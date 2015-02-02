@@ -10,8 +10,8 @@
     <script type="text/javascript" src="LocalStorageEngine.uncompressed.js"></script>
     <script type="text/javascript" src="EncryptedStorage.uncompressed.js"></script>
     <script type="text/javascript" src="Hoard.uncompressed.js"></script>
-    <!--script type="text/javascript" src="squirrel.js"></script -->
-    <script type="text/javascript" src="test.js"></script>
+    <script type="text/javascript" src="squirrel.js"></script>
+    <!--script type="text/javascript" src="test.js"></script-->
     <script type="text/javascript" src="https://apis.google.com/js/client.js?onload=gapi_loaded"></script>
     <link rel="stylesheet" href="jquery-ui.min.css">
     <link rel="stylesheet" href="jquery-bonsai.css">
@@ -21,10 +21,31 @@
     <img class="logo" src="squirrel.png">
     <div class="unauthenticated">
       <div class="intro">
-        Welcome to Squirrel, the online browser safe. Enter your password to log in or register.
+        <h1>Welcome to Squirrel</h1>
+	<h2> Enter your details to log in or register</h2>
       </div>
       <div id="authenticate">
-        <input type="password" size="50" id="password" value="" title="Enter password" /> <button id="log_in">Log in</button>
+        <table>
+	  <tbody>
+	    <tr>
+	      <td>Username:</td>
+	      <td>
+		<input size="50" id="user" value="" title="Enter username" />
+	      </td>
+	    </tr>
+            <tr>
+	      <td>Password:</td>
+	      <td>
+		<input type="password" size="50" id="password" value="" title="Enter password" />
+	      </td>
+	    </tr>
+	    <tr>
+	      <td colspan="2" align="center">
+		<button id="log_in">Log in</button>
+	      </td>
+	    </tr>
+	  </tbody>
+	</table>
       </div>
     </div>
 

@@ -264,6 +264,18 @@ function add_node($ul, key, value, time) {
     return $li;
 }
 
+// Play an event into the DOM, usually under control of a hoard
+function play_event(e) {
+    if (e.type == 'N') {
+	var $ul = $('#tree');
+	for (var i = 0; i < e.path.length - 1; i++) {
+	    $ul = $ul.find('li[data-key="' + e.path[i] + '"] > ul');
+	}
+	add_node($ul, e.path[e.path.length - 1], e.data, e.time);
+    } else
+	throw "up";
+}
+
 // Try and synch with Drive
 function sync_with_drive(ready) {
     console.log('Trying to sync with '
@@ -402,20 +414,9 @@ function dlg_local_load_confirmed() {
         $('#tree').empty();
         hoard.empty();
         hoard.thaw(reader.result, {
-            add_node: function(e) {
-                var $node = $('root');
-                var i = 0;
-                while (i < e.path.length) {
-                    var $sub = $node.children('ul > li[data-key="'
-                                              + e.path[i] + '"]')
-                        .first();
-                    if (!$sub)
-                        break;
-                    $node = $sub;
-                }
-                var $ul = $node.find('ul').first();
-                add_node($ul, e,path[e.path.length - 1], e.data, e.time);
-            }} );
+	    pass_on: play_event
+	    // ignore conflicts
+        });
         $('#tree').bonsai('update');
         read_complete();
     };
@@ -440,24 +441,29 @@ function load_local_file() {
 
 function log_in() {
     $('#authenticate').loadingOverlay({ loadingText: 'Logging in' });
+    var user = $('#user').val();
     var pass = $('#password').val();
     if (!pass || pass === '') {
         console.log("Null password not allowed");
         return false;
     }
     console.log("Log in");
-    if (local_store.log_in(pass)) {
-        logged_in_to_local_store();
-    } else {
-        console.log("Local store rejected password. Offering registration");
-        offer_registration(pass);
-    }
+    local_store.log_in(
+	user, pass,
+	function() {
+            logged_in_to_local_store();
+	},
+	function(e) {
+            console.log("Local store rejected password. Offering registration");
+            offer_registration(user, pass);
+	});
 }
 
 (function ($) {
     $(document).ready(function() {
 
-        local_store = new EncryptedStorage('squirrel');
+        local_store = new EncryptedStorage(
+	    new LocalStorageEngine('squirrel'), 'squirrel');
 
         // Log in
         $('#log_in').click(log_in);
