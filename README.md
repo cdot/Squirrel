@@ -1,0 +1,2 @@
+# Squirrel
+Hierarchical information store
