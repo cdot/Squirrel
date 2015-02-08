@@ -18,6 +18,7 @@ const AES_BITSINKEY = 32 * 8;
 
 var drive;
 function gapi_loaded() {
+    console.log("Google API loaded, creating drive engine");
     drive = new GoogleDriveEngine(
         '985219699584-mt1do7j28ifm2vt821d498emarmdukbt.apps.googleusercontent.com');
 };
@@ -34,8 +35,12 @@ function get_path($node) {
     return path;
 }
 
+function getstring(id) {
+    return $('div.strings > .' + message).text();
+}
+
 function last_mod(time) {
-    return 'Double-click to edit. Last modified: ' + time.toLocaleString();
+    return getstring('lastmod_string') + time.toLocaleString();
 }
 
 function confirm_delete($node) {
@@ -298,12 +303,12 @@ function sync_with_drive(ready) {
                         if (drive_db !== null)
                             merge_into_local(drive_db);
                     } catch (e) {
-                        console.log("Error loading drive db: " + e);
+                        alert(getstring("errload_ddb") + e);
                     }
                     ready();
                 },
                 error: function(reason) {
-                    console.log("Cannot sync: " + reason);
+                    alert(getstring("errsync_ddb") + reason);
                     ready();
                 }
             });
@@ -314,85 +319,100 @@ function sync_with_drive(ready) {
 // We are registered with the local store
 function logged_in_to_local_store() {
     console.log(local_store.userid + " is logged in to local store");
-    sync_with_drive(function() {
-        $('body').loadingOverlay('remove');
-        $('.unauthenticated').hide();
-        $('.authenticated').show();
-    });
+    if (drive) {
+        sync_with_drive(function() {
+            $('.unauthenticated').hide();
+            $('.authenticated').show();
+        });
+    } else {
+            $('.unauthenticated').hide();
+            $('.authenticated').show();
+    }
 }
 
 // Confirm that we want to register by re-entering password
-function confirm_password(pass) {
+function confirm_password(user, pass) {
     var $dlg = $('#dlg_confirm_pass');
     $dlg.find('.message').hide();
+    $dlg.find('#userid').text(user);
+
+    var buttons = {};
+    buttons[getstring('confirm_button')] = function(evt) {
+        var cpass = $('#confirm_password').val();
+        if (cpass === pass) {
+            $dlg.dialog("close");
+            // We want to register; create the new registration in the
+            // local drive
+            local_store.register(pass);
+            logged_in_to_local_store();
+        } else {
+            $('#password_mismatch').show();
+            $('#show_password').button().click(function() {
+                $dlg.find('#passwords')
+                    .text(pass + " and " + cpass)
+                    .show();
+            });
+        }
+    };
+    buttons[getstring('cancel_button')] = function() {
+        $dlg.dialog("close");
+    };
+
     $dlg.dialog({
         width: 'auto',
         modal: true,
-        buttons: {
-            "Confirm" : function(evt) {
-                var cpass = $('#confirm_password').val();
-                if (cpass === pass) {
-                    $(this).dialog("close");
-                    // We want to register; create the new registration in the
-                    // local drive
-                    local_store.register(pass);
-                    logged_in_to_local_store();
-                } else {
-                    $('#password_mismatch').show();
-                    $('#show_password').button().click(function() {
-                        $dlg.find('#passwords')
-                            .text(pass + " and " + cpass)
-                            .show();
-                    });
-                }
-            }
-        }});
+        buttons: buttons});
 }
 
 // Registration is being offered for the reason shown by clss.
-function registration_dialog(clss, pass) {
-    $('.' + clss).show();
-    $('#dlg_register').dialog({
+function _registration_dialog(message, user, pass) {
+    var $dlg = $('#dlg_register');
+    $dlg.find('.message').text(getstring(message));
+    var buttons = {};
+    buttons[getstring('yes_button')] = function(evt) {
+        $dlg.dialog("close");
+        // We want to register; create the new registration in the
+        // local drive
+        console.log("Registration selected. Confirming password");
+        confirm_password(user, pass);
+    };
+    buttons[getstring('no_button')] = function(evt) {
+        $dlg.dialog("close");
+        // No local store registration; we can't do any more
+    };
+    $dlg.dialog({
         modal: true,
-        buttons: {
-            "Yes" : function(evt) {
-                $(this).dialog("close");
-                // We want to register; create the new registration in the
-                // local drive
-                console.log("Registration selected. Confirming password");
-                confirm_password(pass);
-            },
-            "No" : function(evt) {
-                $(this).dialog("close");
-                // No local store registration; we can't do any more
-            }
-        }});
+        buttons: buttons});
 }
 
 // The local store didn't allow login using this pass. See if the
 // user wants to register
-function offer_registration(pass) {
+function _offer_registration(user, pass, finished) {
     var $dlg = $('#dlg_register');
-    $dlg.find('.message').hide();
     if (drive) {
+        // Drive is there; see if it has a file
         drive.authorise(
             function() {
                 console.log('Checking Google Drive');
                 drive.exists(
-		    local_store.make_userid(pass),
+		    local_store.getData(user),
 		    function() {
-			registration_dialog('nuts_on_drive', pass);
+			_registration_dialog('nuts_on_drive', user, pass);
+                        finished();
 		    },
 		    function() {
-			registration_dialog('not_on_drive', pass);
+			_registration_dialog('not_on_drive', user, pass);
+                        finished();
 		    });
             },
             function() {
-		registration_dialog('cant_connect', pass);
+                drive = null;
+		_registration_dialog('cant_connect', user, pass);
+                finished();
             });
     } else {
-        $('.cant_connect').show();
-        // Reject the registration
+	_registration_dialog('cant_connect', user_pass);
+        finished();
     }
 
 }
@@ -401,7 +421,7 @@ function offer_registration(pass) {
 function dlg_local_load_confirmed() {
     var $dlg = $(this);
     // TODO: the loading gif freezes, because of the work done in playlist
-    $dlg.loadingOverlay({ loadingText: 'Loading...' });
+    $dlg.loadingOverlay({ loadingText: getstring('string') });
     var read_complete = function(error) {
         $dlg.loadingOverlay('remove');
         if (typeof(error) !== 'undefined')
@@ -440,22 +460,28 @@ function load_local_file() {
 }
 
 function log_in() {
-    $('#authenticate').loadingOverlay({ loadingText: 'Logging in' });
+    $('#authenticate').loadingOverlay({ loadingText: getstring('login_string') });
+    var finished = function() {
+        $('#authenticate').loadingOverlay('remove');
+    };
+
     var user = $('#user').val();
     var pass = $('#password').val();
     if (!pass || pass === '') {
         console.log("Null password not allowed");
         return false;
     }
-    console.log("Log in");
+    console.log("Log in to local store");
     local_store.log_in(
 	user, pass,
 	function() {
+            console.log("Logged in to local store");
+            finished();
             logged_in_to_local_store();
 	},
 	function(e) {
             console.log("Local store rejected password. Offering registration");
-            offer_registration(user, pass);
+            _offer_registration(user, pass, finished);
 	});
 }
 

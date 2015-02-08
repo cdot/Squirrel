@@ -29,8 +29,7 @@ EncryptedStorage.prototype._get_users = function(ok, fail) {
     var data = this.engine.getData(
         this.application + ':users',
         function(data) {
-            if (ok)
-                ok.call(this, JSON.parse(data));
+            ok.call(this, JSON.parse(data));
         },
         fail);
 };
@@ -46,8 +45,7 @@ EncryptedStorage.prototype.register = function(user, pass, ok, fail) {
     this._get_users(
         function(known) {
             if (known[user]) {
-                if (fail)
-                    fail.call(this, user + " is already registered");
+                fail.call(this, user + " is already registered");
             }
             es._register(known, ok, fail);
         },
@@ -64,13 +62,11 @@ EncryptedStorage.prototype._register = function(known, ok, fail) {
         this.application + ':users',
         JSON.stringify(known),
         function () {
-            if (ok)
-                ok.call(es)
+            ok.call(es)
         },
         function (e) {
             es.pass = null;
-            if (fail)
-                fail.call(es, e);
+            fail.call(es, e);
         })
 }
 
@@ -88,8 +84,7 @@ EncryptedStorage.prototype.log_in = function(user, pass, ok, fail) {
                 } else {
                     es.user = null;
                     es.pass = null;
-                    if (fail)
-                        fail.call(es, user + " is not recognised");
+                    fail.call(es, user + " is not recognised");
                 }
             }
         },

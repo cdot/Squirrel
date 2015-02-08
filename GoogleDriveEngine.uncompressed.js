@@ -5,36 +5,46 @@ function GoogleDriveEngine(cID) /* implements StorageEngine */ {
     this.authorised = false;
 };
 
+// TODO: use drive.appfolder, see https://developers.google.com/drive/web/appdata
 const SCOPES = 'https://www.googleapis.com/auth/drive';
 
 // If use of Drive can be authorised, calls ok(drive) where drive
 // is this object. If it fails, calls fail(message).
 // ok() is required, fail() is optional.
-GoogleDriveEngine.prototype._authorise = function(ok, fail) {
+GoogleDriveEngine.prototype.authorise = function(ok, fail) {
     if (this.authorised) {
         // Don't recurse
         ok.call(this);
     } else {
         var drive = this;
+        var tid;
+        var auth_failed = function(message) {
+            if (message === null)
+                message = "Could not authorise access to Google Drive";
+            console.log("GDE: Auth failed " + message);
+            fail.call(drive, message);
+        };
+        console.log("GDE: Authorising");
+        // Timeout after 5 seconds
+        tid = window.setTimeout(function() {
+            window.clearTimeout(tid);
+            auth_failed("Timeout trying to authorise");
+        }, 5000);
         gapi.auth.authorize(
             {'client_id': this.cID, 'scope': SCOPES, 'immediate': true},
             function (authResult) {
+                window.clearTimeout(tid);
                 if (authResult && !authResult.fail) {
                     // Access token has been okfully retrieved, requests
                     // can be sent to the API.
+                    console.log("GDE: Auth OK");
                     gapi.client.load('drive', 'v2', function() {
                         drive.authorised = true;
                         ok.call(drive);
                         drive.authorised = false;
                     });
                 } else {
-                    var message = authResult ? authResult.fail : null;
-                    if (message === null)
-                        message = "Could not authorise access to Google Drive";
-                    if (fail !== null)
-                        fail.call(drive, message);
-                    else
-                        console.log(message);
+                    auth_failed(authResult ? authResult.fail : null);
                 }
             });
     }
@@ -123,12 +133,10 @@ GoogleDriveEngine.prototype._putfile = function(p) {
 
         .then(
             function(response) {
-                if (p.ok !== null)
-                    p.ok.call(drive, response.result);
+                p.ok.call(drive, response.result);
             },
             function(reason) {
-                if (p.fail != null)
-                    p.fail.call(drive, reason);
+                p.fail.call(drive, reason);
             })
 };
 
@@ -145,12 +153,10 @@ GoogleDriveEngine.prototype.search = function(p) {
         })
         .then(
             function(response) {
-                if (p.ok !== null)
-                    p.ok.call(drive, response.result.items);
+                p.ok.call(drive, response.result.items);
             },
             function(reason) {
-                if (p.fail !== null)
-                    p.fail.call(drive, reason);
+                p.fail.call(drive, reason);
             });
 };
 
@@ -190,12 +196,10 @@ GoogleDriveEngine.prototype._getfile = function(p) {
                     'Bearer ' + oauthToken.access_token);
             },
             ok: function(data) {
-                if (p.ok !== null)
-                    p.ok.call(drive, data);
+                p.ok.call(drive, data);
             },
             fail: function(reason) {
-                if (p.fail !== null)
-                    p.fail.call(drive, reason);
+                p.fail.call(drive, reason);
             }
         });
 };
@@ -213,12 +217,10 @@ GoogleDriveEngine.prototype.list = function(p) {
         })
         .then(
             function(response) {
-                if (p.ok !== null)
-                    p.ok.call(drive, response.result.items);
+            p.ok.call(drive, response.result.items);
             },
             function(reason) {
-                if (p.fail !== null)
-                    p.fail.call(drive, reason);
+            p.fail.call(drive, reason);
             });
 };
 */
@@ -234,15 +236,15 @@ GoogleDriveEngine.prototype.exists = function(name, does, does_not) {
         query: "title='" + name + "'",
 	ok: function(items) {
             if (items.length > 0) {
-	        if (does !== null)
+	        if (does)
                     does.call(drive, items[0].id);
             } else {
-	        if (does_not !== null)
+	        if (does_not)
                     does_not.call(drive);
             }
 	},
 	fail: function() {
-	    if (does_not !== null)
+	    if (does_not)
                 does_not.call(drive);
 	}
     });
@@ -250,7 +252,7 @@ GoogleDriveEngine.prototype.exists = function(name, does, does_not) {
 
 // Implements: StorageEngine.setData
 GoogleDriveEngine.prototype.setData = function(key, data, ok,fail) {
-    this._authorise(
+    this.authorise(
         function() {
             this._upload(
                 {
@@ -265,7 +267,7 @@ GoogleDriveEngine.prototype.setData = function(key, data, ok,fail) {
 
 // Implements: StorageEngine.getData
 GoogleDriveEngine.prototype.getData = function(key, ok, fail) {
-    this._authorise(
+    this.authorise(
         function() {
             this._download(
                 {

@@ -61,25 +61,7 @@
 
     <!-- Dialogs -->
     <div id="dlg_register" class="dialog" title="Register">
-      You are not registered in this browser
-      <span class="message nuts_on_drive">, but I can see that you have an
-        existing hoard of nuts on Google Drive. Do you want to use it?</span>
-      <span class="message not_on_drive">, and I can't see any existing
-        hoard of nuts on Google Drive. Do you want to register in this
-        browser? A copy of your hoard will automatically be created on Google
-        Drive.</span>
-      <span class="message cant_connect"> and I can't connect to Google
-        Drive to check whether you have any nuts there or not. Do you want to
-        continue and create a local hoard? It will be automatically synced
-        with Google Drive if and when we are able to make contact with
-        it.</span>
-      <span class="message mismatch_with_drive"> and the password you entered
-        does not match the hoard of nuts that I can see on Google Drive.
-        This might be because you are logged in to Google as somebody else, or
-        you might have mistyped your password.
-        Do you can continue to register with this password?  A copy of your
-        new hoard will automatically be created on Google Drive.
-        Drive.</span></span>
+      You are not registered in this browser<span class="message"></span>
     </div>
 
     <div id="dlg_confirm_pass" class="dialog" title="Confirm password">
@@ -89,6 +71,7 @@
         <div id="passwords" class="message" style="display:none">
         </div>
       </div>
+      Registering you with username '<span id="userid"></span>'<br />
       Re-enter your password to confirm it<br />
       <input type="password" size="30" id="confirm_password" value="" title="Enter password" />
     </div>
@@ -107,6 +90,37 @@
     
     <div id="dlg_add_node" class="dialog" title="Add child node">
       Select type of child node to add
+    </div>
+
+    <!-- Translatable strings TODO: move to translation module -->
+    <div id="strings" style="display:none">
+      <span class="yes_button">Yes</span>
+      <span class="no_button">No</span>
+      <span class="cancel_button">Cancel</span>
+      <span class="confirm_button">Confirm</span>
+      <span class="loading_string">Loading...</span>
+      <span class="login_string">Logging in...</span>
+      <span class="errload_ddb">Error loading drive DB: </span>
+      <span class="errsync_ddb">Cannot sync: </span>
+      <span class="nuts_on_drive">, but I can see that you have an
+        existing hoard of nuts on Google Drive. Do you want to use it?</span>
+      <span class="not_on_drive">, and I can't see any existing
+        hoard of nuts on Google Drive. Do you want to register in this
+        browser? A copy of your hoard will automatically be created on Google
+        Drive.</span>
+      <span class="cant_connect"> and I can't connect to Google
+        Drive to check whether you have any nuts there or not. Do you want to
+        continue and create a local hoard? It will be automatically synced
+        with Google Drive if and when we are able to make contact with
+        it.</span>
+      <span class="mismatch_with_drive"> and the password you entered
+        does not match the hoard of nuts that I can see on Google Drive.
+        This might be because you are logged in to Google as somebody else, or
+        you might have mistyped your password.
+        Do you can continue to register with this password?  A copy of your
+        new hoard will automatically be created on Google Drive.
+        Drive.</span>
+      <span class="lastmod_string">Double-click to edit. Last modified: </span>
     </div>
   </body>
 </html>

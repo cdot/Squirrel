@@ -11,8 +11,7 @@ LocalStorageEngine.prototype.setData = function(key, data, ok, fail) {
         localStorage.setItem(this.app + ':' + key, data);
         ok.call(this);
     } catch (e) {
-        if (fail)
-            fail.call(this, e);
+        fail.call(this, e);
     }
 };
 
@@ -20,14 +19,12 @@ LocalStorageEngine.prototype.setData = function(key, data, ok, fail) {
 LocalStorageEngine.prototype.getData = function(key, ok, fail) {
     try {
         var r = localStorage.getItem(this.app + ':' + key);
-        if (typeof(r) !== 'undefined' && r !== null) {
-            if (ok)
-                ok.call(this, r);
-        } else if (fail)
-                fail.call(this, "No such item " + key);
+        if (typeof(r) !== 'undefined' && r !== null)
+            ok.call(this, r);
+        else
+            fail.call(this, "No such item " + key);
     } catch (e) {
-        if (fail)
-            fail.call(this, e);
+        fail.call(this, e);
     }
 };
 
