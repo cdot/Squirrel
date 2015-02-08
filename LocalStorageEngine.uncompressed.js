@@ -3,9 +3,12 @@
 
 function LocalStorageEngine(app) /* implements StorageEngine */ {
     this.app = app;
+    this.isReadyOnly = false;
 }
 
-// Implements: StorageEngine.setData;
+LocalStorageEngine.prototype = Object.create(StorageEngine.prototype);
+
+// Implements: StorageEngine
 LocalStorageEngine.prototype.setData = function(key, data, ok, fail) {
     try {
         localStorage.setItem(this.app + ':' + key, data);
@@ -15,7 +18,7 @@ LocalStorageEngine.prototype.setData = function(key, data, ok, fail) {
     }
 };
 
-// Implements: StorageEngine.getData;
+// Implements: StorageEngine
 LocalStorageEngine.prototype.getData = function(key, ok, fail) {
     try {
         var r = localStorage.getItem(this.app + ':' + key);

@@ -6,6 +6,8 @@
     <script type="text/javascript" src="jquery-bonsai.js"></script>
     <script type="text/javascript" src="loading-overlay.min.js"></script>
     <script type="text/javascript" src="AES.uncompressed.js"></script>
+    <script type="text/javascript" src="StorageEngine.uncompressed.js"></script>
+    <script type="text/javascript" src="FileStorageEngine.uncompressed.js"></script>
     <script type="text/javascript" src="GoogleDriveEngine.uncompressed.js"></script>
     <script type="text/javascript" src="LocalStorageEngine.uncompressed.js"></script>
     <script type="text/javascript" src="EncryptedStorage.uncompressed.js"></script>
@@ -81,6 +83,10 @@
       The file must be in change stream format.
       </p>
       <input type="file" id="local_file_pick" title="Select file" value="aes.txt" />
+    </div>
+
+    <div id="init_store" class="dialog" title="Init local file store">
+      <input type="file" id="init_store_pick" title="Select file" value="store.test" />
     </div>
 
     <div id="dlg_confirm_delete" class="dialog" title="Delete entry">

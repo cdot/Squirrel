@@ -12,7 +12,10 @@ function EncryptedStorage(engine, app) /* implements StorageEngine */ {
     this.pass = null;
     this.user = null;
     this.engine = engine;
+    this.isReadOnly = engine.isReadOnly;
 }
+
+EncryptedStorage.prototype = Object.create(StorageEngine.prototype);
 
 // Encryption uses the 256 bit AES engine
 EncryptedStorage.prototype._encrypt = function(data) {
@@ -101,7 +104,7 @@ EncryptedStorage.prototype.log_out = function(pass) {
 
 // Load the data from the current users' personal data store
 // The data is a character string
-// Implements: StorageEngine.getData
+// Implements: StorageEngine
 EncryptedStorage.prototype.getData = function(key, ok, fail) {
     if (!this.user) {
         fail.call(this, "Not logged in");
@@ -121,8 +124,12 @@ EncryptedStorage.prototype.getData = function(key, ok, fail) {
 
 // Save the data to the current user's personal data store
 // The data is a character string
-// Implements: StorageEngine.setData
+// Implements: StorageEngine
 EncryptedStorage.prototype.setData = function(key, data, ok, fail) {
+    if (this.engine.isReadOnly) {
+	fail.call(this, "Read only");
+	return;
+    }
     if (!this.user) {
         fail.call(this, "Not logged in");
         return;
@@ -133,3 +140,13 @@ EncryptedStorage.prototype.setData = function(key, data, ok, fail) {
         ok, fail);
 };
 
+// Implements: StorageEngine
+EncryptedStorage.prototype.exists = function(key, ok, fail) {
+    if (!this.user) {
+        fail.call(this, "Not logged in");
+        return;
+    }
+    this.engine.exists(
+        this.application + '/' + this.user + ':' + key,
+        ok, fail);
+};

@@ -2,8 +2,11 @@
 
 function GoogleDriveEngine(cID) /* implements StorageEngine */ {
     this.cID = cID;
+    this.isReadOnly = false;
     this.authorised = false;
 };
+
+GoogleDriveEngine.prototype = Object.create(StorageEngine.prototype);
 
 // TODO: use drive.appfolder, see https://developers.google.com/drive/web/appdata
 const SCOPES = 'https://www.googleapis.com/auth/drive';
@@ -11,7 +14,7 @@ const SCOPES = 'https://www.googleapis.com/auth/drive';
 // If use of Drive can be authorised, calls ok(drive) where drive
 // is this object. If it fails, calls fail(message).
 // ok() is required, fail() is optional.
-GoogleDriveEngine.prototype.authorise = function(ok, fail) {
+GoogleDriveEngine.prototype._authorise = function(ok, fail) {
     if (this.authorised) {
         // Don't recurse
         ok.call(this);
@@ -142,22 +145,27 @@ GoogleDriveEngine.prototype._putfile = function(p) {
 
 // Get a list of resources, call ok passing the list of matching
 // items, or fail with a message
-// p = { query:, ok:, fail: }
-GoogleDriveEngine.prototype.search = function(p) {
+GoogleDriveEngine.prototype._search = function(query, ok, fail) {
     var drive = this;
-    gapi.client
-        .request({
-            'path': '/drive/v2/files',
-            'method': 'GET',
-            'params' : { q: p.query }
-        })
-        .then(
-            function(response) {
-                p.ok.call(drive, response.result.items);
-            },
-            function(reason) {
-                p.fail.call(drive, reason);
-            });
+    this._authorise(
+	function() {
+	    gapi.client
+		.request({
+		    'path': '/drive/v2/files',
+		    'method': 'GET',
+		    'params' : { q: query }
+		})
+		.then(
+		    function(response) {
+			ok.call(drive, response.result.items);
+		    },
+		    function(reason) {
+			fail.call(drive, reason);
+		    });
+	},
+	function(reason) {
+	    fail.call(drive, reason);
+	});	   
 };
 
 // Download a resource, call ok or fail
@@ -167,17 +175,16 @@ GoogleDriveEngine.prototype._download = function(p) {
         this._getfile(p);
     } else if (p.name) {
         var gd = this;
-        this.search({
-            query: "title='" + p.name + "'",
-            ok: function(items) {
+        this._search(
+	    "title='" + p.name + "'",
+            function(items) {
                 if (items.length > 0) {
                     p.url = items[0].downloadUrl;
                     drive._download(p);
                 } else
                     p.fail.call(gd, "File not found");
             },
-            fail: p.fail
-        });
+            p.fail);
     } else
         debugger;
 };
@@ -204,54 +211,26 @@ GoogleDriveEngine.prototype._getfile = function(p) {
         });
 };
 
-// Get a list of resources, call ok pasing the list of items, or fail
-// with a message
-// p = { ok:, fail: }
-/*
-GoogleDriveEngine.prototype.list = function(p) {
-    var drive = this;
-    gapi.client
-        .request({
-            'path': '/drive/v2/files',
-            'method': 'GET'
-        })
-        .then(
-            function(response) {
-            p.ok.call(drive, response.result.items);
-            },
-            function(reason) {
-            p.fail.call(drive, reason);
-            });
-};
-*/
-
 // Determine if the given name exists, call the function 'does' or
 // 'does_not' accordingly, passing the faileId to 'does'
 GoogleDriveEngine.prototype.exists = function(name, does, does_not) {
-    if (typeof(name) !== 'string')
-        debugger;
     var drive = this;
 
-    var items = this.search({
-        query: "title='" + name + "'",
-	ok: function(items) {
-            if (items.length > 0) {
-	        if (does)
-                    does.call(drive, items[0].id);
-            } else {
-	        if (does_not)
-                    does_not.call(drive);
-            }
-	},
-	fail: function() {
-	    if (does_not)
+    var items = this._search(
+        "title='" + name + "'",
+	function(items) {
+            if (items.length > 0)
+                does.call(drive, items[0].id);
+            else
                 does_not.call(drive);
-	}
-    });
+	},
+	function() {
+            does_not.call(drive);
+	});
 };
 
 // Implements: StorageEngine.setData
-GoogleDriveEngine.prototype.setData = function(key, data, ok,fail) {
+GoogleDriveEngine.prototype.setData = function(key, data, ok, fail) {
     this.authorise(
         function() {
             this._upload(

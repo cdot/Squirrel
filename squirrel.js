@@ -16,11 +16,12 @@ Tabs built from local cache
 // https://apis.google.com/js/client.js is loaded
 const AES_BITSINKEY = 32 * 8;
 
-var drive;
+var remote_store;
 function gapi_loaded() {
-    console.log("Google API loaded, creating drive engine");
-    drive = new GoogleDriveEngine(
-        '985219699584-mt1do7j28ifm2vt821d498emarmdukbt.apps.googleusercontent.com');
+    console.log("Google API loaded");
+    if (!remote_store)
+	remote_store = new GoogleDriveEngine(
+            '985219699584-mt1do7j28ifm2vt821d498emarmdukbt.apps.googleusercontent.com');
 };
 var hoard;
 
@@ -36,7 +37,7 @@ function get_path($node) {
 }
 
 function getstring(id) {
-    return $('div.strings > .' + message).text();
+    return $('#strings > span.' + id).text();
 }
 
 function last_mod(time) {
@@ -282,45 +283,33 @@ function play_event(e) {
 }
 
 // Try and synch with Drive
-function sync_with_drive(ready) {
+function sync_with_remote_store(ready) {
     console.log('Trying to sync with '
-                + local_store.userid + ' on Google Drive');
-    drive.authorise(
-        function() {
-            drive.download({
-                name: local_store.userid,
-                success: function(data) {
-                    if (data.substring(0,3) == "AES") {
-                        data = data.substring(3);
-                        data = Aes.Ctr.decrypt(
-                            data.substring(3),
-                            local_store.password,
-                            AES_BITSINKEY);
-                    }
+                + local_store.userid + ' on remote store');
 
-                    try {
-                        var drive_db = $.parseJSON(data);
-                        if (drive_db !== null)
-                            merge_into_local(drive_db);
-                    } catch (e) {
-                        alert(getstring("errload_ddb") + e);
-                    }
-                    ready();
-                },
-                error: function(reason) {
-                    alert(getstring("errsync_ddb") + reason);
-                    ready();
-                }
-            });
-        });
-    // Synch local drive with google
+    remote_store.getData(
+        function(data) {
+            try {
+                var remote_store_db = $.parseJSON(data);
+                if (remote_store_db !== null)
+                    merge_into_local(remote_store_db);
+            } catch (e) {
+                alert(getstring("errload_ddb") + e);
+            }
+            ready();
+        },
+        function(reason) {
+            alert(getstring("errsync_ddb") + reason);
+            ready();
+        }
+    );
 }
 
 // We are registered with the local store
 function logged_in_to_local_store() {
     console.log(local_store.userid + " is logged in to local store");
-    if (drive) {
-        sync_with_drive(function() {
+    if (remote_store) {
+        sync_with_remote_store(function() {
             $('.unauthenticated').hide();
             $('.authenticated').show();
         });
@@ -388,33 +377,23 @@ function _registration_dialog(message, user, pass) {
 // The local store didn't allow login using this pass. See if the
 // user wants to register
 function _offer_registration(user, pass, finished) {
-    var $dlg = $('#dlg_register');
-    if (drive) {
-        // Drive is there; see if it has a file
-        drive.authorise(
-            function() {
-                console.log('Checking Google Drive');
-                drive.exists(
-		    local_store.getData(user),
-		    function() {
-			_registration_dialog('nuts_on_drive', user, pass);
-                        finished();
-		    },
-		    function() {
-			_registration_dialog('not_on_drive', user, pass);
-                        finished();
-		    });
-            },
-            function() {
-                drive = null;
-		_registration_dialog('cant_connect', user, pass);
+    if (remote_store) {
+        // Remote store is there; see if it has a file
+        console.log('Checking Remote Store');
+        remote_store.exists(
+	    user,
+	    function() {
+		_registration_dialog('nuts_on_drive', user, pass);
                 finished();
-            });
+	    },
+	    function() {
+		_registration_dialog('not_on_drive', user, pass);
+                finished();
+	    });
     } else {
-	_registration_dialog('cant_connect', user_pass);
+	_registration_dialog('cant_connect', user, pass);
         finished();
     }
-
 }
 
 // Load a file from the client. File must be in event list format.
@@ -490,6 +469,17 @@ function log_in() {
 
         local_store = new EncryptedStorage(
 	    new LocalStorageEngine('squirrel'), 'squirrel');
+
+	$('#init_store').dialog({
+	    modal: true,
+	    buttons: {
+		"Open": function(evt) {
+		    $(this).dialog("close");
+		    var fileData = $('#init_store_pick')[0].files[0];
+		    remote_store = new FileStorageEngine(fileData);
+		}
+	    }
+	});
 
         // Log in
         $('#log_in').click(log_in);
