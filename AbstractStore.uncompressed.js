@@ -4,7 +4,7 @@
  * isReadOnly: true if the store is read-only
  */
 
-function StorageEngine() {
+function AbstractStore() {
     this.isReadOnly = true;
 }
 
@@ -15,8 +15,8 @@ function StorageEngine() {
  * @param fail error function, passed a reason, this = the engine
  * If the item does not exist, must return null
  */
-StorageEngine.prototype.getData = function(key, ok, fail) {
-    fail.call('getData is not supported by this StorageEngine');
+AbstractStore.prototype.getData = function(key, ok, fail) {
+    fail.call('getData is not supported by this AbstractStore');
 };
 
 /**
@@ -25,7 +25,7 @@ StorageEngine.prototype.getData = function(key, ok, fail) {
  * @param ok item exists, this = the engine
  * @param fail does not exist, this = the engine
  */
-StorageEngine.prototype.exists = function(key, ok, fail) {
+AbstractStore.prototype.exists = function(key, ok, fail) {
     this.getData(key, ok, fail);
 };
 
@@ -38,7 +38,7 @@ StorageEngine.prototype.exists = function(key, ok, fail) {
  * The engine does not have to implement saving. If it does not, this
  * method must call fail(message)
  */
-StorageEngine.prototype.setData = function(key, data, ok, fail) {
-    fail.call(this, "setData is not supported by this StorageEngine");
+AbstractStore.prototype.setData = function(key, data, ok, fail) {
+    fail.call(this, "setData is not supported by this store");
 };
 

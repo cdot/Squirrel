@@ -1,16 +1,16 @@
-// StorageEngine implementation reading data from a JSON file on disk.
+// AbstractStore implementation reading data from a JSON file on disk.
 // The File object has to be passed to the constructor.
 // @param file a javascript File or Blob object
 // See https://developer.mozilla.org/en-US/docs/Web/API/FileReader
-function FileStorageEngine(file) {
+function FileStore(file) {
     this.cache = null;
     this.file = file;
 }
 
-FileStorageEngine.prototype = Object.create(StorageEngine.prototype);
+FileStore.prototype = Object.create(AbstractStore.prototype);
 
-// Implements: StorageEngine
-FileStorageEngine.prototype.getData = function(key, ok, fail) {
+// Implements: AbstractStore
+FileStore.prototype.getData = function(key, ok, fail) {
     if (this.cache === null) {
 	var store = this;
 	var reader = new FileReader();

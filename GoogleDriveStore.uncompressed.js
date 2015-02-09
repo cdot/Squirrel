@@ -1,12 +1,12 @@
 // A store engine using Google Drive
 
-function GoogleDriveEngine(cID) /* implements StorageEngine */ {
+function GoogleDriveStore(cID) /* implements AbstractStore */ {
     this.cID = cID;
     this.isReadOnly = false;
     this.authorised = false;
 };
 
-GoogleDriveEngine.prototype = Object.create(StorageEngine.prototype);
+GoogleDriveStore.prototype = Object.create(AbstractStore.prototype);
 
 // TODO: use drive.appfolder, see https://developers.google.com/drive/web/appdata
 const SCOPES = 'https://www.googleapis.com/auth/drive';
@@ -14,7 +14,7 @@ const SCOPES = 'https://www.googleapis.com/auth/drive';
 // If use of Drive can be authorised, calls ok(drive) where drive
 // is this object. If it fails, calls fail(message).
 // ok() is required, fail() is optional.
-GoogleDriveEngine.prototype._authorise = function(ok, fail) {
+GoogleDriveStore.prototype._authorise = function(ok, fail) {
     if (this.authorised) {
         // Don't recurse
         ok.call(this);
@@ -62,7 +62,7 @@ GoogleDriveEngine.prototype._authorise = function(ok, fail) {
 // fail:
 // };
 // call ok or fail on completion
-GoogleDriveEngine.prototype._upload = function(p) {
+GoogleDriveStore.prototype._upload = function(p) {
     var drive = this;
 
     if (p.id)
@@ -79,7 +79,7 @@ GoogleDriveEngine.prototype._upload = function(p) {
             });
 }
 
-GoogleDriveEngine.prototype._putfile = function(p) {
+GoogleDriveStore.prototype._putfile = function(p) {
 
     var url = '/upload/drive/v2/files';
     var method = 'POST';
@@ -145,7 +145,7 @@ GoogleDriveEngine.prototype._putfile = function(p) {
 
 // Get a list of resources, call ok passing the list of matching
 // items, or fail with a message
-GoogleDriveEngine.prototype._search = function(query, ok, fail) {
+GoogleDriveStore.prototype._search = function(query, ok, fail) {
     var drive = this;
     this._authorise(
 	function() {
@@ -170,7 +170,7 @@ GoogleDriveEngine.prototype._search = function(query, ok, fail) {
 
 // Download a resource, call ok or fail
 // p = { (id | name):, ok:, fail: }
-GoogleDriveEngine.prototype._download = function(p) {
+GoogleDriveStore.prototype._download = function(p) {
     if (p.url) {
         this._getfile(p);
     } else if (p.name) {
@@ -190,7 +190,7 @@ GoogleDriveEngine.prototype._download = function(p) {
 };
 
 // p = {url: ok: , fail: }
-GoogleDriveEngine.prototype._getfile = function(p) {
+GoogleDriveStore.prototype._getfile = function(p) {
     var drive = this;
     var oauthToken = gapi.auth.getToken();
     $.ajax(
@@ -213,7 +213,8 @@ GoogleDriveEngine.prototype._getfile = function(p) {
 
 // Determine if the given name exists, call the function 'does' or
 // 'does_not' accordingly, passing the faileId to 'does'
-GoogleDriveEngine.prototype.exists = function(name, does, does_not) {
+// Implements: AbstractStore
+GoogleDriveStore.prototype.exists = function(name, does, does_not) {
     var drive = this;
 
     var items = this._search(
@@ -229,8 +230,8 @@ GoogleDriveEngine.prototype.exists = function(name, does, does_not) {
 	});
 };
 
-// Implements: StorageEngine.setData
-GoogleDriveEngine.prototype.setData = function(key, data, ok, fail) {
+// Implements: AbstractStore
+GoogleDriveStore.prototype.setData = function(key, data, ok, fail) {
     this.authorise(
         function() {
             this._upload(
@@ -244,8 +245,8 @@ GoogleDriveEngine.prototype.setData = function(key, data, ok, fail) {
         fail);
 };
 
-// Implements: StorageEngine.getData
-GoogleDriveEngine.prototype.getData = function(key, ok, fail) {
+// Implements: AbstractStore
+GoogleDriveStore.prototype.getData = function(key, ok, fail) {
     this.authorise(
         function() {
             this._download(

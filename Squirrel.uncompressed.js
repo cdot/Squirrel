@@ -467,16 +467,17 @@ function log_in() {
 (function ($) {
     $(document).ready(function() {
 
-        local_store = new EncryptedStorage(
-	    new LocalStorageEngine('squirrel'), 'squirrel');
+        local_store = new EncryptedStore(
+	    new LocalStorageStore('squirrel'), 'squirrel');
 
+        // DEBUG - use unencrypted file store as a source for sync data
 	$('#init_store').dialog({
 	    modal: true,
 	    buttons: {
 		"Open": function(evt) {
 		    $(this).dialog("close");
 		    var fileData = $('#init_store_pick')[0].files[0];
-		    remote_store = new FileStorageEngine(fileData);
+		    remote_store = new FileStore(fileData);
 		}
 	    }
 	});

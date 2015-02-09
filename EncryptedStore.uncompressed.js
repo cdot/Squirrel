@@ -7,7 +7,7 @@
 // an encryption layer.
 
 // app = application name
-function EncryptedStorage(engine, app) /* implements StorageEngine */ {
+function EncryptedStore(engine, app) /* implements AbstractStore */ {
     this.application = app;
     this.pass = null;
     this.user = null;
@@ -15,20 +15,20 @@ function EncryptedStorage(engine, app) /* implements StorageEngine */ {
     this.isReadOnly = engine.isReadOnly;
 }
 
-EncryptedStorage.prototype = Object.create(StorageEngine.prototype);
+EncryptedStore.prototype = Object.create(AbstractStore.prototype);
 
 // Encryption uses the 256 bit AES engine
-EncryptedStorage.prototype._encrypt = function(data) {
+EncryptedStore.prototype._encrypt = function(data) {
     return Aes.Ctr.encrypt(data, this.pass, 256);
 };
 
-EncryptedStorage.prototype._decrypt = function(data) {
+EncryptedStore.prototype._decrypt = function(data) {
     return Aes.Ctr.decrypt(data, this.pass, 256);
 };
 
 // Get the 'users' data block for this application, which is a JSON-encoded
 // map of user => encoded password (like passwd)
-EncryptedStorage.prototype._get_users = function(ok, fail) {
+EncryptedStore.prototype._get_users = function(ok, fail) {
     var data = this.engine.getData(
         this.application + ':users',
         function(data) {
@@ -41,7 +41,7 @@ EncryptedStorage.prototype._get_users = function(ok, fail) {
 // if there's a problem (e.g. the user already exists). If successful,
 // the registered user will be left logged in, and the registration time will
 // be returned (as a JSON date)
-EncryptedStorage.prototype.register = function(user, pass, ok, fail) {
+EncryptedStore.prototype.register = function(user, pass, ok, fail) {
     var es = this;
     this.user = user;
     this.pass = pass;
@@ -57,7 +57,7 @@ EncryptedStorage.prototype.register = function(user, pass, ok, fail) {
         });
 };
 
-EncryptedStorage.prototype._register = function(known, ok, fail) {
+EncryptedStore.prototype._register = function(known, ok, fail) {
     var es = this;
     known[this.user] = this._encrypt(this.pass);
     // set_users
@@ -75,7 +75,7 @@ EncryptedStorage.prototype._register = function(known, ok, fail) {
 
 // Return the registration date (as a JSON date) if login was successful
 // or undefined otherwise.
-EncryptedStorage.prototype.log_in = function(user, pass, ok, fail) {
+EncryptedStore.prototype.log_in = function(user, pass, ok, fail) {
     var es = this;
     es._get_users(
         function(known) {
@@ -97,15 +97,15 @@ EncryptedStorage.prototype.log_in = function(user, pass, ok, fail) {
 };
 
 // log the current user out
-EncryptedStorage.prototype.log_out = function(pass) {
+EncryptedStore.prototype.log_out = function(pass) {
     this.user = null;
     this.pass = null;
 };
 
 // Load the data from the current users' personal data store
 // The data is a character string
-// Implements: StorageEngine
-EncryptedStorage.prototype.getData = function(key, ok, fail) {
+// Implements: AbstractStore
+EncryptedStore.prototype.getData = function(key, ok, fail) {
     if (!this.user) {
         fail.call(this, "Not logged in");
         return;
@@ -124,8 +124,8 @@ EncryptedStorage.prototype.getData = function(key, ok, fail) {
 
 // Save the data to the current user's personal data store
 // The data is a character string
-// Implements: StorageEngine
-EncryptedStorage.prototype.setData = function(key, data, ok, fail) {
+// Implements: AbstractStore
+EncryptedStore.prototype.setData = function(key, data, ok, fail) {
     if (this.engine.isReadOnly) {
 	fail.call(this, "Read only");
 	return;
@@ -140,8 +140,8 @@ EncryptedStorage.prototype.setData = function(key, data, ok, fail) {
         ok, fail);
 };
 
-// Implements: StorageEngine
-EncryptedStorage.prototype.exists = function(key, ok, fail) {
+// Implements: AbstractStore
+EncryptedStore.prototype.exists = function(key, ok, fail) {
     if (!this.user) {
         fail.call(this, "Not logged in");
         return;
