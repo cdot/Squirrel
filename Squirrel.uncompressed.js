@@ -16,11 +16,11 @@ Tabs built from local cache
 // https://apis.google.com/js/client.js is loaded
 const AES_BITSINKEY = 32 * 8;
 
-var remote_store;
+var cloud_store;
 function gapi_loaded() {
     console.log("Google API loaded");
-    if (!remote_store)
-	remote_store = new GoogleDriveEngine(
+    if (!cloud_store)
+	cloud_store = new GoogleDriveStore(
             '985219699584-mt1do7j28ifm2vt821d498emarmdukbt.apps.googleusercontent.com');
 };
 var hoard;
@@ -282,23 +282,26 @@ function play_event(e) {
 	throw "up";
 }
 
-// Try and synch with Drive
-function sync_with_remote_store(ready) {
+// Try and synch with content in remote store
+function sync_with_cloud_store(ready) {
     console.log('Trying to sync with '
-                + local_store.userid + ' on remote store');
+                + client_store.userid + ' on remote store');
 
-    remote_store.getData(
+    cloud_store.getData(
+        client_store.user,
         function(data) {
             try {
-                var remote_store_db = $.parseJSON(data);
-                if (remote_store_db !== null)
-                    merge_into_local(remote_store_db);
+                var cloud_store_db = $.parseJSON(data);
+                if (cloud_store_db !== null)
+                    merge_into_local(cloud_store_db);
             } catch (e) {
+debugger;
                 alert(getstring("errload_ddb") + e);
             }
             ready();
         },
         function(reason) {
+debugger;
             alert(getstring("errsync_ddb") + reason);
             ready();
         }
@@ -306,16 +309,16 @@ function sync_with_remote_store(ready) {
 }
 
 // We are registered with the local store
-function logged_in_to_local_store() {
-    console.log(local_store.userid + " is logged in to local store");
-    if (remote_store) {
-        sync_with_remote_store(function() {
+function logged_in_to_client_store() {
+    console.log(client_store.user + " is logged in to local store");
+    if (cloud_store) {
+        sync_with_cloud_store(function() {
             $('.unauthenticated').hide();
             $('.authenticated').show();
         });
     } else {
-            $('.unauthenticated').hide();
-            $('.authenticated').show();
+        $('.unauthenticated').hide();
+        $('.authenticated').show();
     }
 }
 
@@ -332,8 +335,8 @@ function confirm_password(user, pass) {
             $dlg.dialog("close");
             // We want to register; create the new registration in the
             // local drive
-            local_store.register(pass);
-            logged_in_to_local_store();
+            client_store.register(pass);
+            logged_in_to_client_store();
         } else {
             $('#password_mismatch').show();
             $('#show_password').button().click(function() {
@@ -377,19 +380,27 @@ function _registration_dialog(message, user, pass) {
 // The local store didn't allow login using this pass. See if the
 // user wants to register
 function _offer_registration(user, pass, finished) {
-    if (remote_store) {
+    if (cloud_store) {
         // Remote store is there; see if it has a file
-        console.log('Checking Remote Store');
-        remote_store.exists(
-	    user,
-	    function() {
-		_registration_dialog('nuts_on_drive', user, pass);
+        cloud_store.log_in(
+            user, pass,
+            function() {
+                console.log('Checking Remote Store');
+                cloud_store.exists(
+	            user,
+	            function() {
+		        _registration_dialog('nuts_in_cloud', user, pass);
+                        finished();
+	            },
+	            function() {
+		        _registration_dialog('not_in_cloud', user, pass);
+                        finished();
+	            });
+            },
+            function(message) {
+	        _registration_dialog('mismatch_with_cloud', user, pass);
                 finished();
-	    },
-	    function() {
-		_registration_dialog('not_on_drive', user, pass);
-                finished();
-	    });
+            });
     } else {
 	_registration_dialog('cant_connect', user, pass);
         finished();
@@ -451,12 +462,12 @@ function log_in() {
         return false;
     }
     console.log("Log in to local store");
-    local_store.log_in(
+    client_store.log_in(
 	user, pass,
 	function() {
             console.log("Logged in to local store");
             finished();
-            logged_in_to_local_store();
+            logged_in_to_client_store();
 	},
 	function(e) {
             console.log("Local store rejected password. Offering registration");
@@ -467,8 +478,8 @@ function log_in() {
 (function ($) {
     $(document).ready(function() {
 
-        local_store = new EncryptedStore(
-	    new LocalStorageStore('squirrel'), 'squirrel');
+        client_store = new LocalStorageStore('squirrel');
+        //client_store = new EncryptedStore(client_store, 'squirrel');
 
         // DEBUG - use unencrypted file store as a source for sync data
 	$('#init_store').dialog({
@@ -477,7 +488,8 @@ function log_in() {
 		"Open": function(evt) {
 		    $(this).dialog("close");
 		    var fileData = $('#init_store_pick')[0].files[0];
-		    remote_store = new FileStore(fileData);
+		    cloud_store = new FileStore(fileData);
+                    logged_in_to_client_store();
 		}
 	    }
 	});
@@ -490,7 +502,10 @@ function log_in() {
             $('#tree').empty();
             $('#authenticated').hide();
             $('#unauthenticated').show();
-            local_store.log_out();
+            if (client_store)
+                client_store.log_out();
+            if (cloud_store)
+                cloud_store.log_out();
             if ($tabs.hasClass('ui-tabs'))
                 $tabs.tabs("destroy");
         });

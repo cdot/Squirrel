@@ -11,13 +11,19 @@ FileStore.prototype = Object.create(AbstractStore.prototype);
 
 // Implements: AbstractStore
 FileStore.prototype.getData = function(key, ok, fail) {
+    var ukey = this.user + ':' + key,
+    store, reader;
+    if (!this.user) {
+        fail.call(this, "Not logged in");
+        return;
+    }
     if (this.cache === null) {
-	var store = this;
-	var reader = new FileReader();
+	store = this;
+	reader = new FileReader();
 	reader.onload = function(evt) {
             store.cache = JSON.parse(reader.result);
-	    if (typeof(store.cache[key] !== 'undefined'))
-		ok.call(store, store.cache[key]);
+	    if (typeof(store.cache[ukey] !== 'undefined'))
+		ok.call(store, store.cache[ukey]);
 	    else
 		fail.call(store, key + ' not present in ' + this.file.name);
 	};
@@ -26,8 +32,8 @@ FileStore.prototype.getData = function(key, ok, fail) {
 	};
 	reader.onabort = reader.onerror;
 	reader.readAsBinaryString(this.file);
-    } else if (typeof(this.cache[key] !== 'undefined'))
-	ok.call(this, this.cache[key]);
+    } else if (typeof(this.cache[ukey] !== 'undefined'))
+	ok.call(this, this.cache[ukey]);
     else
 	fail.call(this, key + ' not present');
 };

@@ -1,6 +1,9 @@
-// A store engine using Google Drive
+/**
+ * A store using Google Drive
+ * @implements AbstractStore
+ */
 
-function GoogleDriveStore(cID) /* implements AbstractStore */ {
+function GoogleDriveStore(cID) {
     this.cID = cID;
     this.isReadOnly = false;
     this.authorised = false;
@@ -15,13 +18,14 @@ const SCOPES = 'https://www.googleapis.com/auth/drive';
 // is this object. If it fails, calls fail(message).
 // ok() is required, fail() is optional.
 GoogleDriveStore.prototype._authorise = function(ok, fail) {
+    var drive, tid, auth_failed;
     if (this.authorised) {
         // Don't recurse
         ok.call(this);
     } else {
-        var drive = this;
-        var tid;
-        var auth_failed = function(message) {
+        drive = this;
+        tid;
+        auth_failed = function(message) {
             if (message === null)
                 message = "Could not authorise access to Google Drive";
             console.log("GDE: Auth failed " + message);
@@ -81,11 +85,13 @@ GoogleDriveStore.prototype._upload = function(p) {
 
 GoogleDriveStore.prototype._putfile = function(p) {
 
-    var url = '/upload/drive/v2/files';
-    var method = 'POST';
-    var params = {
+    var url = '/upload/drive/v2/files',
+    method = 'POST',
+    params = {
             'uploadType': 'multipart',
-    }
+    },
+    metadata, base64Data, multipartRequestBody;
+
     if (p.id) {
         // Known fileId, we're updating and existing file
         url += '/' + p.id;
@@ -108,13 +114,13 @@ GoogleDriveStore.prototype._putfile = function(p) {
     if (typeof(p.data) !== 'string')
         debugger;
 
-    var metadata = {
+    metadata = {
         'title': p.name,
         'mimeType': p.contentType
     };
 
-    var base64Data = btoa(p.data);
-    var multipartRequestBody =
+    base64Data = btoa(p.data);
+    multipartRequestBody =
         delimiter +
         'Content-Type: application/json\r\n\r\n' +
         JSON.stringify(metadata) +
@@ -171,10 +177,11 @@ GoogleDriveStore.prototype._search = function(query, ok, fail) {
 // Download a resource, call ok or fail
 // p = { (id | name):, ok:, fail: }
 GoogleDriveStore.prototype._download = function(p) {
+    var gd;
     if (p.url) {
         this._getfile(p);
     } else if (p.name) {
-        var gd = this;
+        gd = this;
         this._search(
 	    "title='" + p.name + "'",
             function(items) {
@@ -191,8 +198,8 @@ GoogleDriveStore.prototype._download = function(p) {
 
 // p = {url: ok: , fail: }
 GoogleDriveStore.prototype._getfile = function(p) {
-    var drive = this;
-    var oauthToken = gapi.auth.getToken();
+    var drive = this,
+    oauthToken = gapi.auth.getToken();
     $.ajax(
         {
             url: p.url,
@@ -216,9 +223,12 @@ GoogleDriveStore.prototype._getfile = function(p) {
 // Implements: AbstractStore
 GoogleDriveStore.prototype.exists = function(name, does, does_not) {
     var drive = this;
-
-    var items = this._search(
-        "title='" + name + "'",
+    if (!this.user) {
+        fail.call(this, "Not logged in");
+        return;
+    }
+    this._search(
+        "title='" + this.user + ':' + name + "'",
 	function(items) {
             if (items.length > 0)
                 does.call(drive, items[0].id);
@@ -232,11 +242,15 @@ GoogleDriveStore.prototype.exists = function(name, does, does_not) {
 
 // Implements: AbstractStore
 GoogleDriveStore.prototype.setData = function(key, data, ok, fail) {
+    if (!this.user) {
+        fail.call(this, "Not logged in");
+        return;
+    }
     this.authorise(
         function() {
             this._upload(
                 {
-                    name: key,
+                    name: this.user + ':' + key,
                     data: data,
                     ok: ok,
                     fail: fail
@@ -245,13 +259,16 @@ GoogleDriveStore.prototype.setData = function(key, data, ok, fail) {
         fail);
 };
 
-// Implements: AbstractStore
 GoogleDriveStore.prototype.getData = function(key, ok, fail) {
+    if (!this.user) {
+        fail.call(this, "Not logged in");
+        return;
+    }
     this.authorise(
         function() {
             this._download(
                 {
-                    name: key,
+                    name: this.user + ':' + key,
                     ok: ok,
                     fail: fail
                 })

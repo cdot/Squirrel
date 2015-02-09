@@ -1,27 +1,33 @@
-// A store engine using HTML5 localStorage.
-// Implements the AbstractStore interface.
-
-function LocalStorageStore(app) /* implements AbstractStore */ {
-    this.app = app;
+/**
+ * A store engine using HTML5 localStorage.
+ * @implements AbstractStore
+ */
+function LocalStorageStore() {
     this.isReadyOnly = false;
 }
 
 LocalStorageStore.prototype = Object.create(AbstractStore.prototype);
 
-// Implements: AbstractStore
 LocalStorageStore.prototype.setData = function(key, data, ok, fail) {
+    if (!this.user) {
+        fail.call(this, "Not logged in");
+        return;
+    }
     try {
-        localStorage.setItem(this.app + ':' + key, data);
+        localStorage.setItem(this.user + ':' + key, data);
         ok.call(this);
     } catch (e) {
         fail.call(this, e);
     }
 };
 
-// Implements: AbstractStore
 LocalStorageStore.prototype.getData = function(key, ok, fail) {
+    if (!this.user) {
+        fail.call(this, "Not logged in");
+        return;
+    }
     try {
-        var r = localStorage.getItem(this.app + ':' + key);
+        var r = localStorage.getItem(this.user + ':' + key);
         if (typeof(r) !== 'undefined' && r !== null)
             ok.call(this, r);
         else
