@@ -19,9 +19,11 @@ const AES_BITSINKEY = 32 * 8;
 var cloud_store;
 function gapi_loaded() {
     console.log("Google API loaded");
-    if (!cloud_store)
+    if (!cloud_store) {
 	cloud_store = new GoogleDriveStore(
             '985219699584-mt1do7j28ifm2vt821d498emarmdukbt.apps.googleusercontent.com');
+        //cloud_store = new EncryptedStore(client_store);
+    }
 };
 var hoard;
 
@@ -282,26 +284,26 @@ function play_event(e) {
 	throw "up";
 }
 
+function merge_with_cload_store
+function load_client_store(ok, fail) {
+    client_store.getData(
+        'squirrel',
+        function(db) {
+            hoard = new Hoard(db);
+            ok.call(this);
+        }, fail);
+}
+
 // Try and synch with content in remote store
 function sync_with_cloud_store(ready) {
-    console.log('Trying to sync with '
-                + client_store.userid + ' on remote store');
+    console.log('Trying to sync local with cloud ');
 
     cloud_store.getData(
-        client_store.user,
-        function(data) {
-            try {
-                var cloud_store_db = $.parseJSON(data);
-                if (cloud_store_db !== null)
-                    merge_into_local(cloud_store_db);
-            } catch (e) {
-debugger;
-                alert(getstring("errload_ddb") + e);
-            }
-            ready();
+        'squirrel',
+        function(cloud_store_db) {
+            merge_with_client(cloud_store_db, ready);
         },
         function(reason) {
-debugger;
             alert(getstring("errsync_ddb") + reason);
             ready();
         }
@@ -311,15 +313,21 @@ debugger;
 // We are registered with the local store
 function logged_in_to_client_store() {
     console.log(client_store.user + " is logged in to local store");
-    if (cloud_store) {
-        sync_with_cloud_store(function() {
-            $('.unauthenticated').hide();
-            $('.authenticated').show();
-        });
-    } else {
+    var ready = function() {
         $('.unauthenticated').hide();
         $('.authenticated').show();
-    }
+    };
+    load_client_store(
+        function() {
+            if (cloud_store)
+                sync_with_cloud_store(ready);
+            else
+                ready();
+        },
+        function(e) {
+            alert(e);
+            // TODO: something here.
+        });
 }
 
 // Confirm that we want to register by re-entering password
@@ -479,7 +487,7 @@ function log_in() {
     $(document).ready(function() {
 
         client_store = new LocalStorageStore('squirrel');
-        //client_store = new EncryptedStore(client_store, 'squirrel');
+        //client_store = new EncryptedStore(client_store);
 
         // DEBUG - use unencrypted file store as a source for sync data
 	$('#init_store').dialog({

@@ -7,9 +7,10 @@ const FIELD_SEP  = String.fromCharCode(3);
 const PATH_SEP   = String.fromCharCode(4);
 const BLOCK_SEP  = String.fromCharCode(5);
 
-function Hoard(engine) {
+function Hoard(data) {
     this.empty();
     this.engine = engine;
+    this.cache = { data: data };
 }
 
 Hoard.prototype.empty = function() {
@@ -132,39 +133,6 @@ Hoard.prototype.record_event = function(type, path, data) {
     this.play_event(e);
     // Add to the list of events
     this.events.push(e);
-};
-
-// Freeze the hoard to a string for saving
-Hoard.prototype.freeze = function() {
-    var safe = this;
-    var a = [
-        this.time.toISOString(),
-        JSON.stringify(this.cache)
-    ];
-    var b = [];
-
-    // Stringify the unsynched events
-    this.events.each(function(i, e) {
-        b.push(safe.encode_event(e));
-    });
-    a.push(b.join(EVENT_SEP));
-
-    return a.join(BLOCK_SEP);
-};
-
-// Thaw the hoard from a string. Any existing data in the hoard is
-// discarded.
-Hoard.prototype.thaw = function(data, o) {
-    var a = data.split(BLOCK_SEP, 3);
-    this.last_sync = new Date(a[0]);
-    this.cache = JSON.parse(a[1]);
-    this.events = [];
-    var a = a[2].split(EVENT_SEP);
-    for (var i = 0; i < a.length; i++) {
-        var e = a[i];
-        if (e.length > 0)
-            events.push(this._decode_event(e));
-    }
 };
 
 // Merge the content of the hoard with the event stream in the hoard passed.

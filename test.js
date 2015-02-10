@@ -58,7 +58,8 @@ function store_tests(engine, ok) {
         
         function(engine, ok) {
             engine.setData(
-                "HoardOfNuts", "some data " + test_date,
+                "HoardOfNuts",
+                "some data " + test_date,
                 unexpected,
                 function(e) {
                     // OK, not logged in
@@ -127,7 +128,8 @@ function store_tests(engine, ok) {
 
         function(engine, ok) {
             engine.setData(
-                "HoardOfNuts", "some data " + test_date,
+                "HoardOfNuts",
+                { entry: "some data", date: test_date.valueOf() },
                 function() {
                     ok.call();
                 },
@@ -137,8 +139,8 @@ function store_tests(engine, ok) {
         function(engine, ok) {
             engine.getData("HoardOfNuts", function(d) {
                 //console.log("Received back " + d);
-                assert(d === "some data " + test_date,
-                       name + ' tests failed d !=== "some data " + test_date');
+                assert(d.entry === "some data" && d.date === test_date.valueOf(),
+                       name + ' tests failed d !=== "some data" + test_date');
                 ok.call();
             }, unexpected);
         },

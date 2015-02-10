@@ -10,8 +10,8 @@ function EncryptedStore(engine) {
 EncryptedStore.prototype = Object.create(AbstractStore.prototype);
 
 EncryptedStore.prototype.register = function(user, pass, ok, fail) {
-    var self = this;
-    var xpass = Aes.Ctr.encrypt(pass, pass, 256);
+    var self = this,
+    xpass = Aes.Ctr.encrypt(pass, pass, 256);
     this.engine.register(
         user,
         xpass,
@@ -58,23 +58,27 @@ EncryptedStore.prototype._decrypt = function(data) {
 // Implements: AbstractStore
 EncryptedStore.prototype.getData = function(key, ok, fail) {
     var self = this;
-    this.engine.getData(
-        key,
+    if (!this.user) {
+        fail.call(this, "Internal error: not logged in");
+        return;
+    }
+    this.engine._read(
+        this.user + ':' + key,
         function(data) {
             try {
-                ok.call(self, self._decrypt(data));
+                ok.call(self, JSON.parse(self._decrypt(data)));
             } catch (e) {
-                fail.call(es, "Decryption failure: " + e);
+                fail.call(self, "Decryption failure: " + e);
             }
         }, fail);
 };
 
 EncryptedStore.prototype.setData = function(key, data, ok, fail) {
-    if (!this.engine.user)
-        fail.call(this, "Not logged in");
+    if (!this.user)
+        fail.call(this, "Internal error: not logged in");
     else
-        this.engine.setData(
-            key, this._encrypt(data), ok, fail);
+        this.engine._write(this.user + ':' + key,
+                    this._encrypt(JSON.stringify(data)), ok, fail);
 };
 
 EncryptedStore.prototype.exists = function(key, ok, fail) {

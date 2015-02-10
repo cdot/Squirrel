@@ -24,7 +24,7 @@ const PASSWORDS_KEY = '::passwords::';
 /**
  * Check if a user is known and (if pass is not null) check their password.
  * Default implementation retrieves a JSON-encoded plain text "passwords"
- * hash using this.getData. Subclasses may override to be more defensive
+ * hash using this._read. Subclasses may override to be more defensive
  * e.g. encrypt.
  * @param {string} user username
  * @param {string} password or {check_pass} callback, or null to just check
@@ -185,7 +185,11 @@ AbstractStore.prototype.getData = function(key, ok, fail) {
         fail.call(this, "Internal error: not logged in");
         return;
     }
-    this._read(this.user + ':' + key, ok, fail);
+    this._read(
+        this.user + ':' + key,
+        function(data) {
+            ok.call(this, JSON.parse(data));
+        }, fail);
 };
 
 /**
@@ -216,10 +220,9 @@ AbstractStore.prototype.exists = function(key, ok, fail) {
  * @param {fail} passed a reason, this = the engine
  */
 AbstractStore.prototype.setData = function(key, data, ok, fail) {
-    if (!this.user) {
+    if (!this.user)
         fail.call(this, "Internal error: not logged in");
-        return;
-    }
-    this._write(this.user + ':' + key, data, ok, fail);
+    else
+        this._write(this.user + ':' + key, JSON.stringify(data), ok, fail);
 };
 
