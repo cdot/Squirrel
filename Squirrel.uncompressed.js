@@ -17,6 +17,7 @@ Tabs built from local cache
 const AES_BITSINKEY = 32 * 8;
 
 var cloud_store;
+var hoard;
 function gapi_loaded() {
     console.log("Google API loaded");
     if (!cloud_store) {
@@ -25,7 +26,6 @@ function gapi_loaded() {
         //cloud_store = new EncryptedStore(client_store);
     }
 };
-var hoard;
 
 function get_path($node) {
     var path = [];
@@ -284,7 +284,6 @@ function play_event(e) {
 	throw "up";
 }
 
-function merge_with_cload_store
 function load_client_store(ok, fail) {
     client_store.getData(
         'squirrel',
@@ -300,8 +299,9 @@ function sync_with_cloud_store(ready) {
 
     cloud_store.getData(
         'squirrel',
-        function(cloud_store_db) {
-            merge_with_client(cloud_store_db, ready);
+        function(cloud_hoard) {
+            hoard.sync(cloud_hoard);
+	    ready();
         },
         function(reason) {
             alert(getstring("errsync_ddb") + reason);

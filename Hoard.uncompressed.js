@@ -1,4 +1,24 @@
-// A store of data that can be synchronised with another store
+/**
+ * A hierarchical data store, designed to be synched with another
+ * store on a time basis.
+ *
+ * A hoard consists of two types of data. First, a cache that represents
+ * the current state of the data in the hoard. Second, a list of events
+ * that record the changes to the hoard since the time of the last
+ * sync.
+ *
+ * The cache may be null, in which case the state of the data is entirely
+ * represented by the events. These can be replayed at any time to
+ * regenerate and empty cache. If the cache is non-null, the events record
+ * the changes that have been made since the last sync. In this case the
+ * events are assumed to have already been played into the cache.
+ *
+ * The basic idea is that the central shared hoard is represented using
+ * a times stream of events that can be replayed from any point to regenerate
+ * the cache. The client has a local hoard that uses a cache, and records
+ * events since the last sync so that they can be merged with the stream
+ * of events in the shared hoard.
+ */
 
 // Characters used in event encoding. Characters in the range
 // [\x00-\x07\x08-\x1F] are not permitted in paths.
@@ -9,16 +29,29 @@ const BLOCK_SEP  = String.fromCharCode(5);
 
 function Hoard(data) {
     this.empty();
-    this.engine = engine;
-    this.cache = { data: data };
+    /** @member {Object} root of the data structure */
+    this.cache = {};
+    /** @member {Array} events played since the last sync */
+    this.events = [];
+    /** @member {number} integer date since the last sync */
+    this.last_sync = null;
+    if (data) {
+	this.cache = data.cache;
+	this.events = data.events;
+	this.last_sync = data.last_sync;
+    }
 }
 
+/**
+ * Clear down the hoard.
+ */
 Hoard.prototype.empty = function() {
-    this.last_sync = null; // Time of last synch
-    this.events = []; // events queued since the last sync
-    this.cache = { data: {} }; // the cache
+    this.last_sync = null;
+    this.events = [];
+    this.cache = {};
 }
 
+/*
 // Decode an event string to a structure
 Hoard.prototype._decode_event = function(event) {
     var fields = event.substring(1).split(FIELD_SEP);
@@ -44,6 +77,7 @@ Hoard.prototype._encode_event = function(event) {
         e += FIELD_SEP + event.data;
     return e;
 };
+*/
 
 /**
  * Play a single event into the hoard. The cache is updated, and
@@ -54,9 +88,12 @@ Hoard.prototype._encode_event = function(event) {
  * D - delete node
  * E
  * R
+ * @param {Object} e the event record
+ * @param {Object} o report object, that will record detected conflicts
+ * and provide a callback for use when the sync is complete
  */
-Hoard.prototype.play_event = function(e, o) {
-    var node, i, newnode;
+Hoard.prototype.play_event = function(e) {
+    var node, i, newnode, conflicts = [];
     if (e.type === 'N') {
         if (typeof(e.time) === 'undefined' || e.time == null)
             e.time = new Date();
@@ -85,8 +122,7 @@ Hoard.prototype.play_event = function(e, o) {
         };
 
         if (node.data[new_name]) {
-            if (o && o.conflicts)
-                o.conflicts.push({ event: e, message: "Already exists" });
+            conflicts.push({ event: e, message: "Already exists" });
             return;
         }
         node.data[new_name] = newnode;
@@ -114,8 +150,7 @@ Hoard.prototype.play_event = function(e, o) {
     } else {
         throw("Unrecognised event type " + e.type);
     }
-    if (o && typeof(o.pass_on) !== 'undefined')
-        o.pass_on(e);
+    return conflicts;
 };
 
 // Record an event in the store. We update and timestamp the cache
@@ -148,7 +183,7 @@ Hoard.prototype.record_event = function(type, path, data) {
 // Save local cache
 // Save remote stream
 
-Hoard.prototype.sync = function(other, o) {
+Hoard.prototype.sync = function(other) {
     var stream = other.events;
     var i = 0;
     var is = 0;
@@ -159,7 +194,7 @@ Hoard.prototype.sync = function(other, o) {
         i++;
     is = i;
     while (i < il)
-        this.play_event(stream[i++], o);
+        this.play_event(stream[i++]);
     i = is;
     while (j < jl) {
         while (i < il && this.events[j].time > stream[i].time)
