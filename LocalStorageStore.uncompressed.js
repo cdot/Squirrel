@@ -3,37 +3,31 @@
  * @implements AbstractStore
  */
 function LocalStorageStore() {
-    this.isReadyOnly = false;
+    AbstractStore.call(this);
+    this.isReadOnly = false;
 }
 
 LocalStorageStore.prototype = Object.create(AbstractStore.prototype);
 
-LocalStorageStore.prototype.setData = function(key, data, ok, fail) {
-    if (!this.user) {
-        fail.call(this, "Not logged in");
-        return;
-    }
+LocalStorageStore.prototype._write = function(key, data, ok, fail) {
     try {
-        localStorage.setItem(this.user + ':' + key, data);
+        localStorage.setItem(key, data);
         ok.call(this);
     } catch (e) {
         fail.call(this, e);
     }
 };
 
-LocalStorageStore.prototype.getData = function(key, ok, fail) {
-    if (!this.user) {
-        fail.call(this, "Not logged in");
-        return;
-    }
+LocalStorageStore.prototype._read = function(key, ok, fail) {
+    var r;
     try {
-        var r = localStorage.getItem(this.user + ':' + key);
-        if (typeof(r) !== 'undefined' && r !== null)
-            ok.call(this, r);
-        else
-            fail.call(this, "No such item " + key);
+        r = localStorage.getItem(key);
     } catch (e) {
         fail.call(this, e);
-    }
+        return;
+    };
+    if (typeof(r) !== 'undefined' && r !== null)
+        ok.call(this, r);
+    else
+        fail.call(this, "No such item '" + key + "'");
 };
-

@@ -1,29 +1,173 @@
 var drive;
 var test_date = new Date();
 
-function unexpected_error(e) {
-    debugger;
-    throw "Unexpected error: " + e;
+function assert(t, e) {
+    if (!t) {
+        if (!e)
+            e = "Assert failed";
+        debugger;
+        throw e;
+    }
 }
 
-function test_engine_get(engine, name) {
-    engine.getData("HoardOfNuts", function(d) {
-        //console.log("Received back " + d);
-        if (d !== "some data " + test_date)
-            throw name + ' tests failed d !=== "some data " + test_date';
-        console.log(name + " tests passed OK");
-    }, unexpected_error);
+function unexpected(e) {
+    assert(false, "Unexpected callback: " + e);
 }
 
-function test_engine_set(engine, name) {
-    engine.setData("HoardOfNuts", "some data " + test_date, function() {
-        test_engine_get(engine, name);
-    }, unexpected_error);
+function run_tests(engine, tests) {
+    if (tests.length == 0)
+        return;
+    var test = tests.shift();
+    test.call(
+        this,
+        engine,
+        function() {
+            run_tests(engine, tests);
+        });
 }
 
-// test GoogleDriveEngine
+// Make sure of behaviour when login fails
+function no_login_tests(engine) {
+    run_tests(engine, [
+        
+        function(engine, ok) {
+            engine.log_in(
+                "not a user", "not a password",
+                unexpected,
+                ok);
+        },
+        
+        function(engine, ok) {
+            engine.exists(
+                "HoardOfNuts",
+                unexpected,
+                function(e) {
+                    ok.call();
+                });
+        },
+        
+        function(engine, ok) {
+            engine.getData(
+                "HoardOfNuts",
+                unexpected,
+                function(e) {
+                    // OK, not logged in
+                    ok.call();
+                });
+        },
+        
+        function(engine, ok) {
+            engine.setData(
+                "HoardOfNuts", "some data " + test_date,
+                unexpected,
+                function(e) {
+                    // OK, not logged in
+                    ok.call();
+                });
+        },
+
+        function() {
+            console.log("no_login_tests passed");
+        }
+    ]);
+};
+
+function registration_tests(engine) {
+    run_tests(engine, [
+        function(engine, ok) {
+            engine.check_user(
+                "test user", "test password",
+                function() {
+                    // Already registered
+                    console.log("registration_tests skipped - already registered");
+                },
+                ok);
+        },
+
+        function(engine, ok) {
+            // try registering
+            if (!engine.isReadOnly) {
+                engine.register(
+                    "test user", "test password",
+                    ok,
+                    unexpected);
+            }
+        },
+
+        function(engine, ok) {
+            // Make sure we are logged in
+            assert(engine.user === "test user");
+            engine.log_out();
+            ok.call();
+        },
+
+        function() {
+            console.log("registration_tests passed");
+        }]);
+}
+
+function login_tests(engine) {
+    run_tests(engine, [
+        function(engine, ok) {
+            engine.log_in(
+                "test user", "test password",
+                ok,
+                unexpected);
+        },
+
+        function(engine, ok) {
+            engine.log_out();
+            ok.call();
+        },
+
+        function() {
+            console.log("login_tests passed");
+        }
+    ]);
+}
+
+// Assumes logged in
+function set_get_tests(engine) {
+    run_tests(engine, [
+        function(engine, ok) {
+            engine.log_in(
+                "test user", "test password",
+                ok,
+                unexpected);
+        },
+
+        function(engine, ok) {
+            engine.setData(
+                "HoardOfNuts", "some data " + test_date,
+                function() {
+                    ok.call();
+                },
+                unexpected);
+        },
+
+        function(engine, ok) {
+            engine.getData("HoardOfNuts", function(d) {
+                //console.log("Received back " + d);
+                assert(d === "some data " + test_date,
+                       name + ' tests failed d !=== "some data " + test_date');
+                ok.call();
+            }, unexpected);
+        },
+
+        function(engine, ok) {
+            engine.log_out();
+            ok.call();
+        },
+
+        function() {
+            console.log("get_set_tests passed");
+        }
+    ]);
+}
+
+// test GoogleDriveStore
 function gapi_loaded() {
-    drive = new GoogleDriveEngine(
+    drive = new GoogleDriveStore(
         '985219699584-mt1do7j28ifm2vt821d498emarmdukbt.apps.googleusercontent.com');
     $('#gd_button').show();
 };
@@ -41,65 +185,49 @@ $(document).ready(function() {
     $('body')
         .empty();
 
-    var b = $('<button id="gd_button">Test GoogleDriveEngine</button>');
+    var b = $('<button id="gd_button">Test GoogleDriveStore</button>');
     b.hide().click(
         function() {
-            test_engine_set(drive);
         });
     $('body').append(b);
+    $('body').append('<br />');
 
-    b = $('<button>Test LocalStorageEngine</button>');
+    b = $('<button>Test LocalStorageStore</button>');
     b.click(
         function() {
-            // test LocalStorageEngine
-            var local = new LocalStorageEngine('base_test');
-            test_engine_set(local, "LocalStorageEngine");
+            console.log("test LocalStorageStore");
+            var local = new LocalStorageStore();
+            no_login_tests(local);
+            registration_tests(local);
+            login_tests(local);
+            set_get_tests(local);
+            console.log("LocalStorageStore tests complete");
         });
     $('body').append(b);
+    $('body').append('<br />');
 
-    b = $('<button>Test EncryptedStorage</button>');
+    b = $('<button>Test EncryptedStore</button>');
     b.click(
         function() {
-            // test EncryptedStorage (with LocalStorageEngine)
-            var local = new LocalStorageEngine('es_test');
-            var es = new EncryptedStorage(local, 'test_app ' + test_date);
+            // test EncryptedStore (with LocalStorageStore)
+            var local = new EncryptedStore(new LocalStorageStore());
 
-            var expected_userid;
-            es.register("worm", "ToadFlax",
-                        function(uid) {
-                            expected_userid = uid;
-                        },
-                        unexpected_error);
-
-            es.log_out();
-
-            var lid = es.log_in("worm", "ToadFlax",
-                                function(uid) {
-                                    //console.log("userid " + uid + " logged in");
-                                },
-                                unexpected_error);
-
-            es.setData('oompa', "some data " + test_date,
-                       function() {
-                           //console.log("es set OK");
-                       },
-                       unexpected_error);
-
-            es.getData('oompa', function(d) {
-                if (d !== "some data " + test_date)
-                    throw name + ' tests failed "'+ d + '" !=== "'
-                    + "some data " + test_date + '"';
-                console.log("EncryptedStorage tests passed");
-            }, unexpected_error);
+            console.log("test EncryptedStore");
+            no_login_tests(local);
+            registration_tests(local);
+            login_tests(local);
+            set_get_tests(local);
+            console.log("EncryptedStore tests complete");
         });
     $('body').append(b);
+    $('body').append('<br />');
 
     b = $('<button>Test Hoard</button>');
     b.click(
         function() {
-            var locs = new LocalStorageEngine('hoard_test_1');
+            var locs = new LocalStorageStore('hoard_test_1');
             var loc = new Hoard(locs);
-            var rems = new LocalStorageEngine('hoard_test_2');
+            var rems = new LocalStorageStore('hoard_test_2');
             var rem = new Hoard(rems);
             var fns = [
                 function() {
@@ -151,5 +279,6 @@ $(document).ready(function() {
             cascade(fns, 0);
         });
     $('body').append(b);
+    $('body').append('<br />');
 });
 
