@@ -5,7 +5,6 @@
 
 function GoogleDriveStore(cID) {
     this.cID = cID;
-    this.isReadOnly = false;
     this.authorised = false;
 };
 

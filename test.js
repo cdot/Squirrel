@@ -27,7 +27,7 @@ function run_tests(engine, tests) {
 }
 
 // Make sure of behaviour when login fails
-function no_login_tests(engine) {
+function store_tests(engine, ok) {
     run_tests(engine, [
         
         function(engine, ok) {
@@ -66,14 +66,11 @@ function no_login_tests(engine) {
                 });
         },
 
-        function() {
+        function(engine, ok) {
             console.log("no_login_tests passed");
-        }
-    ]);
-};
+            ok.call();
+        },
 
-function registration_tests(engine) {
-    run_tests(engine, [
         function(engine, ok) {
             engine.check_user(
                 "test user", "test password",
@@ -86,12 +83,10 @@ function registration_tests(engine) {
 
         function(engine, ok) {
             // try registering
-            if (!engine.isReadOnly) {
-                engine.register(
-                    "test user", "test password",
-                    ok,
-                    unexpected);
-            }
+            engine.register(
+                "test user", "test password",
+                ok,
+                unexpected);
         },
 
         function(engine, ok) {
@@ -101,13 +96,11 @@ function registration_tests(engine) {
             ok.call();
         },
 
-        function() {
+        function(engine, ok) {
             console.log("registration_tests passed");
-        }]);
-}
+            ok.call();
+        },
 
-function login_tests(engine) {
-    run_tests(engine, [
         function(engine, ok) {
             engine.log_in(
                 "test user", "test password",
@@ -120,15 +113,11 @@ function login_tests(engine) {
             ok.call();
         },
 
-        function() {
+        function(engine, ok) {
             console.log("login_tests passed");
-        }
-    ]);
-}
+            ok.call();
+        },
 
-// Assumes logged in
-function set_get_tests(engine) {
-    run_tests(engine, [
         function(engine, ok) {
             engine.log_in(
                 "test user", "test password",
@@ -160,7 +149,8 @@ function set_get_tests(engine) {
         },
 
         function() {
-            console.log("get_set_tests passed");
+            console.log("set_get_tests passed");
+            ok.call();
         }
     ]);
 }
@@ -196,12 +186,26 @@ $(document).ready(function() {
     b.click(
         function() {
             console.log("test LocalStorageStore");
-            var local = new LocalStorageStore();
-            no_login_tests(local);
-            registration_tests(local);
-            login_tests(local);
-            set_get_tests(local);
-            console.log("LocalStorageStore tests complete");
+            localStorage.removeItem('test/::passwords::');
+            localStorage.removeItem('test/test user:HoardOfNuts');
+            var local = new LocalStorageStore('test');
+            store_tests(local, function() {
+                console.log("LocalStorageStore tests complete");
+            });
+        });
+    $('body').append(b);
+    $('body').append('<br />');
+
+    b = $('<button>Test FileStore</button>');
+    b.click(
+        function() {
+            console.log("test FileStore");
+            var aFileParts = ['{}'];
+            var file = new Blob(aFileParts, {type : 'application/json'});
+            var local = new FileStore(file);
+            store_tests(local, function() {
+                console.log("FileStore tests complete");
+            });
         });
     $('body').append(b);
     $('body').append('<br />');
@@ -210,14 +214,14 @@ $(document).ready(function() {
     b.click(
         function() {
             // test EncryptedStore (with LocalStorageStore)
-            var local = new EncryptedStore(new LocalStorageStore());
+            localStorage.removeItem('test/::passwords::');
+            localStorage.removeItem('test/test user:HoardOfNuts');
+            var local = new EncryptedStore(new LocalStorageStore('test'));
 
             console.log("test EncryptedStore");
-            no_login_tests(local);
-            registration_tests(local);
-            login_tests(local);
-            set_get_tests(local);
-            console.log("EncryptedStore tests complete");
+            store_tests(local, function() {
+                console.log("EncryptedStore tests complete");
+            });
         });
     $('body').append(b);
     $('body').append('<br />');

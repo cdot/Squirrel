@@ -13,8 +13,6 @@
  * @param {string} stored password for the user
  */
 function AbstractStore() {
-    /** @member {boolean} is the store read-only? */
-    this.isReadOnly = true;
     /** @member {string} currently logged-in user */
     this.user = null;
     /** @member {string} logged-in users' password */
@@ -38,18 +36,20 @@ AbstractStore.prototype.check_user = function(user, pass, ok, fail) {
     this._read(
         PASSWORDS_KEY,
         function(data) {
-            var passes = JSON.parse(data), success = false;
-            if (pass !== null) {
-                // Check if the password is correct
-                if (typeof(pass) === 'string')
-                    success = (passes[user] === pass);
-                else if (typeof(passes[user]) !== 'undefined')
-                    // invoke the checker callback to check
-                    success = pass(passes[user]);
+            var passes, success = false;
+            if (typeof(data) !== 'undefined') {
+                passes = JSON.parse(data);
+                if (pass !== null) {
+                    // Check if the password is correct
+                    if (typeof(pass) === 'string')
+                        success = (passes[user] === pass);
+                    else if (typeof(passes[user]) !== 'undefined')
+                        // invoke the checker callback to check
+                        success = pass(passes[user]);
+                }
+                else
+                    success = (typeof(passes[user]) !== 'undefined');
             }
-            else
-                success = (typeof(passes[user]) !== 'undefined');
-
             if (success)
                 ok.call(this);
             else
@@ -70,25 +70,20 @@ AbstractStore.prototype.check_user = function(user, pass, ok, fail) {
  * @param {fail} called on failure
  */
 AbstractStore.prototype.add_user = function(user, pass, ok, fail) {
-    var update = function(passes) {
-        passes[user] = pass;
-        var json = JSON.stringify(passes);
-        this._write(
-            PASSWORDS_KEY,
-            json,
-            ok,
-            fail);
-    };
     this._read(
         PASSWORDS_KEY,
         function(data) {
-            // Updating existing password hash
-            update.call(this, JSON.parse(data));
+            var passes;
+            if (typeof(data) === 'undefined')
+                passes = {};
+            else
+                passes = JSON.parse(data);
+
+            passes[user] = pass;
+            var json = JSON.stringify(passes);
+            this._write(PASSWORDS_KEY, json, ok, fail);
         },
-        function(e) {
-            // Creating password hash on the fly
-            update.call(this, {});
-        });
+        fail);
 };
 
 /**
@@ -100,8 +95,10 @@ AbstractStore.prototype._write = function(key, data, ok, fail) {
 };
 
 /**
-* @protected
- * Override in subclasses. Clients must not call.
+ * @protected
+ * Override in subclasses. Clients must not call. ok(data) will
+ * be called even if the key is not present (in which case it will
+ * be passed undefined)
  */
 AbstractStore.prototype._read = function(key, ok, fail) {
     fail.call('reading is not supported by this store');

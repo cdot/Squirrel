@@ -3,37 +3,57 @@
 // @param file a javascript File or Blob object
 // See https://developer.mozilla.org/en-US/docs/Web/API/FileReader
 function FileStore(file) {
+    AbstractStore.call(this);
     this.cache = null;
     this.file = file;
 }
 
 FileStore.prototype = Object.create(AbstractStore.prototype);
 
-// Implements: AbstractStore
-FileStore.prototype.getData = function(key, ok, fail) {
-    var ukey = this.user + ':' + key,
-    store, reader;
-    if (!this.user) {
-        fail.call(this, "Not logged in");
-        return;
-    }
+FileStore.prototype._cache = function(ok, fail) {
+    var self, reader;
     if (this.cache === null) {
-	store = this;
+	self = this;
 	reader = new FileReader();
 	reader.onload = function(evt) {
-            store.cache = JSON.parse(reader.result);
-	    if (typeof(store.cache[ukey] !== 'undefined'))
-		ok.call(store, store.cache[ukey]);
-	    else
-		fail.call(store, key + ' not present in ' + this.file.name);
+            // There may be a number of onload events queued. Only
+            // load the cache from the first one.
+            if (self.cache === null)
+                self.cache = JSON.parse(reader.result);
+            ok.call(self);
 	};
 	reader.onerror = function() {
-	    fail.call(store, this.file.name + " read failed");
+	    fail.call(self, this.file.name + " read failed");
 	};
 	reader.onabort = reader.onerror;
 	reader.readAsBinaryString(this.file);
-    } else if (typeof(this.cache[ukey] !== 'undefined'))
-	ok.call(this, this.cache[ukey]);
+    }
     else
-	fail.call(this, key + ' not present');
+	ok.call(this, this.cache);
+};
+
+FileStore.prototype._read = function(key, ok, fail) {
+    this._cache(
+        function() {
+            ok.call(this, this.cache[key]);
+        },
+        fail);
+};
+
+// Note that this store is not persistent; changes only happen in
+// the cache
+FileStore.prototype._write = function(key, data, ok, fail) {
+    this._cache(
+        function() {
+            this.cache[key] = data;
+            ok.call(this);
+        },
+        function() {
+            // Write file will be the result of a read fail (probably)
+            // so just create the cache in memory
+            if (!this.cache)
+                this.cache = {};
+            this.cache[key] = data;
+            ok.call(this);
+        });
 };

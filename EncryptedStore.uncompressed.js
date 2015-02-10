@@ -4,10 +4,7 @@
 
 function EncryptedStore(engine) {
     AbstractStore.call(this);
-    if (engine.isReadOnly)
-        throw "Cannot create an EncryptedStore over a read-only store";
     this.engine = engine;
-    this.isReadOnly = false;
 }
 
 EncryptedStore.prototype = Object.create(AbstractStore.prototype);
@@ -73,9 +70,7 @@ EncryptedStore.prototype.getData = function(key, ok, fail) {
 };
 
 EncryptedStore.prototype.setData = function(key, data, ok, fail) {
-    if (this.engine.isReadOnly)
-	fail.call(this, "Read only");
-    else if (!this.engine.user)
+    if (!this.engine.user)
         fail.call(this, "Not logged in");
     else
         this.engine.setData(
