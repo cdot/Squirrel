@@ -1,0 +1,32 @@
+{
+    "name": "Squirrel",
+    "version": "0.0.1",
+    "eslintConfig": {
+        "env": {
+            "browser": true,
+            "jquery": true
+        },
+        "ecmaFeatures": {
+            "blockBindings": true
+        },
+        "globals": {
+            "AbstractStore": true,
+            "GoogleDriveStore": true,
+            "LocalStorageStore": true,
+            "FileStore": true,
+            "Hoard": true,
+            "Aes": true,
+            "gapi" : true
+        },
+        "rules": {
+            "no-underscore-dangle": 0,
+            "camelcase": 0,
+            "no-unused-vars": 1,
+            "no-console": 1,
+            "no-debugger": 1,
+            "no-alert": 1,
+            "dot-notation" : 1,
+            "no-use-before-define": "3 nofunc"
+        }
+    }
+}

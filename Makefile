@@ -5,6 +5,9 @@ all:	$(patsubst %.uncompressed.js,%.min.js,$(wildcard *.uncompressed.js)) \
 test:	all test.js
 	cat index.uncompressed.html | sed -e 's/Squirrel\.uncompressed\.js/test.js/g' > test.html
 
+eslint: *.uncompressed.js
+	eslint --config package.json *.uncompressed.js
+
 %.min.js : %.uncompressed.js
 	java -jar yuicompressor.jar -v $< > $@
 

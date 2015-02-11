@@ -3,6 +3,8 @@
 // password. Note that keys are *not* encyrpted.
 
 function EncryptedStore(engine) {
+    "use strict";
+
     AbstractStore.call(this);
     this.engine = engine;
 }
@@ -10,6 +12,8 @@ function EncryptedStore(engine) {
 EncryptedStore.prototype = Object.create(AbstractStore.prototype);
 
 EncryptedStore.prototype.register = function(user, pass, ok, fail) {
+    "use strict";
+
     var self = this,
     xpass = Aes.Ctr.encrypt(pass, pass, 256);
     this.engine.register(
@@ -23,6 +27,8 @@ EncryptedStore.prototype.register = function(user, pass, ok, fail) {
 };
 
 EncryptedStore.prototype.log_in = function(user, pass, ok, fail) {
+    "use strict";
+
     var self = this;
     this.engine.log_in(
         user,
@@ -39,6 +45,8 @@ EncryptedStore.prototype.log_in = function(user, pass, ok, fail) {
 };
 
 EncryptedStore.prototype.log_out = function() {
+    "use strict";
+
     this.engine.log_out();
     this.user = null;
     this.pass = null;
@@ -46,10 +54,14 @@ EncryptedStore.prototype.log_out = function() {
 
 // Encryption uses the 256 bit AES engine
 EncryptedStore.prototype._encrypt = function(data) {
+    "use strict";
+
     return Aes.Ctr.encrypt(data, this.pass, 256);
 };
 
 EncryptedStore.prototype._decrypt = function(data) {
+    "use strict";
+
     return Aes.Ctr.decrypt(data, this.pass, 256);
 };
 
@@ -57,13 +69,15 @@ EncryptedStore.prototype._decrypt = function(data) {
 // The data is a character string
 // Implements: AbstractStore
 EncryptedStore.prototype.getData = function(key, ok, fail) {
+    "use strict";
+
     var self = this;
     if (!this.user) {
         fail.call(this, "Internal error: not logged in");
         return;
     }
     this.engine._read(
-        this.user + ':' + key,
+        this.user + ":" + key,
         function(data) {
             try {
                 ok.call(self, JSON.parse(self._decrypt(data)));
@@ -74,16 +88,22 @@ EncryptedStore.prototype.getData = function(key, ok, fail) {
 };
 
 EncryptedStore.prototype.setData = function(key, data, ok, fail) {
-    if (!this.user)
+    "use strict";
+
+    if (!this.user) {
         fail.call(this, "Internal error: not logged in");
-    else
-        this.engine._write(this.user + ':' + key,
+    } else {
+        this.engine._write(this.user + ":" + key,
                     this._encrypt(JSON.stringify(data)), ok, fail);
+    }
 };
 
 EncryptedStore.prototype.exists = function(key, ok, fail) {
-    if (!this.engine.user)
+    "use strict";
+
+    if (!this.engine.user) {
         fail.call(this, "Not logged in");
-    else
+    } else {
         this.engine.exists(key, ok, fail);
+    }
 };

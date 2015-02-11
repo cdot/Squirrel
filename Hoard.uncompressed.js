@@ -48,23 +48,27 @@
  * @member {number} last_sync integer date since the last sync, or null
  */
 function Hoard(data) {
+    "use strict";
 
     if (data) {
-	this.cache = data.cache;
-	this.events = data.events;
-	this.last_sync = data.last_sync;
-    } else
+        this.cache = data.cache;
+        this.events = data.events;
+        this.last_sync = data.last_sync;
+    } else {
         this.empty();
+    }
 }
 
 /**
  * Clear down the hoard.
  */
 Hoard.prototype.empty = function() {
+    "use strict";
+
     this.last_sync = null;
     this.events = [];
     this.cache = { data: {} };
-}
+};
 
 /*
 // EVENT ENCODING - not used
@@ -78,6 +82,8 @@ const BLOCK_SEP  = String.fromCharCode(5);
 
 // Decode an event string to a structure
 Hoard.prototype._decode_event = function(event) {
+    "use strict";
+
     var fields = event.substring(1).split(FIELD_SEP);
     var datum = {
         type: event.charAt(0),
@@ -92,6 +98,8 @@ Hoard.prototype._decode_event = function(event) {
 
 // Encode an event structure as a string
 Hoard.prototype._encode_event = function(event) {
+    "use strict";
+
     if (!event.time)
         event.time = new Date();
     var e =  event.type
@@ -110,9 +118,9 @@ Hoard.prototype._encode_event = function(event) {
  * <ul>
  * <li>'N' with no data - create collection</li>
  * <li>'N' with data - create leaf</li>
- * <li>'D' delete node, no data</li>
- * <li>'E'</li>
- * <li>'R' rename node, data has new name</li>
+ * <li>'D' delete node, no data. Will delete the entire node tree.</li>
+ * <li>'E' edit node - modify the leaf data in a node</li>
+ * <li>'R' rename node, data contains new name</li>
 * </ul>
  * Returns a conflict object if there was an error. This has two fields,
  * 'event' for the event record and 'message'.
@@ -121,68 +129,69 @@ Hoard.prototype._encode_event = function(event) {
  * @return {Conflict} conflict object, or null if there was no conflict
  */
 Hoard.prototype.play_event = function(e, listener) {
-    var node, i, newnode, new_name, conflicts = [];
-    if (e.type === 'N') {
-        if (typeof(e.time) === 'undefined' || e.time == null)
-            e.time = new Date();
+    "use strict";
 
-	node = this.cache;
-	for (i = 0; i < e.path.length - 1; i++) {
-            if (typeof(node.data) === 'string') {
-                throw("Cannot play event over leaf node");
-            } else if (node.data[e.path[i]]) {
-                node = node.data[e.path[i]];
-            } else {
-                newnode = {
-                    time: e.time,
-                    data: {}
-                };
-                node.data[e.path[i]] = newnode;
-                node = newnode;
-            }
-	}
+    var parent, name, i;
 
-        node.time = e.time; // collection is being modified
+    if (typeof e.time === "undefined" || e.time === null) {
+        e.time = new Date().valueOf();
+    }
 
-        new_name = e.path[e.path.length - 1];
-        newnode = {
-            time: new Date()
-        };
+    this.events.push(e);
 
-        if (node.data[new_name]) {
+    // Update the cache; the listener will only be called if this
+    // succeeds
+    parent = this.cache;
+    for (i = 0; i < e.path.length - 1; i++) {
+        name = e.path[i];
+        if (typeof parent.data === "string") {
+            throw "Cannot play event over leaf node";
+        } else if (parent.data[name]) {
+            parent = parent.data[name];
+        } else {
+            return { event: e, message:
+                     e.path.slice(0, i).join("/") + " does not exist" };
+        }
+    }
+    name = e.path[i];
+
+    if (e.type === "N") {
+        if (parent.data[name]) {
             return { event: e, message: "Already exists" };
         }
-        node.data[new_name] = newnode;
 
-        if (typeof(e.data) === 'string')
-            newnode.data = e.data;
-        else
-            newnode.data = {};
+        parent.time = e.time; // collection is being modified
+        parent.data[name] = {
+            time: e.time,
+            data: (typeof e.data === "string") ?
+                e.data : {}
+        };
+    } else if (e.type === "D") {
+        if (!parent.data[name]) {
+            return { event: e, message: "Does not exist" };
+        }
+        delete parent.data[name];
+    } else if (e.type === "R") {
+        if (!parent.data[name]) {
+            return { event: e, message: "Does not exist" };
+        }
 
-        this.events.push(e);
+        parent.data[e.data] = parent.data[name];
+        delete parent.data[name];
+    } else if (e.type === "E") {
+        if (!parent.data[name]) {
+            return { event: e, message: "Does not exist" };
+        }
 
-        if (listener)
-            listener.call(this, e);
-
-    } else if (e.type === 'D') {
-	node = this.cache;
-	for (i = 0; i < e.path.length - 1; i++) {
-            if (typeof(node.data) !== 'string') {
-                node = node.data[e.path[i]];
-            } else {
-                node = null;
-                break;
-            }
-	}
-        if (node)
-            delete(node.data[e.path[e.path.length - 1]]);
-
-        if (listener)
-            listener.call(this, e);
-
+        parent.data[name] = e.data;
     } else {
-        throw("Unrecognised event type " + e.type);
+        throw "Unrecognised event type " + e.type;
     }
+
+    if (listener) {
+        listener.call(this, e);
+    }
+
     return null;
 };
 
@@ -196,21 +205,25 @@ Hoard.prototype.play_event = function(e, listener) {
  * @return {Conflict} conflict object or null if there was no conflict
  */
 Hoard.prototype.record_event = function(type, path, data) {
+    "use strict";
+
     var e = {
         type: type,
         path: path
     },
     conflict;
 
-    if (typeof(data) !== 'undefined')
+    if (typeof data !== "undefined") {
         e.data = data;
-    e.time = new Date();
+    }
+    e.time = new Date().valueOf();
 
     // Update the cache
     conflict = this.play_event(e);
-    if (conflict === null)
+    if (conflict === null) {
         // Add to the list of events
         this.events.push(e);
+    }
     return conflict;
 };
 
@@ -225,6 +238,8 @@ Hoard.prototype.record_event = function(type, path, data) {
  * @return {array} of conflicts, as returned by play_event, if there are any
  */
 Hoard.prototype.sync = function(other, listener) {
+    "use strict";
+
     var i = 0,
     stream = other.events,
     is = 0,
@@ -235,24 +250,27 @@ Hoard.prototype.sync = function(other, listener) {
     c;
 
     // Play in all other events since the last sync
-    while (i < il && stream[i].time <= this.last_sync)
+    while (i < il && stream[i].time <= this.last_sync) {
         i++;
+    }
     is = i;
     while (i < il) {
         c = this.play_event(stream[i++], listener);
-        if (c !== null)
+        if (c !== null) {
             conflicts.push(c);
+        }
     }
 
     // Merge-sort in the local event stream to the other event
     // stream
     i = is;
     while (j < jl) {
-        while (i < il && this.events[j].time > stream[i].time)
+        while (i < il && this.events[j].time > stream[i].time) {
             i++;
-        if (i === il)
+        }
+        if (i === il) {
             stream.push(this.events[j]);
-        else {
+        } else {
             stream.splice(i, 0, this.events[j]);
             il++;
         }

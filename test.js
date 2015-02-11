@@ -157,20 +157,31 @@ function store_tests(engine, ok) {
     ]);
 }
 
+// Sequence events over 5ms intervals interspersed with function calls
+function play_events(es, i) {
+    if (typeof(i) === 'undefined')
+        i = 0;
+    if (i == es.length)
+        return;
+    var e = es[i];
+    window.setTimeout(function() {
+        if (typeof(e) === 'function') {
+            console.log("call " + i);
+            e.call();
+        } else {
+            console.log("play " + i);
+            e.hoard.play_event(e.event);
+        }
+        play_events(es, i + 1);
+    }, 5);
+}
+
 // test GoogleDriveStore
 function gapi_loaded() {
     drive = new GoogleDriveStore(
         '985219699584-mt1do7j28ifm2vt821d498emarmdukbt.apps.googleusercontent.com');
     $('#gd_button').show();
 };
-
-function cascade(fns, index) {
-    window.setTimeout(function() {
-        fns[index++].call();
-        if (index < fns.length)
-            cascade(fns, index);
-    }, 5);
-}
 
 $(document).ready(function() {
 
@@ -233,36 +244,33 @@ $(document).ready(function() {
         function() {
             var loc = new Hoard();
             var rem = new Hoard();
-            var fns = [
+            play_events([
+                {hoard: rem, event:{
+                    type: 'N', path: ['rem' ]}},
+                {hoard: rem, event:{
+                    type: 'N',
+                    path: ['rem', 'rem_branch' ]}},
+                {hoard: loc, event:{type: 'N', path: ['loc' ]}},
+                {hoard: rem, event:{
+                    type: 'N',
+                    path: [ 'rem', 'rem_branch2' ]}},
+                {hoard: loc, event:{
+                    type: 'N', path: ['loc', 'loc_branch' ]}},
+                {hoard: loc, event:{
+                    type: 'N',
+                    path: ['loc', 'loc_branch', 'loc_leaf' ],
+                    data: 'local leaf data'}},
+                {hoard: rem, event:{
+                    type: 'N',
+                    path: ['rem', 'rem_branch', 'rem_leaf' ],
+                    data: 'rem leaf data'}},
+                {hoard: rem, event:{
+                    type: 'N', path: [ 'loc' ]}},
+
                 function() {
-                    rem.play_event({type: 'N', path: ['rem' ]});
-                },
-                function() {
-                    rem.play_event({type: 'N', path: ['rem', 'rem_branch' ]});
-                },
-                function() {
-                    loc.play_event({type: 'N', path: ['loc' ]});
-                },
-                function() {
-                    rem.play_event({type: 'N', path: [ 'rem', 'rem_branch2' ]});
-                },
-                function() {
-                    loc.play_event({type: 'N', path: ['loc', 'loc_branch' ]});
-                },
-                function() {
-                    loc.play_event({type: 'N', path: ['loc', 'loc_branch', 'loc_leaf' ], data: 'local leaf data'});
-                },
-                function() {
-                    rem.play_event({type: 'N',
-                                   path: ['rem', 'rem_branch', 'rem_leaf' ],
-                                  data: 'rem leaf data'});
-                },
-                function() {
-                    rem.play_event({type: 'N', path: [ 'loc' ]});
-                },
-                function() {
+                    var passon = [];
                     var listener = function(e) {
-                        console.log('Pass on: ' + e.type + " "
+                        passon.push(e.type + " "
                                     + e.path.join('/')
                                     + (e.data ? (' = ' + e.data) : ''));
                     }
@@ -272,10 +280,25 @@ $(document).ready(function() {
                            "Not what was expected");
                     assert(conflicts[0].event.path[0] === 'loc',
                            "Not what was expected");
+                    assert("N rem;N rem/rem_branch;N rem/rem_branch2;N rem/rem_branch/rem_leaf = rem leaf data" == passon.join(';'));
+                },
+
+                {hoard:rem, event:{
+                    type: 'R',
+                    path: ['rem', 'rem_branch' ],
+                    data: 'remainder' }},
+                {hoard: rem, event: {
+                    type: 'E', path: ['rem', 'remainder', 'rem_leaf' ],
+                    data: 'rest'}},
+                {hoard: rem, event: {
+                    type: 'D', path: ['rem', 'rem_branch2' ]}},
+
+                function() {
+                    var conflicts = loc.sync(rem);
+                    assert(conflicts.length == 0);
                     console.log("Hoard tests passed");
-                }
-            ];
-            cascade(fns, 0);
+                },
+            ]);
         });
     $('body').append(b);
     $('body').append('<br />');

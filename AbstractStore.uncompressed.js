@@ -3,7 +3,7 @@
  * an interface that supports the setting and getting of data on a
  * per-user basis.
  * User support includes login, logout, registration.
- * 
+ *
  * @callback ok
  *
  * @callback fail
@@ -18,13 +18,15 @@
  * @class
  */
 function AbstractStore() {
+    "use strict";
+
     /** @member {string} currently logged-in user */
     this.user = null;
     /** @member {string} logged-in users' password */
     this.pass = null;
 }
 
-const PASSWORDS_KEY = '::passwords::';
+const PASSWORDS_KEY = "::passwords::";
 
 /**
  * Check if a user is known and (if pass is not null) check their password.
@@ -38,27 +40,31 @@ const PASSWORDS_KEY = '::passwords::';
  * @param {fail} called on failure
  */
 AbstractStore.prototype.check_user = function(user, pass, ok, fail) {
+    "use strict";
+
     this._read(
         PASSWORDS_KEY,
         function(data) {
             var passes, success = false;
-            if (typeof(data) !== 'undefined') {
+            if (typeof data !== "undefined") {
                 passes = JSON.parse(data);
                 if (pass !== null) {
                     // Check if the password is correct
-                    if (typeof(pass) === 'string')
+                    if (typeof pass === "string") {
                         success = (passes[user] === pass);
-                    else if (typeof(passes[user]) !== 'undefined')
+                    } else if (typeof passes[user] !== "undefined") {
                         // invoke the checker callback to check
                         success = pass(passes[user]);
+                    }
+                } else {
+                    success = (typeof passes[user] !== "undefined");
                 }
-                else
-                    success = (typeof(passes[user]) !== 'undefined');
             }
-            if (success)
+            if (success) {
                 ok.call(this);
-            else
+            } else {
                 fail.call(this, "Unknown '" + user + "'");
+            }
         },
         function(e) {
             // passwords hash may not exist
@@ -75,14 +81,17 @@ AbstractStore.prototype.check_user = function(user, pass, ok, fail) {
  * @param {fail} called on failure
  */
 AbstractStore.prototype.add_user = function(user, pass, ok, fail) {
+    "use strict";
+
     this._read(
         PASSWORDS_KEY,
         function(data) {
             var passes;
-            if (typeof(data) === 'undefined')
+            if (typeof data === "undefined") {
                 passes = {};
-            else
+            } else {
                 passes = JSON.parse(data);
+            }
 
             passes[user] = pass;
             var json = JSON.stringify(passes);
@@ -96,6 +105,8 @@ AbstractStore.prototype.add_user = function(user, pass, ok, fail) {
  * Override in subclasses. Clients must not call.
  */
 AbstractStore.prototype._write = function(key, data, ok, fail) {
+    "use strict";
+
     fail.call(this, "writing is not supported by this store");
 };
 
@@ -106,7 +117,9 @@ AbstractStore.prototype._write = function(key, data, ok, fail) {
  * be passed undefined)
  */
 AbstractStore.prototype._read = function(key, ok, fail) {
-    fail.call('reading is not supported by this store');
+    "use strict";
+
+    fail.call("reading is not supported by this store");
 };
 
 /**
@@ -120,6 +133,8 @@ AbstractStore.prototype._read = function(key, ok, fail) {
  * @param {fail} called on failure
  */
 AbstractStore.prototype.register = function(user, pass, ok, fail) {
+    "use strict";
+
     if (this.user !== null) {
         fail.call(this, "Internal error: already logged in");
         return;
@@ -131,7 +146,7 @@ AbstractStore.prototype.register = function(user, pass, ok, fail) {
         function() {
             fail.call(this, "User already registered");
         },
-        function(e) {
+        function(/*e*/) {
             this.add_user(
                 user, pass,
                 function() {
@@ -153,6 +168,8 @@ AbstractStore.prototype.register = function(user, pass, ok, fail) {
  * @param {fail} called on failure
  */
 AbstractStore.prototype.log_in = function(user, pass, ok, fail) {
+    "use strict";
+
     if (this.user !== null) {
         fail.call(this, "Internal error: already logged in");
         return;
@@ -166,12 +183,14 @@ AbstractStore.prototype.log_in = function(user, pass, ok, fail) {
             ok.call(this);
         },
         fail);
-}
+};
 
 /**
  * Log the current user out. Always succeeds.
  */
 AbstractStore.prototype.log_out = function() {
+    "use strict";
+
     this.user = null;
     this.pass = null;
 };
@@ -186,12 +205,14 @@ AbstractStore.prototype.log_out = function() {
  * @return the data if the item exists. If the item does not exist, null
  */
 AbstractStore.prototype.getData = function(key, ok, fail) {
+    "use strict";
+
     if (!this.user) {
         fail.call(this, "Internal error: not logged in");
         return;
     }
     this._read(
-        this.user + ':' + key,
+        this.user + ":" + key,
         function(data) {
             ok.call(this, JSON.parse(data));
         }, fail);
@@ -206,11 +227,13 @@ AbstractStore.prototype.getData = function(key, ok, fail) {
  * @param {fail} (does not exist) this = the engine
  */
 AbstractStore.prototype.exists = function(key, ok, fail) {
+    "use strict";
+
     if (!this.user) {
         fail.call(this, "Internal error: not logged in");
         return;
     }
-    this._read(this.user + ':' + key, ok, fail);
+    this._read(this.user + ":" + key, ok, fail);
 };
 
 /**
@@ -225,9 +248,11 @@ AbstractStore.prototype.exists = function(key, ok, fail) {
  * @param {fail} passed a reason, this = the engine
  */
 AbstractStore.prototype.setData = function(key, data, ok, fail) {
-    if (!this.user)
-        fail.call(this, "Internal error: not logged in");
-    else
-        this._write(this.user + ':' + key, JSON.stringify(data), ok, fail);
-};
+    "use strict";
 
+    if (!this.user) {
+        fail.call(this, "Internal error: not logged in");
+    } else {
+        this._write(this.user + ":" + key, JSON.stringify(data), ok, fail);
+    }
+};
