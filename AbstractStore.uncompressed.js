@@ -12,6 +12,11 @@
  * @callback check_pass
  * @param {string} stored password for the user
  */
+
+/**
+ * Create a new store. Subclasses must call this constructor.
+ * @class
+ */
 function AbstractStore() {
     /** @member {string} currently logged-in user */
     this.user = null;

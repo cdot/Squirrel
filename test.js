@@ -231,10 +231,8 @@ $(document).ready(function() {
     b = $('<button>Test Hoard</button>');
     b.click(
         function() {
-            var locs = new LocalStorageStore('hoard_test_1');
-            var loc = new Hoard(locs);
-            var rems = new LocalStorageStore('hoard_test_2');
-            var rem = new Hoard(rems);
+            var loc = new Hoard();
+            var rem = new Hoard();
             var fns = [
                 function() {
                     rem.play_event({type: 'N', path: ['rem' ]});
@@ -263,22 +261,17 @@ $(document).ready(function() {
                     rem.play_event({type: 'N', path: [ 'loc' ]});
                 },
                 function() {
-                    var o = {
-                        pass_on: function(e) {
-                            console.log('Pass on: ' + e.type + " "
-                                        + e.path.join('/')
-                                        + (e.data ? e.data : ''));
-                        },
-                        conflicts: []
+                    var listener = function(e) {
+                        console.log('Pass on: ' + e.type + " "
+                                    + e.path.join('/')
+                                    + (e.data ? (' = ' + e.data) : ''));
                     }
-                    loc.sync(rem, o);
-                    var conflicts = o.conflicts;
-                    if (conflicts.length !== 1)
-                        throw "Too many conflicts";
-                    if (conflicts[0].message !== "Already exists")
-                        throw "Not what was expected";
-                    if (conflicts[0].event.path[0] !== 'loc')
-                        throw "Not what was expected"
+                    var conflicts = loc.sync(rem, listener);
+                    assert(conflicts.length == 1, conflicts.length);
+                    assert(conflicts[0].message === "Already exists",
+                           "Not what was expected");
+                    assert(conflicts[0].event.path[0] === 'loc',
+                           "Not what was expected");
                     console.log("Hoard tests passed");
                 }
             ];

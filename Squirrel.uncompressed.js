@@ -300,7 +300,7 @@ function sync_with_cloud_store(ready) {
     cloud_store.getData(
         'squirrel',
         function(cloud_hoard) {
-            hoard.sync(cloud_hoard);
+            hoard.sync(cloud_hoard, play_event);
 	    ready();
         },
         function(reason) {
