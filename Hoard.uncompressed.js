@@ -281,7 +281,11 @@ Hoard.prototype.sync = function(other, listener) {
     this.events = [];
 
     // Set the sync time
-    this.last_sync = stream[il - 1].time + 1;
+    if (il > 0) {
+        this.last_sync = stream[il - 1].time + 1;
+    } else {
+        this.last_synv = new Date().valueOf();
+    }
 
     // Delete the other cache
     other.cache = { data: {} };

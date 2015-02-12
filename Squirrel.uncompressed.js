@@ -13,15 +13,16 @@ Tabs built from local cache
 */
 var client_store;
 var cloud_store;
-var hoard;
+var client_hoard;
+var cloud_hoard;
 
 function gapi_loaded() {
     "use strict";
 
     console.log("Google API loaded");
     if (!cloud_store) {
-        cloud_store = new GoogleDriveStore(
-            "985219699584-mt1do7j28ifm2vt821d498emarmdukbt.apps.googleusercontent.com");
+//        cloud_store = new GoogleDriveStore(
+//            "985219699584-mt1do7j28ifm2vt821d498emarmdukbt.apps.googleusercontent.com");
         //cloud_store = new EncryptedStore(client_store);
     }
 }
@@ -71,7 +72,7 @@ function confirm_delete($node) {
                 $(this).dialog("close");
                 var $mum = $node.parents("li");
                 var when = new Date();
-                hoard.record_event("D", get_path($node));
+                client_hoard.record_event("D", get_path($node));
                 $node.remove();
                 if ($mum) {
                     $mum
@@ -104,7 +105,7 @@ function rename_key($node) {
                     .attr("data-key", $input.val())
                     .attr("data-timestamp", when)
                     .attr("title", last_mod(when));
-                hoard.record_event("R", old_path, get_path($node));
+                client_hoard.record_event("R", old_path, get_path($node));
             }
             // Re-sort?
         })
@@ -135,7 +136,7 @@ function change_value($node) {
                 $node.parents("li").first()
                     .attr("data-timestamp", when)
                     .attr("title", last_mod(when));
-                hoard.record_event("E", get_path($node), $node.text());
+                client_hoard.record_event("E", get_path($node), $node.text());
             }
             // Re-sort?
         })
@@ -259,12 +260,12 @@ function add_new_child($ul) {
             "Value": function(evt) {
                 $(this).dialog("close");
                 var $li = add_node($ul, "New Value", "None");
-                hoard.record_event("N", get_path($li), "None");
+                client_hoard.record_event("N", get_path($li), "None");
             },
             "Sub-tree": function(evt) {
                 $(this).dialog("close");
                 var $li = add_node($ul, "New Tree");
-                hoard.record_event("N", get_path($li));
+                client_hoard.record_event("N", get_path($li));
             }
         }});
 }
@@ -330,183 +331,38 @@ function play_event(e) {
     }
 }
 
-function load_client_store(ok, fail) {
-    "use strict";
-
-    client_store.getData(
-        "squirrel",
-        function(db) {
-            hoard = new Hoard(db);
-            ok.call(this);
-        }, fail);
-}
-
-// Try and synch with content in remote store
-function load_cloud_store(ready) {
-    "use strict";
-
-    console.log("Trying to sync local with cloud ");
-
-    cloud_store.getData(
-        "squirrel",
-        function(cloud_hoard) {
-            hoard.sync(cloud_hoard, play_event);
-            ready();
-        },
-        function(reason) {
-            alert(getstring("errsync_ddb") + reason);
-            ready();
-        }
-    );
-}
-
-// We are registered with the local store
-function logged_in_to_client_store() {
-    "use strict";
-
-    console.log(client_store.user + " is logged in to local store");
-    var ready = function() {
-        $(".unauthenticated").hide();
-        $(".authenticated").show();
-    };
-    load_client_store(
-        function() {
-            if (cloud_store) {
-                load_cloud_store(ready);
-            } else {
-                ready();
-            }
-        },
-        function(e) {
-            alert(e);
-            // TODO: something here.
-        });
-}
-
-// Confirm that we want to register by re-entering password
-function confirm_password(user, pass) {
-    "use strict";
-
-    var $dlg = $("#dlg_confirm_pass");
-    $dlg.find(".message").hide();
-    $dlg.find("#userid").text(user);
-
-    var buttons = {};
-    buttons[getstring("confirm_button")] = function(evt) {
-        var cpass = $("#confirm_password").val();
-        if (cpass === pass) {
-            $dlg.dialog("close");
-            // We want to register; create the new registration in the
-            // local drive
-            client_store.register(pass);
-            logged_in_to_client_store();
-        } else {
-            $("#password_mismatch").show();
-            $("#show_password").button().click(function() {
-                $dlg.find("#passwords")
-                    .text(pass + " and " + cpass)
-                    .show();
-            });
-        }
-    };
-    buttons[getstring("cancel_button")] = function() {
-        $dlg.dialog("close");
-    };
-
-    $dlg.dialog({
-        width: "auto",
-        modal: true,
-        buttons: buttons});
-}
-
-// Registration is being offered for the reason shown by clss.
-function _registration_dialog(message, user, pass) {
-    "use strict";
-
-    var $dlg = $("#dlg_register");
-    $dlg.find(".message").text(getstring(message));
-    var buttons = {};
-    buttons[getstring("yes_button")] = function(evt) {
-        $dlg.dialog("close");
-        // We want to register; create the new registration in the
-        // local drive
-        console.log("Registration selected. Confirming password");
-        confirm_password(user, pass);
-    };
-    buttons[getstring("no_button")] = function(evt) {
-        $dlg.dialog("close");
-        // No local store registration; we can't do any more
-    };
-    $dlg.dialog({
-        modal: true,
-        buttons: buttons});
-}
-
-// The local store didn't allow login using this pass. See if the
-// user wants to register
-function _offer_registration(user, pass, finished) {
-    "use strict";
-
-    if (cloud_store) {
-        // Remote store is there; see if it has a file
-        cloud_store.log_in(
-            user, pass,
-            function() {
-                console.log("Checking Remote Store");
-                cloud_store.exists(
-                    user,
-                    function() {
-                        _registration_dialog("nuts_in_cloud", user, pass);
-                        finished();
-                    },
-                    function() {
-                        _registration_dialog("not_in_cloud", user, pass);
-                        finished();
-                    });
-            },
-            function(message) {
-                _registration_dialog("mismatch_with_cloud", user, pass);
-                finished();
-            });
-    } else {
-        _registration_dialog("cant_connect", user, pass);
-        finished();
-    }
-}
-
 // Load a file from the client. File must be in event list format.
-function dlg_local_load_confirmed() {
-    "use strict";
-
-    var $dlg = $(this);
-    // TODO: the loading gif freezes, because of the work done in playlist
-    $dlg.loadingOverlay({ loadingText: getstring("string") });
-    var read_complete = function(error) {
-        $dlg.loadingOverlay("remove");
-        if (typeof error !== "undefined") {
-            alert(error);
-        }
-        $dlg.dialog("close");
-    };
-    var fileData = $("#local_file_pick")[0].files[0];
-    var reader = new FileReader();
-    reader.onload = function(evt) {
-        $("#tree").empty();
-        hoard.empty();
-        hoard.thaw(reader.result, {
-            pass_on: play_event
-            // ignore conflicts
-        });
-        $("#tree").bonsai("update");
-        read_complete();
-    };
-    reader.onabort = read_complete;
-    reader.onerror = read_complete;
-    reader.readAsBinaryString(fileData);
-}
-
 function load_local_file() {
     "use strict";
+
+    var dlg_local_load_confirmed = function() {
+        
+        var $dlg = $(this);
+        // TODO: the loading gif freezes, because of the work done in playlist
+        $dlg.loadingOverlay({ loadingText: getstring("string") });
+        var read_complete = function(error) {
+            $dlg.loadingOverlay("remove");
+            if (typeof error !== "undefined") {
+                alert(error);
+            }
+            $dlg.dialog("close");
+        };
+        var fileData = $("#local_file_pick")[0].files[0];
+        var reader = new FileReader();
+        reader.onload = function(evt) {
+            $("#tree").empty();
+            client_hoard.empty();
+            client_hoard.thaw(reader.result, {
+                pass_on: play_event
+                // ignore conflicts
+            });
+            $("#tree").bonsai("update");
+            read_complete();
+        };
+        reader.onabort = read_complete;
+        reader.onerror = read_complete;
+        reader.readAsBinaryString(fileData);
+    };
 
     $("#dlg_local_load").dialog({
         width: "auto",
@@ -525,8 +381,91 @@ function log_in() {
     "use strict";
 
     $("#authenticate").loadingOverlay({ loadingText: getstring("login_string") });
-    var finished = function() {
-        $("#authenticate").loadingOverlay("remove");
+
+    // Confirm that we want to register by re-entering password
+    var confirm_password = function(user, pass, finished) {
+        var $dlg = $("#dlg_confirm_pass");
+        $dlg.find(".message").hide();
+        $dlg.find("#userid").text(user);
+
+        var buttons = {};
+        buttons[getstring("confirm_button")] = function(evt) {
+            var cpass = $("#confirm_password").val();
+            if (cpass === pass) {
+                $dlg.dialog("close");
+                // We want to register; create the new registration in the
+                // local drive
+                client_store.register(pass);
+                finished();
+            } else {
+                $("#password_mismatch").show();
+                $("#show_password").button().click(function() {
+                    $dlg.find("#passwords")
+                        .text(pass + " and " + cpass)
+                        .show();
+                });
+            }
+        };
+        buttons[getstring("cancel_button")] = function() {
+            $dlg.dialog("close");
+        };
+
+        $dlg.dialog({
+            width: "auto",
+            modal: true,
+            buttons: buttons});
+    };
+
+    // Registration is being offered for the reason shown by clss.
+    var registration_dialog = function(message, user, pass, finished) {
+        "use strict";
+
+        var $dlg = $("#dlg_register");
+        $dlg.find(".message").text(getstring(message));
+        var buttons = {};
+        buttons[getstring("yes_button")] = function(evt) {
+            $dlg.dialog("close");
+            // We want to register; create the new registration in the
+            // local drive
+            console.log("Registration selected. Confirming password");
+            confirm_password(user, pass, finished);
+        };
+        buttons[getstring("no_button")] = function(evt) {
+            $dlg.dialog("close");
+            // No local store registration; we can't do any more
+        };
+        $dlg.dialog({
+            modal: true,
+            buttons: buttons});
+    }
+
+    // The local store didn't allow login using this pass. See if the
+    // user wants to register
+    var offer_registration = function(user, pass, finished) {
+        if (cloud_store) {
+            // Remote store is there; see if it has the user
+            cloud_store.log_in(
+                user, pass,
+                function() {
+                    console.log("Checking Remote Store");
+                    cloud_store.exists(
+                        user,
+                        function() {
+                            registration_dialog(
+                                "nuts_in_cloud", user, pass, finished);
+                        },
+                        function() {
+                            registration_dialog(
+                                "not_in_cloud", user, pass, finished);
+                        });
+                },
+                function(message) {
+                    registration_dialog(
+                        "mismatch_with_cloud", user, pass, finished);
+                });
+        } else {
+            registration_dialog("cant_connect", user, pass, finished);
+        }
     };
 
     var user = $("#user").val();
@@ -535,40 +474,145 @@ function log_in() {
         console.log("Null password not allowed");
         return false;
     }
-    console.log("Log in to local store");
+
+    // Callback invoked when either of the client or cloud hoards
+    // is loaded
+    var load_attempted = { client: false, cloud: false };
+    var hoard_loaded = function(hoard, error) {
+        load_attempted[hoard] = true;
+
+        if (error) {
+            alert(error);
+        } else {
+            if (client_hoard && cloud_hoard) {
+                client_hoard.sync(cloud_hoard, play_event);
+            }
+        }
+        if (load_attempted["client"] && load_attempted["cloud"]) {
+            // Finished
+            $("#authenticate").loadingOverlay("remove");
+            if (client_hoard) {
+                $(".unauthenticated").hide();
+                $(".authenticated").show();
+            }
+        }
+    };
+
+    // We are logged in (or freshly registered) with the local store
+    // If we haven't already logged in to the cloud store, do so now.
+    var logged_in_to_client = function() {
+        console.log("'" + client_store.user + "' is logged in to client store");
+        client_store.getData(
+            "squirrel",
+            function(cloud_data) {
+                client_hoard = new Hoard(cloud_data);
+                hoard_loaded("client");
+            },
+            function(reason) {
+                hoard_loaded("client", reason);
+            }
+        );
+    };
+
+    console.log("Log in to stores");
     client_store.log_in(
         user, pass,
         function() {
-            console.log("Logged in to local store");
-            finished();
-            logged_in_to_client_store();
+            logged_in_to_client();
         },
         function(e) {
-            console.log("Local store rejected password. Offering registration");
-            _offer_registration(user, pass, finished);
+            console.log(e + "; Local store rejected password. Offering registration");
+            offer_registration(user, pass, logged_in_to_client);
         });
+    if (cloud_store) {
+        cloud_store.log_in(
+            user, pass,
+            function() {
+                console.log("Logged in to cloud store");
+                this.getData(
+                    "squirrel",
+                    function(data) {
+                        cloud_hoard = new Hoard(data);
+                        hoard_loaded("cloud");
+                    },
+                    function(e) {
+                        hoard_loaded("cloud", e);
+                    });
+            },
+            function(e) {
+                hoard_loaded("cloud", "Cloud store rejected password.");
+            });
+    }
 }
+
+const TEST_DATA = {
+    "::passwords::": JSON.stringify({
+        "x":"x",
+        "y":"y"
+    }),
+    "x:squirrel": JSON.stringify({
+        "last_sync":1421999268,
+        "cache":{
+            "time":1421999268,
+            "data":{
+                "Asite":{
+                    "data":{
+                        "Pass":{
+                            "time":1398580882,
+                            "data":"pass"
+                        },
+                        "User":{
+                            "time":1398580882,
+                            "data":"sue"
+                        }
+                    },"time":1421999268},
+                "Bsite":{
+                    "data":{
+                        "Account":{
+                            "time":1398580882,
+                            "data":"0123456789"
+                        }
+                    },
+                    "time":1398580882
+                }
+            }
+        },
+        "events": []
+    }),
+    "y:squirrel": JSON.stringify({
+        "last_sync":1421999268,
+        "cache":{
+            "data":{
+                "CSite":{
+                    "data":{
+                        "User":{
+                            "time":1398580882,
+                            "data":"Cuser"
+                        },
+                        "Pass":{
+                            "data":"cuserpass",
+                            "time":1398580882
+                        }
+                    },
+                    "time":1421999268
+                }
+            },
+            "time":0
+        },
+        "events":[]
+    })
+};
 
 (function ($) {
     "use strict";
 
     $(document).ready(function() {
 
-        client_store = new LocalStorageStore("squirrel");
+        //client_store = new LocalStorageStore("squirrel");
         //client_store = new EncryptedStore(client_store);
 
-        // DEBUG - use unencrypted file store as a source for sync data
-        $("#init_store").dialog({
-            modal: true,
-            buttons: {
-                "Open": function(evt) {
-                    $(this).dialog("close");
-                    var fileData = $("#init_store_pick")[0].files[0];
-                    cloud_store = new FileStore(fileData);
-                    logged_in_to_client_store();
-                }
-            }
-        });
+        cloud_store = new MemoryStore(TEST_DATA);
+        client_store = new MemoryStore(TEST_DATA);
 
         // Log in
         $("#log_in").click(log_in);
@@ -578,9 +622,7 @@ function log_in() {
             $("#tree").empty();
             $("#authenticated").hide();
             $("#unauthenticated").show();
-            if (client_store) {
-                client_store.log_out();
-            }
+            client_store.log_out();
             if (cloud_store) {
                 cloud_store.log_out();
             }

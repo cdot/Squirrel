@@ -3,6 +3,12 @@
  * @implements AbstractStore
  */
 
+// TODO: use drive.appfolder, see https://developers.google.com/drive/web/appdata
+const SCOPES = "https://www.googleapis.com/auth/drive";
+const BOUNDARY = "-------314159265358979323846";
+const DELIMITER = "\r\n--" + BOUNDARY + "\r\n";
+const RETIMILED = "\r\n--" + BOUNDARY + "--";
+
 function GoogleDriveStore(cID) {
     "use strict";
 
@@ -11,9 +17,6 @@ function GoogleDriveStore(cID) {
 }
 
 GoogleDriveStore.prototype = Object.create(AbstractStore.prototype);
-
-// TODO: use drive.appfolder, see https://developers.google.com/drive/web/appdata
-const SCOPES = "https://www.googleapis.com/auth/drive";
 
 // If use of Drive can be authorised, calls ok(drive) where drive
 // is this object. If it fails, calls fail(message).
@@ -109,10 +112,6 @@ GoogleDriveStore.prototype._putfile = function(p) {
         params.visibility = "PRIVATE";
     }
 
-    const boundary = "-------314159265358979323846";
-    const delimiter = "\r\n--" + boundary + "\r\n";
-    const close_delim = "\r\n--" + boundary + "--";
-
     if (!p.contentType) {
         p.contentType = "application/octet-stream";
     }
@@ -124,22 +123,22 @@ GoogleDriveStore.prototype._putfile = function(p) {
 
     base64Data = btoa(p.data);
     multipartRequestBody =
-        delimiter +
+        DELIMITER +
         "Content-Type: application/json\r\n\r\n" +
         JSON.stringify(metadata) +
-        delimiter +
+        DELIMITER +
         "Content-Type: " + p.contentType + "\r\n" +
         "Content-Transfer-Encoding: base64\r\n" +
         "\r\n" +
         base64Data +
-        close_delim;
+        RETIMILED;
 
     gapi.client.request({
         path: url,
         method: method,
         params: params,
         headers: {
-            "Content-Type": "multipart/mixed; boundary=\"" + boundary + "\""
+            "Content-Type": "multipart/mixed; boundary=\"" + BOUNDARY + "\""
         },
         body: multipartRequestBody})
 
