@@ -397,7 +397,7 @@ function log_in() {
             if (client_hoard && cloud_hoard) {
                 console.log("Synching with cloud");
                 var conflicts = [];
-                client_hoard.sync(cloud_hoard, play_action, conflicts);
+                client_hoard.stream_to_cache(cloud_hoard, play_action, conflicts);
                 update_save_button();
                 if (conflicts.length > 0) {
                     var $dlg = $('#dlg_conflicts');
@@ -568,7 +568,10 @@ function log_in() {
 }
 
 function unsaved_changes() {
-    if ($('.modified').length > 0 || cloud_hoard.modified) {
+    if (client_hoard.modified
+        || cloud_hoard && cloud_hoard.modified
+        || $('.modified').length > 0) {
+
         var changed = '';
         $('.modified').each(function() {
             changed += '   ' + $(this).attr("name") + '\n';
@@ -718,7 +721,15 @@ const CLOUD_DATA = {
             })
             .hide()
             .click(function() {
-                debugger;
+                // TODO: arrgh, synch the hoards before upload!
+                if (client_hoard.modified) {
+                    client_hoard.save(client_store);
+                }
+                if (cloud_hoard && cloud_hoard.modified) {
+                    // TODO: add the client actions to the stream
+                    cloud_hoard.save(cloud_store);
+                }
+                update_save_button();
             });
 
         $("#tree").bonsai({

@@ -209,7 +209,7 @@ Hoard.prototype.reconstruct = function(listener) {
  * @param {Listener} [listener] called whenever an action is played
  * @param {Object[]} conflicts, as returned by play_action, if there are any
  */
-Hoard.prototype.sync = function(cloud, listener, conflicts) {
+Hoard.prototype.stream_to_cache = function(cloud, listener, conflicts) {
     "use strict";
 
     var i = 0, j = 0, is = 0,
@@ -261,4 +261,11 @@ Hoard.prototype.sync = function(cloud, listener, conflicts) {
     } else {
         this.last_sync = new Date().valueOf();
     }
+};
+
+/**
+ * Save the hoard to the given store
+ */
+Hoard.prototype.save = function(store) {
+    console.log(JSON.stringify(this));
 };
