@@ -4,6 +4,10 @@ body {
     color: white;
 }
 
+#strings {
+    display: none;
+}
+
 .logo {
     float: left;
     margin: 1em;
@@ -17,29 +21,45 @@ body {
     font-size: 1em;
 }
 
+.top_bar_right {
+    float: right;
+}
+
 #tree {
-    margin-top: 2em;
+    margin-top: 1em;
     margin-bottom: 2em;
 }
 
-#authenticate {
+#unauthenticated {
+    margin-left: 110px;
+}
+
+#authenticated {
     position: relative;
+    margin-left: 110px;
 }
 
 .selected {
     background-color: black;
 }
 
-.item_button {
+button.item_button {
     height: 1em;
     width: 1em;
-    margin-left: 1em;
-    margin-right: 1em;
+    margin-left: 0.5em;
+    margin-right: 0.5em;
 }
 
 .search_result {
     color: yellow;
     text-decoration: none;
+}
+
+#sites {
+    border-top: 1px solid white;
+    padding-top: 1em;
+    margin-left: 2em;
+    margin-top: 1.5em;
 }
 
 .loading-overlay {

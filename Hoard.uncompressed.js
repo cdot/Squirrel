@@ -3,23 +3,23 @@
  * store on a time basis.
  *
  * A hoard consists of two types of data. First, a cache that represents
- * the current state of the data in the hoard. Second, a list of events
+ * the current state of the data in the hoard. Second, a list of Actions
  * that record the changes to the hoard since the time of the last
  * sync.
  *
  * The cache may be null, in which case the state of the data is entirely
- * represented by the events. These can be replayed at any time to
- * regenerate and empty cache. If the cache is non-null, the events record
+ * represented by the Actions. These can be replayed at any time to
+ * regenerate and empty cache. If the cache is non-null, the actions record
  * the changes that have been made since the last sync. In this case the
- * events are assumed to have already been played into the cache.
+ * actions are assumed to have already been played into the cache.
  *
  * The basic idea is that the central shared hoard is represented using
- * a times stream of events that can be replayed from any point to regenerate
+ * a times stream of actions that can be replayed from any point to regenerate
  * the cache. The client has a local hoard that uses a cache, and records
- * events since the last sync so that they can be merged with the stream
- * of events in the shared hoard.
+ * actions since the last sync so that they can be merged with the stream
+ * of actions in the shared hoard.
  *
- * @typedef Event
+ * @typedef Action
  * @type {object}
  * @property {string} type - single character type
  * @property {string[]} path - node path
@@ -27,7 +27,7 @@
  *
  * @typedef Conflict
  * @type {object}
- * @property {Event} event
+ * @property {Action} action
  * @property {string} message
  *
  * @typedef Data
@@ -36,15 +36,15 @@
  * this is string
  * @property time {integer} time of the last modification
  *
- * @callback listener
- * @param {Event} event
+ * @callback Listener
+ * @param {Action} action
  */
 
 /**
  * Create a new Hoard
  * @class
  * @member {Data} cache root of the data structure
- * @member {Event[]} events events played since the last sync
+ * @member {Action[]} actions actions played since the last sync
  * @member {number} last_sync integer date since the last sync, or null
  */
 function Hoard(data) {
@@ -52,7 +52,7 @@ function Hoard(data) {
 
     if (data) {
         this.cache = data.cache;
-        this.events = data.events;
+        this.actions = data.actions;
         this.last_sync = data.last_sync;
     } else {
         this.empty();
@@ -66,28 +66,28 @@ Hoard.prototype.empty = function() {
     "use strict";
 
     this.last_sync = null;
-    this.events = [];
+    this.actions = [];
     this.cache = { data: {} };
 };
 
 /*
 // EVENT ENCODING - not used
 
-// Characters used in event encoding. Characters in the range
+// Characters used in action encoding. Characters in the range
 // [\x00-\x07\x08-\x1F] are not permitted in paths.
-const EVENT_SEP  = String.fromCharCode(10); // end of event
+const EVENT_SEP  = String.fromCharCode(10); // end of action
 const FIELD_SEP  = String.fromCharCode(3);
 const PATH_SEP   = String.fromCharCode(4);
 const BLOCK_SEP  = String.fromCharCode(5);
 
-// Decode an event string to a structure
-Hoard.prototype._decode_event = function(event) {
+// Decode an action string to a structure
+Hoard.prototype._decode_action = function(action) {
     "use strict";
 
-    var fields = event.substring(1).split(FIELD_SEP);
+    var fields = action.substring(1).split(FIELD_SEP);
     var datum = {
-        type: event.charAt(0),
-        time: new Date(),
+        type: action.charAt(0),
+        time: new Date().valueOf(),
         path: fields[1].split(PATH_SEP),
     };
     datum.time.setTime(fields[0]);
@@ -96,25 +96,25 @@ Hoard.prototype._decode_event = function(event) {
     return datum;
 };
 
-// Encode an event structure as a string
-Hoard.prototype._encode_event = function(event) {
+// Encode an action structure as a string
+Hoard.prototype._encode_action = function(action) {
     "use strict";
 
-    if (!event.time)
-        event.time = new Date();
-    var e =  event.type
-        + event.time.getTime() + FIELD_SEP
-        + event.path.join(PATH_SEP);
-    if (typeof(event.data) !== 'undefined')
-        e += FIELD_SEP + event.data;
+    if (!action.time)
+        action.time = new Date().valueOf();
+    var e =  action.type
+        + action.time.getTime() + FIELD_SEP
+        + action.path.join(PATH_SEP);
+    if (typeof(action.data) !== 'undefined')
+        e += FIELD_SEP + action.data;
     return e;
 };
 */
 
 /**
- * Play a single event into the hoard. The cache is updated, and
- * the event added to the event stream ready for the next synch.
- * Apply the given event type:
+ * Play a single action into the hoard. The cache is updated, and
+ * the action added to the action stream ready for the next synch.
+ * Apply the given action type:
  * <ul>
  * <li>'N' with no data - create collection</li>
  * <li>'N' with data - create leaf</li>
@@ -123,12 +123,12 @@ Hoard.prototype._encode_event = function(event) {
  * <li>'R' rename node, data contains new name</li>
 * </ul>
  * Returns a conflict object if there was an error. This has two fields,
- * 'event' for the event record and 'message'.
- * @param {Event} e the event record
- * @param {listener} [listener] called when the event is played
+ * 'action' for the action record and 'message'.
+ * @param {Action} e the action record
+ * @param {Listener} [listener] called when the action is played
  * @return {Conflict} conflict object, or null if there was no conflict
  */
-Hoard.prototype.play_event = function(e, listener) {
+Hoard.prototype.play_action = function(e, listener) {
     "use strict";
 
     var parent, name, i;
@@ -137,7 +137,7 @@ Hoard.prototype.play_event = function(e, listener) {
         e.time = new Date().valueOf();
     }
 
-    this.events.push(e);
+    this.actions.push(e);
 
     // Update the cache; the listener will only be called if this
     // succeeds
@@ -145,19 +145,19 @@ Hoard.prototype.play_event = function(e, listener) {
     for (i = 0; i < e.path.length - 1; i++) {
         name = e.path[i];
         if (typeof parent.data === "string") {
-            throw "Cannot play event over leaf node";
+            throw "Cannot play action over leaf node";
         } else if (parent.data[name]) {
             parent = parent.data[name];
         } else {
-            return { event: e, message:
-                     e.path.slice(0, i).join("/") + " does not exist" };
+            return { action: e, message:
+                     "'" + e.path.slice(0, i + 1).join("/") + "' does not exist" };
         }
     }
     name = e.path[i];
 
     if (e.type === "N") {
         if (parent.data[name]) {
-            return { event: e, message: "Already exists" };
+            return { action: e, message: "Already exists" };
         }
 
         parent.time = e.time; // collection is being modified
@@ -168,24 +168,24 @@ Hoard.prototype.play_event = function(e, listener) {
         };
     } else if (e.type === "D") {
         if (!parent.data[name]) {
-            return { event: e, message: "Does not exist" };
+            return { action: e, message: "Does not exist" };
         }
         delete parent.data[name];
     } else if (e.type === "R") {
         if (!parent.data[name]) {
-            return { event: e, message: "Does not exist" };
+            return { action: e, message: "Does not exist" };
         }
 
         parent.data[e.data] = parent.data[name];
         delete parent.data[name];
     } else if (e.type === "E") {
         if (!parent.data[name]) {
-            return { event: e, message: "Does not exist" };
+            return { action: e, message: "Does not exist" };
         }
 
         parent.data[name] = e.data;
     } else {
-        throw "Unrecognised event type " + e.type;
+        throw "Unrecognised action type " + e.type;
     }
 
     if (listener) {
@@ -196,99 +196,109 @@ Hoard.prototype.play_event = function(e, listener) {
 };
 
 /**
- * Record an event in the store. We update and timestamp the cache
- * as we store the event. This is descined for use from a UI that
- * wants to add a new event to a client hoard.
- * @param {string} type the single-character type of the event
- * @param {string[]} path array of strings representing the path of the event
- * @param {Object} event-specific data accompanying the event
- * @return {Conflict} conflict object or null if there was no conflict
+ * @private method to reconstruct an action stream from a node and it's
+ * subtree
  */
-Hoard.prototype.record_event = function(type, path, data) {
-    "use strict";
+Hoard.prototype._reconstruct = function(node, path, listener) {
+    if (typeof(node.data) === 'string') {
+        listener.call(this, {
+            type: 'N', 
+            path: path,
+            time: node.time,
+            data: node.data
+        })
+    } else if (typeof(node.data) !== 'undefined') {
+        if (path.length > 0) {
+            // No action for the root
+            listener.call(this, {
+                type: 'N', 
+                time: node.time,
+                path: path
+            });
+        }
 
-    var e = {
-        type: type,
-        path: path
-    },
-    conflict;
-
-    if (typeof data !== "undefined") {
-        e.data = data;
-    }
-    e.time = new Date().valueOf();
-
-    // Update the cache
-    conflict = this.play_event(e);
-    if (conflict === null) {
-        // Add to the list of events
-        this.events.push(e);
-    }
-    return conflict;
+        for (key in node.data) {
+            path.push(key);
+            this._reconstruct(node.data[key], path, listener);
+            path.pop();
+        }
+    } else {
+        debugger;
+}
 };
 
 /**
- * Merge the content of the hoard with the event stream in the hoard passed.
- * First all events in the stream since the last sync are played in
- * to the hoard. Then, all events in the hoard are merged into the stream
- * Finally the hoard's event stream is cleared and the sync time set to
- * the time of the last event in the stream + 1
- * @param {Hoard} other the other hoard to sync with
- * @param {listener} [listener] called whenever an event is played
- * @return {array} of conflicts, as returned by play_event, if there are any
+ * Reconstruct an action stream (which will all be 'N' actions) from
+ * the cache in the hoard. This is used to generate the UI tree from
+ * a stored cache.
+ * @param listener {Listener} callback that takes an action
  */
-Hoard.prototype.sync = function(other, listener) {
+Hoard.prototype.reconstruct = function(listener) {
+    this._reconstruct(this.cache, [], listener);
+};
+
+/**
+ * Merge the content of the hoard with the action stream in the hoard passed.
+ * First all actions in the stream since the last sync are played in
+ * to the hoard. Then, all actions in the hoard are merged into the stream
+ * Finally the hoard's action stream is cleared and the sync time set to
+ * the time of the last action in the stream + 1
+ * @param {Hoard} cloud the other hoard to sync with
+ * @param {Listener} [listener] called whenever an action is played
+ * @param {Object[]} conflicts, as returned by play_action, if there are any
+ * @returns {boolean} true if a cloud update is required
+ */
+Hoard.prototype.sync = function(cloud, listener, conflicts) {
     "use strict";
 
-    var i = 0,
-    stream = other.events,
-    is = 0,
+    var i = 0, j = 0, is = 0,
+    stream = cloud.actions,
     il = stream.length,
-    j = 0,
-    jl = this.events.length,
-    conflicts = [],
+    jl = this.actions.length,
     c;
 
-    // Play in all other events since the last sync
+    console.log("Last sync was at " + new Date(this.last_sync));
+
+    // Play in all cloud actions since the last sync
     while (i < il && stream[i].time <= this.last_sync) {
+        console.log("...skip cloud action @" + new Date(stream[i].time));
         i++;
     }
     is = i;
     while (i < il) {
-        c = this.play_event(stream[i++], listener);
+        console.log("...push cloud action @" + new Date(stream[i].time));
+        c = this.play_action(stream[i++], listener);
         if (c !== null) {
             conflicts.push(c);
         }
     }
 
-    // Merge-sort in the local event stream to the other event
+    // Merge-sort in the local action stream to the cloud action
     // stream
+    var cloud_update_required = (j < jl);
     i = is;
     while (j < jl) {
-        while (i < il && this.events[j].time > stream[i].time) {
+        while (i < il && this.actions[j].time > stream[i].time) {
             i++;
         }
         if (i === il) {
-            stream.push(this.events[j]);
+            stream.push(this.actions[j]);
         } else {
-            stream.splice(i, 0, this.events[j]);
+            stream.splice(i, 0, this.actions[j]);
             il++;
         }
         j++;
     }
 
-    // Clear our event stream - we're up to date
-    this.events = [];
+    // Clear our action stream - we're up to date
+    this.actions = [];
 
     // Set the sync time
     if (il > 0) {
         this.last_sync = stream[il - 1].time + 1;
     } else {
-        this.last_synv = new Date().valueOf();
+        this.last_sync = new Date().valueOf();
     }
 
-    // Delete the other cache
-    other.cache = { data: {} };
-
-    return conflicts;
+    return cloud_update_required;
 };
