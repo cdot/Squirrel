@@ -11,7 +11,6 @@ Local cache built from script
 Tabs built from local cache
 
 */
-var chosen_language="en";
 var client_store;
 var cloud_store;
 var client_hoard;
@@ -52,15 +51,11 @@ function quotemeta(s) {
     return s.replace(/([][!"#$%&'()*+,.\/:;<=>?@\\^`{|}~])/g, "\\\\$1");
 }
 
-function getstring(s) {
-    return $('#strings > .' + s).text();
-}
-
 function last_mod(time) {
     "use strict";
 
     var d = new Date(time);
-    return getstring("lastmod") + d.toLocaleString();
+    return TX("Double-click to edit. Last modified: ") + d.toLocaleString();
 }
 
 function confirm_delete($node) {
@@ -207,7 +202,7 @@ function add_new_child($ul) {
                 client_hoard.play_action(
                     {
                         type: "N",
-                        path: get_path($ul).push(getstring("new_value")),
+                        path: get_path($ul).push(TX("New value")),
                         data: "None"
                     },
                     play_action);
@@ -217,7 +212,7 @@ function add_new_child($ul) {
                 client_hoard.play_action(
                     {
                         type: "N",
-                        path: get_path($ul).push(getstring("new_tree")),
+                        path: get_path($ul).push(TX("New subtree")),
                     },
                     play_action);
             }
@@ -234,32 +229,40 @@ function node_clicked() {
     $div.addClass("selected");
     if ($div.hasClass("treecollection")) {
         var $adder = $("<button></button>")
-            .addClass("item_button")
+            .addClass("icon_button item_button")
             .button({
                 icons: {
-                    primary: "ui-icon-plus"
+                    primary: "silk-icon-add"
                 },
                 text: false
             })
-            .attr("title", getstring("add_child"))
+            .attr("title", TX("Add new child node"))
             .click(function() {
                 add_new_child($div.closest("li").find("ul").first());
             });
         $div.append($adder);
     }
     var $killer = $("<button></button>")
-        .addClass("item_button")
+        .addClass("icon_button item_button")
         .button({
             icons: {
-                primary: "ui-icon-scissors"
+                primary: "silk-icon-delete"
             },
             text: false
         })
-        .attr("title", getstring("delete_this"))
+        .attr("title", TX("Delete this node"))
         .click(function() {
             confirm_delete($div.closest("li"));
         });
     $div.append($killer);
+}
+
+function update_save_button() {
+    $('#save_button').toggle(
+        client_hoard.modified
+            || (cloud_hoard && cloud_hoard.modified)
+            || $(".modified").length > 0
+    );
 }
 
 // Callback for use when managing hoards; plays an action that is being
@@ -284,6 +287,7 @@ function play_action(e) {
         var $li = $("<li></li>")
             .attr("data-key", key)
             .attr("name", key)
+            .addClass("modified")
             .attr("title", last_mod(e.time));
 
         var $div = $("<div></div>")
@@ -308,9 +312,6 @@ function play_action(e) {
             $div.append(" : ").append($valspan);
         } else {
             $div.addClass("treecollection");
-            // var $add_child = $("<button>+</button>").button();
-            // var $remove = $("<button>-</button>").button();
-
             var $subul = $("<ul></ul>");
             $li.append($subul);
         }
@@ -336,6 +337,7 @@ function play_action(e) {
         $parent_ul
             .children("li[data-key='" + quotemeta(key) + "']")
             .attr("data-key", e.data)
+            .addClass("modified")
             .attr("title", last_mod(e.time))
             .children(".node_div")
             .children("span.key")
@@ -344,6 +346,7 @@ function play_action(e) {
     } else if (e.type === "E") {
         $parent_ul
             .children("li[data-key='" + quotemeta(key) + "']")
+            .addClass("modified")
             .attr("title", last_mod(e.time))
             .children(".node_div")
             .children("span.value")
@@ -355,57 +358,13 @@ function play_action(e) {
         $parent_ul
             .parents("li")
             .first()
+            .addClass("modified")
             .attr("title", last_mod(e.time));
     } else {
         throw "Unrecognised action type " + e.type;
     }
+    update_save_button();
     $("#tree").bonsai("update");
-}
-
-// Load a file from the client. File must be in action list format.
-function load_local_file() {
-    "use strict";
-
-    var dlg_local_load_confirmed = function() {
-        var $dlg = $(this), read_complete, fileData, reader;
-
-        // TODO: the loading gif freezes, because of the work done in playlist
-        $dlg.loadingOverlay({ loadingText: getstring("loading") });
-        read_complete = function(error) {
-            $dlg.loadingOverlay("remove");
-            if (typeof error !== "undefined") {
-                alert(error);
-            }
-            $dlg.dialog("close");
-        };
-        fileData = $("#local_file_pick")[0].files[0];
-        reader = new FileReader();
-        reader.onload = function(evt) {
-            $("#tree").empty();
-            client_hoard.empty();
-            client_hoard.thaw(reader.result, {
-                pass_on: play_action
-                // ignore conflicts
-            });
-            $("#tree").bonsai("update");
-            read_complete();
-        };
-        reader.onabort = read_complete;
-        reader.onerror = read_complete;
-        reader.readAsBinaryString(fileData);
-    };
-
-    $("#dlg_local_load").dialog({
-        width: "auto",
-        modal: true,
-        autoOpen: true,
-        buttons: [
-            {
-                text: "OK",
-                click: dlg_local_load_confirmed
-            }
-        ]
-    });
 }
 
 function log_in() {
@@ -414,7 +373,7 @@ function log_in() {
     var user, pass, confirm_password, registration_dialog, offer_registration,
     load_attempted, hoard_loaded, logged_in_to_client;
 
-    $("#authenticated").loadingOverlay({ loadingText: getstring("login") });
+    $("#authenticated").loadingOverlay({ loadingText: TX("Logging in...") });
 
     // Callback invoked when either of the client or cloud hoards
     // is loaded
@@ -429,14 +388,17 @@ function log_in() {
             if (client_hoard && !load_attempted.client) {
                 console.log("Reconstructing from cache");
                 client_hoard.reconstruct(play_action);
+                // Reset the modification count; we just loaded the
+                // client hoard
+                $(".modified").removeClass("modified");
+                client_hoard.modified = false;
+                update_save_button();
             }
             if (client_hoard && cloud_hoard) {
                 console.log("Synching with cloud");
                 var conflicts = [];
-                if (client_hoard.sync(cloud_hoard, play_action, conflicts)) {
-                    // A cloud update is required
-                    $('#save_required').show();
-                }
+                client_hoard.sync(cloud_hoard, play_action, conflicts);
+                update_save_button();
                 if (conflicts.length > 0) {
                     var $dlg = $('#dlg_conflicts');
                     $dlg.children('.message').empty();
@@ -492,7 +454,7 @@ function log_in() {
         $dlg.find(".message").hide();
         $dlg.find("#userid").text(user);
 
-        buttons[getstring("confirm")] = function(evt) {
+        buttons[TX("Confirm")] = function(evt) {
             var cpass = $("#confirm_password").val();
             if (cpass === pass) {
                 $dlg.dialog("close");
@@ -504,12 +466,12 @@ function log_in() {
                 $("#password_mismatch").show();
                 $("#show_password").button().click(function() {
                     $dlg.find("#passwords")
-                        .text(pass + " and " + cpass)
+                        .text(pass + TX(" and ") + cpass)
                         .show();
                 });
             }
         };
-        buttons[getstring("cancel")] = function() {
+        buttons[TX("Cancel")] = function() {
             $dlg.dialog("close");
         };
 
@@ -522,15 +484,16 @@ function log_in() {
     // Registration is being offered for the reason shown by clss.
     registration_dialog = function(message) {
         var $dlg = $("#dlg_register"), buttons = {};
-        $dlg.find(".message").text($("#string > ." + message).text());
-        buttons[getstring("yes")] = function(evt) {
+        $dlg.find(".message").hide();
+        $dlg.find("." + message).show();
+        buttons[TX("Yes")] = function(evt) {
             $dlg.dialog("close");
             // We want to register; create the new registration in the
             // local drive
             console.log("Registration selected. Confirming password");
             confirm_password();
         };
-        buttons[getstring("no")] = function(evt) {
+        buttons[TX("No")] = function(evt) {
             $dlg.dialog("close");
             // No local store registration; we can't do any more
         };
@@ -601,6 +564,30 @@ function log_in() {
             function(e) {
                 hoard_loaded("cloud", "Cloud store rejected password.");
             });
+    }
+}
+
+function unsaved_changes() {
+    if ($('.modified').length > 0 || cloud_hoard.modified) {
+        var changed = '';
+        $('.modified').each(function() {
+            changed += '   ' + $(this).attr("name") + '\n';
+        });
+        return TX("You have unsaved changes") + "\n"
+            + changed
+            +  TX("Are you really sure?");
+    }
+}
+
+function log_out() {
+    $("#tree").empty();
+    $("#authenticated").hide();
+    $("#unauthenticated").show();
+    client_store.log_out();
+    client_hoard = null;
+    if (cloud_store) {
+        cloud_store.log_out();
+        cloud_hoard = null;
     }
 }
 
@@ -685,31 +672,8 @@ const CLOUD_DATA = {
 
     $(document).ready(function() {
 
-        if (chosen_language === "tx" ) {
-            // Extract translatable strings
-            var words = {};
-            $(".TX_title").each(function() {
-                words[$(this).attr("title")] = true;
-            });
-
-            $(".TX_text").each(function() {
-                words[$(this).text()] = true;
-            });
-            var $ta = $("<textarea cols='120' rows='100'></textarea>");
-            $ta.text(Object.keys(words).sort().join("\n"));
-            $("body").empty().append($ta);
-            return;
-        }
-        else if (chosen_language !== "en") {
-            // TODO: implement TX somehow. FileReader, probably.
-            $(".TX_title").each(function() {
-                $(this).attr("title", TX($(this).attr("title")));
-            });
-
-            $(".TX_text").each(function() {
-                $(this).text(TX($(this).text()));
-            });
-        }
+        // Initialise translation module
+        init_TX();
 
         //client_store = new LocalStorageStore("squirrel");
         //client_store = new EncryptedStore(client_store);
@@ -718,33 +682,52 @@ const CLOUD_DATA = {
         client_store = new MemoryStore(CLIENT_DATA);
 
         // Log in
-        $("#log_in").click(log_in);
+        $("#log_in").
+            button({
+                icons: {
+                    primary: "silk-icon-lock-open"
+                }
+            })
+            .click(log_in);
         $("#password")
             .change(log_in);
 
-        $("#log_out").button().click(function() {
-            $("#tree").empty();
-            $("#authenticated").hide();
-            $("#unauthenticated").show();
-            client_store.log_out();
-            client_hoard = null;
-            if (cloud_store) {
-                cloud_store.log_out();
-                cloud_hoard = null;
-            }
-        });
+        $("#log_out")
+            .button({
+                icons: {
+                    primary: "silk-icon-lock"
+                }
+            })
+            .click(function() {
+                var mess = unsaved_changes();
+                if (mess) {
+                    if (window.confirm(mess)) {
+                        log_out();
+                    }
+                } else {
+                    log_out();
+                }
+            });
+
+        $("#save_button")
+            .button({
+                icons: {
+                    primary: "silk-icon-disk"
+                },
+                text: false
+            })
+            .hide()
+            .click(function() {
+                debugger;
+            });
 
         $("#tree").bonsai({
             expandAll: false });
 
-        $("#load_local").button().click(function() {
-            load_local_file();
-        });
-
         $("#add_root_child")
             .button({
                 icons: {
-                    primary: "ui-icon-plus"
+                    primary: "silk-icon-add"
                 },
                 text: false
             })
@@ -752,8 +735,13 @@ const CLOUD_DATA = {
                 add_new_child($("#tree"));
             });
 
-        $("#search").change(function(evt) {
-            search($(this).val());
-        });
+        $("#search")
+            .change(function(evt) {
+                search($(this).val());
+            });
+    });
+
+    $(window).on('beforeunload', function() {
+        return unsaved_changes();
     });
 })(jQuery);

@@ -4,10 +4,6 @@ body {
     color: white;
 }
 
-#strings {
-    display: none;
-}
-
 .logo {
     float: left;
     margin: 1em;
@@ -43,9 +39,9 @@ body {
     background-color: black;
 }
 
-button.item_button {
-    height: 1em;
-    width: 1em;
+button.icon_button {
+    height: 1.5em;
+    width: 1.5em;
     margin-left: 0.5em;
     margin-right: 0.5em;
 }

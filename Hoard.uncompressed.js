@@ -46,6 +46,8 @@
  * @member {Data} cache root of the data structure
  * @member {Action[]} actions actions played since the last sync
  * @member {number} last_sync integer date since the last sync, or null
+ * @member {boolean} modified has the hoard been modified since the last
+ * well understood checkpoint
  */
 function Hoard(data) {
     "use strict";
@@ -54,6 +56,7 @@ function Hoard(data) {
         this.cache = data.cache;
         this.actions = data.actions;
         this.last_sync = data.last_sync;
+        this.modified = false;
     } else {
         this.empty();
     }
@@ -68,48 +71,8 @@ Hoard.prototype.empty = function() {
     this.last_sync = null;
     this.actions = [];
     this.cache = { data: {} };
+    this.modified = false();
 };
-
-/*
-// EVENT ENCODING - not used
-
-// Characters used in action encoding. Characters in the range
-// [\x00-\x07\x08-\x1F] are not permitted in paths.
-const EVENT_SEP  = String.fromCharCode(10); // end of action
-const FIELD_SEP  = String.fromCharCode(3);
-const PATH_SEP   = String.fromCharCode(4);
-const BLOCK_SEP  = String.fromCharCode(5);
-
-// Decode an action string to a structure
-Hoard.prototype._decode_action = function(action) {
-    "use strict";
-
-    var fields = action.substring(1).split(FIELD_SEP);
-    var datum = {
-        type: action.charAt(0),
-        time: new Date().valueOf(),
-        path: fields[1].split(PATH_SEP),
-    };
-    datum.time.setTime(fields[0]);
-    if (fields.length > 2)
-        datum.data = fields[2];
-    return datum;
-};
-
-// Encode an action structure as a string
-Hoard.prototype._encode_action = function(action) {
-    "use strict";
-
-    if (!action.time)
-        action.time = new Date().valueOf();
-    var e =  action.type
-        + action.time.getTime() + FIELD_SEP
-        + action.path.join(PATH_SEP);
-    if (typeof(action.data) !== 'undefined')
-        e += FIELD_SEP + action.data;
-    return e;
-};
-*/
 
 /**
  * Play a single action into the hoard. The cache is updated, and
@@ -150,16 +113,16 @@ Hoard.prototype.play_action = function(e, listener) {
             parent = parent.data[name];
         } else {
             return { action: e, message:
-                     "'" + e.path.slice(0, i + 1).join("/") + "' does not exist" };
+                     "'" + e.path.slice(0, i + 1).join("/") + "' "
+                     + TX("does not exist") };
         }
     }
     name = e.path[i];
 
     if (e.type === "N") {
         if (parent.data[name]) {
-            return { action: e, message: "Already exists" };
+            return { action: e, message: TX("Cannot create, already exists") };
         }
-
         parent.time = e.time; // collection is being modified
         parent.data[name] = {
             time: e.time,
@@ -168,26 +131,25 @@ Hoard.prototype.play_action = function(e, listener) {
         };
     } else if (e.type === "D") {
         if (!parent.data[name]) {
-            return { action: e, message: "Does not exist" };
+            return { action: e, message: TX("Cannot delete, does not exist") };
         }
         delete parent.data[name];
     } else if (e.type === "R") {
         if (!parent.data[name]) {
-            return { action: e, message: "Does not exist" };
+            return { action: e, message: TX("Cannot rename, does not exist") };
         }
-
         parent.data[e.data] = parent.data[name];
         delete parent.data[name];
     } else if (e.type === "E") {
         if (!parent.data[name]) {
-            return { action: e, message: "Does not exist" };
+            return { action: e, message: TX("Cannot change value, does not exist") };
         }
-
         parent.data[name] = e.data;
     } else {
-        throw "Unrecognised action type " + e.type;
+        throw TX("Unrecognised action type") + " '" + e.type + "'";
     }
 
+    this.modified = true;
     if (listener) {
         listener.call(this, e);
     }
@@ -246,7 +208,6 @@ Hoard.prototype.reconstruct = function(listener) {
  * @param {Hoard} cloud the other hoard to sync with
  * @param {Listener} [listener] called whenever an action is played
  * @param {Object[]} conflicts, as returned by play_action, if there are any
- * @returns {boolean} true if a cloud update is required
  */
 Hoard.prototype.sync = function(cloud, listener, conflicts) {
     "use strict";
@@ -275,7 +236,7 @@ Hoard.prototype.sync = function(cloud, listener, conflicts) {
 
     // Merge-sort in the local action stream to the cloud action
     // stream
-    var cloud_update_required = (j < jl);
+    cloud.modified = (j < jl);
     i = is;
     while (j < jl) {
         while (i < il && this.actions[j].time > stream[i].time) {
@@ -292,6 +253,7 @@ Hoard.prototype.sync = function(cloud, listener, conflicts) {
 
     // Clear our action stream - we're up to date
     this.actions = [];
+    this.modified = false;
 
     // Set the sync time
     if (il > 0) {
@@ -299,6 +261,4 @@ Hoard.prototype.sync = function(cloud, listener, conflicts) {
     } else {
         this.last_sync = new Date().valueOf();
     }
-
-    return cloud_update_required;
 };
