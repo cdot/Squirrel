@@ -57,7 +57,7 @@ function AbstractStore() {
 AbstractStore.prototype._exists = function(user, ok, fail) {
     "use strict";
 
-    throw "Pure virtual method";
+    throw "Pure virtual method _exists";
 };
 
 /**
@@ -83,7 +83,7 @@ AbstractStore.prototype.save = function(ok, fail) {
 AbstractStore.prototype._read = function(ok, fail) {
     "use strict";
 
-    throw "Pure virtual method";
+    throw "Pure virtual method _read";
 };
 
 /**

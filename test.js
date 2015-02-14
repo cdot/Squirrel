@@ -47,19 +47,7 @@ function store_tests(engine, ok) {
         },
         
         function(engine, ok) {
-            engine.getData(
-                "HoardOfNuts",
-                unexpected,
-                function(e) {
-                    // OK, not logged in
-                    ok.call();
-                });
-        },
-        
-        function(engine, ok) {
-            engine.setData(
-                "HoardOfNuts",
-                "some data " + test_date,
+            engine.save(
                 unexpected,
                 function(e) {
                     // OK, not logged in
@@ -70,16 +58,6 @@ function store_tests(engine, ok) {
         function(engine, ok) {
             console.log("no_login_tests passed");
             ok.call();
-        },
-
-        function(engine, ok) {
-            engine.check_user(
-                "test user", "test password",
-                function() {
-                    // Already registered
-                    console.log("registration_tests skipped - already registered");
-                },
-                ok);
         },
 
         function(engine, ok) {
@@ -127,22 +105,24 @@ function store_tests(engine, ok) {
         },
 
         function(engine, ok) {
-            engine.setData(
-                "HoardOfNuts",
-                { entry: "some data", date: test_date.valueOf() },
+            engine.data["HoardOfNuts"] =
+                { entry: "some data", date: test_date.valueOf() };
+	    engine.save(
                 function() {
-                    ok.call();
+		    engine.log_out();
                 },
                 unexpected);
         },
 
         function(engine, ok) {
-            engine.getData("HoardOfNuts", function(d) {
-                //console.log("Received back " + d);
-                assert(d.entry === "some data" && d.date === test_date.valueOf(),
-                       name + ' tests failed d !=== "some data" + test_date');
-                ok.call();
-            }, unexpected);
+	    engine.log_in(
+		"test user", "test password",
+		function() {
+		    var d = engine.data["HoardOfNuts"];
+		    assert(d.entry === "some data" && d.date === test_date.valueOf(),
+			   name + ' tests failed d !=== "some data" + test_date');
+		    ok.call();
+		}, unexpected);
         },
 
         function(engine, ok) {

@@ -435,16 +435,8 @@ function log_in() {
     logged_in_to_client = function() {
         console.log("'" + client_store.user + "' is logged in to client store");
         $("#whoami").text(client_store.user);
-        client_store.getData(
-            "squirrel",
-            function(cloud_data) {
-                client_hoard = new Hoard(cloud_data);
-                hoard_loaded("client");
-            },
-            function(reason) {
-                hoard_loaded("client", reason);
-            }
-        );
+        client_hoard = new Hoard(client_store.data);
+        hoard_loaded("client");
     };
 
     // Confirm that we want to register by re-entering password
@@ -551,15 +543,8 @@ function log_in() {
             function() {
                 console.log("'" + cloud_store.user
                             + "' is logged in to cloud store");
-                this.getData(
-                    "squirrel",
-                    function(data) {
-                        cloud_hoard = new Hoard(data);
-                        hoard_loaded("cloud");
-                    },
-                    function(e) {
-                        hoard_loaded("cloud", e);
-                    });
+                cloud_hoard = new Hoard(cloud_store.data);
+                hoard_loaded("cloud");
             },
             function(e) {
                 hoard_loaded("cloud", "Cloud store rejected password.");
@@ -604,10 +589,9 @@ const CLOUD_CHANGE_1  = SINCE_LAST_SYNC + MINUTE;
 const CLOUD_CHANGE_2  = CLOUD_CHANGE_1 + HOUR;
 
 const CLIENT_DATA = {
-    "::passwords::": JSON.stringify({
-        "x": "x"
-    }),
-    "x:squirrel": JSON.stringify({
+    user: "x",
+    pass: "x",
+    data: {
         last_sync: LAST_SYNC,
         cache: {
             time: CLOUD_BUILD,
@@ -637,14 +621,13 @@ const CLIENT_DATA = {
             { type: "R", time: SINCE_LAST_SYNC,
               path: ["LocalSite", "grunt"], data: "User" }
         ]
-    })
+    }
 };
 
 const CLOUD_DATA = {
-    "::passwords::": JSON.stringify({
-        "x": "x"
-    }),
-    "x:squirrel": JSON.stringify({
+    user: "x",
+    pass: "x",
+    data: {
         "last_sync": 0,
         cache: {},
         actions: [
@@ -667,7 +650,7 @@ const CLOUD_DATA = {
             { type: "D", path: [ "LocalSite", "Does", "Not", "Exist" ],
               time: CLOUD_CHANGE_2 + MINUTE * 5 }
         ]
-    })
+    }
 };
 
 (function ($) {
