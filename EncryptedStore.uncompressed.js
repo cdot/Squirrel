@@ -21,7 +21,7 @@ EncryptedStore.prototype.register = function(user, pass, ok, fail) {
         xpass,
         function() {
             self.user = user;
-            self.pass = xpass;
+            self.pass = pass;
             ok.call(self);
         }, fail);
 };
@@ -30,16 +30,22 @@ EncryptedStore.prototype.log_in = function(user, pass, ok, fail) {
     "use strict";
 
     var self = this;
-    this.engine.log_in(
-        user,
-        // Use a checker callback to decrypt the stored password for comparison
-        function(xp) {
-            return Aes.Ctr.decrypt(xp, pass, 256) === pass;
-        },
+    this.engine._read(
         function() {
-            self.user = user;
-            self.pass = pass;
-            ok.call(self);
+            var xpass = Aes.Ctr.decrypt(this.engine.pass, pass, 256);
+            if (xpass === pass) {
+                self.user = user;
+                self.pass = pass;
+                try {
+                    self.data = JSON.parse(
+                        Aes.Ctr.decrypt(self.engine.data, pass, 256));
+                    ok.call(self);
+                } catch (e) {
+                    fail.call(self, e);
+                }
+            } else {
+                fail.call(self, "Incorrect details");
+            }
         },
         fail);
 };
@@ -50,60 +56,14 @@ EncryptedStore.prototype.log_out = function() {
     this.engine.log_out();
     this.user = null;
     this.pass = null;
+    this.data = null;
 };
 
-// Encryption uses the 256 bit AES engine
-EncryptedStore.prototype._encrypt = function(data) {
+EncryptedStore.prototype.save = function(ok, fail) {
     "use strict";
 
-    return Aes.Ctr.encrypt(data, this.pass, 256);
+    this.engine.data = Aes.Ctr.encrypt(this.data, this.pass, 256);
+    this.engine.save(ok, fail);
 };
 
-EncryptedStore.prototype._decrypt = function(data) {
-    "use strict";
 
-    return Aes.Ctr.decrypt(data, this.pass, 256);
-};
-
-// Load the data from the current users' personal data store
-// The data is a character string
-// Implements: AbstractStore
-EncryptedStore.prototype.getData = function(key, ok, fail) {
-    "use strict";
-
-    var self = this;
-    if (!this.user) {
-        fail.call(this, "Internal error: not logged in");
-        return;
-    }
-    this.engine._read(
-        this.user + ":" + key,
-        function(data) {
-            try {
-                ok.call(self, JSON.parse(self._decrypt(data)));
-            } catch (e) {
-                fail.call(self, "Decryption failure: " + e);
-            }
-        }, fail);
-};
-
-EncryptedStore.prototype.setData = function(key, data, ok, fail) {
-    "use strict";
-
-    if (!this.user) {
-        fail.call(this, "Internal error: not logged in");
-    } else {
-        this.engine._write(this.user + ":" + key,
-                    this._encrypt(JSON.stringify(data)), ok, fail);
-    }
-};
-
-EncryptedStore.prototype.exists = function(key, ok, fail) {
-    "use strict";
-
-    if (!this.engine.user) {
-        fail.call(this, "Not logged in");
-    } else {
-        this.engine.exists(key, ok, fail);
-    }
-};

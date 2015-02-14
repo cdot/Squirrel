@@ -228,7 +228,7 @@ GoogleDriveStore.prototype._getfile = function(p) {
         });
 };
 
-// Determine if the given name exists, call the function 'does' or
+// Determine if the given user exists, call the function 'does' or
 // 'does_not' accordingly, passing the faileId to 'does'
 // Implements: AbstractStore
 GoogleDriveStore.prototype.exists = function(name, does, does_not) {
@@ -240,7 +240,7 @@ GoogleDriveStore.prototype.exists = function(name, does, does_not) {
         return;
     }
     this._search(
-        "title='" + this.user + ":" + name + "'",
+        "title='" + name + "'",
         function(items) {
             if (items.length > 0) {
                 does.call(drive, items[0].id);
@@ -254,39 +254,44 @@ GoogleDriveStore.prototype.exists = function(name, does, does_not) {
 };
 
 // Implements: AbstractStore
-GoogleDriveStore.prototype.setData = function(key, data, ok, fail) {
+GoogleDriveStore.prototype.save = function(ok, fail) {
     "use strict";
 
     if (!this.user) {
         fail.call(this, "Not logged in");
-        return;
+    } else {
+        this.authorise(
+            function() {
+                this._upload(
+                    {
+                        name: this.user + ":" + key,
+                        data: JSON.stringify({
+                            pass: this.pass,
+                            data: this.data
+                        }),
+                        ok: ok,
+                        fail: fail
+                    });
+            },
+            fail);
     }
-    this.authorise(
-        function() {
-            this._upload(
-                {
-                    name: this.user + ":" + key,
-                    data: data,
-                    ok: ok,
-                    fail: fail
-                });
-        },
-        fail);
 };
 
-GoogleDriveStore.prototype.getData = function(key, ok, fail) {
+GoogleDriveStore.prototype._read = function(ok, fail) {
     "use strict";
 
-    if (!this.user) {
-        fail.call(this, "Not logged in");
-        return;
-    }
+    var self = this;
     this.authorise(
         function() {
             this._download(
                 {
-                    name: this.user + ":" + key,
-                    ok: ok,
+                    name: this.user,
+                    ok: function(data) {
+                        var content = JSON.parse(data);
+                        self.pass = content.pass;
+                        self.data = content.data;
+                        ok.call(self);
+                    },
                     fail: fail
                 });
         },

@@ -2,20 +2,21 @@
  * A store engine using HTML5 localStorage.
  * @implements AbstractStore
  */
-function LocalStorageStore(prefix) {
+function LocalStorageStore() {
     "use strict";
 
     AbstractStore.call(this);
-    this.prefix = prefix;
 }
 
 LocalStorageStore.prototype = Object.create(AbstractStore.prototype);
 
-LocalStorageStore.prototype._write = function(key, data, ok, fail) {
+LocalStorageStore.prototype.save = function(ok, fail) {
     "use strict";
 
     try {
-        localStorage.setItem(this.prefix + "/" + key, data);
+        localStorage.setItem(this.user + "/pass", this.pass);
+        localStorage.setItem(this.user + "/data",
+                             JSON.stringify(this.data));
         ok.call(this);
     } catch (e) {
         fail.call(this, e);
@@ -25,17 +26,26 @@ LocalStorageStore.prototype._write = function(key, data, ok, fail) {
 LocalStorageStore.prototype._read = function(key, ok, fail) {
     "use strict";
 
-    var r;
     try {
-        r = localStorage.getItem(this.prefix + "/" + key);
+        this.pass = localStorage.getItem(this.user + "/pass");
+        this.data = JSON.parse(localStorage.getItem(this.user + "/data"));
+        ok.call(this);
     } catch (e) {
         fail.call(this, e);
-        return;
     }
-    if (r === null) {
-        // localStorage.getItem returns null if the key was not found :-(
-        ok.call(this);
-    } else {
-        ok.call(this, r);
+};
+
+LocalStorageStore.prototype._exists = function(user, ok, fail) {
+    "use strict";
+
+    try {
+        var x = localStorage.getItem(user + "/pass");
+        if (typeof x !== 'undefined' && x !== null) {
+            ok.call(this);
+        } else {
+            fail.call(this, "User does not exist");
+        }
+    } catch (e) {
+        fail.call(this, e);
     }
 };

@@ -3,13 +3,32 @@
  * an interface that supports the setting and getting of data on a
  * per-user basis.
  * User support includes login, logout, registration.
+
+So, localStore needs to key data per user, and those data blocks need
+to be encrypted. So, a data block indexed per-user would work fine.
+
+"user": { pass: "password", data: stored data }
+
+FileStore needs to store the password in a per-user file with the rest of
+the file encrytped. A single file need not contain multiple users, and
+the filename dictates the username. So the file contains JSON as shown
+above.
+
+Same with google drive, the filename is the username.
+
+Memoery store is per user too, but needs to be told the username up front.
+The password is again encoded in the store.
+
  *
  * @callback ok
+ * Called with this set to the store
  *
  * @callback fail
+ * Called with this set to the store
  * @param {string} message
  *
  * @callback check_pass
+ * Called with this set to the store
  * @param {string} stored password for the user
  */
 
@@ -22,110 +41,53 @@ function AbstractStore() {
 
     /** @member {string} currently logged-in user */
     this.user = null;
-    /** @member {string} logged-in users' password */
+    /** @member {string} password for the user */
     this.pass = null;
+    /** @member {Object} data for the user */
+    this.data = null;
 }
 
-const PASSWORDS_KEY = "::passwords::";
-
 /**
- * Check if a user is known and (if pass is not null) check their password.
- * Default implementation retrieves a JSON-encoded plain text "passwords"
- * hash using this._read. Subclasses may override to be more defensive
- * e.g. encrypt.
+ * @protected
+ * Check if a user has existing data. Subclasses must implement.
  * @param {string} user username
- * @param {string} password or {check_pass} callback, or null to just check
- * if the user exists
  * @param {ok} called on success
  * @param {fail} called on failure
  */
-AbstractStore.prototype.check_user = function(user, pass, ok, fail) {
+AbstractStore.prototype._exists = function(user, ok, fail) {
     "use strict";
 
-    this._read(
-        PASSWORDS_KEY,
-        function(data) {
-            var passes, success = false;
-            if (typeof data !== "undefined") {
-                passes = JSON.parse(data);
-                if (pass !== null) {
-                    // Check if the password is correct
-                    if (typeof pass === "string") {
-                        success = (passes[user] === pass);
-                    } else if (typeof passes[user] !== "undefined") {
-                        // invoke the checker callback to check
-                        success = pass(passes[user]);
-                    }
-                } else {
-                    success = (typeof passes[user] !== "undefined");
-                }
-            }
-            if (success) {
-                ok.call(this);
-            } else {
-                fail.call(this, "Unknown '" + user + "'");
-            }
-        },
-        function(e) {
-            // passwords hash may not exist
-            fail.call(this, "DB read failed: " + e);
-        });
+    throw "Pure virtual method";
 };
 
 /**
- * Add a new user with the given username and password. Default
- * implementation uses setData, which assumes the user is logged in.
- * @param {string} user username
- * @param {string} pass password
+ * Write this.data for the current user. Subclasses must implement.
  * @param {ok} called on success
  * @param {fail} called on failure
  */
-AbstractStore.prototype.add_user = function(user, pass, ok, fail) {
+AbstractStore.prototype.save = function(ok, fail) {
     "use strict";
 
-    this._read(
-        PASSWORDS_KEY,
-        function(data) {
-            var passes;
-            if (typeof data === "undefined") {
-                passes = {};
-            } else {
-                passes = JSON.parse(data);
-            }
-
-            passes[user] = pass;
-            var json = JSON.stringify(passes);
-            this._write(PASSWORDS_KEY, json, ok, fail);
-        },
-        fail);
-};
-
-/**
-* @protected
- * Override in subclasses. Clients must not call.
- */
-AbstractStore.prototype._write = function(key, data, ok, fail) {
-    "use strict";
-
-    fail.call(this, "writing is not supported by this store");
+    fail.call(this, "_write is not supported by this store");
 };
 
 /**
  * @protected
- * Override in subclasses. Clients must not call. ok(data) will
- * be called even if the key is not present (in which case it will
- * be passed undefined)
+ * Subclasses must implement. Populate this from the backing store.
+ * Requires the user to be set up, but will populate the pass and
+ * data from what it reads from the backing store.
+ * Must fill in pass and data fields.
+ * @param {ok} called on success
+ * @param {fail} called on failure
  */
-AbstractStore.prototype._read = function(key, ok, fail) {
+AbstractStore.prototype._read = function(ok, fail) {
     "use strict";
 
-    fail.call("reading is not supported by this store");
+    throw "Pure virtual method";
 };
 
 /**
- * Register a new user of this storage. If successful,
- * the registered user must be left logged in.
- * Default behaviour is a NOP (registration always succeeds).
+ * Register a new user.
  *
  * @param {string} user string identifying the user
  * @param {string} pass user password
@@ -135,26 +97,16 @@ AbstractStore.prototype._read = function(key, ok, fail) {
 AbstractStore.prototype.register = function(user, pass, ok, fail) {
     "use strict";
 
-    if (this.user !== null) {
-        fail.call(this, "Internal error: already logged in");
-        return;
-    }
-    // Could cache the passwords hash but really very little point.
-    // Logging in and out is an infrequent operation.
-    this.check_user(
-        user, null,
+    this._exists(
+        user,
         function() {
-            fail.call(this, "User already registered");
+            fail.call(this, user + " is already registered");
         },
         function(/*e*/) {
-            this.add_user(
-                user, pass,
-                function() {
-                    this.user = user;
-                    this.pass = pass;
-                    ok.call(this);
-                },
-                fail);
+            this.user = user;
+            this.pass = pass;
+            this.data = null;
+            this._write(ok, fail);
         });
 };
 
@@ -170,17 +122,26 @@ AbstractStore.prototype.register = function(user, pass, ok, fail) {
 AbstractStore.prototype.log_in = function(user, pass, ok, fail) {
     "use strict";
 
-    if (this.user !== null) {
-        fail.call(this, "Internal error: already logged in");
-        return;
-    }
-    this.check_user(
+    this._exists(
         user,
-        pass,
         function() {
             this.user = user;
-            this.pass = pass;
-            ok.call(this);
+            this._read(
+                function() {
+                    var success = true;
+                    if (typeof pass === 'string') {
+                        success = (pass === this.pass);
+                    } else {
+                        success = pass.call(this, this.pass);
+                    }
+                    if (success) {
+                        ok.call(this);
+                    } else {
+                        this.log_out();
+                        fail.call(this, "Password mismatch");
+                    }
+                },
+                fail);
         },
         fail);
 };
@@ -193,66 +154,6 @@ AbstractStore.prototype.log_out = function() {
 
     this.user = null;
     this.pass = null;
+    this.data = null;
 };
 
-/**
- * Get the data stored for a key. It is an error to
- * call this method if no-one is logged in.
- *
- * @param {string} key index key
- * @param {ok} success function, passed data, this = the engine
- * @param {fail} error function, passed a reason, this = the engine
- * @return the data if the item exists. If the item does not exist, null
- */
-AbstractStore.prototype.getData = function(key, ok, fail) {
-    "use strict";
-
-    if (!this.user) {
-        fail.call(this, "Internal error: not logged in");
-        return;
-    }
-    this._read(
-        this.user + ":" + key,
-        function(data) {
-            ok.call(this, JSON.parse(data));
-        }, fail);
-};
-
-/**
- * Check if an item exists for the logged-in user. It is an error to
- * call this method if no-one is logged in.
- *
- * @param {string} key key to look up
- * @param {ok} (exists) this = the engine
- * @param {fail} (does not exist) this = the engine
- */
-AbstractStore.prototype.exists = function(key, ok, fail) {
-    "use strict";
-
-    if (!this.user) {
-        fail.call(this, "Internal error: not logged in");
-        return;
-    }
-    this._read(this.user + ":" + key, ok, fail);
-};
-
-/**
- * Save the given data for the given key. It is an error to
- * call this method if no-one is logged in.
- * The store does not have to implement saving. If it does not, this
- * method must call fail(message)
- *
- * @param {string} key index key
- * @param data the data to be stored
- * @param {ok} this = the engine
- * @param {fail} passed a reason, this = the engine
- */
-AbstractStore.prototype.setData = function(key, data, ok, fail) {
-    "use strict";
-
-    if (!this.user) {
-        fail.call(this, "Internal error: not logged in");
-    } else {
-        this._write(this.user + ":" + key, JSON.stringify(data), ok, fail);
-    }
-};

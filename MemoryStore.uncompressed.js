@@ -1,24 +1,26 @@
 // AbstractStore implementation loading data from JSON.
-// Mainly for testing
-// @param data the data to be loaded
-function MemoryStore(data) {
+// For testing
+// @param {string} pass the password
+// @param {Object} data the data
+function MemoryStore(pass, data) {
     "use strict";
 
     AbstractStore.call(this);
+
+    this.pass = pass;
     this.data = data;
 }
 
 MemoryStore.prototype = Object.create(AbstractStore.prototype);
 
-MemoryStore.prototype._read = function(key, ok, fail) {
+MemoryStore.prototype._read = function(ok, fail) {
     "use strict";
 
-    ok.call(this, this.data[key]);
+    ok.call(this);
 };
 
-MemoryStore.prototype._write = function(key, data, ok/*, fail*/) {
+MemoryStore.prototype.save = function(ok/*, fail*/) {
     "use strict";
 
-    this.data[key] = data;
     ok.call(this);
 };
