@@ -23,7 +23,7 @@ LocalStorageStore.prototype.save = function(ok, fail) {
     }
 };
 
-LocalStorageStore.prototype._read = function(key, ok, fail) {
+LocalStorageStore.prototype._read = function(ok, fail) {
     "use strict";
 
     try {

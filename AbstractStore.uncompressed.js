@@ -106,7 +106,7 @@ AbstractStore.prototype.register = function(user, pass, ok, fail) {
             this.user = user;
             this.pass = pass;
             this.data = null;
-            this._write(ok, fail);
+            this.save(ok, fail);
         });
 };
 

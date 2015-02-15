@@ -163,6 +163,80 @@ function gapi_loaded() {
     $('#gd_button').show();
 };
 
+// TODO: synch passwords
+const MINUTE          = 60 * 1000;
+const HOUR            = 60 * MINUTE;
+const CLOUD_BUILD     = 1398600000;
+const LAST_SYNC       = CLOUD_BUILD + HOUR;
+const SINCE_LAST_SYNC = LAST_SYNC + HOUR;
+const CLOUD_CHANGE_1  = SINCE_LAST_SYNC + MINUTE;
+const CLOUD_CHANGE_2  = CLOUD_CHANGE_1 + HOUR;
+
+const CLIENT_DATA = {
+    user: "x",
+    pass: "x",
+    data: {
+        last_sync: LAST_SYNC,
+        cache: {
+            time: CLOUD_BUILD,
+            data: {
+                "LocalSite": {
+                    data: {
+                        "User": {
+                            time: SINCE_LAST_SYNC,
+                            data: "local_user"
+                        },
+                        "Pass": {
+                            time: SINCE_LAST_SYNC,
+                            data: "5678"
+                        },
+                        "Dead": {
+                            time: CLOUD_BUILD,
+                            data: "Zone"
+                        }
+                    },
+                    time: CLOUD_BUILD
+                }
+            }
+        },
+        actions: [
+            { type: "N", time: SINCE_LAST_SYNC,
+              path: ["LocalSite", "Pass"], data: "5678" },
+            { type: "R", time: SINCE_LAST_SYNC,
+              path: ["LocalSite", "grunt"], data: "User" }
+        ]
+    }
+};
+
+const CLOUD_DATA = {
+    user: "x",
+    pass: "x",
+    data: {
+        "last_sync": 0,
+        cache: {},
+        actions: [
+            { type: "N", path: [ "LocalSite" ],
+              time: CLOUD_BUILD },
+            { type: "N", path: [ "LocalSite", "grunt" ],
+              time: CLOUD_BUILD },
+            { type: "N", path: [ "LocalSite", "grunt" ],
+              time: CLOUD_BUILD },
+            { type: "N", path: [ "NewSite" ],
+              time: CLOUD_CHANGE_2 },
+            { type: "D", path: [ "LocalSite", "Dead" ],
+              time: CLOUD_CHANGE_2 + MINUTE },
+            { type: "R", path: [ "LocalSite", "Pass" ], data: "Password",
+              time: CLOUD_CHANGE_2 + MINUTE * 2 },
+            { type: "N", path: [ "LocalSite", "Down" ],
+              time: CLOUD_CHANGE_2 + MINUTE * 3 },
+            { type: "N", path: [ "LocalSite", "Down", "Stairs" ],
+              time: CLOUD_CHANGE_2 + MINUTE * 4, data: "Maid" },
+            { type: "D", path: [ "LocalSite", "Does", "Not", "Exist" ],
+              time: CLOUD_CHANGE_2 + MINUTE * 5 }
+        ]
+    }
+};
+
 $(document).ready(function() {
 
     $('body')

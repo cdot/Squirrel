@@ -451,9 +451,17 @@ function log_in() {
             if (cpass === pass) {
                 $dlg.dialog("close");
                 // We want to register; create the new registration in the
-                // local drive
-                client_store.register(pass);
-                logged_in_to_client();
+                // client drive
+                client_store.register(
+                    user, pass,
+                    function() {
+                        logged_in_to_client();
+                    },
+                    function(e) {
+                        debugger; // Shouldn't happen
+                        alert(e);
+                    }
+                );
             } else {
                 $("#password_mismatch").show();
                 $("#show_password").button().click(function() {
@@ -503,14 +511,7 @@ function log_in() {
                 user, pass,
                 function() {
                     console.log("Checking Remote Store");
-                    cloud_store.exists(
-                        user,
-                        function() {
-                            registration_dialog("existing_hoard");
-                        },
-                        function() {
-                            registration_dialog("no_nuts");
-                        });
+                    registration_dialog("existing_hoard");
                 },
                 function(message) {
                     registration_dialog("unknown_user");
@@ -552,6 +553,8 @@ function log_in() {
     }
 }
 
+// Determine if there are unsaved changes, and generate a warning
+// message for the caller to use.
 function unsaved_changes() {
     if (client_hoard.modified
         || cloud_hoard && cloud_hoard.modified
@@ -567,6 +570,7 @@ function unsaved_changes() {
     }
 }
 
+// Clear down
 function log_out() {
     $("#tree").empty();
     $("#authenticated").hide();
@@ -587,43 +591,6 @@ const LAST_SYNC       = CLOUD_BUILD + HOUR;
 const SINCE_LAST_SYNC = LAST_SYNC + HOUR;
 const CLOUD_CHANGE_1  = SINCE_LAST_SYNC + MINUTE;
 const CLOUD_CHANGE_2  = CLOUD_CHANGE_1 + HOUR;
-
-const CLIENT_DATA = {
-    user: "x",
-    pass: "x",
-    data: {
-        last_sync: LAST_SYNC,
-        cache: {
-            time: CLOUD_BUILD,
-            data: {
-                "LocalSite": {
-                    data: {
-                        "User": {
-                            time: SINCE_LAST_SYNC,
-                            data: "local_user"
-                        },
-                        "Pass": {
-                            time: SINCE_LAST_SYNC,
-                            data: "5678"
-                        },
-                        "Dead": {
-                            time: CLOUD_BUILD,
-                            data: "Zone"
-                        }
-                    },
-                    time: CLOUD_BUILD
-                }
-            }
-        },
-        actions: [
-            { type: "N", time: SINCE_LAST_SYNC,
-              path: ["LocalSite", "Pass"], data: "5678" },
-            { type: "R", time: SINCE_LAST_SYNC,
-              path: ["LocalSite", "grunt"], data: "User" }
-        ]
-    }
-};
-
 const CLOUD_DATA = {
     user: "x",
     pass: "x",
@@ -665,7 +632,7 @@ const CLOUD_DATA = {
         //client_store = new EncryptedStore(client_store);
 
         cloud_store = new MemoryStore(CLOUD_DATA);
-        client_store = new MemoryStore(CLIENT_DATA);
+        client_store = new LocalStorageStore();
 
         // Log in
         $("#log_in").

@@ -71,7 +71,7 @@ Hoard.prototype.empty = function() {
     this.last_sync = null;
     this.actions = [];
     this.cache = { data: {} };
-    this.modified = false();
+    this.modified = false;
 };
 
 /**
