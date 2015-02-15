@@ -1,32 +1,38 @@
-var chosen_language = "en";
+var translations = {};
+var chosen_langauge = "en";
 
-function init_TX() {
-    if (chosen_language === "tx" ) {
-        // Extract translatable strings
-        var words = {};
-        $(".TX_title").each(function() {
-            words[$(this).attr("title")] = true;
-        });
-        
-        $(".TX_text").each(function() {
-            words[$(this).text()] = true;
-        });
-        var $ta = $("<textarea cols='120' rows='100'></textarea>");
-        $ta.text(Object.keys(words).sort().join("\n"));
-        $("body").empty().append($ta);
+function init_Translation(lingo, tx_ready) {
+    if (typeof lingo === 'undefined' || lingo === "en") {
+        tx_ready();
+        return;
     }
-    else if (chosen_language !== "en") {
-        // TODO: implement TX somehow. FileReader, probably.
-        $(".TX_title").each(function() {
-            $(this).attr("title", TX($(this).attr("title")));
+    chosen_language = lingo;
+    $.ajax(
+        "locale/" + chosen_language + ".json",
+        {
+            success: function(data) {
+                translations[chosen_language] = data;
+                $(".TX_title").each(function() {
+                    $(this).attr("title", TX($(this).attr("title")));
+                });
+                $(".TX_text").each(function() {
+                    $(this).text(TX($(this).text()));
+                });
+                tx_ready();
+            },
+            error: function(a,b,c,d) {
+                console.log("Failed to load " + chosen_language + ".json: "
+                            + c.message);
+                tx_ready();
+            }
         });
-        
-        $(".TX_text").each(function() {
-            $(this).text(TX($(this).text()));
-        });
-    }
 }
 
 function TX(s) {
-    return s;
+    var tx = translations[chosen_language][s];
+    if (typeof tx === 'undefined') {
+        return s;
+    } else {
+        return tx;
+    }
 }

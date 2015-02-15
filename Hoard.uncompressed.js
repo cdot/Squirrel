@@ -264,12 +264,13 @@ Hoard.prototype.stream_to_cache = function(cloud, listener, conflicts) {
 /**
  * Save the hoard to the given store
  */
-Hoard.prototype.save = function(store, fail) {
+Hoard.prototype.save = function(store, ok, fail) {
     var self = this;
     store.data = this;
     store.save(
         function() {
             self.modified = false;
+            ok.call(self);
         },
         fail);
 };

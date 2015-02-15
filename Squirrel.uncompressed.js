@@ -361,7 +361,7 @@ function play_action(e) {
             .addClass("modified")
             .attr("title", last_mod(e.time));
     } else {
-        throw "Unrecognised action type " + e.type;
+        throw "Unrecognised action '" + e.type + "'";
     }
     update_save_button();
     $("#tree").bonsai("update");
@@ -373,7 +373,7 @@ function log_in() {
     var user, pass, confirm_password, registration_dialog, offer_registration,
     load_attempted, hoard_loaded, logged_in_to_client;
 
-    $("#authenticated").loadingOverlay({ loadingText: TX("Logging in...") });
+    $("#authenticated").loadingOverlay({ loadingText: TX("Signing in...") });
 
     // Callback invoked when either of the client or cloud hoards
     // is loaded
@@ -559,7 +559,7 @@ function log_in() {
 // Determine if there are unsaved changes, and generate a warning
 // message for the caller to use.
 function unsaved_changes() {
-    if (client_hoard.modified
+    if (client_hoard && client_hoard.modified
         || cloud_hoard && cloud_hoard.modified
         || $('.modified').length > 0) {
 
@@ -624,11 +624,7 @@ const CLOUD_DATA = {
 (function ($) {
     "use strict";
 
-    $(document).ready(function() {
-
-        // Initialise translation module
-        init_TX();
-
+    var ready = function() {
         //client_store = new LocalStorageStore("squirrel");
         //client_store = new EncryptedStore(client_store);
 
@@ -672,30 +668,45 @@ const CLOUD_DATA = {
             })
             .hide()
             .click(function() {
-                // TODO: arrgh, synch the hoards before upload!
+                var $dlg = $("#dlg_alert");
+                $dlg.children(".message").text(
+                    TX("Saving...."));
+                $dlg.dialog({
+                    modal: true
+                });
                 if (client_hoard.modified) {
                     client_hoard.save(
                         client_store,
+                        function() {
+                            $dlg.children(".message").append(
+                                "<div class='notice'>"
+                                    + TX("Saved in this browser")
+                                    + "</div>");
+                        },
                         function(e) {
-                            var $dlg = $("#dlg_alert");
-                            $dlg.children(".message").text(
-                                TX("Local save failed: ") + e);
-                            $dlg.dialog({
-                                modal: true
-                            });
+                            $dlg.children(".message").append(
+                                "<div class='warn'>"
+                                + TX("Failed to save in the browser: ") + e
+                                    + "</div>");
                         });
                 }
                 if (cloud_hoard && cloud_hoard.modified) {
-                    // TODO: add the client actions to the stream
                     cloud_hoard.save(
                         cloud_store,
+                        function() {
+                            if (!client_hoard.modified) {
+                                client_store.actions = [];
+                            }
+                            $dlg.children(".message").append(
+                                "<div class='notice'>"
+                                    + TX("Saved in the cloud")
+                                    + "</div>");
+                        },
                         function(e) {
-                            var $dlg = $("#dlg_alert");
-                            $dlg.children(".message").text(
-                                TX("Cloud save failed: ") + e);
-                            $dlg.dialog({
-                                modal: true
-                            });
+                            $dlg.children(".message").append(
+                                "<div class='warning'>"
+                                    + TX("Cloud save failed: ") + e
+                                    + "</div>");
                         });
                 }
                 update_save_button();
@@ -719,6 +730,11 @@ const CLOUD_DATA = {
             .change(function(evt) {
                 search($(this).val());
             });
+    };
+
+    $(document).ready(function() {
+        // Initialise translation module
+        init_Translation("fr", ready);
     });
 
     $(window).on('beforeunload', function() {

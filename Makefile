@@ -8,6 +8,10 @@ test:	all test.js
 eslint: *.uncompressed.js
 	eslint --config package.json *.uncompressed.js
 
+locale/*.json: *.uncompressed.* Makefile extract_strings.pl
+	cat *.uncompressed.* | \
+		perl extract_strings.pl
+
 %.min.js : %.uncompressed.js
 	java -jar yuicompressor.jar -v $< > $@
 
