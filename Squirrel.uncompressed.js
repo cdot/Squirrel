@@ -458,8 +458,11 @@ function log_in() {
                         logged_in_to_client();
                     },
                     function(e) {
-                        debugger; // Shouldn't happen
-                        alert(e);
+                        var $dlg = $("#dlg_alert");
+                        $dlg.children(".message").text(e);
+                        $dlg.dialog({
+                            modal: true
+                        });
                     }
                 );
             } else {
@@ -602,8 +605,6 @@ const CLOUD_DATA = {
               time: CLOUD_BUILD },
             { type: "N", path: [ "LocalSite", "grunt" ],
               time: CLOUD_BUILD },
-            { type: "N", path: [ "LocalSite", "grunt" ],
-              time: CLOUD_BUILD },
             { type: "N", path: [ "NewSite" ],
               time: CLOUD_CHANGE_2 },
             { type: "D", path: [ "LocalSite", "Dead" ],
@@ -673,11 +674,29 @@ const CLOUD_DATA = {
             .click(function() {
                 // TODO: arrgh, synch the hoards before upload!
                 if (client_hoard.modified) {
-                    client_hoard.save(client_store);
+                    client_hoard.save(
+                        client_store,
+                        function(e) {
+                            var $dlg = $("#dlg_alert");
+                            $dlg.children(".message").text(
+                                TX("Local save failed: ") + e);
+                            $dlg.dialog({
+                                modal: true
+                            });
+                        });
                 }
                 if (cloud_hoard && cloud_hoard.modified) {
                     // TODO: add the client actions to the stream
-                    cloud_hoard.save(cloud_store);
+                    cloud_hoard.save(
+                        cloud_store,
+                        function(e) {
+                            var $dlg = $("#dlg_alert");
+                            $dlg.children(".message").text(
+                                TX("Cloud save failed: ") + e);
+                            $dlg.dialog({
+                                modal: true
+                            });
+                        });
                 }
                 update_save_button();
             });

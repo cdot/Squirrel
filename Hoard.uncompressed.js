@@ -250,10 +250,8 @@ Hoard.prototype.stream_to_cache = function(cloud, listener, conflicts) {
         }
         j++;
     }
-
-    // Clear our action stream - we're up to date
-    this.actions = [];
-    this.modified = false;
+    // We can clear our action stream once the cloud has been updated,
+    // but not before.
 
     // Set the sync time
     if (il > 0) {
@@ -266,6 +264,12 @@ Hoard.prototype.stream_to_cache = function(cloud, listener, conflicts) {
 /**
  * Save the hoard to the given store
  */
-Hoard.prototype.save = function(store) {
-    console.log(JSON.stringify(this));
+Hoard.prototype.save = function(store, fail) {
+    var self = this;
+    store.data = this;
+    store.save(
+        function() {
+            self.modified = false;
+        },
+        fail);
 };

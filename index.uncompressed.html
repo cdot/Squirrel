@@ -76,11 +76,11 @@
 
     <!-- Dialogs -->
     <div id="dlg_register" class="dialog TX_title" title="Register">
-      <span class="TX_text">You are not registered in this browser</span>
-      <span class="message existing_hoard TX_text">, but I can see that you have an existing hoard of nuts in the Cloud store. Do you want to use it?</span>
+      <span class="TX_text">You are not registered in this browser, </span>
+      <span class="message existing_hoard TX_text">but I can see that you have an existing hoard of nuts in the Cloud store. Do you want to use it?</span>
       <span class="message cant_connect TX_text">, and I can't connect to the Cloud store to check whether you have any nuts there or not. Do you want to continue and create a local hoard? It will be automatically synched with the Cloud if and when we are able to make contact with it.</span>
-      <span class="message no_nuts TX_text">, and I can't see any existing hoard of nuts in the Cloud. Do you want to register in this browser? A copy of your hoard will automatically be created in the Cloud.</span>
-      <span class="message unknown_user TX_text">, and the password you entered does not match what I can see in the Cloud. This might be because you are signed in to the Cloud as somebody else, or you might have mistyped your password. Do you can continue to register with this password? A copy of your new hoard will automatically be created in the Cloud.</span>
+      <span class="message no_nuts TX_text">and I can't see any existing hoard of nuts in the Cloud. Do you want to register in this browser? A copy of your hoard will automatically be created in the Cloud.</span>
+      <span class="message unknown_user TX_text">and the password you entered does not match what I can see in the Cloud. This might be because you are signed in to the Cloud as somebody else, or you might have mistyped your password. Do you can continue to register with this password? A copy of your new hoard will automatically be created in the Cloud.</span>
     </div>
 
     <div id="dlg_confirm_pass" class="dialog TX_title" title="Confirm password">
@@ -110,8 +110,13 @@
       </div>
       <span class="TX_text">Please review these rejected actions before saving.</span>
     </div>
+
     <div id="dlg_add_node" class="dialog TX_title" title="Add child node">
       <span class="TX_text">Select type of child node to add</span>
+    </div>
+
+    <div id="dlg_alert" class="dialog TX_title" title="Alert">
+      <div class="message"></div>
     </div>
   </body>
 </html>
