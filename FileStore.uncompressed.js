@@ -15,6 +15,25 @@ function FileStore(file) {
 
 FileStore.prototype = Object.create(AbstractStore.prototype);
 
+FileStore.prototype._exists = function(user, ok, fail) {
+    "use strict";
+
+    if (this.data !== null) {
+        ok.call(this);
+    } else {
+        var self = this;
+        this._read(
+            function() {
+                if (self.user === user) {
+                    ok.call(self);
+                } else {
+                    fail.call(self, "Store does not contain that user");
+                }
+            },
+            fail);
+    }
+};
+
 FileStore.prototype._read = function(ok, fail) {
     "use strict";
 
@@ -26,6 +45,7 @@ FileStore.prototype._read = function(ok, fail) {
         // load the cache from the first one.
         if (self.data === null) {
             var data = JSON.parse(reader.result);
+            self.user = data.user;
             self.pass = data.pass;
             self.data = data.data;
         }

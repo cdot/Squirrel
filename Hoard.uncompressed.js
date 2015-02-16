@@ -213,21 +213,27 @@ Hoard.prototype.stream_to_cache = function(cloud, listener, conflicts) {
     "use strict";
 
     var i = 0, j = 0, is = 0,
-    stream = cloud.actions,
+    stream = cloud.actions.sort(function(a,b) {
+        if (a.time < b.time)
+            return -1;
+        else if (a.time > b.time)
+            return 1;
+        return 0;
+    }),
     il = stream.length,
     jl = this.actions.length,
     c;
 
-    console.log("Last sync was at " + new Date(this.last_sync));
+    //console.log("Last sync was at " + new Date(this.last_sync));
 
     // Play in all cloud actions since the last sync
     while (i < il && stream[i].time <= this.last_sync) {
-        console.log("...skip cloud action @" + new Date(stream[i].time));
+        //console.log("...skip cloud action @" + new Date(stream[i].time));
         i++;
     }
     is = i;
     while (i < il) {
-        console.log("...push cloud action @" + new Date(stream[i].time));
+        //console.log("...push cloud action @" + new Date(stream[i].time));
         c = this.play_action(stream[i++], listener);
         if (c !== null) {
             conflicts.push(c);

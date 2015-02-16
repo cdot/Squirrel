@@ -1,5 +1,5 @@
 var translations = {};
-var chosen_langauge = "en";
+var chosen_language = "en";
 
 function init_Translation(lingo, tx_ready) {
     if (typeof lingo === 'undefined' || lingo === "en") {
@@ -29,7 +29,11 @@ function init_Translation(lingo, tx_ready) {
 }
 
 function TX(s) {
-    var tx = translations[chosen_language][s];
+    var tx = translations[chosen_language];
+    if (!tx) {
+        return s;
+    }
+    tx = tx[s];
     if (typeof tx === 'undefined') {
         return s;
     } else {

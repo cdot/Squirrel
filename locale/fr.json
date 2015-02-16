@@ -1,10 +1,10 @@
 {
-    "The passwords you entered do not match" :
+    "The passwords you entered do not match":
     "Les mots de passe que vous avez entré ne correspondent pas",
     "Sites" : "Sites",
-    "Username:" : "Nom d'utilisateur:",
+    "Username:" : "Nom de connexion:",
     "Save Changes" : "Enregistrer les modifications",
-    "Enter password" : "Entrez le mot de passe",
+    "Enter password" : "Entrez votre mot de passe",
     "No" : "Non",
     "Sign out" : "Se déconnecter",
     "Cannot change value, does not exist" :
@@ -12,62 +12,65 @@
     "Please review these rejected actions before saving." :
     "Veuillez consulter ces actions rejetées avant d'enregistrer.",
     "Squirrel" : "Squirrel",
-    "Saving...." : "Sauver...",
+    "Saving...." : "Enregistre...",
     "Re-enter your password to confirm it" :
     "Entrez à nouveau votre mot de passe pour le confirmer",
     "Are you really sure?" : "Êtes-vous vraiment sûr?",
-    "Signing in..." : "Connexion...",
+    "Signing in..." : "Vous signes...",
     "Add new site" : "Ajouter le nouveau site",
     "Alert" : "Alerter",
     "You are not registered in this browser, " :
     "You are not registered in this browser, ",
     "and the password you entered does not match what I can see in the Cloud. This might be because you are signed in to the Cloud as somebody else, or you might have mistyped your password. Do you can continue to register with this password? A copy of your new hoard will automatically be created in the Cloud." :
-    "et le mot de passe entré ne correspond pas à ce que je peux voir dans le nuage. C'est peut-être parce que vous êtes connecté à la nuée comme quelqu'un d'autre, ou vous pourriez avoir fait votre mot de passe. , Vous pouvez continuer à vous inscrire avec ce mot de passe ? Une copie de votre nouveau Trésor sera automatiquement créée dans le nuage.",
-   "Are you sure you want to delete" : "Are you sure you want to delete",
-   "Saved in the cloud" : "Enregistré dans le nuage",
-   "Init local file store" : "Init local file store",
-   "Welcome to Squirrel" : "Bienvenue à Squirrel",
-   "Enter search string" : "Entrez la chaîne de recherche",
-   "and I can't connect to the Cloud store to check whether you have any nuts there or not. Do you want to continue and create a local hoard? It will be automatically synched with the Cloud if and when we are able to make contact with it." :
+    "et le mot de passe entré ne correspond pas à ce que je peux voir dans le Nuage. C'est peut-être parce que vous êtes connecté à la nuée comme quelqu'un d'autre, ou vous pourriez avoir fait votre mot de passe. , Vous pouvez continuer à vous inscrire avec ce mot de passe ? Une copie de votre nouveau Trésor sera automatiquement créée dans le Nuage.",
+    "Are you sure you want to delete" : "Êtes-vous sûr à supprimer?",
+    "Saved in the Cloud" : "Enregistré dans le Nuage",
+    "Init local file store" : "Init local file store",
+    "Welcome to Squirrel" : "Bienvenue à Squirrel",
+    "Enter search string" : "Entrez la chaîne de recherche",
+    "and I can't connect to the Cloud store to check whether you have any nuts there or not. Do you want to continue and create a local hoard? It will be automatically synched with the Cloud if and when we are able to make contact with it." :
     "et je ne peux pas se connecter au magasin de Cloud pour vérifier si vous avez des noix il ou non. Voulez-vous continuer et créer un Trésor local ? Il sera automatiquement synchronisé avec le Cloud si et quand nous sommes en mesure de faire contact avec elle.",
-   "Select file" : "Select file",
-   "Failed to save in the browser: " :
+    "Select file" : "Select file",
+    "Failed to save in the browser: " :
     "Impossible d'enregistrer dans le navigateur: ",
-   "Select type of child node to add" :
+    "Select type of child node to add" :
     "Sélectionnez le type de nœud enfant à ajouter",
-   "Signed in as: " : "Signé en tant que: ",
-   "does not exist" : "n'existe pas",
-   "Delete entry" : "Supprimer l'entrée",
-   " and everything under it?" : " et tout en dessous?",
-   "but I can see that you have an existing hoard of nuts in the Cloud store. Do you want to use it?" :
-    "mais je vois que vous avez un Trésor existant de noix dans le magasin de nuage. Ne vous vous souhaitez l'utiliser ?",
-   "Conflicts were detected while merging actions from the cloud:" :
-    "Tout en fusionnant les actions du Cloud, les conflits ont été détectés:",
-   "Yes" : "Oui",
-   "Cannot create, already exists" : "Impossible de créer, existe déjà",
-   "Registering you with username" : "Vous inscrivant avec nom d'utilisateur",
-   "and I can't see any existing hoard of nuts in the Cloud. Do you want to register in this browser? A copy of your hoard will automatically be created in the Cloud." : "et je ne vois pas n'importe quel trésor existant de noix dans le nuage. Voulez vous inscrire dans ce navigateur ? Une copie de votre Trésor sera automatiquement créée dans le nuage.",
-   "Cannot delete, does not exist" : "Impossible de supprimer, n'existe pas",
-   "Add new child node" : "Ajouter un nouveau enfant",
-   "Password:" : "Mot de passe:",
-   "Enter username" : "Entrez le nom d'utilisateur",
-   "Cancel" : "Annuler",
-   "Confirm" : "Confirmer",
-   "Search:" : "Recherche:",
-   "Saved in this browser" : "Enregistrés dans ce navigateur",
-   "New value" : "Nouvelle valeur",
-   "Unrecognised action type" : "Type d'action non reconnu",
-   "Enter your details to log in or register" : "Entrez vos informations pour vous connecter ou vous inscrire",
-   "Delete this node" : "Supprimer ce nœud",
-   "Double-click to edit. Last modified: " : "Double-clic pour éditer. Dernière modification: ",
-   "Add child node" : "Ajouter un nouveau enfant",
-   "WARNING!" : "WARNING!",
-   "Confirm password" : "Confirmer mot de passe",
-   " and " : " et ",
-   "Cannot rename, does not exist" : "Impossible de renommer, n'existe pas",
-   "New subtree" : "Nouveau sous-arborescence",
-   "Sign in" : "Connecter",
-   "Register" : "Register",
-   "You have unsaved changes" : "Vous avez des modifications non enregistrées",
-   "Cloud save failed: " : "Echec de la sauvegarde dans le nuage:"
+    "Signed in as: " : "Signé en tant que: ",
+    "does not exist" : "n'existe pas",
+    "Delete entry" : "Supprimer l'entrée",
+    " and everything under it?" : " et tout en dessous?",
+    "but I can see that you have an existing hoard of nuts in the Cloud. Do you want to use it?" :
+    "mais je vois que vous avez un Trésor existant de noix dans le Nuage. Ne vous vous souhaitez l'utiliser ?",
+    "Conflicts were detected while merging actions from the Cloud:" :
+    "Tout en fusionnant les actions du Nuage, les conflits ont été détectés:",
+    "Yes" : "Oui",
+    "Cannot create, already exists" : "Impossible de créer, existe déjà",
+    "Registering you with username" : "Vous inscrivant avec nom de connexion",
+    "and I can't see any existing hoard of nuts in the Cloud. Do you want to register in this browser? A copy of your hoard will automatically be created in the Cloud." :
+    "et je ne vois pas n'importe quel trésor existant de noix dans le Nuage. Voulez vous inscrire dans ce navigateur ? Une copie de votre Trésor sera automatiquement créée dans le Nuage.",
+    "Cannot delete, does not exist" : "Impossible de supprimer, n'existe pas",
+    "Add new child node" : "Ajouter un nouveau enfant",
+    "Password:" : "Mot de passe:",
+    "Enter username" : "Entrez votre nom de connexion",
+    "Cancel" : "Annuler",
+    "Confirm" : "Confirmer",
+    "Search:" : "Recherche:",
+    "Saved in this browser" : "Enregistrés dans ce navigateur",
+    "New value" : "Nouvelle valeur",
+    "Unrecognised action type" : "Type d'action non reconnu",
+    "Enter your details to log in or register" :
+    "Entrez vos informations pour vous connecter ou vous inscrire",
+    "Delete this node" : "Supprimer ce nœud",
+    "Double-click to edit. Last modified: " :
+    "Double-clic pour éditer. Dernière modification: ",
+    "Add child node" : "Ajouter un nouveau enfant",
+    "WARNING!" : "ALARME!",
+    "Confirm password" : "Confirmer mot de passe",
+    " and " : " et ",
+    "Cannot rename, does not exist" : "Impossible de renommer, n'existe pas",
+    "New subtree" : "Nouveau sous-arborescence",
+    "Sign in" : "Connecter",
+    "Register" : "Register",
+    "You have unsaved changes" : "Vous avez des modifications non enregistrées",
+    "Cloud save failed: " : "Ne pouvait pas enregistrer dans le Nuage:"
 }

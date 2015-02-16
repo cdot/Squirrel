@@ -17,6 +17,11 @@ MemoryStore.prototype = Object.create(AbstractStore.prototype);
 MemoryStore.prototype._exists = function(user, ok, fail) {
     "use strict";
 
+    if (this.user === user) {
+        ok.call(self);
+    } else {
+        fail.call(self, "Store does not contain that user");
+    }
     ok.call(this);
 };
 
