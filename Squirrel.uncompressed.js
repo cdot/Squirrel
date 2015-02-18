@@ -30,6 +30,27 @@ function gapi_loaded() {
 */
 }
 
+$.fn.linger = function(onRelease) {
+
+    var eventType = {
+        mousedown: 'ontouchstart' in window ? 'touchstart' : 'mousedown',
+        mouseup: 'ontouchend' in window ? 'touchend' : 'mouseup'
+    };
+
+    return this.each(function() {
+        var timeout;
+        $(this)
+            .on(eventType.mousedown + '.linger', function(e) {
+                timeout = window.setTimeout(function() {
+                    onRelease.call(this, e);
+                }, 500)
+            })
+            .on(eventType.mouseup + '.linger', function(e) {
+                window.clearTimeout(timeout);
+            });
+    });
+};
+
 function get_path($node) {
     "use strict";
 
@@ -56,7 +77,42 @@ function last_mod(time) {
     "use strict";
 
     var d = new Date(time);
-    return TX("Double-click to edit. Last modified: ") + d.toLocaleString();
+    return TX("Click and hold to see menu. Last modified: ") + d.toLocaleString();
+}
+
+// Generate a new password subject to constraints:
+// length: length of password
+// charset: characters legal in the password. Ranges can be defined using
+// A-Z syntax.
+function generate_password(constraints) {
+    if (typeof constraints.length === 'undefined') {
+        constraints.length = 24;
+    }
+    if (typeof constraints.charset === 'undefined') {
+        constraints.charset = 'A-Za-z0-9';
+    }
+    var cs = constraints.charset;
+    var legal = [];
+    while (cs.length > 0) {
+        if (cs.length >= 3 && cs.charAt(1) === "-") {
+            sor = cs.charCodeAt(0);
+            eor = cs.charCodeAt(2);
+            cs = cs.substring(3);
+            while (sor <= eor) {
+                legal.push(String.fromCharCode(sor++));
+            }
+        } else {
+            legal.push(cs.charAt(0));
+            cs = cs.substring(1);
+        }
+    }
+    var array = new Uint8Array(constraints.length);
+    window.crypto.getRandomValues(array);
+    var s = "";
+    for (var i = 0; i < constraints.length; i++) {
+        s += legal[array[i] % legal.length];
+    }
+    return s
 }
 
 function confirm_delete($node) {
@@ -133,18 +189,6 @@ function change_value($span) {
     "use strict";
 
     inplace_edit($span, "E");
-}
-
-function copy_to_clipboard(data) {
-    "use strict";
-    var copyEvent = new ClipboardEvent(
-        'copy',
-        {
-            dataType: 'text/plain',
-            data: data
-        }
-    );
-    document.dispatchEvent(copyEvent);
 }
 
 // Make a case-insensitive selector
@@ -267,6 +311,7 @@ function node_clicked() {
             })
             .attr("title", TX("Copy value to clipboard"));
         $div.append($copier);
+        // There can be only one....
         zeroclipboard = new ZeroClipboard($copier)
             .on("copy", function(e) {
                 var cb = e.clipboardData;
@@ -312,7 +357,7 @@ function play_action(e) {
         $parent_ul = $parent_ul.find("li[data-key='" + quotemeta(e.path[i]) + "'] > ul");
     }
 
-    var key = e.path[e.path.length - 1];
+    var key = e.path[e.path.length - 1], $keyspan, $valspan;
 
     if (e.type === "N") {
         var $li = $("<li></li>")
@@ -322,30 +367,42 @@ function play_action(e) {
             .attr("title", last_mod(e.time));
 
         var $div = $("<div></div>")
-            .addClass("node_div")
-            .click(node_clicked);
+            .addClass("node_div");
         $li.append($div);
 
-        var $keyspan = $("<span class='key'>" + key + "</span>");
-        $keyspan.dblclick(function() {
-            // in-place editor
-            change_key($(this));
-        });
+        $keyspan = $("<span class='key'>" + key + "</span>");
         $div.append($keyspan);
 
         if (typeof e.data !== "undefined" && e.data !== null) {
             $div.addClass("treeleaf");
-            var $valspan = $("<span class='value'>" + e.data + "</span>");
-            $valspan.dblclick(function() {
-                // in-place editor
-                change_value($(this));
-            });
+            $valspan = $("<span class='value'>" + e.data + "</span>");
             $div.append(" : ").append($valspan);
         } else {
             $div.addClass("treecollection");
             var $subul = $("<ul></ul>");
             $li.append($subul);
         }
+
+        $div
+            .linger(function() {
+                console.log("Constructing menu");
+                var $ul = $('<ul></ul>');
+                // Construct context menu
+                $("<li>" + TX("Edit key") + "</li>")
+                    .click(function() {
+                        change_key($keyspan);
+                    })
+                    .appendTo($ul);
+                if ($valspan) {
+                    $("<li>" + TX("Edit value") + "</li>")
+                        .click(function() {
+                            change_value($valspan);
+                        })
+                        .appendTo($ul);
+                }
+                $("body").append($ul);
+                $ul.menu();
+            });
 
         // Insert-sort into the $parent_ul
         var inserted = false;
