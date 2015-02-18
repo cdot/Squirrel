@@ -3,10 +3,12 @@
   <head>
     <meta charset="UTF-8">
     <link rel="icon" href="images/favicon.ico" type="image/x-icon" />
+    <link href='http://fonts.googleapis.com/css?family=Poiret+One&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
     <script type="text/javascript" src="jquery-2.1.3.min.js"></script>
     <script type="text/javascript" src="jquery-ui.min.js"></script>
     <script type="text/javascript" src="jquery-bonsai.min.js"></script>
     <script type="text/javascript" src="loading-overlay.min.js"></script>
+    <script type="text/javascript" src="ZeroClipboard.min.js"></script>
     <script type="text/javascript" src="Translation.uncompressed.js"></script>
     <script type="text/javascript" src="AES.min.js"></script>
     <script type="text/javascript" src="AbstractStore.uncompressed.js"></script>
@@ -31,7 +33,7 @@
 	<h2 class="TX_text">Enter your details to log in or register</h2>
       </div>
       <div>
-        <table>
+        <table id="auth_table">
 	  <tbody>
 	    <tr>
 	      <td class="TX_text">Username:</td>

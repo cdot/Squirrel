@@ -1,6 +1,6 @@
 body {
     background-color: #393939;
-    font-family: Segoe UI,Helvetica,Arial,sans-serif;
+    font-family: 'Poiret One',cursive,Helvetica,Arial,sans-serif;
     color: white;
 }
 
@@ -14,11 +14,19 @@ body {
 }
 
 .ui-widget {
-    font-size: 1em;
+    font-family: 'Poiret One',cursive,Helvetica,Arial,sans-serif;
 }
 
 .top_bar_right {
     float: right;
+}
+
+.intro {
+    margin-left: 52px;
+}
+
+#auth_table {
+    border-spacing: 0.5em;
 }
 
 #tree {

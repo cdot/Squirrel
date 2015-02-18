@@ -15,6 +15,7 @@ var client_store;
 var cloud_store;
 var client_hoard;
 var cloud_hoard;
+var zeroclipboard;
 
 function gapi_loaded() {
     "use strict";
@@ -85,13 +86,16 @@ function confirm_delete($node) {
 }
 
 function inplace_edit($span, action) {
-    var h = $span.parent().css("height");
+    var h = $span.height();
+    var w = $span.width();
+
     $span.hide();
     var $input = $("<input/>");
     $input
         .addClass("inplace_editor")
         .val($span.text())
         .css("height", h)
+        .css("width", w)
         .insertBefore($span)
         .change(function() {
             var val = $input.val();
@@ -129,6 +133,18 @@ function change_value($span) {
     "use strict";
 
     inplace_edit($span, "E");
+}
+
+function copy_to_clipboard(data) {
+    "use strict";
+    var copyEvent = new ClipboardEvent(
+        'copy',
+        {
+            dataType: 'text/plain',
+            data: data
+        }
+    );
+    document.dispatchEvent(copyEvent);
 }
 
 // Make a case-insensitive selector
@@ -239,6 +255,23 @@ function node_clicked() {
                 add_new_child($div.closest("li").find("ul").first());
             });
         $div.append($adder);
+    } else {
+        var $val = $div.children('.value');
+        var $copier =  $("<button></button>")
+            .addClass("icon_button item_button")
+            .button({
+                icons: {
+                    primary: "silk-icon-camera"
+                },
+                text: false
+            })
+            .attr("title", TX("Copy value to clipboard"));
+        $div.append($copier);
+        zeroclipboard = new ZeroClipboard($copier)
+            .on("copy", function(e) {
+                var cb = e.clipboardData;
+                cb.setData("text/plain", $val.text());
+            });
     }
     var $killer = $("<button></button>")
         .addClass("icon_button item_button")

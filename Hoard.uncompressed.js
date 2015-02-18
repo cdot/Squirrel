@@ -144,7 +144,7 @@ Hoard.prototype.play_action = function(e, listener) {
         if (!parent.data[name]) {
             return { action: e, message: TX("Cannot change value, does not exist") };
         }
-        parent.data[name] = e.data;
+        parent.data[name].data = e.data;
     } else {
         throw TX("Unrecognised action type") + " '" + e.type + "'";
     }
