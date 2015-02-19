@@ -9,12 +9,21 @@ body {
     margin: 1em;
 }
 
-.dialog {
-  display: none;
+.ui-menu {
+    z-index: 1000;
 }
 
 .ui-widget {
     font-family: 'Poiret One',cursive,Helvetica,Arial,sans-serif;
+}
+
+.dialog {
+  display: none;
+}
+
+.node_div:hover {
+    background: #44372c url("images/ui-bg_gloss-wave_30_44372c_500x100.png") 50% 50% repeat-x;
+    color: #baec7e;
 }
 
 .top_bar_right {
@@ -43,8 +52,12 @@ body {
     margin-left: 110px;
 }
 
-.selected {
-    background-color: black;
+.value {
+    font-family: "Courier New", Courier, monospace
+}
+
+input {
+    font-family: "Courier New", Courier, monospace
 }
 
 button.icon_button {

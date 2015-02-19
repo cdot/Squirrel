@@ -30,7 +30,8 @@ function gapi_loaded() {
 */
 }
 
-$.fn.linger = function(onRelease) {
+// Generate taphold events on platforms that don't natively support them
+$.fn.linger = function() {
 
     var eventType = {
         mousedown: 'ontouchstart' in window ? 'touchstart' : 'mousedown',
@@ -42,8 +43,9 @@ $.fn.linger = function(onRelease) {
         $(this)
             .on(eventType.mousedown + '.linger', function(e) {
                 timeout = window.setTimeout(function() {
-                    onRelease.call(this, e);
+                    $(e.currentTarget).trigger("taphold");
                 }, 500)
+                return false; // stop bubble
             })
             .on(eventType.mouseup + '.linger', function(e) {
                 window.clearTimeout(timeout);
@@ -77,7 +79,8 @@ function last_mod(time) {
     "use strict";
 
     var d = new Date(time);
-    return TX("Click and hold to see menu. Last modified: ") + d.toLocaleString();
+    return TX("Last modified: ") + d.toLocaleString() + " "
+        + TX("Click and hold to open menu");
 }
 
 // Generate a new password subject to constraints:
@@ -135,10 +138,86 @@ function confirm_delete($node) {
                     { type: "D", path: get_path($node) },
                     function(e) {
                         play_action(e);
-                        $("#tree").bonsai("update");
+                        update_tree();
                     });
             }
         }});
+}
+
+// Update the tree view
+function update_tree() {
+    $("#tree")
+        .bonsai("update")
+        .contextmenu({
+            delegate: ".node_div",
+            menu: [
+                {
+                    // Need the area that handles this to be covered with
+                    // the zeroclipboard
+                    title: TX("Copy value"),
+                    cmd: "copy",
+                    uiIcon: "silk-icon-camera"
+                },
+                {
+                    title: TX("Rename"),
+                    cmd: "rename",
+                    uiIcon: "silk-icon-pencil" 
+                },
+                {
+                    title: TX("Edit value"),
+                    cmd: "edit",
+                    uiIcon: "silk-icon-comment-edit" 
+                },
+                {
+                    title: TX("Generate new password"),
+                    cmd: "generate_password",
+                    uiIcon: "silk-icon-bullet-key" 
+                },               
+                {
+                    title: TX("Add new value"),
+                    cmd: "add_value",
+                    uiIcon: "silk-icon-comment-add" 
+                },
+                {
+                    title: TX("Add new sub-tree"),
+                    cmd: "add_subtree",
+                    uiIcon: "silk-icon-chart-organisation-add" 
+                },
+                {
+                    title: TX("Delete"),
+                    cmd: "delete",
+                    uiIcon: "silk-icon-delete" 
+                }
+            ],
+            beforeOpen: function(e, ui) {
+                var $div = ui.target;
+                var isvalue = ($div.children('.value').length > 0);
+                $("#tree")
+                    .contextmenu("showEntry", "copy", isvalue)
+                    .contextmenu("showEntry", "edit", isvalue)
+                    .contextmenu("showEntry", "generate_password", isvalue)
+                    .contextmenu("showEntry", "add_subtree", !isvalue)
+                    .contextmenu("showEntry", "add_value", !isvalue);
+                if (isvalue) {
+                    // SMELL: is it safe to do this every time?
+                    // Trust that the copy item will always be first!
+                    var $el = ui.menu.children().first();
+                    // Whack the Flash movie over the menu item li
+                    var client = new ZeroClipboard($el);
+                    // Now handle the "copy" event that comes from
+                    // the Flash movie
+                    client.on("copy", function(event) {
+                        event.clipboardData.setData(
+                            "text/plain",
+                            $div.children('.value').text());
+                    });
+                }
+            },
+            // We map long mouse hold to taphold in the plugin above
+            // Right click still works
+            taphold: true,
+            select: node_tapheld
+        });
 }
 
 function inplace_edit($span, action) {
@@ -165,7 +244,7 @@ function inplace_edit($span, action) {
                       data: val },
                     function(e) {
                         play_action(e);
-                        $("#tree").bonsai("update");
+                        update_tree();
                     });
             }
         })
@@ -189,6 +268,54 @@ function change_value($span) {
     "use strict";
 
     inplace_edit($span, "E");
+}
+
+function add_child_node($ul, title, value) {
+    var p = get_path($(this).children("ul"));
+    var action = {
+        type: "N",
+        path: p
+    };
+    if (typeof(value) !== 'undefined') {
+        action.data = value;
+    }
+    p.push(title);
+    client_hoard.play_action(
+        action,
+        function(e) {
+            play_action(e);
+            update_tree();
+        });
+}
+
+function make_password(set) {
+    var $dlg = $("#dlg_gen_password");
+    var buttons = {};
+    var opts = {
+        length: $dlg.find(".pw_length").val(),
+        charset: $dlg.find(".pw_chars").val()
+    };
+
+    buttons[TX("Use this")] = function() {
+        $dlg.dialog("close");
+        var pw = $dlg.find(".pw").text();
+        set.call(this, pw);
+    };
+    buttons[TX("Try again")] = function() {
+        opts.length = $dlg.find(".pw_length").val();
+        opts.charset = $dlg.find(".pw_chars").val();
+        $dlg.find(".pw").text(generate_password(opts));
+    };
+    buttons[TX("Forget it")] = function() {
+        $dlg.dialog("close");
+    };
+
+    $dlg.find(".pw").text(generate_password(opts));
+
+    $dlg.dialog({
+        width: "auto",
+        modal: true,
+        buttons: buttons});
 }
 
 // Make a case-insensitive selector
@@ -238,99 +365,38 @@ function search(s) {
     });
 }
 
-function add_new_child($ul) {
-    "use strict";
-
-    var $dlg = $("#dlg_add_node");
-    var p = get_path($ul);
-    $dlg.dialog({
-        width: "auto",
-        modal: true,
-        buttons: {
-            "Add Value": function(evt) {
-                $(this).dialog("close");
-                p.push(TX("New value"));
-                client_hoard.play_action(
-                    {
-                        type: "N",
-                        path: p,
-                        data: "None"
-                    },
-                    function(e) {
-                        play_action(e);
-                        $("#tree").bonsai("update");
-                    });
-            },
-            "Add Sub-tree": function(evt) {
-                $(this).dialog("close");
-                p.push(TX("New sub-tree"));
-                client_hoard.play_action(
-                    {
-                        type: "N",
-                        path: p
-                    },
-                    function(e) {
-                        play_action(e);
-                        $("#tree").bonsai("update");
-                    });
-            }
-        }});
-}
-
-function node_clicked() {
-    "use strict";
-
-    var $div = $(this);
-    $(".selected")
-        .removeClass("selected")
-        .find(".item_button").remove();
-    $div.addClass("selected");
-    if ($div.hasClass("treecollection")) {
-        var $adder = $("<button></button>")
-            .addClass("icon_button item_button")
-            .button({
-                icons: {
-                    primary: "silk-icon-add"
-                },
-                text: false
-            })
-            .attr("title", TX("Add new child node"))
-            .click(function() {
-                add_new_child($div.closest("li").find("ul").first());
-            });
-        $div.append($adder);
-    } else {
-        var $val = $div.children('.value');
-        var $copier =  $("<button></button>")
-            .addClass("icon_button item_button")
-            .button({
-                icons: {
-                    primary: "silk-icon-camera"
-                },
-                text: false
-            })
-            .attr("title", TX("Copy value to clipboard"));
-        $div.append($copier);
-        // There can be only one....
-        zeroclipboard = new ZeroClipboard($copier)
-            .on("copy", function(e) {
-                var cb = e.clipboardData;
-                cb.setData("text/plain", $val.text());
-            });
+// Handler for tabhold event on a contextmenu item
+function node_tapheld(e, ui) {
+    var $div = ui.target.parents("li").first().children('.node_div');
+    if (ui.cmd === 'copy') {
+        console.log("Copying to clipboard");
+        ZeroClipboard.setData($div.children('.value').text());
     }
-    var $killer = $("<button></button>")
-        .addClass("icon_button item_button")
-        .button({
-            icons: {
-                primary: "silk-icon-delete"
-            },
-            text: false
-        })
-        .attr("title", TX("Delete this node"))
-        .click(function() {
-            confirm_delete($div.closest("li"));
+    else if (ui.cmd === "rename") {
+        console.log("Renaming");
+        change_key($div.children('.key'));
+    }
+    else if (ui.cmd === "edit") {
+        console.log("Editing");
+        change_value($div.children('.value'));
+    }
+    else if (ui.cmd === "add_value") {
+        console.log("Adding value");
+        add_child_node($(this).children("ul"),
+                       TX("New value"), TX("None"));
+    }
+    else if (ui.cmd === "add_subtree") {
+        console.log("Adding subtree");
+        add_child_node($(this).children("ul"),
+                       TX("New sub-tree"));
+    } else if (ui.cmd === "generate_password") {
+        make_password(function(pw) {
+            $div.children('.value').text(pw);
         });
-    $div.append($killer);
+    }
+    else {
+        throw "Unknown ui.cmd " + ui.cmd;
+    }
 }
 
 function update_save_button() {
@@ -350,24 +416,31 @@ function play_action(e) {
     //            + " " + e.path.join("/")
     //            + (typeof e.data !== 'undefined' ? " " + e.data : ""));
 
-    var $parent_ul = $("#tree");
+    var $parent_ul = $("#tree"), key, $li, $div, menu, $keyspan, $valspan;
 
     // Locate the parent of the node who's path we are given
     for (var i = 0; i < e.path.length - 1; i++) {
         $parent_ul = $parent_ul.find("li[data-key='" + quotemeta(e.path[i]) + "'] > ul");
     }
 
-    var key = e.path[e.path.length - 1], $keyspan, $valspan;
+    key = e.path[e.path.length - 1];
 
     if (e.type === "N") {
-        var $li = $("<li></li>")
+        $li = $("<li></li>")
             .attr("data-key", key)
             .attr("name", key)
             .addClass("modified")
             .attr("title", last_mod(e.time));
 
-        var $div = $("<div></div>")
-            .addClass("node_div");
+        $div = $("<div></div>")
+            .addClass("node_div")
+;//            .hover(
+//            function() {
+//                $(this).addClass("selected");
+//            },
+//            function() {
+//                $(this).removeClass("selected");
+//            });
         $li.append($div);
 
         $keyspan = $("<span class='key'>" + key + "</span>");
@@ -382,27 +455,6 @@ function play_action(e) {
             var $subul = $("<ul></ul>");
             $li.append($subul);
         }
-
-        $div
-            .linger(function() {
-                console.log("Constructing menu");
-                var $ul = $('<ul></ul>');
-                // Construct context menu
-                $("<li>" + TX("Edit key") + "</li>")
-                    .click(function() {
-                        change_key($keyspan);
-                    })
-                    .appendTo($ul);
-                if ($valspan) {
-                    $("<li>" + TX("Edit value") + "</li>")
-                        .click(function() {
-                            change_value($valspan);
-                        })
-                        .appendTo($ul);
-                }
-                $("body").append($ul);
-                $ul.menu();
-            });
 
         // Insert-sort into the $parent_ul
         var inserted = false;
@@ -420,6 +472,11 @@ function play_action(e) {
 
         // Add anchor
         $li.prepend($("<a></a>").attr("name", fragment_id(get_path($li))));
+
+        $div
+            .linger()
+            .on("taphold", function() {
+            });
 
     } else if (e.type === "R") {
         $parent_ul
@@ -513,7 +570,7 @@ function log_in() {
             $("#unauthenticated").loadingOverlay("remove");
             if (client_hoard) {
                 update_save_button();
-                $("#tree").bonsai("update");
+                update_tree();
                 $("#unauthenticated").hide();
                 $("#authenticated").show();
             }

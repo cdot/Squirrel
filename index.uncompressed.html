@@ -7,7 +7,8 @@
     <script type="text/javascript" src="jquery-2.1.3.min.js"></script>
     <script type="text/javascript" src="jquery-ui.min.js"></script>
     <script type="text/javascript" src="jquery-bonsai.min.js"></script>
-    <script type="text/javascript" src="loading-overlay.min.js"></script>
+    <script type="text/javascript" src="jquery-loading-overlay.min.js"></script>
+    <script type="text/javascript" src="jquery-ui-contextmenu.min.js"></script>
     <script type="text/javascript" src="ZeroClipboard.min.js"></script>
     <script type="text/javascript" src="Translation.uncompressed.js"></script>
     <script type="text/javascript" src="AES.min.js"></script>
@@ -20,6 +21,7 @@
     <script type="text/javascript" src="Hoard.uncompressed.js"></script>
     <script type="text/javascript" src="Squirrel.uncompressed.js"></script>
     <script type="text/javascript" src="https://apis.google.com/js/client.js?onload=gapi_loaded"></script>
+
     <link rel="stylesheet" href="jquery-ui.min.css">
     <link rel="stylesheet" href="jquery-silk-icons.css">
     <link rel="stylesheet" href="jquery-bonsai.min.css">
@@ -113,19 +115,20 @@
       <span class="TX_text">Please review these rejected actions before saving.</span>
     </div>
 
-    <div id="dlg_add_node" class="dialog TX_title" title="Add child node">
-      <span class="TX_text">Select type of child node to add</span>
-    </div>
-
     <div id="dlg_alert" class="dialog TX_title" title="Alert">
       <div class="message"></div>
     </div>
 
-    <div id="dlg_password_options" class="dialog TX_title" title="Generate password">
-      <span class="TX_text">Password length:</span>
-      <input size="50" value="24" class="pw_length TX_title" title="Enter password length" />
+    <div id="dlg_gen_password" class="dialog TX_title" title="Generate password">
+      <h2><span class="TX_text">Suggestion:</span> <span class="pw value"></span></h2>
+      <p>
+      <span class="TX_text">Length:</span>
+      <input size="20" value="24" class="pw_length TX_title" title="Enter password length" />
+      </p>
+      <p>
       <span class="TX_text">Character range:</span>
-      <input size="50" value="A-Za-z0-9" class="pw_chars TX_title" title="Enter the characters that are legal in passwords for this site. You can use character ranges like A-Z or 0-9" />
+      <input size="20" value="A-Za-z0-9" class="pw_chars TX_title" title="Enter the characters that are legal in passwords for this site. You can use character ranges like A-Z or 0-9" />
+      </p>
     </div>
   </body>
 </html>
