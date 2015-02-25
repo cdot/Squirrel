@@ -41,7 +41,7 @@ GoogleDriveStore.prototype._authorise = function(ok, fail) {
         // Timeout after 5 seconds
         tid = window.setTimeout(function() {
             window.clearTimeout(tid);
-            auth_failed("Timeout trying to authorise");
+            auth_failed("Timeout trying to authorise access to Google Drive");
         }, 5000);
         gapi.auth.authorize(
             {"client_id": this.cID, "scope": SCOPES, "immediate": true},
@@ -195,7 +195,7 @@ GoogleDriveStore.prototype._download = function(p) {
                     p.url = items[0].downloadUrl;
                     drive._download(p);
                 } else {
-                    p.fail.call(gd, "File not found");
+                    p.fail.call(gd, AbstractStore.prototype.UDNE);
                 }
             },
             p.fail);
@@ -236,7 +236,7 @@ GoogleDriveStore.prototype.exists = function(name, does, does_not) {
 
     var drive = this;
     if (!this.user) {
-        does_not.call(this, "Not logged in");
+        does_not.call(this, this.NULI);
         return;
     }
     this._search(
@@ -258,7 +258,7 @@ GoogleDriveStore.prototype.save = function(ok, fail) {
     "use strict";
 
     if (!this.user) {
-        fail.call(this, "Not logged in");
+        fail.call(this, this.NULI);
     } else {
         this.authorise(
             function() {

@@ -17,15 +17,22 @@ var client_hoard;
 var cloud_hoard;
 var zeroclipboard;
 
+const SQUIRREL_LOG = true;
+
+function log(e) {
+    if (SQUIRREL_LOG)
+        console.log(e);
+}
+
 function gapi_loaded() {
     "use strict";
-
-    console.log("Google API loaded");
 /*
+    log("Google API loaded");
     if (!cloud_store) {
-        cloud_store = new GoogleDriveStore(
-            "985219699584-mt1do7j28ifm2vt821d498emarmdukbt.apps.googleusercontent.com");
-        cloud_store = new EncryptedStore(client_store);
+    var gstore = new GoogleDriveStore(
+    "985219699584-mt1do7j28ifm2vt821d498emarmdukbt.apps.googleusercontent.com");
+    cloud_store = new EncryptedStore(gstore);
+    $(document).trigger("cloud_store_ready");
     }
 */
 }
@@ -86,6 +93,17 @@ function last_mod(time) {
     var d = new Date(time);
     return TX("Last modified: ") + d.toLocaleString() + " "
         + TX("Click and hold to open menu");
+}
+
+function squeak(e) {
+    var $dlg = $("#dlg_alert");
+    if (typeof(e) === 'string')
+        $dlg.children(".message").html(e);
+    else
+        $dlg.children(".message").empty().append(e);
+    $dlg.dialog({
+        modal: true
+    });
 }
 
 // Generate a new password subject to constraints:
@@ -387,23 +405,23 @@ function node_tapheld(e, ui) {
     var $li = ui.target.parents("li").first();
     var $div = $li.children('.node_div');
     if (ui.cmd === 'copy') {
-        //console.log("Copying to clipboard");
+        //log("Copying to clipboard");
         ZeroClipboard.setData($div.children('.value').text());
     }
     else if (ui.cmd === "rename") {
-        //console.log("Renaming");
+        //log("Renaming");
         change_key($div.children('.key'));
     }
     else if (ui.cmd === "edit") {
-        //console.log("Editing");
+        //log("Editing");
         change_value($div.children('.value'));
     }
     else if (ui.cmd === "add_value") {
-        //console.log("Adding value");
+        //log("Adding value");
         add_child_node($div, TX("New value"), TX("None"));
     }
     else if (ui.cmd === "add_subtree") {
-        //console.log("Adding subtree");
+        //log("Adding subtree");
         add_child_node($div, TX("New sub-tree"));
     }
     else if (ui.cmd === "generate_password") {
@@ -420,11 +438,7 @@ function node_tapheld(e, ui) {
 }
 
 function update_save_button() {
-    $('#save_button').toggle(
-        client_hoard.modified
-            || (cloud_hoard && cloud_hoard.modified)
-            || $(".modified").length > 0
-    );
+    $('#save_button').toggle(client_hoard.is_modified());
 }
 
 // Callback for use when managing hoards; plays an action that is being
@@ -432,7 +446,7 @@ function update_save_button() {
 function play_action(e) {
     "use strict";
 
-    //console.log("Playing " + e.type + " @" + new Date(e.time)
+    //log("Playing " + e.type + " @" + new Date(e.time)
     //            + " " + e.path.join("/")
     //            + (typeof e.data !== 'undefined' ? " " + e.data : ""));
 
@@ -534,84 +548,42 @@ function play_action(e) {
     return $keyspan;
 }
 
+function get_updates_from_cloud() {
+    // This will get triggered whenever both hoards are
+    // successfully loaded.
+    log("Merging from cloud hoard");
+    var conflicts = [];
+    client_hoard.merge_from_cloud(
+        cloud_hoard, play_action, conflicts);
+    if (conflicts.length > 0) {
+        var $dlg = $('#dlg_conflicts');
+        $dlg.children('.message').empty();
+        $.each(conflicts, function(i, c) {
+            var e = c.action;
+            $("<div></div>")
+                .text(
+                    e.type + ":" + e.path.join("/")
+                        + (typeof e.data !== 'undefined' ?
+                           " " + e.data : "")
+                        + " @" + new Date(e.time)
+                        + ": " + c.message)
+                .appendTo($dlg.children(".message"))
+        });
+        $dlg.dialog({
+            width: "auto"
+        });
+    }
+    // Finished with the cloud hoard (for now)
+    cloud_hoard = null;
+    update_save_button();
+    update_tree();
+}
+
 function log_in() {
     "use strict";
 
-    var user, pass, confirm_password, registration_dialog, offer_registration,
-    load_attempted, hoard_loaded, logged_in_to_client;
-
-    // Callback invoked when either of the client or cloud hoards
-    // is loaded
-    load_attempted = { client: false, cloud: false };
-
-    hoard_loaded = function(hoard, error) {
-        if (error) {
-            console.log(error);
-        } else {
-            console.log(hoard + " hoard loaded");
-
-            if (client_hoard && !load_attempted.client) {
-                //console.log("Reconstructing actions from cache");
-                client_hoard.reconstruct(play_action);
-                // Reset the modification count; we just loaded the
-                // client hoard
-                $(".modified").removeClass("modified");
-                client_hoard.modified = false;
-            }
-            if (client_hoard && cloud_hoard) {
-                $("#unauthenticated").loadingOverlay("remove");
-                $("#unauthenticated").loadingOverlay({
-                    loadingText: TX("Updating...") });
-                //console.log("Synching with cloud");
-                var conflicts = [];
-                client_hoard.stream_to_cache(
-                    cloud_hoard, play_action, conflicts);
-
-                if (conflicts.length > 0) {
-                    var $dlg = $('#dlg_conflicts');
-                    $dlg.children('.message').empty();
-                    $.each(conflicts, function(i, c) {
-                        var e = c.action;
-                        $("<div></div>")
-                            .text(
-                                e.type + ":" + e.path.join("/")
-                                    + (typeof e.data !== 'undefined' ?
-                                       " " + e.data : "")
-                                    + " @" + new Date(e.time)
-                                    + ": " + c.message)
-                            .appendTo($dlg.children(".message"))
-                    });
-                    $dlg.dialog({
-                        width: "auto"
-                    });
-                }
-            }
-        }
-        load_attempted[hoard] = true;
-        if (load_attempted.client && load_attempted.cloud) {
-            // Finished
-            $("#unauthenticated").loadingOverlay("remove");
-            if (client_hoard) {
-                update_save_button();
-                update_tree();
-                $("#unauthenticated").hide();
-                $("#authenticated").show();
-            }
-        }
-    };
-
-    // We are logged in (or freshly registered) with the local store
-    // If we haven't already logged in to the cloud store, do so now.
-    logged_in_to_client = function() {
-        console.log("'" + client_store.user + "' is logged in to client store");
-        $("#whoami").text(client_store.user);
-        console.log("Loading client hoard");
-        client_hoard = new Hoard(client_store.data);
-        hoard_loaded("client");
-    };
-
     // Confirm that we want to register by re-entering password
-    confirm_password = function() {
+    var confirm_password = function() {
         var $dlg = $("#dlg_confirm_pass"),
         buttons = {};
         $dlg.find(".message").hide();
@@ -622,20 +594,13 @@ function log_in() {
             if (cpass === pass) {
                 $dlg.dialog("close");
                 // We want to register; create the new registration in the
-                // client drive
+                // client store
                 client_store.register(
                     user, pass,
                     function() {
-                        logged_in_to_client();
+                        $(document).trigger("logged_in_to_client");
                     },
-                    function(e) {
-                        var $dlg = $("#dlg_alert");
-                        $dlg.children(".message").text(e);
-                        $dlg.dialog({
-                            modal: true
-                        });
-                    }
-                );
+                    squeak);
             } else {
                 $("#password_mismatch").show();
                 $("#show_password").button().click(function() {
@@ -653,7 +618,7 @@ function log_in() {
             width: "auto",
             modal: true,
             buttons: buttons});
-    };
+    },
 
     // Registration is being offered for the reason shown by clss.
     registration_dialog = function(message) {
@@ -664,7 +629,7 @@ function log_in() {
             $dlg.dialog("close");
             // We want to register; create the new registration in the
             // local drive
-            console.log("Registration selected. Confirming password");
+            log("Registration selected. Confirming password");
             confirm_password();
         };
         buttons[TX("No")] = function(evt) {
@@ -674,74 +639,161 @@ function log_in() {
         $dlg.dialog({
             modal: true,
             buttons: buttons});
-    };
+    },
 
     // The local store didn't allow login using this pass. See if the
     // user wants to register
-    offer_registration = function() {
-        if (cloud_store) {
-            // Remote store is there; see if it has the user
-            cloud_store.log_in(
-                user, pass,
-                function() {
-                    console.log("Checking Remote Store");
-                    registration_dialog("existing_hoard");
-                },
-                function(message) {
-                    registration_dialog("unknown_user");
-                });
-        } else {
-            registration_dialog("cant_connect");
-        }
-    };
+    offer_client_registration = function() {
+        log("Offering client registration");
+        // See if remote store has the user
+        cloud_store.log_in(
+            user, pass,
+            function() {
+                log("Checking Remote Store");
+                registration_dialog("existing_hoard");
+            },
+            function(message) {
+                registration_dialog("unknown_user");
+            });
+    },
 
-    user = $("#user").val();
+    register_in_cloud = function() {
+        // Create new user in the cloud, initialising it from
+        // the client hoard.
+        cloud_store.register(
+            user, pass,
+            function() {
+                var acts = [];
+                client_hoard.reconstruct_actions(function(a) {
+                    acts.push(a);
+                });
+                cloud_store.data = new Hoard(
+                    {
+                        last_sync: null,
+                        actions: acts,
+                        cache: null
+                    });
+                cloud_store.save(
+                    function () {
+                        log("Cloud saved");
+                        $(document).trigger("hoard_loaded", "cloud");
+                    },
+                    function(e) {
+                        log("Cloud save failed: " + e);
+                    });
+            },
+            squeak);
+    },
+
+    user = $("#user").val(),
     pass = $("#password").val();
-    if (!pass || pass === "") {
-        var $dlg = $("#dlg_alert");
-        var $messy = $dlg.children(".message");
-        $messy.html("<div class='warning'>" +
-                    TX("Empty password not permitted")
-                    + "</div>");
-        $dlg.dialog({
-            modal: true
+
+    // We are logged in (or freshly registered) with the local store
+    // If we haven't already logged in to the cloud store, do so now.
+    $(document)
+        .on("logged_in_to_client", function() {
+            log("'" + client_store.user + "' is logged in to client store");
+            $("#whoami").text(client_store.user);
+            client_hoard = new Hoard(client_store.data);
+            $(document).trigger("hoard_loaded", "client");
+        })
+        .on("logged_in_to_cloud", function() {
+            log("'" + cloud_store.user
+                + "' is logged in to cloud store");
+            cloud_hoard = new Hoard(cloud_store.data);
+            $(document).trigger("hoard_loaded", "cloud");
+        })
+        .on("hoard_loaded", function(event, hoard) {
+            var autosave = false;
+
+            // Callback invoked when either of the client or cloud hoards
+            // is loaded. Effectively a join.
+            log(hoard + " hoard loaded");
+
+            if (hoard === "client" && client_hoard) {
+                autosave = (client_hoard.last_sync === null
+                            && client_hoard.cache === null);
+
+                log("Reconstructing UI tree from cache");
+                // Use reconstruct_actions to drive creation of
+                // the UI
+                client_hoard.reconstruct_actions(play_action);
+                // Reset the UI modification list; we just loaded the
+                // client hoard
+                $(".modified").removeClass("modified");
+            }
+            if (client_hoard && cloud_hoard) {
+                get_updates_from_cloud();
+            }
+            if (hoard === "client") {
+                // Client is ready
+                $("#unauthenticated").loadingOverlay("remove");
+                if (client_hoard) {
+                    update_save_button();
+                    update_tree();
+                    $("#unauthenticated").hide();
+                    $("#authenticated").show();
+                }
+                if (autosave) {
+                    // Client store had no data, so do an initial save
+                    client_store.data = client_hoard;
+                    client_store.save(
+                        function() {
+                            log("Client store initial save");
+                        },
+                        function(e) {
+                            log("Client store initial save failed: " + e);
+                        });
+                }
+            }
         });
+
+    if (!pass || pass === "") {
+        squeak("<div class='warning'>" +
+               TX("Empty password not permitted")
+               + "</div>");
         return false;
     }
 
     $("#unauthenticated").loadingOverlay({ loadingText: TX("Signing in...") });
 
-    //console.log("Log in to stores");
+    log("Log in to client store");
+
     client_store.log_in(
         user, pass,
         function() {
-            logged_in_to_client();
+            $(document).trigger("logged_in_to_client");
         },
         function(e) {
-            console.log(e + "; Local store rejected password. Offering registration");
-            offer_registration();
+            log("Local store rejected login: " + e);
+            if (e === client_store.UDNE) {
+                offer_client_registration();
+            } else {
+                squeak(e);
+            }
         });
-    if (cloud_store) {
-        cloud_store.log_in(
-            user, pass,
-            function() {
-                console.log("'" + cloud_store.user
-                            + "' is logged in to cloud store");
-                cloud_hoard = new Hoard(cloud_store.data);
-                hoard_loaded("cloud");
-            },
-            function(e) {
-                hoard_loaded("cloud", "Cloud store rejected password.");
-            });
-    }
+
+    log("Log in to cloud store");
+    cloud_store.log_in(
+        user, pass,
+        function() {
+            $(document).trigger("logged_in_to_cloud");
+        },
+        function(e) {
+            if (e === cloud_store.UDNE) {
+                log("'" + user
+                    + "' does not exist in cloud; registering")
+                register_in_cloud();
+            } else {
+                squeak(e);
+            }
+        });
 }
 
 // Determine if there are unsaved changes, and generate a warning
 // message for the caller to use.
 function unsaved_changes() {
-    if (client_hoard && client_hoard.modified
-        || cloud_hoard && cloud_hoard.modified
-        || $('.modified').length > 0) {
+    if (client_hoard && client_hoard.is_modified()) {
 
         var changed = '';
         $('.modified').each(function() {
@@ -758,12 +810,74 @@ function log_out() {
     $("#tree").empty();
     $("#authenticated").hide();
     $("#unauthenticated").show();
-    client_store.log_out();
     client_hoard = null;
-    if (cloud_store) {
-        cloud_store.log_out();
-        cloud_hoard = null;
-    }
+    cloud_hoard = null;
+}
+
+function save_hoards() {
+    var $messy = $("<div class='notice'>"
+                   + TX("Saving....")
+                   + "</div>");
+    squeak($messy);
+
+    var save_client = function() {
+        client_hoard.save(
+            client_store,
+            function() {
+                $(".modified").removeClass("modified");
+                $messy.append(
+                    "<div class='notice'>"
+                        + TX("Saved in this browser")
+                        + "</div>");
+
+                update_save_button();
+            },
+            function(e) {
+                $messy.append(
+                    "<div class='warn'>"
+                        + TX("Failed to save in the browser: ") + e
+                        + "</div>");
+
+                update_save_button();
+            });
+    };
+
+    // Reload and save the cloud hoard
+    cloud_store.refresh(
+        function() {
+            var conflicts = [];
+            client_hoard.merge_from_cloud(
+                cloud_hoard, play_action, conflicts);
+            if (client_hoard.is_modified()) {
+                cloud_hoard.actions =
+                    cloud_hoard.actions.concat(client_hoard.actions);
+                cloud_hoard.save(
+                    function() {
+                        client_hoard.actions = [];
+                        client_hoard.last_sync =
+                            new Date().valueOf();
+                        $messy.append(
+                            "<div class='notice'>"
+                                + TX("Saved in the Cloud")
+                                + "</div>");
+                        save_client();
+                    },
+                    function(e) {
+                        $messy.append(
+                            "<div class='error'>"
+                                + TX("Failed to save in the Cloud")
+                                + "<br>" + e + "</div>");
+                        save_client();
+                    });
+            }
+        },
+        function(e) {
+            $messy.append(
+                "<div class='error'>"
+                    + TX("Failed to refresh from the Cloud")
+                    * "<br>" + e + "</div>");
+            save_client();
+        });
 }
 
 (function ($) {
@@ -771,20 +885,25 @@ function log_out() {
 
     var ready = function() {
         client_store = new LocalStorageStore("client/");
+        log("Client store is ready");
         //client_store = new EncryptedStore(client_store);
+        //client_store = new LocalStorageStore();
 
-        client_store = new LocalStorageStore();
+        $(document).on("cloud_store_ready", function() {
+            log("Cloud store is ready, waiting for login");
+            $("#password,#user").removeAttr("disabled");
+            $("#log_in").button("option", "disabled", false);
+        });
 
         // Log in
-        $("#log_in").
-            button({
+        $("#log_in")
+            .button({
                 icons: {
                     primary: "silk-icon-lock-open"
-                }
+                },
+                disabled: true
             })
             .click(log_in);
-        $("#password")
-            .change(log_in);
 
         $("#log_out")
             .button({
@@ -811,69 +930,7 @@ function log_out() {
                 text: false
             })
             .hide()
-            .click(function() {
-                var $dlg = $("#dlg_alert");
-                var $messy =  $dlg.children(".message");
-                $messy.html("<div class='notice'>"
-                            + TX("Saving....")
-                            + "</div>");
-                $dlg.dialog({
-                    modal: true
-                });
-                if (client_hoard.modified) {
-                    client_hoard.save(
-                        client_store,
-                        function() {
-                            $(".modified").removeClass("modified");
-                            $messy.append(
-                                "<div class='notice'>"
-                                    + TX("Saved in this browser")
-                                    + "</div>");
-                        },
-                        function(e) {
-                            $messy.append(
-                                "<div class='warn'>"
-                                + TX("Failed to save in the browser: ") + e
-                                    + "</div>");
-                        });
-                } else {
-                    $messy.append(
-                        "<div class='notice'>"
-                            + TX("Nothing to save in the browser")
-                            + "</div>");
-                }
-                if (cloud_hoard && cloud_hoard.modified) {
-                    // TODO: check that the cloud hoard hasn't changed
-                    // since we last synched
-                    cloud_hoard.save(
-                        cloud_store,
-                        function() {
-                            if (!client_hoard.modified) {
-                                client_store.actions = [];
-                            }
-                            $messy.append(
-                                "<div class='notice'>"
-                                    + TX("Saved in the Cloud")
-                                    + "</div>");
-                        },
-                        function(e) {
-                            $messy.append(
-                                "<div class='warning'>"
-                                    + TX("Cloud save failed: ") + e
-                                    + "</div>");
-                        });
-                }
-                else {
-                    if (!client_hoard.modified) {
-                        client_store.actions = [];
-                    }
-                    $messy.append(
-                        "<div class='notice'>"
-                            + TX("Nothing to save to the Cloud")
-                            + "</div>");
-                }
-                update_save_button();
-            });
+            .click(save_hoards);
 
         $("#tree").bonsai({
             expandAll: false });
@@ -915,6 +972,7 @@ function log_out() {
             */
             cloud_store = new LocalStorageStore("cloud/");
             ready();
+            $(document).trigger("cloud_store_ready");
         });
     });
 

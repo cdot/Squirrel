@@ -27,7 +27,7 @@ FileStore.prototype._exists = function(user, ok, fail) {
                 if (self.user === user) {
                     ok.call(self);
                 } else {
-                    fail.call(self, "Store does not contain that user");
+                    fail.call(self, this.UDNE);
                 }
             },
             fail);

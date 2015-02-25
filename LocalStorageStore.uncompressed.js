@@ -6,9 +6,10 @@ function LocalStorageStore(prefix) {
     "use strict";
 
     AbstractStore.call(this);
-    this.prefix = "";
     if (typeof prefix === 'string') {
         this.prefix = prefix;
+    } else {
+        this.prefix = "";
     }
 }
 
@@ -47,7 +48,7 @@ LocalStorageStore.prototype._exists = function(user, ok, fail) {
         if (typeof x !== 'undefined' && x !== null) {
             ok.call(this);
         } else {
-            fail.call(this, "User does not exist");
+            fail.call(this, this.UDNE);
         }
     } catch (e) {
         fail.call(this, e);

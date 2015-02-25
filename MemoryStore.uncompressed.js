@@ -20,7 +20,7 @@ MemoryStore.prototype._exists = function(user, ok, fail) {
     if (this.user === user) {
         ok.call(self);
     } else {
-        fail.call(self, "Store does not contain that user");
+        fail.call(self, this.UDNE);
     }
     ok.call(this);
 };
