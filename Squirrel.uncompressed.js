@@ -15,7 +15,6 @@ var client_store;
 var cloud_store;
 var client_hoard;
 var cloud_hoard;
-var zeroclipboard;
 
 const SQUIRREL_LOG = true;
 
@@ -65,36 +64,6 @@ $.fn.linger = function() {
     });
 };
 
-function get_path($node) {
-    "use strict";
-
-    var path = [];
-    if (typeof $node.attr("data-key") !== "undefined") {
-        path.push($node.attr("data-key"));
-    }
-    $node
-        .parents("li")
-        .each(function() {
-            if (typeof $(this).attr("data-key") !== "undefined") {
-                path.unshift($(this).attr("data-key"));
-            }
-        });
-    return path;
-}
-
-// Escape meta-characters for use in CSS selectors
-function quotemeta(s) {
-    return s.replace(/([\][!"#$%&'()*+,.\/:;<=>?@\\^`{|}~])/g, "\\$1");
-}
-
-function last_mod(time) {
-    "use strict";
-
-    var d = new Date(time);
-    return TX("Last modified: ") + d.toLocaleString() + " "
-        + TX("Click and hold to open menu");
-}
-
 function squeak(e) {
     var $dlg = $("#dlg_alert");
     if (typeof(e) === 'string')
@@ -141,6 +110,39 @@ function generate_password(constraints) {
     return s
 }
 
+// Reconstruct the tree path from the DOM
+function get_path($node) {
+    "use strict";
+
+    var path = [];
+    if (typeof $node.attr("data-key") !== "undefined") {
+        path.push($node.attr("data-key"));
+    }
+    $node
+        .parents("li")
+        .each(function() {
+            if (typeof $(this).attr("data-key") !== "undefined") {
+                path.unshift($(this).attr("data-key"));
+            }
+        });
+    return path;
+}
+
+// Escape meta-characters for use in CSS selectors
+function quotemeta(s) {
+    return s.replace(/([\][!"#$%&'()*+,.\/:;<=>?@\\^`{|}~])/g, "\\$1");
+}
+
+// Generate a message for the last modified time
+function last_mod(time) {
+    "use strict";
+
+    var d = new Date(time);
+    return TX("Last modified: ") + d.toLocaleString() + " "
+        + TX("Click and hold to open menu");
+}
+
+// Confirm deletion of a node
 function confirm_delete($node) {
     "use strict";
 
@@ -249,6 +251,7 @@ function update_tree() {
         });
 }
 
+// Edit a span in place
 function inplace_edit($span, action) {
     var h = $span.height();
     var w = $span.width();
@@ -285,20 +288,7 @@ function inplace_edit($span, action) {
         .focus();
 }
 
-// Action on double-clicking a tree entry - rename
-function change_key($span) {
-    "use strict";
-    inplace_edit($span, "R");
-    // Re-sort?
-}
-
-// Action on double-clicking a tree entry - revalue
-function change_value($span) {
-    "use strict";
-
-    inplace_edit($span, "E");
-}
-
+// Action on a new tree node
 function add_child_node($div, title, value) {
     var $li = $div.parents("li").first();
     var $ul = $li.parent();
@@ -323,6 +313,7 @@ function add_child_node($div, title, value) {
         });
 }
 
+// Dialog password generation
 function make_password(set) {
     var $dlg = $("#dlg_gen_password");
     var buttons = {};
@@ -353,17 +344,7 @@ function make_password(set) {
         buttons: buttons});
 }
 
-// Make a case-insensitive selector
-/*
-$.expr[":"].contains = $.expr.createPseudo(function(arg) {
-    "use strict";
-
-    return function( elem ) {
-        return $(elem).text().toUpperCase().indexOf(arg.toUpperCase()) >= 0;
-    };
-});
-*/
-
+// Convert a path to an HTTP fragment
 function fragment_id(path) {
     "use strict";
 
@@ -400,7 +381,7 @@ function search(s) {
     });
 }
 
-// Handler for tabhold event on a contextmenu item
+// Handler for taphold event on a contextmenu item
 function node_tapheld(e, ui) {
     var $li = ui.target.parents("li").first();
     var $div = $li.children('.node_div');
@@ -409,12 +390,12 @@ function node_tapheld(e, ui) {
         ZeroClipboard.setData($div.children('.value').text());
     }
     else if (ui.cmd === "rename") {
-        //log("Renaming");
-        change_key($div.children('.key'));
+        //console.log("Renaming");
+	inplace_edit($div.children('.key'), "R");
     }
     else if (ui.cmd === "edit") {
-        //log("Editing");
-        change_value($div.children('.value'));
+        //console.log("Editing");
+	inplace_edit($div.children('.value'), "E");
     }
     else if (ui.cmd === "add_value") {
         //log("Adding value");
@@ -437,6 +418,7 @@ function node_tapheld(e, ui) {
     }
 }
 
+// Update the save button based on hoard state
 function update_save_button() {
     $('#save_button').toggle(client_hoard.is_modified());
 }
@@ -463,7 +445,6 @@ function play_action(e) {
         $li = $("<li></li>")
             .attr("data-key", key)
             .attr("name", key)
-            .addClass("modified")
             .attr("title", last_mod(e.time));
 
         $div = $("<div></div>")
@@ -517,7 +498,6 @@ function play_action(e) {
         $parent_ul
             .children("li[data-key='" + quotemeta(key) + "']")
             .attr("data-key", e.data)
-            .addClass("modified")
             .attr("title", last_mod(e.time))
             .children(".node_div")
             .children("span.key")
@@ -526,7 +506,6 @@ function play_action(e) {
     } else if (e.type === "E") {
         $parent_ul
             .children("li[data-key='" + quotemeta(key) + "']")
-            .addClass("modified")
             .attr("title", last_mod(e.time))
             .children(".node_div")
             .children("span.value")
@@ -538,7 +517,6 @@ function play_action(e) {
         $parent_ul
             .parents("li")
             .first()
-            .addClass("modified")
             .attr("title", last_mod(e.time));
     } else {
         throw "Unrecognised action '" + e.type + "'";
@@ -800,7 +778,6 @@ function unsaved_changes() {
             changed += '   ' + $(this).attr("name") + '\n';
         });
         return TX("You have unsaved changes") + "\n"
-            + changed
             +  TX("Are you really sure?");
     }
 }
