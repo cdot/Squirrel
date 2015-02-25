@@ -93,6 +93,13 @@ AbstractStore.prototype._read = function(ok, fail) {
     throw "Pure virtual method _read";
 };
 
+AbstractStore.prototype.refresh = function(ok, fail) {
+    "use strict";
+
+    this.data = null;
+    this._read(ok, fail);
+};
+
 /**
  * Register a new user.
  *
