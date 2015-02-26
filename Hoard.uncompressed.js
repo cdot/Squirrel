@@ -274,15 +274,3 @@ Hoard.prototype.merge_from_cloud = function(cloud, listener, conflicts) {
     this.last_sync = new Date().valueOf();
 };
 
-/**
- * Save the hoard to the given store
- */
-Hoard.prototype.save = function(store, ok, fail) {
-    var self = this;
-    store.data = this;
-    store.save(
-        function() {
-            ok.call(self);
-        },
-        fail);
-};

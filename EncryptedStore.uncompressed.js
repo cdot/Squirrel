@@ -36,13 +36,13 @@ EncryptedStore.prototype.log_in = function(user, pass, ok, fail) {
             if (xpass === pass) {
                 self.user = user;
                 self.pass = pass;
-                try {
+//                try {
                     self.data = JSON.parse(
                         Aes.Ctr.decrypt(self.engine.data, pass, 256));
                     ok.call(self);
-                } catch (e) {
-                    fail.call(self, e);
-                }
+//                } catch (e) {
+//                    fail.call(self, e);
+//                }
             } else {
                 fail.call(self, "Incorrect details");
             }

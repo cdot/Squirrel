@@ -14,7 +14,6 @@ Tabs built from local cache
 var client_store;
 var cloud_store;
 var client_hoard;
-var cloud_hoard;
 
 const SQUIRREL_LOG = true;
 
@@ -526,13 +525,13 @@ function play_action(e) {
     return $keyspan;
 }
 
-function get_updates_from_cloud() {
+function get_updates_from_cloud(cloard) {
     // This will get triggered whenever both hoards are
     // successfully loaded.
     log("Merging from cloud hoard");
     var conflicts = [];
     client_hoard.merge_from_cloud(
-        cloud_hoard, play_action, conflicts);
+        cloard, play_action, conflicts);
     if (conflicts.length > 0) {
         var $dlg = $('#dlg_conflicts');
         $dlg.children('.message').empty();
@@ -552,7 +551,6 @@ function get_updates_from_cloud() {
         });
     }
     // Finished with the cloud hoard (for now)
-    cloud_hoard = null;
     update_save_button();
     update_tree();
 }
@@ -654,13 +652,63 @@ function log_in() {
                 cloud_store.save(
                     function () {
                         log("Cloud saved");
-                        $(document).trigger("hoard_loaded", "cloud");
+                        $(document).trigger(
+                            "hoard_loaded", "cloud", cloud_store.data);
                     },
                     function(e) {
                         log("Cloud save failed: " + e);
                     });
             },
             squeak);
+    },
+
+    cloud_hoard = null,
+
+    cloud_hoard_loaded = function() {
+        log("Cloud hoard loaded");
+        if (client_hoard) {
+            get_updates_from_cloud(cloud_hoard);
+            cloud_hoard = null;
+        }
+    },
+
+    client_hoard_loaded = function() {
+        // Callback invoked when either of the client or cloud hoards
+        // is loaded. Effectively a join.
+        log("Client hoard loaded");
+
+        var autosave = (client_hoard.last_sync === null
+                        && client_hoard.cache === null);
+
+        log("Reconstructing UI tree from cache");
+        // Use reconstruct_actions to drive creation of
+        // the UI
+        client_hoard.reconstruct_actions(play_action);
+        // Reset the UI modification list; we just loaded the
+        // client hoard
+        $(".modified").removeClass("modified");
+    
+        if (cloud_hoard) {
+            get_updates_from_cloud(cloud_hoard);
+            cloud_hoard = null;
+        }
+    
+        $("#unauthenticated").loadingOverlay("remove");
+        update_save_button();
+        update_tree();
+        $("#unauthenticated").hide();
+        $("#authenticated").show();
+        if (autosave) {
+            // Client store had no data, so do an initial save
+            client_store.data = client_hoard;
+            client_store.save(
+                function() {
+                    log("Client store initial save");
+                },
+                function(e) {
+                    log("Client store initial save failed: " + e);
+                });
+        }
     },
 
     user = $("#user").val(),
@@ -673,57 +721,13 @@ function log_in() {
             log("'" + client_store.user + "' is logged in to client store");
             $("#whoami").text(client_store.user);
             client_hoard = new Hoard(client_store.data);
-            $(document).trigger("hoard_loaded", "client");
+            client_hoard_loaded(client_hoard);
         })
         .on("logged_in_to_cloud", function() {
             log("'" + cloud_store.user
                 + "' is logged in to cloud store");
             cloud_hoard = new Hoard(cloud_store.data);
-            $(document).trigger("hoard_loaded", "cloud");
-        })
-        .on("hoard_loaded", function(event, hoard) {
-            var autosave = false;
-
-            // Callback invoked when either of the client or cloud hoards
-            // is loaded. Effectively a join.
-            log(hoard + " hoard loaded");
-
-            if (hoard === "client" && client_hoard) {
-                autosave = (client_hoard.last_sync === null
-                            && client_hoard.cache === null);
-
-                log("Reconstructing UI tree from cache");
-                // Use reconstruct_actions to drive creation of
-                // the UI
-                client_hoard.reconstruct_actions(play_action);
-                // Reset the UI modification list; we just loaded the
-                // client hoard
-                $(".modified").removeClass("modified");
-            }
-            if (client_hoard && cloud_hoard) {
-                get_updates_from_cloud();
-            }
-            if (hoard === "client") {
-                // Client is ready
-                $("#unauthenticated").loadingOverlay("remove");
-                if (client_hoard) {
-                    update_save_button();
-                    update_tree();
-                    $("#unauthenticated").hide();
-                    $("#authenticated").show();
-                }
-                if (autosave) {
-                    // Client store had no data, so do an initial save
-                    client_store.data = client_hoard;
-                    client_store.save(
-                        function() {
-                            log("Client store initial save");
-                        },
-                        function(e) {
-                            log("Client store initial save failed: " + e);
-                        });
-                }
-            }
+            cloud_hoard_loaded();
         });
 
     if (!pass || pass === "") {
@@ -788,7 +792,6 @@ function log_out() {
     $("#authenticated").hide();
     $("#unauthenticated").show();
     client_hoard = null;
-    cloud_hoard = null;
 }
 
 function save_hoards() {
@@ -798,8 +801,8 @@ function save_hoards() {
     squeak($messy);
 
     var save_client = function() {
-        client_hoard.save(
-            client_store,
+        client_store.data = client_hoard;
+        client_store.save(
             function() {
                 $(".modified").removeClass("modified");
                 $messy.append(
@@ -823,12 +826,14 @@ function save_hoards() {
     cloud_store.refresh(
         function() {
             var conflicts = [];
+            var cloard = new Hoard(cloud_store.data);
             client_hoard.merge_from_cloud(
-                cloud_hoard, play_action, conflicts);
+                cloard, play_action, conflicts);
             if (client_hoard.is_modified()) {
-                cloud_hoard.actions =
-                    cloud_hoard.actions.concat(client_hoard.actions);
-                cloud_hoard.save(
+                cloard.actions =
+                    cloard.actions.concat(client_hoard.actions);
+                cloud_store.data = cloard;
+                cloud_store.save(
                     function() {
                         client_hoard.actions = [];
                         client_hoard.last_sync =
@@ -866,11 +871,12 @@ function save_hoards() {
         //client_store = new EncryptedStore(client_store);
         //client_store = new LocalStorageStore();
 
-        $(document).on("cloud_store_ready", function() {
-            log("Cloud store is ready, waiting for login");
-            $("#password,#user").removeAttr("disabled");
-            $("#log_in").button("option", "disabled", false);
-        });
+        $(document)
+            .on("cloud_store_ready", function() {
+                log("Cloud store is ready, waiting for login");
+                $("#password,#user").removeAttr("disabled");
+                $("#log_in").button("option", "disabled", false);
+            });
 
         // Log in
         $("#log_in")

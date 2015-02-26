@@ -18,39 +18,48 @@ LocalStorageStore.prototype = Object.create(AbstractStore.prototype);
 LocalStorageStore.prototype.save = function(ok, fail) {
     "use strict";
 
-    try {
+//    try {
         localStorage.setItem(this.prefix + this.user + "/pass", this.pass);
         localStorage.setItem(this.prefix + this.user + "/data",
                              JSON.stringify(this.data));
         ok.call(this);
-    } catch (e) {
-        fail.call(this, e);
-    }
+//    } catch (e) {
+//        if (typeof e !== 'string') {
+//            debugger;
+//        }
+//        fail.call(this, e);
+//    }
 };
 
 LocalStorageStore.prototype._read = function(ok, fail) {
     "use strict";
 
-    try {
+//    try {
         this.pass = localStorage.getItem(this.prefix + this.user + "/pass");
         this.data = JSON.parse(localStorage.getItem(this.prefix + this.user + "/data"));
         ok.call(this);
-    } catch (e) {
-        fail.call(this, e);
-    }
+//    } catch (e) {
+//        if (typeof e !== 'string') {
+//            debugger;
+//        }
+//        fail.call(this, e);
+//    }
 };
 
 LocalStorageStore.prototype._exists = function(user, ok, fail) {
     "use strict";
 
-    try {
+//    try {
         var x = localStorage.getItem(this.prefix + user + "/pass");
         if (typeof x !== 'undefined' && x !== null) {
             ok.call(this);
         } else {
             fail.call(this, this.UDNE);
         }
-    } catch (e) {
-        fail.call(this, e);
-    }
+//    } catch (e) {
+//        if (typeof e !== 'string') {
+//            debugger;
+//        }
+//        fail.call(this, e);
+//    }
 };
