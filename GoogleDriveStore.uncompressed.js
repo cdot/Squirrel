@@ -3,8 +3,6 @@
  * @implements AbstractStore
  */
 
-// TODO: use drive.appfolder, see https://developers.google.com/drive/web/appdata
-const SCOPES = "https://www.googleapis.com/auth/drive";
 const BOUNDARY = "-------314159265358979323846";
 const DELIMITER = "\r\n--" + BOUNDARY + "\r\n";
 const RETIMILED = "\r\n--" + BOUNDARY + "--";
@@ -44,15 +42,20 @@ GoogleDriveStore.prototype._authorise = function(ok, fail) {
             auth_failed("Timeout trying to authorise access to Google Drive");
         }, 5000);
         gapi.auth.authorize(
-            {"client_id": this.cID, "scope": SCOPES, "immediate": true},
+            {
+                "client_id": this.cID,
+                "scope": "https://www.googleapis.com/auth/drive",
+                "immediate": true
+            },
             function (authResult) {
                 window.clearTimeout(tid);
                 if (authResult && !authResult.fail) {
-                    // Access token has been okfully retrieved, requests
+                    // Access token has been retrieved, requests
                     // can be sent to the API.
-                    console.log("GDE: Auth OK");
+                    console.log("GDE: Auth OK: " + gapi.auth.getToken());
                     gapi.client.load("drive", "v2", function() {
                         drive.authorised = true;
+                        console.log("GDE: drive/v2 API loaded");
                         ok.call(drive);
                         drive.authorised = false;
                     });
@@ -80,7 +83,7 @@ GoogleDriveStore.prototype._upload = function(p) {
     if (p.id) {
         this._putfile(p);
     } else {
-        this.exists(
+        this._exists(
             p.name,
             function(id) {
                 p.id = id;
@@ -118,7 +121,8 @@ GoogleDriveStore.prototype._putfile = function(p) {
 
     metadata = {
         title: p.name,
-        mimeType: p.contentType
+        mimeType: p.contentType,
+        parents: [{ id: "appfolder" }]
     };
 
     base64Data = btoa(p.data);
@@ -159,12 +163,12 @@ GoogleDriveStore.prototype._search = function(query, ok, fail) {
     var drive = this;
     this._authorise(
         function() {
-            gapi.client
-                .request({
-                    path: "/drive/v2/files",
-                    method: "GET",
-                    params: { q: query }
-                })
+debugger;
+            gapi.client.drive.files.get({
+                path: "/drive/v2/files",
+                method: "GET",
+                params: { q: query }
+            })
                 .then(
                     function(response) {
                         ok.call(drive, response.result.items);
@@ -192,6 +196,7 @@ GoogleDriveStore.prototype._download = function(p) {
             "title='" + p.name + "'",
             function(items) {
                 if (items.length > 0) {
+debugger;
                     p.url = items[0].downloadUrl;
                     drive._download(p);
                 } else {
@@ -231,26 +236,45 @@ GoogleDriveStore.prototype._getfile = function(p) {
 // Determine if the given user exists, call the function 'does' or
 // 'does_not' accordingly, passing the faileId to 'does'
 // Implements: AbstractStore
-GoogleDriveStore.prototype.exists = function(name, does, does_not) {
+GoogleDriveStore.prototype._exists = function(user, ok, fail) {
     "use strict";
 
     var drive = this;
-    if (!this.user) {
-        does_not.call(this, this.NULI);
-        return;
-    }
+    this._authorise(
+        function() {
+            gapi.client.drive.files.get({
+                fileId: 'appfolder'
+            })
+                .then(
+                    function(response) {
+                        debugger;
+                        ok.call(drive, response.result.items);
+                    },
+                    function(reason) {
+                        debugger;
+                        fail.call(drive, reason);
+                    });
+        },
+        function(reason) {
+            fail.call(drive, reason);
+        });
+
+/*
     this._search(
-        "title='" + name + "'",
+        "title='" + user + "'",
         function(items) {
+debugger;
             if (items.length > 0) {
-                does.call(drive, items[0].id);
+                ok.call(drive, items[0].id);
             } else {
-                does_not.call(drive);
+                fail.call(drive, this.UDNE);
             }
         },
-        function() {
-            does_not.call(drive);
+        function(e) {
+            console.log("Search failed: " + e);
+            fail.call(drive, this.UDNE);
         });
+*/
 };
 
 // Implements: AbstractStore
@@ -260,11 +284,11 @@ GoogleDriveStore.prototype.save = function(ok, fail) {
     if (!this.user) {
         fail.call(this, this.NULI);
     } else {
-        this.authorise(
+        this._authorise(
             function() {
                 this._upload(
                     {
-                        name: this.user + ":" + key,
+                        name: this.user,
                         data: JSON.stringify({
                             pass: this.pass,
                             data: this.data
@@ -281,7 +305,7 @@ GoogleDriveStore.prototype._read = function(ok, fail) {
     "use strict";
 
     var self = this;
-    this.authorise(
+    this._authorise(
         function() {
             this._download(
                 {

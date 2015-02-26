@@ -24,15 +24,13 @@ function log(e) {
 
 function gapi_loaded() {
     "use strict";
-/*
+
     log("Google API loaded");
     if (!cloud_store) {
-    var gstore = new GoogleDriveStore(
-    "985219699584-mt1do7j28ifm2vt821d498emarmdukbt.apps.googleusercontent.com");
-    cloud_store = new EncryptedStore(gstore);
-    $(document).trigger("cloud_store_ready");
+        cloud_store = new GoogleDriveStore(
+            "985219699584-mt1do7j28ifm2vt821d498emarmdukbt.apps.googleusercontent.com");
+        $(document).trigger("cloud_store_ready");
     }
-*/
 }
 
 // Generate taphold events on platforms that don't natively support them
@@ -953,9 +951,9 @@ function save_hoards() {
                 }
             });
             */
-            cloud_store = new LocalStorageStore("cloud/");
+//            cloud_store = new LocalStorageStore("cloud/");
             ready();
-            $(document).trigger("cloud_store_ready");
+//            $(document).trigger("cloud_store_ready");
         });
     });
 
