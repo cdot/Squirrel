@@ -54,7 +54,7 @@ LocalStorageStore.prototype._exists = function(user, ok, fail) {
         if (typeof x !== 'undefined' && x !== null) {
             ok.call(this);
         } else {
-            fail.call(this, this.UDNE);
+            fail.call(this, this.NOT_FOUND);
         }
 //    } catch (e) {
 //        if (typeof e !== 'string') {

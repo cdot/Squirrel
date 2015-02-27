@@ -13,15 +13,24 @@
     <script type="text/javascript" src="Translation.uncompressed.js"></script>
     <script type="text/javascript" src="AES.min.js"></script>
     <script type="text/javascript" src="AbstractStore.uncompressed.js"></script>
-    <script type="text/javascript" src="FileStore.uncompressed.js"></script>
+<!-- For testing only
     <script type="text/javascript" src="MemoryStore.uncompressed.js"></script>
-    <script type="text/javascript" src="GoogleDriveStore.uncompressed.js"></script>
+-->
     <script type="text/javascript" src="LocalStorageStore.uncompressed.js"></script>
     <script type="text/javascript" src="EncryptedStore.uncompressed.js"></script>
     <script type="text/javascript" src="Hoard.uncompressed.js"></script>
     <script type="text/javascript" src="Squirrel.uncompressed.js"></script>
+<!-- File Store (for loading from a JSON file on disk
+    <script type="text/javascript" src="FileStore.uncompressed.js"></script>
+-->
+<!-- Google Drive
     <script type="text/javascript" src="https://apis.google.com/js/client.js?onload=gapi_loaded"></script>
-
+    <script type="text/javascript" src="GoogleDriveStore.uncompressed.js"></script>
+-->
+<!-- DropBox -->
+    <script type="text/javascript" src="dropbox.min.js"></script>
+    <script type="text/javascript" src="DropboxStore.uncompressed.js"></script>
+<!-- -->
     <link rel="stylesheet" href="jquery-ui.min.css">
     <link rel="stylesheet" href="jquery-silk-icons.css">
     <link rel="stylesheet" href="jquery-bonsai.min.css">
@@ -97,10 +106,6 @@
       <span class="TX_text">Registering you with username</span> '<span id="userid"></span>'<br />
       <span class="TX_text">Re-enter your password to confirm it</span><br />
       <input type="password" size="30" id="confirm_password" value="" class="TX_title" title="Enter password" />
-    </div>
-
-    <div id="init_store" class="dialog TX_title" title="Init local file store">
-      <input type="file" id="init_store_pick" class="TX_title" title="Select file" value="store.test" />
     </div>
 
     <div id="dlg_confirm_delete" class="dialog TX_title" title="Delete entry">

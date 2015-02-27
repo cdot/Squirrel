@@ -200,7 +200,7 @@ debugger;
                     p.url = items[0].downloadUrl;
                     drive._download(p);
                 } else {
-                    p.fail.call(gd, AbstractStore.prototype.UDNE);
+                    p.fail.call(gd, this.NOT_FOUND);
                 }
             },
             p.fail);
@@ -267,12 +267,12 @@ debugger;
             if (items.length > 0) {
                 ok.call(drive, items[0].id);
             } else {
-                fail.call(drive, this.UDNE);
+                fail.call(drive, this.NOT_FOUND);
             }
         },
         function(e) {
             console.log("Search failed: " + e);
-            fail.call(drive, this.UDNE);
+            fail.call(drive, this.NOT_FOUND);
         });
 */
 };
@@ -321,3 +321,14 @@ GoogleDriveStore.prototype._read = function(ok, fail) {
         },
         fail);
 };
+
+function gapi_loaded() {
+    "use strict";
+
+    log("Google API loaded");
+    if (!cloud_store) {
+        store = new GoogleDriveStore(
+            "985219699584-mt1do7j28ifm2vt821d498emarmdukbt.apps.googleusercontent.com");
+        $(document).trigger("cloud_store_ready", store);
+    }
+}

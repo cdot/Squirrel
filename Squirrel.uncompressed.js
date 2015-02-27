@@ -22,17 +22,6 @@ function log(e) {
         console.log(e);
 }
 
-function gapi_loaded() {
-    "use strict";
-
-    log("Google API loaded");
-    if (!cloud_store) {
-        cloud_store = new GoogleDriveStore(
-            "985219699584-mt1do7j28ifm2vt821d498emarmdukbt.apps.googleusercontent.com");
-        $(document).trigger("cloud_store_ready");
-    }
-}
-
 // Generate taphold events on platforms that don't natively support them
 $.fn.linger = function() {
 
@@ -620,15 +609,19 @@ function log_in() {
     offer_client_registration = function() {
         log("Offering client registration");
         // See if remote store has the user
-        cloud_store.log_in(
-            user, pass,
-            function() {
-                log("Checking Remote Store");
-                registration_dialog("existing_hoard");
-            },
-            function(message) {
-                registration_dialog("unknown_user");
-            });
+        if (cloud_store) {
+            cloud_store.log_in(
+                user, pass,
+                function() {
+                    log("Checking Remote Store");
+                    registration_dialog("existing_hoard");
+                },
+                function(message) {
+                    registration_dialog("unknown_user");
+                });
+        } else {
+            registration_dialog("cant_connect");
+        }
     },
 
     register_in_cloud = function() {
@@ -746,28 +739,30 @@ function log_in() {
         },
         function(e) {
             log("Local store rejected login: " + e);
-            if (e === client_store.UDNE) {
+            if (e === client_store.NOT_FOUND) {
                 offer_client_registration();
             } else {
                 squeak(e);
             }
         });
 
-    log("Log in to cloud store");
-    cloud_store.log_in(
-        user, pass,
-        function() {
-            $(document).trigger("logged_in_to_cloud");
-        },
-        function(e) {
-            if (e === cloud_store.UDNE) {
-                log("'" + user
-                    + "' does not exist in cloud; registering")
-                register_in_cloud();
-            } else {
-                squeak(e);
-            }
-        });
+    if (cloud_store) {
+        log("Log in to cloud store");
+        cloud_store.log_in(
+            user, pass,
+            function() {
+                $(document).trigger("logged_in_to_cloud");
+            },
+            function(e) {
+                if (e === cloud_store.NOT_FOUND) {
+                    log("'" + user
+                        + "' does not exist in cloud; registering")
+                    register_in_cloud();
+                } else {
+                    squeak(e);
+                }
+            });
+    }
 }
 
 // Determine if there are unsaved changes, and generate a warning
@@ -865,15 +860,20 @@ function save_hoards() {
 
     var ready = function() {
         client_store = new LocalStorageStore("client/");
-        log("Client store is ready");
         //client_store = new EncryptedStore(client_store);
-        //client_store = new LocalStorageStore();
+        log("Client store is ready");
 
         $(document)
-            .on("cloud_store_ready", function() {
-                log("Cloud store is ready, waiting for login");
-                $("#password,#user").removeAttr("disabled");
-                $("#log_in").button("option", "disabled", false);
+        /* Uncomment to use LocalStorage for the cloud store
+            .on("ready_for_store", function() {
+                cloud_store = new LocalStorageStore("cloud/");
+                $(document).trigger("cloud_store_ready");
+            })
+        */
+            .on("cloud_store_ready", function(event, store) {
+                log("Cloud store is ready");
+                cloud_store = store;
+                //cloud_store = new EncryptedStore(store);
             });
 
         // Log in
@@ -931,29 +931,18 @@ function save_hoards() {
             .change(function(evt) {
                 search($(this).val());
             });
+
+        $("#password,#user").removeAttr("disabled");
+        $("#log_in").button("option", "disabled", false);
     };
 
     $(document).ready(function() {
         // Initialise translation module
         init_Translation("en", function() {
-            /*
-            // Development - init from file on disk
-            var $dlg = $("#init_store");
-            $dlg.dialog({
-                modal: true,
-                width: "500px",
-                buttons: {
-                    "Continue": function() {
-                        $dlg.dialog("close");
-                        cloud_store = new FileStore($("#init_store_pick")[0].files[0]);
-                        ready();
-                    }
-                }
-            });
-            */
-//            cloud_store = new LocalStorageStore("cloud/");
             ready();
-//            $(document).trigger("cloud_store_ready");
+            // Notify store providers that we're ready for
+            // store initialisation
+            $(document).trigger("ready_for_store");
         });
     });
 

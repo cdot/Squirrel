@@ -27,7 +27,7 @@ FileStore.prototype._exists = function(user, ok, fail) {
                 if (self.user === user) {
                     ok.call(self);
                 } else {
-                    fail.call(self, this.UDNE);
+                    fail.call(self, this.NOT_FOUND);
                 }
             },
             fail);
@@ -57,3 +57,23 @@ FileStore.prototype._read = function(ok, fail) {
     reader.onabort = reader.onerror;
     reader.readAsBinaryString(this.file);
 };
+
+// Initialise a cloud store using the filestore
+(function ($) {
+    $(document).on("ready_for_store", function() {
+        var $dlg = $('<div class="dialog" title="Init local file store"><input type="file" id="init_store_pick" title="Select file" value="store.test" /></div>');
+        $('body').append($dlg);
+        $dlg.dialog({
+            modal: true,
+            width: "500px",
+            buttons: {
+                "Continue": function() {
+                    $dlg.dialog("close");
+                    $(document).trigger(
+                        "cloud_store_ready",
+                        new FileStore($("#init_store_pick")[0].files[0]));
+                }
+            }
+        });
+    });
+})(jQuery);

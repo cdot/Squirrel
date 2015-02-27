@@ -48,11 +48,10 @@ function AbstractStore() {
 }
 
 // Error strings
-AbstractStore.prototype.UDNE = TX("User does not exist");
-AbstractStore.prototype.WNS  = TX("_write is not supported by this store");
-AbstractStore.prototype.UIAR = TX("User is already registered");
-AbstractStore.prototype.PDNM = TX("Passwords do not match");
-AbstractStore.prototype.NULI = TX("Not logged in");
+AbstractStore.prototype.NOT_FOUND = TX("User does not exist");
+AbstractStore.prototype.UIAR      = TX("User is already registered");
+AbstractStore.prototype.PDNM      = TX("Passwords do not match");
+AbstractStore.prototype.NULI      = TX("Not logged in");
 
 /**
  * @protected
@@ -75,7 +74,7 @@ AbstractStore.prototype._exists = function(user, ok, fail) {
 AbstractStore.prototype.save = function(ok, fail) {
     "use strict";
 
-    fail.call(this, this.WNS);
+    throw "Pure virtual method save";
 };
 
 /**
