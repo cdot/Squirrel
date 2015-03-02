@@ -1,58 +1,50 @@
-// TODO:
-// Synch with Drive
-// Hide extra functions in a twisty
 /*
-Local cache - executed up to a point
-Script beyond that point
-
-Remote - script.
-
-Local cache built from script
-Tabs built from local cache
 
 */
-var client_store;
-var cloud_store;
-var client_hoard;
 
-const SQUIRREL_LOG = true;
-
-function log(e) {
-    if (SQUIRREL_LOG)
-        console.log(e);
-}
-
-// Generate taphold events on platforms that don't natively support them
+/**
+ * Plugin to generate taphold events on platforms that don't
+ * natively support them
+ */
 $.fn.linger = function() {
+    "use strict";
 
     var eventType = {
-        mousedown: 'ontouchstart' in window ? 'touchstart' : 'mousedown',
-        mouseup: 'ontouchend' in window ? 'touchend' : 'mouseup'
+        mousedown: "ontouchstart" in window ? "touchstart" : "mousedown",
+        mouseup: "ontouchend" in window ? "touchend" : "mouseup"
     };
     return this.each(function() {
         var timeout;
         $(this)
-            .on(eventType.mousedown + '.linger', function(e) {
+            .on(eventType.mousedown + ".linger", function(e) {
                 timeout = window.setTimeout(function() {
                     $(e.currentTarget).trigger("taphold");
-                }, 1000)
+                }, 1000);
                 return false; // stop bubble
             })
-            .on(eventType.mouseup + '.linger', function(e) {
+            .on(eventType.mouseup + ".linger", function(e) {
                 window.clearTimeout(timeout);
             })
-            .on(eventType.click + '.linger', function(e) {
+            .on(eventType.click + ".linger", function(e) {
                 window.clearTimeout(timeout);
             })
-            .on('contextmenu.linger', function(e) {
+            .on("contextmenu.linger", function(e) {
                 window.clearTimeout(timeout);
             });
     });
 };
 
-function squeak(e) {
+var Squirrel = { // Namespace
+    client_store: null,
+    cloud_store: null,
+    client_hoard: null
+};
+
+Squirrel.squeak = function(e) {
+    "use strict";
+
     var $dlg = $("#dlg_alert");
-    if (typeof(e) === 'string')
+    if (typeof e === "string")
         $dlg.children(".message").html(e);
     else
         $dlg.children(".message").empty().append(e);
@@ -65,12 +57,15 @@ function squeak(e) {
 // length: length of password
 // charset: characters legal in the password. Ranges can be defined using
 // A-Z syntax.
-function generate_password(constraints) {
-    if (typeof constraints.length === 'undefined') {
+Squirrel.generate_password = function(constraints) {
+    "use strict";
+    var sor, eor;
+
+    if (typeof constraints.length === "undefined") {
         constraints.length = 24;
     }
-    if (typeof constraints.charset === 'undefined') {
-        constraints.charset = 'A-Za-z0-9';
+    if (typeof constraints.charset === "undefined") {
+        constraints.charset = "A-Za-z0-9";
     }
     var cs = constraints.charset;
     var legal = [];
@@ -93,11 +88,11 @@ function generate_password(constraints) {
     for (var i = 0; i < constraints.length; i++) {
         s += legal[array[i] % legal.length];
     }
-    return s
+    return s;
 }
 
 // Reconstruct the tree path from the DOM
-function get_path($node) {
+Squirrel.get_path = function($node) {
     "use strict";
 
     var path = [];
@@ -115,25 +110,27 @@ function get_path($node) {
 }
 
 // Escape meta-characters for use in CSS selectors
-function quotemeta(s) {
+Squirrel.quotemeta = function(s) {
+    "use strict";
+
     return s.replace(/([\][!"#$%&'()*+,.\/:;<=>?@\\^`{|}~])/g, "\\$1");
 }
 
 // Generate a message for the last modified time
-function last_mod(time) {
+Squirrel.last_mod = function(time) {
     "use strict";
 
     var d = new Date(time);
-    return TX("Last modified: ") + d.toLocaleString() + " "
-        + TX("Click and hold to open menu");
+    return TX.tx("Last modified: ") + d.toLocaleString() + " "
+        + TX.tx("Click and hold to open menu");
 }
 
 // Confirm deletion of a node
-function confirm_delete($node) {
+Squirrel.confirm_delete = function($node) {
     "use strict";
 
     var $dlg = $("#dlg_confirm_delete");
-    $dlg.find(".message").text(get_path($node).join("/"));
+    $dlg.find(".message").text(Squirrel.get_path($node).join("/"));
     if ($node.hasClass("treecollection")) {
         $dlg.find(".is_collection").show();
     } else {
@@ -146,17 +143,19 @@ function confirm_delete($node) {
             "Confirm": function(evt) {
                 $(this).dialog("close");
                 client_hoard.play_action(
-                    { type: "D", path: get_path($node) },
+                    { type: "D", path: Squirrel.get_path($node) },
                     function(e) {
                         play_action(e);
-                        update_tree();
+                        Squirrel.update_tree();
                     });
             }
         }});
 }
 
 // Update the tree view
-function update_tree() {
+Squirrel.update_tree = function() {
+    "use strict";
+
     $("#tree")
         .bonsai("update")
         .contextmenu({
@@ -165,37 +164,37 @@ function update_tree() {
                 {
                     // Need the area that handles this to be covered with
                     // the zeroclipboard
-                    title: TX("Copy value"),
+                    title: TX.tx("Copy value"),
                     cmd: "copy",
                     uiIcon: "silk-icon-camera"
                 },
                 {
-                    title: TX("Rename"),
+                    title: TX.tx("Rename"),
                     cmd: "rename",
                     uiIcon: "silk-icon-pencil" 
                 },
                 {
-                    title: TX("Edit value"),
+                    title: TX.tx("Edit value"),
                     cmd: "edit",
                     uiIcon: "silk-icon-comment-edit" 
                 },
                 {
-                    title: TX("Generate new password"),
+                    title: TX.tx("Generate new password"),
                     cmd: "generate_password",
                     uiIcon: "silk-icon-bullet-key" 
                 },               
                 {
-                    title: TX("Add new value"),
+                    title: TX.tx("Add new value"),
                     cmd: "add_value",
                     uiIcon: "silk-icon-comment-add" 
                 },
                 {
-                    title: TX("Add new sub-tree"),
+                    title: TX.tx("Add new sub-tree"),
                     cmd: "add_subtree",
                     uiIcon: "silk-icon-chart-organisation-add" 
                 },
                 {
-                    title: TX("Delete"),
+                    title: TX.tx("Delete"),
                     cmd: "delete",
                     uiIcon: "silk-icon-delete" 
                 }
@@ -205,9 +204,9 @@ function update_tree() {
                 if (ui.target.is(".node_div"))
                     $div = ui.target;
                 else
-                    $div = ui.target.parents('.node_div').first();
+                    $div = ui.target.parents(".node_div").first();
 
-                isvalue = ($div.children('.value').length > 0);
+                isvalue = ($div.children(".value").length > 0);
                 $("#tree")
                     .contextmenu("showEntry", "copy", isvalue)
                     .contextmenu("showEntry", "edit", isvalue)
@@ -226,19 +225,20 @@ function update_tree() {
                     client.on("copy", function(event) {
                         event.clipboardData.setData(
                             "text/plain",
-                            $div.children('.value').text());
+                            $div.children(".value").text());
                     });
                 }
             },
             // We map long mouse hold to taphold in the plugin above
             // Right click still works
             taphold: true,
-            select: node_tapheld
+            select: Squirrel.node_tapheld
         });
 }
 
 // Edit a span in place
-function inplace_edit($span, action) {
+Squirrel.inplace_edit = function($span, action) {
+    "use strict";
     var h = $span.height();
     var w = $span.width();
 
@@ -255,14 +255,14 @@ function inplace_edit($span, action) {
             $input.remove();
             $span.show();
             if (val !== $span.text()) {
-                var old_path = get_path($span);
+                var old_path = Squirrel.get_path($span);
                 client_hoard.play_action(
                     { type: action,
                       path: old_path,
                       data: val },
                     function(e) {
                         play_action(e);
-                        update_tree();
+                        Squirrel.update_tree();
                     });
             }
         })
@@ -275,17 +275,18 @@ function inplace_edit($span, action) {
 }
 
 // Action on a new tree node
-function add_child_node($div, title, value) {
+Squirrel.add_child_node = function($div, title, value) {
+    "use strict";
     var $li = $div.parents("li").first();
     var $ul = $li.parent();
     $ul.bonsai("expand", $li);
 
-    var p = get_path($div);
+    var p = Squirrel.get_path($div);
     var action = {
         type: "N",
         path: p
     };
-    if (typeof(value) !== 'undefined') {
+    if (typeof value !== "undefined") {
         action.data = value;
     }
     p.push(title);
@@ -294,13 +295,14 @@ function add_child_node($div, title, value) {
         function(e) {
             var $n = play_action(e);
             // Want the result of the action play to grab the focus?
-            update_tree();
-            inplace_edit($n);
+            Squirrel.update_tree();
+            Squirrel.inplace_edit($n);
         });
 }
 
 // Dialog password generation
-function make_password(set) {
+Squirrel.make_password = function(set) {
+    "use strict";
     var $dlg = $("#dlg_gen_password");
     var buttons = {};
     var opts = {
@@ -308,21 +310,21 @@ function make_password(set) {
         charset: $dlg.find(".pw_chars").val()
     };
 
-    buttons[TX("Use this")] = function() {
+    buttons[TX.tx("Use this")] = function() {
         $dlg.dialog("close");
         var pw = $dlg.find(".pw").text();
         set.call(this, pw);
     };
-    buttons[TX("Try again")] = function() {
+    buttons[TX.tx("Try again")] = function() {
         opts.length = $dlg.find(".pw_length").val();
         opts.charset = $dlg.find(".pw_chars").val();
-        $dlg.find(".pw").text(generate_password(opts));
+        $dlg.find(".pw").text(Squirrel.generate_password(opts));
     };
-    buttons[TX("Forget it")] = function() {
+    buttons[TX.tx("Forget it")] = function() {
         $dlg.dialog("close");
     };
 
-    $dlg.find(".pw").text(generate_password(opts));
+    $dlg.find(".pw").text(Squirrel.generate_password(opts));
 
     $dlg.dialog({
         width: "auto",
@@ -331,7 +333,7 @@ function make_password(set) {
 }
 
 // Convert a path to an HTTP fragment
-function fragment_id(path) {
+Squirrel.fragment_id = function(path) {
     "use strict";
 
     var fid = path.join(":");
@@ -340,7 +342,7 @@ function fragment_id(path) {
     });
 }
 
-function search(s) {
+Squirrel.search = function(s) {
     "use strict";
 
     var $sar = $("#search_results");
@@ -349,10 +351,10 @@ function search(s) {
     $(".key").each(function() {
         if ($(this).text().match(re)) {
             var $li = $(this).closest("li");
-            var path = get_path($li);
+            var path = Squirrel.get_path($li);
             var $res = $("<a></a>");
             $res
-                .attr("href", "#" + fragment_id(path))
+                .attr("href", "#" + Squirrel.fragment_id(path))
                 .addClass("search_result")
                 .text(path.join("/"))
                 .click(function() {
@@ -368,36 +370,37 @@ function search(s) {
 }
 
 // Handler for taphold event on a contextmenu item
-function node_tapheld(e, ui) {
+Squirrel.node_tapheld = function(e, ui) {
+    "use strict";
     var $li = ui.target.parents("li").first();
-    var $div = $li.children('.node_div');
-    if (ui.cmd === 'copy') {
+    var $div = $li.children(".node_div");
+    if (ui.cmd === "copy") {
         //log("Copying to clipboard");
-        ZeroClipboard.setData($div.children('.value').text());
+        ZeroClipboard.setData($div.children(".value").text());
     }
     else if (ui.cmd === "rename") {
-        //console.log("Renaming");
-	inplace_edit($div.children('.key'), "R");
+        //console.debug("Renaming");
+	Squirrel.inplace_edit($div.children(".key"), "R");
     }
     else if (ui.cmd === "edit") {
-        //console.log("Editing");
-	inplace_edit($div.children('.value'), "E");
+        //console.debug("Editing");
+	Squirrel.inplace_edit($div.children(".value"), "E");
     }
     else if (ui.cmd === "add_value") {
         //log("Adding value");
-        add_child_node($div, TX("New value"), TX("None"));
+        Squirrel.add_child_node($div, TX.tx("New value"), TX.tx("None"));
     }
     else if (ui.cmd === "add_subtree") {
         //log("Adding subtree");
-        add_child_node($div, TX("New sub-tree"));
+        Squirrel.add_child_node($div, TX.tx("New sub-tree"));
     }
     else if (ui.cmd === "generate_password") {
-        make_password(function(pw) {
-            $div.children('.value').text(pw);
+        Squirrel.make_password(function(pw) {
+            $div.children(".value").text(pw);
         });
     }
     else if (ui.cmd === "delete") {
-        confirm_delete($div);
+        Squirrel.confirm_delete($div);
     }
     else {
         throw "Unknown ui.cmd " + ui.cmd;
@@ -405,24 +408,25 @@ function node_tapheld(e, ui) {
 }
 
 // Update the save button based on hoard state
-function update_save_button() {
-    $('#save_button').toggle(client_hoard.is_modified());
+Squirrel.update_save_button = function() {
+    "use strict";
+    $("#save_button").toggle(Squirrel.client_hoard.is_modified());
 }
 
 // Callback for use when managing hoards; plays an action that is being
 // played into the hoard into the DOM as well.
-function play_action(e) {
+Squirrel.play_action = function(e) {
     "use strict";
 
     //log("Playing " + e.type + " @" + new Date(e.time)
     //            + " " + e.path.join("/")
-    //            + (typeof e.data !== 'undefined' ? " " + e.data : ""));
+    //            + (typeof e.data !== "undefined" ? " " + e.data : ""));
 
     var $parent_ul = $("#tree"), key, $li, $div, menu, $keyspan, $valspan;
 
-    // Locate the parent of the node who's path we are given
+    // Locate the parent of the node who"s path we are given
     for (var i = 0; i < e.path.length - 1; i++) {
-        $parent_ul = $parent_ul.find("li[data-key='" + quotemeta(e.path[i]) + "'] > ul");
+        $parent_ul = $parent_ul.find("li[data-key='" + Squirrel.quotemeta(e.path[i]) + "'] > ul");
     }
 
     key = e.path[e.path.length - 1];
@@ -431,7 +435,7 @@ function play_action(e) {
         $li = $("<li></li>")
             .attr("data-key", key)
             .attr("name", key)
-            .attr("title", last_mod(e.time));
+            .attr("title", Squirrel.last_mod(e.time));
 
         $div = $("<div></div>")
             .addClass("node_div")
@@ -472,7 +476,7 @@ function play_action(e) {
         }
 
         // Add anchor
-        $li.prepend($("<a></a>").attr("name", fragment_id(get_path($li))));
+        $li.prepend($("<a></a>").attr("name", Squirrel.fragment_id(Squirrel.get_path($li))));
 
         // Enable taphold events
         $div
@@ -482,365 +486,138 @@ function play_action(e) {
 
     } else if (e.type === "R") {
         $parent_ul
-            .children("li[data-key='" + quotemeta(key) + "']")
+            .children("li[data-key='" + Squirrel.quotemeta(key) + "']")
             .attr("data-key", e.data)
-            .attr("title", last_mod(e.time))
+            .attr("title", Squirrel.last_mod(e.time))
             .children(".node_div")
             .children("span.key")
             .text(e.data);
         // TODO: re-sort
     } else if (e.type === "E") {
         $parent_ul
-            .children("li[data-key='" + quotemeta(key) + "']")
-            .attr("title", last_mod(e.time))
+            .children("li[data-key='" + Squirrel.quotemeta(key) + "']")
+            .attr("title", Squirrel.last_mod(e.time))
             .children(".node_div")
             .children("span.value")
             .text(e.data);
     } else if (e.type === "D") {
         $parent_ul
-            .children("li[data-key='" + quotemeta(e.path[i]) + "']")
+            .children("li[data-key='" + Squirrel.quotemeta(e.path[i]) + "']")
             .remove();
         $parent_ul
             .parents("li")
             .first()
-            .attr("title", last_mod(e.time));
+            .attr("title", Squirrel.last_mod(e.time));
     } else {
         throw "Unrecognised action '" + e.type + "'";
     }
-    update_save_button();
+    Squirrel.update_save_button();
 
     return $keyspan;
 }
 
-function get_updates_from_cloud(cloard) {
+Squirrel.get_updates_from_cloud = function(cloard) {
+    "use strict";
+
     // This will get triggered whenever both hoards are
     // successfully loaded.
-    log("Merging from cloud hoard");
+    console.debug("Merging from cloud hoard");
     var conflicts = [];
     client_hoard.merge_from_cloud(
-        cloard, play_action, conflicts);
+        cloard, Squirrel.play_action, conflicts);
     if (conflicts.length > 0) {
-        var $dlg = $('#dlg_conflicts');
-        $dlg.children('.message').empty();
+        var $dlg = $("#dlg_conflicts");
+        $dlg.children(".message").empty();
         $.each(conflicts, function(i, c) {
             var e = c.action;
             $("<div></div>")
                 .text(
                     e.type + ":" + e.path.join("/")
-                        + (typeof e.data !== 'undefined' ?
+                        + (typeof e.data !== "undefined" ?
                            " " + e.data : "")
                         + " @" + new Date(e.time)
                         + ": " + c.message)
-                .appendTo($dlg.children(".message"))
+                .appendTo($dlg.children(".message"));
         });
         $dlg.dialog({
             width: "auto"
         });
     }
     // Finished with the cloud hoard (for now)
-    update_save_button();
-    update_tree();
-}
-
-function log_in() {
-    "use strict";
-
-    // Confirm that we want to register by re-entering password
-    var confirm_password = function() {
-        var $dlg = $("#dlg_confirm_pass"),
-        buttons = {};
-        $dlg.find(".message").hide();
-        $dlg.find("#userid").text(user);
-
-        buttons[TX("Confirm")] = function(evt) {
-            var cpass = $("#confirm_password").val();
-            if (cpass === pass) {
-                $dlg.dialog("close");
-                // We want to register; create the new registration in the
-                // client store
-                client_store.register(
-                    user, pass,
-                    function() {
-                        $(document).trigger("logged_in_to_client");
-                    },
-                    squeak);
-            } else {
-                $("#password_mismatch").show();
-                $("#show_password").button().click(function() {
-                    $dlg.find("#passwords")
-                        .text(pass + TX(" and ") + cpass)
-                        .show();
-                });
-            }
-        };
-        buttons[TX("Cancel")] = function() {
-            $dlg.dialog("close");
-        };
-
-        $dlg.dialog({
-            width: "auto",
-            modal: true,
-            buttons: buttons});
-    },
-
-    // Registration is being offered for the reason shown by clss.
-    registration_dialog = function(message) {
-        var $dlg = $("#dlg_register"), buttons = {};
-        $dlg.find(".message").hide();
-        $dlg.find("." + message).show();
-        buttons[TX("Yes")] = function(evt) {
-            $dlg.dialog("close");
-            // We want to register; create the new registration in the
-            // local drive
-            log("Registration selected. Confirming password");
-            confirm_password();
-        };
-        buttons[TX("No")] = function(evt) {
-            $dlg.dialog("close");
-            // No local store registration; we can't do any more
-        };
-        $dlg.dialog({
-            modal: true,
-            buttons: buttons});
-    },
-
-    // The local store didn't allow login using this pass. See if the
-    // user wants to register
-    offer_client_registration = function() {
-        log("Offering client registration");
-        // See if remote store has the user
-        if (cloud_store) {
-            cloud_store.log_in(
-                user, pass,
-                function() {
-                    log("Checking Remote Store");
-                    registration_dialog("existing_hoard");
-                },
-                function(message) {
-                    registration_dialog("unknown_user");
-                });
-        } else {
-            registration_dialog("cant_connect");
-        }
-    },
-
-    register_in_cloud = function() {
-        // Create new user in the cloud, initialising it from
-        // the client hoard.
-        cloud_store.register(
-            user, pass,
-            function() {
-                var acts = [];
-                client_hoard.reconstruct_actions(function(a) {
-                    acts.push(a);
-                });
-                cloud_store.data = new Hoard(
-                    {
-                        last_sync: null,
-                        actions: acts,
-                        cache: null
-                    });
-                cloud_store.save(
-                    function () {
-                        log("Cloud saved");
-                        $(document).trigger(
-                            "hoard_loaded", "cloud", cloud_store.data);
-                    },
-                    function(e) {
-                        log("Cloud save failed: " + e);
-                    });
-            },
-            squeak);
-    },
-
-    cloud_hoard = null,
-
-    cloud_hoard_loaded = function() {
-        log("Cloud hoard loaded");
-        if (client_hoard) {
-            get_updates_from_cloud(cloud_hoard);
-            cloud_hoard = null;
-        }
-    },
-
-    client_hoard_loaded = function() {
-        // Callback invoked when either of the client or cloud hoards
-        // is loaded. Effectively a join.
-        log("Client hoard loaded");
-
-        var autosave = (client_hoard.last_sync === null
-                        && client_hoard.cache === null);
-
-        log("Reconstructing UI tree from cache");
-        // Use reconstruct_actions to drive creation of
-        // the UI
-        client_hoard.reconstruct_actions(play_action);
-        // Reset the UI modification list; we just loaded the
-        // client hoard
-        $(".modified").removeClass("modified");
-    
-        if (cloud_hoard) {
-            get_updates_from_cloud(cloud_hoard);
-            cloud_hoard = null;
-        }
-    
-        $("#unauthenticated").loadingOverlay("remove");
-        update_save_button();
-        update_tree();
-        $("#unauthenticated").hide();
-        $("#authenticated").show();
-        if (autosave) {
-            // Client store had no data, so do an initial save
-            client_store.data = client_hoard;
-            client_store.save(
-                function() {
-                    log("Client store initial save");
-                },
-                function(e) {
-                    log("Client store initial save failed: " + e);
-                });
-        }
-    },
-
-    user = $("#user").val(),
-    pass = $("#password").val();
-
-    // We are logged in (or freshly registered) with the local store
-    // If we haven't already logged in to the cloud store, do so now.
-    $(document)
-        .on("logged_in_to_client", function() {
-            log("'" + client_store.user + "' is logged in to client store");
-            $("#whoami").text(client_store.user);
-            client_hoard = new Hoard(client_store.data);
-            client_hoard_loaded(client_hoard);
-        })
-        .on("logged_in_to_cloud", function() {
-            log("'" + cloud_store.user
-                + "' is logged in to cloud store");
-            cloud_hoard = new Hoard(cloud_store.data);
-            cloud_hoard_loaded();
-        });
-
-    if (!pass || pass === "") {
-        squeak("<div class='warning'>" +
-               TX("Empty password not permitted")
-               + "</div>");
-        return false;
-    }
-
-    $("#unauthenticated").loadingOverlay({ loadingText: TX("Signing in...") });
-
-    log("Log in to client store");
-
-    client_store.log_in(
-        user, pass,
-        function() {
-            $(document).trigger("logged_in_to_client");
-        },
-        function(e) {
-            log("Local store rejected login: " + e);
-            if (e === client_store.NOT_FOUND) {
-                offer_client_registration();
-            } else {
-                squeak(e);
-            }
-        });
-
-    if (cloud_store) {
-        log("Log in to cloud store");
-        cloud_store.log_in(
-            user, pass,
-            function() {
-                $(document).trigger("logged_in_to_cloud");
-            },
-            function(e) {
-                if (e === cloud_store.NOT_FOUND) {
-                    log("'" + user
-                        + "' does not exist in cloud; registering")
-                    register_in_cloud();
-                } else {
-                    squeak(e);
-                }
-            });
-    }
+    Squirrel.update_save_button();
+    Squirrel.update_tree();
 }
 
 // Determine if there are unsaved changes, and generate a warning
 // message for the caller to use.
-function unsaved_changes() {
+Squirrel.unsaved_changes = function() {
+    "use strict";
     if (client_hoard && client_hoard.is_modified()) {
 
-        var changed = '';
-        $('.modified').each(function() {
-            changed += '   ' + $(this).attr("name") + '\n';
+        var changed = "";
+        $(".modified").each(function() {
+            changed += "   " + $(this).attr("name") + "\n";
         });
-        return TX("You have unsaved changes") + "\n"
-            +  TX("Are you really sure?");
+        return TX.tx("You have unsaved changes") + "\n"
+             + TX.tx("Are you really sure?");
     }
-}
+};
 
-// Clear down
-function log_out() {
-    $("#tree").empty();
-    $("#authenticated").hide();
-    $("#unauthenticated").show();
-    client_hoard = null;
-}
-
-function save_hoards() {
+Squirrel.save_hoards = function() {
+    "use strict";
     var $messy = $("<div class='notice'>"
-                   + TX("Saving....")
+                   + TX.tx("Saving....")
                    + "</div>");
-    squeak($messy);
+    Squirrel.squeak($messy);
 
     var save_client = function() {
-        client_store.data = client_hoard;
-        client_store.save(
+        Squirrel.client_store.data = client_hoard;
+        Squirrel.client_store.save(
             function() {
                 $(".modified").removeClass("modified");
                 $messy.append(
                     "<div class='notice'>"
-                        + TX("Saved in this browser")
+                        + TX.tx("Saved in this browser")
                         + "</div>");
 
-                update_save_button();
+                Squirrel.update_save_button();
             },
             function(e) {
                 $messy.append(
                     "<div class='warn'>"
-                        + TX("Failed to save in the browser: ") + e
+                        + TX.tx("Failed to save in the browser: ") + e
                         + "</div>");
 
-                update_save_button();
+                Squirrel.update_save_button();
             });
     };
 
     // Reload and save the cloud hoard
-    cloud_store.refresh(
+    Squirrel.cloud_store.refresh(
         function() {
             var conflicts = [];
-            var cloard = new Hoard(cloud_store.data);
+            var cloard = new Hoard(Squirrel.cloud_store.data);
             client_hoard.merge_from_cloud(
-                cloard, play_action, conflicts);
+                cloard, Squirrel.play_action, conflicts);
             if (client_hoard.is_modified()) {
                 cloard.actions =
                     cloard.actions.concat(client_hoard.actions);
-                cloud_store.data = cloard;
-                cloud_store.save(
+                Squirrel.cloud_store.data = cloard;
+                Squirrel.cloud_store.save(
                     function() {
                         client_hoard.actions = [];
                         client_hoard.last_sync =
                             new Date().valueOf();
                         $messy.append(
                             "<div class='notice'>"
-                                + TX("Saved in the Cloud")
+                                + TX.tx("Saved in the Cloud")
                                 + "</div>");
                         save_client();
                     },
                     function(e) {
                         $messy.append(
                             "<div class='error'>"
-                                + TX("Failed to save in the Cloud")
+                                + TX.tx("Failed to save in the Cloud")
                                 + "<br>" + e + "</div>");
                         save_client();
                     });
@@ -849,104 +626,189 @@ function save_hoards() {
         function(e) {
             $messy.append(
                 "<div class='error'>"
-                    + TX("Failed to refresh from the Cloud")
+                    + TX.tx("Failed to refresh from the Cloud")
                     * "<br>" + e + "</div>");
             save_client();
         });
-}
+};
+
+Squirrel.hoards_loaded = function() {
+    var autosave = (Squirrel.client_hoard.last_sync === null
+                    && Squirrel.client_hoard.cache === null);
+
+    console.debug("Reconstructing UI tree from cache");
+    // Use reconstruct_actions to drive creation of
+    // the UI
+    Squirrel.client_hoard.reconstruct_actions(Squirrel.play_action);
+    // Reset the UI modification list; we just loaded the
+    // client hoard
+    $(".modified").removeClass("modified");
+    
+    $("#unauthenticated").loadingOverlay("remove");
+    Squirrel.update_save_button();
+    Squirrel.update_tree();
+    $("#unauthenticated").hide();
+    $("#authenticated").show();
+};
+
+Squirrel.load_cloud_hoard = function() {
+    if (Squirrel.cloud_store) {
+        Squirrel.cloud_store.read(
+            function(data) {
+                try {
+                    var hoard = JSON.parse(data);
+                    Squirrel.get_updates_from_cloud(new Hoard(hoard));
+                    Squirrel.hoards_loaded();
+                } catch (e) {
+                    Squirrel.squeak("Cloud hoard data is malformed: " + e);
+                };
+            },
+            function(e) {
+                if (e === AbstractStore.NODATA) {
+                    console.debug("Cloud hoard contains no data");
+                    Squirrel.hoards_loaded();
+                } else {
+                    Squirrel.squeak("Cloud store error: " + e);
+                }
+            });
+    } else {
+        Squirrel.hoards_loaded();
+    }
+};
+
+Squirrel.load_hoards = function() {
+    Squirrel.client_store.read(
+        function(data) {
+            try {
+                Squirrel.client_hoard = new Hoard(JSON.parse(data));
+                if (Squirrel.cloud_store)
+                    Squirrel.load_cloud_hoard();
+            } catch (e) {
+                Squirrel.squeak("Client hoard data is malformed: " + e);
+            };
+        },
+        function(e) {
+            if (e === AbstractStore.NODATA) {
+                console.debug("Client hoard contains no data");
+                Squirrel.client_hoard = new Hoard();
+                if (Squirrel.cloud_store)
+                    Squirrel.load_cloud_hoard();
+            } else {
+                Squirrel.squeak("Client store error: " + e);
+            }
+        });
+};
+
+Squirrel.init_ui = function() {
+    $("#save_button")
+        .button({
+            icons: {
+                primary: "silk-icon-disk"
+            },
+            text: false
+        })
+        .hide()
+        .click(Squirrel.save_hoards);
+
+    $("#tree").bonsai({
+        expandAll: false });
+
+    $("#add_root_child")
+        .button({
+            icons: {
+                primary: "silk-icon-add"
+            },
+            text: false
+        })
+        .click(function() {
+            add_new_child($("#tree"));
+        });
+
+    $("#search")
+        .change(function(evt) {
+            search($(this).val());
+        });
+};
+
+Squirrel.log_in_dialog = function(ok, fail, uReq, pReq) {
+    var $dlg = $("#dlg_login"),
+    b = {},
+    self = this;
+    $dlg.find("#uReq").toggle(uReq);
+    $dlg.find("#pReq").toggle(pReq);
+    b[TX.tx("Sign In")] = function(evt) {
+        $(this).dialog("close");
+        ok.call(self,
+                $dlg.find("#user").val(),
+                $dlg.find("#password").val());
+    };
+    $dlg.dialog({
+        modal: true,
+        width: "auto",
+        buttons: b
+    });
+};
+
+Squirrel.init_client_store = function() {
+    var cls = new LocalStorageStore({
+        dataset: "Squirrel",
+        ok: function() {
+            console.debug("Client store is ready");
+            $("#whoami").text(this.user);
+            Squirrel.client_store = this;
+            Squirrel.load_hoards();
+        },
+        fail: function(e) {
+            // We did our best!
+            Squirrel.squeak("Failed" + e);
+        },
+        identify: function(ok, fail, uReq, pReq) {
+            var user, pass;
+            assert(uReq || pReq);
+            if (uReq && Squirrel.cloud_store) {
+                if (!pReq) {
+                    ok.call(this, Squirrel.cloud_store.user);
+                    return;
+                } else {
+                    // Just prompt for password
+                    $("#dlg_login").find("#user").val(Squirrel.cloud_store.user);
+                    uReq = false;
+                }
+            }
+            Squirrel.log_in_dialog.call(this, ok, fail, uReq, pReq);
+        }
+    });
+};
+
+Squirrel.init_cloud_store = function() {
+    var cls =  new DropboxStore({
+        dataset: "Squirrel",
+        ok: function() {
+            Squirrel.cloud_store = this;
+            Squirrel.init_client_store();
+        },
+        fail: function(e) {
+            Squirrel.squeak("Could not contact cloud store");
+            Squirrel.init_client_store();
+        },
+        identify: Squirrel.log_in_dialog
+    });
+};
 
 (function ($) {
     "use strict";
 
-    var ready = function() {
-        client_store = new LocalStorageStore("client/");
-        //client_store = new EncryptedStore(client_store);
-        log("Client store is ready");
-
-        $(document)
-        /* Uncomment to use LocalStorage for the cloud store
-            .on("ready_for_store", function() {
-                cloud_store = new LocalStorageStore("cloud/");
-                $(document).trigger("cloud_store_ready");
-            })
-        */
-            .on("cloud_store_ready", function(event, store) {
-                log("Cloud store is ready");
-                cloud_store = store;
-                //cloud_store = new EncryptedStore(store);
-            });
-
-        // Log in
-        $("#log_in")
-            .button({
-                icons: {
-                    primary: "silk-icon-lock-open"
-                },
-                disabled: true
-            })
-            .click(log_in);
-
-        $("#log_out")
-            .button({
-                icons: {
-                    primary: "silk-icon-lock"
-                }
-            })
-            .click(function() {
-                var mess = unsaved_changes();
-                if (mess) {
-                    if (window.confirm(mess)) {
-                        log_out();
-                    }
-                } else {
-                    log_out();
-                }
-            });
-
-        $("#save_button")
-            .button({
-                icons: {
-                    primary: "silk-icon-disk"
-                },
-                text: false
-            })
-            .hide()
-            .click(save_hoards);
-
-        $("#tree").bonsai({
-            expandAll: false });
-
-        $("#add_root_child")
-            .button({
-                icons: {
-                    primary: "silk-icon-add"
-                },
-                text: false
-            })
-            .click(function() {
-                add_new_child($("#tree"));
-            });
-
-        $("#search")
-            .change(function(evt) {
-                search($(this).val());
-            });
-
-        $("#password,#user").removeAttr("disabled");
-        $("#log_in").button("option", "disabled", false);
-    };
-
-    $(document).ready(function() {
-        // Initialise translation module
-        init_Translation("en", function() {
-            ready();
-            // Notify store providers that we're ready for
-            // store initialisation
-            $(document).trigger("ready_for_store");
-        });
+    $(document)
+        .ready(function() {
+            // Initialise UI components
+            Squirrel.init_ui();
+            // Initialise translation module
+            new TX("en", Squirrel.init_cloud_store);
+        })
+    .on("stores_ready", function() {
     });
 
-    $(window).on('beforeunload', function() {
-        return unsaved_changes();
+    $(window).on("beforeunload", function() {
+        return Squirrel.unsaved_changes();
     });
 })(jQuery);

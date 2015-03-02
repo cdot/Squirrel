@@ -1,24 +1,8 @@
 /**
- * Pure virtual base class of password-protected stores. A store presents
- * an interface that supports the setting and getting of data on a
- * per-user basis.
- * User support includes login, logout, registration.
-
-So, localStore needs to key data per user, and those data blocks need
-to be encrypted. So, a data block indexed per-user would work fine.
-
-"user": { pass: "password", data: stored data }
-
-FileStore needs to store the password in a per-user file with the rest of
-the file encrytped. A single file need not contain multiple users, and
-the filename dictates the username. So the file contains JSON as shown
-above.
-
-Same with google drive, the filename is the username.
-
-Memoery store is per user too, but needs to be told the username up front.
-The password is again encoded in the store.
-
+ * Pure virtual base class of store providers.
+ *
+ * Store providers provide a simple file system interface to data in the
+ * store.
  *
  * @callback ok
  * Called with this set to the store
@@ -27,146 +11,78 @@ The password is again encoded in the store.
  * Called with this set to the store
  * @param {string} message
  *
- * @callback check_pass
- * Called with this set to the store
- * @param {string} stored password for the user
+ * @callback identify
+ * Called to identify what user is trying to use this store. Only stores
+ * that require a username will use this. It's a hook for a login
+ * prompt.
+ * @param {ok} Called this set to the store and with the username as parameter
+ * @param {fail} Called with this set to the store and a message
+ * @param {uReq} true if the store requires a user
+ * @param {pReq} true if the store requires a password
  */
 
 /**
  * Create a new store. Subclasses must call this constructor.
+ * The standard pattern is for the constructor to take a callback as
+ * parameter to the create and invoke that callback when the store
+ * is ready for use.
  * @class
+ * @param {object} params
+ *    * dataset name of the unique data set this store holds
+ *    * ok, called on success
+ *    * fail, called on failure
+ *    * identify, called to identify the user of the store,
+ *      if needed
+ *    * uReq - true if a username is required by this store
+ *    * pReq - true if a password is required by this store
  */
-function AbstractStore() {
+function AbstractStore(params) {
     "use strict";
 
-    /** @member {string} currently logged-in user */
-    this.user = null;
-    /** @member {string} password for the user */
-    this.pass = null;
-    /** @member {Object} data for the user */
-    this.data = null;
+    var self = this;
+
+    this.dataset = params.dataset;
+
+    if (params.uReq || params.pReq) {
+        params.identify.call(
+            this,
+            function(user, pass) {
+                if (params.uReq)
+                    this.user = user;
+                if (params.pReq)
+                    this.pass = pass;
+                params.ok.call(self);
+            },
+            params.fail,
+            params.uReq,
+            params.pReq);
+    } else
+        params.ok.call(this);
 }
 
-// Error strings
-AbstractStore.prototype.NOT_FOUND = TX("User does not exist");
-AbstractStore.prototype.UIAR      = TX("User is already registered");
-AbstractStore.prototype.PDNM      = TX("Passwords do not match");
-AbstractStore.prototype.NULI      = TX("Not logged in");
+// Special error message, must be used when a store is otherwise OK but
+// data being read is missing.
+AbstractStore.NODATA = "not found";
 
 /**
- * @protected
- * Check if a user has existing data. Subclasses must implement.
- * @param {string} user username
+ * Write data. Subclasses must implement.
+ * @param {string} data to write
  * @param {ok} called on success
  * @param {fail} called on failure
  */
-AbstractStore.prototype._exists = function(user, ok, fail) {
+AbstractStore.prototype.write = function(data, ok, fail) {
     "use strict";
 
-    throw "Pure virtual method _exists";
+    throw "Pure virtual method write";
 };
 
 /**
- * Write this.data for the current user. Subclasses must implement.
+ * Read data. Subclasses must implement.
  * @param {ok} called on success
  * @param {fail} called on failure
  */
-AbstractStore.prototype.save = function(ok, fail) {
+AbstractStore.prototype.read = function(ok, fail) {
     "use strict";
 
-    throw "Pure virtual method save";
+    throw "Pure virtual method read";
 };
-
-/**
- * @protected
- * Subclasses must implement. Populate this from the backing store.
- * Requires the user to be set up, but will populate the pass and
- * data from what it reads from the backing store.
- * Must fill in pass and data fields.
- * @param {ok} called on success
- * @param {fail} called on failure
- */
-AbstractStore.prototype._read = function(ok, fail) {
-    "use strict";
-
-    throw "Pure virtual method _read";
-};
-
-AbstractStore.prototype.refresh = function(ok, fail) {
-    "use strict";
-
-    this.data = null;
-    this._read(ok, fail);
-};
-
-/**
- * Register a new user.
- *
- * @param {string} user string identifying the user
- * @param {string} pass user password
- * @param {ok} called on success
- * @param {fail} called on failure
- */
-AbstractStore.prototype.register = function(user, pass, ok, fail) {
-    "use strict";
-
-    this._exists(
-        user,
-        function() {
-            fail.call(this, this.UIAR);
-        },
-        function(/*e*/) {
-            this.user = user;
-            this.pass = pass;
-            this.data = null;
-            this.save(ok, fail);
-        });
-};
-
-/**
- * Log in the user. Default behaviour is for login to always succeed.
- *
- * @param {string} user string identifying the user
- * @param {string} pass user password, or (protected use only) a
- * {check_pass} function that will check the pass
- * @param {ok} called on success
- * @param {fail} called on failure
- */
-AbstractStore.prototype.log_in = function(user, pass, ok, fail) {
-    "use strict";
-
-    this._exists(
-        user,
-        function() {
-            this.user = user;
-            this._read(
-                function() {
-                    var success = true;
-                    if (typeof pass === 'string') {
-                        success = (pass === this.pass);
-                    } else {
-                        success = pass.call(this, this.pass);
-                    }
-                    if (success) {
-                        ok.call(this);
-                    } else {
-                        this.log_out();
-                        fail.call(this, this.PDNM);
-                    }
-                },
-                fail);
-        },
-        fail);
-};
-
-/**
- * Log the current user out. Always succeeds.
- */
-AbstractStore.prototype.log_out = function() {
-    "use strict";
-
-    this.user = null;
-    this.pass = null;
-    this.data = null;
-};
-

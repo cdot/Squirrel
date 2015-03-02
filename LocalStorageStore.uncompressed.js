@@ -2,64 +2,37 @@
  * A store engine using HTML5 localStorage.
  * @implements AbstractStore
  */
-function LocalStorageStore(prefix) {
+function LocalStorageStore(params) {
     "use strict";
 
-    AbstractStore.call(this);
-    if (typeof prefix === 'string') {
-        this.prefix = prefix;
-    } else {
-        this.prefix = "";
-    }
+    params.uReq = true;
+    AbstractStore.call(this, params);
 }
 
 LocalStorageStore.prototype = Object.create(AbstractStore.prototype);
 
-LocalStorageStore.prototype.save = function(ok, fail) {
+LocalStorageStore.prototype.read = function(ok, fail) {
     "use strict";
 
-//    try {
-        localStorage.setItem(this.prefix + this.user + "/pass", this.pass);
-        localStorage.setItem(this.prefix + this.user + "/data",
-                             JSON.stringify(this.data));
-        ok.call(this);
-//    } catch (e) {
-//        if (typeof e !== 'string') {
-//            debugger;
-//        }
-//        fail.call(this, e);
-//    }
-};
-
-LocalStorageStore.prototype._read = function(ok, fail) {
-    "use strict";
-
-//    try {
-        this.pass = localStorage.getItem(this.prefix + this.user + "/pass");
-        this.data = JSON.parse(localStorage.getItem(this.prefix + this.user + "/data"));
-        ok.call(this);
-//    } catch (e) {
-//        if (typeof e !== 'string') {
-//            debugger;
-//        }
-//        fail.call(this, e);
-//    }
-};
-
-LocalStorageStore.prototype._exists = function(user, ok, fail) {
-    "use strict";
-
-//    try {
-        var x = localStorage.getItem(this.prefix + user + "/pass");
-        if (typeof x !== 'undefined' && x !== null) {
-            ok.call(this);
+    try {
+        var data = localStorage.getItem(this.dataset + "." + this.user);
+        if (data === null) {
+            fail.call(this, AbstractStore.NODATA);
         } else {
-            fail.call(this, this.NOT_FOUND);
+            ok.call(this, data);
         }
-//    } catch (e) {
-//        if (typeof e !== 'string') {
-//            debugger;
-//        }
-//        fail.call(this, e);
-//    }
+    } catch (e) {
+        fail.call(this, e);
+    }
+};
+
+LocalStorageStore.prototype.write = function(data, ok, fail) {
+    "use strict";
+
+    try {
+        localStorage.setItem(this.dataset + "." + this.user, data);
+        ok.call(this);
+    } catch (e) {
+        fail.call(this, e);
+    }
 };

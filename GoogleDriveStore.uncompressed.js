@@ -243,7 +243,7 @@ GoogleDriveStore.prototype._exists = function(user, ok, fail) {
     this._authorise(
         function() {
             gapi.client.drive.files.get({
-                fileId: 'appfolder'
+                fileId: "appfolder"
             })
                 .then(
                     function(response) {

@@ -64,10 +64,14 @@ function Hoard(data) {
  * and the local actions list is no longer needed.
  */
 Hoard.prototype.clear_actions = function() {
+    "use strict";
+
     this.actions = [];
 };
 
 Hoard.prototype.is_modified = function() {
+    "use strict";
+
     return this.actions.length > 0;
 };
 
@@ -115,7 +119,7 @@ Hoard.prototype.play_action = function(e, listener, no_push) {
         } else {
             return { action: e, message:
                      "'" + e.path.slice(0, i + 1).join("/") + "' "
-                     + TX("does not exist") };
+                     + TX.tx("does not exist") };
         }
     }
     name = e.path[i];
@@ -126,7 +130,7 @@ Hoard.prototype.play_action = function(e, listener, no_push) {
 
     if (e.type === "N") {
         if (parent.data[name]) {
-            return { action: e, message: TX("Cannot create, already exists") };
+            return { action: e, message: TX.tx("Cannot create, already exists") };
         }
         parent.time = e.time; // collection is being modified
         parent.data[name] = {
@@ -136,18 +140,18 @@ Hoard.prototype.play_action = function(e, listener, no_push) {
         };
     } else if (e.type === "D") {
         if (!parent.data[name]) {
-            return { action: e, message: TX("Cannot delete, does not exist") };
+            return { action: e, message: TX.tx("Cannot delete, does not exist") };
         }
         delete parent.data[name];
     } else if (e.type === "R") {
         if (!parent.data[name]) {
-            return { action: e, message: TX("Cannot rename, does not exist") };
+            return { action: e, message: TX.tx("Cannot rename, does not exist") };
         }
         parent.data[e.data] = parent.data[name];
         delete parent.data[name];
     } else if (e.type === "E") {
         if (!parent.data[name]) {
-            return { action: e, message: TX("Cannot change value, does not exist") };
+            return { action: e, message: TX.tx("Cannot change value, does not exist") };
         }
         parent.data[name].data = e.data;
     } else {
@@ -169,13 +173,14 @@ Hoard.prototype.play_action = function(e, listener, no_push) {
  * cache.
  */
 Hoard.prototype.simplify = function() {
+    "use strict";
 
     // First reconstruct the cache by playing all the actions
     this.cache = null;
     if (this.actions) {
         for (var i = 0; i < this.actions.length; i++) {
             // Play the action with no push and no listener
-            var er = play_action(this.actions[i], false, true);
+            var er = this.play_action(this.actions[i], false, true);
             if (er !== null) {
                 throw "Disaster! " + er.message;
             }
@@ -202,19 +207,21 @@ Hoard.prototype.simplify = function() {
  * subtree
  */
 Hoard.prototype._reconstruct_actions = function(node, path, listener) {
-    var p;
-    if (typeof(node.data) === 'string') {
+    "use strict";
+    var key;
+
+    if (typeof node.data === "string") {
         listener.call(this, {
-            type: 'N', 
+            type: "N", 
             path: path.slice(),
             time: node.time,
             data: node.data
-        })
-    } else if (typeof(node.data) !== 'undefined') {
+        });
+    } else if (typeof node.data !== "undefined") {
         if (path.length > 0) {
             // No action for the root
             listener.call(this, {
-                type: 'N', 
+                type: "N", 
                 time: node.time,
                 path: path.slice()
             });
@@ -239,6 +246,8 @@ Hoard.prototype._reconstruct_actions = function(node, path, listener) {
  * the listener can do what it likes with the action it is passed.
  */
 Hoard.prototype.reconstruct_actions = function(listener) {
+    "use strict";
+
     if (this.cache) {
         this._reconstruct_actions(this.cache, [], listener);
     }
@@ -273,4 +282,3 @@ Hoard.prototype.merge_from_cloud = function(cloud, listener, conflicts) {
     this.actions = local_actions;
     this.last_sync = new Date().valueOf();
 };
-

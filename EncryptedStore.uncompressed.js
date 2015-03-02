@@ -1,69 +1,61 @@
-// Store engine for encrypted data. Uses an underlying engine to actually
-// store the encrypted data. Each user's data is encrypted using their unique
-// password. Note that keys are *not* encyrpted.
-
-function EncryptedStore(engine) {
+/**
+ * @class
+ * Store engine for encrypted data. Uses an underlying engine to actually
+ * store the encrypted data.
+ * The encryption requires a password, but no attempt is made to determine
+ * if the password is correct. Whatever data is held in the underlying
+ * store is simply decrypted, it's up to the caller to determine if it's
+ * valid or not.
+ * @param {object} params: Standard for AbstractStore, plus:
+ *   * engine Class of storage engine to use under
+ *     this encryption layer
+ */
+function EncryptedStore(params) {
     "use strict";
 
-    AbstractStore.call(this);
-    this.engine = engine;
+    var self = this, pok = params.ok;
+
+    params.pReq = true; // Tell identify() we need a password
+    // Override the OK function (SMELL: should really use extend)
+    params.ok = function() {
+        // Don't call AbstractStore(), it doesn't do anything useful
+        // for us. The identity prompt has already been issued by the
+        // engine constructor.
+        self.engine = this;
+        // Need the user so callers see this as a normal store.
+        // Don't copy the pass, it's ok where it is
+        self.user = this.user;
+        pok.call(self);
+    };
+    
+    new params.engine(params);
 }
 
 EncryptedStore.prototype = Object.create(AbstractStore.prototype);
 
-EncryptedStore.prototype.register = function(user, pass, ok, fail) {
-    "use strict";
-
-    var self = this,
-    xpass = Aes.Ctr.encrypt(pass, pass, 256);
-    this.engine.register(
-        user,
-        xpass,
-        function() {
-            self.user = user;
-            self.pass = pass;
-            ok.call(self);
-        }, fail);
-};
-
-EncryptedStore.prototype.log_in = function(user, pass, ok, fail) {
+EncryptedStore.prototype.read = function(ok, fail) {
     "use strict";
 
     var self = this;
-    this.engine._read(
-        function() {
-            var xpass = Aes.Ctr.decrypt(this.engine.pass, pass, 256);
-            if (xpass === pass) {
-                self.user = user;
-                self.pass = pass;
-//                try {
-                    self.data = JSON.parse(
-                        Aes.Ctr.decrypt(self.engine.data, pass, 256));
-                    ok.call(self);
-//                } catch (e) {
-//                    fail.call(self, e);
-//                }
-            } else {
-                fail.call(self, "Incorrect details");
-            }
+
+    this.engine.read(
+        function(xdata) {
+            var data = Aes.Ctr.decrypt(xdata, self.engine.pass, 256);
+            ok.call(self, data);
         },
         fail);
 };
 
-EncryptedStore.prototype.log_out = function() {
+EncryptedStore.prototype.write = function(data, ok, fail) {
     "use strict";
 
-    this.engine.log_out();
-    this.user = null;
-    this.pass = null;
-    this.data = null;
+    var self = this,
+    xdata = Aes.Ctr.encrypt(data, this.engine.pass, 256);
+
+    this.engine.write(
+        xdata,
+        function() {
+            ok.call(self);
+        },
+        fail);
 };
-
-EncryptedStore.prototype.save = function(ok, fail) {
-    "use strict";
-
-    this.engine.data = Aes.Ctr.encrypt(this.data, this.pass, 256);
-    this.engine.save(ok, fail);
-};
-
-

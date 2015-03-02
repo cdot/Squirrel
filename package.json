@@ -17,10 +17,14 @@
             "FileStore": true,
             "Hoard": true,
             "Aes": true,
-            "gapi" : true
+            "TX": true,
+            "Dropbox": true,
+            "gapi" : true,
+            "ZeroClipboard": true
         },
         "rules": {
             "no-underscore-dangle": 0,
+            "curly": 0,
             "camelcase": 0,
             "no-unused-vars": 1,
             "no-console": 1,
