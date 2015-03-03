@@ -9,6 +9,7 @@ $.fn.linger = function() {
         mousedown: "ontouchstart" in window ? "touchstart" : "mousedown",
         mouseup: "ontouchend" in window ? "touchend" : "mouseup"
     };
+
     return this.each(function() {
         var timeout;
         $(this)
@@ -38,13 +39,14 @@ var Squirrel = { // Namespace
     suppress_update_events: 0
 };
 
-Squirrel.getURLParameter = function(name) {
-    var re = new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)');
-    var hits = re.exec(location.search) || [,""];
-    return decodeURIComponent(hits[1].replace(/\+/g, '%20'))
-        || null;
-}
+//Squirrel.getURLParameter = function(name) {
+//    var re = new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)');
+//    var hits = re.exec(location.search) || [,""];
+//    return decodeURIComponent(hits[1].replace(/\+/g, '%20'))
+//        || null;
+//}
 
+// Generate an alert dialog
 Squirrel.squeak = function(e) {
     "use strict";
 
@@ -60,10 +62,12 @@ Squirrel.squeak = function(e) {
     });
 }
 
-// Generate a new password subject to constraints:
-// length: length of password
-// charset: characters legal in the password. Ranges can be defined using
-// A-Z syntax.
+/**
+ * Generate a new password subject to constraints:
+ * length: length of password
+ * charset: characters legal in the password. Ranges can be defined using
+ * A-Z syntax.
+ */
 Squirrel.generate_password = function(constraints) {
     "use strict";
     var sor, eor;
@@ -98,7 +102,9 @@ Squirrel.generate_password = function(constraints) {
     return s;
 }
 
-// Reconstruct the tree path from the DOM
+/**
+ * Reconstruct the path for an item from the DOM
+ */
 Squirrel.get_path = function($node) {
     "use strict";
 
@@ -116,14 +122,18 @@ Squirrel.get_path = function($node) {
     return path;
 }
 
-// Escape meta-characters for use in CSS selectors
+/*
+ * Escape meta-characters for use in CSS selectors
+ */
 Squirrel.quotemeta = function(s) {
     "use strict";
 
     return s.replace(/([\][!"#$%&'()*+,.\/:;<=>?@\\^`{|}~])/g, "\\$1");
 }
 
-// Generate a message for the last modified time
+/**
+ * Generate a message for the last modified time
+ */
 Squirrel.last_mod = function(time) {
     "use strict";
 
@@ -132,7 +142,9 @@ Squirrel.last_mod = function(time) {
         + TX.tx("Click and hold to open menu");
 }
 
-// Confirm deletion of a node
+/**
+ * Confirm deletion of a node
+ */
 Squirrel.confirm_delete = function($node) {
     "use strict";
 
@@ -159,7 +171,9 @@ Squirrel.confirm_delete = function($node) {
         }});
 }
 
-// Update the tree view
+/**
+ * Update the tree view when data changes
+ */
 Squirrel.update_tree = function() {
     "use strict";
 
@@ -243,7 +257,9 @@ Squirrel.update_tree = function() {
         });
 }
 
-// Edit a span in place
+/**
+ * Edit a span in place, used for renaming and revaluing
+ */
 Squirrel.inplace_edit = function($span, action) {
     "use strict";
     var h = $span.height();
@@ -268,7 +284,7 @@ Squirrel.inplace_edit = function($span, action) {
                       path: old_path,
                       data: val },
                     function(e) {
-                        play_action(e);
+                        Squirrel.play_action(e);
                         Squirrel.update_tree();
                     });
             }
@@ -281,7 +297,9 @@ Squirrel.inplace_edit = function($span, action) {
         .focus();
 }
 
-// Action on a new tree node
+/**
+ * Action on a new tree node
+ */
 Squirrel.add_child_node = function($div, title, value) {
     "use strict";
     var $li = $div.parents("li").first();
@@ -300,14 +318,16 @@ Squirrel.add_child_node = function($div, title, value) {
     Squirrel.client_hoard.play_action(
         action,
         function(e) {
-            var $n = play_action(e);
+            var $n = Squirrel.play_action(e);
             // Want the result of the action play to grab the focus?
             Squirrel.update_tree();
             Squirrel.inplace_edit($n);
         });
 }
 
-// Dialog password generation
+/**
+ * Dialog password generation
+ */
 Squirrel.make_password = function(set) {
     "use strict";
     var $dlg = $("#dlg_gen_password");
@@ -339,7 +359,9 @@ Squirrel.make_password = function(set) {
         buttons: buttons});
 }
 
-// Convert a path to an HTTP fragment
+/**
+ * Convert a path to an HTTP fragment
+ */
 Squirrel.fragment_id = function(path) {
     "use strict";
 
@@ -349,6 +371,9 @@ Squirrel.fragment_id = function(path) {
     });
 }
 
+/**
+ * Perform a text search
+ */
 Squirrel.search = function(s) {
     "use strict";
 
@@ -376,7 +401,9 @@ Squirrel.search = function(s) {
     });
 }
 
-// Handler for taphold event on a contextmenu item
+/**
+ * Handler for taphold event on a contextmenu item
+ */
 Squirrel.node_tapheld = function(e, ui) {
     "use strict";
     var $li = ui.target.parents("li").first();
@@ -414,7 +441,9 @@ Squirrel.node_tapheld = function(e, ui) {
     }
 }
 
-// Update the save button based on hoard state
+/**
+ * Update the save button based on hoard state
+ */
 Squirrel.update_save_button = function() {
     "use strict";
 
@@ -423,8 +452,10 @@ Squirrel.update_save_button = function() {
     $("#save_button").toggle(needed);
 }
 
-// Callback for use when managing hoards; plays an action that is being
-// played into the hoard into the DOM as well.
+/**
+ * Callback for use when managing hoards; plays an action that is being
+ * played into the hoard into the DOM as well.
+ */
 Squirrel.play_action = function(e) {
     "use strict";
 
@@ -783,12 +814,12 @@ Squirrel.init_ui = function() {
             text: false
         })
         .click(function() {
-            add_new_child($("#tree"));
+            Squirrel.add_child_node($("#tree"), "New site");
         });
 
     $("#search")
         .change(function(evt) {
-            search($(this).val());
+            Squirrel.search($(this).val());
         });
 };
 
