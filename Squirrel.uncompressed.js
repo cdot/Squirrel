@@ -33,7 +33,9 @@ $.fn.linger = function() {
 var Squirrel = { // Namespace
     client_store: null,
     cloud_store: null,
-    client_hoard: null
+    client_hoard: null,
+    cloud_is_empty: false,
+    suppress_update_events: 0
 };
 
 Squirrel.getURLParameter = function(name) {
@@ -47,10 +49,12 @@ Squirrel.squeak = function(e) {
     "use strict";
 
     var $dlg = $("#dlg_alert");
+
     if (typeof e === "string")
         $dlg.children(".message").html(e);
     else
         $dlg.children(".message").empty().append(e);
+
     $dlg.dialog({
         modal: true
     });
@@ -145,7 +149,7 @@ Squirrel.confirm_delete = function($node) {
         buttons: {
             "Confirm": function(evt) {
                 $(this).dialog("close");
-                client_hoard.play_action(
+                Squirrel.client_hoard.play_action(
                     { type: "D", path: Squirrel.get_path($node) },
                     function(e) {
                         play_action(e);
@@ -259,7 +263,7 @@ Squirrel.inplace_edit = function($span, action) {
             $span.show();
             if (val !== $span.text()) {
                 var old_path = Squirrel.get_path($span);
-                client_hoard.play_action(
+                Squirrel.client_hoard.play_action(
                     { type: action,
                       path: old_path,
                       data: val },
@@ -293,7 +297,7 @@ Squirrel.add_child_node = function($div, title, value) {
         action.data = value;
     }
     p.push(title);
-    client_hoard.play_action(
+    Squirrel.client_hoard.play_action(
         action,
         function(e) {
             var $n = play_action(e);
@@ -413,7 +417,10 @@ Squirrel.node_tapheld = function(e, ui) {
 // Update the save button based on hoard state
 Squirrel.update_save_button = function() {
     "use strict";
-    $("#save_button").toggle(Squirrel.client_hoard.is_modified());
+
+    var needed = Squirrel.client_hoard.modified || Squirrel.cloud_is_empty;
+    console.debug("Update save button " + needed);
+    $("#save_button").toggle(needed);
 }
 
 // Callback for use when managing hoards; plays an action that is being
@@ -514,7 +521,8 @@ Squirrel.play_action = function(e) {
     } else {
         throw "Unrecognised action '" + e.type + "'";
     }
-    Squirrel.update_save_button();
+    if (Squirrel.suppress_update_events == 0)
+        $(document).trigger("update_save_button");
 
     return $keyspan;
 }
@@ -526,8 +534,9 @@ Squirrel.get_updates_from_cloud = function(cloard) {
     // successfully loaded.
     console.debug("Merging from cloud hoard");
     var conflicts = [];
-    client_hoard.merge_from_cloud(
-        cloard, Squirrel.play_action, conflicts);
+    Squirrel.suppress_update_events++;
+    Squirrel.client_hoard.merge_from_cloud(cloard, Squirrel.play_action, conflicts);
+    Squirrel.suppress_update_events--;
     if (conflicts.length > 0) {
         var $dlg = $("#dlg_conflicts");
         $dlg.children(".message").empty();
@@ -555,15 +564,18 @@ Squirrel.get_updates_from_cloud = function(cloard) {
 // message for the caller to use.
 Squirrel.unsaved_changes = function() {
     "use strict";
-    if (client_hoard && client_hoard.is_modified()) {
+
+    if (Squirrel.client_hoard.modified || Squirrel.cloud_is_empty) {
 
         var changed = "";
         $(".modified").each(function() {
             changed += "   " + $(this).attr("name") + "\n";
         });
-        return TX.tx("You have unsaved changes") + "\n"
-             + TX.tx("Are you really sure?");
+        if (Squirrel.cloud_is_empty)
+            changed += TX.tx("The Cloud store is empty") + "\n";
+        return changed;
     }
+    return null;
 };
 
 Squirrel.save_hoards = function() {
@@ -571,11 +583,12 @@ Squirrel.save_hoards = function() {
     var $messy = $("<div class='notice'>"
                    + TX.tx("Saving....")
                    + "</div>");
+
     Squirrel.squeak($messy);
 
     var save_client = function() {
-        Squirrel.client_store.data = client_hoard;
-        Squirrel.client_store.save(
+        Squirrel.client_store.write(
+            JSON.stringify(Squirrel.client_hoard),
             function() {
                 $(".modified").removeClass("modified");
                 $messy.append(
@@ -593,56 +606,95 @@ Squirrel.save_hoards = function() {
 
                 Squirrel.update_save_button();
             });
+    },
+
+    update_cloud_store = function(cloard) {
+        cloard.actions = cloard.actions.concat(Squirrel.client_hoard.actions);
+        Squirrel.cloud_store.write(
+            JSON.stringify(cloard),
+            function() {
+                Squirrel.client_hoard.actions = [];
+                Squirrel.client_hoard.last_sync =
+                    new Date().valueOf();
+                $messy.append(
+                    "<div class='notice'>"
+                        + TX.tx("Saved in the Cloud")
+                        + "</div>");
+                Squirrel.cloud_is_empty = false;
+                save_client();
+            },
+            function(e) {
+                $messy.append(
+                    "<div class='error'>"
+                        + TX.tx("Failed to save in the Cloud")
+                        + "<br>" + e + "</div>");
+                save_client();
+            });
     };
 
     // Reload and save the cloud hoard
-    Squirrel.cloud_store.refresh(
-        function() {
+    Squirrel.cloud_store.read(
+        function(data) {
             var conflicts = [];
-            var cloard = new Hoard(Squirrel.cloud_store.data);
-            client_hoard.merge_from_cloud(
-                cloard, Squirrel.play_action, conflicts);
-            if (client_hoard.is_modified()) {
-                cloard.actions =
-                    cloard.actions.concat(client_hoard.actions);
-                Squirrel.cloud_store.data = cloard;
-                Squirrel.cloud_store.save(
-                    function() {
-                        client_hoard.actions = [];
-                        client_hoard.last_sync =
-                            new Date().valueOf();
-                        $messy.append(
-                            "<div class='notice'>"
-                                + TX.tx("Saved in the Cloud")
-                                + "</div>");
-                        save_client();
-                    },
-                    function(e) {
-                        $messy.append(
-                            "<div class='error'>"
-                                + TX.tx("Failed to save in the Cloud")
-                                + "<br>" + e + "</div>");
-                        save_client();
-                    });
+            var cloard;
+            try {
+                cloard = new Hoard(JSON.parse(data));
+            } catch (e) {
+                Squirrel.squeak(TX.tx("Overwriting malformed cloud hoard")
+                                + " (" + e + ")");
+                cloard = new Hoard();
+                Squirrel.cloud_is_empty = true;
+            };
+            if (!Squirrel.cloud_is_empty) {
+                Squirrel.suppress_update_events++;
+                Squirrel.client_hoard.merge_from_cloud(
+                    cloard, Squirrel.play_action, conflicts);
+                Squirrel.suppress_update_events--;
             }
+            if (Squirrel.client_hoard.modified || Squirrel.cloud_is_empty)
+                update_cloud_store(cloard);
         },
         function(e) {
-            $messy.append(
-                "<div class='error'>"
-                    + TX.tx("Failed to refresh from the Cloud")
-                    * "<br>" + e + "</div>");
-            save_client();
+            if (e === AbstractStore.NODATA) {
+                Squirrel.cloud_is_empty = true;
+                var cloard = new Hoard();
+                Squirrel.client_hoard.reconstruct_actions(
+                    function(e) {
+                        cloard.actions.push({
+                            type: e.type,
+                            time: e.time,
+                            data: e.data,
+                            path: e.path.slice()
+                        });
+                    });
+                update_cloud_store(cloard);
+            } else {
+                $messy.append(
+                    "<div class='error'>"
+                        + TX.tx("Failed to refresh from the Cloud")
+                        * "<br>" + e + "</div>");
+                save_client();
+            }
         });
 };
 
 Squirrel.hoards_loaded = function() {
-    var autosave = (Squirrel.client_hoard.last_sync === null
-                    && Squirrel.client_hoard.cache === null);
+    $(window).on("beforeunload", function() {
+        var us = Squirrel.unsaved_changes();
+        if (us !== null) {
+            us = TX.tx("You have unsaved changes")
+                + "\n" + us
+                + "\n" + TX.tx("Are you really sure?")
+        }
+        return us;
+    });
 
     console.debug("Reconstructing UI tree from cache");
     // Use reconstruct_actions to drive creation of
     // the UI
+    Squirrel.suppress_update_events++;
     Squirrel.client_hoard.reconstruct_actions(Squirrel.play_action);
+    Squirrel.suppress_update_events--;
     // Reset the UI modification list; we just loaded the
     // client hoard
     $(".modified").removeClass("modified");
@@ -665,15 +717,17 @@ Squirrel.load_cloud_hoard = function() {
                     Squirrel.get_updates_from_cloud(new Hoard(hoard));
                     Squirrel.hoards_loaded();
                 } catch (e) {
-                    Squirrel.squeak("Cloud hoard data is malformed: " + e);
+                    Squirrel.squeak(TX.tx("Cloud hoard data is malformed")
+                                    + ": " + e);
                 };
             },
             function(e) {
                 if (e === AbstractStore.NODATA) {
                     console.debug("Cloud store contains no data");
+                    Squirrel.cloud_is_empty = true;
                     Squirrel.hoards_loaded();
                 } else {
-                    Squirrel.squeak("Cloud store error: " + e);
+                    Squirrel.squeak(TX.tx("Cloud store error") + ": " + e);
                 }
             });
     } else {
@@ -686,9 +740,13 @@ Squirrel.load_hoards = function() {
         function(data) {
             try {
                 Squirrel.client_hoard = new Hoard(JSON.parse(data));
+                // If the cloud hoard had no data, force a save
+                if (Squirrel.cloud_is_empty)
+                    Squirrel.client_hoard.modified = true;
                 Squirrel.load_cloud_hoard();
             } catch (e) {
-                Squirrel.squeak("Client hoard data is malformed: " + e);
+                Squirrel.squeak(TX.tx("Client hoard data is malformed")
+                                + ": " + e);
             };
         },
         function(e) {
@@ -697,7 +755,8 @@ Squirrel.load_hoards = function() {
                 Squirrel.client_hoard = new Hoard();
                 Squirrel.load_cloud_hoard();
             } else {
-                Squirrel.squeak("Client store error: " + e);
+                Squirrel.squeak(TX.tx("Client store error")
+                                + ": " + e);
             }
         });
 };
@@ -754,7 +813,7 @@ Squirrel.log_in_dialog = function(ok, fail, uReq, pReq) {
 
 Squirrel.init_client_store = function() {
     var cls = new LocalStorageStore({
-        dataset: "Squirrel",
+        dataset: "Local Hoard",
         ok: function() {
             console.debug("Client store is ready");
             $("#whoami").text(this.user);
@@ -763,7 +822,7 @@ Squirrel.init_client_store = function() {
         },
         fail: function(e) {
             // We did our best!
-            Squirrel.squeak("Failed" + e);
+            Squirrel.squeak(TX.tx("Failed ") + e);
         },
         identify: function(ok, fail, uReq, pReq) {
             var user, pass;
@@ -784,15 +843,26 @@ Squirrel.init_client_store = function() {
 };
 
 Squirrel.init_cloud_store = function() {
-//    var cls =  new DropboxStore({
-    var cls =  new GoogleDriveStore({
-        dataset: "Squirrel",
+    var datastore = LocalStorageStore;
+
+    if (typeof DropboxStore !== "undefined") {
+        console.debug("Using Dropbox for the Cloud");
+        datastore = DropboxStore; // Uncomment the one you want to use
+    } else if (typeof GoogleDriveStore !== "undefined") {
+        console.debug("Using Google Drive for the Cloud");
+        datastore = GoogleDriveStore;
+    } else {
+        console.debug("Using LocalStorage for the Cloud");
+    }
+
+    var cls = new datastore({
+        dataset: "Cloud Hoard",
         ok: function() {
             Squirrel.cloud_store = this;
             Squirrel.init_client_store();
         },
         fail: function(e) {
-            Squirrel.squeak("Could not contact cloud store");
+            Squirrel.squeak(TX.tx("Could not contact cloud store"));
             Squirrel.init_client_store();
         },
         identify: Squirrel.log_in_dialog
@@ -808,9 +878,7 @@ Squirrel.init_cloud_store = function() {
             Squirrel.init_ui();
             // Initialise translation module
             new TX("en", Squirrel.init_cloud_store);
-        });
+        })
+    .on("update_save_button", Squirrel.update_save_button);
 
-    $(window).on("beforeunload", function() {
-        return Squirrel.unsaved_changes();
-    });
 })(jQuery);

@@ -51,6 +51,7 @@ function Hoard(data) {
         this.last_sync = data.last_sync;
         this.actions = data.actions;
         this.cache = data.cache;
+        this.modified = false;
     } else {
         this.last_sync = null;
         this.clear_actions();
@@ -67,12 +68,7 @@ Hoard.prototype.clear_actions = function() {
     "use strict";
 
     this.actions = [];
-};
-
-Hoard.prototype.is_modified = function() {
-    "use strict";
-
-    return this.actions.length > 0;
+    this.modified = false;
 };
 
 /**
@@ -105,6 +101,7 @@ Hoard.prototype.play_action = function(e, listener, no_push) {
 
     if (!no_push) {
         this.actions.push(e);
+        this.modified = true;
     }
 
     // Update the cache; the listener will only be called if this
@@ -200,6 +197,7 @@ Hoard.prototype.simplify = function() {
         });
         this.cache = null;
     }
+    this.modified = true;
 };
 
 /**
