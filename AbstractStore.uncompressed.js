@@ -26,6 +26,15 @@
  * The standard pattern is for the constructor to take a callback as
  * parameter to the create and invoke that callback when the store
  * is ready for use.
+ *
+ * If params.uReq of params.pReq are set true, then the store will
+ * call the params.identify method in order to find out the username
+ * and/or password. Either or both of these may be populated from another
+ * source before this base class constructor is called - for example, if
+ * the user is already logged in to a cloud data service, then it's
+ * redundant to ask them their username again. However if the store
+ * is encrypted, then there may need to be a password prompt.
+ *
  * @class
  * @param {object} params
  *    * dataset name of the unique data set this store holds

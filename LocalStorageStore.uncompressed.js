@@ -14,25 +14,25 @@ LocalStorageStore.prototype = Object.create(AbstractStore.prototype);
 LocalStorageStore.prototype.read = function(ok, fail) {
     "use strict";
 
-    try {
+//    try {
         var data = localStorage.getItem(this.dataset + "." + this.user);
         if (data === null) {
             fail.call(this, AbstractStore.NODATA);
         } else {
             ok.call(this, data);
         }
-    } catch (e) {
-        fail.call(this, e);
-    }
+//    } catch (e) {
+//        fail.call(this, e);
+//    }
 };
 
 LocalStorageStore.prototype.write = function(data, ok, fail) {
     "use strict";
 
-    try {
+//    try {
         localStorage.setItem(this.dataset + "." + this.user, data);
         ok.call(this);
-    } catch (e) {
-        fail.call(this, e);
-    }
+//    } catch (e) {
+//        fail.call(this, e);
+//    }
 };

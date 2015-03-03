@@ -13,10 +13,14 @@ locale/*.json: *.uncompressed.* Makefile translate.pl
 		perl translate.pl
 
 %.min.js : %.uncompressed.js
-	java -jar yuicompressor.jar -v $< > $@
+	cat $< \
+	  | perl -pe '$/=undef;s{((console\.debug|assert)\(.*?\);)}{/*$1*/}gs' \
+	  | java -jar yuicompressor.jar --type js --verbose -o $@
 
 %.min.css : %.uncompressed.css
 	java -jar yuicompressor.jar $< > $@
 
 %.html : %.uncompressed.html
-	cat $< | sed -e 's/\.uncompressed\./.min./g' > $@
+	cat $< \
+	  | sed -e '/Assert\.uncompressed\.js/d' \
+	  | sed -e 's/\.uncompressed\./.min./g' > $@

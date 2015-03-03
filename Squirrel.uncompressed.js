@@ -1,7 +1,3 @@
-/*
-
-*/
-
 /**
  * Plugin to generate taphold events on platforms that don't
  * natively support them
@@ -39,6 +35,13 @@ var Squirrel = { // Namespace
     cloud_store: null,
     client_hoard: null
 };
+
+Squirrel.getURLParameter = function(name) {
+    var re = new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)');
+    var hits = re.exec(location.search) || [,""];
+    return decodeURIComponent(hits[1].replace(/\+/g, '%20'))
+        || null;
+}
 
 Squirrel.squeak = function(e) {
     "use strict";
@@ -653,8 +656,10 @@ Squirrel.hoards_loaded = function() {
 
 Squirrel.load_cloud_hoard = function() {
     if (Squirrel.cloud_store) {
+        console.debug("Reading cloud store");
         Squirrel.cloud_store.read(
             function(data) {
+                console.debug("Cloud store has data");
                 try {
                     var hoard = JSON.parse(data);
                     Squirrel.get_updates_from_cloud(new Hoard(hoard));
@@ -665,7 +670,7 @@ Squirrel.load_cloud_hoard = function() {
             },
             function(e) {
                 if (e === AbstractStore.NODATA) {
-                    console.debug("Cloud hoard contains no data");
+                    console.debug("Cloud store contains no data");
                     Squirrel.hoards_loaded();
                 } else {
                     Squirrel.squeak("Cloud store error: " + e);
@@ -681,8 +686,7 @@ Squirrel.load_hoards = function() {
         function(data) {
             try {
                 Squirrel.client_hoard = new Hoard(JSON.parse(data));
-                if (Squirrel.cloud_store)
-                    Squirrel.load_cloud_hoard();
+                Squirrel.load_cloud_hoard();
             } catch (e) {
                 Squirrel.squeak("Client hoard data is malformed: " + e);
             };
@@ -691,8 +695,7 @@ Squirrel.load_hoards = function() {
             if (e === AbstractStore.NODATA) {
                 console.debug("Client hoard contains no data");
                 Squirrel.client_hoard = new Hoard();
-                if (Squirrel.cloud_store)
-                    Squirrel.load_cloud_hoard();
+                Squirrel.load_cloud_hoard();
             } else {
                 Squirrel.squeak("Client store error: " + e);
             }
@@ -781,7 +784,8 @@ Squirrel.init_client_store = function() {
 };
 
 Squirrel.init_cloud_store = function() {
-    var cls =  new DropboxStore({
+//    var cls =  new DropboxStore({
+    var cls =  new GoogleDriveStore({
         dataset: "Squirrel",
         ok: function() {
             Squirrel.cloud_store = this;
@@ -804,9 +808,7 @@ Squirrel.init_cloud_store = function() {
             Squirrel.init_ui();
             // Initialise translation module
             new TX("en", Squirrel.init_cloud_store);
-        })
-    .on("stores_ready", function() {
-    });
+        });
 
     $(window).on("beforeunload", function() {
         return Squirrel.unsaved_changes();

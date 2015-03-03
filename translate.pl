@@ -1,3 +1,4 @@
+# Extract strings for translation from sources
 use JSON;
 
 my @strings;

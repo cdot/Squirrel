@@ -1,5 +1,8 @@
-// @param identify not used for this store; there's no way to log in
-// using this API
+/**
+ * A store using Dropbox
+ * @implements AbstractStore
+ */
+
 function DropboxStore(params) {
     "use strict";
 
@@ -8,10 +11,10 @@ function DropboxStore(params) {
         key: "37tzcd7ezkaqovy"
     }).authenticate(function(error, client) {
         if (error) {
-            console.log("Dropbox auth failed: " + error);
+            console.debug("Dropbox auth failed: " + error);
             params.fail(self, error.responseText);
         } else {
-            console.log("Dropbox auth OK");
+            console.debug("Dropbox auth OK");
 
             client.getAccountInfo(
                 null,
@@ -19,10 +22,10 @@ function DropboxStore(params) {
                     if (erm) {
                         var err = error.responseText
                             || "Status: " + error.status;
-                        console.log("Dropbox write failed " + err);
+                        console.debug("Dropbox getAccountInfo failed " + err);
                         params.fail.call(self, err);
                     } else {
-                        console.log("Dropbox got username " + accountInfo.name);
+                        console.debug("Dropbox got username " + accountInfo.name);
                         self.client = client;
                         self.user = accountInfo.name;
                         params.uReq = false;
@@ -45,7 +48,7 @@ DropboxStore.prototype.write = function(data, ok, fail) {
         data,
         function(error, stat) {
             if (error) {
-                console.log("Dropbox write failed " + error.responseText);
+                console.debug("Dropbox write failed " + error.responseText);
                 fail.call(self, error.responseText || error.status);
             } else {
                 ok.call(self, self.data);
@@ -62,7 +65,7 @@ DropboxStore.prototype.read = function(ok, fail) {
         this.dataset + "." + this.user,
         function(error, data) {
             if (error) {
-                console.log("Dropbox read failed " + error.responseText);
+                console.debug("Dropbox read failed " + error.responseText);
                 if (error.status === Dropbox.ApiError.NOT_FOUND)
                     fail.call(self, AbstractStore.NODATA);
                 else
