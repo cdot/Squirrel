@@ -671,6 +671,7 @@ Squirrel.save_hoards = function() {
             try {
                 cloard = new Hoard(JSON.parse(data));
             } catch (e) {
+                // We'll get here if decryption failed....
                 Squirrel.squeak(TX.tx("Overwriting malformed cloud hoard")
                                 + " (" + e + ")");
                 cloard = new Hoard();
@@ -730,11 +731,8 @@ Squirrel.hoards_loaded = function() {
     // client hoard
     $(".modified").removeClass("modified");
     
-    $("#unauthenticated").loadingOverlay("remove");
     Squirrel.update_save_button();
     Squirrel.update_tree();
-    $("#unauthenticated").hide();
-    $("#authenticated").show();
 };
 
 Squirrel.load_cloud_hoard = function() {
@@ -826,15 +824,20 @@ Squirrel.init_ui = function() {
 Squirrel.log_in_dialog = function(ok, fail, uReq, pReq) {
     var $dlg = $("#dlg_login"),
     b = {},
-    self = this;
-    $dlg.find("#uReq").toggle(uReq);
-    $dlg.find("#pReq").toggle(pReq);
-    b[TX.tx("Sign In")] = function(evt) {
+    self = this,
+    sign_in = function(evt) {
         $(this).dialog("close");
         ok.call(self,
-                $dlg.find("#user").val(),
-                $dlg.find("#password").val());
+                uReq ? $dlg.find("#user").val() : undefined,
+                pReq ? $dlg.find("#pass").val() : undefined);
     };
+    $dlg.find("#uReq").toggle(uReq);
+    $dlg.find("#pReq").toggle(pReq);
+    if (uReq && !pReq)
+         $dlg.find("#uReq").change(sign_in);
+    else if (!uReq && pReq)
+         $dlg.find("#pReq").change(sign_in);
+    b[TX.tx("Sign In")] = sign_in;
     $dlg.dialog({
         modal: true,
         width: "auto",
@@ -843,7 +846,10 @@ Squirrel.log_in_dialog = function(ok, fail, uReq, pReq) {
 };
 
 Squirrel.init_client_store = function() {
-    var cls = new LocalStorageStore({
+//    var cls = new LocalStorageStore({
+    var cls = new EncryptedStore({
+        engine: LocalStorageStore,
+
         dataset: "Local Hoard",
         ok: function() {
             console.debug("Client store is ready");
@@ -856,17 +862,42 @@ Squirrel.init_client_store = function() {
             Squirrel.squeak(TX.tx("Failed ") + e);
         },
         identify: function(ok, fail, uReq, pReq) {
-            var user, pass;
+            // Won't ever get here unless uReq || pReq
             assert(uReq || pReq);
-            if (uReq && Squirrel.cloud_store) {
-                if (!pReq) {
+            var user, pass;
+            if (uReq && Squirrel.cloud_store
+                && typeof Squirrel.cloud_store.user !== 'undefined') {
+
+                if (pReq) {
+                    if (Squirrel.cloud_store
+                         && typeof Squirrel.cloud_store.pass !== 'undefined') {
+                        // The cloud store loaded OK, we will re-use the
+                        // password for the client store
+                        ok.call(this,
+                                Squirrel.cloud_store.user,
+                                Squirrel.cloud_store.pass);
+                        return;
+                    } else {
+                        // The cloud store loaded but didn't require a
+                        // password.
+                        $("#dlg_login").find("#user").val(
+                            Squirrel.cloud_store.user);
+                        uReq = false;
+                    }
+                } else {
                     ok.call(this, Squirrel.cloud_store.user);
                     return;
-                } else {
-                    // Just prompt for password
-                    $("#dlg_login").find("#user").val(Squirrel.cloud_store.user);
-                    uReq = false;
                 }
+            } else if (Squirrel.cloud_store
+                       && typeof Squirrel.cloud_store.pass !== 'undefined') {
+                if (!uReq) {
+                    ok.call(this, undefined, Squirrel.cloud_store.pass);
+                    return;
+                }
+                // Fall through to prompt for the username
+                $("#dlg_login").find("#pass").val(
+                    Squirrel.cloud_store.pass);
+                pReq = false;
             }
             Squirrel.log_in_dialog.call(this, ok, fail, uReq, pReq);
         }
@@ -886,7 +917,10 @@ Squirrel.init_cloud_store = function() {
         console.debug("Using LocalStorage for the Cloud");
     }
 
-    var cls = new datastore({
+//    var cls = new datastore({
+    var cls = new EncryptedStore({
+        engine: datastore,
+
         dataset: "Cloud Hoard",
         ok: function() {
             Squirrel.cloud_store = this;

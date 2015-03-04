@@ -40,7 +40,13 @@ EncryptedStore.prototype.read = function(ok, fail) {
 
     this.engine.read(
         function(xdata) {
-            var data = Aes.Ctr.decrypt(xdata, self.engine.pass, 256);
+            var data;
+            try {
+                data = Aes.Ctr.decrypt(xdata, self.engine.pass, 256);
+            } catch (e) {
+                fail.call(self, e);
+                return;
+            }
             ok.call(self, data);
         },
         fail);
@@ -50,7 +56,14 @@ EncryptedStore.prototype.write = function(data, ok, fail) {
     "use strict";
 
     var self = this,
-    xdata = Aes.Ctr.encrypt(data, this.engine.pass, 256);
+    xdata;
+
+    try {
+        xdata = Aes.Ctr.encrypt(data, this.engine.pass, 256);
+    } catch (e) {
+        fail.call(this, e);
+        return;
+    };
 
     this.engine.write(
         xdata,
