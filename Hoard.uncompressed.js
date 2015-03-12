@@ -35,6 +35,7 @@
  *
  * @callback Listener
  * @param {Action} action
+ * @param {Function} chain
  */
 
 /**
@@ -64,7 +65,7 @@ Hoard.stringify_action = function(action) {
         + action.path.join("/")
         + (typeof action.data !== "undefined" ?
            (" '" + action.data + "'") : "")
-        + " @" + new Date(action.time);
+        + " @" + new Date(action.time).toLocaleString();
 };
 
 
@@ -105,7 +106,7 @@ Hoard.prototype.play_action = function(e, listener, no_push) {
     var parent, name, i;
 
     if (typeof e.time === "undefined" || e.time === null) {
-        e.time = new Date().valueOf();
+        e.time = Date.now();
     }
 
     if (!no_push) {
@@ -164,9 +165,8 @@ Hoard.prototype.play_action = function(e, listener, no_push) {
         throw "Unrecognised action type '" + e.type + "'";
     }
 
-    if (listener) {
+    if (listener)
         listener.call(this, e);
-    }
 
     return null;
 };
@@ -211,34 +211,57 @@ Hoard.prototype.simplify = function() {
 
 /**
  * @private method to reconstruct an action stream from a node and it's
- * subtree
+ * subtree. Relies on the listener to call the next function.
  */
-Hoard.prototype._reconstruct_actions = function(node, path, listener) {
+Hoard.prototype._reconstruct_actions = function() {
     "use strict";
-    var key;
+    var context, node, path, key, self = this, p, next_node;
+
+    if (this.reconstruct.queue.length == 0) {
+        if (this.reconstruct.complete)
+            this.reconstruct.complete();
+        delete this.reconstruct;
+        return;
+    }
+
+    context = this.reconstruct.queue.shift();
+    node = context.node;
+    path = context.path;
+    next_node = function() {
+        self._reconstruct_actions();
+    };
 
     if (typeof node.data === "string") {
-        listener.call(this, {
-            type: "N", 
-            path: path.slice(),
-            time: node.time,
-            data: node.data
-        });
-    } else if (typeof node.data !== "undefined") {
-        if (path.length > 0) {
-            // No action for the root
-            listener.call(this, {
+        this.reconstruct.listener.call(
+            this,
+            {
                 type: "N", 
+                path: path.slice(),
                 time: node.time,
-                path: path.slice()
-            });
+                data: node.data
+            },
+            next_node);
+    } else if (typeof node.data !== "undefined") {
+        for (key in node.data) {
+            p = path.slice();
+            p.push(key);
+            this.reconstruct.queue.push({
+                node: node.data[key],
+                path: p });
         }
 
-        for (key in node.data) {
-            path.push(key);
-            this._reconstruct_actions(node.data[key], path, listener);
-            path.pop();
-        }
+        if (path.length > 0) {
+            // No action for the root
+            this.reconstruct.listener.call(
+                this,
+                {
+                    type: "N", 
+                    time: node.time,
+                    path: path.slice()
+                },
+                next_node);
+        } else
+            next_node();
     } else {
         throw "Internal error";
     }
@@ -249,14 +272,23 @@ Hoard.prototype._reconstruct_actions = function(node, path, listener) {
  * the cache in the hoard. This is used to generate the UI tree from
  * a stored cache. Does not (directly) affect the actions stored in
  * the hoard (though the listener might).
- * @param listener {Listener} callback that takes an action. Note that
- * the listener can do what it likes with the action it is passed.
+ * @param {Listener} [listener] callback that takes an action, and a
+ * function that must be called once the action has been applied. Note that
+ * the listener can do what it likes with the action it is passed, and
+ * the function need not be called immediately.
+ * @param chain callback invoked when all actions have been constructed
+ * (no parameters, no this)
  */
-Hoard.prototype.reconstruct_actions = function(listener) {
+Hoard.prototype.reconstruct_actions = function(listener, chain) {
     "use strict";
 
     if (this.cache) {
-        this._reconstruct_actions(this.cache, [], listener);
+        this.reconstruct = {
+            queue: [ { node: this.cache, path: [] } ],
+            listener: listener,
+            complete: chain
+        };
+        this._reconstruct_actions();
     }
 };
 
@@ -266,27 +298,30 @@ Hoard.prototype.reconstruct_actions = function(listener) {
  * @param {Hoard} cloud the cloud hoard
  * @param {Listener} [listener] called whenever an action is played
  * @param {Object[]} conflicts, as returned by play_action, if there are any
+ * @param chain function to call once all merged. Passed a list of conflicts.
  */
-Hoard.prototype.merge_from_cloud = function(cloud, listener, conflicts) {
+Hoard.prototype.merge_from_cloud = function(cloud, listener, chain) {
     "use strict";
 
     var i, c,
     // Save the local action stream
-    local_actions = this.actions;
+    local_actions = this.actions,
+    conflicts = [];
 
     // Play in all cloud actions since the last sync
     this.actions = [];
     for (i = 0; i < cloud.actions.length; i++) {
         if (cloud.actions[i].time > this.last_sync) {
-            console.debug("Merge " + Hoard.stringify_action(cloud.actions[i]));
-            c = this.play_action(cloud.actions[i], listener);
-            if (c !== null) {
+            //console.debug("Merge " + Hoard.stringify_action(cloud.actions[i]));
+            c = this.play_action(cloud.actions[i], listener, true);
+            if (c !== null)
                 conflicts.push(c);
-            }
         }
     }
 
     // Restore the saved actions list
     this.actions = local_actions;
-    this.last_sync = new Date().valueOf();
+    this.last_sync = Date.now();
+    if (chain)
+        chain(conflicts);
 };

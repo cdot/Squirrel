@@ -21,7 +21,7 @@
     <script type="text/javascript" src="GoogleDriveStore.uncompressed.js"></script>
     <script type="text/javascript" src="https://apis.google.com/js/client.js?onload=gapi_loaded"></script>
 <!---->
-<!-- DropBox
+<!-- DropBox -->
     <script type="text/javascript" src="dropbox.min.js"></script>
     <script type="text/javascript" src="DropboxStore.uncompressed.js"></script>
 <!---->
@@ -55,18 +55,19 @@
 
     <!-- Dialogs -->
     <div id="dlg_login" class="dialog TX_title" title="Enter login information">
+      <div id="dlg_login_foruser"></div>
       <table width="100%">
 	  <tbody>
-	    <tr id="uReq">
+	    <tr id="dlg_login_uReq">
 	      <td class="TX_text">Username:</td>
 	      <td>
-		<input size="50" id="user" value="" class="TX_title" title="Enter username" />
+		<input size="50" id="dlg_log_user" value="" class="TX_title" title="Enter username" />
 	      </td>
 	    </tr>
-            <tr id="pReq">
+            <tr id="dlg_login_pReq">
 	      <td class="TX_text">Password:</td>
 	      <td>
-		<input type="password" size="50" id="pass" class="TX_title" title="Enter password" value="" />
+		<input type="password" size="50" id="dlg_login_pass" class="TX_title" title="Enter password" value="" />
 	      </td>
 	    </tr>
 	  </tbody>
@@ -74,52 +75,31 @@
     </div>
 
     <div id="dlg_alert" class="dialog TX_title" title="Alert">
-      <div class="message"></div>
+      <div id="dlg_alert_message"></div>
     </div>
 
-    <div id="dlg_gen_password" class="dialog TX_title" title="Generate password">
-      <h2><span class="TX_text">Suggestion:</span> <span class="pw value"></span></h2>
+    <div id="dlg_gen_pw" class="dialog TX_title" title="Generate password">
+      <h2><span class="TX_text">Suggestion:</span> <span id="dlg_gen_pw_idea" class="value"></span></h2>
       <p>
       <span class="TX_text">Length:</span>
-      <input size="20" value="24" class="pw_length TX_title" title="Enter password length" />
+      <input size="20" value="24" id="dlg_gen_pw_len" class="TX_title" title="Enter password length" />
       </p>
       <p>
       <span class="TX_text">Character range:</span>
-      <input size="20" value="A-Za-z0-9" class="pw_chars TX_title" title="Enter the characters that are legal in passwords for this site. You can use character ranges like A-Z or 0-9" />
+      <input size="20" value="A-Za-z0-9" id="dlg_gen_pw_chs" class="TX_title" title="Enter the characters that are legal in passwords for this site. You can use character ranges like A-Z or 0-9" />
       </p>
     </div>
 
-    <div id="dlg_confirm_delete" class="dialog TX_title" title="Delete entry">
-      <span class="TX_text">Are you sure you want to delete</span> '<span class="message"></span>'
-      <span class="is_collection" class="TX_text"> and everything under it?</span>
+    <div id="dlg_delconf" class="dialog TX_title" title="Delete entry">
+      <span class="TX_text">Are you sure you want to delete</span> '<span id="dlg_delconf_message"></span>'
+      <span id="dlg_delconf_coll" class="TX_text"> and everything under it?</span>
     </div>
     
     <div id="dlg_conflicts" class="dialog TX_title" title="WARNING!">
       <span class="TX_text">Conflicts were detected while merging actions from the Cloud:</span>
-      <div class="message">
+      <div id="dlg_conflicts_message">
       </div>
       <span class="TX_text">Please review these rejected actions before saving.</span>
-    </div>
-
-<!--------------------------------------->
-    <div id="dlg_register" class="dialog TX_title" title="Register">
-      <span class="TX_text">You are not registered in this browser, </span>
-      <span class="message existing_hoard TX_text">but I can see that you have an existing hoard of nuts in the Cloud. Do you want to use it?</span>
-      <span class="message cant_connect TX_text">and I can't connect to the Cloud store to check whether you have any nuts there or not. Do you want to continue and create a local hoard? It will be automatically synched with the Cloud if and when we are able to make contact with it.</span>
-      <span class="message no_nuts TX_text">and I can't see any existing hoard of nuts in the Cloud. Do you want to register in this browser? A copy of your hoard will automatically be created in the Cloud.</span>
-      <span class="message unknown_user TX_text">and the password you entered does not match what I can see in the Cloud. This might be because you are signed in to the Cloud as somebody else, or you might have mistyped your password. Do you can continue to register with this password? A copy of your new hoard will automatically be created in the Cloud.</span>
-    </div>
-
-    <div id="dlg_confirm_pass" class="dialog TX_title" title="Confirm password">
-      <div id="password_mismatch" class="message" style="display:none">
-        <span class="TX_text">The passwords you entered do not match</span><br />
-        <button id="show_password">Show passwords</button>
-        <div id="passwords" class="message" style="display:none">
-        </div>
-      </div>
-      <span class="TX_text">Registering you with username</span> '<span id="userid"></span>'<br />
-      <span class="TX_text">Re-enter your password to confirm it</span><br />
-      <input type="password" size="30" id="confirm_password" value="" class="TX_title" title="Enter password" />
     </div>
   </body>
 </html>
