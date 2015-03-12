@@ -61,6 +61,8 @@ function Hoard(data) {
 }
 
 Hoard.stringify_action = function(action) {
+    "use strict";
+
     return action.type + ":"
         + action.path.join("/")
         + (typeof action.data !== "undefined" ?
@@ -217,7 +219,7 @@ Hoard.prototype._reconstruct_actions = function() {
     "use strict";
     var context, node, path, key, self = this, p, next_node;
 
-    if (this.reconstruct.queue.length == 0) {
+    if (this.reconstruct.queue.length === 0) {
         if (this.reconstruct.complete)
             this.reconstruct.complete();
         delete this.reconstruct;

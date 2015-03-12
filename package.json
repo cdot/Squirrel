@@ -10,11 +10,12 @@
             "blockBindings": true
         },
         "globals": {
+            "assert": true,
             "AbstractStore": true,
             "GoogleDriveStore": true,
+            "DropboxStore": true,
             "LocalStorageStore": true,
-            "MemoryStore": true,
-            "FileStore": true,
+            "EncryptedStore": true,
             "Hoard": true,
             "Aes": true,
             "TX": true,
@@ -27,7 +28,7 @@
             "curly": 0,
             "camelcase": 0,
             "no-unused-vars": 1,
-            "no-console": 1,
+            "no-console": 0,
             "no-debugger": 1,
             "no-alert": 1,
             "dot-notation" : 1,

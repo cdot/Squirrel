@@ -56,9 +56,9 @@ function AbstractStore(params) {
         params.identify.call(
             this,
             function(user, pass) {
-                if (typeof this.user == "undefined")
+                if (typeof this.user === "undefined")
                     this.user = user;
-                if (typeof this.pass == "undefined")
+                if (typeof this.pass === "undefined")
                     this.pass = pass;
                 params.ok.call(self);
             },
@@ -74,6 +74,8 @@ AbstractStore.NODATA = "not found";
 // Return an textual identifier for the store that will be meaningful to the
 // end user
 AbstractStore.prototype.identifier = function() {
+    "use strict";
+
     throw "Pure virtual method 'identifier'";
 };
 
@@ -83,7 +85,7 @@ AbstractStore.prototype.identifier = function() {
  * @param {ok} called on success
  * @param {fail} called on failure
  */
-AbstractStore.prototype.write = function(data, ok, fail) {
+AbstractStore.prototype.write = function(/*data, ok, fail*/) {
     "use strict";
 
     throw "Pure virtual method 'write'";
@@ -94,7 +96,7 @@ AbstractStore.prototype.write = function(data, ok, fail) {
  * @param {ok} called on success
  * @param {fail} called on failure
  */
-AbstractStore.prototype.read = function(ok, fail) {
+AbstractStore.prototype.read = function(/*ok, fail*/) {
     "use strict";
 
     throw "Pure virtual method 'read'";

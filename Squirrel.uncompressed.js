@@ -19,21 +19,23 @@ $.fn.linger = function() {
                 }, 1000);
                 return false; // stop bubble
             })
-            .on(eventType.mouseup + ".linger", function(e) {
+            .on(eventType.mouseup + ".linger", function(/*evt*/) {
                 window.clearTimeout(timeout);
             })
-            .on(eventType.click + ".linger", function(e) {
+            .on(eventType.click + ".linger", function(/*evt*/) {
                 window.clearTimeout(timeout);
             })
-            .on("contextmenu.linger", function(e) {
+            .on("contextmenu.linger", function(/*evt*/) {
                 window.clearTimeout(timeout);
             });
     });
 };
 
 $.fn.scrollView = function () {
+    "use strict";
+
     return this.each(function () {
-        $('html, body').animate({
+        $("html, body").animate({
             scrollTop: $(this).offset().top
         }, 250);
     });
@@ -69,11 +71,13 @@ Squirrel.squeak = function(e) {
     $("#dlg_alert").dialog({
         modal: true
     });
-}
+};
 
 // Allow the UI to have a slice of time at least every 100ms. Used when
 // chaining functions.
 Squirrel.ui_yield = function(fn) {
+    "use strict";
+
     if (Date.now() - Squirrel.last_yield > 100) {
         window.setTimeout(function() {
             Squirrel.last_yield = Date.now();
@@ -121,7 +125,7 @@ Squirrel.generate_password = function(constraints) {
         s += legal[array[i] % legal.length];
     }
     return s;
-}
+};
 
 /**
  * Reconstruct the path for an item from the DOM
@@ -140,7 +144,7 @@ Squirrel.get_path = function($node) {
         path = Squirrel.get_path($node.parents(".node").first());
         path.push($node.attr("data-key"));
 
-        ps = path.join(Squirrel.PATHSEP)
+        ps = path.join(Squirrel.PATHSEP);
         $node.data("path", ps);
 
         assert(!Squirrel.nodes[ps]);
@@ -149,7 +153,7 @@ Squirrel.get_path = function($node) {
         path = [];
 
     return path;
-}
+};
 
 /*
  * Escape meta-characters for use in CSS selectors
@@ -158,7 +162,7 @@ Squirrel.quotemeta = function(s) {
     "use strict";
 
     return s.replace(/([\][!"#$%&'()*+,.\/:;<=>?@\\^`{|}~])/g, "\\$1");
-}
+};
 
 /**
  * Generate a message for the last modified time
@@ -169,7 +173,7 @@ Squirrel.last_mod = function(time) {
     var d = new Date(time);
     return TX.tx("Last modified: ") + d.toLocaleString() + " "
         + TX.tx("Click and hold to open menu");
-}
+};
 
 /**
  * Confirm deletion of a node
@@ -184,7 +188,7 @@ Squirrel.confirm_delete = function($node) {
         modal: true,
         width: "auto",
         buttons: {
-            "Confirm": function(evt) {
+            "Confirm": function(/*evt*/) {
                 $(this).dialog("close");
                 Squirrel.client_hoard.play_action(
                     {
@@ -196,7 +200,7 @@ Squirrel.confirm_delete = function($node) {
                     });
             }
         }});
-}
+};
 
 /**
  * Update the tree view when data changes
@@ -282,7 +286,7 @@ Squirrel.update_tree = function() {
             taphold: true,
             select: Squirrel.context_menu_choice
         });
-}
+};
 
 /**
  * Edit a span in place, used for renaming and revaluing
@@ -318,7 +322,7 @@ Squirrel.in_place_edit = function($span, action) {
             }
         })
         .keydown(function(e) { // cancel
-            if (e.keyCode == 27) {
+            if (e.keyCode === 27) {
                 $input.remove();
                 $span.show();
             }
@@ -329,7 +333,7 @@ Squirrel.in_place_edit = function($span, action) {
         })
         .select()
         .focus();
-}
+};
 
 /**
  * A (manual) new tree node action
@@ -360,7 +364,7 @@ Squirrel.add_child_node = function($parent, title, value) {
                     $n.children(".node_div").children(".key"));
             });
         });
-}
+};
 
 /**
  * Dialog password generation
@@ -394,7 +398,7 @@ Squirrel.make_password = function(set) {
         width: "auto",
         modal: true,
         buttons: buttons});
-}
+};
 
 /**
  * Convert a path to an HTTP fragment
@@ -406,7 +410,7 @@ Squirrel.fragment_id = function(path) {
     return fid.replace(/[^A-Za-z0-9:_]/g, function(m) {
         return m.charCodeAt(0);
     });
-}
+};
 
 /**
  * Perform a text search
@@ -438,7 +442,7 @@ Squirrel.search = function(s) {
             $sar.append($res).append("<br />");
         }
     });
-}
+};
 
 /**
  * Handler for context menu
@@ -488,7 +492,7 @@ Squirrel.context_menu_choice = function(e, ui) {
     default:
         throw "Unknown ui.cmd " + ui.cmd;
     }
-}
+};
 
 /**
  * Update the save button based on hoard state
@@ -499,8 +503,7 @@ Squirrel.update_save_button = function() {
     var needed = Squirrel.client_hoard.modified || Squirrel.cloud_is_empty;
     console.debug("Update save button " + needed);
     $("#save_button").toggle(needed);
-}
-
+};
 
 /**
  * Callback for use when managing hoards; plays an action that is being
@@ -514,8 +517,8 @@ Squirrel.play_action = function(e, chain) {
 
     //console.debug("Playing " + Squirrel.stringify_action(e));
 
-    var $li, $div, menu, $keyspan, $valspan, key, $parent_ul,
-    p = e.path;
+    var $li, $div, key, $parent_ul,
+    p = e.path, inserted;
 
     switch (e.type) {
 
@@ -535,9 +538,9 @@ Squirrel.play_action = function(e, chain) {
             .addClass("node_div")
             .appendTo($li);
 
-        $keyspan = $("<span></span>")
+        $("<span></span>")
             .addClass("key")
-	    .dblclick(function() {
+            .dblclick(function() {
                 Squirrel.in_place_edit(
                     $div.children(".key"), "R");
             })
@@ -551,7 +554,7 @@ Squirrel.play_action = function(e, chain) {
                 .append(
                     $("<span></span>")
                         .addClass("value")
-	                .dblclick(function() {
+                        .dblclick(function() {
                             Squirrel.in_place_edit(
                                 $div.children(".value"), "E");
                         })
@@ -564,7 +567,7 @@ Squirrel.play_action = function(e, chain) {
         }
 
         // Insert-sort into the $parent_ul
-        var inserted = false;
+        inserted = false;
         key = key.toLowerCase();
         $parent_ul.children("li.node").each(function() {
             if ($(this).attr("data-key").toLowerCase() > key) {
@@ -606,7 +609,7 @@ Squirrel.play_action = function(e, chain) {
             .text(e.data);
 
         // Re-insert the element in it's sorted position
-        var inserted = false;
+        inserted = false;
         key = e.data.toLowerCase();
         $parent_ul.children("li.node").each(function() {
             if ($(this).attr("data-key").toLowerCase() > key) {
@@ -652,7 +655,7 @@ Squirrel.play_action = function(e, chain) {
         throw "Unrecognised action '" + e.type + "'";
     }
 
-    if (Squirrel.suppress_update_events == 0)
+    if (Squirrel.suppress_update_events === 0)
         $(document).trigger("update_save_button");
 
     if (typeof chain !== "undefined") {
@@ -660,7 +663,7 @@ Squirrel.play_action = function(e, chain) {
             chain($li);
         });
     }
-}
+};
 
 Squirrel.get_updates_from_cloud = function(cloard, chain) {
     "use strict";
@@ -691,7 +694,7 @@ Squirrel.get_updates_from_cloud = function(cloard, chain) {
             // Finished with the cloud hoard (for now)
             chain();
         });
-}
+};
 
 // Determine if there are unsaved changes, and generate a warning
 // message for the caller to use.
@@ -713,6 +716,7 @@ Squirrel.unsaved_changes = function() {
 
 Squirrel.save_hoards = function() {
     "use strict";
+
     var $messy = $("<div class='notice'>"
                    + TX.tx("Saving....")
                    + "</div>");
@@ -767,7 +771,6 @@ Squirrel.save_hoards = function() {
     // Reload and save the cloud hoard
     Squirrel.cloud_store.read(
         function(data) {
-            var conflicts = [];
             var cloard;
             try {
                 cloard = new Hoard(JSON.parse(data));
@@ -777,7 +780,7 @@ Squirrel.save_hoards = function() {
                                 + " (" + e + ")");
                 cloard = new Hoard();
                 Squirrel.cloud_is_empty = true;
-            };
+            }
             if (!Squirrel.cloud_is_empty) {
                 Squirrel.suppress_update_events++;
                 Squirrel.client_hoard.merge_from_cloud(
@@ -792,12 +795,12 @@ Squirrel.save_hoards = function() {
                 Squirrel.cloud_is_empty = true;
                 var cloard = new Hoard();
                 Squirrel.client_hoard.reconstruct_actions(
-                    function(e, next) {
+                    function(a, next) {
                         cloard.actions.push({
-                            type: e.type,
-                            time: e.time,
-                            data: e.data,
-                            path: e.path.slice()
+                            type: a.type,
+                            time: a.time,
+                            data: a.data,
+                            path: a.path.slice()
                         });
                         next();
                     });
@@ -814,12 +817,14 @@ Squirrel.save_hoards = function() {
 
 // Last in the initial hoard load sequence
 Squirrel.hoards_loaded = function() {
+    "use strict";
+
     $(window).on("beforeunload", function() {
         var us = Squirrel.unsaved_changes();
         if (us !== null) {
             us = TX.tx("You have unsaved changes")
                 + "\n" + us
-                + "\n" + TX.tx("Are you really sure?")
+                + "\n" + TX.tx("Are you really sure?");
             return us;
         }
     });
@@ -833,6 +838,8 @@ Squirrel.hoards_loaded = function() {
 };
 
 Squirrel.load_cloud_store = function() {
+    "use strict";
+
     if (Squirrel.cloud_store) {
         console.debug("Reading cloud store");
         Squirrel.cloud_store.read(
@@ -845,7 +852,7 @@ Squirrel.load_cloud_store = function() {
                     Squirrel.squeak(TX.tx("Cloud hoard data is malformed")
                                     + ": " + e);
                     return;
-                };
+                }
                 Squirrel.get_updates_from_cloud(
                     new Hoard(hoard),
                     Squirrel.hoards_loaded);
@@ -865,6 +872,8 @@ Squirrel.load_cloud_store = function() {
 };
 
 Squirrel.load_client_store = function() {
+    "use strict";
+
     Squirrel.client_store.read(
         function(data) {
             try {
@@ -873,7 +882,7 @@ Squirrel.load_client_store = function() {
                 Squirrel.squeak(TX.tx("Client hoard data is malformed")
                                 + ": " + e);
                 return;
-            };
+            }
             // If the cloud hoard had no data, force a save
             if (Squirrel.cloud_is_empty)
                 Squirrel.client_hoard.modified = true;
@@ -901,6 +910,8 @@ Squirrel.load_client_store = function() {
 };
 
 Squirrel.init_ui = function() {
+    "use strict";
+
     $("#save_button")
         .button({
             icons: {
@@ -928,16 +939,18 @@ Squirrel.init_ui = function() {
         });
 
     $("#search")
-        .change(function(evt) {
+        .change(function(/*evt*/) {
             Squirrel.search($(this).val());
         });
 };
 
 Squirrel.log_in_dialog = function(ok, fail, uReq, pReq) {
+    "use strict";
+
     var $dlg = $("#dlg_login"),
     b = {},
     self = this,
-    sign_in = function(evt) {
+    sign_in = function(/*evt*/) {
         $dlg.dialog("close");
         ok.call(self,
                 uReq ? $("#dlg_login_user").val() : undefined,
@@ -970,8 +983,10 @@ Squirrel.log_in_dialog = function(ok, fail, uReq, pReq) {
 };
 
 Squirrel.init_client_store = function() {
-//    var cls = new LocalStorageStore({
-    var cls = new EncryptedStore({
+    "use strict";
+
+    //Squirrel.ignore = new LocalStorageStore({
+    new EncryptedStore({
         engine: LocalStorageStore,
 
         dataset: "Local Hoard",
@@ -989,13 +1004,13 @@ Squirrel.init_client_store = function() {
         identify: function(ok, fail, uReq, pReq) {
             // Won't ever get here unless uReq || pReq
             if (uReq && Squirrel.cloud_store
-                && typeof Squirrel.cloud_store.user !== 'undefined') {
+                && typeof Squirrel.cloud_store.user !== "undefined") {
 
                 uReq = false; // user is in cloud store
 
                 if (pReq) {
                     if (Squirrel.cloud_store
-                         && typeof Squirrel.cloud_store.pass !== 'undefined') {
+                         && typeof Squirrel.cloud_store.pass !== "undefined") {
                         // The cloud store loaded OK, we will re-use the
                         // password for the client store
                         ok.call(this,
@@ -1016,7 +1031,7 @@ Squirrel.init_client_store = function() {
                     return;
                 }
             } else if (Squirrel.cloud_store
-                       && typeof Squirrel.cloud_store.pass !== 'undefined') {
+                       && typeof Squirrel.cloud_store.pass !== "undefined") {
                 if (!uReq) {
                     // We were only asked for a password.
                     ok.call(this, undefined, Squirrel.cloud_store.pass);
@@ -1033,13 +1048,15 @@ Squirrel.init_client_store = function() {
 };
 
 Squirrel.init_cloud_store = function() {
+    "use strict";
+
     var params = {
         dataset: "Cloud Hoard",
         ok: function() {
             Squirrel.cloud_store = this;
             Squirrel.init_client_store();
         },
-        fail: function(e) {
+        fail: function(/*e*/) {
             Squirrel.squeak(TX.tx("Could not contact cloud store"));
             Squirrel.init_client_store();
         },
@@ -1061,8 +1078,8 @@ Squirrel.init_cloud_store = function() {
     // Disable update events until the hoards are loaded and updated
     Squirrel.suppress_update_events++;
 
-//    var cls = new params.engine(params);
-    var cls = new EncryptedStore(params);
+//  new params.engine(params);
+    new EncryptedStore(params);
 };
 
 (function ($) {

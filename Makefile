@@ -14,11 +14,11 @@ locale/*.json: *.uncompressed.* Makefile translate.pl
 
 %.min.js : %.uncompressed.js
 	cat $< \
-	  | perl -pe '$/=undef;s{((console\.debug|assert)\(.*?\);)}{/*$1*/}gs' \
-	  | java -jar yuicompressor.jar --type js --verbose -o $@
+	  | perl -pe '$/=undef;s{\b((console\.debug|assert)\(.*?\)|debugger);}{/*$1*/}gs' \
+	  | uglifyjs --compress -- $< > $@
 
 %.min.css : %.uncompressed.css
-	java -jar yuicompressor.jar $< > $@
+	cleancss $< > $@
 
 %.html : %.uncompressed.html
 	cat $< \

@@ -6,8 +6,8 @@
 function DropboxStore(params) {
     "use strict";
 
-    var self = this,
-    dbcl = new Dropbox.Client({
+    var self = this;
+    new Dropbox.Client({
         key: "37tzcd7ezkaqovy"
     }).authenticate(function(error, client) {
         if (error) {
@@ -39,6 +39,8 @@ function DropboxStore(params) {
 DropboxStore.prototype = Object.create(AbstractStore.prototype);
 
 DropboxStore.prototype.identifier = function() {
+    "use strict";
+
     return "Dropbox{" + this.user + "}";
 };
 
@@ -50,7 +52,7 @@ DropboxStore.prototype.write = function(data, ok, fail) {
     this.client.writeFile(
         this.dataset + "." + this.user,
         data,
-        function(error, stat) {
+        function(error/*, stat*/) {
             if (error) {
                 console.debug("Dropbox write failed " + error.responseText);
                 fail.call(self, error.responseText || error.status);

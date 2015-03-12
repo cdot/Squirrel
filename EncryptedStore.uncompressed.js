@@ -36,8 +36,10 @@ function EncryptedStore(params) {
 EncryptedStore.prototype = Object.create(AbstractStore.prototype);
 
 EncryptedStore.prototype.identifier = function() {
+    "use strict";
+
     return this.engine.identifier() + " (encrypted)";
-}
+};
 
 EncryptedStore.prototype.read = function(ok, fail) {
     "use strict";
@@ -69,7 +71,7 @@ EncryptedStore.prototype.write = function(data, ok, fail) {
     } catch (e) {
         fail.call(this, e);
         return;
-    };
+    }
 
     this.engine.write(
         xdata,

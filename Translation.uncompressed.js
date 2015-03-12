@@ -25,16 +25,16 @@ var TX = {
                     tx_ready();
                 },
                 error: function(a, b, c) {
-                    var m;
+                    var m = /^(.+)-.+/.exec(TX.lingo);
                     console.log("Failed to load " + TX.lingo + ".json: "
                                 + c.message);
-                    if (m = /^(.+)-.+/.exec(TX.lingo))
+                    if (m)
                         TX.lingo = m[1];
                     else
                         TX.lingo = "en";
                     TX.init(tx_ready);
                 }
-            })
+            });
     },
     tx: function(s) {
         "use strict";

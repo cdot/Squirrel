@@ -12,6 +12,8 @@ function LocalStorageStore(params) {
 LocalStorageStore.prototype = Object.create(AbstractStore.prototype);
 
 LocalStorageStore.prototype.identifier = function() {
+    "use strict";
+
     return "Browser{" + this.user + "}";
 };
 

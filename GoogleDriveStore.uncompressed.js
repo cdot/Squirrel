@@ -54,6 +54,7 @@ GoogleDriveStore._init = function(self, params) {
     },
 
     handleAuthResult = function (authResult) {
+        var message;
         window.clearTimeout(tid);
         if (authResult && !authResult.fail) {
             // Access token has been retrieved, requests
@@ -78,11 +79,13 @@ GoogleDriveStore._init = function(self, params) {
 //            immediate: true
         },
         handleAuthResult);
-}
+};
 
 GoogleDriveStore.prototype = Object.create(AbstractStore.prototype);
 
 GoogleDriveStore.prototype.identifier = function() {
+    "use strict";
+
     return "Google Drive{" + this.user + "}";
 };
 
@@ -96,7 +99,7 @@ function gapi_loaded() {
 
     console.debug("gapi: loaded");
     GoogleDriveStore.loaded = true;
-};
+}
 
 /**
  * @private
@@ -263,7 +266,7 @@ GoogleDriveStore.prototype._getfile = function(p) {
                     "Authorization",
                     "Bearer " + oauthToken.access_token);
             },
-            success: function(data, textStatus, jqXHR) {
+            success: function(data/*, textStatus, jqXHR*/) {
                 console.debug("gapi: _getfile OK");
                 p.ok.call(self, data);
             },
@@ -289,8 +292,6 @@ GoogleDriveStore.prototype.write = function(data, ok, fail) {
 
 GoogleDriveStore.prototype.read = function(ok, fail) {
     "use strict";
-
-    var self = this;
 
     this._download(
         {
