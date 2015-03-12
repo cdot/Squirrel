@@ -59,6 +59,15 @@ function Hoard(data) {
     }
 }
 
+Hoard.stringify_action = function(action) {
+    return action.type + ":"
+        + action.path.join("/")
+        + (typeof action.data !== "undefined" ?
+           (" '" + action.data + "'") : "")
+        + " @" + new Date(action.time);
+};
+
+
 /**
  * Clear down the actions in the hoard. The cache is left untouched.
  * This is used when the client hoard has been synched with the cloud
@@ -269,6 +278,7 @@ Hoard.prototype.merge_from_cloud = function(cloud, listener, conflicts) {
     this.actions = [];
     for (i = 0; i < cloud.actions.length; i++) {
         if (cloud.actions[i].time > this.last_sync) {
+            console.debug("Merge " + Hoard.stringify_action(cloud.actions[i]));
             c = this.play_action(cloud.actions[i], listener);
             if (c !== null) {
                 conflicts.push(c);

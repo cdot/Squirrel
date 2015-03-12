@@ -39,7 +39,6 @@ GoogleDriveStore._init = function(self, params) {
 
     handleAboutGetResult = function(result) {
         if (result.status === 200) {
-            params.uReq = false;
             self.user = result.result.user.displayName;
         } else {
             console.debug("gapi: Google Drive about.get failed");
@@ -82,6 +81,10 @@ GoogleDriveStore._init = function(self, params) {
 }
 
 GoogleDriveStore.prototype = Object.create(AbstractStore.prototype);
+
+GoogleDriveStore.prototype.identifier = function() {
+    return "Google Drive{" + this.user + "}";
+};
 
 // The load process is triggered by the tag in the html:
 // <script type="text/javascript" src="https://apis.google.com/js/client.js?onload=gapi_loaded"></script>

@@ -38,6 +38,10 @@ function DropboxStore(params) {
 
 DropboxStore.prototype = Object.create(AbstractStore.prototype);
 
+DropboxStore.prototype.identifier = function() {
+    return "Dropbox{" + this.user + "}";
+};
+
 DropboxStore.prototype.write = function(data, ok, fail) {
     "use strict";
 

@@ -42,8 +42,6 @@
  *    * fail, called on failure
  *    * identify, called to identify the user of the store,
  *      if needed
- *    * uReq - true if a username is required by this store
- *    * pReq - true if a password is required by this store
  */
 function AbstractStore(params) {
     "use strict";
@@ -52,19 +50,19 @@ function AbstractStore(params) {
 
     this.dataset = params.dataset;
 
-    if (params.uReq || params.pReq) {
+    var uReq = (params.uReq && typeof this.user === "undefined");
+    var pReq = (params.pReq && typeof this.pass === "undefined");
+    if (uReq || pReq) {
         params.identify.call(
             this,
             function(user, pass) {
-                if (params.uReq)
+                if (typeof this.user == "undefined")
                     this.user = user;
-                if (params.pReq)
+                if (typeof this.pass == "undefined")
                     this.pass = pass;
                 params.ok.call(self);
             },
-            params.fail,
-            params.uReq,
-            params.pReq);
+            params.fail, uReq, pReq);
     } else
         params.ok.call(this);
 }
@@ -72,6 +70,12 @@ function AbstractStore(params) {
 // Special error message, must be used when a store is otherwise OK but
 // data being read is missing.
 AbstractStore.NODATA = "not found";
+
+// Return an textual identifier for the store that will be meaningful to the
+// end user
+AbstractStore.prototype.identifier = function() {
+    throw "Pure virtual method 'identifier'";
+};
 
 /**
  * Write data. Subclasses must implement.
@@ -82,7 +86,7 @@ AbstractStore.NODATA = "not found";
 AbstractStore.prototype.write = function(data, ok, fail) {
     "use strict";
 
-    throw "Pure virtual method write";
+    throw "Pure virtual method 'write'";
 };
 
 /**
@@ -93,5 +97,5 @@ AbstractStore.prototype.write = function(data, ok, fail) {
 AbstractStore.prototype.read = function(ok, fail) {
     "use strict";
 
-    throw "Pure virtual method read";
+    throw "Pure virtual method 'read'";
 };

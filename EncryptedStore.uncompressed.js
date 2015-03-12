@@ -15,16 +15,18 @@ function EncryptedStore(params) {
 
     var self = this, pok = params.ok;
 
-    params.pReq = true; // Tell identify() we need a password
+    // Push the password requirement down onto the embedded store
+    params.pReq = true;
+    params.dataset = "Encrypted " + params.dataset;
     // Override the OK function (SMELL: should really use extend)
     params.ok = function() {
         // Don't call AbstractStore(), it doesn't do anything useful
         // for us. The identity prompt has already been issued by the
         // engine constructor.
         self.engine = this;
-        // Need the user so callers see this as a normal store.
-        // Don't copy the pass, it's ok where it is
+        // Need the user and pass so callers see this as a normal store.
         self.user = this.user;
+        self.pass = this.pass;
         pok.call(self);
     };
     
@@ -32,6 +34,10 @@ function EncryptedStore(params) {
 }
 
 EncryptedStore.prototype = Object.create(AbstractStore.prototype);
+
+EncryptedStore.prototype.identifier = function() {
+    return this.engine.identifier() + " (encrypted)";
+}
 
 EncryptedStore.prototype.read = function(ok, fail) {
     "use strict";

@@ -11,18 +11,26 @@ function LocalStorageStore(params) {
 
 LocalStorageStore.prototype = Object.create(AbstractStore.prototype);
 
+LocalStorageStore.prototype.identifier = function() {
+    return "Browser{" + this.user + "}";
+};
+
 LocalStorageStore.prototype.read = function(ok, fail) {
     "use strict";
 
+    var data;
+
     try {
-        var data = localStorage.getItem(this.dataset + "." + this.user);
-        if (data === null) {
-            fail.call(this, AbstractStore.NODATA);
-        } else {
-            ok.call(this, data);
-        }
+        data = localStorage.getItem(this.dataset + "." + this.user);
     } catch (e) {
         fail.call(this, e);
+        return;
+    }
+    if (data === null) {
+        //console.debug(this.dataset + "." + this.user + " is null");
+        fail.call(this, AbstractStore.NODATA);
+    } else {
+        ok.call(this, data);
     }
 };
 
@@ -31,8 +39,9 @@ LocalStorageStore.prototype.write = function(data, ok, fail) {
 
     try {
         localStorage.setItem(this.dataset + "." + this.user, data);
-        ok.call(this);
     } catch (e) {
         fail.call(this, e);
+        return;
     }
+    ok.call(this);
 };
