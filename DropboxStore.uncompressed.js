@@ -20,12 +20,12 @@ function DropboxStore(params) {
                 null,
                 function(erm, accountInfo) {
                     if (erm) {
-                        var err = error.responseText
+                        var err = erm.responseText
                             || "Status: " + error.status;
                         console.debug("Dropbox getAccountInfo failed " + err);
                         params.fail.call(self, err);
                     } else {
-                        console.debug("Dropbox got username " + accountInfo.name);
+                        console.debug("Dropbox username " + accountInfo.name);
                         self.client = client;
                         self.user = accountInfo.name;
                         params.uReq = false;
@@ -41,7 +41,7 @@ DropboxStore.prototype = Object.create(AbstractStore.prototype);
 DropboxStore.prototype.identifier = function() {
     "use strict";
 
-    return "Dropbox{" + this.user + "}";
+    return "Dropbox";
 };
 
 DropboxStore.prototype.write = function(data, ok, fail) {

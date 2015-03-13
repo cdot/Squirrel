@@ -76,7 +76,7 @@ AbstractStore.NODATA = "not found";
 AbstractStore.prototype.identifier = function() {
     "use strict";
 
-    throw "Pure virtual method 'identifier'";
+    return "abstract";
 };
 
 /**

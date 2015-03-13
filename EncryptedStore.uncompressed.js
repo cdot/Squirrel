@@ -38,7 +38,7 @@ EncryptedStore.prototype = Object.create(AbstractStore.prototype);
 EncryptedStore.prototype.identifier = function() {
     "use strict";
 
-    return this.engine.identifier() + " (encrypted)";
+    return /* "encrypted " + */ this.engine.identifier();
 };
 
 EncryptedStore.prototype.read = function(ok, fail) {

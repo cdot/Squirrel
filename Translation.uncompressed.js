@@ -1,6 +1,12 @@
+/**
+ * Translations module. Determines the language to use from the browser,
+ * picks up translations from 
+ */
 var TX = {
     lingo: window.navigator.userLanguage || window.navigator.language || "en",
+
     translations: null,
+
     init: function(tx_ready) {
         "use strict";
 
@@ -36,16 +42,22 @@ var TX = {
                 }
             });
     },
+
     tx: function(s) {
         "use strict";
 
-        if (TX.translations === null)
-            return s;
+        var tx, i;
 
-        var tx = TX.translations[s];
-        if (typeof tx === "undefined")
-            return s;
+        if (TX.translations !== null) {
+            tx = TX.translations[s];
+            if (typeof tx !== "undefined" && tx.length > 0)
+                s = tx;
+        }
 
-        return tx;
+        for (i = arguments.length - 1; i > 0; i--) {
+            s = s.replace("\$" + i, arguments[i]);
+        }
+
+        return s;
     }
 };

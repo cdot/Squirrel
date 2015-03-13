@@ -3,7 +3,7 @@ use JSON;
 
 my @strings;
 while (<>) {
-    while ($_ =~ s/\bTX\((["'])(.*?)\1//) {
+    while ($_ =~ s/\bTX.tx\((["'])(.*?)\1//) {
         $strings{$2} = 1;
     }
     while ($_ =~ s/\bTX_title\b.*?title=(["'])(.*?)\1//) {
@@ -36,7 +36,7 @@ for my $f (readdir D) {
     foreach my $k (keys %strings) {
         if (!defined $data->{$k}) {
             print STDERR "Adding $k\n";
-            $data->{$k} = $k;
+            $data->{$k} = "";
             $changed = 1;
         }
     }

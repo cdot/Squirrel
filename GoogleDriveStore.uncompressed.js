@@ -86,7 +86,7 @@ GoogleDriveStore.prototype = Object.create(AbstractStore.prototype);
 GoogleDriveStore.prototype.identifier = function() {
     "use strict";
 
-    return "Google Drive{" + this.user + "}";
+    return "Google Drive";
 };
 
 // The load process is triggered by the tag in the html:
