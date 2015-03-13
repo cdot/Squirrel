@@ -151,9 +151,9 @@ Squirrel.get_path = function($node) {
     if (path)
         return path.split(Squirrel.PATHSEP);
 
-    if (typeof $node.attr("data-key") !== "undefined") {
-        path = Squirrel.get_path($node.parents(".node").first());
-        path.push($node.attr("data-key"));
+    if (typeof $node.data("key") !== "undefined") {
+        path = Squirrel.get_path($node.parent().closest(".node"));
+        path.push($node.data("key"));
 
         ps = path.join(Squirrel.PATHSEP);
         $node.data("path", ps);
@@ -559,7 +559,7 @@ Squirrel.play_action = function(e, chain) {
 
         $li = $("<li></li>")
             .addClass("node modified")
-            .attr("data-key", key)
+            .data("key", key)
             .attr("name", key)
             .attr("title", Squirrel.last_mod(e.time));
 
@@ -599,7 +599,7 @@ Squirrel.play_action = function(e, chain) {
         inserted = false;
         key = key.toLowerCase();
         $parent_ul.children("li.node").each(function() {
-            if ($(this).attr("data-key").toLowerCase() > key) {
+            if ($(this).data("key").toLowerCase() > key) {
                 $li.insertBefore($(this));
                 inserted = true;
                 return false;
@@ -630,18 +630,22 @@ Squirrel.play_action = function(e, chain) {
         $parent_ul = $li.closest("ul");
         $li
             .detach()
-            .attr("data-key", e.data)
-            .data("path", null)
+            .data("key", e.data)
             .attr("title", Squirrel.last_mod(e.time))
             .children(".node_div")
             .children("span.key")
             .text(e.data);
+        // Reset the path of all subnodes
+        $li
+            .data("path", null)
+            .find(".node")
+            .data("path", null);
 
         // Re-insert the element in it's sorted position
         inserted = false;
         key = e.data.toLowerCase();
         $parent_ul.children("li.node").each(function() {
-            if ($(this).attr("data-key").toLowerCase() > key) {
+            if ($(this).data("key").toLowerCase() > key) {
                 $li.insertBefore($(this));
                 inserted = true;
                 return false;
