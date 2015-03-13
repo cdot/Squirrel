@@ -139,7 +139,8 @@ Squirrel.generate_password = function(constraints) {
 };
 
 /**
- * Reconstruct the path for an item from the DOM
+ * Reconstruct the path for an item from the DOM, populating the
+ * node->path->node mappings in the process
  */
 Squirrel.get_path = function($node) {
     "use strict";
@@ -147,23 +148,48 @@ Squirrel.get_path = function($node) {
     if (!$node.hasClass("node"))
         $node = $node.closest(".node");
 
-    var path = $node.data("path"), ps;
-    if (path)
-        return path.split(Squirrel.PATHSEP);
+    var ps = $node.data("path"), path;
+    if (typeof ps !== "undefined" && ps !== null)
+        return ps.split(Squirrel.PATHSEP);
 
     if (typeof $node.data("key") !== "undefined") {
         path = Squirrel.get_path($node.parent().closest(".node"));
+
         path.push($node.data("key"));
 
         ps = path.join(Squirrel.PATHSEP);
+
+        // node->path mapping
         $node.data("path", ps);
 
+        // path->node mapping
         assert(!Squirrel.nodes[ps]);
         Squirrel.nodes[ps] = $node;
     } else
         path = [];
 
     return path;
+};
+
+/**
+ * Remove the node (and all subnodes) from the node->path->node mappings
+ */
+Squirrel.demap = function($node) {
+    "use strict";
+
+    if (!$node.hasClass("node"))
+        $node = $node.closest(".node");
+
+    delete Squirrel.nodes[$node.data("path")];
+    $node
+        .data("path", null)
+        // Reset the path of all subnodes
+        .find(".node")
+        .each(function() {
+            var $s = $(this);
+            delete Squirrel.nodes[$s.data("path")];
+            $s.data("path", null);
+        });
 };
 
 /*
@@ -626,6 +652,7 @@ Squirrel.play_action = function(e, chain) {
     case "R": // Rename
         // Detach the li from the DOM
         $li = Squirrel.nodes[p.join(Squirrel.PATHSEP)];
+        Squirrel.demap($li);
 
         $parent_ul = $li.closest("ul");
         $li
@@ -635,11 +662,6 @@ Squirrel.play_action = function(e, chain) {
             .children(".node_div")
             .children("span.key")
             .text(e.data);
-        // Reset the path of all subnodes
-        $li
-            .data("path", null)
-            .find(".node")
-            .data("path", null);
 
         // Re-insert the element in it's sorted position
         inserted = false;
@@ -653,6 +675,15 @@ Squirrel.play_action = function(e, chain) {
         });
         if (!inserted)
             $parent_ul.append($li);
+
+        // Reset the path of all subnodes. We have to do this so
+        // they get added to Squirrel.nodes. This will also update
+        // the mapping for $li.
+        $li
+            .find(".node")
+            .each(function() {
+                Squirrel.get_path($(this));
+            });
 
         // refresh data-path and update get fragment ID
         $li .addClass("modified")
@@ -672,17 +703,13 @@ Squirrel.play_action = function(e, chain) {
 
     case "D": // Delete node
         $li = Squirrel.nodes[p.join(Squirrel.PATHSEP)];
+        Squirrel.demap($li);
 
         $li .parents("li.node")
             .first()
             .addClass("modified")
             .attr("title", Squirrel.last_mod(e.time));
 
-        $li.find("li.node").each(function() {
-            delete Squirrel.nodes[Squirrel.get_path($(this))];
-        });
-        delete Squirrel.nodes[Squirrel.get_path($li)];
-        
         $li.remove();
 
         break;
@@ -776,17 +803,30 @@ Squirrel.save_hoards = function() {
 
     Squirrel.squeak($messy);
 
-    var save_client = function() {
+    var finished = function() {
+        Squirrel.update_save_button();
+        $messy.append(TX.tx("Save complete."));
+    },
+
+    save_client = function() {
+
+        if (Squirrel.client.status === "loaded"
+            && $(".modified").length === 0) {
+            finished();
+            return;
+        }
+
         Squirrel.client.store.write(
             JSON.stringify(Squirrel.client.hoard),
             function() {
                 $(".modified").removeClass("modified");
+                Squirrel.client.status = "loaded";
                 $messy.append(
                     "<div class='notice'>"
                         + TX.tx("Saved in $1", this.identifier())
                         + "</div>");
 
-                Squirrel.update_save_button();
+                finished();
             },
             function(e) {
                 $messy.append(
@@ -795,8 +835,12 @@ Squirrel.save_hoards = function() {
                                 this.identifier(), e)
                         + "</div>");
 
-                Squirrel.update_save_button();
+                finished();
             });
+    },
+
+    chain = function() {
+        Squirrel.ui_yield(save_client);
     },
 
     update_cloud_store = function(cloard) {
@@ -811,7 +855,7 @@ Squirrel.save_hoards = function() {
                         + TX.tx("Saved in $1", this.identifier())
                         + "</div>");
                 Squirrel.cloud.status = "loaded";
-                save_client();
+                chain();
             },
             function(e) {
                 $messy.append(
@@ -819,7 +863,7 @@ Squirrel.save_hoards = function() {
                         + TX.tx("Failed to save in $1: $2",
                                 this.identifier(), e)
                         + "</div>");
-                save_client();
+                chain();
             });
     };
 
@@ -833,21 +877,27 @@ Squirrel.save_hoards = function() {
             } catch (e) {
                 // We'll get here if decryption failed....
                 console.debug("Cloud hoard JSON parse failed: " + e);
-                Squirrel.squeak(
-                    TX.tx("$1 hoard can't be read. Are you sure you have the correct password?",
-                    this.identifier()));
+                $messy.append(
+                    "<div class='error'>"
+                    + TX.tx("$1 hoard can't be read for update",
+                            this.identifier())
+                        + "</div>");
                 Squirrel.cloud.status = "corrupt";
                 cloard = new Hoard();
             }
+
             if (Squirrel.cloud.status === "loaded") {
                 Squirrel.suppress_update_events++;
                 Squirrel.client.hoard.merge_from_cloud(
                     cloard, Squirrel.play_action);
                 Squirrel.suppress_update_events--;
             }
+
             if ( Squirrel.cloud.status !== "loaded"
                  || Squirrel.client.hoard.actions.length !== 0)
                 update_cloud_store(cloard);
+            else
+                chain();
         },
         function(e) {
             if (e === AbstractStore.NODATA) {
@@ -871,7 +921,7 @@ Squirrel.save_hoards = function() {
                         + TX.tx("Failed to refresh from $1",
                                 this.identifier())
                         * "<br>" + e + "</div>");
-                save_client();
+                chain();
             }
         });
 };
