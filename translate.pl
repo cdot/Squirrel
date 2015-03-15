@@ -6,6 +6,9 @@ while (<>) {
     while ($_ =~ s/\bTX.tx\((["'])(.*?)\1//) {
         $strings{$2} = 1;
     }
+    while ($_ =~ s/\bSquirrel\.\w+\.status\s*=\s*["'](.*?)\1//) {
+        $strings{$2} = 1;
+    }
     while ($_ =~ s/\bTX_title\b.*?title=(["'])(.*?)\1//) {
         $strings{$2} = 1;
     }
@@ -43,7 +46,7 @@ for my $f (readdir D) {
     if ($changed) {
         print STDERR "Writing changes to $f\n";
         open(F, ">", $f);
-        print F $json->pretty(1)->utf8->encode($data);
+        print F $json->pretty(1)->canonical->utf8->encode($data);
         close(F);
     }
 }

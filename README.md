@@ -27,7 +27,21 @@ Squirrel uses a "cloud store" to synchronise your safe between multiple computer
 
 In the past browsers have often been highlighted as the source of security problems. As a result, modern browsers are very well designed and, if used properly, offer a very secure environment in which to run software.
 
-Squirrel doesn't know your password, nor is it possible to extract from your stored data. If you forget your password, no-one can help you, so don't forget it. The safest thing is to write it on a piece of paper, and store that somewhere safe (such as a safety deposit box at the bank.) Nor does it transmit your password over the internet.
+Squirrel doesn't store your password, nor does it transmit your password over the internet. Is it extremely difficult to extract your password from your stored data. If you forget your password, no-one can help you, so don't forget it.
+
+## Some tips on passwords
+
+The algorithm Squirrel uses to store data is very secure, and the only known way to crack it in finite time is to guess your password. So:
+- make your passwords hard to guess
+"Hard to guess for a computer" doesn't mean the same thing as "hard to guess" for a human. Computers can rapidly test millions of passwords in an attempt to find yours. Things that can help computers do this are using things such as real words, people and place names, dates, telephone numbers - all be tested by password crackers. Some people seem to believe that substituting numbers or punctuation for letters - for example, using "0" in place of "O" or "$" in place of "S" - somehow makes their password more secure. If does, a tiny bit, but not enough for it to be a good idea. Hackers know how people think, so try not to think like a person when choosing a password.
+- avoid using real words, names, dates, telephone numbers
+- substituting numbers or punctuation for letters doesn't work very well
+Your master password needs to be as hard as possible for a computer to crack. Ideally you will choose a long string of random characters, though that might be too hard to remember.
+- A long string of random characters is best
+Despite what many IT departments tell you, writing down your password isn't a bad idea, just so long as you make sure that the physical security of what you have written is very strong.
+- writing down a very strong password may not be a bad idea
+
+Ultimately I'm not going to tell you my best password tips, because I'd be giving away my own secrets. But if you follow the tips above, you should be able to come up with something pretty good.
 
 ## Using Squirrel
 
@@ -36,10 +50,31 @@ the cloud service you want to use (currently Dropbox or Google Drive). Once
 the sources have been cached in your browser, there is no need to worry about
 them again.
 
-You must be logged in to your chosen cloud store provider. Squirrel will ask you for your encryption password.
+You must be logged in to your chosen cloud store provider. Squirrel will ask you for your encryption password. Once in, you are presented with a simple interface where you can create keys, keys within keys, and data associated with those keys. Double-click a key to edit it, or use right click (or long tap/long hold) to pull down a menu of options.
+
+## About Squirrel
+
+Squirrel was written by Crawford Currie http://c-dot.co.uk, and uses the following 3rd party libraries:
+
+- JQuery & JQuery UI, from the JQuery Foundation, https://jquery.org
+- AES implementation in JavaScript (c) Chris Veness 2005-2014, http://www.movable-type.co.uk/scripts/aes.html
+- jquery-bonsai, Copyright (c) 2014 Simon Wade, http://aexmachina.info/jquery-bonsai
+- silk icons, by Mark James, http://www.famfamfam.com/lab/icons/silk/
+- ZeroClipboard, Copyright (c) 2009-2014 Jon Rohan, James M. Greene, http://zeroclipboard.org/ 
+- Dropbox API, Copyright (c) 2012 Dropbox, Inc., http://www.dropbox.com
+- Google Drive API, 
+## TODOs
+
+Undo (actions are not currently reversible)
+
+R -> R
+E -> E
+D -> N
+N -> D
 
 ## Possible enhancements:
 
+Use github to serve the app
 Password change reminders
 Remember password constraints for a site
 Alert if the wrong password is used

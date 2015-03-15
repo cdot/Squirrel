@@ -50,16 +50,16 @@ function AbstractStore(params) {
 
     this.dataset = params.dataset;
 
-    var uReq = (params.uReq && typeof this.user === "undefined");
-    var pReq = (params.pReq && typeof this.pass === "undefined");
+    var uReq = (params.uReq && typeof this.user() === "undefined");
+    var pReq = (params.pReq && typeof this.pass() === "undefined");
     if (uReq || pReq) {
         params.identify.call(
             this,
             function(user, pass) {
-                if (typeof this.user === "undefined")
-                    this.user = user;
-                if (typeof this.pass === "undefined")
-                    this.pass = pass;
+                if (typeof this.suser === "undefined")
+                    this.suser = user;
+                if (typeof this.spass === "undefined")
+                    this.spass = pass;
                 params.ok.call(self);
             },
             params.fail, uReq, pReq);
@@ -71,12 +71,40 @@ function AbstractStore(params) {
 // data being read is missing.
 AbstractStore.NODATA = "not found";
 
-// Return an textual identifier for the store that will be meaningful to the
-// end user
+/**
+ * Return an textual identifier for the store that will be meaningful to the
+ * end user
+ */
 AbstractStore.prototype.identifier = function() {
     "use strict";
 
     return "abstract";
+};
+
+/**
+ * Set/get the user on the store. Only relevant on stores that are
+ * protected by passwords.
+ * @param pass the new password
+ */
+AbstractStore.prototype.user = function(user) {
+    "use strict";
+
+    if (arguments.length > 0)
+        this.suser = user;
+    return this.suser;
+};
+
+/**
+ * Set/get the password on the store. Only relevant on stores that are
+ * protected by passwords.
+ * @param pass the new password
+ */
+AbstractStore.prototype.pass = function(pass) {
+    "use strict";
+
+    if (arguments.length === 1 && typeof pass !== "undefined")
+        this.spass = pass;
+    return this.spass;
 };
 
 /**

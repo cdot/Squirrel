@@ -52,11 +52,21 @@ function Hoard(data) {
         this.last_sync = data.last_sync;
         this.actions = data.actions;
         this.cache = data.cache;
+        this.options = data.options;
     } else {
         this.last_sync = null;
         this.clear_actions();
         this.cache = null;
     }
+    if (typeof this.options === "undefined")
+        this.options = {
+            // autosave exists in both the client and cloud stores, but
+            // is only relevant in the client - it is never inherited
+            // from the cloud. This is so that (for example) a tablet
+            // doesn't get the option when it spends most of its time
+            // disconnected.
+            autosave: true
+        };
 }
 
 Hoard.stringify_action = function(action) {

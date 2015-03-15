@@ -1,38 +1,45 @@
-debug: dropbox drive eslint
+debug: dropbox.html drive.html eslint
 
 release: \
-	$(patsubst %.uncompressed.js,%.min.js,$(wildcard *.uncompressed.js)) \
-	$(patsubst %.uncompressed.css,%.min.css,$(wildcard *.uncompressed.css)) \
 	dropbox.html drive.html
 
-test:	all test.js
-	cat index.uncompressed.html | sed -e 's/Squirrel\.uncompressed\.js/test.js/g' > test.html
+clean:
+	rm libs/*.min.*
+	rm *.min.*
+	rm *.pruned.*
+	rm *.html
 
 eslint: *.uncompressed.js
 	eslint --config package.json *.uncompressed.js
 
-locale/*.json: *.uncompressed.* Makefile translate.pl
-	cat *.uncompressed.* | \
-		perl translate.pl
+locale/*.json: *.uncompressed.js Squirrel.html.src Makefile translate.pl
+	cat $^ \
+	| perl translate.pl
 
 %.min.js : %.uncompressed.js
 	cat $< \
-	  | perl -pe 's{\b((console\.debug|assert)\(.*?\)|debugger);}{/*$1*/}gs' \
-	  | uglifyjs --compress -- $< > $@
+	| grep -v 'use strict";' \
+	| perl -e '$$/=undef;$$_=<>;s{\b((console\.debug|assert)\(.*?\)|debugger);}{/*$1*/}gs;print $$_' \
+	> $*.pruned.js
+	uglifyjs --compress --source-map $*.min.map -o $@ -- $*.pruned.js
 
 %.min.css : %.uncompressed.css
 	cleancss $< > $@
 
-dropbox : dropbox.uncompressed.html
+%.uncompressed.html : Squirrel.html.src Makefile
+	cat Squirrel.html.src \
+	| perl -e '$$/=undef;$$_=<>;s{<!--cloud:$*\s*(.*?)\s*cloud:$*-->}{"$$1"}sge;print $$_;' \
+	> $@
 
-drive : drive.uncompressed.html
+minified : \
+	$(patsubst %.uncompressed.js,%.min.js,$(wildcard *.uncompressed.js)) \
+	$(patsubst %.uncompressed.css,%.min.css,$(wildcard *.uncompressed.css)) \
+	$(patsubst libs/%.uncompressed.js,libs/%.min.js,$(wildcard libs/*.uncompressed.js)) \
+	$(patsubst libs/%.uncompressed.css,libs/%.min.css,$(wildcard libs/*.uncompressed.css))
 
-%.uncompressed.html : index.uncompressed.html
-	echo "$< and $*"
-	cat $< \
-	| perl -e '$$/=undef;$$x=<>;$$x=~s{<!--cloud:$*\s*(.*?)\s*cloud:$*-->}{"$$1"}sge;$$x=~s{<!--cloud:.*cloud:\w+-->}{}sg;print $$x;' > $@
-
-%.html : %.uncompressed.html
-	cat $< \
-	  | sed -e '/Assert\.uncompressed\.js/d' \
-	  | sed -e 's/\.uncompressed\./.min./g' > $@
+%.html : %.uncompressed.html minified
+	cat $*.uncompressed.html \
+	| sed -e '/Assert\.uncompressed\.js/d' \
+	| sed -e 's/\.uncompressed\./.min./g' \
+	| perl -e '$$/=undef;$$_=<>;s/<!--.*?-->//gs;s/>\s*</></gs;print $$_' \
+	> $@

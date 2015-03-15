@@ -16,6 +16,7 @@
             "DropboxStore": true,
             "LocalStorageStore": true,
             "EncryptedStore": true,
+            "Utils": true,
             "Hoard": true,
             "Aes": true,
             "TX": true,

@@ -27,7 +27,7 @@ function DropboxStore(params) {
                     } else {
                         console.debug("Dropbox username " + accountInfo.name);
                         self.client = client;
-                        self.user = accountInfo.name;
+                        self.user(accountInfo.name);
                         params.uReq = false;
                         AbstractStore.call(self, params);
                     }
@@ -50,7 +50,7 @@ DropboxStore.prototype.write = function(data, ok, fail) {
     var self = this;
 
     this.client.writeFile(
-        this.dataset + "." + this.user,
+        this.dataset + "." + this.user(),
         data,
         function(error/*, stat*/) {
             if (error) {
@@ -68,7 +68,7 @@ DropboxStore.prototype.read = function(ok, fail) {
     var self = this;
 
     this.client.readFile(
-        this.dataset + "." + this.user,
+        this.dataset + "." + this.user(),
         function(error, data) {
             if (error) {
                 console.debug("Dropbox read failed " + error.responseText);

@@ -18,15 +18,14 @@ function EncryptedStore(params) {
     // Push the password requirement down onto the embedded store
     params.pReq = true;
     params.dataset = "Encrypted " + params.dataset;
-    // Override the OK function (SMELL: should really use extend)
+    // Override the OK function
+    // SMELL: should really use extend
     params.ok = function() {
+        // 'this' is the engine.
         // Don't call AbstractStore(), it doesn't do anything useful
         // for us. The identity prompt has already been issued by the
         // engine constructor.
         self.engine = this;
-        // Need the user and pass so callers see this as a normal store.
-        self.user = this.user;
-        self.pass = this.pass;
         pok.call(self);
     };
     
@@ -41,6 +40,18 @@ EncryptedStore.prototype.identifier = function() {
     return /* "encrypted " + */ this.engine.identifier();
 };
 
+EncryptedStore.prototype.user = function(u) {
+    "use strict";
+
+    return this.engine.user(u);
+};
+
+EncryptedStore.prototype.pass = function(pw) {
+    "use strict";
+
+    return this.engine.pass(pw);
+};
+
 EncryptedStore.prototype.read = function(ok, fail) {
     "use strict";
 
@@ -50,7 +61,7 @@ EncryptedStore.prototype.read = function(ok, fail) {
         function(xdata) {
             var data;
             try {
-                data = Aes.Ctr.decrypt(xdata, self.engine.pass, 256);
+                data = Aes.Ctr.decrypt(xdata, self.engine.pass(), 256);
             } catch (e) {
                 fail.call(self, e);
                 return;
@@ -67,7 +78,7 @@ EncryptedStore.prototype.write = function(data, ok, fail) {
     xdata;
 
     try {
-        xdata = Aes.Ctr.encrypt(data, this.engine.pass, 256);
+        xdata = Aes.Ctr.encrypt(data, this.engine.pass(), 256);
     } catch (e) {
         fail.call(this, e);
         return;
