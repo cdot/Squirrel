@@ -26,12 +26,11 @@
         <script type="text/javascript" src="https://apis.google.com/js/client.js?onload=gapi_loaded"></script>
     cloud:drive-->
 <!--cloud:dropbox
-        <script type="text/javascript" src="libs/dropbox.min.js"></script>
+        <script type="text/javascript" src="libs/dropbox.uncompressed.js"></script>
         <script type="text/javascript" src="DropboxStore.uncompressed.js"></script>
     cloud:dropbox-->
-    <link rel="stylesheet" href="libs/jquery-ui.min.css">
-    <link rel="stylesheet" href="libs/jquery-silk-icons.css">
-    <link rel="stylesheet" href="libs/jquery-bonsai.min.css">
+    <link rel="stylesheet" href="libs/jquery-ui.uncompressed.css">
+    <link rel="stylesheet" href="libs/jquery-bonsai.uncompressed.css">
     <link rel="stylesheet" href="Squirrel.uncompressed.css">
   </head>
   <body>
@@ -42,7 +41,9 @@
       <h2>
         <span class="TX_text">Signed in as: </span><span id="whoami"></span>
       </h2>
-      <button id="options_button" class="authenticated TX_title TX_text" title="Change options">Options</button>
+      <button id="options_button" class="authenticated TX_title TX_text" title="Change options">
+        Options
+      </button>
       <label for="search" class="TX_text">Search:</label>
       <input id="search" value="" class="TX_title" title="Enter search string" />
       <div id="search_results"></div>
@@ -89,21 +90,33 @@
       <div id="dlg_alert_message"></div>
     </div>
 
-    <div id="dlg_gen_pw" class="dialog TX_title" title="Generate password">
-      <h2><span class="TX_text">Suggestion:</span> <span id="dlg_gen_pw_idea" class="value"></span></h2>
+    <div id="dlg_gen_rand" class="dialog TX_title" title="Generate random value">
+      <span class="TX_text">Suggested value for</span>
+      '<span id="dlg_gen_rand_key"></span>': '<span id="dlg_gen_rand_idea" class="value"></span>'
       <p>
       <span class="TX_text">Length:</span>
-      <input size="20" value="24" id="dlg_gen_pw_len" class="TX_title" title="Enter password length" />
+      <input size="20" value="24" id="dlg_gen_rand_len" class="TX_title" title="Enter password length" />
       </p>
       <p>
       <span class="TX_text">Character range:</span>
-      <input size="20" value="A-Za-z0-9" id="dlg_gen_pw_chs" class="TX_title" title="Enter the characters that are legal in passwords for this site. You can use character ranges like A-Z or 0-9" />
+      <input size="20" value="A-Za-z0-9" id="dlg_gen_rand_chs" class="TX_title" title="Enter the characters that are legal in passwords for this site. You can use character ranges like A-Z or 0-9" />
       </p>
+      <div>
+        <button id="dlg_gen_rand_use" class="TX_text">Use this</button>
+        <button id="dlg_gen_rand_again" class="TX_text">Try again</button>
+        <button id="dlg_gen_rand_cancel" class="TX_text">Cancel</button>
+      </div>
     </div>
 
     <div id="dlg_delconf" class="dialog TX_title" title="Delete entry">
-      <span class="TX_text">Are you sure you want to delete</span> '<span id="dlg_delconf_message"></span>'
-      <span id="dlg_delconf_coll" class="TX_text"> and everything under it?</span> 
+      <p>
+        <span class="TX_text">Are you sure you want to delete</span> '<span id="dlg_delconf_message"></span>'
+        <span id="dlg_delconf_coll" class="TX_text"> and everything under it?</span>
+      </p>
+      <div>
+        <button id="dlg_delconf_delete" class="TX_text">Delete</button>
+        <button id="dlg_delconf_cancel" class="TX_text">Cancel</button>
+      </div>
     </div>
     
     <div id="dlg_conflicts" class="dialog TX_title" title="WARNING!">

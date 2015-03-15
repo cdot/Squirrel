@@ -39,7 +39,7 @@ GoogleDriveStore._init = function(self, params) {
 
     handleAboutGetResult = function(result) {
         if (result.status === 200) {
-            self.user = result.result.user.displayName;
+            self.user(result.result.user.displayName);
         } else {
             console.debug("gapi: Google Drive about.get failed");
             params.fail.call(self, "Google Drive about.get failed");
@@ -283,7 +283,7 @@ GoogleDriveStore.prototype.write = function(data, ok, fail) {
 
     this._upload(
         {
-            name: this.dataset + "." + this.user,
+            name: this.dataset + "." + this.user(),
             data: data,
             ok: ok,
             fail: fail
@@ -295,7 +295,7 @@ GoogleDriveStore.prototype.read = function(ok, fail) {
 
     this._download(
         {
-            name: this.dataset + "." + this.user,
+            name: this.dataset + "." + this.user(),
             ok: ok,
             fail: fail
         });

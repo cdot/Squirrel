@@ -5,48 +5,48 @@ body {
 }
 
 .squirrel-icon-add-site {
-    background-image:url('squirrel-icons.png') !important;
+    background-image:url('images/squirrel-icons.png') !important;
     background-position:0 0px;
 }
 
 .squirrel-icon-copy {
-    background-image:url('squirrel-icons.png') !important;
+    background-image:url('images/squirrel-icons.png') !important;
     background-position:0 -16px;
 }
 
 .squirrel-icon-rename {
-    background-image:url('squirrel-icons.png') !important;
+    background-image:url('images/squirrel-icons.png') !important;
     background-position:0 -32px;
 }
 
 .squirrel-icon-edit{
-    background-image:url('squirrel-icons.png') !important;
+    background-image:url('images/squirrel-icons.png') !important;
     background-position:0 -48px;
 }
 
 .squirrel-icon-generate-pass {
-    background-image:url('squirrel-icons.png') !important;
+    background-image:url('images/squirrel-icons.png') !important;
     background-position:0 -64px;
 }
 
 .squirrel-icon-add-value {
-    background-image:url('squirrel-icons.png') !important;
+    background-image:url('images/squirrel-icons.png') !important;
     background-position:0 -80px;
 }
 
 .squirrel-icon-add-subtree {
-    background-image:url('silk-icons.png') !important;
+    background-image:url('images/squirrel-icons.png') !important;
     background-position:0 -96px;
 }
 
 .squirrel-icon-delete {
-    background-image:url('silk-icons.png') !important;
+    background-image:url('images/squirrel-icons.png') !important;
     background-position:0 -112px;
 }
 
 .squirrel-icon-save {
-    background-image:url('silk-icons.png') !important;
-    background-position:0 -5376px;
+    background-image:url('images/squirrel-icons.png') !important;
+    background-position:0 -128px;
 }
 
 .logo {

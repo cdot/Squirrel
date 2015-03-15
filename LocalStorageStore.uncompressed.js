@@ -23,13 +23,13 @@ LocalStorageStore.prototype.read = function(ok, fail) {
     var data;
 
     try {
-        data = localStorage.getItem(this.dataset + "." + this.user);
+        data = localStorage.getItem(this.dataset + "." + this.user());
     } catch (e) {
         fail.call(this, e);
         return;
     }
     if (data === null) {
-        //console.debug(this.dataset + "." + this.user + " is null");
+        //console.debug(this.dataset + "." + this.user() + " is null");
         fail.call(this, AbstractStore.NODATA);
     } else {
         ok.call(this, data);
@@ -40,7 +40,7 @@ LocalStorageStore.prototype.write = function(data, ok, fail) {
     "use strict";
 
     try {
-        localStorage.setItem(this.dataset + "." + this.user, data);
+        localStorage.setItem(this.dataset + "." + this.user(), data);
     } catch (e) {
         fail.call(this, e);
         return;

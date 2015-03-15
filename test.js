@@ -37,7 +37,7 @@ function exercise_store(store) {
     store.read(
         function() {
             assert(this === store);
-            assert(this.user);
+            assert(this.user());
             exercise_store_read(
                 store,
                 function(store) {

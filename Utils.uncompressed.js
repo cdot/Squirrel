@@ -38,13 +38,18 @@ $.fn.linger = function() {
 /**
  * Scroll the view to this element
  */
-$.fn.scrollView = function () {
+$.fn.scroll_into_view = function () {
     "use strict";
 
     return this.each(function () {
-        $("html, body").animate({
-            scrollTop: $(this).offset().top
-        }, 250);
+        var offset = $(this).offset().top - $(window).scrollTop();
+
+        if (offset > window.innerHeight){
+            // Not in view so scroll to it
+            $('html,body').animate({scrollTop: offset - 16}, 500);
+            return false;
+        }
+        return true;
     });
 };
 
@@ -102,6 +107,18 @@ $.fn.edit_in_place = function(opts) {
 
             .blur(blurb)
             .select();
+    });
+};
+
+/**
+ * Shorthand for $el.off(event).one(event, handler)
+ * Useful when the handler uses closure variables
+ */
+$.fn.reon = function(event, handler) {
+    "use strict";
+
+    return this.each(function() {
+        $(this).off(event).on(event, handler);
     });
 };
 

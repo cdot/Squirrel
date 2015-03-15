@@ -154,27 +154,34 @@ Squirrel.confirm_delete = function($node) {
     var $dlg = $("#dlg_delconf");
     $("#dlg_delconf_message").text(Squirrel.get_path($node).join("/"));
     $("#dlg_delconf_coll").toggle($node.hasClass("treecollection"));
+    $("#dlg_delconf_delete").button()
+        .reon("click", function(/*evt*/) {
+            $(this).dialog("close");
+            Squirrel.client.hoard.play_action(
+                {
+                    type: "D",
+                    path: Squirrel.get_path($node)
+                },
+                function(e) {
+                    Squirrel.play_action(
+                        e,
+                        function() {
+                            Squirrel.sometime("update_save");
+                            Squirrel.sometime("update_tree");
+                        });
+                });
+        });
+
+    $("#dlg_delconf_cancel")
+        .button()
+        .reon("click", function(/*evt*/) {
+            $(this).dialog("close");
+        });
+
     $dlg.dialog({
         modal: true,
-        width: "auto",
-        buttons: {
-            "Confirm": function(/*evt*/) {
-                $(this).dialog("close");
-                Squirrel.client.hoard.play_action(
-                    {
-                        type: "D",
-                        path: Squirrel.get_path($node)
-                    },
-                    function(e) {
-                        Squirrel.play_action(
-                            e,
-                            function() {
-                                Squirrel.sometime("update_save");
-                                Squirrel.sometime("update_tree");
-                            });
-                    });
-            }
-        }});
+        width: "auto"
+    });
 };
 
 /**
@@ -194,7 +201,7 @@ Squirrel.update_tree = function() {
         $("#treeroot")
             .contextmenu("showEntry", "copy", isvalue)
             .contextmenu("showEntry", "edit", isvalue)
-            .contextmenu("showEntry", "generate_password", isvalue)
+            .contextmenu("showEntry", "randomise", isvalue)
             .contextmenu("showEntry", "add_subtree", !isvalue)
             .contextmenu("showEntry", "add_value", !isvalue);
 
@@ -235,8 +242,8 @@ Squirrel.update_tree = function() {
                 uiIcon: "squirrel-icon-edit" 
             },
             {
-                title: TX.tx("Generate new password"),
-                cmd: "generate_password",
+                title: TX.tx("Generate new random value"),
+                cmd: "randomise",
                 uiIcon: "squirrel-icon-generate-pass" 
             },               
             {
@@ -331,35 +338,55 @@ Squirrel.add_child_node = function($parent, title, value) {
 /**
  * Dialog password generation
  */
-Squirrel.make_password = function(set) {
+Squirrel.make_random = function($div) {
     "use strict";
-    var $dlg = $("#dlg_gen_pw");
-    var buttons = {};
+
+    var $dlg = $("#dlg_gen_rand");
     var opts = {
-        length: $("#dlg_gen_pw_len").val(),
-        charset: $("#dlg_gen_pw_chs").val()
+        length: $("#dlg_gen_rand_len").val(),
+        charset: $("#dlg_gen_rand_chs").val()
     };
 
-    buttons[TX.tx("Use this")] = function() {
-        $dlg.dialog("close");
-        var pw = $("#dlg_gen_pw_idea").text();
-        set.call(this, pw);
-    };
-    buttons[TX.tx("Try again")] = function() {
-        opts.length = $("#dlg_gen_pw_len").val();
-        opts.charset = $("#dlg_gen_pw_chs").val();
-        $("#dlg_gen_pw_idea").text(Utils.generate_password(opts));
-    };
-    buttons[TX.tx("Forget it")] = function() {
-        $dlg.dialog("close");
-    };
+    $("#dlg_gen_rand_key").text($div.children(".key").text());
 
-    $("#dlg_gen_pw_idea").text(Utils.generate_password(opts));
+    $("#dlg_gen_rand_use").button()
+        .reon("click", function() {
+            $dlg.dialog("close");
+            var pw = $("#dlg_gen_rand_idea").text();
+            var old_path = Squirrel.get_path($div);
+            Squirrel.client.hoard.play_action(
+                { type: 'E',
+                  path: old_path,
+                  data: pw },
+                function(e) {
+                    Squirrel.play_action(
+                        e,
+                        function() {
+                            Squirrel.sometime("update_save");
+                        });
+                });
+        });
+
+    $("#dlg_gen_rand_again")
+        .button()
+        .reon("click", function() {
+            opts.length = $("#dlg_gen_rand_len").val();
+            opts.charset = $("#dlg_gen_rand_chs").val();
+            $("#dlg_gen_rand_idea").text(Utils.generate_password(opts));
+        });
+
+    $("#dlg_gen_rand_cancel")
+        .button()
+        .reon("click", function() {
+            $dlg.dialog("close");
+        });
 
     $dlg.dialog({
         width: "auto",
-        modal: true,
-        buttons: buttons});
+        modal: true
+    });
+
+    $("#dlg_gen_rand_idea").text(Utils.generate_password(opts));
 };
 
 /**
@@ -429,10 +456,8 @@ Squirrel.context_menu_choice = function(e, ui) {
         Squirrel.add_child_node($div, TX.tx("New sub-tree"));
         break;
 
-    case "generate_password":
-        Squirrel.make_password(function(pw) {
-            $div.children(".value").text(pw);
-        });
+    case "randomise":
+        Squirrel.make_random($div);
         break;
 
     case "delete":
@@ -593,7 +618,7 @@ Squirrel.play_action = function(e, chain) {
         $li .addClass("modified")
             .children("a.node_fragment")
             .attr("name", Utils.fragmentify(Squirrel.get_path($li).join(":")))
-            .scrollView();
+            .scroll_into_view();
         break;
 
     case "E": // Change data
@@ -1021,21 +1046,24 @@ Squirrel.change_password_dialog = function() {
             $("#dlg_chpw_conf").attr("type", "password");
         }
     });
-    $("#dlg_chpw_set").button().click(function() {
-        var p = $("#dlg_chpw_pass").val(),
-        c = $("#dlg_chpw_conf").val();
-        if (p !== c)
-            Squirrel.squeak("Passwords do not match");
-        else {
-            // for TX: TX.tx("has a new password")
-            Squirrel.client.store.pass(p);
-            Squirrel.client.status = "has a new password";
-            Squirrel.cloud.store.pass(p);
-            Squirrel.cloud.status = "has a new password";
-            $("#dlg_chpw").dialog("close");
-            Squirrel.sometime("update_save");
-        }
-    });
+
+    $("#dlg_chpw_set").button()
+        .reon("click", function() {
+            var p = $("#dlg_chpw_pass").val(),
+            c = $("#dlg_chpw_conf").val();
+            if (p !== c)
+                Squirrel.squeak("Passwords do not match");
+            else {
+                // for TX: TX.tx("has a new password")
+                Squirrel.client.store.pass(p);
+                Squirrel.client.status = "has a new password";
+                Squirrel.cloud.store.pass(p);
+                Squirrel.cloud.status = "has a new password";
+                $("#dlg_chpw").dialog("close");
+                Squirrel.sometime("update_save");
+            }
+        });
+
     $("#dlg_chpw").dialog({
         modal: true,
         width: "auto"
@@ -1048,13 +1076,14 @@ Squirrel.options_dialog = function() {
     var $dlg = $("#dlg_options");
     $("#dlg_options_autosave")
         .prop("checked", Squirrel.client.hoard.options.autosave)
-        .change(function() {
+        .reon("change", function() {
             Squirrel.client.hoard.options.autosave =
                 $("#dlg_options_autosave").is(":checked");
             Squirrel.sometime("update_save");
-    });
-    $("#dlg_options_chpw").button()
-        .click(Squirrel.change_password_dialog);
+        });
+    $("#dlg_options_chpw")
+        .button()
+        .reon("click", Squirrel.change_password_dialog);
 
     $dlg.dialog({
         modal: true,
@@ -1077,21 +1106,23 @@ Squirrel.login_dialog = function(ok, fail, uReq, pReq) {
     $pReq = $("#dlg_login_pReq").toggle(pReq).find("input");
 
     if (uReq && pReq) {
-         $uReq.change(function() {
+         $uReq.reon("change", function() {
              $pReq.focus();
          });
-         $pReq.change(sign_in);
+         $pReq.reon("change", sign_in);
     }
     else if (uReq)
-        $uReq.change(sign_in);
+        $uReq.reon("change", sign_in);
     else if (pReq) {
         $("#dlg_login_foruser")
             .toggle(this.user() !== null)
             .text(this.user() || "");
-        $pReq.change(sign_in);
+        $pReq.reon("change", sign_in);
     }
 
-    $("dlg_login_signin").button().click(sign_in);
+    $("dlg_login_signin")
+        .button()
+        .reon("click", sign_in);
 
     $dlg.dialog({
         modal: true,
