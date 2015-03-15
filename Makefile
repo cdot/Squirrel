@@ -8,6 +8,7 @@ clean:
 	rm *.min.*
 	rm *.pruned.*
 	rm *.html
+	git checkout libs/ZeroClipboard.min.js
 
 eslint: *.uncompressed.js
 	eslint --config package.json *.uncompressed.js
