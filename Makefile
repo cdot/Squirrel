@@ -18,11 +18,13 @@ locale/*.json: *.uncompressed.js Squirrel.html.src Makefile translate.pl
 	| perl translate.pl
 
 %.min.js : %.uncompressed.js
-	cat $< \
-	| grep -v 'use strict";' \
-	| perl -e '$$/=undef;$$_=<>;s{\b((console\.debug|assert)\(.*?\)|debugger);}{/*$1*/}gs;print $$_' \
-	> $*.pruned.js
-	uglifyjs --compress --source-map $*.min.map -o $@ -- $*.pruned.js
+	uglifyjs \
+		--compress \
+		--source-map $*.min.map \
+		--define DEBUG=false \
+		--mangle \
+		-o $@ \
+		-- $<
 
 %.min.css : %.uncompressed.css
 	cleancss $< > $@
@@ -40,7 +42,5 @@ minified : \
 
 %.html : %.uncompressed.html minified
 	cat $*.uncompressed.html \
-	| sed -e '/Assert\.uncompressed\.js/d' \
-	| sed -e 's/\.uncompressed\./.min./g' \
-	| perl -e '$$/=undef;$$_=<>;s/<!--.*?-->//gs;s/>\s*</></gs;print $$_' \
+	| perl -e '$$/=undef;$$_=<>;s/\.uncompressed\./.min./sg;s/<!--.*?-->//gs;s/>\s*</></gs;print $$_' \
 	> $@

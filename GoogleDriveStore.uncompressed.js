@@ -1,3 +1,5 @@
+/* Copyright (C) 2015 Crawford Currie http://c-dot.co.uk / MIT */
+
 /**
  * A store using Google Drive
  * @implements AbstractStore
@@ -17,7 +19,7 @@ GoogleDriveStore._init = function(self, params) {
     "use strict";
 
     if (!GoogleDriveStore.loaded) {
-        console.debug("gapi: not loaded yet");
+        if (DEBUG) console.debug("gapi: not loaded yet");
         if (GoogleDriveStore.load_waits-- === 0) {
             params.fail.call("Timeout waiting for Google Drive Client API");
             return;
@@ -41,14 +43,14 @@ GoogleDriveStore._init = function(self, params) {
         if (result.status === 200) {
             self.user(result.result.user.displayName);
         } else {
-            console.debug("gapi: Google Drive about.get failed");
+            if (DEBUG) console.debug("gapi: Google Drive about.get failed");
             params.fail.call(self, "Google Drive about.get failed");
         }
         AbstractStore.call(self, params);
     },
 
     handleClientLoad = function() {
-        console.debug("gapi: drive/v2 loaded");
+        if (DEBUG) console.debug("gapi: drive/v2 loaded");
         gapi.client.drive.about.get()
             .then(handleAboutGetResult);
     },
@@ -59,7 +61,7 @@ GoogleDriveStore._init = function(self, params) {
         if (authResult && !authResult.fail) {
             // Access token has been retrieved, requests
             // can be sent to the API.
-            console.debug("gapi: auth OK");
+            if (DEBUG) console.debug("gapi: auth OK");
             gapi.client.load("drive", "v2", handleClientLoad);
         } else {
             if (authResult === null)
@@ -70,7 +72,7 @@ GoogleDriveStore._init = function(self, params) {
         }
     };
 
-    console.debug("gapi: authorising");
+    if (DEBUG) console.debug("gapi: authorising");
 
     gapi.auth.authorize(
         {
@@ -97,7 +99,7 @@ GoogleDriveStore.load_waits = 10;
 function gapi_loaded() {
     "use strict";
 
-    console.debug("gapi: loaded");
+    if (DEBUG) console.debug("gapi: loaded");
     GoogleDriveStore.loaded = true;
 }
 
@@ -222,19 +224,19 @@ GoogleDriveStore.prototype._download = function(p) {
 
     var self = this;
     if (p.url) {
-        console.debug("gapi: download " + p.url);
+        if (DEBUG) console.debug("gapi: download " + p.url);
         this._getfile(p);
     } else if (p.name) {
-        console.debug("gapi: search for " + p.name);
+        if (DEBUG) console.debug("gapi: search for " + p.name);
         this._search(
             "'appfolder' in parents and title='" + p.name + "'",
             function(items) {
                 if (items.length > 0) {
                     p.url = items[0].downloadUrl;
-                    console.debug("gapi: found " + p.name + " at " + p.url);
+                    if (DEBUG) console.debug("gapi: found " + p.name + " at " + p.url);
                     self._download(p);
                 } else {
-                    console.debug("gapi: could not find " + p.name);
+                    if (DEBUG) console.debug("gapi: could not find " + p.name);
                     p.fail.call(self, AbstractStore.NODATA);
                 }
             },
@@ -254,7 +256,7 @@ GoogleDriveStore.prototype._getfile = function(p) {
     var self = this,
     oauthToken = gapi.auth.getToken();
 
-    console.debug("gapi: ajax " + p.url);
+    if (DEBUG) console.debug("gapi: ajax " + p.url);
 
     // SMELL: no client API to get file content from Drive
     $.ajax(
@@ -267,12 +269,12 @@ GoogleDriveStore.prototype._getfile = function(p) {
                     "Bearer " + oauthToken.access_token);
             },
             success: function(data/*, textStatus, jqXHR*/) {
-                console.debug("gapi: _getfile OK");
+                if (DEBUG) console.debug("gapi: _getfile OK");
                 p.ok.call(self, data);
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 var reason = textStatus + " " + errorThrown;
-                console.debug("gapi: _getfile failed " + reason);
+                if (DEBUG) console.debug("gapi: _getfile failed " + reason);
                 p.fail.call(self, reason);
             }
         });

@@ -1,3 +1,5 @@
+/* Copyright (C) 2015 Crawford Currie http://c-dot.co.uk / MIT */
+
 /**
  * A combined hierarchical data store with change log, designed to be
  * used in a client-cloud topology where a single cloud hoard is synched
@@ -319,7 +321,7 @@ Hoard.prototype.merge_from_cloud = function(cloud, listener, chain) {
     this.actions = [];
     for (i = 0; i < cloud.actions.length; i++) {
         if (cloud.actions[i].time > this.last_sync) {
-            //console.debug("Merge " + Hoard.stringify_action(cloud.actions[i]));
+            //if (DEBUG) console.debug("Merge " + Hoard.stringify_action(cloud.actions[i]));
             c = this.play_action(cloud.actions[i], listener, true);
             if (c !== null)
                 conflicts.push(c);

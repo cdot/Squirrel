@@ -1,3 +1,5 @@
+/* Copyright (C) 2015 Crawford Currie http://c-dot.co.uk / MIT */
+
 var Squirrel = {                     // Namespace
     // status may be one of "is empty", "is corrupt", "is loaded" or
     // "has a new password". If the status is anything but "is loaded"
@@ -105,7 +107,7 @@ Squirrel.get_path = function($node) {
         $node.data("path", ps);
 
         // path->node mapping
-        assert(!Squirrel.nodes[ps]);
+        if (DEBUG && Squirrel.nodes[ps]) debugger;
         Squirrel.nodes[ps] = $node;
     } else
         path = [];
@@ -152,32 +154,39 @@ Squirrel.confirm_delete = function($node) {
     "use strict";
 
     var $dlg = $("#dlg_delconf");
+
     $("#dlg_delconf_message").text(Squirrel.get_path($node).join("/"));
     $("#dlg_delconf_coll").toggle($node.hasClass("treecollection"));
-    $("#dlg_delconf_delete").button()
-        .reon("click", function(/*evt*/) {
-            $(this).dialog("close");
-            Squirrel.client.hoard.play_action(
-                {
-                    type: "D",
-                    path: Squirrel.get_path($node)
-                },
-                function(e) {
-                    Squirrel.play_action(
-                        e,
-                        function() {
-                            Squirrel.sometime("update_save");
-                            Squirrel.sometime("update_tree");
-                        });
-                });
-        });
 
-    $("#dlg_delconf_cancel")
-        .button()
-        .reon("click", function(/*evt*/) {
-            $(this).dialog("close");
-        });
+    if (typeof $dlg.dialog("instance") === "undefined") {
+        $("#dlg_delconf_delete")
+            .button()
+            .on("click", function(/*evt*/) {
+                var $dlg = $("#dlg_delconf");
+                $dlg.dialog("close");
+                Squirrel.client.hoard.play_action(
+                    {
+                        type: "D",
+                        path: Squirrel.get_path($dlg.data("node"))
+                    },
+                    function(e) {
+                        Squirrel.play_action(
+                            e,
+                            function() {
+                                Squirrel.sometime("update_save");
+                                Squirrel.sometime("update_tree");
+                            });
+                    });
+            });
 
+        $("#dlg_delconf_cancel")
+            .button()
+            .on("click", function(/*evt*/) {
+                $("#dlg_delconf").dialog("close");
+            });
+    }
+
+    $dlg.data("node", $node);
     $dlg.dialog({
         modal: true,
         width: "auto"
@@ -263,7 +272,7 @@ Squirrel.update_tree = function() {
             }
         ],
         beforeOpen: before_open,
-        // We map long mouse hold to taphold in the plugin above
+        // We map long mouse hold to taphold
         // Right click still works
         taphold: true,
         select: Squirrel.context_menu_choice
@@ -275,10 +284,12 @@ Squirrel.update_tree = function() {
 };
 
 /**
- * Edit a span in place, used for renaming and revaluing
+ * Edit a node in place, used for renaming and revaluing
  */
-Squirrel.in_place_edit = function($span, action) {
+Squirrel.edit_node = function($node, what) {
     "use strict";
+
+    var $span = $node.children(".node_div").children("." + what);
 
     // Fit width to the container
     var w = $("#tree").width();
@@ -289,15 +300,16 @@ Squirrel.in_place_edit = function($span, action) {
     $span.edit_in_place({
         width: w,
         changed: function(s) {
-            var old_path = Squirrel.get_path($span);
+            var old_path = Squirrel.get_path($node);
             Squirrel.client.hoard.play_action(
-                { type: action,
+                { type: what === "key" ? "R" : "E",
                   path: old_path,
                   data: s },
                 function(e) {
                     Squirrel.play_action(
                         e,
-                        function() {
+                        function($newnode) {
+                            $newnode.scroll_into_view();
                             Squirrel.sometime("update_save");
                             Squirrel.sometime("update_tree");
                         });
@@ -309,14 +321,10 @@ Squirrel.in_place_edit = function($span, action) {
 /**
  * A (manual) new tree node action
  */
-Squirrel.add_child_node = function($parent, title, value) {
+Squirrel.add_child_node = function($node, title, value) {
     "use strict";
 
-    var $li = $parent.parents("li").first();
-    var $ul = $li.parent();
-    $ul.bonsai("expand", $li);
-
-    var p = Squirrel.get_path($parent);
+    var p = Squirrel.get_path($node);
     var action = {
         type: "N",
         path: p
@@ -328,9 +336,11 @@ Squirrel.add_child_node = function($parent, title, value) {
     Squirrel.client.hoard.play_action(
         action,
         function(e) {
-            Squirrel.play_action(e, function($n) {
-                Squirrel.in_place_edit(
-                    $n.children(".node_div").children(".key"));
+            Squirrel.play_action(e, function($newnode) {
+                $newnode.scroll_into_view();
+                $newnode.closest("ul")
+                    .bonsai("expand", $node);
+                Squirrel.edit_node($newnode, "key");
             });
         });
 };
@@ -338,7 +348,7 @@ Squirrel.add_child_node = function($parent, title, value) {
 /**
  * Dialog password generation
  */
-Squirrel.make_random = function($div) {
+Squirrel.make_random_dialog = function($node) {
     "use strict";
 
     var $dlg = $("#dlg_gen_rand");
@@ -347,46 +357,55 @@ Squirrel.make_random = function($div) {
         charset: $("#dlg_gen_rand_chs").val()
     };
 
-    $("#dlg_gen_rand_key").text($div.children(".key").text());
+    $("#dlg_gen_rand_key").text(
+        $node.children(".node_div").children(".key").text());
+    $("#dlg_gen_rand_idea").text(Utils.generate_password(opts));
 
-    $("#dlg_gen_rand_use").button()
-        .reon("click", function() {
-            $dlg.dialog("close");
-            var pw = $("#dlg_gen_rand_idea").text();
-            var old_path = Squirrel.get_path($div);
-            Squirrel.client.hoard.play_action(
-                { type: 'E',
-                  path: old_path,
-                  data: pw },
-                function(e) {
-                    Squirrel.play_action(
-                        e,
-                        function() {
-                            Squirrel.sometime("update_save");
-                        });
-                });
-        });
+    $dlg.data("node", $node);
+    $dlg.data("opts", opts);
 
-    $("#dlg_gen_rand_again")
-        .button()
-        .reon("click", function() {
-            opts.length = $("#dlg_gen_rand_len").val();
-            opts.charset = $("#dlg_gen_rand_chs").val();
-            $("#dlg_gen_rand_idea").text(Utils.generate_password(opts));
-        });
+    if (typeof $dlg.dialog("instance") == "undefined") {
+        $("#dlg_gen_rand_use")
+            .button()
+            .on("click", function() {
+                var $dlg = $("#dlg_gen_rand");
+                $dlg.dialog("close");
+                var pw = $("#dlg_gen_rand_idea").text();
+                var old_path = Squirrel.get_path($dlg.data("node"));
+                Squirrel.client.hoard.play_action(
+                    { type: 'E',
+                      path: old_path,
+                      data: pw },
+                    function(e) {
+                        Squirrel.play_action(
+                            e,
+                            function() {
+                                Squirrel.sometime("update_save");
+                            });
+                    });
+            });
 
-    $("#dlg_gen_rand_cancel")
-        .button()
-        .reon("click", function() {
-            $dlg.dialog("close");
-        });
+        $("#dlg_gen_rand_again")
+            .button()
+            .on("click", function() {
+                var $dlg = $("#dlg_gen_rand");
+                var ops = $dlg.data("opts");
+                opts.length = $("#dlg_gen_rand_len").val();
+                opts.charset = $("#dlg_gen_rand_chs").val();
+                $("#dlg_gen_rand_idea").text(Utils.generate_password(opts));
+            });
+
+        $("#dlg_gen_rand_cancel")
+            .button()
+            .on("click", function() {
+                $("#dlg_gen_rand").dialog("close");
+            });
+    }
 
     $dlg.dialog({
         width: "auto",
         modal: true
     });
-
-    $("#dlg_gen_rand_idea").text(Utils.generate_password(opts));
 };
 
 /**
@@ -407,7 +426,7 @@ Squirrel.search = function(s) {
                 .attr("href", "#" + Utils.fragmentify(path.join(":")))
                 .addClass("search_result")
                 .text(path.join("/"))
-                .click(function() {
+                .on("click", function() {
                     $("#treeroot")
                         .bonsai("collapseAll")
                         .bonsai("expand", $li);
@@ -432,35 +451,37 @@ Squirrel.context_menu_choice = function(e, ui) {
 
     switch (ui.cmd) {
     case "copy":
-        //console.debug("Copying to clipboard");
+        if (DEBUG) console.debug("Copying to clipboard");
         ZeroClipboard.setData($div.children(".value").text());
         break;
 
     case "rename":
-        //console.debug("Renaming");
-	Squirrel.in_place_edit($div.children(".key"), "R");
+        if (DEBUG) console.debug("Renaming");
+	Squirrel.edit_node($li, "key");
         break;
 
     case "edit":
-        //console.debug("Editing");
-	Squirrel.in_place_edit($div.children(".value"), "E");
+        if (DEBUG) console.debug("Editing");
+	Squirrel.edit_node($li, "value");
         break;
 
     case "add_value":
-        //console.debug("Adding value");
-        Squirrel.add_child_node($div, TX.tx("New value"), TX.tx("None"));
+        if (DEBUG) console.debug("Adding value");
+        Squirrel.add_child_node($li, TX.tx("A new value"), TX.tx("None"));
         break;
 
     case "add_subtree":
-        //console.debug("Adding subtree");
-        Squirrel.add_child_node($div, TX.tx("New sub-tree"));
+        if (DEBUG) console.debug("Adding subtree");
+        Squirrel.add_child_node($li, TX.tx("A new sub-tree"));
         break;
 
     case "randomise":
-        Squirrel.make_random($div);
+        if (DEBUG) console.debug("Randomising");
+        Squirrel.make_random_dialog($li);
         break;
 
     case "delete":
+        if (DEBUG) console.debug("Deleting");
         Squirrel.confirm_delete($div);
         break;
 
@@ -499,9 +520,9 @@ Squirrel.update_save = function() {
 Squirrel.play_action = function(e, chain) {
     "use strict";
 
-    //console.debug("Playing " + Squirrel.stringify_action(e));
+    //if (DEBUG) console.debug("Playing " + Squirrel.stringify_action(e));
 
-    var $li, $div, key, $parent_ul,
+    var $node, $div, key, $container,
     p = e.path, inserted;
 
     switch (e.type) {
@@ -509,10 +530,13 @@ Squirrel.play_action = function(e, chain) {
     case "N": // Construct new node
         p = p.slice();
         key = p.pop();
-        $li = Squirrel.nodes[p.join(Squirrel.PATHSEP)]; // get the parent
-        $parent_ul = $li.children("ul").first();
 
-        $li = $("<li></li>")
+        // Get the container
+        $node = Squirrel.nodes[p.join(Squirrel.PATHSEP)];
+        $container = $node.children("ul").first();
+
+        // Create the new node
+        $node = $("<li></li>")
             .addClass("node modified")
             .data("key", key)
             .attr("name", key)
@@ -520,13 +544,12 @@ Squirrel.play_action = function(e, chain) {
 
         $div = $("<div></div>")
             .addClass("node_div")
-            .appendTo($li);
+            .appendTo($node);
 
         $("<span></span>")
             .addClass("key")
             .dblclick(function() {
-                Squirrel.in_place_edit(
-                    $div.children(".key"), "R");
+                Squirrel.edit_node($node, "key");
             })
             .text(key)
             .appendTo($div);
@@ -539,52 +562,49 @@ Squirrel.play_action = function(e, chain) {
                     $("<span></span>")
                         .addClass("value")
                         .dblclick(function() {
-                            Squirrel.in_place_edit(
-                                $div.children(".value"), "E");
+                            Squirrel.edit_node($node, "value");
                         })
                         .text(e.data));
         } else {
             $div.addClass("treecollection");
             $("<ul></ul>")
                 .addClass("node_ul")
-                .appendTo($li);
+                .appendTo($node);
         }
 
-        // Insert-sort into the $parent_ul
+        // Insert-sort into the $container
         inserted = false;
         key = key.toLowerCase();
-        $parent_ul.children("li.node").each(function() {
+        $container.children("li.node").each(function() {
             if ($(this).data("key").toLowerCase() > key) {
-                $li.insertBefore($(this));
+                $node.insertBefore($(this));
                 inserted = true;
                 return false;
             }
         });
         if (!inserted)
-            $parent_ul.append($li);
+            $container.append($node);
 
-        Squirrel.get_path($li); // add to cache
+        Squirrel.get_path($node); // add to cache
 
         // Add anchor
         $("<a></a>")
             .addClass("node_fragment")
-            .attr("name", Utils.fragmentify(Squirrel.get_path($li).join(":")))
-            .prependTo($li);
+            .attr("name", Utils.fragmentify(Squirrel.get_path($node).join(":")))
+            .prependTo($node);
 
-        // Enable taphold events
-        $div
-            .linger()
-            .click(function() {
-            });
+        // Enable taphold events. These will be intercepted by the
+        // context menu.
+        $div.linger();
         break;
 
     case "R": // Rename
         // Detach the li from the DOM
-        $li = Squirrel.nodes[p.join(Squirrel.PATHSEP)];
-        Squirrel.demap($li);
+        $node = Squirrel.nodes[p.join(Squirrel.PATHSEP)];
+        Squirrel.demap($node);
 
-        $parent_ul = $li.closest("ul");
-        $li
+        $container = $node.closest("ul");
+        $node
             .detach()
             .data("key", e.data)
             .attr("title", Squirrel.last_mod(e.time))
@@ -595,35 +615,35 @@ Squirrel.play_action = function(e, chain) {
         // Re-insert the element in it's sorted position
         inserted = false;
         key = e.data.toLowerCase();
-        $parent_ul.children("li.node").each(function() {
+        $container.children("li.node").each(function() {
             if ($(this).data("key").toLowerCase() > key) {
-                $li.insertBefore($(this));
+                $node.insertBefore($(this));
                 inserted = true;
                 return false;
             }
         });
         if (!inserted)
-            $parent_ul.append($li);
+            $container.append($node);
 
         // Reset the path of all subnodes. We have to do this so
         // they get added to Squirrel.nodes. This will also update
-        // the mapping for $li.
-        $li
+        // the mapping for $node.
+        $node
             .find(".node")
             .each(function() {
                 Squirrel.get_path($(this));
             });
 
         // refresh data-path and update get fragment ID
-        $li .addClass("modified")
+        $node .addClass("modified")
             .children("a.node_fragment")
-            .attr("name", Utils.fragmentify(Squirrel.get_path($li).join(":")))
+            .attr("name", Utils.fragmentify(Squirrel.get_path($node).join(":")))
             .scroll_into_view();
         break;
 
     case "E": // Change data
-        $li = Squirrel.nodes[p.join(Squirrel.PATHSEP)];
-        $li .attr("title", Squirrel.last_mod(e.time))
+        $node = Squirrel.nodes[p.join(Squirrel.PATHSEP)];
+        $node .attr("title", Squirrel.last_mod(e.time))
             .addClass("modified")
             .children(".node_div")
             .children("span.value")
@@ -631,15 +651,15 @@ Squirrel.play_action = function(e, chain) {
         break;
 
     case "D": // Delete node
-        $li = Squirrel.nodes[p.join(Squirrel.PATHSEP)];
-        Squirrel.demap($li);
+        $node = Squirrel.nodes[p.join(Squirrel.PATHSEP)];
+        Squirrel.demap($node);
 
-        $li .parents("li.node")
+        $node .parents("li.node")
             .first()
             .addClass("modified")
             .attr("title", Squirrel.last_mod(e.time));
 
-        $li.remove();
+        $node.remove();
 
         break;
 
@@ -651,7 +671,7 @@ Squirrel.play_action = function(e, chain) {
 
     if (typeof chain !== "undefined") {
         Squirrel.chain(function() {
-            chain($li);
+            chain($node);
         });
     }
 };
@@ -661,7 +681,7 @@ Squirrel.get_updates_from_cloud = function(cloard, chain) {
 
     // This will get triggered whenever both hoards are
     // successfully loaded.
-    console.debug("Merging from cloud hoard");
+    if (DEBUG) console.debug("Merging from cloud hoard");
     Squirrel.client.hoard.merge_from_cloud(
         cloard,
         Squirrel.play_action,
@@ -824,7 +844,7 @@ Squirrel.save_hoards = function() {
             Squirrel.cloud.status = "is loaded";
         } catch (e) {
             // We'll get here if decryption failed....
-            console.debug("Cloud hoard JSON parse failed: " + e);
+            if (DEBUG) console.debug("Cloud hoard JSON parse failed: " + e);
             $messy.append(
                 "<div class='error'>"
                     + TX.tx("$1 hoard can't be read for update",
@@ -852,7 +872,7 @@ Squirrel.save_hoards = function() {
     // Action on the cloud store read failing
     cloud_store_read_failed = function(e) {
         if (e === AbstractStore.NODATA) {
-            console.debug(this.identifier() + " contains NODATA");
+            if (DEBUG) console.debug(this.identifier() + " contains NODATA");
             Squirrel.cloud.status = "is empty";
             construct_new_cloud();
         } else {
@@ -905,15 +925,15 @@ Squirrel.load_cloud_store = function() {
     "use strict";
 
     if (Squirrel.cloud.store) {
-        console.debug("Reading cloud " + Squirrel.cloud.store.identifier());
+        if (DEBUG) console.debug("Reading cloud " + Squirrel.cloud.store.identifier());
         Squirrel.cloud.store.read(
             function(data) {
                 var hoard;
-                console.debug(this.identifier() + " is ready");
+                if (DEBUG) console.debug(this.identifier() + " is ready");
                 try {
                     hoard = JSON.parse(data);
                 } catch (e) {
-                    console.debug("Client hoard JSON parse failed: " + e);
+                    if (DEBUG) console.debug("Client hoard JSON parse failed: " + e);
                     Squirrel.squeak(
                         TX.tx("$1 hoard can't be read. Are you sure you have the correct password?",
                         this.identifier()));
@@ -927,7 +947,7 @@ Squirrel.load_cloud_store = function() {
             },
             function(e) {
                 if (e === AbstractStore.NODATA) {
-                    console.debug(this.identifier() + " contains NODATA");
+                    if (DEBUG) console.debug(this.identifier() + " contains NODATA");
                     Squirrel.cloud.status = "is empty";
                 } else {
                     Squirrel.squeak(TX.tx("$1 store error: $2",
@@ -956,7 +976,7 @@ Squirrel.load_client_store = function() {
                 Squirrel.client.status = "is corrupt";
             }
 
-            console.debug("Reconstructing UI tree from cache");
+            if (DEBUG) console.debug("Reconstructing UI tree from cache");
             Squirrel.client.hoard.reconstruct_actions(
                 Squirrel.play_action,
                 function() { // on complete
@@ -966,13 +986,13 @@ Squirrel.load_client_store = function() {
                     // Mark all the nodes in the pending actions list as
                     // modified. If a node isn't found, back up the tree
                     // until we find a parent that does exist and mark it.
-                    var as = Squirrel.client.hoard.actions, i, p, $li;
+                    var as = Squirrel.client.hoard.actions, i, p, $node;
                     for (i = 0; i < as.length; i++) {
                         p = as[i].path.slice();
                         while (p.length > 0) {
-                            $li = Squirrel.nodes[p.join(Squirrel.PATHSEP)];
-                            if ($li) {
-                                $li.addClass("modified");
+                            $node = Squirrel.nodes[p.join(Squirrel.PATHSEP)];
+                            if ($node) {
+                                $node.addClass("modified");
                                 break;
                             }
                             p.pop();
@@ -984,7 +1004,7 @@ Squirrel.load_client_store = function() {
         function(e) {
             if (e === AbstractStore.NODATA) {
                 Squirrel.client.hoard = new Hoard();
-                console.debug(this.identifier() + " contains NODATA");
+                if (DEBUG) console.debug(this.identifier() + " contains NODATA");
                 Squirrel.client.status = "is empty";
                 Squirrel.chain(Squirrel.load_cloud_store);
             } else {
@@ -1005,12 +1025,12 @@ Squirrel.init_ui = function() {
             text: false
         })
         .hide()
-        .click(Squirrel.save_hoards);
+        .on("click", Squirrel.save_hoards);
 
     $("#options_button")
         .button()
         .hide()
-        .click(Squirrel.options_dialog);
+        .on("click", Squirrel.options_dialog);
 
     Squirrel.nodes[""] = $("#tree");
 
@@ -1024,12 +1044,12 @@ Squirrel.init_ui = function() {
             },
             text: false
         })
-        .click(function() {
-            Squirrel.add_child_node($("#tree"), "New site");
+        .on("click", function() {
+            Squirrel.add_child_node($("#tree"), "A new site");
         });
 
     $("#search")
-        .change(function(/*evt*/) {
+        .on("change", function(/*evt*/) {
             Squirrel.search($(this).val());
         });
 };
@@ -1037,34 +1057,39 @@ Squirrel.init_ui = function() {
 Squirrel.change_password_dialog = function() {
     "use strict";
 
-    $("#dlg_chpw_show").change(function() {
-        if ($("#dlg_chpw_show").prop("checked")) {
-            $("#dlg_chpw_pass").attr("type", "text");
-            $("#dlg_chpw_conf").attr("type", "text");
-        } else {
-            $("#dlg_chpw_pass").attr("type", "password");
-            $("#dlg_chpw_conf").attr("type", "password");
-        }
-    });
+    var $dlg = $("#dlg_chpw");
 
-    $("#dlg_chpw_set").button()
-        .reon("click", function() {
-            var p = $("#dlg_chpw_pass").val(),
-            c = $("#dlg_chpw_conf").val();
-            if (p !== c)
-                Squirrel.squeak("Passwords do not match");
-            else {
-                // for TX: TX.tx("has a new password")
-                Squirrel.client.store.pass(p);
-                Squirrel.client.status = "has a new password";
-                Squirrel.cloud.store.pass(p);
-                Squirrel.cloud.status = "has a new password";
-                $("#dlg_chpw").dialog("close");
-                Squirrel.sometime("update_save");
-            }
-        });
+    if (typeof $dlg.dialog("instance") === "undefined") {
+        $("#dlg_chpw_show")
+            .on("change", function() {
+                if ($("#dlg_chpw_show").prop("checked")) {
+                    $("#dlg_chpw_pass").attr("type", "text");
+                    $("#dlg_chpw_conf").attr("type", "text");
+                } else {
+                    $("#dlg_chpw_pass").attr("type", "password");
+                    $("#dlg_chpw_conf").attr("type", "password");
+                }
+            });
 
-    $("#dlg_chpw").dialog({
+        $("#dlg_chpw_set").button()
+            .on("click", function() {
+                var p = $("#dlg_chpw_pass").val(),
+                c = $("#dlg_chpw_conf").val();
+                if (p !== c)
+                    Squirrel.squeak("Passwords do not match");
+                else {
+                    // for TX: TX.tx("has a new password")
+                    Squirrel.client.store.pass(p);
+                    Squirrel.client.status = "has a new password";
+                    Squirrel.cloud.store.pass(p);
+                    Squirrel.cloud.status = "has a new password";
+                    $("#dlg_chpw").dialog("close");
+                    Squirrel.sometime("update_save");
+                }
+            });
+    }
+
+    $dlg.dialog({
         modal: true,
         width: "auto"
     });
@@ -1074,17 +1099,19 @@ Squirrel.options_dialog = function() {
     "use strict";
 
     var $dlg = $("#dlg_options");
-    $("#dlg_options_autosave")
-        .prop("checked", Squirrel.client.hoard.options.autosave)
-        .reon("change", function() {
-            Squirrel.client.hoard.options.autosave =
-                $("#dlg_options_autosave").is(":checked");
-            Squirrel.sometime("update_save");
-        });
-    $("#dlg_options_chpw")
-        .button()
-        .reon("click", Squirrel.change_password_dialog);
 
+    if (typeof $dlg.dialog("instance") == "undefined") {
+        $("#dlg_options_autosave")
+            .prop("checked", Squirrel.client.hoard.options.autosave)
+            .on("change", function() {
+                Squirrel.client.hoard.options.autosave =
+                    $("#dlg_options_autosave").is(":checked");
+                Squirrel.sometime("update_save");
+            });
+        $("#dlg_options_chpw")
+            .button()
+            .on("click", Squirrel.change_password_dialog);
+    }
     $dlg.dialog({
         modal: true,
         width: "auto"
@@ -1094,36 +1121,41 @@ Squirrel.options_dialog = function() {
 Squirrel.login_dialog = function(ok, fail, uReq, pReq) {
     "use strict";
 
-    var $dlg = $("#dlg_login"),
-    self = this,
+    var $dlg = $("#dlg_login"), self, sign_in, $uReq, $pReq;
+
+    // Should never be called more than once
+    if (DEBUG && typeof $dlg.dialog("instance") !== "undefined")
+        debugger;
+
+    self = this;
     sign_in = function(/*evt*/) {
         $dlg.dialog("close");
         ok.call(self,
                 uReq ? $("#dlg_login_user").val() : undefined,
                 pReq ? $("#dlg_login_pass").val() : undefined);
-    },
-    $uReq = $("#dlg_login_uReq").toggle(uReq).find("input"),
+    };
+    $uReq = $("#dlg_login_uReq").toggle(uReq).find("input");
     $pReq = $("#dlg_login_pReq").toggle(pReq).find("input");
-
+        
     if (uReq && pReq) {
-         $uReq.reon("change", function() {
-             $pReq.focus();
-         });
-         $pReq.reon("change", sign_in);
+        $uReq.on("change", function() {
+            $pReq.focus();
+        });
+        $pReq.on("change", sign_in);
     }
     else if (uReq)
-        $uReq.reon("change", sign_in);
+        $uReq.on("change", sign_in);
     else if (pReq) {
         $("#dlg_login_foruser")
             .toggle(this.user() !== null)
             .text(this.user() || "");
-        $pReq.reon("change", sign_in);
+        $pReq.on("change", sign_in);
     }
 
     $("dlg_login_signin")
         .button()
-        .reon("click", sign_in);
-
+        .on("click", sign_in);
+    
     $dlg.dialog({
         modal: true,
         width: "auto"
@@ -1139,7 +1171,7 @@ Squirrel.init_client_store = function() {
 
         dataset: "Local Hoard",
         ok: function() {
-            console.debug(this.identifier() + " store is ready");
+            if (DEBUG) console.debug(this.identifier() + " store is ready");
             $("#whoami").text(this.user());
             Squirrel.client.store = this;
             $(".unauthenticated").text(TX.tx("Loading..."));
@@ -1169,7 +1201,7 @@ Squirrel.init_client_store = function() {
                         // The cloud store loaded but didn't require a
                         // password. SMELL: as they are both Encrypted,
                         // this should never happen.
-                        console.debug("I didn't expect to have to prompt for a client password");
+                        if (DEBUG) console.debug("I didn't expect to have to prompt for a client password");
                         $("#dlg_login_user").val(
                             Squirrel.cloud.store.user());
                         // Fall through to prompt for password
@@ -1212,13 +1244,13 @@ Squirrel.init_cloud_store = function() {
     };
 
     if (typeof DropboxStore !== "undefined") {
-        console.debug("Using Dropbox for the Cloud");
+        if (DEBUG) console.debug("Using Dropbox for the Cloud");
         params.engine = DropboxStore; // Uncomment the one you want to use
     } else if (typeof GoogleDriveStore !== "undefined") {
-        console.debug("Using Google Drive for the Cloud");
+        if (DEBUG) console.debug("Using Google Drive for the Cloud");
         params.engine = GoogleDriveStore;
     } else {
-        console.debug("Using LocalStorage for the Cloud");
+        if (DEBUG) console.debug("Using LocalStorage for the Cloud");
         params.engine = LocalStorageStore;
         params.uReq = true;
     }

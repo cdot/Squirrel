@@ -4,6 +4,15 @@ body {
     color: white;
 }
 
+a {
+    color: yellow;
+    text-decoration: none;
+}
+
+a:hover {
+    font-weight: bold;
+}
+
 .squirrel-icon-add-site {
     background-image:url('images/squirrel-icons.png') !important;
     background-position:0 0px;
@@ -123,3 +132,6 @@ button.icon_button {
     margin-bottom: 2em;
 }
 
+#copyright {
+    margin-top: 1em;
+}

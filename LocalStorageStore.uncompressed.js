@@ -1,3 +1,5 @@
+/* Copyright (C) 2015 Crawford Currie http://c-dot.co.uk / MIT */
+
 /**
  * A store engine using HTML5 localStorage.
  * @implements AbstractStore
@@ -29,7 +31,6 @@ LocalStorageStore.prototype.read = function(ok, fail) {
         return;
     }
     if (data === null) {
-        //console.debug(this.dataset + "." + this.user() + " is null");
         fail.call(this, AbstractStore.NODATA);
     } else {
         ok.call(this, data);

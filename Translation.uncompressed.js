@@ -11,7 +11,7 @@ var TX = {
         "use strict";
 
         if (/^en(\b|$)/i.test(TX.lingo)) {
-            console.debug("Using language 'en'");
+            if (DEBUG) console.debug("Using language 'en'");
             tx_ready();
             return;
         }
@@ -27,13 +27,13 @@ var TX = {
                     $(".TX_text").each(function() {
                         $(this).text(TX.tx($(this).text()));
                     });
-                    console.debug("Using language '" + TX.lingo + "'");
+                    if (DEBUG) console.debug("Using language '" + TX.lingo + "'");
                     tx_ready();
                 },
                 error: function(a, b, c) {
                     var m = /^(.+)-.+/.exec(TX.lingo);
-                    console.log("Failed to load " + TX.lingo + ".json: "
-                                + c.message);
+                    if (DEBUG) console.debug(
+                        "Failed to load " + TX.lingo + ".json: " + c.message);
                     if (m)
                         TX.lingo = m[1];
                     else

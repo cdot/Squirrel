@@ -10,10 +10,9 @@
     <script type="text/javascript" src="libs/jquery-ui.uncompressed.js"></script>
     <script type="text/javascript" src="libs/jquery-bonsai.uncompressed.js"></script>
     <script type="text/javascript" src="libs/jquery-ui-contextmenu.uncompressed.js"></script>
-    <script type="text/javascript" src="libs/ZeroClipboard.min.js"></script>
+    <script type="text/javascript" src="libs/ZeroClipboard.uncompressed.js"></script>
     <script type="text/javascript" src="libs/aes.uncompressed.js"></script>
     <script type="text/javascript" src="libs/aes-ctr.uncompressed.js"></script>
-    <script type="text/javascript" src="Assert.uncompressed.js"></script>
     <script type="text/javascript" src="Translation.uncompressed.js"></script>
     <script type="text/javascript" src="Utils.uncompressed.js"></script>
     <script type="text/javascript" src="AbstractStore.uncompressed.js"></script>
@@ -58,6 +57,9 @@
         </div>
       </div>
     </div>
+    <p id="copyright">
+    Copyright &copy; 2015 Crawford Currie <a href="http://c-dot.co.uk">http://c-dot.co.uk</a>
+    </p>
 
     <!-- Dialogs -->
     <div id="dlg_login" class="dialog TX_title" title="Enter login information">
@@ -114,8 +116,8 @@
         <span id="dlg_delconf_coll" class="TX_text"> and everything under it?</span>
       </p>
       <div>
-        <button id="dlg_delconf_delete" class="TX_text">Delete</button>
         <button id="dlg_delconf_cancel" class="TX_text">Cancel</button>
+        <button id="dlg_delconf_delete" class="TX_text">Delete</button>
       </div>
     </div>
     

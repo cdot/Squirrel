@@ -1,6 +1,15 @@
+/* Copyright (C) 2015 Crawford Currie http://c-dot.co.uk / MIT */
+
 /**
  * Utilities and plugins used by Squirrel
  */
+
+/*
+ * Symbol defined to be false when UglifyJS minimises code modules, causing
+ * debug code to become unreachable. DEBUG cannot be used in this file, as
+ * this declaration overrides the UglifyJS --define
+ */
+const DEBUG = true;
 
 /**
  * Plugin to generate taphold events on platforms that don't
