@@ -63,13 +63,14 @@ Squirrel was written by Crawford Currie http://c-dot.co.uk, and uses the followi
 - ZeroClipboard, Copyright (c) 2009-2014 Jon Rohan, James M. Greene, http://zeroclipboard.org/ 
 - Dropbox API, Copyright (c) 2012 Dropbox, Inc., http://www.dropbox.com
 - Google Drive API, 
+
 ## TODOs
 
 Undo (actions are not currently reversible)
 
 R -> R
 E -> E
-D -> N
+D -> N # can't undo?
 N -> D
 
 ## Possible enhancements:

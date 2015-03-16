@@ -50,7 +50,8 @@
         <strong class="TX_text">Sites</strong>
         <button id="add_root_child" class="icon_button TX_title" title="Add new site">
         </button>
-        <button id="save_button" class="icon_button">Save</button>
+        <button id="undo_button" class="icon_button TX_title TX_text" title="Undo last change">Undo</button>
+        <button id="save_button" class="icon_button TX_text">Save</button>
         <div id="tree" name="/" class="node">
           <ul id="treeroot">
           </ul>

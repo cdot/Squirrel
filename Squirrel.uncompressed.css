@@ -58,6 +58,11 @@ a:hover {
     background-position:0 -128px;
 }
 
+.squirrel-icon-undo {
+    background-image:url('images/squirrel-icons.png') !important;
+    background-position:0 -144px;
+}
+
 .logo {
     float: left;
     margin: 1em;
@@ -76,7 +81,7 @@ a:hover {
 }
 
 .node_div:hover {
-    background: #44372c url("images/ui-bg_gloss-wave_30_44372c_500x100.png") 50% 50% repeat-x;
+    background: #44372c url("libs/images/ui-bg_gloss-wave_30_44372c_500x100.png") 50% 50% repeat-x;
     color: #baec7e;
 }
 

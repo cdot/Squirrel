@@ -110,8 +110,13 @@ $.fn.edit_in_place = function(opts) {
             })
 
             .keydown(function(e) { // Escape means cancel
-                if (e.keyCode === 27)
+                if (e.keyCode === 27
+                    || (e.keyCode === 13
+                        && $(this).val() === $self.text())) {
                     blurb();
+                    return false;
+                } else
+                    return true;
             })
 
             .blur(blurb)

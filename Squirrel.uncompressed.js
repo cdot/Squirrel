@@ -13,14 +13,19 @@ var Squirrel = {                     // Namespace
         store: null,                 // Temporary memory used during load
         status: "is empty"
     },
+
     PATHSEP: String.fromCharCode(1), // separator used in Path->node mapping
     nodes: {},                       // Path->node mapping
+
     last_yield: Date.now(),
     waiting: {},
     // By setting the wait_timeout to a non-null value we block
     // the wait queue until it is set to null and Squirrel.sometime is called
     // This lets us complete the load without too much noise
-    wait_timeout: true
+    wait_timeout: true,
+
+    // undo stack, this session only
+    undo_stack: []
 };
 
 // Generate an alert dialog
@@ -137,6 +142,31 @@ Squirrel.demap = function($node) {
 };
 
 /**
+ * Undo the most recent action
+ */
+Squirrel.undo = function() {
+    if (DEBUG && Squirrel.undo_stack.length == 0) throw "Whoops";
+    var a = Squirrel.undo_stack.pop();
+    a.time = Date.now();
+    if (DEBUG) console.debug("Undo " + Hoard.stringify_action(a));
+    Squirrel.client.hoard.play_action(
+        a,
+        function(e) {
+            Squirrel.play_action(
+                e,
+                function() {
+                    // If there are no undos, there can be no modifications.
+                    // The hoard status will not be changed, though, so a
+                    // save may still be required.
+                    if (Squirrel.undo_stack.length == 0)
+                        $(".modified").removeClass("modified");
+                    Squirrel.sometime("update_save");
+                    Squirrel.sometime("update_tree");
+                });
+        });
+};
+
+/**
  * Generate a message for the last modified time, used in the title of nodes.
  */
 Squirrel.last_mod = function(time) {
@@ -153,9 +183,12 @@ Squirrel.last_mod = function(time) {
 Squirrel.confirm_delete = function($node) {
     "use strict";
 
-    var $dlg = $("#dlg_delconf");
+    var $dlg = $("#dlg_delconf"),
+    p = Squirrel.get_path($node);
 
-    $("#dlg_delconf_message").text(Squirrel.get_path($node).join("/"));
+    $dlg.data("path", p);
+
+    $("#dlg_delconf_message").text(p.join("/"));
     $("#dlg_delconf_coll").toggle($node.hasClass("treecollection"));
 
     if (typeof $dlg.dialog("instance") === "undefined") {
@@ -167,7 +200,7 @@ Squirrel.confirm_delete = function($node) {
                 Squirrel.client.hoard.play_action(
                     {
                         type: "D",
-                        path: Squirrel.get_path($dlg.data("node"))
+                        path: $dlg.data("path")
                     },
                     function(e) {
                         Squirrel.play_action(
@@ -175,7 +208,7 @@ Squirrel.confirm_delete = function($node) {
                             function() {
                                 Squirrel.sometime("update_save");
                                 Squirrel.sometime("update_tree");
-                            });
+                            }, true);
                     });
             });
 
@@ -186,7 +219,6 @@ Squirrel.confirm_delete = function($node) {
             });
     }
 
-    $dlg.data("node", $node);
     $dlg.dialog({
         modal: true,
         width: "auto"
@@ -310,9 +342,15 @@ Squirrel.edit_node = function($node, what) {
                         e,
                         function($newnode) {
                             $newnode.scroll_into_view();
+                            // There's a problem with bonsai when you create
+                            // new nodes at the end; it doesn't let you close
+                            // the new nodes. However this clears after a
+                            // save and is a minor niggle only. Classing them
+                            // as expanded solves it well enough.
+                            $newnode.addClass("expanded");
                             Squirrel.sometime("update_save");
                             Squirrel.sometime("update_tree");
-                        });
+                        }, true);
                 });
         }
     });
@@ -338,10 +376,10 @@ Squirrel.add_child_node = function($node, title, value) {
         function(e) {
             Squirrel.play_action(e, function($newnode) {
                 $newnode.scroll_into_view();
-                $newnode.closest("ul")
+                $newnode.parents("ul")
                     .bonsai("expand", $node);
                 Squirrel.edit_node($newnode, "key");
-            });
+            }, true);
         });
 };
 
@@ -381,7 +419,7 @@ Squirrel.make_random_dialog = function($node) {
                             e,
                             function() {
                                 Squirrel.sometime("update_save");
-                            });
+                            }, true);
                     });
             });
 
@@ -446,43 +484,43 @@ Squirrel.search = function(s) {
 Squirrel.context_menu_choice = function(e, ui) {
     "use strict";
 
-    var $li = ui.target.parents("li").first();
-    var $div = $li.children(".node_div");
+    var $node = ui.target.closest("li");
 
     switch (ui.cmd) {
     case "copy":
         if (DEBUG) console.debug("Copying to clipboard");
-        ZeroClipboard.setData($div.children(".value").text());
+        ZeroClipboard.setData(
+            $node.children(".node_div").children(".value").text());
         break;
 
     case "rename":
         if (DEBUG) console.debug("Renaming");
-	Squirrel.edit_node($li, "key");
+	Squirrel.edit_node($node, "key");
         break;
 
     case "edit":
         if (DEBUG) console.debug("Editing");
-	Squirrel.edit_node($li, "value");
+	Squirrel.edit_node($node, "value");
         break;
 
     case "add_value":
         if (DEBUG) console.debug("Adding value");
-        Squirrel.add_child_node($li, TX.tx("A new value"), TX.tx("None"));
+        Squirrel.add_child_node($node, TX.tx("A new value"), TX.tx("None"));
         break;
 
     case "add_subtree":
         if (DEBUG) console.debug("Adding subtree");
-        Squirrel.add_child_node($li, TX.tx("A new sub-tree"));
+        Squirrel.add_child_node($node, TX.tx("A new sub-tree"));
         break;
 
     case "randomise":
         if (DEBUG) console.debug("Randomising");
-        Squirrel.make_random_dialog($li);
+        Squirrel.make_random_dialog($node);
         break;
 
     case "delete":
         if (DEBUG) console.debug("Deleting");
-        Squirrel.confirm_delete($div);
+        Squirrel.confirm_delete($node);
         break;
 
     default:
@@ -496,6 +534,8 @@ Squirrel.context_menu_choice = function(e, ui) {
 Squirrel.update_save = function() {
     "use strict";
 
+    $("#undo_button").toggle(Squirrel.undo_stack.length !== 0);
+
     var us = Squirrel.unsaved_changes(3);
     if (us !== null) {
         if (Squirrel.client.hoard.options.autosave) {
@@ -506,8 +546,9 @@ Squirrel.update_save = function() {
                 TX.tx("Save is required because: ") + us);
             $("#save_button").show();
         }
-    } else
+    } else {
         $("#save_button").hide();
+    }
 };
 
 /**
@@ -516,11 +557,13 @@ Squirrel.update_save = function() {
  * @param e action to play
  * @param chain function to call once the action has been played. May
  * be undefined. Passed the modified node.
+ * @param undoable set true if the inverse of this action is to be added
+ * to the undo chain.
  */
-Squirrel.play_action = function(e, chain) {
+Squirrel.play_action = function(e, chain, undoable) {
     "use strict";
 
-    //if (DEBUG) console.debug("Playing " + Squirrel.stringify_action(e));
+    //if (DEBUG) console.debug("Playing " + Hoard.stringify_action(e));
 
     var $node, $div, key, $container,
     p = e.path, inserted;
@@ -544,11 +587,34 @@ Squirrel.play_action = function(e, chain) {
 
         $div = $("<div></div>")
             .addClass("node_div")
+        /* Enable taphold events. These will be intercepted by the
+           context menu. */
+            .linger()
             .appendTo($node);
 
         $("<span></span>")
             .addClass("key")
+            .on("click", function(e) {
+                // Prevent click from bubbling, only obey double click
+                // Not perfect, but good enough.
+                var $span = $(this);
+                $span.data(
+                    "click_timer",
+                    window.setTimeout(
+                        function() {
+                            if ($span.data("click_timer") !== null) {
+                                $span.data("click_timer", null);
+                                // Same as the node_div handler below
+                                $span.closest("ul").bonsai(
+                                    $node.hasClass("expanded")
+                                        ? "collapse" : "expand", $node);
+                            }
+                        },
+                        250));
+                return false;
+            })
             .dblclick(function() {
+                $(this).data("click_timer", null);
                 Squirrel.edit_node($node, "key");
             })
             .text(key)
@@ -566,7 +632,11 @@ Squirrel.play_action = function(e, chain) {
                         })
                         .text(e.data));
         } else {
-            $div.addClass("treecollection");
+            $div.addClass("treecollection")
+            .on("click", function(e) {
+                $(this).closest("ul").bonsai(
+                    $node.hasClass("expanded") ? "collapse" : "expand", $node);
+            });
             $("<ul></ul>")
                 .addClass("node_ul")
                 .appendTo($node);
@@ -585,17 +655,21 @@ Squirrel.play_action = function(e, chain) {
         if (!inserted)
             $container.append($node);
 
-        Squirrel.get_path($node); // add to cache
+        p = Squirrel.get_path($node); // add to cache
+
+        if (undoable) {
+            Squirrel.undo_stack.push({
+                type: "D",
+                path: p
+            });
+        }
 
         // Add anchor
         $("<a></a>")
             .addClass("node_fragment")
-            .attr("name", Utils.fragmentify(Squirrel.get_path($node).join(":")))
+            .attr("name", Utils.fragmentify(p.join(":")))
             .prependTo($node);
 
-        // Enable taphold events. These will be intercepted by the
-        // context menu.
-        $div.linger();
         break;
 
     case "R": // Rename
@@ -634,25 +708,60 @@ Squirrel.play_action = function(e, chain) {
                 Squirrel.get_path($(this));
             });
 
-        // refresh data-path and update get fragment ID
+        // refresh data-path and update fragment ID
+        key = p.pop(); // record old node name
+        p = Squirrel.get_path($node); // get new path
         $node .addClass("modified")
             .children("a.node_fragment")
-            .attr("name", Utils.fragmentify(Squirrel.get_path($node).join(":")))
+            .attr("name", Utils.fragmentify(p.join(":")))
             .scroll_into_view();
+
+        if (undoable) {
+            Squirrel.undo_stack.push({
+                type: "R",
+                path: p,
+                data: key
+            });
+        }
+
         break;
 
     case "E": // Change data
         $node = Squirrel.nodes[p.join(Squirrel.PATHSEP)];
+
+        if (undoable) {
+            Squirrel.undo_stack.push({
+                type: "E",
+                path: p,
+                data: $node.children(".node_div")
+                    .children("span.value")
+                    .text()
+            });
+        }
+
         $node .attr("title", Squirrel.last_mod(e.time))
             .addClass("modified")
             .children(".node_div")
             .children("span.value")
             .text(e.data);
+
         break;
 
     case "D": // Delete node
         $node = Squirrel.nodes[p.join(Squirrel.PATHSEP)];
         Squirrel.demap($node);
+
+        if (undoable) {
+            // Not enough - all the subtree would need to be
+            // regenerated
+            Squirrel.undo_stack.push({
+                type: "N",
+                path: p,
+                data: $node.children(".node_div")
+                    .children("span.value")
+                    .text()
+            });
+        }
 
         $node .parents("li.node")
             .first()
@@ -1026,6 +1135,16 @@ Squirrel.init_ui = function() {
         })
         .hide()
         .on("click", Squirrel.save_hoards);
+
+    $("#undo_button")
+        .button({
+            icons: {
+                primary: "squirrel-icon-undo"
+            },
+            text: false
+        })
+        .hide()
+        .on("click", Squirrel.undo);
 
     $("#options_button")
         .button()
