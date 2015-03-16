@@ -208,3 +208,19 @@ Utils.fragmentify = function(fid) {
         return "_" + m.charCodeAt(0);
     });
 };
+
+/**
+ * Read a file from disc
+ */
+Utils.read_file = function(file, ok, fail) {
+    var store = this;
+    var reader = new FileReader();
+    reader.onload = function(evt) {
+        ok(reader.result);
+    };
+    reader.onerror = function() {
+	fail(file.name + " read failed");
+    };
+    reader.onabort = reader.onerror;
+    reader.readAsBinaryString(file);
+};

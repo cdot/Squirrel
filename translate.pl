@@ -13,7 +13,10 @@ while (<>) {
         $strings{$2} = 1;
     }
     while ($_ =~ s/\bTX_text\b.*?>(.*?)<//) {
-        $strings{$1} = 1;
+        my $s = $1;
+        $s =~ s/\s+/ /;
+        $s =~ s/^\s//; $s =~ s/\s^//;
+        $strings{$s} = 1;
     }
 }
 

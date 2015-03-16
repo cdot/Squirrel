@@ -181,6 +181,14 @@ Hoard.prototype.play_action = function(e, listener, no_push) {
     return null;
 };
 
+Hoard.prototype.load_csv = function(data, listener) {
+    var lines = data.split(/\r?\n/), i;
+    for (i = 0; i < lines.length; i++) {
+        lines[i] = lines[i].replace(/"(.*)"/, "$1");
+        var path = lines[i].split(/",\s*"/);
+    }
+};
+
 /**
  * Simplify the action stream in the hoard by eliminating all but "N" actions.
  * Set node change times according to the most recent change.

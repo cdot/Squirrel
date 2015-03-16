@@ -123,32 +123,45 @@
     </div>
     
     <div id="dlg_conflicts" class="dialog TX_title" title="WARNING!">
-      <span class="TX_text">Conflicts were detected while merging actions from the Cloud:</span>
+      <p class="TX_text">
+        Conflicts were detected while merging actions from the Cloud:
+      </p>
       <div id="dlg_conflicts_message">
       </div>
-      <span class="TX_text">Please review these rejected actions before saving.</span>
+      <p class="TX_text">
+        Please review these rejected actions before saving
+      </p>
     </div>
 
     <div id="dlg_options" class="dialog TX_title" title="Options">
-      <p class="TX_text">
-        If autosave is disabled, you will have to save using the button
-        above the data display.
+      <p>
+        <button id="dlg_options_chpw" class="TX_title TX_text" title="Change master password">
+          Change master password
+        </button>
       </p>
-      <div>
+      <p>
         <input type="checkbox" id="dlg_options_autosave">
-        <label for="dlg_options_autosave" class="TX_text">Autosave</label>
-      </div>
-      <p class="TX_text">
-        You can change your master password here
+        <label for="dlg_options_autosave" class="TX_text">
+          Autosave
+        </label>
+        <p id="dlg_options_autosave_warn" class="warning TX_text">
+          You will have to save using the button above the data display
+        </p>
       </p>
-      <div>
-        <button id="dlg_options_chpw" class="TX_title TX_text" title="Change master password">Change Password</button>
-      </div>
+      <p>
+        <button id="dlg_options_csv" class="TX_title TX_text" title="Load CSV file">
+          Load CSV file
+        </button>
+      </p>
+    </div>
+
+    <div id="dlg_csv" class="dialog TX_title" title="Load CSV file">
+      <label for="dlg_csv_file">CSV file</label>
+      <input type="file" id="dlg_csv_file" class="input_file" />
     </div>
 
     <div id="dlg_chpw" class="dialog TX_title" title="Change Password">
-      <p class="TX_text">
-        Change the master password used to protect your data.
+      <p class="warning TX_text">
         You should ensure that all clients up to date and you
         are safely connected to the internet before doing this,
         or you may lose data.
@@ -164,7 +177,9 @@
         </tr>
         <tr>
           <td>
-            <label for="dlg_chpw_conf" class="TX_text">Confirm new password</label>
+            <label for="dlg_chpw_conf" class="TX_text">
+              Confirm new password
+            </label>
           </td>
           <td>
             <input type="password" size="50" id="dlg_chpw_conf" class="TX_title" title="Re-enter new password" value="" />
@@ -172,7 +187,10 @@
         </tr>
       </table>
       <p>
-        <input type="checkbox" id="dlg_chpw_show"><label for="dlg_chpw_show" class="TX_text">Show password</label>
+        <input type="checkbox" id="dlg_chpw_show">
+        <label for="dlg_chpw_show" class="TX_text">
+          Show password
+        </label>
       </p>
       <div>
         <button id="dlg_chpw_set" class="TX_title TX_text" title="Set new master password">Set new password</button>

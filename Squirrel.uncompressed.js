@@ -1173,6 +1173,39 @@ Squirrel.init_ui = function() {
         });
 };
 
+Squirrel.load_CSV_file_dialog = function() {
+    "use strict";
+
+    var $dlg = $("#dlg_csv");
+    if (typeof $dlg.dialog("instance") === "undefined") {
+        $("#dlg_csv_file").change(function() {
+            var selectedFile = $(this)[0].files[0];
+            Utils.read_file(
+                selectedFile,
+                function(data) {
+                    $dlg.dialog("close");
+                    Squirrel.client.hoard.load_csv(
+                        data,
+                        function(e) {
+                            Squirrel.play_action(
+                                e,
+                                function() {
+                                    Squirrel.sometime("update_save");
+                                    Squirrel.sometime("update_tree");
+                                });
+                        });
+                },
+                function(e) {
+                    Squirrel.squeak(e);
+                });
+        });
+    }
+    $dlg.dialog({
+        modal: true,
+        width: "auto"
+    });
+};
+
 Squirrel.change_password_dialog = function() {
     "use strict";
 
@@ -1225,11 +1258,27 @@ Squirrel.options_dialog = function() {
             .on("change", function() {
                 Squirrel.client.hoard.options.autosave =
                     $("#dlg_options_autosave").is(":checked");
+                $(".autosave_warn", $dlg)
+                    .toggle(!Squirrel.client.hoard.options.autosave);
                 Squirrel.sometime("update_save");
             });
+
+        $("#dlg_options_autosave_warn")
+            .toggle(!Squirrel.client.hoard.options.autosave);
+
         $("#dlg_options_chpw")
             .button()
-            .on("click", Squirrel.change_password_dialog);
+            .on("click", function () {
+                $dlg.dialog("close");
+                Squirrel.change_password_dialog();
+            });
+
+        $("#dlg_options_csv")
+            .button()
+            .on("click", function() {
+                $dlg.dialog("close");
+                Squirrel.load_CSV_file_dialog()
+            });
     }
     $dlg.dialog({
         modal: true,
