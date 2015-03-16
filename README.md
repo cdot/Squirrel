@@ -66,17 +66,11 @@ Squirrel was written by Crawford Currie http://c-dot.co.uk, and uses the followi
 
 ## TODOs
 
-Undo (actions are not currently reversible)
-
-R -> R
-E -> E
-D -> N # can't undo?
-N -> D
+D -> N # can't undo  fully
 
 ## Possible enhancements:
 
 Use github to serve the app
 Password change reminders
 Remember password constraints for a site
-Alert if the wrong password is used
 Different stores (SkyDrive? Github?)
