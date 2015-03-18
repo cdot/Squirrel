@@ -85,10 +85,10 @@ Squirrel.undo = function() {
     var a = Squirrel.undo_stack.pop();
     a.time = Date.now();
     if (DEBUG) console.debug("Undo " + Hoard.stringify_action(a));
-    Squirrel.client.hoard.play_action(
+    var res = Squirrel.client.hoard.record_action(
         a,
         function(e) {
-            Squirrel.play_action(
+            Squirrel.render_action(
                 e,
                 function() {
                     // If there are no undos, there can be no modifications.
@@ -100,6 +100,8 @@ Squirrel.undo = function() {
                     Utils.sometime("update_tree");
                 });
         });
+    if (res !== null)
+        Squirrel.squeak(res.message);
 };
 
 /**
@@ -119,89 +121,8 @@ Squirrel.last_mod = function(time) {
 Squirrel.update_tree = function() {
     "use strict";
 
-    var before_open = function(e, ui) {
-        var $div = (ui.target.is(".node_div"))
-            ? ui.target
-            : $div = ui.target.parents(".node_div").first(),
-        $val = $div.children(".value"),
-        isvalue = ($val.length > 0),
-        $root = $("#treeroot");
-
-        $root
-            .contextmenu("showEntry", "copy", isvalue)
-            .contextmenu("showEntry", "edit", isvalue)
-            .contextmenu("showEntry", "randomise", isvalue)
-            .contextmenu("showEntry", "add_subtree", !isvalue)
-            .contextmenu("showEntry", "add_value", !isvalue);
-
-        if (!Squirrel.menued) {
-            // First time, attach handler
-            // Whack a Flash movie over the menu item li
-            new ZeroClipboard(
-                ui.menu.children("li[data-command='copy']"))
-            // Handle the "copy" event that comes from
-            // the Flash movie and populate the event with our data
-                .on("copy", function(event) {
-                    if (DEBUG) console.debug("Copying to clipboard");
-                    event.clipboardData.setData(
-                        "text/plain",
-                        Squirrel.menued.text());
-                });
-        }
-        Squirrel.menued = $val;
-    },
-
-    menu = {
-        delegate: ".node_div",
-        menu: [
-            {
-                // Need the area that handles this to be covered with
-                // the zeroclipboard
-                title: TX.tx("Copy value"),
-                cmd: "copy",
-                uiIcon: "squirrel-icon-copy"
-            },
-            {
-                title: TX.tx("Rename"),
-                cmd: "rename",
-                uiIcon: "squirrel-icon-rename" 
-            },
-            {
-                title: TX.tx("Edit value"),
-                cmd: "edit",
-                uiIcon: "squirrel-icon-edit" 
-            },
-            {
-                title: TX.tx("Generate new random value"),
-                cmd: "randomise",
-                uiIcon: "squirrel-icon-generate-pass" 
-            },               
-            {
-                title: TX.tx("Add new value"),
-                cmd: "add_value",
-                uiIcon: "squirrel-icon-add-value" 
-            },
-            {
-                title: TX.tx("Add new sub-tree"),
-                cmd: "add_subtree",
-                uiIcon: "squirrel-icon-add-subtree" 
-            },
-            {
-                title: TX.tx("Delete"),
-                cmd: "delete",
-                uiIcon: "squirrel-icon-delete" 
-            }
-        ],
-        beforeOpen: before_open,
-        // We map long mouse hold to taphold
-        // Right click still works
-        taphold: true,
-        select: Squirrel.context_menu_choice
-    };
-
-    $("#treeroot")
-        .bonsai("update")
-        .contextmenu(menu);
+    $("#treeroot").bonsai("update");
+    Squirrel.init_context_menu();
 };
 
 /**
@@ -222,18 +143,20 @@ Squirrel.edit_node = function($node, what) {
         width: w,
         changed: function(s) {
             var old_path = Squirrel.get_path($node);
-            Squirrel.client.hoard.play_action(
+            var e = Squirrel.client.hoard.record_action(
                 { type: what === "key" ? "R" : "E",
                   path: old_path,
                   data: s },
                 function(e) {
-                    Squirrel.play_action(
+                    Squirrel.render_action(
                         e,
                         function($newnode) {
                             Utils.sometime("update_save");
                             Utils.sometime("update_tree");
                         }, true);
                 });
+            if (e !== null)
+                Squirrel.squeak(e.message);
         }
     });
 };
@@ -253,10 +176,10 @@ Squirrel.add_child_node = function($node, title, value) {
         action.data = value;
     }
     p.push(title);
-    Squirrel.client.hoard.play_action(
+    var res = Squirrel.client.hoard.record_action(
         action,
         function(e) {
-            Squirrel.play_action(e, function($newnode) {
+            Squirrel.render_action(e, function($newnode) {
                 // There's a problem with bonsai when you create
                 // new nodes at the end; it doesn't let you close
                 // the new nodes. However this clears after a
@@ -270,6 +193,8 @@ Squirrel.add_child_node = function($node, title, value) {
                 Squirrel.edit_node($newnode, "key");
             }, true);
         });
+    if (res !== null)
+        Squirrel.squeak(res.message);
 };
 
 /**
@@ -306,54 +231,6 @@ Squirrel.search = function(s) {
 };
 
 /**
- * Handler for context menu
- */
-Squirrel.context_menu_choice = function(e, ui) {
-    "use strict";
-
-    var $node = ui.target.closest("li");
-
-    switch (ui.cmd) {
-    case "copy":
-        // Handled by the ZeroClipboard event handler
-        break;
-
-    case "rename":
-        if (DEBUG) console.debug("Renaming");
-	Squirrel.edit_node($node, "key");
-        break;
-
-    case "edit":
-        if (DEBUG) console.debug("Editing");
-	Squirrel.edit_node($node, "value");
-        break;
-
-    case "add_value":
-        if (DEBUG) console.debug("Adding value");
-        Squirrel.add_child_node($node, TX.tx("A new value"), TX.tx("None"));
-        break;
-
-    case "add_subtree":
-        if (DEBUG) console.debug("Adding subtree");
-        Squirrel.add_child_node($node, TX.tx("A new sub-tree"));
-        break;
-
-    case "randomise":
-        if (DEBUG) console.debug("Randomising");
-        Squirrel.make_random_dialog($node);
-        break;
-
-    case "delete":
-        if (DEBUG) console.debug("Deleting");
-        Squirrel.confirm_delete_dialog($node);
-        break;
-
-    default:
-        throw "Unknown ui.cmd " + ui.cmd;
-    }
-};
-
-/**
  * Event handler to update the save button based on hoard state
  */
 Squirrel.update_save = function() {
@@ -385,7 +262,7 @@ Squirrel.update_save = function() {
  * @param undoable set true if the inverse of this action is to be added
  * to the undo chain.
  */
-Squirrel.play_action = function(e, chain, undoable) {
+Squirrel.render_action = function(e, chain, undoable) {
     "use strict";
 
     //if (DEBUG) console.debug("Playing " + Hoard.stringify_action(e));
@@ -627,7 +504,7 @@ Squirrel.get_updates_from_cloud = function(cloard, chain) {
     if (DEBUG) console.debug("Merging from cloud hoard");
     Squirrel.client.hoard.merge_from_cloud(
         cloard,
-        Squirrel.play_action,
+        Squirrel.render_action,
         function(conflicts) {
             if (conflicts.length > 0) {
                 var $dlg = $("#dlg_conflicts");
@@ -806,7 +683,7 @@ Squirrel.save_hoards = function() {
                 
         if (Squirrel.cloud.status === "is loaded") {
             Squirrel.client.hoard.merge_from_cloud(
-                cloard, Squirrel.play_action);
+                cloard, Squirrel.render_action);
         }
                 
         if ( Squirrel.cloud.status !== "is loaded"
@@ -926,7 +803,7 @@ Squirrel.load_client_store = function() {
 
             if (DEBUG) console.debug("Reconstructing UI tree from cache");
             Squirrel.client.hoard.reconstruct_actions(
-                Squirrel.play_action,
+                Squirrel.render_action,
                 function() { // on complete
                     // Reset the UI modification list; we just loaded the
                     // client hoard
@@ -1007,7 +884,7 @@ Squirrel.init_ui = function() {
     $("#add_root_child")
         .button({
             icons: {
-                primary: "squirrel-icon-add-site"
+                primary: "squirrel-icon-add"
             },
             text: false
         })

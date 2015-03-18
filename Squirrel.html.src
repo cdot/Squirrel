@@ -22,6 +22,7 @@
     <script type="text/javascript" src="Hoard.uncompressed.js"></script>
     <script type="text/javascript" src="Squirrel.uncompressed.js"></script>
     <script type="text/javascript" src="Dialogs.uncompressed.js"></script>
+    <script type="text/javascript" src="ContextMenu.uncompressed.js"></script>
 <!--cloud:drive
         <script type="text/javascript" src="GoogleDriveStore.uncompressed.js"></script>
         <script type="text/javascript" src="https://apis.google.com/js/client.js?onload=gapi_loaded"></script>

@@ -112,10 +112,10 @@ Hoard.prototype.clear_actions = function() {
  * action stream
  * @return {Conflict} conflict object, or null if there was no conflict
  */
-Hoard.prototype.play_action = function(e, listener, no_push) {
+Hoard.prototype.record_action = function(e, listener, no_push) {
     "use strict";
 
-    var parent, name, i;
+    var parent, name, i, c;
 
     if (typeof e.time === "undefined" || e.time === null) {
         e.time = Date.now();
@@ -145,10 +145,13 @@ Hoard.prototype.play_action = function(e, listener, no_push) {
         parent = this.cache = { data: {} };
     }
 
+    c = function(mess) {
+        return { action: e, message: mess };
+    };
+
     if (e.type === "N") {
-        if (parent.data[name]) {
-            return { action: e, message: TX.tx("Cannot create, already exists") };
-        }
+        if (parent.data[name])
+            return c(TX.tx("Cannot create, '$1' already exists", name));
         parent.time = e.time; // collection is being modified
         parent.data[name] = {
             time: e.time,
@@ -156,23 +159,24 @@ Hoard.prototype.play_action = function(e, listener, no_push) {
                 e.data : {}
         };
     } else if (e.type === "D") {
-        if (!parent.data[name]) {
-            return { action: e, message: TX.tx("Cannot delete, does not exist") };
-        }
+        if (!parent.data[name])
+            return c(TX.tx("Cannot delete, '$1' does not exist", name));
         delete parent.data[name];
     } else if (e.type === "R") {
-        if (!parent.data[name]) {
-            return { action: e, message: TX.tx("Cannot rename, does not exist") };
-        }
+        if (!parent.data[name])
+            return c(TX.tx("Cannot rename, '$1' does not exist", name));
+        if (parent.data[e.data])
+            return c(TX.tx("Cannot rename, '$1' already exists",
+                           e.data));
         parent.data[e.data] = parent.data[name];
         delete parent.data[name];
     } else if (e.type === "E") {
-        if (!parent.data[name]) {
-            return { action: e, message: TX.tx("Cannot change value, does not exist") };
-        }
+        if (!parent.data[name])
+            return c(TX.tx("Cannot change value, '$1' does not exist", name));
         parent.data[name].data = e.data;
     } else {
-        throw "Unrecognised action type '" + e.type + "'";
+        // Internal error
+        throw "Internal error: Unrecognised action type '" + e.type + "'";
     }
 
     if (listener)
@@ -196,10 +200,9 @@ Hoard.prototype.simplify = function() {
     if (this.actions) {
         for (var i = 0; i < this.actions.length; i++) {
             // Play the action with no push and no listener
-            var er = this.play_action(this.actions[i], false, true);
-            if (er !== null) {
+            var er = this.record_action(this.actions[i], false, true);
+            if (er !== null)
                 throw "Disaster! " + er.message;
-            }
         }
     }
 
@@ -328,7 +331,7 @@ Hoard.prototype.reconstruct_actions = function(listener, chain) {
  * Actions are *not* appended to our local actions stream.
  * @param {Hoard} cloud the cloud hoard
  * @param {Listener} [listener] called whenever an action is played
- * @param {Object[]} conflicts, as returned by play_action, if there are any
+ * @param {Object[]} conflicts, as returned by record_action, if there are any
  * @param chain function to call once all merged. Passed a list of conflicts.
  */
 Hoard.prototype.merge_from_cloud = function(cloud, listener, chain) {
@@ -344,7 +347,7 @@ Hoard.prototype.merge_from_cloud = function(cloud, listener, chain) {
     for (i = 0; i < cloud.actions.length; i++) {
         if (cloud.actions[i].time > this.last_sync) {
             //if (DEBUG) console.debug("Merge " + Hoard.stringify_action(cloud.actions[i]));
-            c = this.play_action(cloud.actions[i], listener, true);
+            c = this.record_action(cloud.actions[i], listener, true);
             if (c !== null)
                 conflicts.push(c);
         }

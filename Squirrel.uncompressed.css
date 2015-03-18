@@ -13,7 +13,7 @@ a:hover {
     font-weight: bold;
 }
 
-.squirrel-icon-add-site {
+.squirrel-icon-add {
     background-image:url('images/squirrel-icons.png') !important;
     background-position:0 0px;
 }
@@ -33,7 +33,7 @@ a:hover {
     background-position:0 -48px;
 }
 
-.squirrel-icon-generate-pass {
+.squirrel-icon-key {
     background-image:url('images/squirrel-icons.png') !important;
     background-position:0 -64px;
 }
@@ -43,24 +43,29 @@ a:hover {
     background-position:0 -80px;
 }
 
-.squirrel-icon-add-subtree {
+.squirrel-icon-delete {
     background-image:url('images/squirrel-icons.png') !important;
     background-position:0 -96px;
 }
 
-.squirrel-icon-delete {
+.squirrel-icon-save {
     background-image:url('images/squirrel-icons.png') !important;
     background-position:0 -112px;
 }
 
-.squirrel-icon-save {
+.squirrel-icon-undo {
     background-image:url('images/squirrel-icons.png') !important;
     background-position:0 -128px;
 }
 
-.squirrel-icon-undo {
+.squirrel-icon-cut {
     background-image:url('images/squirrel-icons.png') !important;
     background-position:0 -144px;
+}
+
+.squirrel-icon-paste {
+    background-image:url('images/squirrel-icons.png') !important;
+    background-position:0 -160px;
 }
 
 .logo {

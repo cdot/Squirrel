@@ -37,19 +37,21 @@ Squirrel.confirm_delete_dialog = function($node) {
             .on("click", function(/*evt*/) {
                 var $dlg = $("#dlg_delconf");
                 $dlg.dialog("close");
-                Squirrel.client.hoard.play_action(
+                var res = Squirrel.client.hoard.record_action(
                     {
                         type: "D",
                         path: $dlg.data("path")
                     },
                     function(e) {
-                        Squirrel.play_action(
+                        Squirrel.render_action(
                             e,
                             function() {
                                 Utils.sometime("update_save");
                                 Utils.sometime("update_tree");
                             }, true);
                     });
+                if (res !== null)
+                    Squirrel.squeak(res.message);
             });
 
         $("#dlg_delconf_cancel")
@@ -92,17 +94,19 @@ Squirrel.make_random_dialog = function($node) {
                 $dlg.dialog("close");
                 var pw = $("#dlg_gen_rand_idea").text();
                 var old_path = Squirrel.get_path($dlg.data("node"));
-                Squirrel.client.hoard.play_action(
+                var res = Squirrel.client.hoard.record_action(
                     { type: 'E',
                       path: old_path,
                       data: pw },
                     function(e) {
-                        Squirrel.play_action(
+                        Squirrel.render_action(
                             e,
                             function() {
                                 Utils.sometime("update_save");
                             }, true);
                     });
+                if (res !== null)
+                    Squirrel.squeak(e.message);
             });
 
         $("#dlg_gen_rand_again")
@@ -181,6 +185,45 @@ Squirrel.change_password_dialog = function() {
     });
 };
 
+Squirrel.read_json_file = function(file) {
+    Utils.read_file(
+        file,
+        function(data) {
+            $("#dlg_options").dialog("close");
+            try {
+                data = JSON.parse(data);
+            } catch (e) {
+                Squirrel.squeak(TX.tx("JSON could not be parsed")
+                                + ": " + e);
+                return;
+            }
+            if (DEBUG) console.debug("Importing...");
+            Squirrel.load_log = [];
+            Squirrel.client.hoard.actions_from_hierarchy(
+                { data: data },
+                function(act, next) { // listener
+                    //console.debug(Hoard.stringify_action(act));
+                    var res = Squirrel.client.hoard.record_action(
+                        act, function (sact) {
+                            Squirrel.render_action(sact, next);
+                        });
+                    if (res !== null)
+                        Squirrel.load_log.push(res.message);
+                    next();
+                },
+                function() { // chain on complete
+                    Utils.sometime("update_save");
+                    Utils.sometime("update_tree");
+                    Squirrel.squeak(
+                        file.name
+                            + TX.tx(" has been loaded") + "<br />"
+                            + join("<br />", Squirrel.load_log));
+                    delete Squirrel.load_log;
+                });
+        },
+        Squirrel.squeak);
+};
+
 Squirrel.options_dialog = function() {
     "use strict";
 
@@ -212,41 +255,7 @@ Squirrel.options_dialog = function() {
                 this.value = null;
             })
             .on("change", function() {
-                var selectedFile = $("#dlg_options_jsonfile")[0].files[0];
-                Utils.read_file(
-                    selectedFile,
-                    function(data) {
-                        $dlg.dialog("close");
-                        try {
-                            data = JSON.parse(data);
-                        } catch (e) {
-                            Squirrel.squeak(TX.tx("JSON could not be parsed")
-                                            + ": " + e);
-                            return;
-                        }
-                        if (DEBUG) console.debug("Importing...");
-                        Squirrel.client.hoard.actions_from_hierarchy(
-                            { data: data },
-                            function(act, next) { // listener
-                                //console.debug(Hoard.stringify_action(act));
-                                var res = Squirrel.client.hoard.play_action(
-                                    act, function (sact) {
-                                        Squirrel.play_action(sact, next);
-                                    });
-                                if (res !== null)
-                                    next();
-                            },
-                            function() { // chain on complete
-                                Utils.sometime("update_save");
-                                Utils.sometime("update_tree");
-                                Squirrel.squeak(
-                                    selectedFile.name
-                                        + TX.tx(" has been loaded"));
-                            });
-                    },
-                    function(e) {
-                        Squirrel.squeak(e);
-                    });
+                read_json_file($("#dlg_options_jsonfile")[0].files[0]);
             })
             .hide();
 
@@ -260,12 +269,13 @@ Squirrel.options_dialog = function() {
                 $dlg.dialog("close");
             });
 
-        new ZeroClipboard($("#dlg_options_copy"))
+        var zc = new ZeroClipboard($("#dlg_options_copy"))
             .on("copy", function(event) {
                 event.clipboardData.setData(
                     "text/plain",
                     JSON.stringify(Squirrel.client.hoard));
             });
+        $dlg.data("ZC", zc);
     }
     $dlg.dialog({
         modal: true,
