@@ -10,6 +10,7 @@
     <script type="text/javascript" src="libs/jquery-ui.uncompressed.js"></script>
     <script type="text/javascript" src="libs/jquery-bonsai.uncompressed.js"></script>
     <script type="text/javascript" src="libs/jquery-ui-contextmenu.uncompressed.js"></script>
+    <script type="text/javascript" src="libs/jquery-fileinput.uncompressed.js"></script>
     <script type="text/javascript" src="libs/ZeroClipboard.uncompressed.js"></script>
     <script type="text/javascript" src="libs/aes.uncompressed.js"></script>
     <script type="text/javascript" src="libs/aes-ctr.uncompressed.js"></script>
@@ -20,6 +21,7 @@
     <script type="text/javascript" src="EncryptedStore.uncompressed.js"></script>
     <script type="text/javascript" src="Hoard.uncompressed.js"></script>
     <script type="text/javascript" src="Squirrel.uncompressed.js"></script>
+    <script type="text/javascript" src="Dialogs.uncompressed.js"></script>
 <!--cloud:drive
         <script type="text/javascript" src="GoogleDriveStore.uncompressed.js"></script>
         <script type="text/javascript" src="https://apis.google.com/js/client.js?onload=gapi_loaded"></script>
@@ -64,7 +66,7 @@
 
     <!-- Dialogs -->
     <div id="dlg_login" class="dialog TX_title" title="Enter login information">
-      <div id="dlg_login_foruser"></div>
+      <p id="dlg_login_foruser"></p>
       <table width="100%">
 	<tbody>
 	  <tr id="dlg_login_uReq">
@@ -76,13 +78,14 @@
           <tr id="dlg_login_pReq">
 	    <td class="TX_text">Password:</td>
 	    <td>
-	      <input type="password" size="50" id="dlg_login_pass" class="TX_title" title="Enter password" value="" />
+	      <input tabindex="2" type="password" size="50" id="dlg_login_pass" class="TX_title" title="Enter password" value="" />
 	    </td>
 	  </tr>
 	</tbody>
       </table>
-      <label for="dlg_login_signin" class="TX_text">Sign In</label>
-      <button id="dlg_login_signin"></button>
+      <p>
+        <button id="dlg_login_signin" class="TX_text">Sign In</button>
+      </p>
     </div>
 
     <div id="dlg_saving" class="dialog TX_title" title="Saving">
@@ -149,15 +152,16 @@
         </p>
       </p>
       <p>
-        <button id="dlg_options_csv" class="TX_title TX_text" title="Load CSV file">
-          Load CSV file
+        <input type="file" id="dlg_options_jsonfile" class="input_file" />
+        <button id="dlg_options_import" class="TX_title TX_text" title="Import JSON file">
+          Import JSON file
         </button>
       </p>
-    </div>
-
-    <div id="dlg_csv" class="dialog TX_title" title="Load CSV file">
-      <label for="dlg_csv_file">CSV file</label>
-      <input type="file" id="dlg_csv_file" class="input_file" />
+      <p>
+        <button id="dlg_options_copy" class="TX_title TX_text" title="Copy JSON data to the clipboard">
+          Copy JSON to clipboard
+        </button>
+      </p>
     </div>
 
     <div id="dlg_chpw" class="dialog TX_title" title="Change Password">

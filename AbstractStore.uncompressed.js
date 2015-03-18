@@ -91,7 +91,7 @@ AbstractStore.prototype.identifier = function() {
 AbstractStore.prototype.user = function(user) {
     "use strict";
 
-    if (arguments.length > 0)
+    if (typeof user !== "undefined")
         this.suser = user;
     return this.suser;
 };

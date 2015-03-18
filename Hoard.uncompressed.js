@@ -181,14 +181,6 @@ Hoard.prototype.play_action = function(e, listener, no_push) {
     return null;
 };
 
-Hoard.prototype.load_csv = function(data, listener) {
-    var lines = data.split(/\r?\n/), i;
-    for (i = 0; i < lines.length; i++) {
-        lines[i] = lines[i].replace(/"(.*)"/, "$1");
-        var path = lines[i].split(/",\s*"/);
-    }
-};
-
 /**
  * Simplify the action stream in the hoard by eliminating all but "N" actions.
  * Set node change times according to the most recent change.
@@ -232,63 +224,88 @@ Hoard.prototype.simplify = function() {
  */
 Hoard.prototype._reconstruct_actions = function() {
     "use strict";
-    var context, node, path, key, self = this, p, next_node;
+    var context, node, path, key, self = this, p, next_node, time;
 
-    if (this.reconstruct.queue.length === 0) {
-        if (this.reconstruct.complete)
-            this.reconstruct.complete();
-        delete this.reconstruct;
-        return;
-    }
+    while (this.reconstruct.queue.length !== 0) {
+        context = this.reconstruct.queue.shift();
+        node = context.node;
+        path = context.path;
+        next_node = function() {
+            Utils.soon(function() {
+                self._reconstruct_actions();
+            });
+        };
+        time = (typeof node.time !== "undefined" ? node.time : Date.now());
 
-    context = this.reconstruct.queue.shift();
-    node = context.node;
-    path = context.path;
-    next_node = function() {
-        self._reconstruct_actions();
-    };
-
-    if (typeof node.data === "string") {
-        this.reconstruct.listener.call(
-            this,
-            {
-                type: "N", 
-                path: path.slice(),
-                time: node.time,
-                data: node.data
-            },
-            next_node);
-    } else if (typeof node.data !== "undefined") {
-        for (key in node.data) {
-            p = path.slice();
-            p.push(key);
-            this.reconstruct.queue.push({
-                node: node.data[key],
-                path: p });
-        }
-
-        if (path.length > 0) {
-            // No action for the root
+        if (typeof node.data === "string") {
             this.reconstruct.listener.call(
                 this,
                 {
                     type: "N", 
-                    time: node.time,
-                    path: path.slice()
+                    path: path.slice(),
+                    time: time,
+                    data: node.data
                 },
                 next_node);
-        } else
-            next_node();
-    } else {
-        throw "Internal error";
+            return;
+        } else if (typeof node.data !== "undefined") {
+            for (key in node.data) {
+                p = path.slice();
+                p.push(key);
+                this.reconstruct.queue.push({
+                    node: node.data[key],
+                    path: p });
+            }
+
+            if (path.length > 0) {
+                // No action for the root
+                this.reconstruct.listener.call(
+                    this,
+                    {
+                        type: "N", 
+                        time: time,
+                        path: path.slice()
+                    },
+                    next_node);
+                return;
+            }
+        } else {
+            throw "Internal error";
+        }
     }
+
+    if (this.reconstruct.complete)
+        this.reconstruct.complete();
+    delete this.reconstruct;
 };
 
 /**
  * Reconstruct an action stream (which will all be 'N' actions) from
- * the cache in the hoard. This is used to generate the UI tree from
- * a stored cache. Does not (directly) affect the actions stored in
+ * a data block. Does not (directly) affect the actions stored in
  * the hoard (though the listener might).
+ * @param data data structure, a simple hierarchical structure
+ * of keys and the data they contain e.g.
+ * { "key1" : { data: { subkey1: { data: "string data" } } } }
+ * Other fields (such as time) may be present and are used if they are.
+ * @param {Listener} [listener] callback that takes an action, and a
+ * function that must be called once the action has been applied. Note that
+ * the listener can do what it likes with the action it is passed, and
+ * the function need not be called immediately.
+ * @param chain callback invoked when all actions have been constructed
+ * (no parameters, no this)
+ */
+Hoard.prototype.actions_from_hierarchy = function(data, listener, chain) {
+    this.reconstruct = {
+        queue: [ { node: data, path: [] } ],
+        listener: listener,
+        complete: chain
+    };
+    this._reconstruct_actions();
+};
+
+/**
+ * Reconstruct an action stream from the cache in the hoard. This is
+ * used to generate the UI tree from a stored cache. 
  * @param {Listener} [listener] callback that takes an action, and a
  * function that must be called once the action has been applied. Note that
  * the listener can do what it likes with the action it is passed, and
@@ -300,12 +317,9 @@ Hoard.prototype.reconstruct_actions = function(listener, chain) {
     "use strict";
 
     if (this.cache) {
-        this.reconstruct = {
-            queue: [ { node: this.cache, path: [] } ],
-            listener: listener,
-            complete: chain
-        };
-        this._reconstruct_actions();
+        this.actions_from_hierarchy(this.cache, listener, chain);
+    } else {
+        chain();
     }
 };
 

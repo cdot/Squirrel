@@ -70,6 +70,7 @@ D -> N # can't undo  fully
 
 ## Possible enhancements:
 
+Drag-drop between subtrees
 Use github to serve the app
 Password change reminders
 Remember password constraints for a site

@@ -101,6 +101,10 @@ a:hover {
     display: none;
 }
 
+.modified > .node_div > .key {
+    color: orange;
+}
+
 .value {
     font-family: "Courier New", Courier, monospace
 }

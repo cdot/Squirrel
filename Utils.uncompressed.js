@@ -136,7 +136,15 @@ $.fn.reon = function(event, handler) {
     });
 };
 
-var Utils = {}; // Namespace
+var Utils = { // Namespace
+    waiting: {},
+    // By setting the wait_timeout to a non-null value we block
+    // the wait queue until Utils.sometime is called the first time.
+    // This lets us complete the load without too much noise.
+    wait_timeout: true,
+
+    last_yield: Date.now()
+};
 
 /**
  * Generate a new password subject to constraints:
@@ -223,4 +231,63 @@ Utils.read_file = function(file, ok, fail) {
     };
     reader.onabort = reader.onerror;
     reader.readAsBinaryString(file);
+};
+
+/**
+ * Simple asynchronous event mechanism to prevent duplicate events.
+ * This intended for events that will update the UI, but don't want
+ * to be called every time due to the load they impose. Events are always
+ * sent using the $(document).triggerHandler()
+ * Events queued using sometime will not be fired until the first
+ * call to sometime_is_now, and after that at most every 250ms.
+ * @param {string} event name
+ * @param {Object} target optional target for the event. If not set, the
+ * event will be sent to $(document)
+ */
+Utils.sometime = function(event) {
+    "use strict";
+
+    if (Utils.waiting[event])
+        return;
+
+    Utils.waiting[event] = true;
+    if (Utils.wait_timeout === null)
+        Utils.wait_timeout = window.setTimeout(
+            Utils.sometime_is_now, 250 /*ms*/);
+};
+
+/**
+ * Start the sometime sequence
+ */
+Utils.sometime_is_now = function() {
+    "use strict";
+
+    Utils.wait_timeout = null;
+    for (var event in Utils.waiting) {
+        $(document).triggerHandler(event);
+        // Only now delete the event to allow it to be requeued
+        delete Utils.waiting[event];
+    }
+};
+
+/**
+ * Allow the UI to have a slice of time before we call the given function,
+ * but only if it's been a perceptible amount of time since the last UI
+ * update.
+ * @param fn function to call
+ */
+Utils.soon = function(fn) {
+    "use strict";
+
+    // If it's been a decent amount of time since the last time
+    // we yielded to the UI, then set an asynchronous timeout before
+    // we activate the next function in the chain. This will allow
+    // the UI a timeslice.
+    if (Date.now() - Utils.last_yield > 100 /*ms*/) {
+        window.setTimeout(function() {
+            Utils.last_yield = Date.now();
+            fn();
+        }, 1);
+    } else
+        fn();
 };
