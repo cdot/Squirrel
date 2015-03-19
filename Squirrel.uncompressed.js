@@ -172,7 +172,7 @@ Squirrel.add_child_node = function($node, title, value) {
         type: "N",
         path: p
     };
-    if (typeof value !== "undefined") {
+    if (typeof value === "string") {
         action.data = value;
     }
     p.push(title);
@@ -190,11 +190,45 @@ Squirrel.add_child_node = function($node, title, value) {
                     .scroll_into_view()
                     .parents("ul")
                     .bonsai("expand", $node);
+                if (typeof value !== "string"
+                    && typeof value !== "undefined") {
+                    Squirrel.insert_data(p, value);
+                }
                 Squirrel.edit_node($newnode, "key");
             }, true);
         });
     if (res !== null)
         Squirrel.squeak(res.message);
+};
+
+/**
+ * Insert data from a structure under the given path
+ * @param path path to the parent below which this data will be inserted
+ * @param data hoard cache format data
+*/
+Squirrel.insert_data = function(path, data) {
+    var load_log = [];
+    Squirrel.client.hoard.actions_from_hierarchy(
+        { data: data },
+        function(act, next) { // listener
+            //console.debug(Hoard.stringify_action(act));
+            act.path = path.slice().concat(act.path);
+            var res = Squirrel.client.hoard.record_action(
+                act, function (sact) {
+                    Squirrel.render_action(sact, next);
+                });
+            if (res !== null)
+                load_log.push(res.message);
+            next();
+        },
+        function() { // chain on complete
+            Utils.sometime("update_save");
+            Utils.sometime("update_tree");
+            Squirrel.squeak(
+                file.name
+                    + TX.tx(" has been loaded") + "<br />"
+                    + join("<br />", load_log));
+        });
 };
 
 /**
@@ -296,6 +330,10 @@ Squirrel.render_action = function(e, chain, undoable) {
 
         $("<span></span>")
             .addClass("key")
+            .hover(
+                function(e) {
+                    Squirrel.$paste = $node;
+                })
             .on("click", function(e) {
                 $("#treeroot").contextmenu("close");
                 // Prevent click from bubbling, only obey double click
@@ -901,7 +939,10 @@ Squirrel.init_ui = function() {
 
     $(document)
         .on("update_save", Squirrel.update_save)
-        .on("update_tree", Squirrel.update_tree);
+        .on("update_tree", Squirrel.update_tree)
+        .paste(function(e, data) {
+            debugger;
+        });
 };
 
 Squirrel.init_client_store = function() {
@@ -1010,5 +1051,6 @@ Squirrel.init_cloud_store = function() {
             // Initialise translation module
             TX.init(Squirrel.init_cloud_store);
         });
+;
 
 })(jQuery);

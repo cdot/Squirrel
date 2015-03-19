@@ -18,17 +18,17 @@ a:hover {
     background-position:0 0px;
 }
 
-.squirrel-icon-copy {
+.squirrel-icon-camera {
     background-image:url('images/squirrel-icons.png') !important;
     background-position:0 -16px;
 }
 
-.squirrel-icon-rename {
+.squirrel-icon-pencil {
     background-image:url('images/squirrel-icons.png') !important;
     background-position:0 -32px;
 }
 
-.squirrel-icon-edit{
+.squirrel-icon-edit {
     background-image:url('images/squirrel-icons.png') !important;
     background-position:0 -48px;
 }
@@ -58,7 +58,7 @@ a:hover {
     background-position:0 -128px;
 }
 
-.squirrel-icon-cut {
+.squirrel-icon-copy {
     background-image:url('images/squirrel-icons.png') !important;
     background-position:0 -144px;
 }

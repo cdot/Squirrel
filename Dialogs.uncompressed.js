@@ -198,28 +198,7 @@ Squirrel.read_json_file = function(file) {
                 return;
             }
             if (DEBUG) console.debug("Importing...");
-            Squirrel.load_log = [];
-            Squirrel.client.hoard.actions_from_hierarchy(
-                { data: data },
-                function(act, next) { // listener
-                    //console.debug(Hoard.stringify_action(act));
-                    var res = Squirrel.client.hoard.record_action(
-                        act, function (sact) {
-                            Squirrel.render_action(sact, next);
-                        });
-                    if (res !== null)
-                        Squirrel.load_log.push(res.message);
-                    next();
-                },
-                function() { // chain on complete
-                    Utils.sometime("update_save");
-                    Utils.sometime("update_tree");
-                    Squirrel.squeak(
-                        file.name
-                            + TX.tx(" has been loaded") + "<br />"
-                            + join("<br />", Squirrel.load_log));
-                    delete Squirrel.load_log;
-                });
+            Squirrel.insert_data([], data);
         },
         Squirrel.squeak);
 };

@@ -359,3 +359,17 @@ Hoard.prototype.merge_from_cloud = function(cloud, listener, chain) {
     if (chain)
         chain(conflicts);
 };
+
+/**
+ * Return the cache node identified by the path.
+ * @return a cache node, or null if not found.
+ */
+Hoard.prototype.get_node = function(path) {
+    var node = this.cache, name, i;
+    for (i = 0; i < path.length; i++) {
+        if (typeof node.data === "string")
+            return null;
+        node = node.data[path[i]];
+    }
+    return node;
+};
