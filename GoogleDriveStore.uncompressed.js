@@ -12,13 +12,23 @@ const SCOPE = "https://www.googleapis.com/auth/drive.appfolder";
 function GoogleDriveStore(params) {
     "use strict";
 
+    GoogleDriveStore.is_loaded = false;
+    GoogleDriveStore.load_waits = 10;
+    $.getScript("https://apis.google.com/js/client.js?onload=GoogleDriveStore.loaded");
     GoogleDriveStore._init(this, params);
 }
+
+GoogleDriveStore.loaded = function() {
+    "use strict";
+
+    if (DEBUG) console.debug("gapi: loaded");
+    GoogleDriveStore.loaded = true;
+};
 
 GoogleDriveStore._init = function(self, params) {
     "use strict";
 
-    if (!GoogleDriveStore.loaded) {
+    if (!GoogleDriveStore.is_loaded) {
         if (DEBUG) console.debug("gapi: not loaded yet");
         if (GoogleDriveStore.load_waits-- === 0) {
             params.fail.call("Timeout waiting for Google Drive Client API");
@@ -93,15 +103,6 @@ GoogleDriveStore.prototype.identifier = function() {
 
 // The load process is triggered by the tag in the html:
 // <script type="text/javascript" src="https://apis.google.com/js/client.js?onload=gapi_loaded"></script>
-
-GoogleDriveStore.loaded = false;
-GoogleDriveStore.load_waits = 10;
-function gapi_loaded() {
-    "use strict";
-
-    if (DEBUG) console.debug("gapi: loaded");
-    GoogleDriveStore.loaded = true;
-}
 
 /**
  * @private

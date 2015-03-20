@@ -5,35 +5,11 @@
     <meta name="cache-control" content="public">
     <meta name="expires" content="Wed, 1 Jan 2025 12:00:00 GMT">
     <link rel="icon" href="images/favicon.ico" type="image/x-icon" />
-    <link href='https://fonts.googleapis.com/css?family=Poiret+One&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
-    <script type="text/javascript" src="libs/jquery-2.1.3.uncompressed.js"></script>
-    <script type="text/javascript" src="libs/jquery-ui.uncompressed.js"></script>
-    <script type="text/javascript" src="libs/jquery-bonsai.uncompressed.js"></script>
-    <script type="text/javascript" src="libs/jquery-ui-contextmenu.uncompressed.js"></script>
-    <script type="text/javascript" src="libs/jquery-fileinput.uncompressed.js"></script>
-    <script type="text/javascript" src="libs/ZeroClipboard.uncompressed.js"></script>
-    <script type="text/javascript" src="libs/aes.uncompressed.js"></script>
-    <script type="text/javascript" src="libs/aes-ctr.uncompressed.js"></script>
-    <script type="text/javascript" src="Translation.uncompressed.js"></script>
-    <script type="text/javascript" src="Utils.uncompressed.js"></script>
-    <script type="text/javascript" src="AbstractStore.uncompressed.js"></script>
-    <script type="text/javascript" src="LocalStorageStore.uncompressed.js"></script>
-    <script type="text/javascript" src="EncryptedStore.uncompressed.js"></script>
-    <script type="text/javascript" src="Hoard.uncompressed.js"></script>
-    <script type="text/javascript" src="Squirrel.uncompressed.js"></script>
-    <script type="text/javascript" src="Dialogs.uncompressed.js"></script>
-    <script type="text/javascript" src="ContextMenu.uncompressed.js"></script>
-<!--cloud:drive
-        <script type="text/javascript" src="GoogleDriveStore.uncompressed.js"></script>
-        <script type="text/javascript" src="https://apis.google.com/js/client.js?onload=gapi_loaded"></script>
-    cloud:drive-->
-<!--cloud:dropbox
-        <script type="text/javascript" src="libs/dropbox.uncompressed.js"></script>
-        <script type="text/javascript" src="DropboxStore.uncompressed.js"></script>
-    cloud:dropbox-->
-    <link rel="stylesheet" href="libs/jquery-ui.uncompressed.css">
-    <link rel="stylesheet" href="libs/jquery-bonsai.uncompressed.css">
-    <link rel="stylesheet" href="Squirrel.uncompressed.css">
+    <!--LIBSJS_HTML-->
+    <!--COMMONJS_HTML-->
+    <!--STOREJS_HTML-->
+    <!--LIBSCSS_HTML-->
+    <!--COMMONCSS_HTML-->
   </head>
   <body>
     <img class="logo" src="images/squirrel.png">

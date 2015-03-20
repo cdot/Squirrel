@@ -112,8 +112,8 @@ Squirrel.make_random_dialog = function($node) {
         $("#dlg_gen_rand_again")
             .button()
             .on("click", function() {
-                var $dlg = $("#dlg_gen_rand");
-                var ops = $dlg.data("opts");
+                var $dlg = $("#dlg_gen_rand"),
+                opts = $dlg.data("opts");
                 opts.length = $("#dlg_gen_rand_len").val();
                 opts.charset = $("#dlg_gen_rand_chs").val();
                 $("#dlg_gen_rand_idea").text(Utils.generate_password(opts));
