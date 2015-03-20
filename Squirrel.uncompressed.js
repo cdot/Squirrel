@@ -18,7 +18,9 @@ var Squirrel = {                     // Namespace
     nodes: {},                       // Path->node mapping
 
     // undo stack, this session only
-    undo_stack: []
+    undo_stack: [],
+
+    clipboard : null
 };
 
 /**
@@ -121,8 +123,8 @@ Squirrel.last_mod = function(time) {
 Squirrel.update_tree = function() {
     "use strict";
 
-    $("#treeroot").bonsai("update");
-    Squirrel.init_context_menu();
+    $("#bonsai-root").bonsai("update");
+    $("#bonsai-root").bonsai("expand", $("#sites-node"));
 };
 
 /**
@@ -134,7 +136,7 @@ Squirrel.edit_node = function($node, what) {
     var $span = $node.children(".node_div").children("." + what);
 
     // Fit width to the container
-    var w = $("#tree").width();
+    var w = $("#bonsai-root").width();
     $span.parents().each(function() {
         w -= $(this).position().left;
     });
@@ -250,13 +252,13 @@ Squirrel.search = function(s) {
                 .addClass("search_result")
                 .text(path.join("/"))
                 .on("click", function() {
-                    $("#treeroot")
+                    $("#bonsai-root")
                         .contextmenu("close")
                         .bonsai("collapseAll")
                         .bonsai("expand", $li);
                     // Zoom up the tree opening each level we find
                     $li.parents("li.node").each(function() {
-                        $("#treeroot").bonsai("expand", $(this));
+                        $("#bonsai-root").bonsai("expand", $(this));
                     });
                 });
             $sar.append($res).append("<br />");
@@ -335,7 +337,7 @@ Squirrel.render_action = function(e, chain, undoable) {
                     Squirrel.$paste = $node;
                 })
             .on("click", function(e) {
-                $("#treeroot").contextmenu("close");
+                $("#bonsai-root").contextmenu("close");
                 // Prevent click from bubbling, only obey double click
                 // Not perfect, but good enough.
                 var $span = $(this);
@@ -346,8 +348,8 @@ Squirrel.render_action = function(e, chain, undoable) {
                             if ($span.data("click_timer") !== null) {
                                 $span.data("click_timer", null);
                                 // Same as the node_div handler below
-                                $span
-                                    .closest("ul")
+                                $("#bonsai-root")
+                                    .contextmenu("close")
                                     .bonsai(
                                         $node.hasClass("expanded")
                                             ? "collapse" : "expand", $node);
@@ -378,9 +380,8 @@ Squirrel.render_action = function(e, chain, undoable) {
         } else {
             $div.addClass("treecollection")
             .on("click", function(e) {
-                $("#treeroot").contextmenu("close");
-                $(this)
-                    .closest("ul")
+                $("#bonsai-root")
+                    .contextmenu("close")
                     .bonsai(
                         $node.hasClass("expanded")
                             ? "collapse" : "expand", $node);
@@ -889,7 +890,7 @@ Squirrel.init_ui = function() {
         })
         .hide()
         .on("click", function(/*evt*/) {
-            $("#treeroot").contextmenu("close");
+            $("#bonsai-root").contextmenu("close");
             Squirrel.save_hoards();
         });
 
@@ -902,7 +903,7 @@ Squirrel.init_ui = function() {
         })
         .hide()
         .on("click", function(/*evt*/) {
-            $("#treeroot").contextmenu("close");
+            $("#bonsai-root").contextmenu("close");
             Squirrel.undo();
         });
 
@@ -910,14 +911,13 @@ Squirrel.init_ui = function() {
         .button()
         .hide()
         .on("click", function(/*evt*/) {
-            $("#treeroot").contextmenu("close");
+            $("#bonsai-root").contextmenu("close");
             Squirrel.options_dialog();
         });
 
-    Squirrel.nodes[""] = $("#tree");
+    Squirrel.nodes[""] = $("#sites-node");
 
-    $("#treeroot").bonsai({
-        expandAll: false });
+    $("#bonsai-root").bonsai();
 
     $("#add_root_child")
         .button({
@@ -927,15 +927,17 @@ Squirrel.init_ui = function() {
             text: false
         })
         .on("click", function() {
-            $("#treeroot").contextmenu("close");
-            Squirrel.add_child_node($("#tree"), "A new site");
+            $("#bonsai-root").contextmenu("close");
+            Squirrel.add_child_node($("#sites-node"), "A new site");
         });
 
     $("#search")
         .on("change", function(/*evt*/) {
-            $("#treeroot").contextmenu("close");
+            $("#bonsai-root").contextmenu("close");
             Squirrel.search($(this).val());
         });
+
+    Squirrel.init_context_menu($("#bonsai-root"));
 
     $(document)
         .on("update_save", Squirrel.update_save)

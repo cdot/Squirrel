@@ -2,24 +2,29 @@
  * Context menu handling
  */
 
-Squirrel.init_context_menu = function() {
+Squirrel.init_context_menu = function($root) {
 
-    var before_open = function(e, ui) {
+    before_open = function(e, ui) {
         var $div = (ui.target.is(".node_div"))
             ? ui.target
             : $div = ui.target.parents(".node_div").first(),
         $val = $div.children(".value"),
         isvalue = ($val.length > 0),
-        $root = $("#treeroot"), zc;
+        zc,
+        isroot = ui.target.closest("li").is("#sites-node");
 
         $root
+            .contextmenu("showEntry", "rename", !isroot)
             .contextmenu("showEntry", "copy_value", isvalue)
+            .contextmenu("showEntry", "make_copy", !isroot)
+            .contextmenu("showEntry", "delete", !isroot)
             .contextmenu("showEntry", "edit", isvalue)
             .contextmenu("showEntry", "randomise", isvalue)
             .contextmenu("showEntry", "add_subtree", !isvalue)
-            .contextmenu("showEntry", "add_value", !isvalue)
+            .contextmenu("showEntry", "add_value", !isvalue && !isroot)
             .contextmenu("showEntry", "insert_copy", !isvalue)
-            .contextmenu("enableEntry", "insert_copy", Squirrel.clipboard);
+            .contextmenu("enableEntry", "insert_copy",
+                         Squirrel.clipboard !== null);
 
         if (!$root.data("zc_copy")) {
             // First time, attach zero clipboard handler
@@ -94,12 +99,12 @@ Squirrel.init_context_menu = function() {
                 uiIcon: "squirrel-icon-add-value" 
             },
             {
-                title: TX.tx("Add new sub-tree"),
+                title: TX.tx("Add new folder"),
                 cmd: "add_subtree",
                 uiIcon: "squirrel-icon-add" 
             },
             {
-                title: TX.tx("Copy node"),
+                title: TX.tx("Copy folder"),
                 cmd: "make_copy",
                 uiIcon: "squirrel-icon-copy"
             },
@@ -121,7 +126,7 @@ Squirrel.init_context_menu = function() {
         select: Squirrel.context_menu_choice
     };
 
-    $("#treeroot").contextmenu(menu);
+    $root.contextmenu(menu);
 };
 
 /**
@@ -166,7 +171,7 @@ Squirrel.context_menu_choice = function(e, ui) {
 
     case "add_subtree":
         if (DEBUG) console.debug("Adding subtree");
-        Squirrel.add_child_node($node, TX.tx("A new sub-tree"));
+        Squirrel.add_child_node($node, TX.tx("A new folder"));
         break;
 
     case "randomise":
