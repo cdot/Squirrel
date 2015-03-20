@@ -10,6 +10,7 @@
     <!--STOREJS_HTML-->
     <!--LIBSCSS_HTML-->
     <!--COMMONCSS_HTML-->
+    <!--DEBUG-->
   </head>
   <body>
     <img class="logo" src="images/squirrel.png">

@@ -38,76 +38,74 @@ driveJS= \
 # make drive.uncompressed.html
 
 SPRE=<script "type="text/javascript" src="
-
 SPOS="></script>
-
 LPRE=<link rel="stylesheet" href="
-
 LPOS=">
 
-LIBSJS_HTML= $(patsubst %,$(SPRE)%$(SPOS),$(LIBSJS))
-
-LIBSCSS_HTML= $(patsubst %,$(LPRE)%$(LPOS),$(LIBSCSS))
-
-COMMONJS_HTML= $(patsubst %,$(SPRE)%$(SPOS),$(COMMONJS))
-
-COMMONCSS_HTML= $(patsubst %,$(LPRE)%$(LPOS),$(COMMONCSS))
-
-dropboxJS_HTML= $(patsubst %,$(SPRE)%$(SPOS),$(dropboxJS))
-
-drive_JS_HTML= $(patsubst %,$(SPRE)%$(SPOS),$(driveJS))
+debug: dropbox.uncompressed.html drive..uncompressed.html
 
 %.uncompressed.html : Squirrel.html.src
 	./sub.pl Squirrel.html.src \
-		LIBSJS_HTML '$(LIBSJS_HTML)' \
-		COMMONJS_HTML '$(COMMONJS_HTML)' \
-		STOREJS_HTML '$($*JS_HTML)' \
-		LIBSCSS_HTML '$(LIBSCSS_HTML)' \
-		COMMONCSS_HTML '$(COMMONCSS_HTML)' \
+		LIBSJS_HTML '$(patsubst %,$(SPRE)%$(SPOS),$(LIBSJS))' \
+		COMMONJS_HTML '$(patsubst %,$(SPRE)%$(SPOS),$(COMMONJS))' \
+		STOREJS_HTML '$(patsubst %,$(SPRE)%$(SPOS),$($*JS))' \
+		LIBSCSS_HTML '$(patsubst %,$(LPRE)%$(LPOS),$(LIBSCSS))' \
+		COMMONCSS_HTML '$(patsubst %,$(LPRE)%$(LPOS),$(COMMONCSS))' \
+		DEBUG '<script type="text/javascript">const DEBUG=true;</script>' \
 	> $@
 
 # Making release 
 
+#		--source-map $(patsubst %.js,%.map,$@) \
+
 uglifyJS = \
 	uglifyjs \
 		--compress \
-		--source-map $*.min.map \
 		--define DEBUG=false \
-		--mangle \
 		-o $@ \
 		-- $^
 
-libs.min.js : $(LIBSJS)
+cleancss = \
+	echo "" > $@; \
+	$(patsubst %,cleancss %>>$@;,$^)
+
+libs/libs.min.js : $(LIBSJS)
 	$(uglifyJS)
 
-libs.min.css : $(LIBSCSS)
-	cleancss $< > $@
+libs/libs.min.css : $(LIBSCSS)
+	$(cleancss)
 
 Squirrel.min.js : $(COMMONJS)
 	$(uglifyJS)
 
 Squirrel.min.css : $(COMMONCSS)
-	cleancss $< > $@
+	$(cleancss)
 
-dropbox.min.js : $(dropboxJS_JS)
+dropbox.min.js : $(dropboxJS)
+	$(uglifyJS)
 
-%.html : Squirrel.html.src Squirrel.min.js libs.min.js %.min.js libs.min.css Squirrel.min.css 
-	./sub.pl Squirrel.html.src \
-	LIBSJS_HTML '$(SPRE)libs.min.js$(SPOS)' \
+drive.min.js : $(driveJS)
+	$(uglifyJS)
+
+%.html : Squirrel.html.src Squirrel.min.js libs/libs.min.js %.min.js libs/libs.min.css Squirrel.min.css
+	perl sub.pl Squirrel.html.src \
+	LIBSJS_HTML '$(SPRE)libs/libs.min.js$(SPOS)' \
 	COMMONJS_HTML '$(SPRE)Squirrel.min.js$(SPOS)' \
 	STOREJS_HTML '$(SPRE)$*.min.js$(SPOS)' \
-	LIBSCSS_HTML '$(LPRE)libs.min.css$(LPOS)' \
+	LIBSCSS_HTML '$(LPRE)libs/libs.min.css$(LPOS)' \
 	COMMONCSS_HTML '$(LPRE)Squirrel.min.css$(LPOS)' \
 	> $@
 
-release: \
-	dropbox.html drive.html
+release: dropbox.html drive.html
+
+# Other targets
 
 clean:
-	rm *~
-	rm libs/*.min.*
-	rm *.min.*
-	rm *.html
+	rm -f *~
+	rm -f libs/*.min.*
+	rm -f *.min.*
+	rm -f *.html
+	rm -f *.map
 
 eslint: *.uncompressed.js
 	eslint --config package.json *.uncompressed.js
@@ -116,8 +114,4 @@ locale/*.json: *.uncompressed.js Squirrel.html.src Makefile translate.pl
 	cat $^ \
 	| perl translate.pl
 
-%.uncompressed.html : Squirrel.html.src Makefile
-	cat Squirrel.html.src \
-	| perl -e '$$/=undef;$$_=<>;s{<!--cloud:$*\s*(.*?)\s*cloud:$*-->}{"$$1"}sge;print $$_;' \
-	> $@
 

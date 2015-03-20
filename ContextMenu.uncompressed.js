@@ -35,7 +35,7 @@ Squirrel.init_context_menu = function($root) {
             // Handle the "copy" event that comes from
             // the Flash movie and populate the event with our data
             zc.on("copy", function(event) {
-                if (DEBUG) console.debug("Copying to clipboard");
+                if (DEBUG) { console.debug("Copying to clipboard"); }
                 event.clipboardData.setData(
                     "text/plain",
                     $root.data("zc_copy").text());
