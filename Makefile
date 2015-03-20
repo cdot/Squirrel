@@ -107,8 +107,8 @@ clean:
 	rm -f *.html
 	rm -f *.map
 
-eslint: *.uncompressed.js
-	eslint --config package.json *.uncompressed.js
+eslint: $(COMMONJS) DropboxStore.uncompressed.js $(driveJS)
+	eslint --config package.json $^
 
 locale/*.json: *.uncompressed.js Squirrel.html.src Makefile translate.pl
 	cat $^ \

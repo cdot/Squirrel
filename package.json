@@ -22,7 +22,9 @@
             "TX": true,
             "Dropbox": true,
             "gapi" : true,
-            "ZeroClipboard": true
+            "ZeroClipboard": true,
+            "DEBUG": true,
+            "Squirrel": true
         },
         "rules": {
             "no-underscore-dangle": 0,

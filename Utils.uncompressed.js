@@ -48,7 +48,7 @@ $.fn.scroll_into_view = function () {
 
         if (offset > window.innerHeight){
             // Not in view so scroll to it
-            $('html,body').animate({scrollTop: offset - 16}, 500);
+            $("html,body").animate({scrollTop: offset - 16}, 500);
             return false;
         }
         return true;
@@ -67,7 +67,7 @@ $.fn.edit_in_place = function(opts) {
         var h = opts.height || $self.height();
         var w = opts.width || $self.width();
         var changed = opts.changed ||
-            function(text) {
+            function(/*text*/) {
                 $self.text();
             };
         var $input = $("<input/>"),
@@ -129,17 +129,6 @@ $.fn.reon = function(event, handler) {
     });
 };
 
-$.fn.paste = function(event, handler) {
-    "use string";
-
-    return this.each(function() {
-        $(this).on("paste", function(e) {
-            console.debug("Saw paste event on $(document)");
-            Utils.handle_paste(this, e);
-        });
-    });
-};
-
 var Utils = { // Namespace
     waiting: {},
     // By setting the wait_timeout to a non-null value we block
@@ -148,66 +137,6 @@ var Utils = { // Namespace
     wait_timeout: true,
 
     last_yield: Date.now()
-};
-
-// The onpaste event has the handle_paste function attached to it, and is
-// passed two arguments: this (i.e. a reference to the element that the
-// event is attached to) and the event object.
-Utils.handle_paste = function(elem, e) {
-
-    if (e && e.clipboardData && e.clipboardData.getData) {
-        // Webkit - get data from clipboard, put into elem,
-        // cleanup, then cancel event. This prevents webkit
-        // pasting anything twice. Webkit is awkward, and won't
-        // paste anything if you simply clear elem.
-        if (/text\/plain/.test(e.clipboardData.types))
-            // Data is already available
-            $div.text(e.clipboardData.getData('text/plain'));
-
-        Utils.wait_for_paste_data(elem);
-
-        if (e.preventDefault) {
-            e.stopPropagation();
-            e.preventDefault();
-        }
-        return false;
-    }
-    else {
-        // Everything else
-        Utils.wait_for_paste_data(elem);
-        return true;
-    }
-};
-
-// This is necessary because the pasted data doesn't appear straight
-// away, so if you just called processpaste straight away then it
-// wouldn't have any data to process.
-//
-// What it does is check if the editable div has any content, if it
-// does then calls processpaste, otherwise it sets a timer to call
-// itself and check again in 20 milliseconds.
-Utils.wait_for_pastedata = function(elem, saved_content) {
-    if (elem.children().length > 0)
-        Utils.process_paste(elem, saved_content);
-    else {
-        var e = elem;
-        var s = saved_content;
-        var callself = function () {
-            Utils.wait_for_paste_data(that.e, that.s)
-        };
-        setTimeout(callself, 20);
-    }
-};
-
-Utils.process_paste = function(elem, saved_content) {
-    pasteddata = elem.innerHTML;
-    //^^ Alternatively loop through dom (elem.childNodes
-    // or elem.getElementsByTagName) here
-
-    elem.innerHTML = saved_content;
-
-    // Do whatever with gathered data;
-    alert(pasteddata);
 };
 
 /**
@@ -285,9 +214,11 @@ Utils.fragmentify = function(fid) {
  * Read a file from disc
  */
 Utils.read_file = function(file, ok, fail) {
-    var store = this;
+    "use strict";
+
+    //var store = this;
     var reader = new FileReader();
-    reader.onload = function(evt) {
+    reader.onload = function(/*evt*/) {
         ok(reader.result);
     };
     reader.onerror = function() {

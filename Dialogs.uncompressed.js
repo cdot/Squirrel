@@ -35,12 +35,12 @@ Squirrel.confirm_delete_dialog = function($node) {
         $("#dlg_delconf_delete")
             .button()
             .on("click", function(/*evt*/) {
-                var $dlg = $("#dlg_delconf");
-                $dlg.dialog("close");
+                var $ddlg = $("#dlg_delconf");
+                $ddlg.dialog("close");
                 var res = Squirrel.client.hoard.record_action(
                     {
                         type: "D",
-                        path: $dlg.data("path")
+                        path: $ddlg.data("path")
                     },
                     function(e) {
                         Squirrel.render_action(
@@ -86,16 +86,16 @@ Squirrel.make_random_dialog = function($node) {
     $dlg.data("node", $node);
     $dlg.data("opts", opts);
 
-    if (typeof $dlg.dialog("instance") == "undefined") {
+    if (typeof $dlg.dialog("instance") === "undefined") {
         $("#dlg_gen_rand_use")
             .button()
             .on("click", function() {
-                var $dlg = $("#dlg_gen_rand");
-                $dlg.dialog("close");
+                var $ddlg = $("#dlg_gen_rand");
+                $ddlg.dialog("close");
                 var pw = $("#dlg_gen_rand_idea").text();
-                var old_path = Squirrel.get_path($dlg.data("node"));
+                var old_path = Squirrel.get_path($ddlg.data("node"));
                 var res = Squirrel.client.hoard.record_action(
-                    { type: 'E',
+                    { type: "E",
                       path: old_path,
                       data: pw },
                     function(e) {
@@ -106,14 +106,14 @@ Squirrel.make_random_dialog = function($node) {
                             }, true);
                     });
                 if (res !== null)
-                    Squirrel.squeak(e.message);
+                    Squirrel.squeak(res.message);
             });
 
         $("#dlg_gen_rand_again")
             .button()
             .on("click", function() {
-                var $dlg = $("#dlg_gen_rand"),
-                opts = $dlg.data("opts");
+                var $ddlg = $("#dlg_gen_rand");
+                opts = $ddlg.data("opts");
                 opts.length = $("#dlg_gen_rand_len").val();
                 opts.charset = $("#dlg_gen_rand_chs").val();
                 $("#dlg_gen_rand_idea").text(Utils.generate_password(opts));
@@ -136,8 +136,6 @@ Squirrel.load_JSON_file_dialog = function() {
     "use strict";
 
     var $dlg = $("#dlg_json");
-    if (typeof $dlg.dialog("instance") === "undefined") {
-    }
     $dlg.dialog({
         modal: true,
         width: "auto"
@@ -186,6 +184,8 @@ Squirrel.change_password_dialog = function() {
 };
 
 Squirrel.read_json_file = function(file) {
+    "use strict";
+
     Utils.read_file(
         file,
         function(data) {
@@ -208,7 +208,7 @@ Squirrel.options_dialog = function() {
 
     var $dlg = $("#dlg_options");
 
-    if (typeof $dlg.dialog("instance") == "undefined") {
+    if (typeof $dlg.dialog("instance") === "undefined") {
         $("#dlg_options_autosave")
             .prop("checked", Squirrel.client.hoard.options.autosave)
             .on("change", function() {
@@ -228,15 +228,6 @@ Squirrel.options_dialog = function() {
                 $dlg.dialog("close");
                 Squirrel.change_password_dialog();
             });
-
-        $("#dlg_options_jsonfile")
-            .on("click", function() {
-                this.value = null;
-            })
-            .on("change", function() {
-                read_json_file($("#dlg_options_jsonfile")[0].files[0]);
-            })
-            .hide();
 
         $("#dlg_options_import").button().click(function(e) {
             $("#dlg_options_jsonfile").trigger("click", e);
@@ -269,7 +260,7 @@ Squirrel.login_dialog = function(ok, fail, uReq, pReq) {
 
     // Should never be called more than once
     if (DEBUG && typeof $dlg.dialog("instance") !== "undefined")
-        debugger;
+        throw "Bad restart";
 
     sign_in = function(/*evt*/) {
         $dlg.dialog("close");
@@ -305,7 +296,7 @@ Squirrel.login_dialog = function(ok, fail, uReq, pReq) {
     $dlg.dialog({
         modal: true,
         width: "auto",
-        focus: function(e, ui) {
+        focus: function(/*e, ui*/) {
             // "autofocus" ought to do this, but doesn't
             $foc.focus();
         }

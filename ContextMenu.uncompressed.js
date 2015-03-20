@@ -3,8 +3,9 @@
  */
 
 Squirrel.init_context_menu = function($root) {
+    "use strict";
 
-    before_open = function(e, ui) {
+    var before_open = function(e, ui) {
         var $div = (ui.target.is(".node_div"))
             ? ui.target
             : $div = ui.target.parents(".node_div").first(),
@@ -147,7 +148,7 @@ Squirrel.context_menu_choice = function(e, ui) {
         break;
 
     case "insert_copy":
-        if (DEBUG) console.debug("Pasting "+Squirrel.$paste);
+        if (DEBUG) console.debug("Pasting " + Squirrel.$paste);
         if (Squirrel.clipboard) {
             var data = JSON.parse(Squirrel.clipboard);
             Squirrel.add_child_node($node, TX.tx("A copy"), data.data);

@@ -20,7 +20,7 @@ var Squirrel = {                     // Namespace
     // undo stack, this session only
     undo_stack: [],
 
-    clipboard : null
+    clipboard: null
 };
 
 /**
@@ -82,7 +82,9 @@ Squirrel.demap = function($node) {
  * Undo the most recent action
  */
 Squirrel.undo = function() {
-    if (DEBUG && Squirrel.undo_stack.length == 0) throw "Whoops";
+    "use strict";
+
+    if (DEBUG && Squirrel.undo_stack.length === 0) throw "Whoops";
 
     var a = Squirrel.undo_stack.pop();
     a.time = Date.now();
@@ -96,7 +98,7 @@ Squirrel.undo = function() {
                     // If there are no undos, there can be no modifications.
                     // The hoard status will not be changed, though, so a
                     // save may still be required.
-                    if (Squirrel.undo_stack.length == 0)
+                    if (Squirrel.undo_stack.length === 0)
                         $(".modified").removeClass("modified");
                     Utils.sometime("update_save");
                     Utils.sometime("update_tree");
@@ -149,10 +151,10 @@ Squirrel.edit_node = function($node, what) {
                 { type: what === "key" ? "R" : "E",
                   path: old_path,
                   data: s },
-                function(e) {
+                function(ea) {
                     Squirrel.render_action(
-                        e,
-                        function($newnode) {
+                        ea,
+                        function(/*$newnode*/) {
                             Utils.sometime("update_save");
                             Utils.sometime("update_tree");
                         }, true);
@@ -209,6 +211,8 @@ Squirrel.add_child_node = function($node, title, value) {
  * @param data hoard cache format data
 */
 Squirrel.insert_data = function(path, data) {
+    "use strict";
+
     var load_log = [];
     Squirrel.client.hoard.actions_from_hierarchy(
         { data: data },
@@ -227,9 +231,8 @@ Squirrel.insert_data = function(path, data) {
             Utils.sometime("update_save");
             Utils.sometime("update_tree");
             Squirrel.squeak(
-                file.name
-                    + TX.tx(" has been loaded") + "<br />"
-                    + join("<br />", load_log));
+                TX.tx("JSON has been loaded") + "<br />"
+                    + load_log.join("<br />"));
         });
 };
 
@@ -333,10 +336,10 @@ Squirrel.render_action = function(e, chain, undoable) {
         $("<span></span>")
             .addClass("key")
             .hover(
-                function(e) {
+                function(/*e*/) {
                     Squirrel.$paste = $node;
                 })
-            .on("click", function(e) {
+            .on("click", function(/*e*/) {
                 $("#bonsai-root").contextmenu("close");
                 // Prevent click from bubbling, only obey double click
                 // Not perfect, but good enough.
@@ -379,7 +382,7 @@ Squirrel.render_action = function(e, chain, undoable) {
                         .text(e.data));
         } else {
             $div.addClass("treecollection")
-            .on("click", function(e) {
+            .on("click", function(/*e*/) {
                 $("#bonsai-root")
                     .contextmenu("close")
                     .bonsai(
@@ -941,10 +944,7 @@ Squirrel.init_ui = function() {
 
     $(document)
         .on("update_save", Squirrel.update_save)
-        .on("update_tree", Squirrel.update_tree)
-        .paste(function(e, data) {
-            debugger;
-        });
+        .on("update_tree", Squirrel.update_tree);
 };
 
 Squirrel.init_client_store = function() {
@@ -1053,6 +1053,5 @@ Squirrel.init_cloud_store = function() {
             // Initialise translation module
             TX.init(Squirrel.init_cloud_store);
         });
-;
 
 })(jQuery);

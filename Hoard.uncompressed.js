@@ -227,17 +227,17 @@ Hoard.prototype.simplify = function() {
  */
 Hoard.prototype._reconstruct_actions = function() {
     "use strict";
-    var context, node, path, key, self = this, p, next_node, time;
+    var context, node, path, key, self = this, p, time,
+    next_node = function() {
+        Utils.soon(function() {
+            self._reconstruct_actions();
+        });
+    };
 
     while (this.reconstruct.queue.length !== 0) {
         context = this.reconstruct.queue.shift();
         node = context.node;
         path = context.path;
-        next_node = function() {
-            Utils.soon(function() {
-                self._reconstruct_actions();
-            });
-        };
         time = (typeof node.time !== "undefined" ? node.time : Date.now());
 
         if (typeof node.data === "string") {
@@ -298,6 +298,8 @@ Hoard.prototype._reconstruct_actions = function() {
  * (no parameters, no this)
  */
 Hoard.prototype.actions_from_hierarchy = function(data, listener, chain) {
+    "use strict";
+
     this.reconstruct = {
         queue: [ { node: data, path: [] } ],
         listener: listener,
@@ -365,7 +367,9 @@ Hoard.prototype.merge_from_cloud = function(cloud, listener, chain) {
  * @return a cache node, or null if not found.
  */
 Hoard.prototype.get_node = function(path) {
-    var node = this.cache, name, i;
+    "use strict";
+
+    var node = this.cache, i;
     for (i = 0; i < path.length; i++) {
         if (typeof node.data === "string")
             return null;
