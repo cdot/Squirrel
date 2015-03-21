@@ -1,14 +1,28 @@
-// Generate an alert dialog
-Squirrel.squeak = function(e) {
+// Generate an alert dialog "OK" button
+Squirrel.squeak = function(e, ok) {
     "use strict";
+
+    var $dlg = $("#dlg_alert");
 
     if (typeof e === "string")
         $("#dlg_alert_message").html(e);
     else
         $("#dlg_alert_message").empty().append(e);
 
-    $("#dlg_alert").dialog({
-        modal: true
+    if (typeof $dlg.dialog("instance") === "undefined") {
+        $("#dlg_alert_ok")
+            .button()
+            .on("click", function(/*e*/) {
+                $dlg.dialog("close");
+            });
+    }
+
+    $dlg.dialog({
+        modal: true,
+        close: function() {
+            if (typeof ok !== "undefined")
+                ok();
+        }
     });
 };
 
@@ -256,11 +270,10 @@ Squirrel.options_dialog = function() {
 Squirrel.login_dialog = function(ok, fail, uReq, pReq) {
     "use strict";
 
-    var $dlg = $("#dlg_login"), sign_in, $uReq, $pReq, store = this, $foc;
+    var $dlg = $("#dlg_login"), store = this,
 
-    // Should never be called more than once
-    if (DEBUG && typeof $dlg.dialog("instance") !== "undefined")
-        throw "Bad restart";
+    $uReq = $("#dlg_login_uReq").toggle(uReq).find("input"),
+    $pReq = $("#dlg_login_pReq").toggle(pReq).find("input"),
 
     sign_in = function(/*evt*/) {
         $dlg.dialog("close");
@@ -268,37 +281,34 @@ Squirrel.login_dialog = function(ok, fail, uReq, pReq) {
                 uReq ? $("#dlg_login_user").val() : undefined,
                 pReq ? $("#dlg_login_pass").val() : undefined);
     };
-    $uReq = $("#dlg_login_uReq").toggle(uReq).find("input");
-    $pReq = $("#dlg_login_pReq").toggle(pReq).find("input");
+    $("#dlg_login_signin")
+        .button()
+        .reon("click", sign_in);
         
     if (uReq && pReq) {
-        $foc = $uReq;
-        $uReq.on("change", function() {
+        $dlg.data("foc", $uReq);
+        $uReq.reon("change", function() {
             $pReq.focus();
         });
-        $pReq.on("change", sign_in);
+        $pReq.reon("change", sign_in);
     }
     else if (uReq) {
-        $foc = $uReq;
-        $uReq.on("change", sign_in);
+        $dlg.data("foc", $uReq);
+        $uReq.reon("change", sign_in);
     } else if (pReq) {
         $("#dlg_login_foruser")
             .toggle(this.user() !== null)
             .text(this.user() || "");
-        $foc = $pReq;
-        $pReq.on("change", sign_in);
+        $dlg.data("foc", $pReq);
+        $pReq.reon("change", sign_in);
     }
 
-    $("#dlg_login_signin")
-        .button()
-        .on("click", sign_in);
-    
     $dlg.dialog({
         modal: true,
         width: "auto",
         focus: function(/*e, ui*/) {
             // "autofocus" ought to do this, but doesn't
-            $foc.focus();
+            $dlg.data("foc").focus();
         }
     });
 };

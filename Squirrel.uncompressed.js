@@ -1,27 +1,8 @@
 /* Copyright (C) 2015 Crawford Currie http://c-dot.co.uk / MIT */
 
-var Squirrel = {                     // Namespace
-    // status may be one of "is empty", "is corrupt", "is loaded" or
-    // "has a new password". If the status is anything but "is loaded"
-    // then it is a candidate for saving.
-    client: {
-        store: null,                 // The store used actively
-        hoard: null,                 // The hoard in that store
-        status: "is empty"
-    },
-    cloud: {
-        store: null,                 // Temporary memory used during load
-        status: "is empty"
-    },
+var Squirrel = {};                     // Namespace
 
-    PATHSEP: String.fromCharCode(1), // separator used in Path->node mapping
-    nodes: {},                       // Path->node mapping
-
-    // undo stack, this session only
-    undo_stack: [],
-
-    clipboard: null
-};
+const PATHSEP = String.fromCharCode(1); // separator used in Path->node mapping
 
 /**
  * Reconstruct the path for an item from the DOM, populating the
@@ -35,14 +16,14 @@ Squirrel.get_path = function($node) {
 
     var ps = $node.data("path"), path;
     if (typeof ps !== "undefined" && ps !== null)
-        return ps.split(Squirrel.PATHSEP);
+        return ps.split(PATHSEP);
 
     if (typeof $node.data("key") !== "undefined") {
         path = Squirrel.get_path($node.parent().closest(".node"));
 
         path.push($node.data("key"));
 
-        ps = path.join(Squirrel.PATHSEP);
+        ps = path.join(PATHSEP);
 
         // node->path mapping
         $node.data("path", ps);
@@ -316,7 +297,7 @@ Squirrel.render_action = function(e, chain, undoable) {
         key = p.pop();
 
         // Get the container
-        $node = Squirrel.nodes[p.join(Squirrel.PATHSEP)];
+        $node = Squirrel.nodes[p.join(PATHSEP)];
         $container = $node.children("ul").first();
 
         // Create the new node
@@ -426,7 +407,7 @@ Squirrel.render_action = function(e, chain, undoable) {
 
     case "R": // Rename
         // Detach the li from the DOM
-        $node = Squirrel.nodes[p.join(Squirrel.PATHSEP)];
+        $node = Squirrel.nodes[p.join(PATHSEP)];
         Squirrel.demap($node);
 
         $container = $node.closest("ul");
@@ -479,7 +460,7 @@ Squirrel.render_action = function(e, chain, undoable) {
         break;
 
     case "E": // Change data
-        $node = Squirrel.nodes[p.join(Squirrel.PATHSEP)];
+        $node = Squirrel.nodes[p.join(PATHSEP)];
 
         if (undoable) {
             Squirrel.undo_stack.push({
@@ -500,7 +481,7 @@ Squirrel.render_action = function(e, chain, undoable) {
         break;
 
     case "D": // Delete node
-        $node = Squirrel.nodes[p.join(Squirrel.PATHSEP)];
+        $node = Squirrel.nodes[p.join(PATHSEP)];
         Squirrel.demap($node);
 
         if (undoable) {
@@ -802,7 +783,7 @@ Squirrel.load_cloud_store = function() {
                 } catch (e) {
                     if (DEBUG) console.debug("Client hoard JSON parse failed: " + e);
                     Squirrel.squeak(
-                        TX.tx("$1 hoard can't be read. Are you sure you have the correct password?",
+                        TX.tx("$1 hoard exists, but can't be read. Check that you have the correct password.",
                         this.identifier()));
                     Squirrel.cloud.status = "is corrupt";
                     Utils.soon(Squirrel.hoards_loaded);
@@ -817,8 +798,9 @@ Squirrel.load_cloud_store = function() {
                     if (DEBUG) console.debug(this.identifier() + " contains NODATA");
                     Squirrel.cloud.status = "is empty";
                 } else {
-                    Squirrel.squeak(TX.tx("$1 store error: $2",
-                                          this.identifier(), e));
+                    Squirrel.squeak(
+                        TX.tx("$1 store error: $2", this.identifier(), e));
+                    // Could not contact cloud; continue all the same
                 }
                 Utils.soon(Squirrel.hoards_loaded);
             });
@@ -830,6 +812,7 @@ Squirrel.load_cloud_store = function() {
 Squirrel.load_client_store = function() {
     "use strict";
 
+    if (DEBUG) console.debug("Load client store");
     Squirrel.client.store.read(
         function(data) {
             try {
@@ -837,10 +820,11 @@ Squirrel.load_client_store = function() {
                 Squirrel.client.status = "is loaded";
             } catch (e) {
                 Squirrel.squeak(
-                    TX.tx("$1 hoard can't be read. Do you have the correct password?",
-                    this.identifier()) + ": " + e);
-                Squirrel.client.hoard = new Hoard();
-                Squirrel.client.status = "is corrupt";
+                    TX.tx("$1 hoard exists, but can't be read. Check that you have the correct password.", this.identifier()),
+                    Squirrel.init_application);
+                return;
+                //Squirrel.client.hoard = new Hoard();
+                //Squirrel.client.status = "is corrupt";
             }
 
             if (DEBUG) console.debug("Reconstructing UI tree from cache");
@@ -857,7 +841,7 @@ Squirrel.load_client_store = function() {
                     for (i = 0; i < as.length; i++) {
                         p = as[i].path.slice();
                         while (p.length > 0) {
-                            $node = Squirrel.nodes[p.join(Squirrel.PATHSEP)];
+                            $node = Squirrel.nodes[p.join(PATHSEP)];
                             if ($node) {
                                 $node.addClass("modified");
                                 break;
@@ -875,8 +859,9 @@ Squirrel.load_client_store = function() {
                 Squirrel.client.status = "is empty";
                 Utils.soon(Squirrel.load_cloud_store);
             } else {
-                Squirrel.squeak(TX.tx("$1 store error: $2",
-                                      this.identifier(), e));
+                Squirrel.squeak(
+                    TX.tx("$1 store error: $2", this.identifier(), e),
+                    Squirrel.init_application);
             }
         });
 };
@@ -917,8 +902,6 @@ Squirrel.init_ui = function() {
             $("#bonsai-root").contextmenu("close");
             Squirrel.options_dialog();
         });
-
-    Squirrel.nodes[""] = $("#sites-node");
 
     $("#bonsai-root").bonsai();
 
@@ -1043,6 +1026,34 @@ Squirrel.init_cloud_store = function() {
     new EncryptedStore(params);
 };
 
+Squirrel.init_application = function() {
+
+    // status may be one of "is empty", "is corrupt", "is loaded" or
+    // "has a new password". If the status is anything but "is loaded"
+    // then it is a candidate for saving.
+    Squirrel.client = {
+        store: null,                 // The store used actively
+        hoard: null,                 // The hoard in that store
+        status: "is empty"
+    };
+
+    Squirrel.cloud = {
+        store: null,                 // Temporary memory used during load
+        status: "is empty"
+    };
+
+    Squirrel.nodes = {             // Path->node mapping
+        "": $("#sites-node")
+    };
+
+    // undo stack, this session only
+    Squirrel.undo_stack = [];
+
+    Squirrel.clipboard = null;
+
+    Squirrel.init_cloud_store();
+};
+
 (function ($) {
     "use strict";
 
@@ -1051,7 +1062,7 @@ Squirrel.init_cloud_store = function() {
             // Initialise UI components
             Squirrel.init_ui();
             // Initialise translation module
-            TX.init(Squirrel.init_cloud_store);
+            TX.init(Squirrel.init_application);
         });
 
 })(jQuery);

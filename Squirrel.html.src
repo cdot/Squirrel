@@ -73,7 +73,8 @@
     </div>
 
     <div id="dlg_alert" class="dialog TX_title" title="Alert">
-      <div id="dlg_alert_message"></div>
+      <p id="dlg_alert_message"></p>
+      <button id="dlg_alert_ok" class="TX_text">OK</button>
     </div>
 
     <div id="dlg_gen_rand" class="dialog TX_title" title="Generate random value">
