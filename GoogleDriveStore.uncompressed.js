@@ -18,6 +18,8 @@ function GoogleDriveStore(params) {
     GoogleDriveStore._init(this, params);
 }
 
+const SQUIRREL_STORE = GoogleDriveStore;
+
 GoogleDriveStore.loaded = function() {
     "use strict";
 

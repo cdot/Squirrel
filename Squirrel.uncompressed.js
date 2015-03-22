@@ -86,7 +86,7 @@ Squirrel.undo = function() {
                 });
         });
     if (res !== null)
-        Squirrel.squeak(res.message);
+        Squirrel.Dialog.squeak(res.message);
 };
 
 /**
@@ -103,11 +103,25 @@ Squirrel.last_mod = function(time) {
 /**
  * Event handler to update the tree view when data changes
  */
-Squirrel.update_tree = function() {
+Squirrel.update_tree = function(/*event*/) {
     "use strict";
 
     $("#bonsai-root").bonsai("update");
     $("#bonsai-root").bonsai("expand", $("#sites-node"));
+};
+
+Squirrel.check_alarms = function(/* event */) {
+    Squirrel.client.hoard.check_alarms(
+        function(path, expired, next) {
+            var $node = Squirrel.nodes[path.join(PATHSEP)];
+            Squirrel.Dialog.squeak(
+                TX.tx("Reminder on '$1' was due at $2",
+                      Squirrel.make_jump($node),
+                      expired.toLocaleDateString()),
+                function() {
+                    next();
+                })
+        });
 };
 
 /**
@@ -141,7 +155,7 @@ Squirrel.edit_node = function($node, what) {
                         }, true);
                 });
             if (e !== null)
-                Squirrel.squeak(e.message);
+                Squirrel.Dialog.squeak(e.message);
         }
     });
 };
@@ -183,7 +197,7 @@ Squirrel.add_child_node = function($node, title, value) {
             }, true);
         });
     if (res !== null)
-        Squirrel.squeak(res.message);
+        Squirrel.Dialog.squeak(res.message);
 };
 
 /**
@@ -211,9 +225,26 @@ Squirrel.insert_data = function(path, data) {
         function() { // chain on complete
             Utils.sometime("update_save");
             Utils.sometime("update_tree");
-            Squirrel.squeak(
+            Squirrel.Dialog.squeak(
                 TX.tx("JSON has been loaded") + "<br />"
                     + load_log.join("<br />"));
+        });
+};
+
+Squirrel.make_jump = function($node) {
+    var path = Squirrel.get_path($node);
+    return $("<a></a>")
+        .attr("href", "#" + Utils.fragmentify(path.join(":")))
+        .text(path.join("/"))
+        .on("click", function() {
+            $("#bonsai-root")
+                .contextmenu("close")
+                .bonsai("collapseAll")
+                .bonsai("expand", $node);
+            // Zoom up the tree opening each level we find
+            $node.parents(".node").each(function() {
+                $("#bonsai-root").bonsai("expand", $(this));
+            });
         });
 };
 
@@ -228,24 +259,9 @@ Squirrel.search = function(s) {
     var re = new RegExp(s, "i");
     $(".key").each(function() {
         if ($(this).text().match(re)) {
-            var $li = $(this).closest("li");
-            var path = Squirrel.get_path($li);
-            var $res = $("<a></a>");
-            $res
-                .attr("href", "#" + Utils.fragmentify(path.join(":")))
-                .addClass("search_result")
-                .text(path.join("/"))
-                .on("click", function() {
-                    $("#bonsai-root")
-                        .contextmenu("close")
-                        .bonsai("collapseAll")
-                        .bonsai("expand", $li);
-                    // Zoom up the tree opening each level we find
-                    $li.parents("li.node").each(function() {
-                        $("#bonsai-root").bonsai("expand", $(this));
-                    });
-                });
-            $sar.append($res).append("<br />");
+            var $node = $(this).closest(".node");
+            Squirrel.make_jump($node).addClass("search_result").appendTo($sar);
+            $sar.append("<br />");
         }
     });
 };
@@ -253,7 +269,7 @@ Squirrel.search = function(s) {
 /**
  * Event handler to update the save button based on hoard state
  */
-Squirrel.update_save = function() {
+Squirrel.update_save = function(/*event*/) {
     "use strict";
 
     $("#undo_button").toggle(Squirrel.undo_stack.length !== 0);
@@ -287,7 +303,7 @@ Squirrel.render_action = function(e, chain, undoable) {
 
     //if (DEBUG) console.debug("Playing " + Hoard.stringify_action(e));
 
-    var $node, $div, key, $container,
+    var $node, $div, key, $container, $alarm,
     p = e.path, inserted;
 
     switch (e.type) {
@@ -504,6 +520,43 @@ Squirrel.render_action = function(e, chain, undoable) {
 
         $node.remove();
 
+        break;
+
+    case "A": // Alarm
+        $node = Squirrel.nodes[p.join(PATHSEP)];
+        // Check there's an alarm already
+        $alarm = $node.children(".alarm");
+        if ($alarm.length > 0) {
+            if ($alarm.data("alarm") != e.data) {
+                $node.addClass("modified");
+                $alarm.data("alarm", e.data);
+            }
+        } else {
+            $node .addClass("modified")
+            $("<button></button>")
+                .addClass("alarm")
+                .data("alarm", e.data)
+                .button(
+                    {
+                        icons: {
+                            primary: "squirrel-icon-alarm"
+                        },
+                        text: false
+                    })
+                .click(function() {
+                    Squirrel.Dialog.alarm($node);
+                })
+                .prependTo($node);
+        }
+        break;
+
+    case "C": // Cancel alarm
+        $node = Squirrel.nodes[p.join(PATHSEP)];
+        $alarm = $node.children(".alarm");
+        if ($alarm.length > 0) {
+            $alarm.remove();
+            $node.addClass("modified");
+        }
         break;
 
     default:
@@ -761,6 +814,7 @@ Squirrel.hoards_loaded = function() {
 
     Utils.sometime("update_tree");
     Utils.sometime("update_save");
+    Utils.sometime("check_alarms");
 
     // Flush the sometimes, and allow new sometimes to be set
     Utils.sometime_is_now();
@@ -782,7 +836,7 @@ Squirrel.load_cloud_store = function() {
                     hoard = JSON.parse(data);
                 } catch (e) {
                     if (DEBUG) console.debug("Client hoard JSON parse failed: " + e);
-                    Squirrel.squeak(
+                    Squirrel.Dialog.squeak(
                         TX.tx("$1 hoard exists, but can't be read. Check that you have the correct password.",
                         this.identifier()));
                     Squirrel.cloud.status = "is corrupt";
@@ -798,7 +852,7 @@ Squirrel.load_cloud_store = function() {
                     if (DEBUG) console.debug(this.identifier() + " contains NODATA");
                     Squirrel.cloud.status = "is empty";
                 } else {
-                    Squirrel.squeak(
+                    Squirrel.Dialog.squeak(
                         TX.tx("$1 store error: $2", this.identifier(), e));
                     // Could not contact cloud; continue all the same
                 }
@@ -819,7 +873,7 @@ Squirrel.load_client_store = function() {
                 Squirrel.client.hoard = new Hoard(JSON.parse(data));
                 Squirrel.client.status = "is loaded";
             } catch (e) {
-                Squirrel.squeak(
+                Squirrel.Dialog.squeak(
                     TX.tx("$1 hoard exists, but can't be read. Check that you have the correct password.", this.identifier()),
                     Squirrel.init_application);
                 return;
@@ -859,7 +913,7 @@ Squirrel.load_client_store = function() {
                 Squirrel.client.status = "is empty";
                 Utils.soon(Squirrel.load_cloud_store);
             } else {
-                Squirrel.squeak(
+                Squirrel.Dialog.squeak(
                     TX.tx("$1 store error: $2", this.identifier(), e),
                     Squirrel.init_application);
             }
@@ -900,7 +954,7 @@ Squirrel.init_ui = function() {
         .hide()
         .on("click", function(/*evt*/) {
             $("#bonsai-root").contextmenu("close");
-            Squirrel.options_dialog();
+            Squirrel.Dialog.options();
         });
 
     $("#bonsai-root").bonsai();
@@ -923,9 +977,10 @@ Squirrel.init_ui = function() {
             Squirrel.search($(this).val());
         });
 
-    Squirrel.init_context_menu($("#bonsai-root"));
+    Squirrel.ContextMenu.init($("#bonsai-root"));
 
     $(document)
+        .on("check_alarms", Squirrel.check_alarms)
         .on("update_save", Squirrel.update_save)
         .on("update_tree", Squirrel.update_tree);
 };
@@ -947,7 +1002,7 @@ Squirrel.init_client_store = function() {
         },
         fail: function(e) {
             // We did our best!
-            Squirrel.squeak(TX.tx("Failed ") + e);
+            Squirrel.Dialog.squeak(TX.tx("Failed ") + e);
         },
         identify: function(ok, fail, uReq, pReq) {
             // Won't ever get here unless uReq || pReq
@@ -990,7 +1045,7 @@ Squirrel.init_client_store = function() {
                     Squirrel.cloud.store.pass());
                 pReq = false;
             }
-            Squirrel.login_dialog.call(this, ok, fail, uReq, pReq);
+            Squirrel.Dialog.login.call(this, ok, fail, uReq, pReq);
         }
     });
 };
@@ -1004,19 +1059,16 @@ Squirrel.init_cloud_store = function() {
             Squirrel.cloud.store = this;
             Squirrel.init_client_store();
         },
-        fail: function(/*e*/) {
-            Squirrel.squeak(TX.tx("Could not contact cloud store"));
-            Squirrel.init_client_store();
+        fail: function(e) {
+            Squirrel.Dialog.squeak(
+                TX.tx("Could not contact cloud store: $1", e),
+                Squirrel.init_client_store);
         },
-        identify: Squirrel.login_dialog
+        identify: Squirrel.Dialog.login
     };
 
-    if (typeof DropboxStore !== "undefined") {
-        if (DEBUG) console.debug("Using Dropbox for the Cloud");
-        params.engine = DropboxStore; // Uncomment the one you want to use
-    } else if (typeof GoogleDriveStore !== "undefined") {
-        if (DEBUG) console.debug("Using Google Drive for the Cloud");
-        params.engine = GoogleDriveStore;
+    if (typeof SQUIRREL_STORE !== "undefined") {
+        params.engine = SQUIRREL_STORE;
     } else {
         if (DEBUG) console.debug("Using LocalStorage for the Cloud");
         params.engine = LocalStorageStore;
@@ -1059,6 +1111,11 @@ Squirrel.init_application = function() {
 
     $(document)
         .ready(function() {
+            // By default, jQuery timestamps datatype 'script' and 'jsonp'
+            // requests to avoid them being cached by the browser.
+            // Disable this functionality by default so that as much as
+            // possible is cached locally
+            if (!DEBUG) $.ajaxSetup({ cache: true });
             // Initialise UI components
             Squirrel.init_ui();
             // Initialise translation module

@@ -59,10 +59,10 @@ Squirrel was written by Crawford Currie http://c-dot.co.uk, and uses the followi
 - JQuery & JQuery UI, from the JQuery Foundation, https://jquery.org
 - AES implementation in JavaScript (c) Chris Veness 2005-2014, http://www.movable-type.co.uk/scripts/aes.html
 - jquery-bonsai, Copyright (c) 2014 Simon Wade, http://aexmachina.info/jquery-bonsai
-- silk icons, by Mark James, http://www.famfamfam.com/lab/icons/silk/
+- jquery-contextmenu, Copyright 2013-2015 Martin Wendt and others, https://github.com/mar10/jquery-ui-contextmenu
 - ZeroClipboard, Copyright (c) 2009-2014 Jon Rohan, James M. Greene, http://zeroclipboard.org/ 
 - Dropbox API, Copyright (c) 2012 Dropbox, Inc., http://www.dropbox.com
-- Google Drive API, 
+- Google Drive API
 
 ## TODOs
 
@@ -70,8 +70,7 @@ D -> N # can't undo  fully
 
 ## Possible enhancements:
 
-Drag-drop between subtrees
 Use github to serve the app
 Password change reminders
 Remember password constraints for a site
-Different stores (SkyDrive? Github?)
+Different stores (Facebook? Github? Parse?)

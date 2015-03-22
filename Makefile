@@ -1,4 +1,16 @@
-LIBSJS= \
+STORES = dropbox drive facebook
+
+dropboxJS = \
+	libs/dropbox.uncompressed.js \
+	DropboxStore.uncompressed.js
+
+driveJS = \
+	GoogleDriveStore.uncompressed.js
+
+facebookJS = \
+	FacebookStore.uncompressed.js
+
+LIBSJS = \
 	libs/jquery-2.1.3.uncompressed.js \
 	libs/jquery-ui.uncompressed.js \
 	libs/jquery-bonsai.uncompressed.js \
@@ -8,11 +20,11 @@ LIBSJS= \
 	libs/aes.uncompressed.js \
 	libs/aes-ctr.uncompressed.js
 
-LIBSCSS= \
+LIBSCSS = \
 	libs/jquery-ui.uncompressed.css \
 	libs/jquery-bonsai.uncompressed.css
 
-COMMONJS= \
+COMMONJS = \
 	Utils.uncompressed.js \
 	Translation.uncompressed.js \
 	AbstractStore.uncompressed.js \
@@ -23,15 +35,8 @@ COMMONJS= \
 	Dialogs.uncompressed.js \
 	Hoard.uncompressed.js
 
-COMMONCSS= \
+COMMONCSS = \
 	Squirrel.uncompressed.css
-
-dropboxJS= \
-	libs/dropbox.uncompressed.js \
-	DropboxStore.uncompressed.js
-
-driveJS= \
-	GoogleDriveStore.uncompressed.js
 
 # Making debug
 # e.g make dropbox.uncompressed.html
@@ -42,7 +47,7 @@ SPOS="></script>
 LPRE=<link rel="stylesheet" href="
 LPOS=">
 
-debug: dropbox.uncompressed.html drive..uncompressed.html
+debug: $(patsubst %,%.uncompressed.html,$(STORES))
 
 %.uncompressed.html : Squirrel.html.src
 	./sub.pl Squirrel.html.src \
@@ -81,10 +86,7 @@ Squirrel.min.js : $(COMMONJS)
 Squirrel.min.css : $(COMMONCSS)
 	$(cleancss)
 
-dropbox.min.js : $(dropboxJS)
-	$(uglifyJS)
-
-drive.min.js : $(driveJS)
+%.min.js : $(%JS)
 	$(uglifyJS)
 
 %.html : Squirrel.html.src Squirrel.min.js libs/libs.min.js %.min.js libs/libs.min.css Squirrel.min.css
@@ -96,7 +98,7 @@ drive.min.js : $(driveJS)
 	COMMONCSS_HTML '$(LPRE)Squirrel.min.css$(LPOS)' \
 	> $@
 
-release: dropbox.html drive.html
+release: $(patsubst %,%.html,$(STORES))
 
 # Other targets
 

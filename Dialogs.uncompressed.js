@@ -1,5 +1,24 @@
+Squirrel.Dialog = {};
+
+/**
+ * @private
+ */
+Squirrel.Dialog.play_action = function(action) {
+    var res = Squirrel.client.hoard.record_action(
+        action,
+        function(e) {
+            Squirrel.render_action(
+                e,
+                function() {
+                    Utils.sometime("update_save");
+                }, true);
+        });
+    if (res !== null)
+        Squirrel.Dialog.squeak(res.message);
+};
+
 // Generate an alert dialog "OK" button
-Squirrel.squeak = function(e, ok) {
+Squirrel.Dialog.squeak = function(e, ok) {
     "use strict";
 
     var $dlg = $("#dlg_alert");
@@ -34,7 +53,7 @@ Squirrel.squeak = function(e, ok) {
 /**
  * Confirm deletion of a node
  */
-Squirrel.confirm_delete_dialog = function($node) {
+Squirrel.Dialog.confirm_delete = function($node) {
     "use strict";
 
     var $dlg = $("#dlg_delconf"),
@@ -65,7 +84,7 @@ Squirrel.confirm_delete_dialog = function($node) {
                             }, true);
                     });
                 if (res !== null)
-                    Squirrel.squeak(res.message);
+                    Squirrel.Dialog.squeak(res.message);
             });
 
         $("#dlg_delconf_cancel")
@@ -84,7 +103,7 @@ Squirrel.confirm_delete_dialog = function($node) {
 /**
  * Dialog password generation
  */
-Squirrel.make_random_dialog = function($node) {
+Squirrel.Dialog.make_random = function($node) {
     "use strict";
 
     var $dlg = $("#dlg_gen_rand");
@@ -108,19 +127,10 @@ Squirrel.make_random_dialog = function($node) {
                 $ddlg.dialog("close");
                 var pw = $("#dlg_gen_rand_idea").text();
                 var old_path = Squirrel.get_path($ddlg.data("node"));
-                var res = Squirrel.client.hoard.record_action(
+                Squirrel.Dialog.play_action(
                     { type: "E",
                       path: old_path,
-                      data: pw },
-                    function(e) {
-                        Squirrel.render_action(
-                            e,
-                            function() {
-                                Utils.sometime("update_save");
-                            }, true);
-                    });
-                if (res !== null)
-                    Squirrel.squeak(res.message);
+                      data: pw });
             });
 
         $("#dlg_gen_rand_again")
@@ -146,7 +156,7 @@ Squirrel.make_random_dialog = function($node) {
     });
 };
 
-Squirrel.load_JSON_file_dialog = function() {
+Squirrel.Dialog.load_JSON_file = function() {
     "use strict";
 
     var $dlg = $("#dlg_json");
@@ -156,7 +166,7 @@ Squirrel.load_JSON_file_dialog = function() {
     });
 };
 
-Squirrel.change_password_dialog = function() {
+Squirrel.Dialog.change_password = function() {
     "use strict";
 
     var $dlg = $("#dlg_chpw");
@@ -178,7 +188,7 @@ Squirrel.change_password_dialog = function() {
                 var p = $("#dlg_chpw_pass").val(),
                 c = $("#dlg_chpw_conf").val();
                 if (p !== c)
-                    Squirrel.squeak("Passwords do not match");
+                    Squirrel.Dialog.squeak("Passwords do not match");
                 else {
                     // for TX: TX.tx("has a new password")
                     Squirrel.client.store.pass(p);
@@ -207,17 +217,17 @@ Squirrel.read_json_file = function(file) {
             try {
                 data = JSON.parse(data);
             } catch (e) {
-                Squirrel.squeak(TX.tx("JSON could not be parsed")
+                Squirrel.Dialog.squeak(TX.tx("JSON could not be parsed")
                                 + ": " + e);
                 return;
             }
             if (DEBUG) console.debug("Importing...");
             Squirrel.insert_data([], data);
         },
-        Squirrel.squeak);
+        Squirrel.Dialog.squeak);
 };
 
-Squirrel.options_dialog = function() {
+Squirrel.Dialog.options = function() {
     "use strict";
 
     var $dlg = $("#dlg_options");
@@ -240,7 +250,7 @@ Squirrel.options_dialog = function() {
             .button()
             .on("click", function () {
                 $dlg.dialog("close");
-                Squirrel.change_password_dialog();
+                Squirrel.Dialog.change_password();
             });
 
         $("#dlg_options_import").button().click(function(e) {
@@ -267,7 +277,7 @@ Squirrel.options_dialog = function() {
     });
 };
 
-Squirrel.login_dialog = function(ok, fail, uReq, pReq) {
+Squirrel.Dialog.login = function(ok, fail, uReq, pReq) {
     "use strict";
 
     var $dlg = $("#dlg_login"), store = this,
@@ -311,4 +321,84 @@ Squirrel.login_dialog = function(ok, fail, uReq, pReq) {
             $dlg.data("foc").focus();
         }
     });
+};
+
+Squirrel.Dialog.alarm = function($node) {
+    var $dlg = $("#dlg_alarm"),
+    $alarm = $node.children(".alarm"),
+    path = Squirrel.get_path($node),
+    number = 6,
+    units = "m";
+
+    is_new = (typeof $dlg.dialog("instance") === "undefined");
+
+    if ($alarm.length > 0) {
+        number = $alarm.data("alarm");
+        if (number % 365 === 0)
+            number /= 365, units = "y";
+        else if (number % 30 === 0)
+            number /= 30, units = "m";
+        else if (number % 7 === 0)
+            number /= 7, units = "w";
+        else
+            units = "d";
+        $("#dlg_alarm_cancel").show();
+    } else
+        $("#dlg_alarm_cancel").show();
+
+    $dlg.data("path", path);
+    $("#dlg_alarm_number").val(number);
+    $("#dlg_alarm_units").val(units);
+
+    $dlg.dialog({
+        modal: true,
+        width: "auto"
+    });
+
+    // Doing this after the dialog is initialised, because otherwise the
+    // selectmenu is covered
+    if (is_new) {
+        $("#dlg_alarm_units")
+            .selectmenu();
+
+        $("#dlg_alarm_number")
+            .spinner({
+                min: 1
+            });
+
+        $("#dlg_alarm_set")
+            .button()
+            .on("click", function() {
+                $dlg.dialog("close");
+
+                var number = $("#dlg_alarm_number").val(),
+                units = $("#dlg_alarm_units").val();
+
+                if (units === "y")
+                    number *= 365;
+                else if (units === "m")
+                    number *= 30;
+                else if (units === "w")
+                    number *= 7;
+
+                Squirrel.Dialog.play_action(
+                    { type: "A",
+                      path: $dlg.data("path"),
+                      data: number
+                    });
+            });
+
+        $("#dlg_alarm_cancel")
+            .button()
+            .on("click", function() {
+                $dlg.dialog("close");
+                if ($alarm) {
+                    var data = $dlg.data("alarm");
+                    Squirrel.Dialog.play_action(
+                        { type: "C",
+                          path: $dlg.data("path")
+                        });
+                }
+            });
+    }
 };

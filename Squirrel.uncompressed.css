@@ -75,6 +75,11 @@ a:hover {
     background-position:0 -160px;
 }
 
+.squirrel-icon-alarm {
+    background-image:url('images/squirrel-icons.png') !important;
+    background-position:0 -176px;
+}
+
 .logo {
     float: left;
     margin: 1em;
@@ -125,11 +130,10 @@ input {
     font-family: "Courier New", Courier, monospace
 }
 
-button.icon_button {
-    height: 1.5em;
-    width: 1.5em;
-    margin-left: 0.5em;
-    margin-right: 0.5em;
+button.ui-button-icon-only {
+    width: 16px;
+    height: 16px;
+    padding: 0;
 }
 
 .search_result {
@@ -155,4 +159,20 @@ button.icon_button {
 
 #copyright {
     margin-top: 1em;
+}
+
+#dlg_alarm_number {
+    width: 3em;
+}
+
+#dlg_alarm_units {
+    width: 6em;
+}
+
+#dlg_alarm_units-button {
+    top: 1em;
+}
+
+.alarm {
+    float: left;
 }

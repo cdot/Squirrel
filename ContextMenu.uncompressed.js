@@ -1,8 +1,10 @@
+Squirrel.ContextMenu = {};
+
 /**
  * Context menu handling
  */
 
-Squirrel.init_context_menu = function($root) {
+Squirrel.ContextMenu.init = function($root) {
     "use strict";
 
     var before_open = function(e, ui) {
@@ -10,6 +12,7 @@ Squirrel.init_context_menu = function($root) {
             ? ui.target
             : $div = ui.target.parents(".node_div").first(),
         $val = $div.children(".value"),
+        hasalarm = ui.target.closest(".node").children(".alarm").length > 0,
         isvalue = ($val.length > 0),
         zc,
         isroot = ui.target.closest("li").is("#sites-node");
@@ -19,13 +22,13 @@ Squirrel.init_context_menu = function($root) {
             .contextmenu("showEntry", "copy_value", isvalue)
             .contextmenu("showEntry", "make_copy", !isroot)
             .contextmenu("showEntry", "delete", !isroot)
+            .contextmenu("showEntry", "add_alarm", !hasalarm && !isroot)
             .contextmenu("showEntry", "edit", isvalue)
             .contextmenu("showEntry", "randomise", isvalue)
             .contextmenu("showEntry", "add_subtree", !isvalue)
             .contextmenu("showEntry", "add_value", !isvalue && !isroot)
-            .contextmenu("showEntry", "insert_copy", !isvalue)
-            .contextmenu("enableEntry", "insert_copy",
-                         Squirrel.clipboard !== null);
+            .contextmenu("showEntry", "insert_copy",
+                         !isvalue && Squirrel.clipboard !== null);
 
         if (!$root.data("zc_copy")) {
             // First time, attach zero clipboard handler
@@ -90,6 +93,11 @@ Squirrel.init_context_menu = function($root) {
                 uiIcon: "squirrel-icon-edit" 
             },
             {
+                title: TX.tx("Add reminder"),
+                cmd: "add_alarm",
+                uiIcon: "squirrel-icon-alarm" 
+            },
+            {
                 title: TX.tx("Generate new random value"),
                 cmd: "randomise",
                 uiIcon: "squirrel-icon-key" 
@@ -124,7 +132,7 @@ Squirrel.init_context_menu = function($root) {
         // We map long mouse hold to taphold
         // Right click still works
         taphold: true,
-        select: Squirrel.context_menu_choice
+        select: Squirrel.ContextMenu.choice
     };
 
     $root.contextmenu(menu);
@@ -133,7 +141,7 @@ Squirrel.init_context_menu = function($root) {
 /**
  * Handler for context menu items
  */
-Squirrel.context_menu_choice = function(e, ui) {
+Squirrel.ContextMenu.choice = function(e, ui) {
     "use strict";
 
     var $node = ui.target.closest("li");
@@ -177,12 +185,17 @@ Squirrel.context_menu_choice = function(e, ui) {
 
     case "randomise":
         if (DEBUG) console.debug("Randomising");
-        Squirrel.make_random_dialog($node);
+        Squirrel.Dialog.make_random($node);
+        break;
+
+    case "add_alarm":
+        if (DEBUG) console.debug("Adding reminder");
+        Squirrel.Dialog.alarm($node);
         break;
 
     case "delete":
         if (DEBUG) console.debug("Deleting");
-        Squirrel.confirm_delete_dialog($node);
+        Squirrel.Dialog.confirm_delete($node);
         break;
 
     default:

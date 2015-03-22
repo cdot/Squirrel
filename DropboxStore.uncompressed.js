@@ -4,7 +4,6 @@
  * A store using Dropbox
  * @implements AbstractStore
  */
-
 function DropboxStore(params) {
     "use strict";
 
@@ -28,7 +27,7 @@ function DropboxStore(params) {
                         params.fail.call(self, err);
                     } else {
                         if (DEBUG) console.debug("Dropbox username " + accountInfo.name);
-                        self.client = client;
+                        self.db_client = client;
                         self.user(accountInfo.name);
                         params.uReq = false;
                         AbstractStore.call(self, params);
@@ -37,6 +36,8 @@ function DropboxStore(params) {
         }
     });
 }
+
+const SQUIRREL_STORE = DropboxStore;
 
 DropboxStore.prototype = Object.create(AbstractStore.prototype);
 
@@ -51,7 +52,7 @@ DropboxStore.prototype.write = function(data, ok, fail) {
 
     var self = this;
 
-    this.client.writeFile(
+    this.db_client.writeFile(
         this.dataset + "." + this.user(),
         data,
         function(error/*, stat*/) {
@@ -69,7 +70,7 @@ DropboxStore.prototype.read = function(ok, fail) {
 
     var self = this;
 
-    this.client.readFile(
+    this.db_client.readFile(
         this.dataset + "." + this.user(),
         function(error, data) {
             if (error) {

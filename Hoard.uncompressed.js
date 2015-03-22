@@ -63,7 +63,7 @@ function Hoard(data) {
     if (typeof this.options === "undefined")
         this.options = {
             // autosave exists in both the client and cloud stores, but
-            // is only relevant in the client - it is never inherited
+            // is only read from the client - it is never read
             // from the cloud. This is so that (for example) a tablet
             // doesn't get the option when it spends most of its time
             // disconnected.
@@ -115,7 +115,7 @@ Hoard.prototype.clear_actions = function() {
 Hoard.prototype.record_action = function(e, listener, no_push) {
     "use strict";
 
-    var parent, name, i, c;
+    var parent, name, node, i, c;
 
     if (typeof e.time === "undefined" || e.time === null) {
         e.time = Date.now();
@@ -130,7 +130,7 @@ Hoard.prototype.record_action = function(e, listener, no_push) {
     for (i = 0; i < e.path.length - 1; i++) {
         name = e.path[i];
         if (parent && typeof parent.data === "string") {
-            throw "Cannot play action over leaf node";
+            throw "Internal error: Cannot " + e.type + " over leaf node";
         } else if (parent && parent.data[name]) {
             parent = parent.data[name];
         } else {
@@ -149,7 +149,8 @@ Hoard.prototype.record_action = function(e, listener, no_push) {
         return { action: e, message: mess };
     };
 
-    if (e.type === "N") {
+    switch (e.type) {
+    case "N": // New
         if (parent.data[name])
             return c(TX.tx("Cannot create, '$1' already exists", name));
         parent.time = e.time; // collection is being modified
@@ -158,11 +159,15 @@ Hoard.prototype.record_action = function(e, listener, no_push) {
             data: (typeof e.data === "string") ?
                 e.data : {}
         };
-    } else if (e.type === "D") {
+        break;
+
+    case "D": // Delete
         if (!parent.data[name])
             return c(TX.tx("Cannot delete, '$1' does not exist", name));
         delete parent.data[name];
-    } else if (e.type === "R") {
+        break;
+
+    case "R": // Rename
         if (!parent.data[name])
             return c(TX.tx("Cannot rename, '$1' does not exist", name));
         if (parent.data[e.data])
@@ -170,11 +175,27 @@ Hoard.prototype.record_action = function(e, listener, no_push) {
                            e.data));
         parent.data[e.data] = parent.data[name];
         delete parent.data[name];
-    } else if (e.type === "E") {
+        break;
+
+    case "E": // Edit
         if (!parent.data[name])
             return c(TX.tx("Cannot change value, '$1' does not exist", name));
         parent.data[name].data = e.data;
-    } else {
+        break;
+
+    case "A": // Alarm
+        if (!parent.data[name])
+            return c(TX.tx("Cannot set reminder, '$1' does not exist", name));
+        parent.data[name].alarm = e.data;
+        break;
+
+    case "C": // Cancel alarm
+        if (!parent.data[name])
+            return c(TX.tx("Cannot cancel reminder, '$1' does not exist", name));
+        delete parent.data[name].alarm;
+        break;
+
+    default:
         // Internal error
         throw "Internal error: Unrecognised action type '" + e.type + "'";
     }
@@ -249,7 +270,20 @@ Hoard.prototype._reconstruct_actions = function() {
                     time: time,
                     data: node.data
                 },
-                next_node);
+                function() {
+                    if (node.alarm) {
+                        this.reconstruct.listener.call(
+                            this,
+                            {
+                                type: "A", 
+                                path: path.slice(),
+                                time: time,
+                                data: node.alarm
+                            },
+                            next_node);
+                    } else
+                        next_node();
+                });
             return;
         } else if (typeof node.data !== "undefined") {
             for (key in node.data) {
@@ -274,7 +308,7 @@ Hoard.prototype._reconstruct_actions = function() {
             }
         } else {
             throw "Internal error";
-        }
+        }        
     }
 
     if (this.reconstruct.complete)
@@ -376,4 +410,53 @@ Hoard.prototype.get_node = function(path) {
         node = node.data[path[i]];
     }
     return node;
+};
+
+// Milliseconds in a day
+const MSDAY = 24 * 60 * 60 * 1000;
+
+/**
+* @private
+*/
+Hoard.prototype.each_alarm = function() {
+    var self = this;
+
+    while (this.check && this.check.queue.length > 0) {
+        var item = this.check.queue.pop(),
+        node = item.node, name;
+
+        if (typeof node.data === "object")
+            for (name in node.data) {
+                var snode = node.data[name];
+                this.check.queue.push({
+                    node: snode,
+                    path: item.path.slice().concat([ name ])
+                });
+            };
+
+        if (typeof node.alarm !== "undefined"
+            && (Date.now() - node.time) >= (node.alarm * MSDAY)) {
+            this.check.alarm(
+                item.path,
+                new Date(node.time + node.alarm * MSDAY),
+                function() {
+                    self.each_alarm();
+                });
+            return;
+        }
+    }
+    delete this.check;
+}
+
+/**
+ * Check alarms, calling callback on all alarms that have fired
+ */
+Hoard.prototype.check_alarms = function(callback) {
+    if (!this.cache)
+        return;
+    this.check = {
+        queue: [ { path: [], node: this.cache } ],
+        alarm: callback
+    };
+    this.each_alarm();
 };
