@@ -20,15 +20,27 @@
       <h2>
         <span class="TX_text">Signed in as: </span><span id="whoami"></span>
       </h2>
-      <button id="options_button" class="authenticated TX_title TX_text" title="Change options">
-        Options
-      </button>
+      <div id="extras">
+        <button id="extras_button" class="authenticated TX_title TX_text" title="Change options">
+          Extras
+        </button>
+        <ul id="extras_menu" class="menu TX_title" title="Extras">
+          <li class="TX_text" data-command="chpw">Change master password</li>
+          <li class="TX_text" data-command="copydb">Copy entire database to clipboard (JSON)</li>
+          <li data-command="readfile" class="TX_text">Load local JSON file</li>
+          <li class="TX_text" data-command="deleteall">Delete entire database</li>
+        </ul>
+      </div>
       <label for="search" class="TX_text">Search:</label>
       <input id="search" value="" class="TX_title" title="Enter search string" />
       <div id="search_results"></div>
       <div id="sites">
         <button id="undo_button" class="icon_button TX_title TX_text" title="Undo last change">Undo</button>
         <button id="save_button" class="icon_button TX_text">Save</button>
+        <input type="checkbox" id="autosave_checkbox">
+        <label for="autosave_checkbox" class="TX_text">
+          Autosave
+        </label>
         <ul id="bonsai-root" name="/" class="bonsai-root">
           <li id="sites-node" name="/" class="node">
             <div class="node_div treecollection">
@@ -117,34 +129,6 @@
       </p>
     </div>
 
-    <div id="dlg_options" class="dialog TX_title" title="Options">
-      <p>
-        <button id="dlg_options_chpw" class="TX_title TX_text" title="Change master password">
-          Change master password
-        </button>
-      </p>
-      <p>
-        <input type="checkbox" id="dlg_options_autosave">
-        <label for="dlg_options_autosave" class="TX_text">
-          Autosave
-        </label>
-        <p id="dlg_options_autosave_warn" class="warning TX_text">
-          You will have to save using the button above the data display
-        </p>
-      </p>
-      <p>
-        <input type="file" id="dlg_options_jsonfile" class="input_file" />
-        <button id="dlg_options_import" class="TX_title TX_text" title="Import JSON file">
-          Import JSON file
-        </button>
-      </p>
-      <p>
-        <button id="dlg_options_copy" class="TX_title TX_text" title="Copy JSON data to the clipboard">
-          Copy JSON to clipboard
-        </button>
-      </p>
-    </div>
-
     <div id="dlg_chpw" class="dialog TX_title" title="Change Password">
       <p class="warning TX_text">
         You should ensure that all clients up to date and you
@@ -204,6 +188,11 @@
         <button id="dlg_alarm_set" class="TX_title TX_text" title="Set (or reset) reminder">Set</button>
         <button id="dlg_alarm_cancel" class="TX_title TX_text" title="Cancel reminder">Cancel</button>
       </div>
+    </div>
+
+    <!-- Not really a dialog, just a handy way to hide -->
+    <div class="dialog">
+      <input type="file" id="dlg_load_file" />
     </div>
   </body>
 </html>

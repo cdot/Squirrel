@@ -33,6 +33,7 @@ Squirrel.Dialog.squeak = function(e, ok) {
             .button()
             .on("click", function(/*e*/) {
                 $dlg.dialog("close");
+                return false;
             });
     }
 
@@ -85,12 +86,14 @@ Squirrel.Dialog.confirm_delete = function($node) {
                     });
                 if (res !== null)
                     Squirrel.Dialog.squeak(res.message);
+                return false;
             });
 
         $("#dlg_delconf_cancel")
             .button()
             .on("click", function(/*evt*/) {
                 $("#dlg_delconf").dialog("close");
+                return false;
             });
     }
 
@@ -131,6 +134,7 @@ Squirrel.Dialog.make_random = function($node) {
                     { type: "E",
                       path: old_path,
                       data: pw });
+                return false;
             });
 
         $("#dlg_gen_rand_again")
@@ -141,28 +145,20 @@ Squirrel.Dialog.make_random = function($node) {
                 opts.length = $("#dlg_gen_rand_len").val();
                 opts.charset = $("#dlg_gen_rand_chs").val();
                 $("#dlg_gen_rand_idea").text(Utils.generate_password(opts));
+                return false;
             });
 
         $("#dlg_gen_rand_cancel")
             .button()
             .on("click", function() {
                 $("#dlg_gen_rand").dialog("close");
+                return false;
             });
     }
 
     $dlg.dialog({
         width: "auto",
         modal: true
-    });
-};
-
-Squirrel.Dialog.load_JSON_file = function() {
-    "use strict";
-
-    var $dlg = $("#dlg_json");
-    $dlg.dialog({
-        modal: true,
-        width: "auto"
     });
 };
 
@@ -198,79 +194,10 @@ Squirrel.Dialog.change_password = function() {
                     $("#dlg_chpw").dialog("close");
                     Utils.sometime("update_save");
                 }
+                return false;
             });
     }
 
-    $dlg.dialog({
-        modal: true,
-        width: "auto"
-    });
-};
-
-Squirrel.read_json_file = function(file) {
-    "use strict";
-
-    Utils.read_file(
-        file,
-        function(data) {
-            $("#dlg_options").dialog("close");
-            try {
-                data = JSON.parse(data);
-            } catch (e) {
-                Squirrel.Dialog.squeak(TX.tx("JSON could not be parsed")
-                                + ": " + e);
-                return;
-            }
-            if (DEBUG) console.debug("Importing...");
-            Squirrel.insert_data([], data);
-        },
-        Squirrel.Dialog.squeak);
-};
-
-Squirrel.Dialog.options = function() {
-    "use strict";
-
-    var $dlg = $("#dlg_options");
-
-    if (typeof $dlg.dialog("instance") === "undefined") {
-        $("#dlg_options_autosave")
-            .prop("checked", Squirrel.client.hoard.options.autosave)
-            .on("change", function() {
-                Squirrel.client.hoard.options.autosave =
-                    $("#dlg_options_autosave").is(":checked");
-                $(".autosave_warn", $dlg)
-                    .toggle(!Squirrel.client.hoard.options.autosave);
-                Utils.sometime("update_save");
-            });
-
-        $("#dlg_options_autosave_warn")
-            .toggle(!Squirrel.client.hoard.options.autosave);
-
-        $("#dlg_options_chpw")
-            .button()
-            .on("click", function () {
-                $dlg.dialog("close");
-                Squirrel.Dialog.change_password();
-            });
-
-        $("#dlg_options_import").button().click(function(e) {
-            $("#dlg_options_jsonfile").trigger("click", e);
-        });
-
-        $("#dlg_options_copy")
-            .button()
-            .on("click", function() {
-                $dlg.dialog("close");
-            });
-
-        var zc = new ZeroClipboard($("#dlg_options_copy"))
-            .on("copy", function(event) {
-                event.clipboardData.setData(
-                    "text/plain",
-                    JSON.stringify(Squirrel.client.hoard));
-            });
-        $dlg.data("ZC", zc);
-    }
     $dlg.dialog({
         modal: true,
         width: "auto"
@@ -290,6 +217,7 @@ Squirrel.Dialog.login = function(ok, fail, uReq, pReq) {
         ok.call(store,
                 uReq ? $("#dlg_login_user").val() : undefined,
                 pReq ? $("#dlg_login_pass").val() : undefined);
+        return false;
     };
     $("#dlg_login_signin")
         .button()
@@ -323,13 +251,40 @@ Squirrel.Dialog.login = function(ok, fail, uReq, pReq) {
     });
 };
 
+Squirrel.Dialog.load_file = function() {
+    "use strict";
+
+    var $dlg = $("#dlg_load");
+    $("#dlg_load_file").val("");
+
+    if (typeof $dlg.dialog("instance") === "undefined") {
+        //$("#dlg_load_choose").button();
+    }
+
+    $dlg.dialog({
+        modal: true,
+        width: "auto"
+    });
+};
+
+Squirrel.Dialog.delete_all = function() {
+    "use strict";
+
+    Squirrel.squeak(TX.text(
+        "Do you really want to delete the entire database? This cannot be undone.",
+        function() {
+            alert("Fuck off, asshole");
+        }));
+};
+
 Squirrel.Dialog.alarm = function($node) {
+    "use strict";
+
     var $dlg = $("#dlg_alarm"),
     $alarm = $node.children(".alarm"),
     path = Squirrel.get_path($node),
     number = 6,
-    units = "m";
-
+    units = "m",
     is_new = (typeof $dlg.dialog("instance") === "undefined");
 
     if ($alarm.length > 0) {
@@ -386,6 +341,7 @@ Squirrel.Dialog.alarm = function($node) {
                       path: $dlg.data("path"),
                       data: number
                     });
+                return false;
             });
 
         $("#dlg_alarm_cancel")
@@ -399,6 +355,7 @@ Squirrel.Dialog.alarm = function($node) {
                           path: $dlg.data("path")
                         });
                 }
+                return false;
             });
     }
 };

@@ -38,6 +38,32 @@ $.fn.linger = function() {
 };
 
 /**
+ * A wrapper for a file input that replaces it with a button that
+ * uses the input's title attribute for its label
+ */
+$.fn.file_input = function() {
+    "use strict";
+
+    var self = this;
+
+    return this.each(function() {
+        var $self = $(this)
+            .wrap($("<div></div>")
+                  /*.css("position", "relative")
+                  .css("display", "inline-block")*/);
+        $self.hide();
+        $self.parent().append(
+            $("<button></button>")
+                .button({
+                    label: $self.attr("title")
+                })
+                .click(function(evt) {
+                    $self.trigger(evt)
+                }));
+    });
+};
+
+/**
  * Scroll the view to this element
  */
 $.fn.scroll_into_view = function () {

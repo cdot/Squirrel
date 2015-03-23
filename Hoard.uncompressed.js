@@ -213,7 +213,7 @@ Hoard.prototype.record_action = function(e, listener, no_push) {
  * cache and simplified action stream. Note that this will destroy the
  * cache.
  */
-Hoard.prototype.simplify = function() {
+Hoard.prototype.simplify = function(chain) {
     "use strict";
 
     // First reconstruct the cache by playing all the actions
@@ -230,40 +230,63 @@ Hoard.prototype.simplify = function() {
     // Now reconstruct the action stream from the simplified cache
     this.actions = [];
     if (this.cache) {
-        this._reconstruct_actions(this.cache, [], function(e) {
-            this.actions.push({
-                type: e.type,
-                time: e.time,
-                data: e.data,
-                path: e.path.slice()
-            });
-        });
+        this._reconstruct_actions(
+            this.cache.data, [], function(e) {
+                this.actions.push({
+                    type: e.type,
+                    time: e.time,
+                    data: e.data,
+                    path: e.path.slice()
+                });
+            },
+            chain);
         this.cache = null;
-    }
+    } else if (chain)
+        chain();
 };
 
 /**
  * @private method to reconstruct an action stream from a node and it's
  * subtree. Relies on the listener to call the next function.
  */
-Hoard.prototype._reconstruct_actions = function() {
+Hoard.prototype._reconstruct_actions = function(data, path, listener, chain) {
     "use strict";
     var context, node, path, key, self = this, p, time,
-    next_node = function() {
-        Utils.soon(function() {
-            self._reconstruct_actions();
-        });
-    };
 
-    while (this.reconstruct.queue.length !== 0) {
-        context = this.reconstruct.queue.shift();
+    list_nodes = function(node, path) {
+        self.reconstruct.queue.push({
+            node: node,
+            path: path });
+
+        if (typeof node.data === "object") {
+            for (key in node.data) {
+                p = path.slice();
+                p.push(key);
+                list_nodes(node.data[key], p);
+            }
+        }
+    },
+
+    next_node = function() {
+        if (!self.reconstruct)
+            return;
+
+        if (self.reconstruct.queue.length === 0) {
+            var ch = self.reconstruct.chain;
+            delete self.reconstruct;
+            if (typeof ch !== "undefined")
+                ch();
+            return;
+        }
+
+        context = self.reconstruct.queue.shift();
         node = context.node;
         path = context.path;
         time = (typeof node.time !== "undefined" ? node.time : Date.now());
 
         if (typeof node.data === "string") {
-            this.reconstruct.listener.call(
-                this,
+            self.reconstruct.listener.call(
+                self,
                 {
                     type: "N", 
                     path: path.slice(),
@@ -272,8 +295,8 @@ Hoard.prototype._reconstruct_actions = function() {
                 },
                 function() {
                     if (node.alarm) {
-                        this.reconstruct.listener.call(
-                            this,
+                        self.reconstruct.listener.call(
+                            self,
                             {
                                 type: "A", 
                                 path: path.slice(),
@@ -286,34 +309,32 @@ Hoard.prototype._reconstruct_actions = function() {
                 });
             return;
         } else if (typeof node.data !== "undefined") {
-            for (key in node.data) {
-                p = path.slice();
-                p.push(key);
-                this.reconstruct.queue.push({
-                    node: node.data[key],
-                    path: p });
-            }
-
             if (path.length > 0) {
                 // No action for the root
-                this.reconstruct.listener.call(
-                    this,
+                self.reconstruct.listener.call(
+                    self,
                     {
                         type: "N", 
                         time: time,
                         path: path.slice()
                     },
                     next_node);
-                return;
-            }
+            } else
+                next_node();
         } else {
+            if (DEBUG) debugger;
             throw "Internal error";
         }        
-    }
+    };
 
-    if (this.reconstruct.complete)
-        this.reconstruct.complete();
-    delete this.reconstruct;
+    this.reconstruct = {
+        queue: [],
+        listener: listener,
+        chain: chain
+    };
+
+    list_nodes(data, path);
+    next_node();
 };
 
 /**
@@ -334,12 +355,7 @@ Hoard.prototype._reconstruct_actions = function() {
 Hoard.prototype.actions_from_hierarchy = function(data, listener, chain) {
     "use strict";
 
-    this.reconstruct = {
-        queue: [ { node: data, path: [] } ],
-        listener: listener,
-        complete: chain
-    };
-    this._reconstruct_actions();
+    this._reconstruct_actions(data, [], listener, chain);
 };
 
 /**

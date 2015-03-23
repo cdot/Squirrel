@@ -114,10 +114,20 @@ Squirrel.check_alarms = function(/* event */) {
     Squirrel.client.hoard.check_alarms(
         function(path, expired, next) {
             var $node = Squirrel.nodes[path.join(PATHSEP)];
+            $node
+                .find(".alarm")
+                .addClass("expired")
+                .find(".squirrel-icon-alarm")
+                .removeClass("squirrel-icon-alarm")
+                .addClass("squirrel-icon-rung");
             Squirrel.Dialog.squeak(
-                TX.tx("Reminder on '$1' was due at $2",
-                      Squirrel.make_jump($node),
-                      expired.toLocaleDateString()),
+                $("<p></p>")
+                    .append(
+                        $("<span></span>")
+                        .addClass("ui-icon squirrel-icon-rung"))
+                    .append(TX.tx("Reminder on '$1' was due on $2",
+                                  path.join("/"),
+                                  expired.toLocaleDateString())),
                 function() {
                     next();
                 })
@@ -245,6 +255,7 @@ Squirrel.make_jump = function($node) {
             $node.parents(".node").each(function() {
                 $("#bonsai-root").bonsai("expand", $(this));
             });
+            return false;
         });
 };
 
@@ -385,6 +396,7 @@ Squirrel.render_action = function(e, chain, undoable) {
                     .bonsai(
                         $node.hasClass("expanded")
                             ? "collapse" : "expand", $node);
+                return false;
             });
             $("<ul></ul>")
                 .addClass("node_ul")
@@ -819,6 +831,9 @@ Squirrel.hoards_loaded = function() {
     // Flush the sometimes, and allow new sometimes to be set
     Utils.sometime_is_now();
 
+    $("#autosave_checkbox")
+        .prop("checked", Squirrel.client.hoard.options.autosave)
+
     $(".unauthenticated").hide();
     $(".authenticated").show();
 };
@@ -934,6 +949,7 @@ Squirrel.init_ui = function() {
         .on("click", function(/*evt*/) {
             $("#bonsai-root").contextmenu("close");
             Squirrel.save_hoards();
+            return false;
         });
 
     $("#undo_button")
@@ -947,14 +963,87 @@ Squirrel.init_ui = function() {
         .on("click", function(/*evt*/) {
             $("#bonsai-root").contextmenu("close");
             Squirrel.undo();
+            return false;
         });
 
-    $("#options_button")
+    var zc = new ZeroClipboard(
+        $("#extras_menu > li[data-command='copydb']"))
+        .on("copy", function(event) {
+            event.clipboardData.setData(
+                "text/plain",
+                JSON.stringify(Squirrel.client.hoard));
+        });
+
+    $("#extras_menu")
+        .menu({
+            focus: function(/*evt, ui*/) {
+                $("#bonsai-root").contextmenu("close");
+                $(this).show();
+            },
+            select: function(evt, ui) {
+                $(this).hide();
+                switch (ui.item.data("command")) {
+                case "chpw":
+                    Squirrel.Dialog.change_password();
+                    break;
+                case "copydb":
+                    // Handled by zero clipboard
+                    break;
+                case "readfile":
+                    $("#dlg_load_file").trigger("click");
+                    break;
+                case "deleteall":
+                    Squirrel.Dialog.delete_all();
+                    break;
+                default: throw "Bad data-command";
+                }
+            },
+            blur: function(/*evt, ui*/) {
+                $(this).hide();
+            }
+        })
+        .data("ZC", zc); // Protect from GC
+ 
+    $("#dlg_load_file")
+        .change(function(evt) {
+            var file = evt.target.files[0];
+            if (!file)
+                return;
+            Utils.read_file(
+                file,
+                function(data) {
+                    try {
+                        data = JSON.parse(data);
+                    } catch (e) {
+                        Squirrel.Dialog.squeak(TX.tx(
+                            "JSON could not be parsed")
+                                               + ": " + e);
+                        return;
+                    }
+                    if (DEBUG) console.debug("Importing...");
+                    if (typeof data.cache === "object" &&
+                        typeof data.actions !== undefined &&
+                        typeof data.cache.data === "object")
+                        // a hoard
+                        Squirrel.insert_data([], data.cache.data);
+                    else
+                        // raw data
+                        Squirrel.insert_data([], data);
+                },
+                Squirrel.Dialog.squeak);
+        });
+
+    $("#extras_button")
         .button()
-        .hide()
         .on("click", function(/*evt*/) {
-            $("#bonsai-root").contextmenu("close");
-            Squirrel.Dialog.options();
+            $("#extras_menu")
+                .show()
+            .position({
+                my: "right top",
+                at: "right bottom",
+                of: this
+            });
+            return false;
         });
 
     $("#bonsai-root").bonsai();
@@ -969,12 +1058,19 @@ Squirrel.init_ui = function() {
         .on("click", function() {
             $("#bonsai-root").contextmenu("close");
             Squirrel.add_child_node($("#sites-node"), "A new site");
+            return false;
         });
 
     $("#search")
         .on("change", function(/*evt*/) {
             $("#bonsai-root").contextmenu("close");
             Squirrel.search($(this).val());
+        });
+
+    $("#autosave_checkbox")
+        .on("change", function() {
+            Squirrel.client.hoard.options.autosave = $(this).is(":checked");
+            Utils.sometime("update_save");
         });
 
     Squirrel.ContextMenu.init($("#bonsai-root"));

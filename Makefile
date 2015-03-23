@@ -15,7 +15,6 @@ LIBSJS = \
 	libs/jquery-ui.uncompressed.js \
 	libs/jquery-bonsai.uncompressed.js \
 	libs/jquery-ui-contextmenu.uncompressed.js \
-	libs/jquery-fileinput.uncompressed.js \
 	libs/ZeroClipboard.uncompressed.js \
 	libs/aes.uncompressed.js \
 	libs/aes-ctr.uncompressed.js

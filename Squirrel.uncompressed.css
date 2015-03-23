@@ -80,6 +80,11 @@ a:hover {
     background-position:0 -176px;
 }
 
+.squirrel-icon-rung {
+    background-image:url('images/squirrel-icons.png') !important;
+    background-position:0 -192px;
+}
+
 .logo {
     float: left;
     margin: 1em;
@@ -94,6 +99,10 @@ a:hover {
 }
 
 .dialog {
+  display: none;
+}
+
+.menu {
   display: none;
 }
 
@@ -148,7 +157,7 @@ button.ui-button-icon-only {
     margin-top: 1.5em;
 }
 
-#options_button {
+#extras {
     float: right;
 }
 
