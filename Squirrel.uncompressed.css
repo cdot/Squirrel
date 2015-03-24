@@ -106,7 +106,7 @@ a:hover {
   display: none;
 }
 
-.node_div:hover {
+.node_div.hover {
     background: #44372c url("libs/images/ui-bg_gloss-wave_30_44372c_500x100.png") 50% 50% repeat-x;
     color: #baec7e;
 }
@@ -155,10 +155,6 @@ button.ui-button-icon-only {
     padding-top: 1em;
     margin-left: 2em;
     margin-top: 1.5em;
-}
-
-#extras {
-    float: right;
 }
 
 #tree {

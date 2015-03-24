@@ -20,20 +20,17 @@
       <h2>
         <span class="TX_text">Signed in as: </span><span id="whoami"></span>
       </h2>
-      <div id="extras">
-        <button id="extras_button" class="authenticated TX_title TX_text" title="Change options">
-          Extras
-        </button>
-        <ul id="extras_menu" class="menu TX_title" title="Extras">
-          <li class="TX_text" data-command="chpw">Change master password</li>
-          <li class="TX_text" data-command="copydb">Copy entire database to clipboard (JSON)</li>
-          <li data-command="readfile" class="TX_text">Load local JSON file</li>
-          <li class="TX_text" data-command="deleteall">Delete entire database</li>
-        </ul>
-      </div>
       <label for="search" class="TX_text">Search:</label>
       <input id="search" value="" class="TX_title" title="Enter search string" />
-      <div id="search_results"></div>
+      <button id="extras_button" class="authenticated TX_title TX_text" title="Change options">
+        Extras
+      </button>
+      <ul id="extras_menu" class="menu TX_title" title="Extras">
+        <li class="TX_text" data-command="chpw">Change master password</li>
+        <li class="TX_text" data-command="copydb">Copy entire database to clipboard (JSON)</li>
+        <li data-command="readfile" class="TX_text">Load local JSON file</li>
+        <li class="TX_text" data-command="deleteall">Delete entire database</li>
+      </ul>
       <div id="sites">
         <button id="undo_button" class="icon_button TX_title TX_text" title="Undo last change">Undo</button>
         <button id="save_button" class="icon_button TX_text">Save</button>

@@ -110,6 +110,11 @@ Squirrel.update_tree = function(/*event*/) {
     $("#bonsai-root").bonsai("expand", $("#sites-node"));
 };
 
+Squirrel.close_menus = function() {
+    $("#bonsai-root").contextmenu("close");
+    $("#extras_menu").hide();
+};
+
 Squirrel.check_alarms = function(/* event */) {
     Squirrel.client.hoard.check_alarms(
         function(path, expired, next) {
@@ -247,8 +252,8 @@ Squirrel.make_jump = function($node) {
         .attr("href", "#" + Utils.fragmentify(path.join(":")))
         .text(path.join("/"))
         .on("click", function() {
+	    Squirrel.close_menus();
             $("#bonsai-root")
-                .contextmenu("close")
                 .bonsai("collapseAll")
                 .bonsai("expand", $node);
             // Zoom up the tree opening each level we find
@@ -265,14 +270,15 @@ Squirrel.make_jump = function($node) {
 Squirrel.search = function(s) {
     "use strict";
 
-    var $sar = $("#search_results");
-    $sar.empty();
+    $(".node .expanded").each(function() {
+	$("#bonsai-root").bonsai("collapse", $(this));
+    });
+
     var re = new RegExp(s, "i");
     $(".key").each(function() {
         if ($(this).text().match(re)) {
             var $node = $(this).closest(".node");
-            Squirrel.make_jump($node).addClass("search_result").appendTo($sar);
-            $sar.append("<br />");
+	    $("#bonsai-root").bonsai("expand", $node);
         }
     });
 };
@@ -338,6 +344,11 @@ Squirrel.render_action = function(e, chain, undoable) {
             .addClass("node_div")
         /* Enable taphold events. These will be intercepted by the
            context menu. */
+	    .on("mouseover", function(/*evt*/) {
+		Squirrel.close_menus();
+		$(".hover").removeClass("hover");
+		$(this).addClass("hover");
+	    })
             .linger()
             .appendTo($node);
 
@@ -348,7 +359,7 @@ Squirrel.render_action = function(e, chain, undoable) {
                     Squirrel.$paste = $node;
                 })
             .on("click", function(/*e*/) {
-                $("#bonsai-root").contextmenu("close");
+		Squirrel.close_menus();
                 // Prevent click from bubbling, only obey double click
                 // Not perfect, but good enough.
                 var $span = $(this);
@@ -359,8 +370,8 @@ Squirrel.render_action = function(e, chain, undoable) {
                             if ($span.data("click_timer") !== null) {
                                 $span.data("click_timer", null);
                                 // Same as the node_div handler below
+				Squirrel.close_menus();
                                 $("#bonsai-root")
-                                    .contextmenu("close")
                                     .bonsai(
                                         $node.hasClass("expanded")
                                             ? "collapse" : "expand", $node);
@@ -370,7 +381,7 @@ Squirrel.render_action = function(e, chain, undoable) {
                 return false;
             })
             .dblclick(function() {
-                // "click" is always done first, so context menu already closed
+                // "click" is always done first, so menus already closed
                 $(this).data("click_timer", null);
                 Squirrel.edit_node($node, "key");
             })
@@ -391,8 +402,8 @@ Squirrel.render_action = function(e, chain, undoable) {
         } else {
             $div.addClass("treecollection")
             .on("click", function(/*e*/) {
+		Squirrel.close_menus();
                 $("#bonsai-root")
-                    .contextmenu("close")
                     .bonsai(
                         $node.hasClass("expanded")
                             ? "collapse" : "expand", $node);
@@ -555,7 +566,8 @@ Squirrel.render_action = function(e, chain, undoable) {
                         },
                         text: false
                     })
-                .click(function() {
+                .on("click", function() {
+		    Squirrel.close_menus();
                     Squirrel.Dialog.alarm($node);
                 })
                 .prependTo($node);
@@ -947,7 +959,7 @@ Squirrel.init_ui = function() {
         })
         .hide()
         .on("click", function(/*evt*/) {
-            $("#bonsai-root").contextmenu("close");
+            Squirrel.close_menus();
             Squirrel.save_hoards();
             return false;
         });
@@ -961,7 +973,7 @@ Squirrel.init_ui = function() {
         })
         .hide()
         .on("click", function(/*evt*/) {
-            $("#bonsai-root").contextmenu("close");
+            Squirrel.close_menus();
             Squirrel.undo();
             return false;
         });
@@ -977,7 +989,7 @@ Squirrel.init_ui = function() {
     $("#extras_menu")
         .menu({
             focus: function(/*evt, ui*/) {
-                $("#bonsai-root").contextmenu("close");
+		Squirrel.close_menus();
                 $(this).show();
             },
             select: function(evt, ui) {
@@ -1034,15 +1046,21 @@ Squirrel.init_ui = function() {
         });
 
     $("#extras_button")
+	.position({
+	    my: "left",
+	    at: "right+20",
+	    of: $("#search")
+	})
         .button()
         .on("click", function(/*evt*/) {
+	    $("#bonsai-root").contextmenu("close");
             $("#extras_menu")
-                .show()
-            .position({
-                my: "right top",
-                at: "right bottom",
-                of: this
-            });
+		.show()
+		.position({
+                    my: "left top",
+                    at: "left bottom",
+                    of: this
+		});
             return false;
         });
 
@@ -1056,14 +1074,15 @@ Squirrel.init_ui = function() {
             text: false
         })
         .on("click", function() {
-            $("#bonsai-root").contextmenu("close");
+	    Squirrel.close_menus();
             Squirrel.add_child_node($("#sites-node"), "A new site");
             return false;
         });
 
     $("#search")
+	.on("click", Squirrel.close_menus)
         .on("change", function(/*evt*/) {
-            $("#bonsai-root").contextmenu("close");
+	    Squirrel.close_menus();
             Squirrel.search($(this).val());
         });
 
