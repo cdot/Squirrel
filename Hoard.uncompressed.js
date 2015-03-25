@@ -115,14 +115,18 @@ Hoard.prototype.clear_actions = function() {
 Hoard.prototype.record_action = function(e, listener, no_push) {
     "use strict";
 
-    var parent, name, node, i, c;
+    var parent, name, i, c;
 
-    if (typeof e.time === "undefined" || e.time === null) {
+    if (typeof e.time === "undefined" || e.time === null)
         e.time = Date.now();
-    }
 
     if (!no_push)
-        this.actions.push(e);
+        this.actions.push({
+            type: e.type,
+            path: e.path.slice(),
+            time: e.time,
+            data: e.data
+        });
 
     // Update the cache; the listener will only be called if this
     // succeeds
@@ -134,7 +138,7 @@ Hoard.prototype.record_action = function(e, listener, no_push) {
         } else if (parent && parent.data[name]) {
             parent = parent.data[name];
         } else {
-            return { action: e, message:
+            return { conflict: e, message:
                      "'" + e.path.slice(0, i + 1).join("/") + "' "
                      + TX.tx("does not exist") };
         }
@@ -146,7 +150,7 @@ Hoard.prototype.record_action = function(e, listener, no_push) {
     }
 
     c = function(mess) {
-        return { action: e, message: mess };
+        return { conflict: e, message: mess };
     };
 
     switch (e.type) {
@@ -251,22 +255,26 @@ Hoard.prototype.simplify = function(chain) {
  */
 Hoard.prototype._reconstruct_actions = function(data, path, listener, chain) {
     "use strict";
-    var context, node, path, key, self = this, p, time,
 
-    list_nodes = function(node, path) {
+    var self = this,
+
+    // Recursively build a list of all nodes, starting at the root
+    list_nodes = function(node, pat) {
+        var key, p;
         self.reconstruct.queue.push({
             node: node,
-            path: path });
+            path: pat });
 
         if (typeof node.data === "object") {
             for (key in node.data) {
-                p = path.slice();
+                p = pat.slice();
                 p.push(key);
                 list_nodes(node.data[key], p);
             }
         }
     },
 
+    // Handle the next node on the list
     next_node = function() {
         if (!self.reconstruct)
             return;
@@ -279,9 +287,9 @@ Hoard.prototype._reconstruct_actions = function(data, path, listener, chain) {
             return;
         }
 
-        context = self.reconstruct.queue.shift();
-        node = context.node;
-        path = context.path;
+        var context = self.reconstruct.queue.shift(),
+        node = context.node,
+        p = context.path, // we sliced in list_nodes, don't need to again
         time = (typeof node.time !== "undefined" ? node.time : Date.now());
 
         if (typeof node.data === "string") {
@@ -289,7 +297,7 @@ Hoard.prototype._reconstruct_actions = function(data, path, listener, chain) {
                 self,
                 {
                     type: "N", 
-                    path: path.slice(),
+                    path: p,
                     time: time,
                     data: node.data
                 },
@@ -299,7 +307,8 @@ Hoard.prototype._reconstruct_actions = function(data, path, listener, chain) {
                             self,
                             {
                                 type: "A", 
-                                path: path.slice(),
+                                // slice this time, to avoid re-use of the "N"
+                                path: p.slice(),
                                 time: time,
                                 data: node.alarm
                             },
@@ -309,14 +318,14 @@ Hoard.prototype._reconstruct_actions = function(data, path, listener, chain) {
                 });
             return;
         } else if (typeof node.data !== "undefined") {
-            if (path.length > 0) {
+            if (p.length > 0) {
                 // No action for the root
                 self.reconstruct.listener.call(
                     self,
                     {
                         type: "N", 
                         time: time,
-                        path: path.slice()
+                        path: p
                     },
                     next_node);
             } else
@@ -333,7 +342,7 @@ Hoard.prototype._reconstruct_actions = function(data, path, listener, chain) {
         chain: chain
     };
 
-    list_nodes(data, path);
+    list_nodes(data, path.slice());
     next_node();
 };
 
@@ -398,10 +407,13 @@ Hoard.prototype.merge_from_cloud = function(cloud, listener, chain) {
     this.actions = [];
     for (i = 0; i < cloud.actions.length; i++) {
         if (cloud.actions[i].time > this.last_sync) {
-            //if (DEBUG) console.debug("Merge " + Hoard.stringify_action(cloud.actions[i]));
+            if (DEBUG) console.debug(
+                "Merge " + Hoard.stringify_action(cloud.actions[i]));
             c = this.record_action(cloud.actions[i], listener, true);
-            if (c !== null)
+            if (c !== null) {
+                if (DEBUG) console.debug(c.action + " conflict: " + c.message);
                 conflicts.push(c);
+            }
         }
     }
 
@@ -435,7 +447,12 @@ const MSDAY = 24 * 60 * 60 * 1000;
 * @private
 */
 Hoard.prototype.each_alarm = function() {
-    var self = this;
+    "use strict";
+
+    var self = this,
+    alarum = function() {
+        self.each_alarm();
+    };
 
     while (this.check && this.check.queue.length > 0) {
         var item = this.check.queue.pop(),
@@ -448,26 +465,26 @@ Hoard.prototype.each_alarm = function() {
                     node: snode,
                     path: item.path.slice().concat([ name ])
                 });
-            };
+            }
 
         if (typeof node.alarm !== "undefined"
             && (Date.now() - node.time) >= (node.alarm * MSDAY)) {
             this.check.alarm(
                 item.path,
                 new Date(node.time + node.alarm * MSDAY),
-                function() {
-                    self.each_alarm();
-                });
+                alarum);
             return;
         }
     }
     delete this.check;
-}
+};
 
 /**
  * Check alarms, calling callback on all alarms that have fired
  */
 Hoard.prototype.check_alarms = function(callback) {
+    "use strict";
+
     if (!this.cache)
         return;
     this.check = {

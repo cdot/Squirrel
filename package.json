@@ -24,6 +24,7 @@
             "gapi" : true,
             "ZeroClipboard": true,
             "DEBUG": true,
+            "SQUIRREL_STORE": true,
             "Squirrel": true
         },
         "rules": {
@@ -34,6 +35,8 @@
             "no-console": 0,
             "no-debugger": 1,
             "no-alert": 1,
+            "no-new" : 0,
+            "new-cap" : 0,
             "dot-notation" : 1,
             "no-trailing-spaces" : 0,
             "no-use-before-define": "3 nofunc"

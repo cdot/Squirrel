@@ -44,8 +44,6 @@ $.fn.linger = function() {
 $.fn.file_input = function() {
     "use strict";
 
-    var self = this;
-
     return this.each(function() {
         var $self = $(this)
             .wrap($("<div></div>")
@@ -58,7 +56,7 @@ $.fn.file_input = function() {
                     label: $self.attr("title")
                 })
                 .click(function(evt) {
-                    $self.trigger(evt)
+                    $self.trigger(evt);
                 }));
     });
 };

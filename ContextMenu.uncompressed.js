@@ -174,7 +174,7 @@ Squirrel.ContextMenu.choice = function(e, ui) {
         break;
 
     case "add_value":
-        if (DEBUG) console.debug("Adding value");
+        if (DEBUG) console.debug("Adding value to " + Squirrel.get_path($node).join("/"));
         Squirrel.add_child_node($node, TX.tx("A new value"), TX.tx("None"));
         break;
 

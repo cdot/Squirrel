@@ -111,11 +111,15 @@ Squirrel.update_tree = function(/*event*/) {
 };
 
 Squirrel.close_menus = function() {
+    "use strict";
+
     $("#bonsai-root").contextmenu("close");
     $("#extras_menu").hide();
 };
 
 Squirrel.check_alarms = function(/* event */) {
+    "use strict";
+
     Squirrel.client.hoard.check_alarms(
         function(path, expired, next) {
             var $node = Squirrel.nodes[path.join(PATHSEP)];
@@ -135,7 +139,7 @@ Squirrel.check_alarms = function(/* event */) {
                                   expired.toLocaleDateString())),
                 function() {
                     next();
-                })
+                });
         });
 };
 
@@ -156,10 +160,9 @@ Squirrel.edit_node = function($node, what) {
     $span.edit_in_place({
         width: w,
         changed: function(s) {
-            var old_path = Squirrel.get_path($node);
             var e = Squirrel.client.hoard.record_action(
                 { type: what === "key" ? "R" : "E",
-                  path: old_path,
+                  path: Squirrel.get_path($node),
                   data: s },
                 function(ea) {
                     Squirrel.render_action(
@@ -181,17 +184,17 @@ Squirrel.edit_node = function($node, what) {
 Squirrel.add_child_node = function($node, title, value) {
     "use strict";
 
-    var p = Squirrel.get_path($node);
-    var action = {
-        type: "N",
-        path: p
-    };
-    if (typeof value === "string") {
-        action.data = value;
-    }
+    var p = Squirrel.get_path($node), sval;
+    if (typeof value === "string")
+        sval = value;
     p.push(title);
+
     var res = Squirrel.client.hoard.record_action(
-        action,
+        {
+            type: "N",
+            path: p,
+            data: sval
+        },
         function(e) {
             Squirrel.render_action(e, function($newnode) {
                 // There's a problem with bonsai when you create
@@ -246,24 +249,6 @@ Squirrel.insert_data = function(path, data) {
         });
 };
 
-Squirrel.make_jump = function($node) {
-    var path = Squirrel.get_path($node);
-    return $("<a></a>")
-        .attr("href", "#" + Utils.fragmentify(path.join(":")))
-        .text(path.join("/"))
-        .on("click", function() {
-	    Squirrel.close_menus();
-            $("#bonsai-root")
-                .bonsai("collapseAll")
-                .bonsai("expand", $node);
-            // Zoom up the tree opening each level we find
-            $node.parents(".node").each(function() {
-                $("#bonsai-root").bonsai("expand", $(this));
-            });
-            return false;
-        });
-};
-
 /**
  * Perform a text search
  */
@@ -271,14 +256,14 @@ Squirrel.search = function(s) {
     "use strict";
 
     $(".node .expanded").each(function() {
-	$("#bonsai-root").bonsai("collapse", $(this));
+        $("#bonsai-root").bonsai("collapse", $(this));
     });
 
     var re = new RegExp(s, "i");
     $(".key").each(function() {
         if ($(this).text().match(re)) {
             var $node = $(this).closest(".node");
-	    $("#bonsai-root").bonsai("expand", $node);
+            $("#bonsai-root").bonsai("expand", $node);
         }
     });
 };
@@ -344,11 +329,11 @@ Squirrel.render_action = function(e, chain, undoable) {
             .addClass("node_div")
         /* Enable taphold events. These will be intercepted by the
            context menu. */
-	    .on("mouseover", function(/*evt*/) {
-		Squirrel.close_menus();
-		$(".hover").removeClass("hover");
-		$(this).addClass("hover");
-	    })
+            .on("mouseover", function(/*evt*/) {
+                Squirrel.close_menus();
+                $(".hover").removeClass("hover");
+                $(this).addClass("hover");
+            })
             .linger()
             .appendTo($node);
 
@@ -359,7 +344,7 @@ Squirrel.render_action = function(e, chain, undoable) {
                     Squirrel.$paste = $node;
                 })
             .on("click", function(/*e*/) {
-		Squirrel.close_menus();
+                Squirrel.close_menus();
                 // Prevent click from bubbling, only obey double click
                 // Not perfect, but good enough.
                 var $span = $(this);
@@ -370,7 +355,7 @@ Squirrel.render_action = function(e, chain, undoable) {
                             if ($span.data("click_timer") !== null) {
                                 $span.data("click_timer", null);
                                 // Same as the node_div handler below
-				Squirrel.close_menus();
+                                Squirrel.close_menus();
                                 $("#bonsai-root")
                                     .bonsai(
                                         $node.hasClass("expanded")
@@ -402,7 +387,7 @@ Squirrel.render_action = function(e, chain, undoable) {
         } else {
             $div.addClass("treecollection")
             .on("click", function(/*e*/) {
-		Squirrel.close_menus();
+                Squirrel.close_menus();
                 $("#bonsai-root")
                     .bonsai(
                         $node.hasClass("expanded")
@@ -432,7 +417,7 @@ Squirrel.render_action = function(e, chain, undoable) {
         if (undoable) {
             Squirrel.undo_stack.push({
                 type: "D",
-                path: p
+                path: p // don't need to slice, it's fresh
             });
         }
 
@@ -481,7 +466,7 @@ Squirrel.render_action = function(e, chain, undoable) {
             });
 
         // refresh data-path and update fragment ID
-        key = p.pop(); // record old node name
+        key = p[p.length - 1]; // record old node name
         p = Squirrel.get_path($node); // get new path
         $node .addClass("modified")
             .children("a.node_fragment")
@@ -491,7 +476,7 @@ Squirrel.render_action = function(e, chain, undoable) {
         if (undoable) {
             Squirrel.undo_stack.push({
                 type: "R",
-                path: p,
+                path: p, // no need to slice, not re-used
                 data: key
             });
         }
@@ -550,12 +535,12 @@ Squirrel.render_action = function(e, chain, undoable) {
         // Check there's an alarm already
         $alarm = $node.children(".alarm");
         if ($alarm.length > 0) {
-            if ($alarm.data("alarm") != e.data) {
+            if ($alarm.data("alarm") !== e.data) {
                 $node.addClass("modified");
                 $alarm.data("alarm", e.data);
             }
         } else {
-            $node .addClass("modified")
+            $node .addClass("modified");
             $("<button></button>")
                 .addClass("alarm")
                 .data("alarm", e.data)
@@ -567,7 +552,7 @@ Squirrel.render_action = function(e, chain, undoable) {
                         text: false
                     })
                 .on("click", function() {
-		    Squirrel.close_menus();
+                    Squirrel.close_menus();
                     Squirrel.Dialog.alarm($node);
                 })
                 .prependTo($node);
@@ -610,7 +595,7 @@ Squirrel.get_updates_from_cloud = function(cloard, chain) {
                 var $dlg = $("#dlg_conflicts");
                 $("#dlg_conflicts_message").empty();
                 $.each(conflicts, function(i, c) {
-                    var e = c.action;
+                    var e = c.conflict;
                     $("<div></div>")
                         .text(Hoard.stringify_action(e)
                               + ": " + c.message)
@@ -844,7 +829,7 @@ Squirrel.hoards_loaded = function() {
     Utils.sometime_is_now();
 
     $("#autosave_checkbox")
-        .prop("checked", Squirrel.client.hoard.options.autosave)
+        .prop("checked", Squirrel.client.hoard.options.autosave);
 
     $(".unauthenticated").hide();
     $(".authenticated").show();
@@ -989,7 +974,7 @@ Squirrel.init_ui = function() {
     $("#extras_menu")
         .menu({
             focus: function(/*evt, ui*/) {
-		Squirrel.close_menus();
+                Squirrel.close_menus();
                 $(this).show();
             },
             select: function(evt, ui) {
@@ -1046,43 +1031,30 @@ Squirrel.init_ui = function() {
         });
 
     $("#extras_button")
-	.position({
-	    my: "left",
-	    at: "right+20",
-	    of: $("#search")
-	})
+        .position({
+            my: "left",
+            at: "right+20",
+            of: $("#search")
+        })
         .button()
         .on("click", function(/*evt*/) {
-	    $("#bonsai-root").contextmenu("close");
+            $("#bonsai-root").contextmenu("close");
             $("#extras_menu")
-		.show()
-		.position({
+                .show()
+                .position({
                     my: "left top",
                     at: "left bottom",
                     of: this
-		});
+                });
             return false;
         });
 
     $("#bonsai-root").bonsai();
 
-    $("#add_root_child")
-        .button({
-            icons: {
-                primary: "squirrel-icon-add"
-            },
-            text: false
-        })
-        .on("click", function() {
-	    Squirrel.close_menus();
-            Squirrel.add_child_node($("#sites-node"), "A new site");
-            return false;
-        });
-
     $("#search")
-	.on("click", Squirrel.close_menus)
+        .on("click", Squirrel.close_menus)
         .on("change", function(/*evt*/) {
-	    Squirrel.close_menus();
+            Squirrel.close_menus();
             Squirrel.search($(this).val());
         });
 
@@ -1194,6 +1166,7 @@ Squirrel.init_cloud_store = function() {
 };
 
 Squirrel.init_application = function() {
+    "use strict";
 
     // status may be one of "is empty", "is corrupt", "is loaded" or
     // "has a new password". If the status is anything but "is loaded"

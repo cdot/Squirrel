@@ -4,6 +4,8 @@ Squirrel.Dialog = {};
  * @private
  */
 Squirrel.Dialog.play_action = function(action) {
+    "use strict";
+
     var res = Squirrel.client.hoard.record_action(
         action,
         function(e) {
@@ -251,22 +253,6 @@ Squirrel.Dialog.login = function(ok, fail, uReq, pReq) {
     });
 };
 
-Squirrel.Dialog.load_file = function() {
-    "use strict";
-
-    var $dlg = $("#dlg_load");
-    $("#dlg_load_file").val("");
-
-    if (typeof $dlg.dialog("instance") === "undefined") {
-        //$("#dlg_load_choose").button();
-    }
-
-    $dlg.dialog({
-        modal: true,
-        width: "auto"
-    });
-};
-
 Squirrel.Dialog.delete_all = function() {
     "use strict";
 
@@ -289,13 +275,13 @@ Squirrel.Dialog.alarm = function($node) {
 
     if ($alarm.length > 0) {
         number = $alarm.data("alarm");
-        if (number % 365 === 0)
-            number /= 365, units = "y";
-        else if (number % 30 === 0)
-            number /= 30, units = "m";
-        else if (number % 7 === 0)
-            number /= 7, units = "w";
-        else
+        if (number % 365 === 0) {
+            number /= 365; units = "y";
+        } else if (number % 30 === 0) {
+            number /= 30; units = "m";
+        } else if (number % 7 === 0) {
+            number /= 7; units = "w";
+        } else
             units = "d";
         $("#dlg_alarm_cancel").show();
     } else
@@ -326,20 +312,20 @@ Squirrel.Dialog.alarm = function($node) {
             .on("click", function() {
                 $dlg.dialog("close");
 
-                var number = $("#dlg_alarm_number").val(),
-                units = $("#dlg_alarm_units").val();
+                var numb = $("#dlg_alarm_number").val(),
+                uns = $("#dlg_alarm_units").val();
 
-                if (units === "y")
-                    number *= 365;
-                else if (units === "m")
-                    number *= 30;
-                else if (units === "w")
-                    number *= 7;
+                if (uns === "y")
+                    numb *= 365;
+                else if (uns === "m")
+                    numb *= 30;
+                else if (uns === "w")
+                    numb *= 7;
 
                 Squirrel.Dialog.play_action(
                     { type: "A",
                       path: $dlg.data("path"),
-                      data: number
+                      data: numb
                     });
                 return false;
             });
@@ -349,7 +335,6 @@ Squirrel.Dialog.alarm = function($node) {
             .on("click", function() {
                 $dlg.dialog("close");
                 if ($alarm) {
-                    var data = $dlg.data("alarm");
                     Squirrel.Dialog.play_action(
                         { type: "C",
                           path: $dlg.data("path")

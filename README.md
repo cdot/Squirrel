@@ -64,13 +64,6 @@ Squirrel was written by Crawford Currie http://c-dot.co.uk, and uses the followi
 - Dropbox API, Copyright (c) 2012 Dropbox, Inc., http://www.dropbox.com
 - Google Drive API
 
-## TODOs
 
-D -> N # can't undo  fully
 
-## Possible enhancements:
 
-Use github to serve the app
-Password change reminders
-Remember password constraints for a site
-Different stores (Facebook? Github? Parse?)
