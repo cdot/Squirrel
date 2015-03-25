@@ -29,7 +29,6 @@
         <li class="TX_text" data-command="chpw">Change master password</li>
         <li class="TX_text" data-command="copydb">Copy entire database to clipboard (JSON)</li>
         <li data-command="readfile" class="TX_text">Load local JSON file</li>
-        <li class="TX_text" data-command="deleteall">Delete entire database</li>
       </ul>
       <div id="sites">
         <button id="undo_button" class="icon_button TX_title TX_text" title="Undo last change">Undo</button>
@@ -130,7 +129,9 @@
       <p class="warning TX_text">
         You should ensure that all clients up to date and you
         are safely connected to the internet before doing this,
-        or you may lose data.
+        or you will lose data. Changing the master password will
+        overwrite all data in the cloud with what you can currently
+        see in the browser.
       </p>
       <table>
         <tr>
