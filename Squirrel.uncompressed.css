@@ -85,6 +85,11 @@ a:hover {
     background-position:0 -192px;
 }
 
+.squirrel-icon-pick {
+    background-image:url('images/squirrel-icons.png') !important;
+    background-position:0 -208px;
+}
+
 .logo {
     float: left;
     margin: 1em;
@@ -109,14 +114,6 @@ a:hover {
 .node_div.hover {
     background: #44372c url("libs/images/ui-bg_gloss-wave_30_44372c_500x100.png") 50% 50% repeat-x;
     color: #baec7e;
-}
-
-.top_bar_right {
-    float: right;
-}
-
-.intro {
-    margin-left: 52px;
 }
 
 .unauthenticated {
@@ -145,9 +142,13 @@ button.ui-button-icon-only {
     padding: 0;
 }
 
-.search_result {
-    color: yellow;
-    text-decoration: none;
+.pick_cell {
+    border: 1px solid grey;
+}
+
+.picked {
+    background-color: yellow;
+    color: black;
 }
 
 #sites {

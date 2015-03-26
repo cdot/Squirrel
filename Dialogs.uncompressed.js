@@ -344,3 +344,57 @@ Squirrel.Dialog.alarm = function($node) {
             });
     }
 };
+
+Squirrel.Dialog.pick_from = function($node) {
+    "use strict";
+
+    var $dlg = $("#dlg_pick"),
+    val = $node.children(".node_div").children(".value").text(),
+    $which = $("#dlg_pick_which"),
+    $from = $("#dlg_pick_from"), i, $f,
+
+    item_clicked = function() {
+        var ii = $(this).data("i");
+        $dlg
+            .find("td.i" + ii)
+            .addClass("picked");
+    };
+
+    if (typeof $dlg.dialog("instance") === "undefined") {
+        $("#dlg_pick_clear")
+            .button()
+            .on("click", function() {
+                $dlg.find(".picked").removeClass("picked");
+            });
+    }
+
+    for (i = 0; i < val.length; i++) {
+        $f = $from.children("td.i" + i);
+        if ($f.length === 0) {
+            $("<td></td>")
+                .data("i", i)
+                .addClass("pick_cell i" + i)
+                .text(i)
+                .on("click", item_clicked)
+                .appendTo($which);
+            $f = $("<td></td>")
+                .data("i", i)
+                .addClass("pick_cell i" + i)
+                .on("click", item_clicked)
+                .appendTo($from);
+        }
+        $f.text(val.charAt(i));
+    }
+
+    while (i < $from.children("td").length) {
+        $from.children("td").last().remove();
+        i++;
+    }
+
+    $dlg.find(".picked").removeClass("picked");
+
+    $dlg.dialog({
+        modal: true,
+        width: "auto"
+    });
+};

@@ -20,6 +20,7 @@ Squirrel.ContextMenu.init = function($root) {
         $root
             .contextmenu("showEntry", "rename", !isroot)
             .contextmenu("showEntry", "copy_value", isvalue)
+            .contextmenu("showEntry", "pick_from", isvalue)
             .contextmenu("showEntry", "make_copy", !isroot)
             .contextmenu("showEntry", "delete", !isroot)
             .contextmenu("showEntry", "add_alarm", !hasalarm && !isroot)
@@ -81,6 +82,11 @@ Squirrel.ContextMenu.init = function($root) {
                 title: TX.tx("Copy value"),
                 cmd: "copy_value",
                 uiIcon: "squirrel-icon-camera"
+            },
+            {
+                title: TX.tx("Pick"),
+                cmd: "pick_from",
+                uiIcon: "squirrel-icon-pick"
             },
             {
                 title: TX.tx("Rename"),
@@ -196,6 +202,11 @@ Squirrel.ContextMenu.choice = function(e, ui) {
     case "delete":
         if (DEBUG) console.debug("Deleting");
         Squirrel.Dialog.confirm_delete($node);
+        break;
+
+    case "pick_from":
+        if (DEBUG) console.debug("Picking");
+        Squirrel.Dialog.pick_from($node);
         break;
 
     default:

@@ -188,6 +188,21 @@
       </div>
     </div>
 
+    <div id="dlg_pick" class="dialog TX_title" title="Pick from string">
+      <p>
+        Click on the Nth character position to see what character it is
+      </p>
+      <table>
+        <tbody>
+          <tr id="dlg_pick_which"></tr>
+          <tr id="dlg_pick_from"></tr>
+        </tbody>
+      </table>
+      <p>
+        <button id="dlg_pick_clear" class="TX_text">Clear</button>
+      </p>
+    </div>
+
     <!-- Not really a dialog, just a handy way to hide -->
     <div class="dialog">
       <input type="file" id="dlg_load_file" />
