@@ -374,7 +374,7 @@ Squirrel.Dialog.pick_from = function($node) {
             $("<td></td>")
                 .data("i", i)
                 .addClass("pick_cell i" + i)
-                .text(i)
+                .text(i + 1)
                 .on("click", item_clicked)
                 .appendTo($which);
             $f = $("<td></td>")

@@ -67,7 +67,7 @@ function Hoard(data) {
             // from the cloud. This is so that (for example) a tablet
             // doesn't get the option when it spends most of its time
             // disconnected.
-            autosave: true
+            autosave: false
         };
 }
 
@@ -156,7 +156,8 @@ Hoard.prototype.record_action = function(e, listener, no_push) {
     switch (e.type) {
     case "N": // New
         if (parent.data[name])
-            return c(TX.tx("Cannot create, '$1' already exists", name));
+            return c(TX.tx("Cannot create, '$1' already exists",
+                           e.path.join("/")));
         parent.time = e.time; // collection is being modified
         parent.data[name] = {
             time: e.time,
@@ -167,41 +168,47 @@ Hoard.prototype.record_action = function(e, listener, no_push) {
 
     case "D": // Delete
         if (!parent.data[name])
-            return c(TX.tx("Cannot delete, '$1' does not exist", name));
+            return c(TX.tx("Cannot delete, '$1' does not exist",
+                           e.path.join("/")));
         delete parent.data[name];
         break;
 
     case "R": // Rename
         if (!parent.data[name])
-            return c(TX.tx("Cannot rename, '$1' does not exist", name));
+            return c(TX.tx("Cannot rename, '$1' does not exist",
+                          e.path.join("/")));
         if (parent.data[e.data])
-            return c(TX.tx("Cannot rename, '$1' already exists",
-                           e.data));
+            return c(TX.tx("Cannot rename '$1', '$2' already exists",
+                           e.path.join("/"), e.data));
         parent.data[e.data] = parent.data[name];
         delete parent.data[name];
         break;
 
     case "E": // Edit
         if (!parent.data[name])
-            return c(TX.tx("Cannot change value, '$1' does not exist", name));
+            return c(TX.tx("Cannot change value, '$1' does not exist",
+                           e.path.join("/")));
         parent.data[name].data = e.data;
         break;
 
     case "A": // Alarm
         if (!parent.data[name])
-            return c(TX.tx("Cannot set reminder, '$1' does not exist", name));
+            return c(TX.tx("Cannot set reminder, '$1' does not exist",
+                           e.path.join("/")));
         parent.data[name].alarm = e.data;
         break;
 
     case "C": // Cancel alarm
         if (!parent.data[name])
-            return c(TX.tx("Cannot cancel reminder, '$1' does not exist", name));
+            return c(TX.tx("Cannot cancel reminder, '$1' does not exist",
+                           e.path.join("/")));
         delete parent.data[name].alarm;
         break;
 
     default:
         // Internal error
-        throw "Internal error: Unrecognised action type '" + e.type + "'";
+        throw "Internal error: Unrecognised action type " +
+            Squirrel.stringify_action(e);
     }
 
     if (listener)
@@ -411,7 +418,7 @@ Hoard.prototype.merge_from_cloud = function(cloud, listener, chain) {
                 "Merge " + Hoard.stringify_action(cloud.actions[i]));
             c = this.record_action(cloud.actions[i], listener, true);
             if (c !== null) {
-                if (DEBUG) console.debug(c.action + " conflict: " + c.message);
+                if (DEBUG) console.debug("Conflict: " + c.message);
                 conflicts.push(c);
             }
         }

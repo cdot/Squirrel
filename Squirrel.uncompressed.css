@@ -129,11 +129,11 @@ a:hover {
 }
 
 .value {
-    font-family: "Courier New", Courier, monospace
+    font-family: "Courier New", Courier, monospace;
 }
 
 input {
-    font-family: "Courier New", Courier, monospace
+    font-family: "Courier New", Courier, monospace;
 }
 
 button.ui-button-icon-only {
@@ -143,6 +143,7 @@ button.ui-button-icon-only {
 }
 
 .pick_cell {
+    font-family: "Courier New", Courier, monospace;
     border: 1px solid grey;
 }
 

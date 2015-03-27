@@ -20,16 +20,9 @@
       <h2>
         <span class="TX_text">Signed in as: </span><span id="whoami"></span>
       </h2>
-      <label for="search" class="TX_text">Search:</label>
+      <span id="search_label" class="TX_text">Search:</span>
       <input id="search" value="" class="TX_title" title="Enter search string" />
-      <button id="extras_button" class="authenticated TX_title TX_text" title="Change options">
-        Extras
-      </button>
-      <ul id="extras_menu" class="menu TX_title" title="Extras">
-        <li class="TX_text" data-command="chpw">Change master password</li>
-        <li class="TX_text" data-command="copydb">Copy entire database to clipboard (JSON)</li>
-        <li data-command="readfile" class="TX_text">Load local JSON file</li>
-      </ul>
+      <span id="search_hits"></span>
       <div id="sites">
         <button id="undo_button" class="icon_button TX_title TX_text" title="Undo last change">Undo</button>
         <button id="save_button" class="icon_button TX_text">Save</button>
@@ -37,6 +30,14 @@
         <label for="autosave_checkbox" class="TX_text">
           Autosave
         </label>
+        <button id="extras_button" class="authenticated TX_title TX_text" title="Change options">
+          Extras
+        </button>
+        <ul id="extras_menu" class="menu TX_title" title="Extras">
+          <li class="TX_text" data-command="chpw">Change master password</li>
+          <li class="TX_text" data-command="copydb">Copy entire database to clipboard (JSON)</li>
+          <li data-command="readfile" class="TX_text">Load local JSON file</li>
+        </ul>
         <ul id="bonsai-root" name="/" class="bonsai-root">
           <li id="sites-node" name="/" class="node">
             <div class="node_div treecollection">

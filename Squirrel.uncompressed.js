@@ -39,6 +39,23 @@ Squirrel.get_path = function($node) {
 };
 
 /**
+ * Custom key comparison, such that "User" and "Pass" always bubble
+ * to the top of the keys
+ */
+Squirrel.compare_keys = function(a, b) {
+    a = a.toLowerCase(); b = b.toLowerCase();
+    if (a === "user") // the lowest possible key
+        return (b === "user") ? 0 : -1;
+    if (b === "user")
+        return 1;
+    if (a === "pass") // The next lowest key
+        return (b === "pass") ? 0 : -1;
+    if (b === "pass")
+        return 1;
+    return (a === b) ? 0 : (a < b) ? -1 : 1;
+};
+
+/**
  * Remove the node (and all subnodes) from the node->path->node mappings
  */
 Squirrel.demap = function($node) {
@@ -260,12 +277,16 @@ Squirrel.search = function(s) {
     });
 
     var re = new RegExp(s, "i");
-    $(".key").each(function() {
+    var hits = 0;
+    $(".key,.value").each(function() {
         if ($(this).text().match(re)) {
-            var $node = $(this).closest(".node");
-            $("#bonsai-root").bonsai("expand", $node);
+            hits++;
+            $(this).parents(".node").each(function() {
+                $("#bonsai-root").bonsai("expand", $(this));
+            });
         }
     });
+    $("#search_hits").text(TX.tx("$1 found", hits));
 };
 
 /**
@@ -403,7 +424,7 @@ Squirrel.render_action = function(e, chain, undoable) {
         inserted = false;
         key = key.toLowerCase();
         $container.children("li.node").each(function() {
-            if ($(this).data("key").toLowerCase() > key) {
+            if (Squirrel.compare_keys($(this).data("key"), key) > 0) {
                 $node.insertBefore($(this));
                 inserted = true;
                 return false;
@@ -447,7 +468,7 @@ Squirrel.render_action = function(e, chain, undoable) {
         inserted = false;
         key = e.data.toLowerCase();
         $container.children("li.node").each(function() {
-            if ($(this).data("key").toLowerCase() > key) {
+            if (Squirrel.compare_keys($(this).data("key"), key) > 0) {
                 $node.insertBefore($(this));
                 inserted = true;
                 return false;
@@ -1031,11 +1052,6 @@ Squirrel.init_ui = function() {
         });
 
     $("#extras_button")
-        .position({
-            my: "left",
-            at: "right+20",
-            of: $("#search")
-        })
         .button()
         .on("click", function(/*evt*/) {
             $("#bonsai-root").contextmenu("close");
@@ -1055,6 +1071,7 @@ Squirrel.init_ui = function() {
         .on("click", Squirrel.close_menus)
         .on("change", function(/*evt*/) {
             Squirrel.close_menus();
+            $("#search_hits").text(TX.tx("Searching..."));
             Squirrel.search($(this).val());
         });
 
