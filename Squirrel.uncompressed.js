@@ -13,16 +13,18 @@
  * attributes:
  *   title: last-modified message, used for tooltip
  * children:
- *   div class=node_div
- *     target for tap-hold events
+ *   div: class=node_div
+ *     target for tap-hold events. Target for mousover, taphold, and
+ *     click events on collections (open, close subtree)
  *     classes:
  *         treeleaf - if this is a leaf node
  *         treecollection - if this is an intermediate node   
  *     children:
- *        span class=key target for click events
+ *        span: class=key target for click events
  *           text: the key name
- *        span class=value - if this is a leaf node, text is the leaf value
- *   ul class=node_ul - if this is an internediate node
+ *        span: class=kv_separator
+ *        span: class=value - if this is a leaf node, text is the leaf value
+ *   ul: class=node_ul - if this is an internediate node
  *
  * DOM nodes are never manipulated directly, Instead, the manipulation
  * function render_action is called back from the record_action method
@@ -424,9 +426,10 @@ Squirrel.render_action = function(e, chain, undoable) {
             .appendTo($div);
 
         if (typeof e.data !== "undefined" && e.data !== null) {
-            $div
-                .addClass("treeleaf")
-                .append(" : ");
+            $div.addClass("treeleaf");
+            $("<span> : </span>")
+                .addClass("kv_separator")
+                .appendTo($div);
             $("<span></span>")
                 .addClass("value")
                 .text(e.data)

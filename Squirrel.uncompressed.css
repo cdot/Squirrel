@@ -136,6 +136,10 @@ a:hover {
     font-family: "Courier New", Courier, monospace;
 }
 
+.kv_separator {
+    color: orange;
+}
+
 input {
     font-family: "Courier New", Courier, monospace;
 }
