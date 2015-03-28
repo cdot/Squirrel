@@ -92,7 +92,11 @@ a:hover {
 
 .logo {
     float: left;
-    margin: 1em;
+    margin: 0.5em 1em 0.5em 1em;
+}
+
+.ui-button-text-only .ui-button-text {
+    padding: 0.3em;
 }
 
 .ui-menu {
@@ -152,6 +156,19 @@ button.ui-button-icon-only {
     color: black;
 }
 
+.alarm {
+    float: left;
+}
+
+#signed_in {
+    float: right;
+}
+
+#toolbar {
+    clear: both;
+    margin-left: 2em;
+}
+
 #sites {
     border-top: 1px solid white;
     padding-top: 1em;
@@ -173,13 +190,14 @@ button.ui-button-icon-only {
 }
 
 #dlg_alarm_units {
-    width: 6em;
+    width: 7em;
 }
 
 #dlg_alarm_units-button {
-    top: 1em;
+    top: 0.65em;
 }
 
-.alarm {
-    float: left;
+#dlg_alarm_units-button > span.ui-selectmenu-text {
+    padding: 0.2em 2.1em 0.2em .25em;
 }
+

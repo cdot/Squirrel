@@ -342,6 +342,9 @@ Squirrel.Dialog.alarm = function($node) {
                 }
                 return false;
             });
+
+        // Hack around http://bugs.jqueryui.com/ticket/10543
+        $dlg.parent().css("overflow", "visible");
     }
 };
 

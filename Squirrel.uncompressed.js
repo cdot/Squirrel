@@ -472,7 +472,8 @@ Squirrel.render_action = function(e, chain, undoable) {
             });
         }
 
-        // Add anchor
+        // Add <a name="anchor">
+        // SMELL: are we still using this?
         $("<a></a>")
             .addClass("node_fragment")
             .attr("name", Utils.fragmentify(p.join(":")))

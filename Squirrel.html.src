@@ -17,13 +17,13 @@
     <h1>Squirrel</h1>
     <div class="unauthenticated TX_text">Authenticating...</div>
     <div class="authenticated">
-      <h2>
-        <span class="TX_text">Signed in as: </span><span id="whoami"></span>
-      </h2>
       <span id="search_label" class="TX_text">Search:</span>
       <input id="search" value="" class="TX_title" title="Enter search string" />
       <span id="search_hits"></span>
-      <div id="sites">
+      <div id="signed_in">
+        <span class="TX_text">Signed in as: </span><span id="whoami"></span>
+      </div>
+      <div id="toolbar">
         <button id="undo_button" class="icon_button TX_title TX_text" title="Undo last change">Undo</button>
         <button id="save_button" class="icon_button TX_text">Save</button>
         <input type="checkbox" id="autosave_checkbox">
@@ -38,6 +38,8 @@
           <li class="TX_text" data-command="copydb">Copy entire database to clipboard (JSON)</li>
           <li data-command="readfile" class="TX_text">Load local JSON file</li>
         </ul>
+      </div>
+      <div id="sites">
         <ul id="bonsai-root" name="/" class="bonsai-root">
           <li id="sites-node" name="/" class="node">
             <div class="node_div treecollection">
