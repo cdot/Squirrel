@@ -1,5 +1,34 @@
 /* Copyright (C) 2015 Crawford Currie http://c-dot.co.uk / MIT */
 
+/*
+ * A Squirrel node corresponds to a node in the client hoard cache. It is
+ * represented in the DOM by an LI node in a UL/LI tree. This node has
+ * structure as follows:
+ * classes:
+ *   node (always)
+ *   modified (if UI modified)
+ * data:
+ *   key, the key name the node is for (simple name, not a path)
+ *   path: the full pathname of the node
+ * attributes:
+ *   title: last-modified message, used for tooltip
+ * children:
+ *   div class=node_div
+ *     target for tap-hold events
+ *     classes:
+ *         treeleaf - if this is a leaf node
+ *         treecollection - if this is an intermediate node   
+ *     children:
+ *        span class=key target for click events
+ *           text: the key name
+ *        span class=value - if this is a leaf node, text is the leaf value
+ *   ul class=node_ul - if this is an internediate node
+ *
+ * DOM nodes are never manipulated directly, Instead, the manipulation
+ * function render_action is called back from the record_action method
+ * of the hoard.
+ */
+
 var Squirrel = {};                     // Namespace
 
 const PATHSEP = String.fromCharCode(1); // separator used in Path->node mapping
@@ -343,19 +372,19 @@ Squirrel.render_action = function(e, chain, undoable) {
         $node = $("<li></li>")
             .addClass("node modified")
             .data("key", key)
-            .attr("name", key)
             .attr("title", Squirrel.last_mod(e.time));
 
+        // SMELL: Apparently the only reason we need the node_div is
+        // for the mouseover and linger. Can we move these events
+        // to the li? Or will they conflict with bonsai?
         $div = $("<div></div>")
             .addClass("node_div")
-        /* Enable taphold events. These will be intercepted by the
-           context menu. */
             .on("mouseover", function(/*evt*/) {
                 Squirrel.close_menus();
                 $(".hover").removeClass("hover");
                 $(this).addClass("hover");
             })
-            .linger()
+            .linger() // taphold events
             .appendTo($node);
 
         $("<span></span>")
@@ -397,24 +426,25 @@ Squirrel.render_action = function(e, chain, undoable) {
         if (typeof e.data !== "undefined" && e.data !== null) {
             $div
                 .addClass("treeleaf")
-                .append(" : ")
-                .append(
-                    $("<span></span>")
-                        .addClass("value")
-                        .dblclick(function() {
-                            Squirrel.edit_node($node, "value");
-                        })
-                        .text(e.data));
+                .append(" : ");
+            $("<span></span>")
+                .addClass("value")
+                .text(e.data)
+                .dblclick(function() {
+                    Squirrel.edit_node($node, "value");
+                })
+                .appendTo($div);
         } else {
-            $div.addClass("treecollection")
-            .on("click", function(/*e*/) {
-                Squirrel.close_menus();
-                $("#bonsai-root")
-                    .bonsai(
-                        $node.hasClass("expanded")
-                            ? "collapse" : "expand", $node);
-                return false;
-            });
+            $div
+                .addClass("treecollection")
+                .on("click", function(/*e*/) {
+                    Squirrel.close_menus();
+                    $("#bonsai-root")
+                        .bonsai(
+                            $node.hasClass("expanded")
+                                ? "collapse" : "expand", $node);
+                    return false;
+                });
             $("<ul></ul>")
                 .addClass("node_ul")
                 .appendTo($node);
@@ -491,7 +521,6 @@ Squirrel.render_action = function(e, chain, undoable) {
         p = Squirrel.get_path($node); // get new path
         $node .addClass("modified")
             .children("a.node_fragment")
-            .attr("name", Utils.fragmentify(p.join(":")))
             .scroll_into_view();
 
         if (undoable) {
@@ -639,8 +668,9 @@ Squirrel.unsaved_changes = function(max_changes) {
 
     var message = [];
 
-    $(".modified").each(function() {
-        message.push(TX.tx("$1 has changed", $(this).attr("name")));
+    $(".node.modified").each(function() {
+        if (DEBUG && !$(this).attr("path")) debugger;
+        message.push(TX.tx("$1 has changed", $(this).attr("path")));
     });
 
     if (message.length > max_changes) {
