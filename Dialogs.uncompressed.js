@@ -9,7 +9,7 @@ Squirrel.Dialog.play_action = function(action) {
     var res = Squirrel.client.hoard.record_action(
         action,
         function(e) {
-            Squirrel.render_action(
+            Squirrel.Tree.action(
                 e,
                 function() {
                     Utils.sometime("update_save");
@@ -60,7 +60,7 @@ Squirrel.Dialog.confirm_delete = function($node) {
     "use strict";
 
     var $dlg = $("#dlg_delconf"),
-    p = Squirrel.get_path($node);
+    p = Squirrel.Tree.path($node);
 
     $dlg.data("path", p);
 
@@ -79,7 +79,7 @@ Squirrel.Dialog.confirm_delete = function($node) {
                         path: $ddlg.data("path")
                     },
                     function(e) {
-                        Squirrel.render_action(
+                        Squirrel.Tree.action(
                             e,
                             function() {
                                 Utils.sometime("update_save");
@@ -131,7 +131,7 @@ Squirrel.Dialog.make_random = function($node) {
                 var $ddlg = $("#dlg_gen_rand");
                 $ddlg.dialog("close");
                 var pw = $("#dlg_gen_rand_idea").text();
-                var old_path = Squirrel.get_path($ddlg.data("node"));
+                var old_path = Squirrel.Tree.path($ddlg.data("node"));
                 Squirrel.Dialog.play_action(
                     { type: "E",
                       path: old_path,
@@ -253,22 +253,12 @@ Squirrel.Dialog.login = function(ok, fail, uReq, pReq) {
     });
 };
 
-Squirrel.Dialog.delete_all = function() {
-    "use strict";
-
-    Squirrel.squeak(TX.text(
-        "Do you really want to delete the entire database? This cannot be undone.",
-        function() {
-            alert("Fuck off, asshole");
-        }));
-};
-
 Squirrel.Dialog.alarm = function($node) {
     "use strict";
 
     var $dlg = $("#dlg_alarm"),
     $alarm = $node.children(".alarm"),
-    path = Squirrel.get_path($node),
+    path = Squirrel.Tree.path($node),
     number = 6,
     units = "m",
     is_new = (typeof $dlg.dialog("instance") === "undefined");

@@ -30,6 +30,7 @@ COMMONJS = \
 	LocalStorageStore.uncompressed.js \
 	EncryptedStore.uncompressed.js \
 	Squirrel.uncompressed.js \
+	Tree.uncompressed.js \
 	ContextMenu.uncompressed.js \
 	Dialogs.uncompressed.js \
 	Hoard.uncompressed.js

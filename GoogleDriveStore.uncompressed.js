@@ -245,7 +245,8 @@ GoogleDriveStore.prototype._download = function(p) {
             },
             p.fail);
     } else {
-        throw "Must have either name or url";
+        // Must have either name or url
+        if (DEBUG) debugger;
     }
 };
 

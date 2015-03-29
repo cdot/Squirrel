@@ -20,6 +20,10 @@ a:hover {
     font-weight: bold;
 }
 
+.lastmod {
+    float: right;
+}
+
 .squirrel-icon-add {
     background-image:url('images/squirrel-icons.png') !important;
     background-position:0 0px;

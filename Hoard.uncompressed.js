@@ -134,7 +134,8 @@ Hoard.prototype.record_action = function(e, listener, no_push) {
     for (i = 0; i < e.path.length - 1; i++) {
         name = e.path[i];
         if (parent && typeof parent.data === "string") {
-            throw "Internal error: Cannot " + e.type + " over leaf node";
+            // "Cannot " + e.type + " over leaf node";
+            if (DEBUG) debugger;
         } else if (parent && parent.data[name]) {
             parent = parent.data[name];
         } else {
@@ -206,9 +207,8 @@ Hoard.prototype.record_action = function(e, listener, no_push) {
         break;
 
     default:
-        // Internal error
-        throw "Internal error: Unrecognised action type " +
-            Squirrel.stringify_action(e);
+        // Internal error uUnrecognised action type
+        if (DEBUG) debugger;
     }
 
     if (listener)
@@ -233,8 +233,7 @@ Hoard.prototype.simplify = function(chain) {
         for (var i = 0; i < this.actions.length; i++) {
             // Play the action with no push and no listener
             var er = this.record_action(this.actions[i], false, true);
-            if (er !== null)
-                throw "Disaster! " + er.message;
+            if (DEBUG && er !== null) debugger;
         }
     }
 
@@ -337,9 +336,8 @@ Hoard.prototype._reconstruct_actions = function(data, path, listener, chain) {
                     next_node);
             } else
                 next_node();
-        } else {
-            if (DEBUG) debugger;
-            throw "Internal error";
+        } else if (DEBUG) {
+            debugger;
         }        
     };
 

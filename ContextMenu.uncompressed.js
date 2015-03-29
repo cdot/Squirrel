@@ -63,7 +63,7 @@ Squirrel.ContextMenu.init = function($root) {
             zc.on("copy", function(event) {
                 if (DEBUG) console.debug("Copying JSON to clipboard");
                 var pa = $root.data("zc_cut");
-                var p = Squirrel.get_path(pa);
+                var p = Squirrel.Tree.path(pa);
                 var n = Squirrel.client.hoard.get_node(p);
                 var json = JSON.stringify(n);
 
@@ -162,7 +162,7 @@ Squirrel.ContextMenu.choice = function(e, ui) {
         break;
 
     case "insert_copy":
-        if (DEBUG) console.debug("Pasting " + Squirrel.$paste);
+        if (DEBUG) console.debug("Pasting");
         if (Squirrel.clipboard) {
             var data = JSON.parse(Squirrel.clipboard);
             Squirrel.add_child_node($node, TX.tx("A copy"), data.data);
@@ -180,7 +180,7 @@ Squirrel.ContextMenu.choice = function(e, ui) {
         break;
 
     case "add_value":
-        if (DEBUG) console.debug("Adding value to " + Squirrel.get_path($node).join("/"));
+        if (DEBUG) console.debug("Adding value to " + Squirrel.Tree.path($node).join("/"));
         Squirrel.add_child_node($node, TX.tx("A new value"), TX.tx("None"));
         break;
 
@@ -210,6 +210,6 @@ Squirrel.ContextMenu.choice = function(e, ui) {
         break;
 
     default:
-        throw "Unknown ui.cmd " + ui.cmd;
+        if (DEBUG) debugger;
     }
 };

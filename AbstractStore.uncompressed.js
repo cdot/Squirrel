@@ -118,7 +118,7 @@ AbstractStore.prototype.pass = function(pass) {
 AbstractStore.prototype.write = function(/*data, ok, fail*/) {
     "use strict";
 
-    throw "Pure virtual method 'write'";
+    if (DEBUG) debugger;
 };
 
 /**
@@ -129,5 +129,5 @@ AbstractStore.prototype.write = function(/*data, ok, fail*/) {
 AbstractStore.prototype.read = function(/*ok, fail*/) {
     "use strict";
 
-    throw "Pure virtual method 'read'";
+    if (DEBUG) debugger;
 };
