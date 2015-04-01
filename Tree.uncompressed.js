@@ -9,7 +9,7 @@
  *   modified (if UI modified)
  * data:
  *   key, the key name the node is for (simple name, not a path)
- *   path: the full pathname of the node
+ *   path: the full pathname of the node (string)
  * attributes:
  *   title: last-modified message, used for tooltip
  * children:
@@ -43,6 +43,7 @@ const PATHSEP = String.fromCharCode(1); // separator used in Path->node mapping
 Squirrel.Tree.set_root = function($node) {
     "use strict";
 
+    $node.data("path", "");
     Squirrel.Tree.cache[""] = $node;
 };
 

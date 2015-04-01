@@ -98,7 +98,7 @@ Squirrel.attach_alarm_handlers = function($node) {
 Squirrel.attach_node_handlers = function($node) {
     var $div = $node.children(".node_div");
 
-    $div.linger();
+    $div.linger();    // long-mouse-press -> taphold mapping
 
     $div.hover(
         function(/*evt*/) {
