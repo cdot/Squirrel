@@ -43,7 +43,9 @@ const PATHSEP = String.fromCharCode(1); // separator used in Path->node mapping
 Squirrel.Tree.set_root = function($node) {
     "use strict";
 
-    $node.data("path", "");
+    // Don't do this, or you end up with an invisible path component
+    // in path strings
+    //$node.data("path", "");
     Squirrel.Tree.cache[""] = $node;
 };
 

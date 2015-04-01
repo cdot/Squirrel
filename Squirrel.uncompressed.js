@@ -292,13 +292,14 @@ Squirrel.get_updates_from_cloud = function(cloard, chain) {
         function(conflicts) {
             if (conflicts.length > 0) {
                 var $dlg = $("#dlg_conflicts");
-                $("#dlg_conflicts_message").empty();
+                var $msg = $("#dlg_conflicts_message");
+                $msg.empty();
                 $.each(conflicts, function(i, c) {
                     var e = c.conflict;
                     $("<div></div>")
                         .text(Hoard.stringify_action(e)
                               + ": " + c.message)
-                        .appendTo($dlg.children(".message"));
+                        .appendTo($msg);
                 });
                 $dlg.dialog({
                     width: "auto"
@@ -663,7 +664,7 @@ Squirrel.init_ui = function() {
         .hide()
         .on("click", function(/*evt*/) {
             Squirrel.close_menus();
-            Squirrel.Tree.undo();
+            Squirrel.Tree.undo(Squirrel.squeak);
             return false;
         });
 

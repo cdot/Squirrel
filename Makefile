@@ -1,4 +1,4 @@
-STORES = dropbox drive facebook
+STORES = dropbox drive
 
 dropboxJS = \
 	libs/dropbox.uncompressed.js \
@@ -6,9 +6,6 @@ dropboxJS = \
 
 driveJS = \
 	GoogleDriveStore.uncompressed.js
-
-facebookJS = \
-	FacebookStore.uncompressed.js
 
 LIBSJS = \
 	libs/jquery-2.1.3.uncompressed.js \
@@ -51,54 +48,56 @@ debug: $(patsubst %,%.uncompressed.html,$(STORES))
 
 %.uncompressed.html : Squirrel.html.src
 	./sub.pl Squirrel.html.src \
-		LIBSJS_HTML '$(patsubst %,$(SPRE)%$(SPOS),$(LIBSJS))' \
-		COMMONJS_HTML '$(patsubst %,$(SPRE)%$(SPOS),$(COMMONJS))' \
-		STOREJS_HTML '$(patsubst %,$(SPRE)%$(SPOS),$($*JS))' \
-		LIBSCSS_HTML '$(patsubst %,$(LPRE)%$(LPOS),$(LIBSCSS))' \
-		COMMONCSS_HTML '$(patsubst %,$(LPRE)%$(LPOS),$(COMMONCSS))' \
-		DEBUG '<script type="text/javascript">const DEBUG=true;</script>' \
+	LIBSJS_HTML '$(patsubst %,$(SPRE)%$(SPOS),$(LIBSJS))' \
+	COMMONJS_HTML '$(patsubst %,$(SPRE)%$(SPOS),$(COMMONJS))' \
+	STOREJS_HTML '$(patsubst %,$(SPRE)%$(SPOS),$($*JS))' \
+	LIBSCSS_HTML '$(patsubst %,$(LPRE)%$(LPOS),$(LIBSCSS))' \
+	COMMONCSS_HTML '$(patsubst %,$(LPRE)%$(LPOS),$(COMMONCSS))' \
+	DEBUG '<script type="text/javascript">const DEBUG=true;</script>' \
+	> $@
+
+.PRECIOUS: %.min.js %.min.css
+
+.SECONDEXPANSION:
+%.html : Squirrel.html.src \
+	$(subst uncompressed,min,$(COMMONJS)) \
+	$(subst uncompressed,min, $(LIBSJS)) \
+	$(patsubst %.uncompressed.css,%.min.css,$(COMMONCSS)) \
+	$(patsubst %.uncompressed.css,%.min.css,$(LIBSCSS)) \
+	$$(subst uncompressed,min,$$($$*JS))
+	./sub.pl Squirrel.html.src \
+	LIBSJS_HTML \
+	'$(patsubst %.uncompressed.js,$(SPRE)%.min.js$(SPOS),$(LIBSJS))' \
+	COMMONJS_HTML \
+	'$(patsubst %.uncompressed.js,$(SPRE)%.min.js$(SPOS),$(COMMONJS))' \
+	STOREJS_HTML \
+	'$(patsubst %.uncompressed.js,$(SPRE)%.min.js$(SPOS),$($*JS))' \
+	LIBSCSS_HTML \
+	'$(patsubst %.uncompressed.css,$(LPRE)%.min.css$(LPOS),$(LIBSCSS))' \
+	COMMONCSS_HTML \
+	'$(patsubst %.uncompressed.css,$(LPRE)%.min.css$(LPOS),$(COMMONCSS))' \
 	> $@
 
 # Making release 
 
 #		--source-map $(patsubst %.js,%.map,$@) \
+#		--beautify \
 
-uglifyJS = \
+%.min.js : %.uncompressed.js
 	uglifyjs \
 		--compress \
 		--define DEBUG=false \
 		-o $@ \
 		-- $^
 
-cleancss = \
+%.min.css : %.uncompressed.css
 	echo "" > $@; \
 	$(patsubst %,cleancss %>>$@;,$^)
 
-libs/libs.min.js : $(LIBSJS)
-	$(uglifyJS)
-
-libs/libs.min.css : $(LIBSCSS)
-	$(cleancss)
-
-Squirrel.min.js : $(COMMONJS)
-	$(uglifyJS)
-
-Squirrel.min.css : $(COMMONCSS)
-	$(cleancss)
-
-%.min.js : $(%JS)
-	$(uglifyJS)
-
-%.html : Squirrel.html.src Squirrel.min.js libs/libs.min.js %.min.js libs/libs.min.css Squirrel.min.css
-	perl sub.pl Squirrel.html.src \
-	LIBSJS_HTML '$(SPRE)libs/libs.min.js$(SPOS)' \
-	COMMONJS_HTML '$(SPRE)Squirrel.min.js$(SPOS)' \
-	STOREJS_HTML '$(SPRE)$*.min.js$(SPOS)' \
-	LIBSCSS_HTML '$(LPRE)libs/libs.min.css$(LPOS)' \
-	COMMONCSS_HTML '$(LPRE)Squirrel.min.css$(LPOS)' \
-	> $@
-
-release: $(patsubst %,%.html,$(STORES))
+release: $(subst uncompressed,min, $(COMMONJS)) \
+	 $(subst uncompressed,min, $(LIBSJS)) \
+	$(patsubst %,%.html,$(STORES))
+	@echo "Done"
 
 # Other targets
 
@@ -116,4 +115,17 @@ locale/*.json: *.uncompressed.js Squirrel.html.src Makefile translate.pl
 	cat $^ \
 	| perl translate.pl
 
+.SECONDEXPANSION:
+upload: \
+	$(patsubst %,%.html,$(STORES)) \
+	$(subst uncompressed,min,$(COMMONJS)) \
+	$(subst uncompressed,min, $(LIBSJS)) \
+	$(patsubst %.uncompressed.css,%.min.css,$(COMMONCSS)) \
+	$(patsubst %.uncompressed.css,%.min.css,$(LIBSCSS)) \
+	$(subst uncompressed,min,$(driveJS)) \
+	$(wildcard images/*) \
+	$(wildcard libs/images/*) \
+	$(wildcard libs/*.swf) \
+	$$(subst uncompressed,min,$(patsubst %,$$(%JS),$(STORES)))
+	./upload.pl $^
 
