@@ -185,9 +185,17 @@
           <option value="y" class="TX_text">years</option>
         </select>
       </p>
+      <p>
+        <span class="TX_text">Next reminder is due in</span>
+        <span id="dlg_alarm_next"></span>
+        <span class="dlg_alarm_next d TX_text">days</span>
+        <span class="dlg_alarm_next w TX_text">weeks</span>
+        <span class="dlg_alarm_next m TX_text">months</span>
+        <span class="dlg_alarm_next y TX_text">years</span>
+      </p>
       <div>
-        <button id="dlg_alarm_set" class="TX_title TX_text" title="Set (or reset) reminder">Set</button>
-        <button id="dlg_alarm_cancel" class="TX_title TX_text" title="Cancel reminder">Cancel</button>
+        <button id="dlg_alarm_set" class="TX_title TX_text" title="Set (or reset) reminder">Set reminder</button>
+        <button id="dlg_alarm_cancel" class="TX_title TX_text" title="Cancel reminder">Cancel reminder</button>
       </div>
     </div>
 

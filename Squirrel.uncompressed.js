@@ -116,7 +116,7 @@ Squirrel.attach_node_handlers = function($node) {
                 .remove();
         });
 
-    $div.children(".key")
+    $div.children(".key,.value")
         .on("click", function(/*e*/) {
             var $span = $(this);
             Squirrel.close_menus();
@@ -141,14 +141,17 @@ Squirrel.attach_node_handlers = function($node) {
             return false;
         });
 
-    $div.on("dblclick", function() {
-        // "click" is always done first, so menus already closed
-        $(this).data("click_timer", null);
-        Squirrel.edit_node($node, "key");
-    })
+    $div.children(".key")
+        .on("dblclick", function() {
+            // "click" is always done first, so menus already closed
+            $(this).data("click_timer", null);
+            Squirrel.edit_node($node, "key");
+        })
 
     $div.children(".value")
         .on("dblclick", function() {
+            // "click" is always done first, so menus already closed
+            $(this).data("click_timer", null);
             Squirrel.edit_node($node, "value");
         })
 
@@ -182,6 +185,7 @@ Squirrel.add_child_node = function($node, title, value) {
         },
         function(e) {
             Squirrel.Tree.action(e, function($newnode) {
+                if (DEBUG && !$newnode) debugger;
                 // There's a problem with bonsai when you create
                 // new nodes at the end; it doesn't let you close
                 // the new nodes. However this clears after a

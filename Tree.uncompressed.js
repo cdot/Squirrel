@@ -10,8 +10,6 @@
  * data:
  *   key, the key name the node is for (simple name, not a path)
  *   path: the full pathname of the node (string)
- * attributes:
- *   title: last-modified message, used for tooltip
  * children:
  *   DIV: class=node_div
  *     target for tap-hold events. Target for mousover, taphold, and
@@ -58,6 +56,7 @@ Squirrel.Tree.set_modified = function($node, time) {
     var d = new Date(time);
     $node
         .addClass("modified")
+        .data("last-time", time)
         .data("last-mod", d.toLocaleString());
 };
 
@@ -199,6 +198,8 @@ Squirrel.Tree.action_N = function(action, undoable) {
     Squirrel.Tree.set_modified($node, action.time);
 
     Squirrel.attach_node_handlers($node);
+
+    return $node;
 };
 
 /**
@@ -255,6 +256,8 @@ Squirrel.Tree.action_R = function(action, undoable) {
             data: key
         });
     }
+
+    return $node;
 };
 
 /**
@@ -356,6 +359,7 @@ Squirrel.Tree.action_A = function(action, undoable) {
         }
         Squirrel.attach_alarm_handlers($node);
     }
+
     return $node;
 };
 
@@ -378,6 +382,7 @@ Squirrel.Tree.action_C = function(action, undoable) {
         $alarm.remove();
         Squirrel.Tree.set_modified($node, action.time);
     }
+
     return $node;
 };
 

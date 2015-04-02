@@ -253,33 +253,60 @@ Squirrel.Dialog.login = function(ok, fail, uReq, pReq) {
     });
 };
 
+const units_days = {
+    d : 1,
+    w : 7,
+    m : 30,
+    y : 365
+};
+const ms_in_day = 24 * 60 * 60 * 1000;
+
 Squirrel.Dialog.alarm = function($node) {
     "use strict";
 
-    var $dlg = $("#dlg_alarm"),
-    $alarm = $node.children(".alarm"),
-    path = Squirrel.Tree.path($node),
-    number = 6,
-    units = "m",
-    is_new = (typeof $dlg.dialog("instance") === "undefined");
+    var $dlg = $("#dlg_alarm");
+    var $alarm = $node.children(".alarm");
+    var path = Squirrel.Tree.path($node);
+    var number = 6;
+    var units = "m";
+    var is_new = (typeof $dlg.dialog("instance") === "undefined");
+
+    var update_next = function() {
+        var numb = $("#dlg_alarm_number").val()
+            * units_days[$("#dlg_alarm_units").val()];
+        var elapsed = Math.round((Date.now() - $node.data("last-time"))
+                                 / ms_in_day);
+        if (elapsed < numb)
+            numb -= elapsed;
+        var uns = "d";
+        if (numb % units_days.y === 0) {
+            numb /= units_days.y; uns = "y";
+        } else if (numb % units_days.m === 0) {
+            numb /= units_days.m; uns = "m";
+        } else if (numb % units_days.w === 0) {
+            numb /= units_days.w; uns = "w";
+        }
+        $("#dlg_alarm_next").text(numb);
+        $(".dlg_alarm_next").hide();
+        $(".dlg_alarm_next." + uns).show();
+    };
 
     if ($alarm.length > 0) {
         number = $alarm.data("alarm");
-        if (number % 365 === 0) {
-            number /= 365; units = "y";
-        } else if (number % 30 === 0) {
-            number /= 30; units = "m";
-        } else if (number % 7 === 0) {
-            number /= 7; units = "w";
+        if (number % units_days.y === 0) {
+            number /= units_days.y; units = "y";
+        } else if (number % units_days.m === 0) {
+            number /= units_days.m; units = "m";
+        } else if (number % units_days.w === 0) {
+            number /= units_days.w; units = "w";
         } else
             units = "d";
-        $("#dlg_alarm_cancel").show();
-    } else
-        $("#dlg_alarm_cancel").show();
+    }
 
     $dlg.data("path", path);
     $("#dlg_alarm_number").val(number);
     $("#dlg_alarm_units").val(units);
+    update_next();
 
     $dlg.dialog({
         modal: true,
@@ -290,27 +317,22 @@ Squirrel.Dialog.alarm = function($node) {
     // selectmenu is covered
     if (is_new) {
         $("#dlg_alarm_units")
-            .selectmenu();
+            .selectmenu()
+            .on("change", update_next);
 
         $("#dlg_alarm_number")
             .spinner({
                 min: 1
-            });
+            })
+            .on("change", update_next);
 
         $("#dlg_alarm_set")
             .button()
             .on("click", function() {
                 $dlg.dialog("close");
 
-                var numb = $("#dlg_alarm_number").val(),
-                uns = $("#dlg_alarm_units").val();
-
-                if (uns === "y")
-                    numb *= 365;
-                else if (uns === "m")
-                    numb *= 30;
-                else if (uns === "w")
-                    numb *= 7;
+                var numb = $("#dlg_alarm_number").val()
+                    * units_days[$("#dlg_alarm_units").val()];
 
                 Squirrel.Dialog.play_action(
                     { type: "A",
