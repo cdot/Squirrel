@@ -188,7 +188,7 @@ Squirrel.Dialog.change_password = function() {
                 if (p !== c)
                     Squirrel.Dialog.squeak("Passwords do not match");
                 else {
-                    // for TX: TX.tx("has a new password")
+                    // TX.tx("has a new password")
                     Squirrel.client.store.pass(p);
                     Squirrel.client.status = "has a new password";
                     Squirrel.cloud.store.pass(p);

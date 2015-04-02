@@ -111,9 +111,8 @@ clean:
 eslint: $(COMMONJS) DropboxStore.uncompressed.js $(driveJS)
 	eslint --config package.json $^
 
-locale/*.json: *.uncompressed.js Squirrel.html.src Makefile translate.pl
-	cat $^ \
-	| perl translate.pl
+locale/%.json: *.uncompressed.js Squirrel.html.src Makefile translate.pl
+	perl translate.pl $@ *.uncompressed.js Squirrel.html.src
 
 .SECONDEXPANSION:
 upload: \

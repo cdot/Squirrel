@@ -22,7 +22,12 @@ Squirrel is different. Squirrel:
    - doesn't have any way for users - or even developers - to access the data without your unique password
    - is simple to use
 
-Squirrel uses a "cloud store" to synchronise your safe between multiple computers. However you don't have 
+Additional features include:
+   - Reminders for when you think passwords need to be changed
+   - Built-in random password generator
+   - Export to, or import from, JSON
+   - Uses a "cloud store" to synchronise your safe between multiple computers.
+
 ## Security risks
 
 In the past browsers have often been highlighted as the source of security problems. As a result, modern browsers are very well designed and, if used properly, offer a very secure environment in which to run software.
@@ -51,6 +56,36 @@ the sources have been cached in your browser, there is no need to worry about
 them again.
 
 You must be logged in to your chosen cloud store provider. Squirrel will ask you for your encryption password. Once in, you are presented with a simple interface where you can create keys, keys within keys, and data associated with those keys. Double-click a key to edit it, or use right click (or long tap/long hold) to pull down a menu of options.
+
+## Developers
+
+Developers must be able to run the following:
+- GNU `make`
+- `uglifyJS` (requires node.js)
+- `perl`
+
+You are welcome to push proposals for changes/fixes to github.
+
+Squirrel incorporates support for translation of all user messages. The
+configured language in your browser is used which translation to use.
+
+Translations are simply mappings from the English string to the equivalent
+in the other language, using the symbols $1, $2 etc to indicate parameters
+such as key names. Currently a single (google) translation is provided as an
+example, in the file `locales/fr.json`
+
+To generate (or refresh) a translation for a language, for example German
+(language code de):
+- clone the repository
+- `make locales/de.json`
+- manually edit the `locales/de.json` file
+
+Making a translation will also generate a file called `strings.txt`
+which is convenient for pasting into Google Translate as a crude starting
+point.
+
+The `upload.pl` script is provided for those who want to upload a
+production version to an FTP site. See the `upload` target in the `Makefile`.
 
 ## About Squirrel
 

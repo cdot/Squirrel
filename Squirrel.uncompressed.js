@@ -309,6 +309,7 @@ Squirrel.get_updates_from_cloud = function(cloard, chain) {
                     width: "auto"
                 });
             }
+            // TX.tx("is loaded")
             Squirrel.cloud.status = "is loaded";
             // Finished with the cloud hoard (for now)
             chain();
@@ -388,6 +389,7 @@ Squirrel.save_hoards = function() {
             JSON.stringify(Squirrel.client.hoard),
             function() {
                 $(".modified").removeClass("modified");
+                // TX.tx("is loaded")
                 Squirrel.client.status = "is loaded";
                 $messy.append(
                     "<div class='notice'>"
@@ -419,6 +421,7 @@ Squirrel.save_hoards = function() {
                     "<div class='notice'>"
                         + TX.tx("Saved in $1", this.identifier())
                         + "</div>");
+                // TX.tx("is loaded")
                 Squirrel.cloud.status = "is loaded";
                 Utils.soon(save_client);
             },
@@ -456,6 +459,7 @@ Squirrel.save_hoards = function() {
         var cloard;
         try {
             cloard = new Hoard(JSON.parse(data));
+            // TX.tx("is loaded")
             Squirrel.cloud.status = "is loaded";
         } catch (e) {
             // We'll get here if decryption failed....
@@ -465,6 +469,7 @@ Squirrel.save_hoards = function() {
                     + TX.tx("$1 hoard can't be read for update",
                             this.identifier())
                     + "</div>");
+            // TX.tx("is corrupt")
             Squirrel.cloud.status = "is corrupt";
             cloud_ok = false;
             construct_new_cloud();
@@ -488,6 +493,7 @@ Squirrel.save_hoards = function() {
     cloud_store_read_failed = function(e) {
         if (e === AbstractStore.NODATA) {
             if (DEBUG) console.debug(this.identifier() + " contains NODATA");
+            // TX.tx("is empty")
             Squirrel.cloud.status = "is empty";
             construct_new_cloud();
         } else {
@@ -557,6 +563,7 @@ Squirrel.load_cloud_store = function() {
                     Squirrel.Dialog.squeak(
                         TX.tx("$1 hoard exists, but can't be read. Check that you have the correct password.",
                         this.identifier()));
+                    // TX.tx("is corrupt")
                     Squirrel.cloud.status = "is corrupt";
                     Utils.soon(Squirrel.hoards_loaded);
                     return;
@@ -569,6 +576,7 @@ Squirrel.load_cloud_store = function() {
                 if (e === AbstractStore.NODATA) {
                     if (DEBUG) console.debug(
                         this.identifier() + " contains NODATA");
+                    // TX.tx("is empty")
                     Squirrel.cloud.status = "is empty";
                 } else {
                     Squirrel.Dialog.squeak(
@@ -590,6 +598,7 @@ Squirrel.load_client_store = function() {
         function(data) {
             try {
                 Squirrel.client.hoard = new Hoard(JSON.parse(data));
+                // TX.tx("is loaded")
                 Squirrel.client.status = "is loaded";
             } catch (e) {
                 Squirrel.Dialog.squeak(
@@ -597,6 +606,7 @@ Squirrel.load_client_store = function() {
                     Squirrel.init_application);
                 return;
                 //Squirrel.client.hoard = new Hoard();
+                // TX.tx("is corrupt")
                 //Squirrel.client.status = "is corrupt";
             }
 
@@ -629,6 +639,7 @@ Squirrel.load_client_store = function() {
             if (e === AbstractStore.NODATA) {
                 Squirrel.client.hoard = new Hoard();
                 if (DEBUG) console.debug(this.identifier() + " contains NODATA");
+                // TX.tx("is empty")
                 Squirrel.client.status = "is empty";
                 Utils.soon(Squirrel.load_cloud_store);
             } else {
