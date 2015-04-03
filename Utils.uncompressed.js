@@ -310,3 +310,96 @@ Utils.soon = function(fn) {
     } else
         fn();
 };
+
+/**
+ * Convert base64/URLEncoded data component to a Blob
+ * http://stackoverflow.com/questions/4998908/convert-data-uri-to-file-then-append-to-formdata
+ */
+Utils.dataURItoBlob = function(dataURI) {
+    // doesn't handle URLEncoded DataURIs - see SO answer
+    // #6850276 for code that does this
+    var byteString = atob(dataURI.split(',')[1]);
+
+    // separate out the mime component
+    var mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0]
+
+    // write the bytes of the string to an ArrayBuffer
+    var ab = new ArrayBuffer(byteString.length);
+    var ia = new Uint8Array(ab);
+    for (var i = 0; i < byteString.length; i++) {
+        ia[i] = byteString.charCodeAt(i);
+    }
+
+    // write the ArrayBuffer to a blob
+    return new Blob([ia], {type: mimeString});
+}
+
+ Utils.uint6ToB64 = function(nUint6) {
+     return nUint6 < 26 ?
+         nUint6 + 65
+         : nUint6 < 52 ?
+         nUint6 + 71
+         : nUint6 < 62 ?
+         nUint6 - 4
+         : nUint6 === 62 ?
+         43
+         : nUint6 === 63 ?
+         47
+         :
+         65;
+ };
+
+/*
+ * Base64 encoding of the content of an array buffer containing bytes
+ */
+Utils.ArrayBufferTo64 = function(ab) {
+    var aBytes = new Uint8Array(ab);
+    var nMod3 = 2;
+    var sB64Enc = "";
+    var nLen = aBytes.length;
+
+    for (var nUint24 = 0, nIdx = 0; nIdx < nLen; nIdx++) {
+        nMod3 = nIdx % 3;
+        if (nIdx > 0 && (nIdx * 4 / 3) % 76 === 0)
+            sB64Enc += "\r\n";
+        nUint24 |= aBytes[nIdx] << (16 >>> nMod3 & 24);
+        if (nMod3 === 2 || nLen - nIdx === 1) {
+            sB64Enc += String.fromCharCode(
+                Utils.uint6ToB64(nUint24 >>> 18 & 63),
+                Utils.uint6ToB64(nUint24 >>> 12 & 63),
+                Utils.uint6ToB64(nUint24 >>> 6 & 63),
+                Utils.uint6ToB64(nUint24 & 63));
+            nUint24 = 0;
+        }
+    }
+
+    return sB64Enc.substr(0, sB64Enc.length - 2 + nMod3)
+        + (nMod3 === 2 ? '' : nMod3 === 1 ? '=' : '==');
+}
+
+/*
+ * Base64 encoding of the content of a string containing bytes
+ */
+Utils.StringTo64 = function(str) {
+    var nMod3 = 2;
+    var sB64Enc = "";
+    var nLen = str.length;
+
+    for (var nUint24 = 0, nIdx = 0; nIdx < nLen; nIdx++) {
+        nMod3 = nIdx % 3;
+        if (nIdx > 0 && (nIdx * 4 / 3) % 76 === 0)
+            sB64Enc += "\r\n";
+        nUint24 |= str.charCodeAt(nIdx) << (16 >>> nMod3 & 24);
+        if (nMod3 === 2 || nLen - nIdx === 1) {
+            sB64Enc += String.fromCharCode(
+                Utils.uint6ToB64(nUint24 >>> 18 & 63),
+                Utils.uint6ToB64(nUint24 >>> 12 & 63),
+                Utils.uint6ToB64(nUint24 >>> 6 & 63),
+                Utils.uint6ToB64(nUint24 & 63));
+            nUint24 = 0;
+        }
+    }
+
+    return sB64Enc.substr(0, sB64Enc.length - 2 + nMod3)
+        + (nMod3 === 2 ? '' : nMod3 === 1 ? '=' : '==');
+}

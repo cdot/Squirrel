@@ -95,7 +95,8 @@ Squirrel was written by Crawford Currie http://c-dot.co.uk, and uses the followi
 - AES implementation in JavaScript (c) Chris Veness 2005-2014, http://www.movable-type.co.uk/scripts/aes.html
 - jquery-bonsai, Copyright (c) 2014 Simon Wade, http://aexmachina.info/jquery-bonsai
 - jquery-contextmenu, Copyright 2013-2015 Martin Wendt and others, https://github.com/mar10/jquery-ui-contextmenu
-- ZeroClipboard, Copyright (c) 2009-2014 Jon Rohan, James M. Greene, http://zeroclipboard.org/ 
+- ZeroClipboard, Copyright (c) 2009-2014 Jon Rohan, James M. Greene, http://zeroclipboard.org/
+- steganography.js, Copyright (C) 2012, Peter Eigenschink, http://www.peter-eigenschink.at/
 - Dropbox API, Copyright (c) 2012 Dropbox, Inc., http://www.dropbox.com
 - Google Drive API
 

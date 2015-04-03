@@ -236,7 +236,7 @@ GoogleDriveStore.prototype._putfile = function(p) {
 /**
  * @private
  * Download a resource, call ok or fail
- * p = { (id | name):, ok:, fail: }
+ * p = { (id | name):, ok:, fail:, options: }
  */
 GoogleDriveStore.prototype._download = function(p) {
     "use strict";
@@ -268,7 +268,7 @@ GoogleDriveStore.prototype._download = function(p) {
 
 /**
  * @private
- * @param p = {url: ok: , fail: }
+ * @param p = {url: ok: , fail:, options }
  */
 GoogleDriveStore.prototype._getfile = function(p) {
     "use strict";
@@ -290,6 +290,8 @@ GoogleDriveStore.prototype._getfile = function(p) {
             },
             success: function(data/*, textStatus, jqXHR*/) {
                 if (DEBUG) console.debug("gapi: _getfile OK");
+                if (p.options && p.options.base64)
+                    data = Utils.StringTo64(data);
                 p.ok.call(self, data);
             },
             error: function(jqXHR, textStatus, errorThrown) {
@@ -303,21 +305,39 @@ GoogleDriveStore.prototype._getfile = function(p) {
 GoogleDriveStore.prototype.write = function(data, ok, fail) {
     "use strict";
 
-    this._upload(
-        {
-            name: this.dataset + "." + this.user(),
-            data: data,
-            ok: ok,
-            fail: fail
+    var self = this;
+
+    // Blob or Data
+    if (typeof data !== "string") {
+        var reader = new FileReader();
+        reader.addEventListener("loadend", function() {
+            self._upload(
+                {
+                    name: self.dataset,
+                    data: reader.result,
+                    ok: ok,
+                    fail: fail
+                });
         });
+        reader.readAsBinaryString(data);
+    } else {
+        this._upload(
+            {
+                name: this.dataset,
+                data: data,
+                ok: ok,
+                fail: fail
+            });
+    }
 };
 
-GoogleDriveStore.prototype.read = function(ok, fail) {
+GoogleDriveStore.prototype.read = function(ok, fail, options) {
     "use strict";
 
     this._download(
         {
-            name: this.dataset + "." + this.user(),
+            name: this.dataset,
+            options: options,
             ok: ok,
             fail: fail
         });

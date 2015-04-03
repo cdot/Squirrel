@@ -52,8 +52,9 @@ DropboxStore.prototype.write = function(data, ok, fail) {
 
     var self = this;
 
+    // writeFile supports a Blob, so this is OK
     this.db_client.writeFile(
-        this.dataset + "." + this.user(),
+        this.dataset,
         data,
         function(error/*, stat*/) {
             if (error) {
@@ -65,22 +66,27 @@ DropboxStore.prototype.write = function(data, ok, fail) {
         });
 };
 
-DropboxStore.prototype.read = function(ok, fail) {
+DropboxStore.prototype.read = function(ok, fail, options) {
     "use strict";
 
     var self = this;
 
     this.db_client.readFile(
-        this.dataset + "." + this.user(),
+        this.dataset,
+        { arrayBuffer: options && options.base64 },
         function(error, data) {
             if (error) {
-                if (DEBUG) console.debug("Dropbox read failed " + error.responseText);
+                if (DEBUG) console.debug(
+                    "Dropbox read failed "
+                        + error.responseText);
                 if (error.status === Dropbox.ApiError.NOT_FOUND)
                     fail.call(self, AbstractStore.NODATA);
                 else
                     fail.call(self, error.responseText);
             } else {
-                ok.call(self, data);
+                if (options && options.base64) // data is an ArrayBuffer
+                    data = Utils.ArrayBufferTo64(data);
+               ok.call(self, data);
             }
         });
 };

@@ -13,6 +13,7 @@ LIBSJS = \
 	libs/jquery-bonsai.uncompressed.js \
 	libs/jquery-ui-contextmenu.uncompressed.js \
 	libs/ZeroClipboard.uncompressed.js \
+	libs/steganography.uncompressed.js \
 	libs/aes.uncompressed.js \
 	libs/aes-ctr.uncompressed.js
 
@@ -26,6 +27,7 @@ COMMONJS = \
 	AbstractStore.uncompressed.js \
 	LocalStorageStore.uncompressed.js \
 	EncryptedStore.uncompressed.js \
+	StegaStore.uncompressed.js \
 	Squirrel.uncompressed.js \
 	Tree.uncompressed.js \
 	ContextMenu.uncompressed.js \

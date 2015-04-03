@@ -791,7 +791,9 @@ Squirrel.init_client_store = function() {
 
     //new LocalStorageStore({
     new EncryptedStore({
-        engine: LocalStorageStore,
+        engine: function(params) {
+            return new LocalStorageStore(params);
+        },
 
         dataset: "Local Hoard",
         ok: function() {
@@ -876,13 +878,19 @@ Squirrel.init_cloud_store = function() {
     };
 
     if (typeof SQUIRREL_STORE !== "undefined") {
-        params.engine = SQUIRREL_STORE;
+        params.engine = function(params) {
+            params.engine = function(params) {
+                return new SQUIRREL_STORE(params);
+            };
+            return new StegaStore(params);
+        };
     } else {
         if (DEBUG) console.debug("Using LocalStorage for the Cloud");
-        params.engine = LocalStorageStore;
+        params.engine = function(params) {
+            return new LocalStorageStore(params);
+        };
     }
 
-    //new params.engine(params);
     new EncryptedStore(params);
 };
 

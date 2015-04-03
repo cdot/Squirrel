@@ -111,7 +111,7 @@ AbstractStore.prototype.pass = function(pass) {
 
 /**
  * Write data. Subclasses must implement.
- * @param {string} data to write
+ * @param {string or Blob} data to write
  * @param {ok} called on success
  * @param {fail} called on failure
  */
@@ -125,8 +125,11 @@ AbstractStore.prototype.write = function(/*data, ok, fail*/) {
  * Read data. Subclasses must implement.
  * @param {ok} called on success
  * @param {fail} called on failure
+ * @param options Hash containing options:
+ * base54 - read binary data into a Base64 encoded string
+ * @return a String containing data
  */
-AbstractStore.prototype.read = function(/*ok, fail*/) {
+AbstractStore.prototype.read = function(/*ok, fail, options*/) {
     "use strict";
 
     if (DEBUG) debugger;

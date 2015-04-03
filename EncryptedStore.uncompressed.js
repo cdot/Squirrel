@@ -29,7 +29,7 @@ function EncryptedStore(params) {
         pok.call(self);
     };
     
-    new params.engine(params);
+    params.engine(params);
 }
 
 EncryptedStore.prototype = Object.create(AbstractStore.prototype);
@@ -52,7 +52,7 @@ EncryptedStore.prototype.pass = function(pw) {
     return this.engine.pass(pw);
 };
 
-EncryptedStore.prototype.read = function(ok, fail) {
+EncryptedStore.prototype.read = function(ok, fail, options) {
     "use strict";
 
     var self = this;
@@ -66,6 +66,8 @@ EncryptedStore.prototype.read = function(ok, fail) {
                 fail.call(self, e);
                 return;
             }
+            if (options && options.base64)
+                data = Utils.StringTo64(data);
             ok.call(self, data);
         },
         fail);
@@ -76,6 +78,9 @@ EncryptedStore.prototype.write = function(data, ok, fail) {
 
     var self = this,
     xdata;
+
+    if (typeof data !== "string")
+        throw "EncryptedStore only supports String";
 
     try {
         xdata = Aes.Ctr.encrypt(data, this.engine.pass(), 256);
