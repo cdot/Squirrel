@@ -19,8 +19,15 @@ Squirrel.Dialog.play_action = function(action) {
         Squirrel.Dialog.squeak(res.message);
 };
 
-// Generate an alert dialog "OK" button
-Squirrel.Dialog.squeak = function(e, ok) {
+/**
+ * Generate a modal alert dialog with optional "OK" and "Cancel" buttons
+ * @param e message (HTML)
+ * @param ok callback on OK button press, or dialog closed
+ * when there is no cancel callback
+ * @param cancel callback on Cancel press, or dialog closed and there is a
+ * cancel callback
+ */
+Squirrel.Dialog.squeak = function(e, ok, cancel) {
     "use strict";
 
     var $dlg = $("#dlg_alert");
@@ -30,20 +37,42 @@ Squirrel.Dialog.squeak = function(e, ok) {
     else
         $("#dlg_alert_message").empty().append(e);
 
+    var called_back = false;
     if (typeof $dlg.dialog("instance") === "undefined") {
         $("#dlg_alert_ok")
             .button()
             .on("click", function(/*e*/) {
+                if (typeof ok !== "undefined") {
+                    ok();
+                    called_back = true;
+                }
+                $dlg.dialog("close");
+                return false;
+            });
+        $("#dlg_alert_cancel")
+            .button()
+            .on("click", function(/*e*/) {
+                if (typeof cancel !== "undefined") {
+                    cancel();
+                    called_back = true;
+                }
                 $dlg.dialog("close");
                 return false;
             });
     }
 
+    $("#dlg_alert_ok").toggle(typeof ok !== "undefined");
+    $("#dlg_alert_cancel").toggle(typeof cancel !== "undefined");
+        
     $dlg.dialog({
         modal: true,
         close: function() {
-            if (typeof ok !== "undefined")
-                ok();
+            if (!called_back) {
+                if (typeof cancel !== "undefined")
+                    cancel();
+                else if (typeof ok !== "undefined")
+                    ok();
+            }
         }
     });
 };

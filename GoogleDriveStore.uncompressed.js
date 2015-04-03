@@ -9,65 +9,86 @@ const CLIENT_ID = "985219699584-mt1do7j28ifm2vt821d498emarmdukbt.apps.googleuser
 // We do everything in the appfolder
 const SCOPE = "https://www.googleapis.com/auth/drive.appfolder";
 
+var gapi_is_loaded = false;
+var gapi_loader;
+
 function GoogleDriveStore(params) {
     "use strict";
 
-    GoogleDriveStore.is_loaded = false;
-    GoogleDriveStore.load_waits = 10;
-    $.getScript("https://apis.google.com/js/client.js?onload=GoogleDriveStore.loaded");
-    GoogleDriveStore._init(this, params);
+    if (gapi_is_loaded) {
+        if (DEBUG) console.debug("gapi is already loaded");
+        this._init(params);
+    } else {
+        var self= this;
+        gapi_loader = function() {
+            if (DEBUG) console.debug("Loading GoogleDriveStore");
+            self._init(params);
+        }
+        $.getScript(
+            "https://apis.google.com/js/client.js?onload=gapi_on_load")
+        .fail(function(jqxhr, settings, exception) {
+            params.fail.call(
+                self,
+                TX.tx("Failed to load Google APIs: $1 $2",
+                      exception, jqxhr.status));
+        });
+    }
 }
+
+GoogleDriveStore.prototype = Object.create(AbstractStore.prototype);
 
 const SQUIRREL_STORE = GoogleDriveStore;
 
-GoogleDriveStore.loaded = function() {
+function gapi_on_load() {
     "use strict";
 
-    if (DEBUG) console.debug("gapi: loaded");
-    GoogleDriveStore.loaded = true;
+    if (DEBUG) console.debug("gapi is loaded");
+    gapi_is_loaded = true;
+    if (gapi_loader)
+        gapi_loader();
 };
 
-GoogleDriveStore._init = function(self, params) {
+GoogleDriveStore.prototype._init = function(params) {
     "use strict";
 
-    if (!GoogleDriveStore.is_loaded) {
-        if (DEBUG) console.debug("gapi: not loaded yet");
-        if (GoogleDriveStore.load_waits-- === 0) {
-            params.fail.call("Timeout waiting for Google Drive Client API");
-            return;
-        }
-        // Wait 200ms before trying again. try a maximum of 10 times.
-        tid = window.setTimeout(function() {
-            window.clearTimeout(tid);
-            // Try again
-            GoogleDriveStore._init(self, params);
-        }, 200);
-        return;
-    }
+    var self = this;
 
     // Timeout after 5 seconds of waiting for auth
     var tid = window.setTimeout(function() {
         window.clearTimeout(tid);
-        params.fail.call("Timeout trying to authorise access to Google Drive");
-    }, 5000),
+        params.fail.call(
+            self,
+            TX.tx("Timeout trying to authorise access to Google Drive. Are popups blocked in your browser?"));
+    }, 5000);
 
-    handleAboutGetResult = function(result) {
+    var handleAboutGetResult = function(result) {
         if (result.status === 200) {
             self.user(result.result.user.displayName);
         } else {
             if (DEBUG) console.debug("gapi: Google Drive about.get failed");
-            params.fail.call(self, "Google Drive about.get failed");
+            params.fail.call(self, TX.tx("Google Drive about.get failed"));
         }
+        // Finish initialising the store
         AbstractStore.call(self, params);
-    },
+    };
 
-    handleClientLoad = function() {
+    var handleClientLoad = function() {
         if (DEBUG) console.debug("gapi: drive/v2 loaded");
-        gapi.client.drive.about.get()
-            .then(handleAboutGetResult);
-    },
+        gapi.client.drive.about.get("name")
+            .then(handleAboutGetResult,
+                  function(e,f, g) {
+                      if (e.result.error.message === "Login required")
+                          params.fail.call(
+                              self,
+                              TX.tx("You don't seem to be logged in to Google Drive"));
+                      else
+                          params.fail.call(
+                              self, TX.tx("Google Drive failed: $1",
+                                          e.result.error.message))
+                  });
+    };
 
-    handleAuthResult = function (authResult) {
+    var handleAuthResult = function (authResult) {
         var message;
         window.clearTimeout(tid);
         if (authResult && !authResult.fail) {
@@ -77,7 +98,7 @@ GoogleDriveStore._init = function(self, params) {
             gapi.client.load("drive", "v2", handleClientLoad);
         } else {
             if (authResult === null)
-                message = "Could not authorise access to Google Drive";
+                message = TX.tx("Could not authorise access to Google Drive");
             else
                 message = authResult.fail;
             params.fail.call(self, message);
@@ -88,23 +109,18 @@ GoogleDriveStore._init = function(self, params) {
 
     gapi.auth.authorize(
         {
+            //immediate: true,
             client_id: CLIENT_ID,
             scope: SCOPE
-//            immediate: true
         },
         handleAuthResult);
 };
-
-GoogleDriveStore.prototype = Object.create(AbstractStore.prototype);
 
 GoogleDriveStore.prototype.identifier = function() {
     "use strict";
 
     return "Google Drive";
 };
-
-// The load process is triggered by the tag in the html:
-// <script type="text/javascript" src="https://apis.google.com/js/client.js?onload=gapi_loaded"></script>
 
 /**
  * @private

@@ -16,6 +16,7 @@
     <img class="logo" src="images/squirrel.png">
     <h1>Squirrel</h1>
     <div class="unauthenticated TX_text">Authenticating...</div>
+    <div class="authfailed TX_text">Authentication failed. Refresh the browser to try again.</div>
     <div class="authenticated">
       <span id="search_label" class="TX_text">Search:</span>
       <input id="search" value="" class="TX_title" title="Enter search string" />
@@ -83,9 +84,10 @@
       <div id="dlg_saving_message"></div>
     </div>
 
-    <div id="dlg_alert" class="dialog TX_title" title="Reminder">
+    <div id="dlg_alert" class="dialog TX_title" title="Alert">
       <p id="dlg_alert_message"></p>
       <button id="dlg_alert_ok" class="TX_text">OK</button>
+      <button id="dlg_alert_cancel" class="TX_text">Cancel</button>
     </div>
 
     <div id="dlg_gen_rand" class="dialog TX_title" title="Generate random value">

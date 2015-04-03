@@ -108,7 +108,7 @@ clean:
 	rm -f *.html
 	rm -f *.map
 
-eslint: $(COMMONJS) DropboxStore.uncompressed.js $(driveJS)
+eslint: *.uncompressed.js
 	eslint --config package.json $^
 
 locale/%.json: *.uncompressed.js Squirrel.html.src Makefile translate.pl
@@ -121,7 +121,6 @@ upload: \
 	$(subst uncompressed,min, $(LIBSJS)) \
 	$(patsubst %.uncompressed.css,%.min.css,$(COMMONCSS)) \
 	$(patsubst %.uncompressed.css,%.min.css,$(LIBSCSS)) \
-	$(subst uncompressed,min,$(driveJS)) \
 	$(wildcard images/*) \
 	$(wildcard libs/images/*) \
 	$(wildcard libs/*.swf) \

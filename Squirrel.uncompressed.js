@@ -862,8 +862,15 @@ Squirrel.init_cloud_store = function() {
         },
         fail: function(e) {
             Squirrel.Dialog.squeak(
-                TX.tx("Could not contact cloud store: $1", e),
-                Squirrel.init_client_store);
+                TX.tx("Could not open cloud store: $1", e)
+                    + "<p>"
+                    + TX.tx("Do you want to continue (only the client store will be available)?"),
+                Squirrel.init_client_store,
+                function() {
+                    if (DEBUG) console.debug("Cancelled");
+                    $(".unauthenticated").hide();
+                    $(".authfailed").show();
+                });
         },
         identify: Squirrel.Dialog.login
     };

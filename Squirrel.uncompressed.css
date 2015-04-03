@@ -128,6 +128,10 @@ a:hover {
     background: transparent url("images/progress_bar.gif") no-repeat 13em center;
 }
 
+.authfailed {
+    display: none;
+}
+
 .authenticated {
     display: none;
 }
