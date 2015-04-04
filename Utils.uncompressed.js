@@ -316,12 +316,14 @@ Utils.soon = function(fn) {
  * http://stackoverflow.com/questions/4998908/convert-data-uri-to-file-then-append-to-formdata
  */
 Utils.dataURItoBlob = function(dataURI) {
+    "use strict";
+
     // doesn't handle URLEncoded DataURIs - see SO answer
     // #6850276 for code that does this
-    var byteString = atob(dataURI.split(',')[1]);
+    var byteString = atob(dataURI.split(",")[1]);
 
     // separate out the mime component
-    var mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0]
+    var mimeString = dataURI.split(",")[0].split(":")[1].split(";")[0];
 
     // write the bytes of the string to an ArrayBuffer
     var ab = new ArrayBuffer(byteString.length);
@@ -332,9 +334,11 @@ Utils.dataURItoBlob = function(dataURI) {
 
     // write the ArrayBuffer to a blob
     return new Blob([ia], {type: mimeString});
-}
+};
 
- Utils.uint6ToB64 = function(nUint6) {
+Utils.uint6ToB64 = function(nUint6) {
+    "use strict";
+
      return nUint6 < 26 ?
          nUint6 + 65
          : nUint6 < 52 ?
@@ -353,6 +357,8 @@ Utils.dataURItoBlob = function(dataURI) {
  * Base64 encoding of the content of an array buffer containing bytes
  */
 Utils.ArrayBufferTo64 = function(ab) {
+    "use strict";
+
     var aBytes = new Uint8Array(ab);
     var nMod3 = 2;
     var sB64Enc = "";
@@ -374,13 +380,15 @@ Utils.ArrayBufferTo64 = function(ab) {
     }
 
     return sB64Enc.substr(0, sB64Enc.length - 2 + nMod3)
-        + (nMod3 === 2 ? '' : nMod3 === 1 ? '=' : '==');
-}
+        + (nMod3 === 2 ? "" : nMod3 === 1 ? "=" : "==");
+};
 
 /*
  * Base64 encoding of the content of a string containing bytes
  */
 Utils.StringTo64 = function(str) {
+    "use strict";
+
     var nMod3 = 2;
     var sB64Enc = "";
     var nLen = str.length;
@@ -401,5 +409,5 @@ Utils.StringTo64 = function(str) {
     }
 
     return sB64Enc.substr(0, sB64Enc.length - 2 + nMod3)
-        + (nMod3 === 2 ? '' : nMod3 === 1 ? '=' : '==');
-}
+        + (nMod3 === 2 ? "" : nMod3 === 1 ? "=" : "==");
+};

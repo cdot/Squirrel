@@ -25,6 +25,8 @@
             "ZeroClipboard": true,
             "DEBUG": true,
             "SQUIRREL_STORE": true,
+            "StegaStore": true,
+            "steganography": true,
             "Squirrel": true
         },
         "rules": {

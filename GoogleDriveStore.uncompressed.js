@@ -6,8 +6,11 @@
  */
 
 const CLIENT_ID = "985219699584-mt1do7j28ifm2vt821d498emarmdukbt.apps.googleusercontent.com";
-// We do everything in the appfolder
-const SCOPE = "https://www.googleapis.com/auth/drive.appfolder";
+// While the appfolder would seem to make sense for Squirrel, it does make
+// it absolutely clear to an attacker where to look for Squirrel data files.
+// By granting full drive access, we open up the whole drive for possible
+// places to hoard.
+const SCOPE = "https://www.googleapis.com/auth/drive";
 
 var gapi_is_loaded = false;
 var gapi_loader;
@@ -19,11 +22,11 @@ function GoogleDriveStore(params) {
         if (DEBUG) console.debug("gapi is already loaded");
         this._init(params);
     } else {
-        var self= this;
+        var self = this;
         gapi_loader = function() {
             if (DEBUG) console.debug("Loading GoogleDriveStore");
             self._init(params);
-        }
+        };
         $.getScript(
             "https://apis.google.com/js/client.js?onload=gapi_on_load")
         .fail(function(jqxhr, settings, exception) {
@@ -46,20 +49,20 @@ function gapi_on_load() {
     gapi_is_loaded = true;
     if (gapi_loader)
         gapi_loader();
-};
+}
 
 GoogleDriveStore.prototype._init = function(params) {
     "use strict";
 
     var self = this;
 
-    // Timeout after 5 seconds of waiting for auth
+    // Timeout after 30 seconds of waiting for auth
     var tid = window.setTimeout(function() {
         window.clearTimeout(tid);
         params.fail.call(
             self,
             TX.tx("Timeout trying to authorise access to Google Drive. Are popups blocked in your browser?"));
-    }, 5000);
+    }, 30000);
 
     var handleAboutGetResult = function(result) {
         if (result.status === 200) {
@@ -76,7 +79,7 @@ GoogleDriveStore.prototype._init = function(params) {
         if (DEBUG) console.debug("gapi: drive/v2 loaded");
         gapi.client.drive.about.get("name")
             .then(handleAboutGetResult,
-                  function(e,f, g) {
+                  function(e) {
                       if (e.result.error.message === "Login required")
                           params.fail.call(
                               self,
@@ -84,7 +87,7 @@ GoogleDriveStore.prototype._init = function(params) {
                       else
                           params.fail.call(
                               self, TX.tx("Google Drive failed: $1",
-                                          e.result.error.message))
+                                          e.result.error.message));
                   });
     };
 
@@ -144,72 +147,40 @@ GoogleDriveStore.prototype._search = function(query, ok, fail) {
             });
 };
 
-/**
- * @private
- * Insert new file
- * p = { name: data: contentType: ok: fail: };
- */
-GoogleDriveStore.prototype._upload = function(p) {
-    "use strict";
-
-    var self = this;
-
-    if (p.id)
-        this._putfile(p);
-    else
-        this._search(
-            "'appfolder' in parents and title='" + p.name + "'",
-            function(items) {
-                if (items.length > 0) {
-                    p.id = items[0].id;
-                    self._putfile(p);
-                } else {
-                    self._putfile(p);
-                }
-            });
-};
-
 const BOUNDARY = "-------314159265358979323846";
 const DELIMITER = "\r\n--" + BOUNDARY + "\r\n";
 const RETIMILED = "\r\n--" + BOUNDARY + "--";
 
-GoogleDriveStore.prototype._putfile = function(p) {
+GoogleDriveStore.prototype._put = function(id, data, ok, fail) {
     "use strict";
 
-    var url = "/upload/drive/v2/files",
-    method = "POST",
-    params = {
-            "uploadType": "multipart"
-    },
-    metadata, base64Data, multipartRequestBody,
-    self = this;
+    var self = this;
+    var url = "/upload/drive/v2/files";
+    var method = "POST";
+    var params = {
+        "uploadType": "multipart"
+    };
 
-    if (p.id) {
-        // Known fileId, we're updating and existing file
-        url += "/" + p.id;
+    if (typeof id !== "undefined") {
+        // Known fileId, we're updating an existing file
+        url += "/" + id;
         method = "PUT";
     } else {
         // New upload
         params.visibility = "PRIVATE";
     }
 
-    if (!p.contentType) {
-        p.contentType = "application/octet-stream";
-    }
-
-    metadata = {
-        title: p.name,
-        mimeType: p.contentType,
-        parents: [{ id: "appfolder" }]
+    var metadata = {
+        title: self.dataset,
+        mimeType: "application/octet-stream"
     };
 
-    base64Data = btoa(p.data);
-    multipartRequestBody =
+    var multipartRequestBody =
         DELIMITER +
         "Content-Type: application/json\r\n\r\n" +
         JSON.stringify(metadata) +
         DELIMITER +
-        "Content-Type: " + p.contentType + "\r\n" +
+        "Content-Type: application/octet-stream\r\n" +
         "Content-Transfer-Encoding: base64\r\n" +
         "\r\n" +
         base64Data +
@@ -248,7 +219,7 @@ GoogleDriveStore.prototype._download = function(p) {
     } else if (p.name) {
         if (DEBUG) console.debug("gapi: search for " + p.name);
         this._search(
-            "'appfolder' in parents and title='" + p.name + "'",
+            "title='" + p.name + "'",
             function(items) {
                 if (items.length > 0) {
                     p.url = items[0].downloadUrl;
@@ -306,28 +277,27 @@ GoogleDriveStore.prototype.write = function(data, ok, fail) {
     "use strict";
 
     var self = this;
+    var have_64 = function(data) {
+        this._search(
+            "title='" + this.dataset + "'",
+            function(items) {
+                var id;
+                if (items.length > 0)
+                    id = items[0].id;
+                self._put(id, data, ok, fail);
+            });
+    };
 
-    // Blob or Data
-    if (typeof data !== "string") {
+    if (typeof data === "string")
+        have_64(btoa(data));
+    else {
+        // Blob. readAsDataURL encodes as base64
         var reader = new FileReader();
         reader.addEventListener("loadend", function() {
-            self._upload(
-                {
-                    name: self.dataset,
-                    data: reader.result,
-                    ok: ok,
-                    fail: fail
-                });
+            var d = reader.result.split(",", 2);
+            have_64(d[1]);
         });
-        reader.readAsBinaryString(data);
-    } else {
-        this._upload(
-            {
-                name: this.dataset,
-                data: data,
-                ok: ok,
-                fail: fail
-            });
+        reader.readAsDataURL(data);
     }
 };
 

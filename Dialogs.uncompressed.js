@@ -283,10 +283,10 @@ Squirrel.Dialog.login = function(ok, fail, uReq, pReq) {
 };
 
 const units_days = {
-    d : 1,
-    w : 7,
-    m : 30,
-    y : 365
+    d: 1,
+    w: 7,
+    m: 30,
+    y: 365
 };
 const ms_in_day = 24 * 60 * 60 * 1000;
 

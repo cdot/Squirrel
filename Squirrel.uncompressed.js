@@ -87,15 +87,19 @@ Squirrel.edit_node = function($node, what) {
 
 // Attach handlers to an alarm button
 Squirrel.attach_alarm_handlers = function($node) {
+    "use strict";
+
     $node.children(".alarm")
         .on("click", function() {
             Squirrel.close_menus();
             Squirrel.Dialog.alarm($node);
-        })
+        });
 };
 
 // Attach handlers to a node's parts
 Squirrel.attach_node_handlers = function($node) {
+    "use strict";
+
     var $div = $node.children(".node_div");
 
     $div.linger();    // long-mouse-press -> taphold mapping
@@ -122,7 +126,6 @@ Squirrel.attach_node_handlers = function($node) {
             Squirrel.close_menus();
             // Prevent click from bubbling, only obey double click
             // Not perfect, but good enough.
-            var $span = $(this);
             $span.data(
                 "click_timer",
                 window.setTimeout(
@@ -146,14 +149,14 @@ Squirrel.attach_node_handlers = function($node) {
             // "click" is always done first, so menus already closed
             $(this).data("click_timer", null);
             Squirrel.edit_node($node, "key");
-        })
+        });
 
     $div.children(".value")
         .on("dblclick", function() {
             // "click" is always done first, so menus already closed
             $(this).data("click_timer", null);
             Squirrel.edit_node($node, "value");
-        })
+        });
 
     $div.filter(".treecollection")
         .on("click", function(/*e*/) {
@@ -878,16 +881,16 @@ Squirrel.init_cloud_store = function() {
     };
 
     if (typeof SQUIRREL_STORE !== "undefined") {
-        params.engine = function(params) {
-            params.engine = function(params) {
-                return new SQUIRREL_STORE(params);
+        params.engine = function(p2) {
+            p2.engine = function(p3) {
+                return new SQUIRREL_STORE(p3);
             };
-            return new StegaStore(params);
+            return new StegaStore(p2);
         };
     } else {
         if (DEBUG) console.debug("Using LocalStorage for the Cloud");
-        params.engine = function(params) {
-            return new LocalStorageStore(params);
+        params.engine = function(p1) {
+            return new LocalStorageStore(p1);
         };
     }
 
