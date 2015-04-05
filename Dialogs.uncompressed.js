@@ -445,6 +445,8 @@ Squirrel.Dialog.pick_from = function($node) {
 
 /* Helper */
 Squirrel.Dialog.ss_change_image = function() {
+    "use strict";
+
     var fail = function(e) {
         $("#dlg_ss_message").text(TX.tx(
             "Cannot use this image because of this error: $1", e));

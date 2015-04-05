@@ -122,4 +122,3 @@ StegaStore.prototype.write = function(path, data, ok, fail) {
     //} else
         embed($img);
 };
-

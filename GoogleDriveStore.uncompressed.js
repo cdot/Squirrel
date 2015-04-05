@@ -1,5 +1,49 @@
 /* Copyright (C) 2015 Crawford Currie http://c-dot.co.uk / MIT */
 
+// needed to read binary files
+// http://www.henryalgus.com/reading-binary-files-using-jquery-ajax/
+$.ajaxTransport("+binary", function(options, originalOptions, jqXHR){
+    // check for conditions and support for blob / arraybuffer response type
+    if (window.FormData && ((options.dataType && (options.dataType == 'binary')) || (options.data && ((window.ArrayBuffer && options.data instanceof ArrayBuffer) || (window.Blob && options.data instanceof Blob)))))
+    {
+        return {
+            // create new XMLHttpRequest
+            send: function(headers, callback){
+		// setup all variables
+                var xhr = new XMLHttpRequest(),
+		url = options.url,
+		type = options.type,
+		async = options.async || true,
+		// blob or arraybuffer. Default is blob
+		dataType = options.responseType || "blob",
+		data = options.data || null,
+		username = options.username || null,
+		password = options.password || null;
+					
+                xhr.addEventListener('load', function(){
+			var data = {};
+			data[options.dataType] = xhr.response;
+			// make callback and send data
+			callback(xhr.status, xhr.statusText, data, xhr.getAllResponseHeaders());
+                });
+ 
+                xhr.open(type, url, async, username, password);
+				
+		// setup custom headers
+		for (var i in headers ) {
+			xhr.setRequestHeader(i, headers[i] );
+		}
+				
+                xhr.responseType = dataType;
+                xhr.send(data);
+            },
+            abort: function(){
+                jqXHR.abort();
+            }
+        };
+    }
+});
+
 /**
  * A store using Google Drive
  * @implements AbstractStore
@@ -151,6 +195,7 @@ const BOUNDARY = "-------314159265358979323846";
 const DELIMITER = "\r\n--" + BOUNDARY + "\r\n";
 const RETIMILED = "\r\n--" + BOUNDARY + "--";
 
+// data is already 64
 GoogleDriveStore.prototype._put = function(path, id, data, ok, fail) {
     "use strict";
 
@@ -183,7 +228,7 @@ GoogleDriveStore.prototype._put = function(path, id, data, ok, fail) {
         "Content-Type: application/octet-stream\r\n" +
         "Content-Transfer-Encoding: base64\r\n" +
         "\r\n" +
-        base64Data +
+        data +
         RETIMILED;
 
     gapi.client.request({
@@ -197,10 +242,10 @@ GoogleDriveStore.prototype._put = function(path, id, data, ok, fail) {
 
         .then(
             function(response) {
-                p.ok.call(self, response.result);
+                ok.call(self, response.result);
             },
             function(reason) {
-                p.fail.call(self, reason);
+                fail.call(self, reason);
             });
 };
 
@@ -244,47 +289,55 @@ GoogleDriveStore.prototype._download = function(p) {
 GoogleDriveStore.prototype._getfile = function(p) {
     "use strict";
 
-    var self = this,
-    oauthToken = gapi.auth.getToken();
+    var self = this;
+    var oauthToken = gapi.auth.getToken();
+    var converter;
 
     if (DEBUG) console.debug("gapi: ajax " + p.url);
 
     // SMELL: no client API to get file content from Drive
-    $.ajax(
-        {
-            url: p.url,
-            method: "GET",
-            beforeSend: function(jqXHR) {
-                jqXHR.setRequestHeader(
-                    "Authorization",
-                    "Bearer " + oauthToken.access_token);
-            },
-            success: function(data/*, textStatus, jqXHR*/) {
-                if (DEBUG) console.debug("gapi: _getfile OK");
-                if (p.options && p.options.base64)
-                    data = Utils.StringTo64(data);
-                p.ok.call(self, data);
-            },
-            error: function(jqXHR, textStatus, errorThrown) {
-                var reason = textStatus + " " + errorThrown;
-                if (DEBUG) console.debug("gapi: _getfile failed " + reason);
-                p.fail.call(self, reason);
-            }
-        });
+    var ax = {
+        url: p.url,
+        method: "GET",
+        beforeSend: function(jqXHR) {
+            jqXHR.setRequestHeader(
+                "Authorization",
+                "Bearer " + oauthToken.access_token);
+        },
+        success: function(data, textStatus, jqXHR) {
+            if (DEBUG) console.debug("gapi: _getfile OK");
+            if (converter)
+                data = converter(data);
+            p.ok.call(self, data);
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            var reason = textStatus + " " + errorThrown;
+            if (DEBUG) console.debug("gapi: _getfile failed " + reason);
+            p.fail.call(self, reason);
+        }
+    };
+
+    if (p.options && p.options.base64) {
+        ax.dataType = "binary";
+        ax.responseType = "arraybuffer",
+        converter = Utils.ArrayBufferTo64;
+    }
+
+    $.ajax(ax);
 };
 
 GoogleDriveStore.prototype.write = function(path, data, ok, fail) {
     "use strict";
 
     var self = this;
-    var have_64 = function(data) {
-        this._search(
+    var have_64 = function(data64) {
+        self._search(
             "title='" + path + "'",
             function(items) {
                 var id;
                 if (items.length > 0)
                     id = items[0].id;
-                self._put(path, id, data, ok, fail);
+                self._put(path, id, data64, ok, fail);
             });
     };
 

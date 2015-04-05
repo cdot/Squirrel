@@ -610,6 +610,8 @@ Squirrel.load_cloud_hoard = function() {
  * Take the opportunity to seed the image used in steganography.
  */
 Squirrel.init_client_hoard = function() {
+    "use strict";
+
     Squirrel.client.hoard = new Hoard();
     // TX.tx("is empty")
     Squirrel.client.status = "is empty";
