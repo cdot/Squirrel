@@ -19,13 +19,13 @@ LocalStorageStore.prototype.identifier = function() {
     return "browser";
 };
 
-LocalStorageStore.prototype.read = function(ok, fail, options) {
+LocalStorageStore.prototype.read = function(path, ok, fail, options) {
     "use strict";
 
     var data;
 
     try {
-        data = localStorage.getItem(this.dataset + "." + this.user());
+        data = localStorage.getItem(path);
     } catch (e) {
         fail.call(this, e);
         return;
@@ -40,13 +40,13 @@ LocalStorageStore.prototype.read = function(ok, fail, options) {
 };
 
 // data is a String or a Blob
-LocalStorageStore.prototype.write = function(data, ok, fail) {
+LocalStorageStore.prototype.write = function(path, data, ok, fail) {
     "use strict";
 
     try {
         if (typeof data !== "string")
             throw "LocalStorageStore only supports String";
-        localStorage.setItem(this.dataset + "." + this.user(), data);
+        localStorage.setItem(path, data);
     } catch (e) {
         fail.call(this, e);
         return;

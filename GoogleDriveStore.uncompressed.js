@@ -151,7 +151,7 @@ const BOUNDARY = "-------314159265358979323846";
 const DELIMITER = "\r\n--" + BOUNDARY + "\r\n";
 const RETIMILED = "\r\n--" + BOUNDARY + "--";
 
-GoogleDriveStore.prototype._put = function(id, data, ok, fail) {
+GoogleDriveStore.prototype._put = function(path, id, data, ok, fail) {
     "use strict";
 
     var self = this;
@@ -171,7 +171,7 @@ GoogleDriveStore.prototype._put = function(id, data, ok, fail) {
     }
 
     var metadata = {
-        title: self.dataset,
+        title: path,
         mimeType: "application/octet-stream"
     };
 
@@ -273,18 +273,18 @@ GoogleDriveStore.prototype._getfile = function(p) {
         });
 };
 
-GoogleDriveStore.prototype.write = function(data, ok, fail) {
+GoogleDriveStore.prototype.write = function(path, data, ok, fail) {
     "use strict";
 
     var self = this;
     var have_64 = function(data) {
         this._search(
-            "title='" + this.dataset + "'",
+            "title='" + path + "'",
             function(items) {
                 var id;
                 if (items.length > 0)
                     id = items[0].id;
-                self._put(id, data, ok, fail);
+                self._put(path, id, data, ok, fail);
             });
     };
 
@@ -301,12 +301,12 @@ GoogleDriveStore.prototype.write = function(data, ok, fail) {
     }
 };
 
-GoogleDriveStore.prototype.read = function(ok, fail, options) {
+GoogleDriveStore.prototype.read = function(path, ok, fail, options) {
     "use strict";
 
     this._download(
         {
-            name: this.dataset,
+            name: path,
             options: options,
             ok: ok,
             fail: fail

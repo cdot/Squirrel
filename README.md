@@ -1,24 +1,23 @@
 # Welcome to Squirrel
 
-Most people have realised by now that to enjoy full online security they need to have a different password for each site they visit, and those passwords need to be long, complex and changed regularly. This creates a problem - how to remember this plethora of passwords and other security information demanded by these sites? So people often have a place - electronic or physical - where they write down their passwords. An electronic document is a really bad idea, but a physical book is as secure as anything else in your house or office, so can't easily be hacked. At the same time it's bad, because you depend on having physical access to the book.
+Most people have realised by now that to enjoy full online security they need to have a different password for each site they visit, and those passwords need to be long, complex and changed regularly. This creates a problem - how to remember this plethora of passwords and other security information demanded by these sites? So people often have a place - electronic or physical - where they write down their passwords. An unencrypted electronic document is a really bad idea. A physical book is as secure as anything else in your house or office, so can't easily be hacked, but you depend on having physical access to the book.
 
-Enter the concept of a "password safe". This is a software tool that stores your passwords under the shelter of a single master password. Some of these safes only work online (and cost money), some of them only work if you install software on your computer. Some are very clever, some not so much. Some cost money, some are free. An excellent free tool is Password Safe http://passwordsafe.sourceforge.net/
+An excellent free tool that solves this problem the passwdsafe family. This toolset supports most of the features we might require, but falls down in a coupld of key areas:
+   - It requires software to be installed to your computer
+   - That software has to be maintained and upgraded each time your operating system changes
+   - It can be complex to set up sharing between platforms (though some have mobile apps, for example)
+   - It's obvious to an attacker when it is being used
 
-These tools have some problems:
-   - Exclusively online tools require access to the internet to use
-   - Online tools (usually) cost money
-   - Personal tools require software to be installed to your computer
-   - It's hard to share between platforms with personal tools (though some have mobile apps, for example)
-
-Squirrel is different. Squirrel:
-   - runs entirely in the browser, so nothing needs to be installed
+Enter Squirrel. Squirrel:
+   - runs entirely in the browser, so nothing needs to be installed, and the same code is used on all platforms
    - doesn't require an internet connection to run
    - encrypts *everything* that it stores, sends or receives
    - doesn't require a special website to store stuff (it can use a number of different online cloud services as a store, and you can even add more)
-   - uses 256 bit AES, one of the toughest ciphers to crack
+   - uses 256 bit AES (Rijndael), one of the toughest ciphers to crack
+   - uses steganography to mask its use
    - caches your encrypted safe locally, so you don't need to be online to use it
    - works with all modern browsers
-   - is entirely open source, allowing you to inspect, and if you want, modify the code
+   - is entirely open source, allowing you to inspect, and if you want, propose modifications to the code
    - doesn't have any way for users - or even developers - to access the data without your unique password
    - is simple to use
 
@@ -26,13 +25,19 @@ Additional features include:
    - Reminders for when you think passwords need to be changed
    - Built-in random password generator
    - Export to, or import from, JSON
-   - Uses a "cloud store" to synchronise your safe between multiple computers.
+   - Implemented entirely in industry-standard HTML5 Javascript and jQuery
 
 ## Security risks
 
-In the past browsers have often been highlighted as the source of security problems. As a result, modern browsers are very well designed and, if used properly, offer a very secure environment in which to run software.
+In the past browsers have often been highlighted as the source of security problems. As a result, modern browsers are under constant scrutiny and are very well designed. If used properly, they offer a very secure environment in which to run software.
 
-Squirrel doesn't store your password, nor does it transmit your password over the internet. Is it extremely difficult to extract your password from your stored data. If you forget your password, no-one can help you, so don't forget it.
+Squirrel doesn't store your password, nor does it transmit your password over the internet. Is it extremely difficult to extract your password from your stored data (if you forget your password, no-one can help you, so don't forget it). So the major risks you should be aware of are:
+- compromised browser (someone has installed a hacked version of the browser)
+- compromised operating system
+- compromised software source (the place you got Squirrel has been hacked)
+- man-in-the-middle attacks, which have compromised the code
+
+These are basically all the same risks all other online tools face.
 
 ## Some tips on passwords
 
@@ -46,7 +51,7 @@ Your master password needs to be as hard as possible for a computer to crack. Id
 Despite what many IT departments tell you, writing down your password isn't a bad idea, just so long as you make sure that the physical security of what you have written is very strong.
 - writing down a very strong password may not be a bad idea
 
-Ultimately I'm not going to tell you my best password tips, because I'd be giving away my own secrets. But if you follow the tips above, you should be able to come up with something pretty good.
+Ultimately I'm not going to tell you my best password tips, because I'd be giving away my own secrets. But if you follow the tips above, you should be able to come up with something pretty good. The password generator built into Squirrel generates very strong passwords.
 
 ## Using Squirrel
 
@@ -55,7 +60,22 @@ the cloud service you want to use (currently Dropbox or Google Drive). Once
 the sources have been cached in your browser, there is no need to worry about
 them again.
 
-You must be logged in to your chosen cloud store provider. Squirrel will ask you for your encryption password. Once in, you are presented with a simple interface where you can create keys, keys within keys, and data associated with those keys. Double-click a key to edit it, or use right click (or long tap/long hold) to pull down a menu of options.
+Before you use Squirrel for the first time, you need to upload an image to
+your chosen cloud store provider. Your password safe will be embedded into
+this image, so it needs to be readable and writable, and needs to be large
+enough to store all the data. For an average sized password store, a 1024x768
+colour image will usually suffice.
+
+Run Squirrel by loading the HTML file that corresponds to your cloud provider
+(e.g. dropbox.html). You will be prompted for the name of the image you
+uploaded. Squirrel will then ask you for your encryption password. Once in,
+you are presented with a simple interface where you can create keys (and keys
+within keys), and add data associated with those keys. Double-click a key to
+edit it, or use right click (or long tap/long hold) to pull down a menu of
+options.
+
+After your first run, Squirrel will not ask you for the image again. You can
+change what image is used at any time using the 'Extras' menu.
 
 ## Developers
 

@@ -442,3 +442,77 @@ Squirrel.Dialog.pick_from = function($node) {
         width: "auto"
     });
 };
+
+/* Helper */
+Squirrel.Dialog.ss_change_image = function() {
+    var fail = function(e) {
+        $("#dlg_ss_message").text(TX.tx(
+            "Cannot use this image because of this error: $1", e));
+    };
+    $("#dlg_ss_ok").attr("disabled", true);
+    $("#dlg_ss_message").text("");
+    var file = $(this)[0].files[0];
+    Utils.read_file(
+        file,
+        function(data) {
+            data = "data:" + file.type + ";base64,"
+                + Utils.StringTo64(data);
+            $("#dlg_ss_thumb")
+                .attr("src", data)
+                .on("load", function() {
+                    // Check that we can use the image
+                    try {
+                        steganography.encode("tada", $("#dlg_ss_thumb")[0]);
+                        $("#stegamage").attr("src", data);
+                        $("#dlg_ss_ok").attr("disabled", false);
+                        $("#dlg_ss_message").text("");
+                    } catch (e) {
+                        fail(e.message);
+                    }
+                });
+        },
+        fail);
+};
+
+Squirrel.Dialog.store_settings = function(ok) {
+    "use strict";
+
+    var $dlg = $("#dlg_ss");
+
+    if (typeof $dlg.dialog("instance") === "undefined") {
+
+        $("#dlg_ss_file")
+            .hide()
+            .on("change", Squirrel.Dialog.ss_change_image);
+
+        $("#dlg_ss_choose").button().click(function(e) {
+            $("#dlg_ss_file").trigger("click", e);
+        });
+
+        $("#dlg_ss_ok")
+            .button()
+            .on("click", function(/*e*/) {
+                if ($("#dlg_ss_storepath").val() === "") {
+                    $("#dlg_ss_message").text(TX.tx(
+                        "Store path may not be empty"));
+                    return false;
+                }
+                $dlg.dialog("close");
+
+                Squirrel.client.hoard.options.store_path =
+                    $("#dlg_ss_storepath").val();
+
+                if (ok)
+                    ok();
+                return false;
+            });
+    }
+
+    $("#dlg_ss_thumb").attr("src", $("#stegamage").attr("src"));
+    $("#dlg_ss_storepath").val(Squirrel.client.hoard.options.store_path);
+
+    $dlg.dialog({
+        modal: true,
+        width: "auto"
+    });
+};

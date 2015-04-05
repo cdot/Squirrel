@@ -213,3 +213,10 @@ button.ui-button-icon-only {
     padding: 0.2em 2.1em 0.2em .25em;
 }
 
+#dlg_ss_thumb {
+    height: 100px;
+}
+
+#dlg_ss > input {
+    width: 100%;
+}

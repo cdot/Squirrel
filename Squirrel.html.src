@@ -35,6 +35,7 @@
           Extras
         </button>
         <ul id="extras_menu" class="menu TX_title" title="Extras">
+          <li class="TX_text" data-command="chss">Change cloud store settings</li>
           <li class="TX_text" data-command="chpw">Change master password</li>
           <li class="TX_text" data-command="copydb">Copy entire database to clipboard (JSON)</li>
           <li data-command="readfile" class="TX_text">Load local JSON file</li>
@@ -216,9 +217,29 @@
       </p>
     </div>
 
-    <!-- Not really a dialog, just a handy way to hide -->
+    <div id="dlg_ss" class="dialog TX_title" title="Choose image">
+      <div>
+        <img id="dlg_ss_thumb" src="images/squirrel.png" />
+      </div>
+      <input type="file" id="dlg_ss_file" class="hidden" />
+      <button id="dlg_ss_choose" class="TX_title TX_text" title="Choose an image file. This should be a colour image of at least 1024x768 pixels">
+        Choose Image File
+      </button>
+      <p id="dlg_ss_message">
+      </p>
+      <p>
+        <label for="dlg_ss_storepath" class="TX_text">Store path: </label>
+        <input id="dlg_ss_storepath" type="text" value="" class="TX_title" title=" Pathname of the image on your cloud store (for example 'photos/stills/grandma.png' will use the file 'grandma.png' in the directory 'photos/stills'."/>
+      </p>
+      <p>
+        <button id="dlg_ss_ok" class="TX_text">OK</button>
+      </p>
+    </div>
+
+    <!-- Not really a dialog, just a handy way to hide stuff -->
     <div class="dialog">
       <input type="file" id="dlg_load_file" />
+      <img id="stegamage" src="images/squirrel.png" />
     </div>
   </body>
 </html>

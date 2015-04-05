@@ -47,14 +47,14 @@ DropboxStore.prototype.identifier = function() {
     return "Dropbox";
 };
 
-DropboxStore.prototype.write = function(data, ok, fail) {
+DropboxStore.prototype.write = function(path, data, ok, fail) {
     "use strict";
 
     var self = this;
 
     // writeFile supports a Blob, so this is OK
     this.db_client.writeFile(
-        this.dataset,
+        path,
         data,
         function(error/*, stat*/) {
             if (error) {
@@ -66,13 +66,13 @@ DropboxStore.prototype.write = function(data, ok, fail) {
         });
 };
 
-DropboxStore.prototype.read = function(ok, fail, options) {
+DropboxStore.prototype.read = function(path, ok, fail, options) {
     "use strict";
 
     var self = this;
 
     this.db_client.readFile(
-        this.dataset,
+        path, 
         { arrayBuffer: options && options.base64 },
         function(error, data) {
             if (error) {

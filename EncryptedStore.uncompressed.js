@@ -17,7 +17,7 @@ function EncryptedStore(params) {
 
     // Push the password requirement down onto the embedded store
     params.pReq = true;
-    params.dataset = "Encrypted " + params.dataset;
+
     // Override the OK function
     // SMELL: should really use extend
     params.ok = function() {
@@ -52,12 +52,13 @@ EncryptedStore.prototype.pass = function(pw) {
     return this.engine.pass(pw);
 };
 
-EncryptedStore.prototype.read = function(ok, fail, options) {
+EncryptedStore.prototype.read = function(path, ok, fail, options) {
     "use strict";
 
     var self = this;
 
     this.engine.read(
+        path,
         function(xdata) {
             var data;
             try {
@@ -73,7 +74,7 @@ EncryptedStore.prototype.read = function(ok, fail, options) {
         fail);
 };
 
-EncryptedStore.prototype.write = function(data, ok, fail) {
+EncryptedStore.prototype.write = function(path, data, ok, fail) {
     "use strict";
 
     var self = this,
@@ -90,6 +91,7 @@ EncryptedStore.prototype.write = function(data, ok, fail) {
     }
 
     this.engine.write(
+        path,
         xdata,
         function() {
             ok.call(self);

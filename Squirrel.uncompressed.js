@@ -389,6 +389,7 @@ Squirrel.save_hoards = function() {
         }
 
         Squirrel.client.store.write(
+            "Squirrel." + Squirrel.client.store.user(),
             JSON.stringify(Squirrel.client.hoard),
             function() {
                 $(".modified").removeClass("modified");
@@ -416,6 +417,7 @@ Squirrel.save_hoards = function() {
     update_cloud_store = function(cloard) {
         cloard.actions = cloard.actions.concat(Squirrel.client.hoard.actions);
         Squirrel.cloud.store.write(
+            Squirrel.client.hoard.options.store_path,
             JSON.stringify(cloard),
             function() {
                 Squirrel.client.hoard.actions = [];
@@ -453,8 +455,10 @@ Squirrel.save_hoards = function() {
                     path: a.path.slice()
                 });
                 next();
+            },
+            function() {
+                update_cloud_store(cloard);
             });
-        update_cloud_store(cloard);
     },
 
     // Action on the clouad store being read OK
@@ -510,14 +514,17 @@ Squirrel.save_hoards = function() {
         }
     };
 
-    if (Squirrel.cloud.status === "has new password") {
+    if (Squirrel.cloud.status === "has new password"
+        || Squirrel.cloud.status === "is empty") {
         // Don't attempt to resync out before saving, simply
-        // overwrite the cloud. Changing password is risky!
+        // overwrite the cloud.
         construct_new_cloud();
     } else {
         // Reload and save the cloud hoard
         Squirrel.cloud.store.read(
-            cloud_store_read_ok, cloud_store_read_failed);
+            Squirrel.client.hoard.options.store_path,
+            cloud_store_read_ok,
+            cloud_store_read_failed);
     }
 };
 
@@ -549,13 +556,18 @@ Squirrel.hoards_loaded = function() {
     $(".authenticated").show();
 };
 
-Squirrel.load_cloud_store = function() {
+/**
+ * Called when we have a (possibly empty) client hoard.
+*  Try and synch it from the cloud.
+ */
+Squirrel.load_cloud_hoard = function() {
     "use strict";
 
     if (Squirrel.cloud.store) {
         if (DEBUG) console.debug(
             "Reading cloud " + Squirrel.cloud.store.identifier());
         Squirrel.cloud.store.read(
+            Squirrel.client.hoard.options.store_path,
             function(data) {
                 var hoard;
                 if (DEBUG) console.debug(this.identifier() + " is ready");
@@ -593,11 +605,58 @@ Squirrel.load_cloud_store = function() {
     }
 };
 
-Squirrel.load_client_store = function() {
+/**
+ * Called when there is no existing client hoard, to initialise a new one.
+ * Take the opportunity to seed the image used in steganography.
+ */
+Squirrel.init_client_hoard = function() {
+    Squirrel.client.hoard = new Hoard();
+    // TX.tx("is empty")
+    Squirrel.client.status = "is empty";
+    Squirrel.Dialog.store_settings(function() {
+        Utils.soon(Squirrel.load_cloud_hoard);
+    });
+};
+
+/**
+ * Once the cloud store and client store have been initialised, we can load
+ * the client hoard. This will give us the baseline cache data and the
+ * location of the cloud hoard, so we can then chain loading and merging
+ * the cloud hoard.
+*/
+Squirrel.load_client_hoard = function() {
     "use strict";
+
+    var rebuild_hoard = function() {
+        if (DEBUG) console.debug("Reconstructing UI tree from cache");
+        Squirrel.client.hoard.reconstruct_actions(
+            Squirrel.Tree.action,
+            function() { // on complete
+                // Reset the UI modification list; we just loaded the
+                // client hoard
+                $(".modified").removeClass("modified");
+                // Mark all the nodes in the pending actions list as
+                // modified. If a node isn't found, back up the tree
+                // until we find a parent that does exist and mark it.
+                var as = Squirrel.client.hoard.actions, i, p, $node;
+                for (i = 0; i < as.length; i++) {
+                    p = as[i].path.slice();
+                    while (p.length > 0) {
+                        $node = Squirrel.Tree.node(p);
+                        if ($node) {
+                            $node.addClass("modified");
+                            break;
+                        }
+                        p.pop();
+                    }
+                }
+                Utils.soon(Squirrel.load_cloud_hoard);
+            });
+    };
 
     if (DEBUG) console.debug("Load client store");
     Squirrel.client.store.read(
+        "Squirrel." + Squirrel.client.store.user(),
         function(data) {
             try {
                 Squirrel.client.hoard = new Hoard(JSON.parse(data));
@@ -612,39 +671,19 @@ Squirrel.load_client_store = function() {
                 // TX.tx("is corrupt")
                 //Squirrel.client.status = "is corrupt";
             }
-
-            if (DEBUG) console.debug("Reconstructing UI tree from cache");
-            Squirrel.client.hoard.reconstruct_actions(
-                Squirrel.Tree.action,
-                function() { // on complete
-                    // Reset the UI modification list; we just loaded the
-                    // client hoard
-                    $(".modified").removeClass("modified");
-                    // Mark all the nodes in the pending actions list as
-                    // modified. If a node isn't found, back up the tree
-                    // until we find a parent that does exist and mark it.
-                    var as = Squirrel.client.hoard.actions, i, p, $node;
-                    for (i = 0; i < as.length; i++) {
-                        p = as[i].path.slice();
-                        while (p.length > 0) {
-                            $node = Squirrel.Tree.node(p);
-                            if ($node) {
-                                $node.addClass("modified");
-                                break;
-                            }
-                            p.pop();
-                        }
-                    }
-                    Utils.soon(Squirrel.load_cloud_store);
+            // Make sure we have a store path
+            if (!Squirrel.client.hoard.options.store_path) {
+                Squirrel.Dialog.store_settings(function() {
+                    rebuild_hoard();
                 });
+            } else
+                rebuild_hoard();
         },
         function(e) {
             if (e === AbstractStore.NODATA) {
-                Squirrel.client.hoard = new Hoard();
                 if (DEBUG) console.debug(this.identifier() + " contains NODATA");
-                // TX.tx("is empty")
-                Squirrel.client.status = "is empty";
-                Utils.soon(Squirrel.load_cloud_store);
+                // Construct a new client hoard
+                Squirrel.init_client_hoard();
             } else {
                 Squirrel.Dialog.squeak(
                     TX.tx("$1 store error: $2", this.identifier(), e),
@@ -653,6 +692,129 @@ Squirrel.load_client_store = function() {
         });
 };
 
+/**
+ * Once the cloud store is loaded, we know the username so can locate
+ * the client store. if the cloud store load failed we may also have
+ * to prompt for the username here as well.
+*/
+Squirrel.init_client_store = function() {
+    "use strict";
+
+    //new LocalStorageStore({
+    new EncryptedStore({
+        engine: function(params) {
+            return new LocalStorageStore(params);
+        },
+
+        ok: function() {
+            if (DEBUG) console.debug(this.identifier() + " store is ready");
+            $("#whoami").text(this.user());
+            Squirrel.client.store = this;
+            $(".unauthenticated").text(TX.tx("Loading..."));
+            // Chain loading the client store
+            Utils.soon(Squirrel.load_client_hoard);
+        },
+        fail: function(e) {
+            // We did our best!
+            Squirrel.Dialog.squeak(TX.tx("Failed ") + e);
+        },
+        identify: function(ok, fail, uReq, pReq) {
+            // Won't ever get here unless uReq || pReq
+            if (uReq && Squirrel.cloud.store
+                && typeof Squirrel.cloud.store.user() !== "undefined") {
+
+                uReq = false; // user is in cloud store
+
+                if (pReq) {
+                    if (Squirrel.cloud.store
+                         && typeof Squirrel.cloud.store.pass() !== "undefined") {
+                        // The cloud store loaded OK, we will re-use the
+                        // password for the client store
+                        ok.call(this,
+                                Squirrel.cloud.store.user(),
+                                Squirrel.cloud.store.pass());
+                        return;
+                    } else {
+                        // The cloud store loaded but didn't require a
+                        // password. SMELL: as they are both Encrypted,
+                        // this should never happen.
+                        if (DEBUG) console.debug("I didn't expect to have to prompt for a client password");
+                        $("#dlg_login_user").val(
+                            Squirrel.cloud.store.user());
+                        // Fall through to prompt for password
+                    }
+                } else {
+                    ok.call(this, Squirrel.cloud.store.user());
+                    return;
+                }
+            } else if (Squirrel.cloud.store
+                       && typeof Squirrel.cloud.store.pass() !== "undefined") {
+                if (!uReq) {
+                    // We were only asked for a password.
+                    ok.call(this, undefined, Squirrel.cloud.store.pass());
+                    return;
+                }
+                // Fall through to prompt for the username
+                $("#dlg_login_pass").val(
+                    Squirrel.cloud.store.pass());
+                pReq = false;
+            }
+            Squirrel.Dialog.login.call(this, ok, fail, uReq, pReq);
+        }
+    });
+};
+
+/**
+ * Establish contact with the cloud, and get user details.
+ * Once the cloud store is initialised, we will know who the user
+ * is, but we won't know where the cloud hoard actually is until we
+ * have initialised the client store and loaded the client hoard.
+ */
+Squirrel.init_cloud_store = function() {
+    "use strict";
+
+    var params = {
+        ok: function() {
+            Squirrel.cloud.store = this;
+            // Chain the client store startup
+            Squirrel.init_client_store();
+        },
+        fail: function(e) {
+            Squirrel.Dialog.squeak(
+                TX.tx("Could not open cloud store: $1", e)
+                    + "<p>"
+                    + TX.tx("Do you want to continue (only the client store will be available)?"),
+                Squirrel.init_client_store,
+                function() {
+                    if (DEBUG) console.debug("Cancelled");
+                    $(".unauthenticated").hide();
+                    $(".authfailed").show();
+                });
+        },
+        identify: Squirrel.Dialog.login
+    };
+
+    if (typeof SQUIRREL_STORE !== "undefined") {
+        params.engine = function(p2) {
+            p2.engine = function(p3) {
+                return new SQUIRREL_STORE(p3);
+            };
+            return new StegaStore(p2);
+        };
+    } else {
+        // TESTING ONLY
+        if (DEBUG) console.debug("Using LocalStorage for the Cloud");
+        params.engine = function(p1) {
+            return new LocalStorageStore(p1);
+        };
+    }
+
+    new EncryptedStore(params);
+};
+
+/**
+ * Initialise handlers and jQuery UI components
+ */
 Squirrel.init_ui = function() {
     "use strict";
 
@@ -705,6 +867,9 @@ Squirrel.init_ui = function() {
                 switch (ui.item.data("command")) {
                 case "chpw":
                     Squirrel.Dialog.change_password();
+                    break;
+                case "chss":
+                    Squirrel.Dialog.store_settings();
                     break;
                 case "copydb":
                     // Handled by zero clipboard
@@ -789,116 +954,14 @@ Squirrel.init_ui = function() {
         .on("update_tree", Squirrel.update_tree);
 };
 
-Squirrel.init_client_store = function() {
-    "use strict";
-
-    //new LocalStorageStore({
-    new EncryptedStore({
-        engine: function(params) {
-            return new LocalStorageStore(params);
-        },
-
-        dataset: "Local Hoard",
-        ok: function() {
-            if (DEBUG) console.debug(this.identifier() + " store is ready");
-            $("#whoami").text(this.user());
-            Squirrel.client.store = this;
-            $(".unauthenticated").text(TX.tx("Loading..."));
-            Utils.soon(Squirrel.load_client_store);
-        },
-        fail: function(e) {
-            // We did our best!
-            Squirrel.Dialog.squeak(TX.tx("Failed ") + e);
-        },
-        identify: function(ok, fail, uReq, pReq) {
-            // Won't ever get here unless uReq || pReq
-            if (uReq && Squirrel.cloud.store
-                && typeof Squirrel.cloud.store.user() !== "undefined") {
-
-                uReq = false; // user is in cloud store
-
-                if (pReq) {
-                    if (Squirrel.cloud.store
-                         && typeof Squirrel.cloud.store.pass() !== "undefined") {
-                        // The cloud store loaded OK, we will re-use the
-                        // password for the client store
-                        ok.call(this,
-                                Squirrel.cloud.store.user(),
-                                Squirrel.cloud.store.pass());
-                        return;
-                    } else {
-                        // The cloud store loaded but didn't require a
-                        // password. SMELL: as they are both Encrypted,
-                        // this should never happen.
-                        if (DEBUG) console.debug("I didn't expect to have to prompt for a client password");
-                        $("#dlg_login_user").val(
-                            Squirrel.cloud.store.user());
-                        // Fall through to prompt for password
-                    }
-                } else {
-                    ok.call(this, Squirrel.cloud.store.user());
-                    return;
-                }
-            } else if (Squirrel.cloud.store
-                       && typeof Squirrel.cloud.store.pass() !== "undefined") {
-                if (!uReq) {
-                    // We were only asked for a password.
-                    ok.call(this, undefined, Squirrel.cloud.store.pass());
-                    return;
-                }
-                // Fall through to prompt for the username
-                $("#dlg_login_pass").val(
-                    Squirrel.cloud.store.pass());
-                pReq = false;
-            }
-            Squirrel.Dialog.login.call(this, ok, fail, uReq, pReq);
-        }
-    });
-};
-
-Squirrel.init_cloud_store = function() {
-    "use strict";
-
-    var params = {
-        dataset: "Cloud Hoard",
-        ok: function() {
-            Squirrel.cloud.store = this;
-            Squirrel.init_client_store();
-        },
-        fail: function(e) {
-            Squirrel.Dialog.squeak(
-                TX.tx("Could not open cloud store: $1", e)
-                    + "<p>"
-                    + TX.tx("Do you want to continue (only the client store will be available)?"),
-                Squirrel.init_client_store,
-                function() {
-                    if (DEBUG) console.debug("Cancelled");
-                    $(".unauthenticated").hide();
-                    $(".authfailed").show();
-                });
-        },
-        identify: Squirrel.Dialog.login
-    };
-
-    if (typeof SQUIRREL_STORE !== "undefined") {
-        params.engine = function(p2) {
-            p2.engine = function(p3) {
-                return new SQUIRREL_STORE(p3);
-            };
-            return new StegaStore(p2);
-        };
-    } else {
-        if (DEBUG) console.debug("Using LocalStorage for the Cloud");
-        params.engine = function(p1) {
-            return new LocalStorageStore(p1);
-        };
-    }
-
-    new EncryptedStore(params);
-};
-
+/**
+ * Initialise application data (new Squirrel(), effectively)
+ */
 Squirrel.init_application = function() {
     "use strict";
+
+    // Initialise UI components
+    Squirrel.init_ui();
 
     // status may be one of "is empty", "is corrupt", "is loaded" or
     // "has a new password". If the status is anything but "is loaded"
@@ -916,9 +979,13 @@ Squirrel.init_application = function() {
 
     Squirrel.clipboard = null;
 
+    // Kick off by initialising the cloud store.
     Squirrel.init_cloud_store();
 };
 
+/**
+ * "Main Program"
+ */
 (function ($) {
     "use strict";
 
@@ -929,9 +996,8 @@ Squirrel.init_application = function() {
             // Disable this functionality by default so that as much as
             // possible is cached locally
             if (!DEBUG) $.ajaxSetup({ cache: true });
-            // Initialise UI components
-            Squirrel.init_ui();
-            // Initialise translation module
+
+            // Initialise translation module, and chain the application init
             TX.init(Squirrel.init_application);
         });
 

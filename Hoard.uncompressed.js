@@ -62,12 +62,17 @@ function Hoard(data) {
     }
     if (typeof this.options === "undefined")
         this.options = {
-            // autosave exists in both the client and cloud stores, but
-            // is only read from the client - it is never read
+            // options exist in both the client and cloud stores, but
+            // are only read from the client - they are never read
             // from the cloud. This is so that (for example) a tablet
-            // doesn't get the option when it spends most of its time
-            // disconnected.
-            autosave: false
+            // doesn't get the autosave option when it spends most of
+            // its time disconnected.
+
+            // Is autosave turned on?
+            autosave: false,
+
+            // What's the server path to the hoard store?
+            store_path: null
         };
 }
 

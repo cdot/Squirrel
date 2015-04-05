@@ -39,8 +39,7 @@
  *
  * @class
  * @param {object} params
- *    * dataset name of the unique data set this store holds
- *    * ok, called on success
+  *    * ok, called on success
  *    * fail, called on failure
  *    * identify, called to identify the user of the store,
  *      if needed
@@ -49,8 +48,6 @@ function AbstractStore(params) {
     "use strict";
 
     var self = this;
-
-    this.dataset = params.dataset;
 
     var uReq = (params.uReq && typeof this.user() === "undefined");
     var pReq = (params.pReq && typeof this.pass() === "undefined");
@@ -111,11 +108,12 @@ AbstractStore.prototype.pass = function(pass) {
 
 /**
  * Write data. Subclasses must implement.
+ * @param path pathname to store the data under, a / separated path string
  * @param {string or Blob} data to write
  * @param {ok} called on success
  * @param {fail} called on failure
  */
-AbstractStore.prototype.write = function(/*data, ok, fail*/) {
+AbstractStore.prototype.write = function(/*path, data, ok, fail*/) {
     "use strict";
 
     if (DEBUG) debugger;
@@ -123,13 +121,14 @@ AbstractStore.prototype.write = function(/*data, ok, fail*/) {
 
 /**
  * Read data. Subclasses must implement.
+ * @param path pathname the data is stored under, a / separated path string
  * @param {ok} called on success
  * @param {fail} called on failure
  * @param options Hash containing options:
  * base54 - read binary data into a Base64 encoded string
  * @return a String containing data
  */
-AbstractStore.prototype.read = function(/*ok, fail, options*/) {
+AbstractStore.prototype.read = function(/*path, ok, fail, options*/) {
     "use strict";
 
     if (DEBUG) debugger;
