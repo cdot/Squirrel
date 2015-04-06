@@ -60,11 +60,7 @@ StegaStore.prototype.read = function(path, ok, fail, options) {
         function(xdata) {
             var data;
             try {
-                // steganography.decode takes an image as Image,
-                // HTMLImageElement, or String representing the
-                // data-URI of the image, and returns the message
-                // which was found in the image.
-                // We don't have a data-url so we have to compile one.
+                 // Make a data-URI from the base64 xdata
                 var datauri = "data:image/png;base64," + xdata;
                 data = steganography.decode(datauri);
                 $("#stegamage").attr("src", datauri);
@@ -89,36 +85,23 @@ StegaStore.prototype.write = function(path, data, ok, fail) {
 
     var self = this;
 
-    var embed = function($image) {
-        var xdata;
-        try {
-            // stegnography.encode takes a message as String, and an
-            // Image, HTMLImageElement, or String representing the
-            // data-URL of the image. Returns a data-URI containing
-            // the image with the encoded message inside.
-            var datauri = steganography.encode(data, $image[0]);
-            xdata = Utils.dataURItoBlob(datauri);
-        } catch (e) {
-            fail.call(self, e);
-            return;
-        }
+    var $image = $("#stegamage");
 
-        self.engine.write(
-            path,
-            xdata,
-            function() {
-                ok.call(self);
-            },
-            fail);
-    };
+    var xdata;
+    try {
+        var datauri = steganography.encode(data, $image[0]);
+        xdata = Utils.dataURItoBlob(datauri);
+    } catch (e) {
+        fail.call(self, e);
+        return;
+    }
 
-    var $img = $("#stegamage");
-    // Don't do this; the .complete flag isn't set for data:image urls
-    //if (!$img.attr("complete")) {
-    //    $img.on("load", function() {
-    //        $img.off("load");
-    //        embed($img);
-    //    });
-    //} else
-        embed($img);
+    self.engine.write(
+        path,
+        xdata,
+        function() {
+            ok.call(self);
+        },
+        fail);
 };
+

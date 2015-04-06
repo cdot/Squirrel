@@ -104,7 +104,19 @@
             args = options.args || config.args,
             prime = util.findNextPrime(Math.pow(2, t)),
             decM, oldDec, oldMask,  modMessage = [], left, right;
+
+           // Encode length using 10 characters
+            var len = "" + message.length;
+            while (len.length < 10)
+                len = "0" + len;
+            message = len + message
+
             for (var i = 0; i <= message.length; i += 1) {
+                // dec ... UTF-16 Unicode of the i-th character of the message
+                // curOverlapping ... The count of the bits of the previous
+                // character not handled in the previous run
+                // mask ... The raw initial bitmask, will be changed every
+                // run and if bits are overlapping
                 var dec = message.charCodeAt(i) || 0,
                 curOverlapping = overlapping * i % t, mask;
                 if (curOverlapping > 0 && oldDec) {
@@ -281,8 +293,11 @@
                 }
             }
             if (charCode !== 0) message += String.fromCharCode(charCode & mask);
-            return message;
+
+            var len = Number.parseInt(message.substr(0, 10));
+            return message.substr(10, len);
         },
+
         getHidingCapacity: function(image, options) {
             options = options || {};
             var config = this.config;
@@ -290,7 +305,7 @@
             height = options.height || image.height,
             t = options.t || config.t,
             codeUnitSize = options.codeUnitSize || config.codeUnitSize;
-            return t * width * height / codeUnitSize >> 0;
+            return (t * width * height / codeUnitSize - 10) >> 0;
         }
     };
     g.steganography = g.steg = new Cover();
