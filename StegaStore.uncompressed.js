@@ -27,6 +27,9 @@ function StegaStore(params) {
         pok.call(self);
     };
 
+    // We're storing base64, so we only need 7 bits per character
+    this.steganographer = new Steganography(4, 7);
+
     new params.engine(params);
 }
 
@@ -62,7 +65,7 @@ StegaStore.prototype.read = function(path, ok, fail, options) {
             try {
                  // Make a data-URI from the base64 xdata
                 var datauri = "data:image/png;base64," + xdata;
-                data = steganography.decode(datauri);
+                data = self.steganographer.extract(datauri);
                 $("#stegamage").attr("src", datauri);
             } catch (e) {
                 fail.call(self, e);
@@ -83,20 +86,24 @@ StegaStore.prototype.read = function(path, ok, fail, options) {
 StegaStore.prototype.write = function(path, data, ok, fail) {
     "use strict";
 
-    var self = this;
-
     var $image = $("#stegamage");
 
     var xdata;
     try {
-        var datauri = steganography.encode(data, $image[0]);
+        var capacity = this.steganographer.getCapacity($image[0]);
+        if (capacity < data.length)
+            throw "Insufficient hiding capacity in that image. Need "
+            + data.length + " but the image will only accomodate " +
+            capacity;
+        var datauri = this.steganographer.inject(data, $image[0]);
         xdata = Utils.dataURItoBlob(datauri);
     } catch (e) {
-        fail.call(self, e);
+        fail.call(this, e);
         return;
     }
 
-    self.engine.write(
+    var self = this;
+    this.engine.write(
         path,
         xdata,
         function() {
@@ -104,4 +111,3 @@ StegaStore.prototype.write = function(path, data, ok, fail) {
         },
         fail);
 };
-

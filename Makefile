@@ -13,7 +13,6 @@ LIBSJS = \
 	libs/jquery-bonsai.uncompressed.js \
 	libs/jquery-ui-contextmenu.uncompressed.js \
 	libs/ZeroClipboard.uncompressed.js \
-	libs/steganography.uncompressed.js \
 	libs/aes.uncompressed.js \
 	libs/aes-ctr.uncompressed.js
 
@@ -27,6 +26,7 @@ COMMONJS = \
 	AbstractStore.uncompressed.js \
 	LocalStorageStore.uncompressed.js \
 	EncryptedStore.uncompressed.js \
+	Steganography.uncompressed.js \
 	StegaStore.uncompressed.js \
 	Squirrel.uncompressed.js \
 	Tree.uncompressed.js \
@@ -48,7 +48,7 @@ LPOS=">
 
 debug: $(patsubst %,%.uncompressed.html,$(STORES))
 
-%.uncompressed.html : Squirrel.html.src
+%.uncompressed.html : Squirrel.html.src $(COMMONJS)
 	./sub.pl Squirrel.html.src \
 	LIBSJS_HTML '$(patsubst %,$(SPRE)%$(SPOS),$(LIBSJS))' \
 	COMMONJS_HTML '$(patsubst %,$(SPRE)%$(SPOS),$(COMMONJS))' \

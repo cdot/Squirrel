@@ -371,7 +371,9 @@ Squirrel.save_hoards = function() {
 
     var finished = function() {
         Utils.sometime("update_save");
-        $messy.append(TX.tx("Save complete."));
+        $messy.append(client_ok && cloud_ok
+                      ? TX.tx("Save complete")
+                      : TX.tx("Save encountered errors"));
         if (client_ok && cloud_ok)
             Utils.sometime(function() {
                 $dlg.dialog("close");

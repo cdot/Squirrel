@@ -116,6 +116,5 @@ Squirrel was written by Crawford Currie http://c-dot.co.uk, and uses the followi
 - jquery-bonsai, Copyright 2014 Simon Wade, http://aexmachina.info/jquery-bonsai
 - jquery-contextmenu, Copyright 2013-2015 Martin Wendt and others, https://github.com/mar10/jquery-ui-contextmenu
 - ZeroClipboard, Copyright 2009-2014 Jon Rohan, James M. Greene, http://zeroclipboard.org/
-- steganography.js, Copyright 2012 Peter Eigenschink, https://github.com/petereigenschink/steganography.js/
 - Dropbox API, Copyright 2012 Dropbox, Inc., http://www.dropbox.com
 - Google Drive API

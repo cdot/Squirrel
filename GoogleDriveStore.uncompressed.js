@@ -4,7 +4,7 @@
 // http://www.henryalgus.com/reading-binary-files-using-jquery-ajax/
 $.ajaxTransport("+binary", function(options, originalOptions, jqXHR){
     // check for conditions and support for blob / arraybuffer response type
-    if (window.FormData && ((options.dataType && (options.dataType == 'binary')) || (options.data && ((window.ArrayBuffer && options.data instanceof ArrayBuffer) || (window.Blob && options.data instanceof Blob)))))
+    if (window.FormData && ((options.dataType && (options.dataType === "binary")) || (options.data && ((window.ArrayBuffer && options.data instanceof ArrayBuffer) || (window.Blob && options.data instanceof Blob)))))
     {
         return {
             // create new XMLHttpRequest
@@ -20,7 +20,7 @@ $.ajaxTransport("+binary", function(options, originalOptions, jqXHR){
 		username = options.username || null,
 		password = options.password || null;
 					
-                xhr.addEventListener('load', function(){
+                xhr.addEventListener("load", function(){
 			var data = {};
 			data[options.dataType] = xhr.response;
 			// make callback and send data
@@ -319,7 +319,7 @@ GoogleDriveStore.prototype._getfile = function(p) {
 
     if (p.options && p.options.base64) {
         ax.dataType = "binary";
-        ax.responseType = "arraybuffer",
+        ax.responseType = "arraybuffer";
         converter = Utils.ArrayBufferTo64;
     }
 

@@ -464,7 +464,8 @@ Squirrel.Dialog.ss_change_image = function() {
                 .on("load", function() {
                     // Check that we can use the image
                     try {
-                        steganography.encode("tada", $("#dlg_ss_thumb")[0]);
+                        var steg = new Steganography(4, 7);
+                        steg.inject("tada", $("#dlg_ss_thumb")[0]);
                         $("#stegamage").attr("src", data);
                         $("#dlg_ss_ok").attr("disabled", false);
                         $("#dlg_ss_message").text("");
