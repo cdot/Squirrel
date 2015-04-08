@@ -1,10 +1,21 @@
 /* Copyright (C) 2015 Crawford Currie http://c-dot.co.uk / MIT */
 
-// needed to read binary files
-// http://www.henryalgus.com/reading-binary-files-using-jquery-ajax/
+/**
+ * A store using Google Drive
+ * @implements AbstractStore
+ */
+
+/**
+ * Needed to read binary files. Generic, but only used by Drive
+ * http://www.henryalgus.com/reading-binary-files-using-jquery-ajax/
+*/
 $.ajaxTransport("+binary", function(options, originalOptions, jqXHR){
     // check for conditions and support for blob / arraybuffer response type
-    if (window.FormData && ((options.dataType && (options.dataType === "binary")) || (options.data && ((window.ArrayBuffer && options.data instanceof ArrayBuffer) || (window.Blob && options.data instanceof Blob)))))
+    if (window.FormData
+        && ((options.dataType && (options.dataType === "binary"))
+            || (options.data
+                && ((window.ArrayBuffer && options.data instanceof ArrayBuffer)
+                    || (window.Blob && options.data instanceof Blob)))))
     {
         return {
             // create new XMLHttpRequest
@@ -24,7 +35,8 @@ $.ajaxTransport("+binary", function(options, originalOptions, jqXHR){
 			var data = {};
 			data[options.dataType] = xhr.response;
 			// make callback and send data
-			callback(xhr.status, xhr.statusText, data, xhr.getAllResponseHeaders());
+			callback(xhr.status, xhr.statusText,
+                                 data, xhr.getAllResponseHeaders());
                 });
  
                 xhr.open(type, url, async, username, password);
@@ -43,11 +55,6 @@ $.ajaxTransport("+binary", function(options, originalOptions, jqXHR){
         };
     }
 });
-
-/**
- * A store using Google Drive
- * @implements AbstractStore
- */
 
 const CLIENT_ID = "985219699584-mt1do7j28ifm2vt821d498emarmdukbt.apps.googleusercontent.com";
 // While the appfolder would seem to make sense for Squirrel, it does make

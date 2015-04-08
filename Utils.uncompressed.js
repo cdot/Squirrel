@@ -354,7 +354,7 @@ Utils.uint6ToB64 = function(nUint6) {
  };
 
 /*
- * Base64 encoding of the content of an array buffer containing bytes
+ * Base64 encoding of the content of an array buffer
  */
 Utils.ArrayBufferTo64 = function(ab) {
     "use strict";
@@ -366,8 +366,6 @@ Utils.ArrayBufferTo64 = function(ab) {
 
     for (var nUint24 = 0, nIdx = 0; nIdx < nLen; nIdx++) {
         nMod3 = nIdx % 3;
-        if (nIdx > 0 && (nIdx * 4 / 3) % 76 === 0)
-            sB64Enc += "\r\n";
         nUint24 |= aBytes[nIdx] << (16 >>> nMod3 & 24);
         if (nMod3 === 2 || nLen - nIdx === 1) {
             sB64Enc += String.fromCharCode(
@@ -384,7 +382,7 @@ Utils.ArrayBufferTo64 = function(ab) {
 };
 
 /*
- * Base64 encoding of the content of a string containing bytes
+ * Base64 encoding of the content of a string
  */
 Utils.StringTo64 = function(str) {
     "use strict";
@@ -395,8 +393,6 @@ Utils.StringTo64 = function(str) {
 
     for (var nUint24 = 0, nIdx = 0; nIdx < nLen; nIdx++) {
         nMod3 = nIdx % 3;
-        if (nIdx > 0 && (nIdx * 4 / 3) % 76 === 0)
-            sB64Enc += "\r\n";
         nUint24 |= str.charCodeAt(nIdx) << (16 >>> nMod3 & 24);
         if (nMod3 === 2 || nLen - nIdx === 1) {
             sB64Enc += String.fromCharCode(
