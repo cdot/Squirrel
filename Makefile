@@ -8,6 +8,7 @@ driveJS = \
 	GoogleDriveStore.uncompressed.js
 
 LIBSJS = \
+	libs/base64.uncompressed.js \
 	libs/jquery-2.1.3.uncompressed.js \
 	libs/jquery-ui.uncompressed.js \
 	libs/jquery-bonsai.uncompressed.js \
@@ -26,7 +27,7 @@ COMMONJS = \
 	AbstractStore.uncompressed.js \
 	LocalStorageStore.uncompressed.js \
 	EncryptedStore.uncompressed.js \
-	Steganography.uncompressed.js \
+	Steganographer.uncompressed.js \
 	StegaStore.uncompressed.js \
 	Squirrel.uncompressed.js \
 	Tree.uncompressed.js \

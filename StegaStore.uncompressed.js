@@ -27,9 +27,6 @@ function StegaStore(params) {
         pok.call(self);
     };
 
-    // We're storing base64, so we only need 7 bits per character
-    this.steganographer = new Steganography(4, 7);
-
     new params.engine(params);
 }
 
@@ -53,57 +50,55 @@ StegaStore.prototype.pass = function(pw) {
     return this.engine.pass(pw);
 };
 
-StegaStore.prototype.read = function(path, ok, fail, options) {
+StegaStore.prototype.read = function(path, ok, fail) {
     "use strict";
 
     var self = this;
 
     this.engine.read(
         path,
-        function(xdata) {
-            var data;
-            try {
-                 // Make a data-URI from the base64 xdata
-                var datauri = "data:image/png;base64," + xdata;
-                data = self.steganographer.extract(datauri);
-                $("#stegamage").attr("src", datauri);
-            } catch (e) {
-                fail.call(self, e);
-                return;
-            }
-            // Do this outside the try..catch to avoid masking
-            // exceptions in deeper code.
-            if (options && options.base64)
-                data = Utils.StringTo64(data);
-            ok.call(self, data);
+        function(ab) {
+            // Make a data-URI
+            var datauri = "data:image/png;base64,"
+                + Utils.ArrayBufferTo64(ab);
+            $("#stegamage")
+                .attr("src", datauri)
+                .on("load", function() {
+                    var steg = new Steganographer(this);
+                    var ab;
+                    try {
+                        ab = steg.extract();
+                    } catch (e) {
+                        fail.call(self, e);
+                        return;
+                    }
+                    
+                    ok.call(self, ab);
+                });
         },
-        fail,
-        { 
-            base64: true
-        });
+        fail);
 };
 
 StegaStore.prototype.write = function(path, data, ok, fail) {
     "use strict";
 
-    var $image = $("#stegamage");
-
+    var self = this;
+    var image = document.getElementById("stegamage");
     var xdata;
+    var steg = new Steganographer(image);
+
     try {
-        var capacity = this.steganographer.getCapacity($image[0]);
-        if (capacity < data.length)
-            throw "Insufficient hiding capacity in that image. Need "
-            + data.length + " but the image will only accomodate " +
-            capacity;
-        var datauri = this.steganographer.inject(data, $image[0]);
-        xdata = Utils.dataURItoBlob(datauri);
+        var canvas = steg.inject(data);
+        // Bit convoluted, but can't see another way to do it
+        var datauri = canvas.toDataURL();
+        // we need to get from the dataURI to an ArrayBuffer
+        xdata = Utils.dataURIToArrayBuffer(datauri);
     } catch (e) {
         fail.call(this, e);
         return;
     }
 
-    var self = this;
-    this.engine.write(
+    self.engine.write(
         path,
         xdata,
         function() {

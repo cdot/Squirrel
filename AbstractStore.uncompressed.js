@@ -4,23 +4,7 @@
  * Pure virtual base class of store providers.
  *
  * Store providers provide a simple file system interface to data in the
- * store.
- *
- * @callback ok
- * Called with this set to the store
- *
- * @callback fail
- * Called with this set to the store
- * @param {string} message
- *
- * @callback identify
- * Called to identify what user is trying to use this store. Only stores
- * that require a username will use this. It's a hook for a login
- * prompt.
- * @param {ok} Called this set to the store and with the username as parameter
- * @param {fail} Called with this set to the store and a message
- * @param {uReq} true if the store requires a user
- * @param {pReq} true if the store requires a password
+ * store. Data is passed back and forth in ArrayBuffer.
  */
 
 /**
@@ -107,11 +91,11 @@ AbstractStore.prototype.pass = function(pass) {
 };
 
 /**
- * Write data. Subclasses must implement.
+ * Write data. Pure virtual.
  * @param path pathname to store the data under, a / separated path string
- * @param {string or Blob} data to write
- * @param {ok} called on success
- * @param {fail} called on failure
+ * @param data an ArrayBuffer (or ArrayBufferView, so it can be a TypedArray)
+ * @param ok called on success with this=self
+ * @param fail called on failure with this=self
  */
 AbstractStore.prototype.write = function(/*path, data, ok, fail*/) {
     "use strict";
@@ -120,16 +104,48 @@ AbstractStore.prototype.write = function(/*path, data, ok, fail*/) {
 };
 
 /**
- * Read data. Subclasses must implement.
+ * Write a string.
  * @param path pathname the data is stored under, a / separated path string
- * @param {ok} called on success
- * @param {fail} called on failure
- * @param options Hash containing options:
- * base54 - read binary data into a Base64 encoded string
- * @return a String containing data
+ * @param str the data String
+ * @param ok called on success with this=self
+ * @param fail called on failure
  */
-AbstractStore.prototype.read = function(/*path, ok, fail, options*/) {
+AbstractStore.prototype.writes = function(path, str, ok, fail) {
+    var self = this;
+
+    this.write(
+        path,
+        Utils.StringToArrayBuffer(str),
+        ok,
+        fail);
+};
+
+/**
+ * Read an ArrayBuffer. Pure virtual.
+ * @param path pathname the data is stored under, a / separated path string
+ * @param ok called on success with this=self, passed ArrayBuffer
+ * @param fail called on failure
+ */
+AbstractStore.prototype.read = function(/*path, ok, fail*/) {
     "use strict";
 
     if (DEBUG) debugger;
+};
+
+/**
+ * Read a string.
+ * @param path pathname the data is stored under, a / separated path string
+ * @param ok called on success with this=self, passed String
+ * @param fail called on failure
+ */
+AbstractStore.prototype.reads = function(path, ok, fail) {
+    var self = this;
+
+    this.read(
+        path,
+        function(ab) {
+            var data = Utils.ArrayBufferToString(ab);
+            ok.call(self, data);
+        },
+        fail);
 };

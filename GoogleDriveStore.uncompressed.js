@@ -235,7 +235,7 @@ GoogleDriveStore.prototype._put = function(path, id, data, ok, fail) {
         "Content-Type: application/octet-stream\r\n" +
         "Content-Transfer-Encoding: base64\r\n" +
         "\r\n" +
-        data +
+        Utils.ArrayBufferTo64(data) +
         RETIMILED;
 
     gapi.client.request({
@@ -259,7 +259,7 @@ GoogleDriveStore.prototype._put = function(path, id, data, ok, fail) {
 /**
  * @private
  * Download a resource, call ok or fail
- * p = { (id | name):, ok:, fail:, options: }
+ * p = { (id | name):, ok:, fail: }
  */
 GoogleDriveStore.prototype._download = function(p) {
     "use strict";
@@ -291,7 +291,7 @@ GoogleDriveStore.prototype._download = function(p) {
 
 /**
  * @private
- * @param p = {url: ok: , fail:, options }
+ * @param p = {url: ok: , fail: }
  */
 GoogleDriveStore.prototype._getfile = function(p) {
     "use strict";
@@ -303,9 +303,11 @@ GoogleDriveStore.prototype._getfile = function(p) {
     if (DEBUG) console.debug("gapi: ajax " + p.url);
 
     // SMELL: no client API to get file content from Drive
-    var ax = {
+    $.ajax({
         url: p.url,
         method: "GET",
+        dataType = "binary",
+        responseType = "arraybuffer",
         beforeSend: function(jqXHR) {
             jqXHR.setRequestHeader(
                 "Authorization",
@@ -313,8 +315,6 @@ GoogleDriveStore.prototype._getfile = function(p) {
         },
         success: function(data, textStatus, jqXHR) {
             if (DEBUG) console.debug("gapi: _getfile OK");
-            if (converter)
-                data = converter(data);
             p.ok.call(self, data);
         },
         error: function(jqXHR, textStatus, errorThrown) {
@@ -322,43 +322,22 @@ GoogleDriveStore.prototype._getfile = function(p) {
             if (DEBUG) console.debug("gapi: _getfile failed " + reason);
             p.fail.call(self, reason);
         }
-    };
-
-    if (p.options && p.options.base64) {
-        ax.dataType = "binary";
-        ax.responseType = "arraybuffer";
-        converter = Utils.ArrayBufferTo64;
-    }
-
-    $.ajax(ax);
+    });
 };
 
 GoogleDriveStore.prototype.write = function(path, data, ok, fail) {
     "use strict";
 
     var self = this;
-    var have_64 = function(data64) {
-        self._search(
-            "title='" + path + "'",
-            function(items) {
-                var id;
-                if (items.length > 0)
-                    id = items[0].id;
-                self._put(path, id, data64, ok, fail);
-            });
-    };
 
-    if (typeof data === "string")
-        have_64(btoa(data));
-    else {
-        // Blob. readAsDataURL encodes as base64
-        var reader = new FileReader();
-        reader.addEventListener("loadend", function() {
-            var d = reader.result.split(",", 2);
-            have_64(d[1]);
+    self._search(
+        "title='" + path + "'",
+        function(items) {
+            var id;
+            if (items.length > 0)
+                id = items[0].id;
+            self._put(path, id, data, ok, fail);
         });
-        reader.readAsDataURL(data);
-    }
 };
 
 GoogleDriveStore.prototype.read = function(path, ok, fail, options) {

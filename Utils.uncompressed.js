@@ -312,10 +312,9 @@ Utils.soon = function(fn) {
 };
 
 /**
- * Convert base64/URLEncoded data component to a Blob
- * http://stackoverflow.com/questions/4998908/convert-data-uri-to-file-then-append-to-formdata
+ * Convert base64/URLEncoded data component to an array buffer
  */
-Utils.dataURItoBlob = function(dataURI) {
+Utils.dataURIToArrayBuffer = function(dataURI) {
     "use strict";
 
     // doesn't handle URLEncoded DataURIs - see SO answer
@@ -332,10 +331,10 @@ Utils.dataURItoBlob = function(dataURI) {
         ia[i] = byteString.charCodeAt(i);
     }
 
-    // write the ArrayBuffer to a blob
-    return new Blob([ia], {type: mimeString});
+    return ab;
 };
 
+// Support for base64 conversion
 Utils.uint6ToB64 = function(nUint6) {
     "use strict";
 
@@ -406,4 +405,37 @@ Utils.StringTo64 = function(str) {
 
     return sB64Enc.substr(0, sB64Enc.length - 2 + nMod3)
         + (nMod3 === 2 ? "" : nMod3 === 1 ? "=" : "==");
+};
+
+Utils.ArrayBufferToString = function(data) {
+    var s = "";
+    var d = new Uint16Array(data);
+    for (var i = 0; i < d.length; i++)
+        s += String.fromCharCode(d[i]);
+    return s;
+};
+
+Utils.StringToArrayBuffer = function(str) {
+    var buf = new ArrayBuffer(str.length*2); // 2 bytes for each char
+    var bufView = new Uint16Array(buf);
+    for (var i = 0, strLen = str.length; i < strLen; i++) {
+        bufView[i] = str.charCodeAt(i);
+    }
+    return buf;
+}
+
+Utils.StringToUint16Array = function(str) {
+    var buf = new Uint16Array(str.length);
+    for (var i = 0, len = str.length; i < len; i++) {
+        buf[i] = str.charCodeAt(i);
+    }
+    return buf;
+};
+
+Utils.Uint16ArrayToString = function(a) {
+    var buf = "";
+    for (var i = 0, len = a.length; i < len; i++) {
+        buf += String.fromCharCodeAt(a[i]);
+    }
+    return buf;
 };

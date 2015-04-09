@@ -52,47 +52,50 @@ EncryptedStore.prototype.pass = function(pw) {
     return this.engine.pass(pw);
 };
 
-EncryptedStore.prototype.read = function(path, ok, fail, options) {
+EncryptedStore.prototype.read = function(path, ok, fail) {
     "use strict";
 
     var self = this;
 
     this.engine.read(
         path,
-        function(xdata) {
+        function(ab) {
             var data;
+            // SMELL: convert AES to work on ArrayBuffers
+            var xstr = Utils.ArrayBufferToString(ab);
+            var str;
             try {
-                data = Aes.Ctr.decrypt(xdata, self.engine.pass(), 256);
+                str = Aes.Ctr.decrypt(xstr, self.engine.pass(), 256);
             } catch (e) {
                 fail.call(self, e);
                 return;
             }
-            if (options && options.base64)
-                data = Utils.StringTo64(data);
-            ok.call(self, data);
+            ab = Utils.StringToArrayBuffer(str);
+            ok.call(self, ab);
         },
         fail);
 };
 
-EncryptedStore.prototype.write = function(path, data, ok, fail) {
+EncryptedStore.prototype.write = function(path, ab, ok, fail) {
     "use strict";
 
-    var self = this,
-    xdata;
+    var self = this;
 
-    if (typeof data !== "string")
-        throw "EncryptedStore only supports String";
+    var str = Utils.ArrayBufferToString(ab);
+    var xstr;
 
     try {
-        xdata = Aes.Ctr.encrypt(data, this.engine.pass(), 256);
+        // SMELL: convert AES to work on ArrayBuffers
+        xtsr = Aes.Ctr.encrypt(str, this.engine.pass(), 256);
     } catch (e) {
         fail.call(this, e);
         return;
     }
 
+    ab = Utils.StringToArrayBuffer(xstr);
     this.engine.write(
         path,
-        xdata,
+        ab,
         function() {
             ok.call(self);
         },

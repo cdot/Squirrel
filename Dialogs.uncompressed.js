@@ -462,13 +462,16 @@ Squirrel.Dialog.ss_change_image = function() {
             $("#dlg_ss_thumb")
                 .attr("src", data)
                 .on("load", function() {
-                    // Check that we can use the image
+                    // Check that we can use the image. This may fail
+                    // due to cross-domain or capacity constraints.
                     try {
-                        var steg = new Steganography(4, 7);
-                        steg.inject("tada", $("#dlg_ss_thumb")[0]);
-                        $("#stegamage").attr("src", data);
+                        var steg = new Steganographer($("#dlg_ss_thumb")[0]);
+                        steg.inject("tada");
+                        $("#stegamage")
+                            .attr("src", data);
                         $("#dlg_ss_ok").attr("disabled", false);
                         $("#dlg_ss_message").text("");
+                        Utils.sometime("update_save");
                     } catch (e) {
                         fail(e.message);
                     }
@@ -502,8 +505,15 @@ Squirrel.Dialog.store_settings = function(ok) {
                 }
                 $dlg.dialog("close");
 
-                Squirrel.client.hoard.options.store_path =
-                    $("#dlg_ss_storepath").val();
+                if (Squirrel.client.hoard.options.store_path !==
+                    $("#dlg_ss_storepath").val()) {
+                    Squirrel.client.hoard.options.store_path =
+                        $("#dlg_ss_storepath").val();
+                    // TX.tx("has new store path")
+                    if (Squirrel.client.status === "is loaded") {
+                        Squirrel.client.status = "has new store path";
+                    }
+                }
 
                 if (ok)
                     ok();

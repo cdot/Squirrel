@@ -19,13 +19,13 @@ LocalStorageStore.prototype.identifier = function() {
     return "browser";
 };
 
-LocalStorageStore.prototype.read = function(path, ok, fail, options) {
+LocalStorageStore.prototype.read = function(path, ok, fail) {
     "use strict";
 
     var data;
 
     try {
-        data = localStorage.getItem(path);
+        data = Utils.StringToArrayBuffer(localStorage.getItem(path));
     } catch (e) {
         fail.call(this, e);
         return;
@@ -33,8 +33,6 @@ LocalStorageStore.prototype.read = function(path, ok, fail, options) {
     if (data === null) {
         fail.call(this, AbstractStore.NODATA);
     } else {
-        if (options && options.base64)
-            data = Utils.StringTo64(data);
         ok.call(this, data);
     }
 };
@@ -44,9 +42,7 @@ LocalStorageStore.prototype.write = function(path, data, ok, fail) {
     "use strict";
 
     try {
-        if (typeof data !== "string")
-            throw "LocalStorageStore only supports String";
-        localStorage.setItem(path, data);
+        localStorage.setItem(path, Utils.ArrayBufferToString(data));
     } catch (e) {
         fail.call(this, e);
         return;

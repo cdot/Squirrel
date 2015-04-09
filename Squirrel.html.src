@@ -217,7 +217,7 @@
       </p>
     </div>
 
-    <div id="dlg_ss" class="dialog TX_title" title="Choose image">
+    <div id="dlg_ss" class="dialog TX_title" title="Choose an image to hide your hoard in">
       <div>
         <img id="dlg_ss_thumb" src="images/squirrel.png" />
       </div>

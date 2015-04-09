@@ -7,28 +7,43 @@ function update() {
     var text = $textarea.val();
     $('#require').text(text.length);
     var $img = $('#img');
-    var capacity = steg.getCapacity($img[0]);
-    $('#capacity').text(capacity);
+    var steg = new Steganographer($img[0], 7);
 
-    if (text.length > capacity)
-        text = text.substring(0, capacity);
+    var datauri;
+    var tries = 5;
 
-    console.debug("Storing " + text.length);
+    while (tries-- > 0 && text.length > 0) {
+        console.debug("Storing " + text.length);
+        try {
+            datauri = steg.inject(text).toDataURL();
+            break;
+        } catch (e) {
+            var excess = ((e.p1 / 16 + 1) >> 0);
+            if (excess === 0)
+                debugger;
+            console.debug(e.message + ", too much by " + excess);
+            text = text.substr(0, text.length - excess);
+        }
+    }
+
     $("#cover")
-        .attr("src", steg.inject(text, $img[0]))
+        .attr("src", datauri)
         .on("load", function(e) {
             $(this).off("load");
-            var text = steg.extract(e.target);
-            console.debug("Recovered " + text.length);
+            var gets = new Steganographer(this);
+            var ab = gets.extract();
+            var a = new Uint16Array(ab);
+            console.debug("Recovered " + a.length);
+            var text = '';
+            for (var i = 0; i < a.length; i++)
+                text += String.fromCharCode(a[i]);
             $('#message').text(text);
         });
 }
 
 (function($) {
     "use strict";
-
     $(document).ready(function() {
-        steg = new Steganography(3, 7);
         $('#text,#t,#codeUnitSize,#threshold').on("change", update);
         update();
     });

@@ -390,7 +390,7 @@ Squirrel.save_hoards = function() {
             return;
         }
 
-        Squirrel.client.store.write(
+        Squirrel.client.store.writes(
             "Squirrel." + Squirrel.client.store.user(),
             JSON.stringify(Squirrel.client.hoard),
             function() {
@@ -418,7 +418,7 @@ Squirrel.save_hoards = function() {
     // Save the given hoard into the cloud.
     update_cloud_store = function(cloard) {
         cloard.actions = cloard.actions.concat(Squirrel.client.hoard.actions);
-        Squirrel.cloud.store.write(
+        Squirrel.cloud.store.writes(
             Squirrel.client.hoard.options.store_path,
             JSON.stringify(cloard),
             function() {
@@ -523,7 +523,7 @@ Squirrel.save_hoards = function() {
         construct_new_cloud();
     } else {
         // Reload and save the cloud hoard
-        Squirrel.cloud.store.read(
+        Squirrel.cloud.store.reads(
             Squirrel.client.hoard.options.store_path,
             cloud_store_read_ok,
             cloud_store_read_failed);
@@ -568,7 +568,7 @@ Squirrel.load_cloud_hoard = function() {
     if (Squirrel.cloud.store) {
         if (DEBUG) console.debug(
             "Reading cloud " + Squirrel.cloud.store.identifier());
-        Squirrel.cloud.store.read(
+        Squirrel.cloud.store.reads(
             Squirrel.client.hoard.options.store_path,
             function(data) {
                 var hoard;
@@ -659,7 +659,7 @@ Squirrel.load_client_hoard = function() {
     };
 
     if (DEBUG) console.debug("Load client store");
-    Squirrel.client.store.read(
+    Squirrel.client.store.reads(
         "Squirrel." + Squirrel.client.store.user(),
         function(data) {
             try {
