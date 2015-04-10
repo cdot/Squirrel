@@ -42,7 +42,7 @@ COMMONCSS = \
 # e.g make dropbox.uncompressed.html
 # make drive.uncompressed.html
 
-SPRE=<script "type="text/javascript" src="
+SPRE=<script type="text/javascript" src="
 SPOS="></script>
 LPRE=<link rel="stylesheet" href="
 LPOS=">

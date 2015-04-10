@@ -119,7 +119,7 @@ GoogleDriveStore.prototype._init = function(params) {
         if (result.status === 200) {
             self.user(result.result.user.displayName);
         } else {
-            if (DEBUG) console.debug("gapi: Google Drive about.get failed");
+            if (DEBUG) console.debug("gds: Google Drive about.get failed");
             params.fail.call(self, TX.tx("Google Drive about.get failed"));
         }
         // Finish initialising the store
@@ -127,7 +127,7 @@ GoogleDriveStore.prototype._init = function(params) {
     };
 
     var handleClientLoad = function() {
-        if (DEBUG) console.debug("gapi: drive/v2 loaded");
+        if (DEBUG) console.debug("gds: drive/v2 loaded");
         gapi.client.drive.about.get("name")
             .then(handleAboutGetResult,
                   function(e) {
@@ -148,7 +148,7 @@ GoogleDriveStore.prototype._init = function(params) {
         if (authResult && !authResult.fail) {
             // Access token has been retrieved, requests
             // can be sent to the API.
-            if (DEBUG) console.debug("gapi: auth OK");
+            if (DEBUG) console.debug("gds: auth OK");
             gapi.client.load("drive", "v2", handleClientLoad);
         } else {
             if (authResult === null)
@@ -159,7 +159,7 @@ GoogleDriveStore.prototype._init = function(params) {
         }
     };
 
-    if (DEBUG) console.debug("gapi: authorising");
+    if (DEBUG) console.debug("gds: authorising");
 
     gapi.auth.authorize(
         {
@@ -176,56 +176,141 @@ GoogleDriveStore.prototype.identifier = function() {
     return "Google Drive";
 };
 
-/**
- * @private
- * Get a list of resources, call ok passing the list of matching
- * items, or fail with a message
- */
-GoogleDriveStore.prototype._search = function(query, ok, fail) {
-    "use strict";
-
-    var self = this;
-
-    gapi.client.drive.files.list({
-        q: query
-    })
-        .then(
-            function(response) {
-                ok.call(self, response.result.items);
-            },
-            function(reason) {
-                fail.call(self, reason);
-            });
-};
-
 const BOUNDARY = "-------314159265358979323846";
 const DELIMITER = "\r\n--" + BOUNDARY + "\r\n";
 const RETIMILED = "\r\n--" + BOUNDARY + "--";
 
-// data is already 64
-GoogleDriveStore.prototype._put = function(path, id, data, ok, fail) {
+/**
+ * @private
+ * @param url url to GET
+ * @param ok callback on ok, passed the data
+ * @param fail callback on fail
+ */
+GoogleDriveStore.prototype._getfile = function(url, ok, fail) {
+    "use strict";
+
+    var self = this;
+    var oauthToken = gapi.auth.getToken();
+    var converter;
+
+    if (DEBUG) console.debug("gds: GET " + url);
+
+    // SMELL: no client API to get file content from Drive
+    $.ajax({
+        url: url,
+        method: "GET",
+        dataType: "binary",
+        responseType: "arraybuffer",
+        beforeSend: function(jqXHR) {
+            jqXHR.setRequestHeader(
+                "Authorization",
+                "Bearer " + oauthToken.access_token);
+        },
+        success: function(data, textStatus, jqXHR) {
+            if (DEBUG) console.debug("gds: _getfile OK");
+            ok.call(self, data);
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            var reason = textStatus + " " + errorThrown;
+            if (DEBUG) console.debug("gds: _getfile failed " + reason);
+            fail.call(self, reason);
+        }
+    });
+};
+
+// Get the id of the folder at the end of the given path, optionally creating
+// the folders if they don't exist. Call ok passing the id of the
+// leaf folder, or fail otherwise.
+GoogleDriveStore.prototype._follow_path = function(
+    parentid, path, ok, fail, create) {
+
+    var self = this;
+
+    if (path.length === 0) {
+        ok.call(self, parentid);
+        return;
+    }
+
+    var p = path.slice();
+    var pathel = p.shift();
+    var create_folder = function(reason) {
+        var metadata = {
+            title: pathel,
+            mimeType: "application/vnd.google-apps.folder"
+        };
+        if (parentid !== "root")
+            // Don't think we want this for a root file?
+            metadata.parents = [ { id : parentid } ];
+        if (DEBUG) console.debug("Creating folder " + pathel + " under " + parentid);
+        gapi.client.drive.files
+            .insert(metadata)
+            .then(
+                function(response) {
+                    var id = response.result.id;
+                    self._follow_path(id, p, ok, fail, true);
+                },
+                function(reason) {
+                    // create failed
+                    debugger;
+                    fail.call(self, reason);
+                });
+    };
+    var query = "title='" + pathel + "'"
+        + " and '" + parentid + "' in parents"
+        + " and mimeType='application/vnd.google-apps.folder'"
+        + " and trashed=false";
+
+    gapi.client.drive.files
+        .list({
+            q: query
+        })
+        .then(
+            function(response) {
+                var items = response.result.items;
+                if (items.length > 0) {
+                    var id = items[0].id;
+                    if (DEBUG) console.debug("gds: found " + query + " at " + id);
+                    self._follow_path(id, p, ok, fail, create);
+                } else {
+                    if (DEBUG) console.debug(
+                        "gds: could not find " + query);
+                    if (create) {
+                        create_folder();
+                    } else {
+                        fail.call(self, AbstractStore.NODATA);
+                    }
+                }
+            },
+            function(r) {
+                fail.call(self, r);
+            });
+};
+
+// id is a (string) id or a { parentid: name: structure }
+GoogleDriveStore.prototype._putfile = function(parentid, name, data, ok, fail, id) {
     "use strict";
 
     var self = this;
     var url = "/upload/drive/v2/files";
     var method = "POST";
     var params = {
-        "uploadType": "multipart"
+        uploadType: "multipart",
+        visibility: "PRIVATE"
     };
+    var metadata = {
+        title: name,
+        mimeType: "application/octet-stream"
+    };
+
+    if (typeof parentid !== "undefined") {
+        metadata.parents = [ { id: parentid } ];
+    }
 
     if (typeof id !== "undefined") {
         // Known fileId, we're updating an existing file
         url += "/" + id;
         method = "PUT";
-    } else {
-        // New upload
-        params.visibility = "PRIVATE";
     }
-
-    var metadata = {
-        title: path,
-        mimeType: "application/octet-stream"
-    };
 
     var multipartRequestBody =
         DELIMITER +
@@ -243,7 +328,7 @@ GoogleDriveStore.prototype._put = function(path, id, data, ok, fail) {
         method: method,
         params: params,
         headers: {
-            "Content-Type": "multipart/mixed; boundary=\"" + BOUNDARY + "\""
+            "Content-Type": "multipart/related; boundary=\"" + BOUNDARY + "\""
         },
         body: multipartRequestBody})
 
@@ -256,98 +341,84 @@ GoogleDriveStore.prototype._put = function(path, id, data, ok, fail) {
             });
 };
 
-/**
- * @private
- * Download a resource, call ok or fail
- * p = { (id | name):, ok:, fail: }
- */
-GoogleDriveStore.prototype._download = function(p) {
-    "use strict";
-
-    var self = this;
-    if (p.url) {
-        if (DEBUG) console.debug("gapi: download " + p.url);
-        this._getfile(p);
-    } else if (p.name) {
-        if (DEBUG) console.debug("gapi: search for " + p.name);
-        this._search(
-            "title='" + p.name + "'",
-            function(items) {
-                if (items.length > 0) {
-                    p.url = items[0].downloadUrl;
-                    if (DEBUG) console.debug("gapi: found " + p.name + " at " + p.url);
-                    self._download(p);
-                } else {
-                    if (DEBUG) console.debug("gapi: could not find " + p.name);
-                    p.fail.call(self, AbstractStore.NODATA);
-                }
-            },
-            p.fail);
-    } else {
-        // Must have either name or url
-        if (DEBUG) debugger;
-    }
-};
-
-/**
- * @private
- * @param p = {url: ok: , fail: }
- */
-GoogleDriveStore.prototype._getfile = function(p) {
-    "use strict";
-
-    var self = this;
-    var oauthToken = gapi.auth.getToken();
-    var converter;
-
-    if (DEBUG) console.debug("gapi: ajax " + p.url);
-
-    // SMELL: no client API to get file content from Drive
-    $.ajax({
-        url: p.url,
-        method: "GET",
-        dataType = "binary",
-        responseType = "arraybuffer",
-        beforeSend: function(jqXHR) {
-            jqXHR.setRequestHeader(
-                "Authorization",
-                "Bearer " + oauthToken.access_token);
-        },
-        success: function(data, textStatus, jqXHR) {
-            if (DEBUG) console.debug("gapi: _getfile OK");
-            p.ok.call(self, data);
-        },
-        error: function(jqXHR, textStatus, errorThrown) {
-            var reason = textStatus + " " + errorThrown;
-            if (DEBUG) console.debug("gapi: _getfile failed " + reason);
-            p.fail.call(self, reason);
-        }
-    });
-};
-
 GoogleDriveStore.prototype.write = function(path, data, ok, fail) {
     "use strict";
 
     var self = this;
 
-    self._search(
-        "title='" + path + "'",
-        function(items) {
-            var id;
-            if (items.length > 0)
-                id = items[0].id;
-            self._put(path, id, data, ok, fail);
-        });
+    var p = path.split("/");
+    var name = p.pop();
+    var broke = function(reason) {
+        fail.call(self, reason);
+    };
+    var create_file = function(parentid) {
+        // See if the file already exists, if it does then use it's id
+        var query = "title='" + name + "'"
+            + " and '" + parentid + "' in parents";
+        gapi.client.drive.files
+            .list({ q: query })
+            .then(
+                function(response) {
+                    var items = response.result.items;
+                    var id;
+                    if (items.length > 0) {
+                        id = items[0].id;
+                        if (DEBUG) console.debug("gds: updating " + name + " id " + id);
+                    } else if (DEBUG)
+                        console.debug("gds: creating " + name + " in " + parentid);
+                    self._putfile(parentid, name, data, ok, fail, id);
+                },
+                broke);
+    };
+
+    this._follow_path(
+        "root",
+        p,
+        create_file,
+        broke,
+        true);
 };
 
-GoogleDriveStore.prototype.read = function(path, ok, fail, options) {
+GoogleDriveStore.prototype.read = function(path, ok, fail) {
     "use strict";
 
-    this._download(
-        {
-            name: path,
-            options: options,
-            ok: ok,
-            fail: fail
-        });
+    if (DEBUG) console.debug("gds: read " + path);
+
+    var p = path.split("/");
+    var name = p.pop();
+    var broke = function(reason) {
+        fail.call(self, reason);
+    };
+    var self = this;
+
+    var get_file = function(parentid) {
+        var query = "title='" + name + "'"
+        + " and '" + parentid + "' in parents"
+        + " and trashed=false";
+
+        gapi.client.drive.files
+            .list({ q: query })
+            .then(
+                function(response) {
+                    var items = response.result.items;
+                    if (items.length > 0) {
+                        var url = items[0].downloadUrl;
+                        if (DEBUG) console.debug(
+                            "gds: download found " + name + " at " + url);
+                        self._getfile(url, ok, fail);
+                    } else {
+                        if (DEBUG) console.debug(
+                            "gds: could not find " + name);
+                        fail.call(self, AbstractStore.NODATA);
+                    }
+                },
+                broke);
+    };
+
+    this._follow_path(
+        "root",
+        p,
+        get_file,
+        broke,
+        false);
 };

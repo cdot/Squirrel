@@ -39,10 +39,10 @@ function AbstractStore(params) {
         params.identify.call(
             this,
             function(user, pass) {
-                if (typeof this.suser === "undefined")
-                    this.suser = user;
-                if (typeof this.spass === "undefined")
-                    this.spass = pass;
+                if (typeof self.suser === "undefined")
+                    self.suser = user;
+                if (typeof self.spass === "undefined")
+                    self.spass = pass;
                 params.ok.call(self);
             },
             params.fail, uReq, pReq);
