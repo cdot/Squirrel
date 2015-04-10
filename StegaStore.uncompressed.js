@@ -60,7 +60,7 @@ StegaStore.prototype.read = function(path, ok, fail) {
         function(ab) {
             // Make a data-URI
             var datauri = "data:image/png;base64,"
-                + Utils.ArrayBufferTo64(ab);
+                + Utils.ArrayBufferToBase64(ab);
             $("#stegamage")
                 .attr("src", datauri)
                 .on("load", function() {
@@ -84,6 +84,8 @@ StegaStore.prototype.write = function(path, data, ok, fail) {
 
     var self = this;
     var image = document.getElementById("stegamage");
+    if (!image)
+        throw "no #stegamage";
     var xdata;
     var steg = new Steganographer(image);
 

@@ -322,16 +322,9 @@ Utils.dataURIToArrayBuffer = function(dataURI) {
     var byteString = atob(dataURI.split(",")[1]);
 
     // separate out the mime component
-    var mimeString = dataURI.split(",")[0].split(":")[1].split(";")[0];
+    //var mimeString = dataURI.split(",")[0].split(":")[1].split(";")[0];
 
-    // write the bytes of the string to an ArrayBuffer
-    var ab = new ArrayBuffer(byteString.length);
-    var ia = new Uint8Array(ab);
-    for (var i = 0; i < byteString.length; i++) {
-        ia[i] = byteString.charCodeAt(i);
-    }
-
-    return ab;
+    return Utils.Base64ToArrayBuffer(byteString);
 };
 
 // Support for base64 conversion
@@ -355,7 +348,7 @@ Utils.uint6ToB64 = function(nUint6) {
 /*
  * Base64 encoding of the content of an array buffer
  */
-Utils.ArrayBufferTo64 = function(ab) {
+Utils.ArrayBufferToBase64 = function(ab) {
     "use strict";
 
     var aBytes = new Uint8Array(ab);
@@ -378,6 +371,14 @@ Utils.ArrayBufferTo64 = function(ab) {
 
     return sB64Enc.substr(0, sB64Enc.length - 2 + nMod3)
         + (nMod3 === 2 ? "" : nMod3 === 1 ? "=" : "==");
+};
+
+Utils.Base64ToArrayBuffer = function(byteString) {
+    var ia = new Uint8Array(byteString.length);
+    for (var i = 0; i < byteString.length; i++) {
+        ia[i] = byteString.charCodeAt(i);
+    }
+    return ia.buffer;
 };
 
 /*
@@ -418,6 +419,23 @@ Utils.ArrayBufferToString = function(data) {
 Utils.StringToArrayBuffer = function(str) {
     var buf = new ArrayBuffer(str.length*2); // 2 bytes for each char
     var bufView = new Uint16Array(buf);
+    for (var i = 0, strLen = str.length; i < strLen; i++) {
+        bufView[i] = str.charCodeAt(i);
+    }
+    return buf;
+}
+
+Utils.ArrayBufferToByteString = function(data) {
+    var s = "";
+    var d = new Uint8Array(data);
+    for (var i = 0; i < d.length; i++)
+        s += String.fromCharCode(d[i]);
+    return s;
+};
+
+Utils.ByteStringToArrayBuffer = function(str) {
+    var buf = new ArrayBuffer(str.length);
+    var bufView = new Uint8Array(buf);
     for (var i = 0, strLen = str.length; i < strLen; i++) {
         bufView[i] = str.charCodeAt(i);
     }

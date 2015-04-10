@@ -84,14 +84,16 @@ function storetestchain(store) {
 
 var DEBUG = true;
 
-function storetests(Class) {
+function storetests(Class, Underclass) {
     "use strict";
 
     $(document)
         .ready(function() {
+            $("body").append(
+                "<img id='stegamage' src='../images/squirrel.png'>");
             var store = new Class({
                 ok: function() {
-                    console.debug("Store created OK");
+                    console.debug(Class.name + " created OK");
                     chain = [ writeArrayBuffer, readArrayBuffer,
                               writeString, readString ];
                     storetestchain(this);
@@ -101,6 +103,10 @@ function storetests(Class) {
                 },
                 identify: function(ok) {
                     ok("TestUser", "123pass456");
+                },
+                engine: function(p) {
+                    console.debug("Create engine " + Underclass.name);
+                    return new Underclass(p);
                 }
             })
         });

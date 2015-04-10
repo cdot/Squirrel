@@ -25,7 +25,7 @@ LocalStorageStore.prototype.read = function(path, ok, fail) {
     var data;
 
     try {
-        data = Utils.StringToArrayBuffer(localStorage.getItem(path));
+        data = Utils.Base64ToArrayBuffer(localStorage.getItem(path));
     } catch (e) {
         fail.call(this, e);
         return;
@@ -42,7 +42,7 @@ LocalStorageStore.prototype.write = function(path, data, ok, fail) {
     "use strict";
 
     try {
-        localStorage.setItem(path, Utils.ArrayBufferToString(data));
+        localStorage.setItem(path, Utils.ArrayBufferToBase64(data));
     } catch (e) {
         fail.call(this, e);
         return;

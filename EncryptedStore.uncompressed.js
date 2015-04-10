@@ -62,7 +62,7 @@ EncryptedStore.prototype.read = function(path, ok, fail) {
         function(ab) {
             var data;
             // SMELL: convert AES to work on ArrayBuffers
-            var xstr = Utils.ArrayBufferToString(ab);
+            var xstr = Utils.ArrayBufferToBase64(ab);
             var str;
             try {
                 str = Aes.Ctr.decrypt(xstr, self.engine.pass(), 256);
@@ -70,7 +70,7 @@ EncryptedStore.prototype.read = function(path, ok, fail) {
                 fail.call(self, e);
                 return;
             }
-            ab = Utils.StringToArrayBuffer(str);
+            ab = Utils.Base64ToArrayBuffer(str);
             ok.call(self, ab);
         },
         fail);
@@ -81,18 +81,18 @@ EncryptedStore.prototype.write = function(path, ab, ok, fail) {
 
     var self = this;
 
-    var str = Utils.ArrayBufferToString(ab);
+    var str = Utils.ArrayBufferToBase64(ab);
     var xstr;
 
     try {
         // SMELL: convert AES to work on ArrayBuffers
-        xtsr = Aes.Ctr.encrypt(str, this.engine.pass(), 256);
+        xstr = Aes.Ctr.encrypt(str, this.engine.pass(), 256);
     } catch (e) {
         fail.call(this, e);
         return;
     }
 
-    ab = Utils.StringToArrayBuffer(xstr);
+    ab = Utils.Base64ToArrayBuffer(xstr);
     this.engine.write(
         path,
         ab,
