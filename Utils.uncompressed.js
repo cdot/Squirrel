@@ -335,13 +335,15 @@ Utils.execute_queue = function(q) {
     "use strict";
 
     var qready = true;
+    var qr = function() {
+        qready = true;
+    };
+
     while (q.length > 0) {
         if (qready) {
             var fn = q.shift();
             qready = false;
-            fn(function() {
-                qready = true;
-            });
+            fn(qr);
         }
     }
 };
@@ -360,41 +362,6 @@ Utils.ArrayBufferToString = function(ab) {
     for (var i = 0; i < a16.length; i++)
         str += String.fromCharCode(a16[i]);
     return str;
-};
-
-/**
- * Convert an ArrayBuffer containing UTF-8 encoded character codes into a
- * String.
- * @param data ArrayBuffer which must be an even number of bytes long
- * @return String the string the ArrayBuffer contains
- */
-Utils.ArrayBufferUTF8ToString = function(ab) {
-    "use strict";
-
-    var a8 = new Uint8Array(ab);
-    var str = "";
-    for (var i = 0; i < a8.length; i++)
-        str += String.fromCharCode(a8[i]);
-    return str;
-
-    for (var nPart, nLen = a8.length, nIdx = 0; nIdx < nLen; nIdx++) {
-    nPart = a8[nIdx];
-    sView += String.fromCharCode(
-      nPart > 251 && nPart < 254 && nIdx + 5 < nLen ? /* six bytes */
-        /* (nPart - 252 << 30) may be not so safe in ECMAScript! So...: */
-        (nPart - 252) * 1073741824 + (a8[++nIdx] - 128 << 24) + (a8[++nIdx] - 128 << 18) + (a8[++nIdx] - 128 << 12) + (a8[++nIdx] - 128 << 6) + a8[++nIdx] - 128
-      : nPart > 247 && nPart < 252 && nIdx + 4 < nLen ? /* five bytes */
-        (nPart - 248 << 24) + (a8[++nIdx] - 128 << 18) + (a8[++nIdx] - 128 << 12) + (a8[++nIdx] - 128 << 6) + a8[++nIdx] - 128
-      : nPart > 239 && nPart < 248 && nIdx + 3 < nLen ? /* four bytes */
-        (nPart - 240 << 18) + (a8[++nIdx] - 128 << 12) + (a8[++nIdx] - 128 << 6) + a8[++nIdx] - 128
-      : nPart > 223 && nPart < 240 && nIdx + 2 < nLen ? /* three bytes */
-        (nPart - 224 << 12) + (a8[++nIdx] - 128 << 6) + a8[++nIdx] - 128
-      : nPart > 191 && nPart < 224 && nIdx + 1 < nLen ? /* two bytes */
-        (nPart - 192 << 6) + a8[++nIdx] - 128
-      : /* nPart < 127 ? */ /* one byte */
-        nPart
-    );
-  }
 };
 
 /**
@@ -566,4 +533,4 @@ Utils.Base64ToArrayBuffer = function(sB64) {
         }
     }
     return ta8.buffer;
-}
+};

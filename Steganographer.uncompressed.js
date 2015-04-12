@@ -73,6 +73,8 @@ Steganographer.findNextPrime = function(n) {
  * the number of bits that can't be stored otherwise
  */
 Steganographer.prototype.adjustToFit = function(size) {
+    "use strict";
+
     var bits = size * 8;
     
     // 9 pixels needed for length and chunkSize
@@ -98,10 +100,10 @@ Steganographer.prototype.adjustToFit = function(size) {
  * @throws if the image doesn't have enough capacity given the
  * current parameters
  */
-Steganographer.prototype.inject = function(data) {
+Steganographer.prototype.inject = function(message) {
     // Can't "use strict"; because of the image manipultaion
 
-    var a8 = new Uint8Array(data);
+    var a8 = new Uint8Array(message);
 
     console.debug("Steg: Embedding " + a8.length + " bytes ("
                   + (a8.length * 8) + " bits)");
@@ -198,7 +200,7 @@ Steganographer.prototype.inject = function(data) {
     offset += 4;
 
     // Embed the message using the calculated chunkSize
-    var mask = (1 << chunkSize) - 1;
+    mask = (1 << chunkSize) - 1;
     for (i = 0; i < chunks.length; i++, offset += 4) {
         if (chunks[i] > mask)
             debugger;
@@ -268,7 +270,7 @@ Steganographer.prototype.extract = function() {
         }
     }
     if (mi < (numChunks * chunkSize >> 3))
-        message[mi++] = charCode & mask;
+        message[mi++] = charCode & 0xFFFF;
     console.debug("Steg: Extracted " + message.length + " bytes");
     return message.buffer;
 };

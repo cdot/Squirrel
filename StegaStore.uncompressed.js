@@ -31,15 +31,15 @@ StegaStore.prototype.read = function(path, ok, fail) {
                 .on("load", function() {
                     $(this).off("load");
                     var steg = new Steganographer(this);
-                    var ab;
+                    var ab2;
                     try {
-                        ab = steg.extract();
+                        ab2 = steg.extract();
                     } catch (e) {
                         fail.call(self, e);
                         return;
                     }
                     
-                    ok.call(self, ab);
+                    ok.call(self, ab2);
                 });
         },
         fail);

@@ -10,6 +10,8 @@
  * http://www.henryalgus.com/reading-binary-files-using-jquery-ajax/
 */
 $.ajaxTransport("+binary", function(options, originalOptions, jqXHR){
+    "use strict";
+
     // check for conditions and support for blob / arraybuffer response type
     if (window.FormData
         && ((options.dataType && (options.dataType === "binary"))
@@ -32,11 +34,11 @@ $.ajaxTransport("+binary", function(options, originalOptions, jqXHR){
 		password = options.password || null;
 					
                 xhr.addEventListener("load", function(){
-			var data = {};
-			data[options.dataType] = xhr.response;
+			var data2 = {};
+			data2[options.dataType] = xhr.response;
 			// make callback and send data
 			callback(xhr.status, xhr.statusText,
-                                 data, xhr.getAllResponseHeaders());
+                                 data2, xhr.getAllResponseHeaders());
                 });
  
                 xhr.open(type, url, async, username, password);
@@ -223,6 +225,7 @@ GoogleDriveStore.prototype._getfile = function(url, ok, fail) {
 // leaf folder, or fail otherwise.
 GoogleDriveStore.prototype._follow_path = function(
     parentid, path, ok, fail, create) {
+    "use strict";
 
     var self = this;
 
@@ -240,7 +243,7 @@ GoogleDriveStore.prototype._follow_path = function(
         };
         if (parentid !== "root")
             // Don't think we want this for a root file?
-            metadata.parents = [ { id : parentid } ];
+            metadata.parents = [ { id: parentid } ];
         if (DEBUG) console.debug("Creating folder " + pathel + " under " + parentid);
         gapi.client.drive.files
             .insert(metadata)
@@ -249,10 +252,10 @@ GoogleDriveStore.prototype._follow_path = function(
                     var id = response.result.id;
                     self._follow_path(id, p, ok, fail, true);
                 },
-                function(reason) {
+                function(r) {
                     // create failed
                     debugger;
-                    fail.call(self, reason);
+                    fail.call(self, r);
                 });
     };
     var query = "title='" + pathel + "'"

@@ -317,16 +317,16 @@ Hoard.prototype._reconstruct_actions = function(data, path, listener, chain) {
     };
 
     // Recursively build a list of all nodes, starting at the root
-    var list_nodes = function(queue, node, pat) {
+    var list_nodes = function(q, node, pat) {
         var key, p;
-        queue.push(function(ready) {
+        q.push(function(ready) {
             handle_node(node, pat, ready);
         });
         if (typeof node.data === "object") {
             for (key in node.data) {
                 p = pat.slice();
                 p.push(key);
-                list_nodes(queue, node.data[key], p);
+                list_nodes(q, node.data[key], p);
             }
         }
     };

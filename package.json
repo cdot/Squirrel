@@ -12,6 +12,7 @@
         "globals": {
             "assert": true,
             "AbstractStore": true,
+            "LayeredStore": true,
             "GoogleDriveStore": true,
             "DropboxStore": true,
             "LocalStorageStore": true,
@@ -26,7 +27,7 @@
             "DEBUG": true,
             "SQUIRREL_STORE": true,
             "StegaStore": true,
-            "steganography": true,
+            "Steganographer": true,
             "Squirrel": true
         },
         "rules": {

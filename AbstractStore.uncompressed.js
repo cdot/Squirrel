@@ -115,7 +115,7 @@ AbstractStore.prototype.write = function(/*path, data, ok, fail*/) {
  * @param fail called on failure
  */
 AbstractStore.prototype.writes = function(path, str, ok, fail) {
-    var self = this;
+    "use strict";
 
     this.write(
         path,
@@ -143,6 +143,8 @@ AbstractStore.prototype.read = function(/*path, ok, fail*/) {
  * @param fail called on failure
  */
 AbstractStore.prototype.reads = function(path, ok, fail) {
+    "use strict";
+
     var self = this;
 
     this.read(
