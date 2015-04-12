@@ -73,7 +73,7 @@ Steganographer.findNextPrime = function(n) {
  * the number of bits that can't be stored otherwise
  */
 Steganographer.prototype.adjustToFit = function(size) {
-    var bits = size * 16;
+    var bits = size * 8;
     
     // 9 pixels needed for length and chunkSize
     var slots = this.image.width * this.image.height - 9;
@@ -84,31 +84,27 @@ Steganographer.prototype.adjustToFit = function(size) {
         return -(bits - this.maxChunk * slots);
     }
 
-    console.debug("Steg: chunk size " + chunkSize
-                  + " (" + slots + " slots, "
-                  + chunkSize * slots / 16 + " chars)");
+    console.debug("Steg: Computed chunk size " + chunkSize
+                  + " (" + slots + " slots, capacity "
+                  + chunkSize * slots + " bits, "
+                  + chunkSize * slots / 8 + " bytes)");
 
     return chunkSize;
 };
 
 /**
  * Inject some content into the given image
- * @param data the content, as a String or ArrayBuffer. If
- * it's an ArrayBuffer, it's divided into 16-bit units.
+ * @param data the content, in an ArrayBuffer.
  * @throws if the image doesn't have enough capacity given the
  * current parameters
  */
 Steganographer.prototype.inject = function(data) {
     // Can't "use strict"; because of the image manipultaion
 
-    var message, i;
-    if (typeof data === "string") {
-        message = new Uint16Array(data.length);
-        for (i = 0; i < data.length; i++)
-            message[i] = data.charCodeAt(i);
-    }
-    else
-        message = new Uint16Array(data);
+    var a8 = new Uint8Array(data);
+
+    console.debug("Steg: Embedding " + a8.length + " bytes ("
+                  + (a8.length * 8) + " bits)");
 
     var shadowCanvas = document.createElement("canvas");
     shadowCanvas.style.display = "none";
@@ -122,82 +118,81 @@ Steganographer.prototype.inject = function(data) {
         0, 0, shadowCanvas.width, shadowCanvas.height);
     var data = imageData.data;
 
-    // Message broken down into 't'-sized chunks
+    // Message broken down into chunks
     var chunks = [];
 
-    var chunkSize = this.adjustToFit(message.length);
+    var chunkSize = this.adjustToFit(a8.length);
     if (chunkSize <= 0)
         throw {
-            message: "Insufficient capacity",
+            message: "Insufficient capacity in the image to hide everything",
             p1: -chunkSize
         };
 
-    // Number of whole chunks required to store the data
-    // in a single 16-bit unit
-    var cpc = (16 / chunkSize) >> 0;
+    // Number of whole chunks required to store a byte of data
+    var cpc = (8 / chunkSize) >> 0;
 
     // Number of bits that have to overlap into the next pixel
-    var overlap = 16 % chunkSize;
+    var overlap = 8 % chunkSize;
 
     // 1 - 2^-chunkSize
     var mcs2 = 1 - Math.pow(2, -chunkSize);
 
-    var decM, oldDec, oldMask, left, right, i, curOverlapping;
+    var decM, oldDec, oldMask, left, right;
 
-    // Break down the message into 'chunkSize' sized chunks
-    for (i = 0; i <= message.length; i++) {
-        // dec ... UTF-16 Unicode of the i-th character of the message
-        dec = message[i];
+    // Break down the data into 'chunkSize' sized chunks
+    var i;
+    for (i = 0; i <= a8.length; i++) {
+        // dec ... i-th byte of the data
+        var dec = a8[i];
 
-        // Count of the bits of the previous character not yet handled
-        curOverlapping = overlap * i % chunkSize;
+        // Count of the bits of the previous byte not yet handled
+        var curOverlapping = overlap * i % chunkSize;
 
-        // mask ... The raw initial bitmask, will be changed every
+        var mask; // The raw initial bitmask, will be changed every
         // run and if bits are overlapping
 
         if (curOverlapping > 0 && oldDec) {
             mask = (1 << chunkSize - curOverlapping) - 1;
-            oldMask = 65536 * (1 - Math.pow(2, -curOverlapping));
+            oldMask = 256 * (1 - Math.pow(2, -curOverlapping));
             left = (dec & mask) << curOverlapping;
-            right = (oldDec & oldMask) >> 16 - curOverlapping;
+            right = (oldDec & oldMask) >> 8 - curOverlapping;
             chunks.push(left + right);
-            if (i < message.length) {
+            if (i < a8.length) {
                 mask = (1 << (2 * chunkSize - curOverlapping)) * mcs2;
                 for (var j = 1; j < cpc; j++) {
                     decM = dec & mask;
                     chunks.push(
-                        decM >> (j - 1) * chunkSize + (chunkSize - curOverlapping));
+                        decM >> (j - 1) * chunkSize
+                            + (chunkSize - curOverlapping));
                     mask <<= chunkSize;
                 }
                 if (overlap * (i + 1) % chunkSize === 0) {
-                    mask = 65536 * mcs2;
+                    mask = 256 * mcs2;
                     decM = dec & mask;
-                    chunks.push(decM >> 16 - chunkSize);
+                    chunks.push(decM >> 8 - chunkSize);
                 } else if (overlap * (i + 1) % chunkSize
                            + (chunkSize - curOverlapping) <= chunkSize) {
                     decM = dec & mask;
                     chunks.push(decM >> (cpc - 1)
-                                    * chunkSize + (chunkSize - curOverlapping));
+                                * chunkSize + (chunkSize - curOverlapping));
                 }
             }
-        } else if (i < message.length) {
+        } else if (i < a8.length) {
             // No overlap bits to deal with, push the integral
             // number of chunks
             mask = (1 << chunkSize) - 1;
             for (j = 0; j < cpc; j++) {
-                decM = dec & mask;
-                chunks.push(decM >> j * chunkSize);
-                mask <<= chunkSize;
+                chunks.push((dec >> j * chunkSize) & mask);
             }
         }
         oldDec = dec;
     }
 
     // Embed data length and chunkSize, using a chunkSize of 4
-    var len = chunks.length;
+    var numChunks = chunks.length;
     var offset = 3; // channel
     for (i = 28; i >= 0; i -= 4, offset += 4) {
-        data[offset] = 255 - ((len >> i) & 0xF);
+        data[offset] = 255 - ((numChunks >> i) & 0xF);
     }
     data[offset] = 255 - chunkSize;
     offset += 4;
@@ -209,7 +204,10 @@ Steganographer.prototype.inject = function(data) {
             debugger;
         data[offset] = 255 - chunks[i];
     }
-
+    console.debug(
+        "Steg: Embedded " + chunks.length + " chunks of "
+            + chunkSize + " bits, " + (chunks.length * chunkSize) + " bits / "
+            + (chunks.length * chunkSize / 8) + " bytes of data");
     imageData.data = data;
     shadowCtx.putImageData(imageData, 0, 0);
 
@@ -239,33 +237,38 @@ Steganographer.prototype.extract = function() {
 
     // Extract data length and chunkSize
     // chunkSize = 4, prime = 17
-    var len = 0;
+    var numChunks = 0;
     var offset = 3;
     for (var i = 0; i < 32; i += 4, offset += 4) {
-        len = (len << 4) | (255 - data[offset]);
+        numChunks = (numChunks << 4) | (255 - data[offset]);
     }
     var chunkSize = 255 - data[offset];
     offset += 4;
 
-    if (len === 0 || len > data.length || chunkSize === 0 || chunkSize > 8)
+    if (numChunks <= 0 || numChunks > data.length
+        || chunkSize <= 0 || chunkSize > 8)
         throw "No message embedded";
 
-    // SMELL: byte order?
-    var message = new Uint16Array((len * chunkSize / 16) >> 0)
+    var message = new Uint8Array(numChunks * chunkSize >> 3);
+    console.debug("Steg: Extracting " + numChunks + " chunks of "
+                  + chunkSize + " bits, "
+                  + (numChunks * chunkSize) + " bits / "
+                  + (numChunks * chunkSize / 8) + " bytes of data");
     var charCode = 0;
     var bitCount = 0;
-    var mask = (1 << 16) - 1;
     var mi = 0;
-    for (i = 0; i < len; i++, offset += 4) {
+    for (i = 0; i < numChunks; i++, offset += 4) {
         var mmi = 255 - data[offset];
         charCode += mmi << bitCount;
         bitCount += chunkSize;
-        if (bitCount >= 16) {
-            message[mi++] = charCode & mask;
-            bitCount %= 16;
+        if (bitCount >= 8) {
+            message[mi++] = charCode & 0xFFFF;
+            bitCount %= 8;
             charCode = mmi >> chunkSize - bitCount;
         }
     }
-
+    if (mi < (numChunks * chunkSize >> 3))
+        message[mi++] = charCode & mask;
+    console.debug("Steg: Extracted " + message.length + " bytes");
     return message.buffer;
 };

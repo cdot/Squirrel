@@ -1,12 +1,19 @@
+function report(s) {
+    console.debug(s);
+    $('body').append("<p>" + s + "</p>");
+}
+
+const TESTR = "1234567";
+
 function readString(store) {
     store.reads(
         "test/test.dat",
         function(str) {
             if (this !== store)
                 throw "Not the same";
-            if (str != "Three blind mice")
-                throw str + " != Three blind mice";
-            console.debug("readString was OK");
+            if (str != TESTR)
+                throw str + " != " + TESTR;
+            report("readString was OK");
             storetestchain(this);
         },
         function(e) {
@@ -16,14 +23,14 @@ function readString(store) {
 }
 
 function writeString(store) {
-    var a = "Three blind mice";
+    var a = TESTR;
     store.writes(
         "test/test.dat",
         a,
         function() {
             if (this !== store)
                 throw "Not the same";
-            console.debug("writeString was OK");
+            report("writeString was OK");
             storetestchain(this);
         },
         function(e) {
@@ -37,14 +44,14 @@ function readArrayBuffer(store) {
         function(ab) {
             if (this !== store)
                 throw "Not the same";
-            var a = new Uint16Array(ab);
-            if (a.length !== 256)
+            var a = new Uint8Array(ab);
+            if (a.length !== 255)
                 throw this + " length " + a.length;
-            for (var i = 0; i < 256; i++)
-                if (a[i] !== ((i << 8) | i))
+            for (var i = 0; i < 255; i++)
+                if (a[i] !== i)
                     throw this + " failed " + i + "=" + a[i]
                 + " != " + ((i << 8) | i);
-            console.debug("readArrayBuffer was OK");
+            report("readArrayBuffer was OK");
             storetestchain(this);
         },
         function(e) {
@@ -54,16 +61,18 @@ function readArrayBuffer(store) {
 }
 
 function writeArrayBuffer(store) {
-    var a = new Uint16Array(256);
-    for (var i = 0; i < 256; i++)
-        a[i] = ((i << 8) | i);
+    // Deliberately make it an odd length to throw off 16-bit-assuming
+    // conversions
+    var a = new Uint8Array(255);
+    for (var i = 0; i < 255; i++)
+        a[i] = i;
     store.write(
         "test/test.dat",
         a.buffer,
         function() {
             if (this !== store)
                 throw "Not the same";
-            console.debug("writeArrayBuffer was OK");
+            report("writeArrayBuffer was OK");
             storetestchain(this);
         },
         function(e) {
@@ -76,9 +85,11 @@ var chain;
 function storetestchain(store) {
     if (chain.length > 0) {
         var fn = chain.shift();
+        console.debug("Running " + fn.name);
         fn(store);
+        console.debug("Ran " + fn.name);
     } else {
-        console.debug("All tests complete");
+        report("All tests complete");
     }
 }
 
@@ -89,25 +100,30 @@ function storetests(Class, Underclass) {
 
     $(document)
         .ready(function() {
-            $("body").append(
-                "<img id='stegamage' src='../images/squirrel.png'>");
-            var store = new Class({
-                ok: function() {
-                    console.debug(Class.name + " created OK");
-                    chain = [ writeArrayBuffer, readArrayBuffer,
-                              writeString, readString ];
-                    storetestchain(this);
-                },
-                fail: function(e) {
-                    throw "Failed " + e;
-                },
-                identify: function(ok) {
-                    ok("TestUser", "123pass456");
-                },
-                engine: function(p) {
-                    console.debug("Create engine " + Underclass.name);
-                    return new Underclass(p);
-                }
-            })
+            $("<img>")
+                .attr("id", "stegamage")
+                .attr("src", "../images/squirrel.png")
+                .on("load", function() {
+                    $(this).off("load");
+                    var store = new Class({
+                        ok: function() {
+                            report(Class.name + " created OK");
+                            chain = [ writeArrayBuffer, readArrayBuffer,
+                                      writeString, readString ];
+                            storetestchain(this);
+                        },
+                        fail: function(e) {
+                            throw "Failed " + e;
+                        },
+                        identify: function(ok) {
+                            ok("TestUser", "123pass456");
+                        },
+                        understore: function(p) {
+                            report("Create engine " + Underclass.name);
+                            return new Underclass(p);
+                        }
+                    })
+                })
+                .appendTo($("body"));
         });
 }

@@ -267,44 +267,15 @@ Hoard.prototype.simplify = function(chain) {
 Hoard.prototype._reconstruct_actions = function(data, path, listener, chain) {
     "use strict";
 
-    var self = this,
+    var self = this;
+    var queue = [];
 
-    // Recursively build a list of all nodes, starting at the root
-    list_nodes = function(node, pat) {
-        var key, p;
-        self.reconstruct.queue.push({
-            node: node,
-            path: pat });
-
-        if (typeof node.data === "object") {
-            for (key in node.data) {
-                p = pat.slice();
-                p.push(key);
-                list_nodes(node.data[key], p);
-            }
-        }
-    },
-
-    // Handle the next node on the list
-    next_node = function() {
-        if (!self.reconstruct)
-            return;
-
-        if (self.reconstruct.queue.length === 0) {
-            var ch = self.reconstruct.chain;
-            delete self.reconstruct;
-            if (typeof ch !== "undefined")
-                ch();
-            return;
-        }
-
-        var context = self.reconstruct.queue.shift(),
-        node = context.node,
-        p = context.path, // we sliced in list_nodes, don't need to again
-        time = (typeof node.time !== "undefined" ? node.time : Date.now());
+    // Handle a node
+    var handle_node = function(node, p, ready) {
+        var time = (typeof node.time !== "undefined" ? node.time : Date.now());
 
         if (typeof node.data === "string") {
-            self.reconstruct.listener.call(
+            listener.call(
                 self,
                 {
                     type: "N", 
@@ -314,7 +285,7 @@ Hoard.prototype._reconstruct_actions = function(data, path, listener, chain) {
                 },
                 function() {
                     if (node.alarm) {
-                        self.reconstruct.listener.call(
+                        listener.call(
                             self,
                             {
                                 type: "A", 
@@ -322,38 +293,47 @@ Hoard.prototype._reconstruct_actions = function(data, path, listener, chain) {
                                 path: p.slice(),
                                 time: time,
                                 data: node.alarm
-                            },
-                            next_node);
-                    } else
-                        next_node();
+                            });
+                    }
+                    ready();
                 });
             return;
         } else if (typeof node.data !== "undefined") {
             if (p.length > 0) {
                 // No action for the root
-                self.reconstruct.listener.call(
+                listener.call(
                     self,
                     {
                         type: "N", 
                         time: time,
                         path: p
                     },
-                    next_node);
+                    ready);
             } else
-                next_node();
+                ready();
         } else if (DEBUG) {
             debugger;
         }        
     };
 
-    this.reconstruct = {
-        queue: [],
-        listener: listener,
-        chain: chain
+    // Recursively build a list of all nodes, starting at the root
+    var list_nodes = function(queue, node, pat) {
+        var key, p;
+        queue.push(function(ready) {
+            handle_node(node, pat, ready);
+        });
+        if (typeof node.data === "object") {
+            for (key in node.data) {
+                p = pat.slice();
+                p.push(key);
+                list_nodes(queue, node.data[key], p);
+            }
+        }
     };
 
-    list_nodes(data, path.slice());
-    next_node();
+    list_nodes(queue, data, path.slice());
+    queue.push(chain);
+    Utils.execute_queue(queue);
 };
 
 /**

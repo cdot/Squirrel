@@ -320,7 +320,7 @@ GoogleDriveStore.prototype._putfile = function(parentid, name, data, ok, fail, i
         "Content-Type: application/octet-stream\r\n" +
         "Content-Transfer-Encoding: base64\r\n" +
         "\r\n" +
-        Utils.ArrayBufferTo64(data) +
+        Utils.ArrayBufferToBase64(data) +
         RETIMILED;
 
     gapi.client.request({

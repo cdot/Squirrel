@@ -230,7 +230,8 @@ Squirrel.insert_data = function(path, data) {
                 });
             if (res !== null)
                 load_log.push(res.message);
-            next();
+            if (next)
+                next();
         },
         function() { // chain on complete
             Utils.sometime("update_save");
@@ -456,7 +457,8 @@ Squirrel.save_hoards = function() {
                     data: a.data,
                     path: a.path.slice()
                 });
-                next();
+                if (next)
+                    next();
             },
             function() {
                 update_cloud_store(cloard);
@@ -597,7 +599,7 @@ Squirrel.load_cloud_hoard = function() {
                     Squirrel.cloud.status = "is empty";
                 } else {
                     Squirrel.Dialog.squeak(
-                        TX.tx("$1 store error: $2", this.identifier(), e));
+                        TX.tx("Could not load cloud hoard; do yuo have the correct password? Error was: $1 store error: $2", this.identifier(), e));
                     // Could not contact cloud; continue all the same
                 }
                 Utils.soon(Squirrel.hoards_loaded);
@@ -634,7 +636,12 @@ Squirrel.load_client_hoard = function() {
     var rebuild_hoard = function() {
         if (DEBUG) console.debug("Reconstructing UI tree from cache");
         Squirrel.client.hoard.reconstruct_actions(
-            Squirrel.Tree.action,
+            function(a, next) {
+                Squirrel.Tree.action(a);
+                // reconstruct_actions uses a queue, so don't chain
+                if (next)
+                    next();
+            },
             function() { // on complete
                 // Reset the UI modification list; we just loaded the
                 // client hoard
@@ -706,7 +713,7 @@ Squirrel.init_client_store = function() {
 
     //new LocalStorageStore({
     new EncryptedStore({
-        engine: function(params) {
+        understore: function(params) {
             return new LocalStorageStore(params);
         },
 
@@ -777,7 +784,7 @@ Squirrel.init_client_store = function() {
 Squirrel.init_cloud_store = function() {
     "use strict";
 
-    var params = {
+    var p = {
         ok: function() {
             Squirrel.cloud.store = this;
             // Chain the client store startup
@@ -798,22 +805,15 @@ Squirrel.init_cloud_store = function() {
         identify: Squirrel.Dialog.login
     };
 
-    if (typeof SQUIRREL_STORE !== "undefined") {
-        params.engine = function(p2) {
-            p2.engine = function(p3) {
-                return new SQUIRREL_STORE(p3);
-            };
-            return new StegaStore(p2);
+    p.understore = function(pp) {
+        pp.understore = function(ppp) {
+            // SQUIRREL_STORE is a class name set by the Makefile
+            return new SQUIRREL_STORE(ppp);
         };
-    } else {
-        // TESTING ONLY
-        if (DEBUG) console.debug("Using LocalStorage for the Cloud");
-        params.engine = function(p1) {
-            return new LocalStorageStore(p1);
-        };
-    }
+        return new StegaStore(pp);
+    };
 
-    new EncryptedStore(params);
+    return new EncryptedStore(p);
 };
 
 /**
@@ -898,9 +898,10 @@ Squirrel.init_ui = function() {
                 return;
             Utils.read_file(
                 file,
-                function(data) {
+                function(str) {
+                    var data;
                     try {
-                        data = JSON.parse(data);
+                        data = JSON.parse(str);
                     } catch (e) {
                         Squirrel.Dialog.squeak(TX.tx(
                             "JSON could not be parsed")

@@ -15,10 +15,13 @@ function update() {
     while (tries-- > 0 && text.length > 0) {
         console.debug("Storing " + text.length);
         try {
-            datauri = steg.inject(text).toDataURL();
+            var data = new Uint8Array(text.length);
+            for (var i = 0; i < text.length; i++)
+                data[i] = text.charCodeAt(i);
+            datauri = steg.inject(data).toDataURL();
             break;
         } catch (e) {
-            var excess = ((e.p1 / 16 + 1) >> 0);
+            var excess = ((e.p1 / 8 + 1) >> 0);
             if (excess === 0)
                 debugger;
             console.debug(e.message + ", too much by " + excess);
@@ -32,7 +35,7 @@ function update() {
             $(this).off("load");
             var gets = new Steganographer(this);
             var ab = gets.extract();
-            var a = new Uint16Array(ab);
+            var a = new Uint8Array(ab);
             console.debug("Recovered " + a.length);
             var text = '';
             for (var i = 0; i < a.length; i++)

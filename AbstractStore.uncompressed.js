@@ -5,10 +5,14 @@
  *
  * Store providers provide a simple file system interface to data in the
  * store. Data is passed back and forth in ArrayBuffer.
+ *
+ * This module provides two store provider virtual base classes,
+ * AbstractStore (which is the base class of all stores) and LayeredStore
+ * (which is an AbstractStore in which an underlying "engine" store provides
+ * the actual storage services)
  */
 
 /**
- * Create a new store. Subclasses must call this constructor.
  * The standard pattern is for the constructor to take a callback as
  * parameter to the create and invoke that callback when the store
  * is ready for use.
@@ -22,8 +26,8 @@
  * is encrypted, then there may need to be a password prompt.
  *
  * @class
- * @param {object} params
-  *    * ok, called on success
+ * @param params fields
+ *    * ok, called on success
  *    * fail, called on failure
  *    * identify, called to identify the user of the store,
  *      if needed
@@ -144,8 +148,64 @@ AbstractStore.prototype.reads = function(path, ok, fail) {
     this.read(
         path,
         function(ab) {
-            var data = Utils.ArrayBufferToString(ab);
+            var data;
+            try {
+                data = Utils.ArrayBufferToString(ab);
+            } catch (e) {
+                fail.call(self, e);
+                return;
+            }
             ok.call(self, data);
         },
         fail);
+};
+
+/**
+ * @class
+ * A LayeredStore is an AbstractStore where actual store services are provided
+ * by another underlying AbstractStore. A LayeredStore is used where data to
+ * be stored/read is to be preprocessed, for example through encryption.
+ * To the AbstractStore constructor params options we add the 'understore'
+ * option (required) which must be a function that will construct
+ * the underlying store to be used as the engine, using parameters passed
+ * down.
+ */
+function LayeredStore(params) {
+    "use strict";
+
+    var self = this, pok = params.ok;
+
+    // Override the OK function
+    params.ok = function() {
+        // 'this' is the engine.
+        // Don't call AbstractStore(), it doesn't do anything useful
+        // for us. The identity prompt has already been issued by the
+        // engine constructor.
+        self.engine = this;
+        pok.call(self);
+    };    
+
+    // We don't use the return value from the understore factory, instead
+    // we set self.engine in the ok function, above.
+    params.understore(params);
+}
+
+LayeredStore.prototype = Object.create(AbstractStore.prototype);
+
+LayeredStore.prototype.identifier = function() {
+    "use strict";
+
+    return this.engine.identifier();
+};
+
+LayeredStore.prototype.user = function(u) {
+    "use strict";
+
+    return this.engine.user(u);
+};
+
+LayeredStore.prototype.pass = function(pw) {
+    "use strict";
+
+    return this.engine.pass(pw);
 };

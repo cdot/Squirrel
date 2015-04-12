@@ -236,8 +236,14 @@ Utils.fragmentify = function(fid) {
 
 /**
  * Read a file from disc
+ * @param file File object to read
+ * @param ok callback when file is read, passed an ArrayBuffer
+ * containing the file contents
+ * @param fail callback on failure
+ * @param mode optional read mode, one of "arraybuffer", "binarystring",
+ * "datauri" or "text". The default is "text".
  */
-Utils.read_file = function(file, ok, fail) {
+Utils.read_file = function(file, ok, fail, mode) {
     "use strict";
 
     //var store = this;
@@ -249,7 +255,16 @@ Utils.read_file = function(file, ok, fail) {
 	fail(file.name + " read failed");
     };
     reader.onabort = reader.onerror;
-    reader.readAsBinaryString(file);
+    if (typeof mode === "undefined" || mode === "text")
+        reader.readAsText(file);
+    else if (mode === "arraybuffer")
+        reader.readAsArrayBuffer(file);
+    else if (mode === "binarystring")
+        reader.readAsBinaryString(file);
+    else if (mode === "datauri")
+        reader.readAsDataURL(file);
+    else
+        throw "Unrecognised mode " + mode;
 };
 
 /**
@@ -312,59 +327,194 @@ Utils.soon = function(fn) {
 };
 
 /**
- * Convert base64/URLEncoded data component to an array buffer
+ * Execute each function in the queue, and continue until empty.
+ * Execution will not continue until the function being executed has
+ * called "ready".
  */
-Utils.dataURIToArrayBuffer = function(dataURI) {
+Utils.execute_queue = function(q) {
     "use strict";
 
-    // doesn't handle URLEncoded DataURIs - see SO answer
-    // #6850276 for code that does this
-    var byteString = atob(dataURI.split(",")[1]);
-
-    // separate out the mime component
-    //var mimeString = dataURI.split(",")[0].split(":")[1].split(";")[0];
-
-    return Utils.Base64ToArrayBuffer(byteString);
+    var qready = true;
+    while (q.length > 0) {
+        if (qready) {
+            var fn = q.shift();
+            qready = false;
+            fn(function() {
+                qready = true;
+            });
+        }
+    }
 };
 
-// Support for base64 conversion
-Utils.uint6ToB64 = function(nUint6) {
+/**
+ * Convert an ArrayBuffer containing 16-bit character codes into a
+ * String.
+ * @param data ArrayBuffer which must be an even number of bytes long
+ * @return String the string the ArrayBuffer contains
+ */
+Utils.ArrayBufferToString = function(ab) {
     "use strict";
 
-     return nUint6 < 26 ?
-         nUint6 + 65
-         : nUint6 < 52 ?
-         nUint6 + 71
-         : nUint6 < 62 ?
-         nUint6 - 4
-         : nUint6 === 62 ?
-         43
-         : nUint6 === 63 ?
-         47
-         :
-         65;
- };
+    var a16 = new Uint16Array(ab);
+    var str = "";
+    for (var i = 0; i < a16.length; i++)
+        str += String.fromCharCode(a16[i]);
+    return str;
+};
 
-/*
- * Base64 encoding of the content of an array buffer
+/**
+ * Convert an ArrayBuffer containing UTF-8 encoded character codes into a
+ * String.
+ * @param data ArrayBuffer which must be an even number of bytes long
+ * @return String the string the ArrayBuffer contains
+ */
+Utils.ArrayBufferUTF8ToString = function(ab) {
+    "use strict";
+
+    var a8 = new Uint8Array(ab);
+    var str = "";
+    for (var i = 0; i < a8.length; i++)
+        str += String.fromCharCode(a8[i]);
+    return str;
+
+    for (var nPart, nLen = a8.length, nIdx = 0; nIdx < nLen; nIdx++) {
+    nPart = a8[nIdx];
+    sView += String.fromCharCode(
+      nPart > 251 && nPart < 254 && nIdx + 5 < nLen ? /* six bytes */
+        /* (nPart - 252 << 30) may be not so safe in ECMAScript! So...: */
+        (nPart - 252) * 1073741824 + (a8[++nIdx] - 128 << 24) + (a8[++nIdx] - 128 << 18) + (a8[++nIdx] - 128 << 12) + (a8[++nIdx] - 128 << 6) + a8[++nIdx] - 128
+      : nPart > 247 && nPart < 252 && nIdx + 4 < nLen ? /* five bytes */
+        (nPart - 248 << 24) + (a8[++nIdx] - 128 << 18) + (a8[++nIdx] - 128 << 12) + (a8[++nIdx] - 128 << 6) + a8[++nIdx] - 128
+      : nPart > 239 && nPart < 248 && nIdx + 3 < nLen ? /* four bytes */
+        (nPart - 240 << 18) + (a8[++nIdx] - 128 << 12) + (a8[++nIdx] - 128 << 6) + a8[++nIdx] - 128
+      : nPart > 223 && nPart < 240 && nIdx + 2 < nLen ? /* three bytes */
+        (nPart - 224 << 12) + (a8[++nIdx] - 128 << 6) + a8[++nIdx] - 128
+      : nPart > 191 && nPart < 224 && nIdx + 1 < nLen ? /* two bytes */
+        (nPart - 192 << 6) + a8[++nIdx] - 128
+      : /* nPart < 127 ? */ /* one byte */
+        nPart
+    );
+  }
+};
+
+/**
+ * Convert a String into an ArrayBuffer containing 16 bit character
+ * codes.
+ * @param str the String to convert
+ * @return an ArrayBuffer (which will be an even number of bytes long)
+ */
+Utils.StringToArrayBuffer = function(str) {
+    "use strict";
+
+    var a16 = new Uint16Array(str.length);
+    for (var i = 0, strLen = str.length; i < strLen; i++)
+        a16[i] = str.charCodeAt(i);
+    return a16.buffer;
+};
+
+/**
+ * Pack arbitrary binary byte data into a String as efficiently
+ * as possible.
+ * @param data arbitrary byte data to be packed
+ * @return a String containing the packed data
+ */
+Utils.ArrayBufferToPackedString = function(ab) {
+    "use strict";
+
+    var a8 = new Uint8Array(ab);
+    // Pack 8-bit data into strings using the high and low bytes for
+    // successive data. The usb of the first character is reserved
+    // for a flag that indicates if the least significant byte of
+    // the last character is part of the string or not.
+    var cc = ((a8.length & 1) !== 0) ? 0x100 : 0;
+    // a8.length == 0, string length = 1, usb = 0
+    // a8.length == 1, string length = 1, usb = 1
+    // a8.length == 2, string length = 2, usb = 0
+    // a8.length == 3, string length = 2, usb = 1
+    // a8.length == 4, string length = 3, usb = 0 etc.
+    var high = true; // have we just packed the high byte?
+    var ps = "";
+    for (var i = 0; i < a8.length; i++) {
+        if (high) {
+            ps += String.fromCharCode(cc | a8[i]);
+            high = false;
+        } else {
+            cc = a8[i] << 8;
+            high = true;
+        }
+    }
+    if (high)
+        ps += String.fromCharCode(cc);
+    return ps;
+};
+
+/**
+ * Convert a packed string, created using ArrayBufferToPackedString, back
+ * into an ArrayBuffer containing an arbitrary number of bytes.
+ */
+Utils.PackedStringToArrayBuffer = function(str) {
+    "use strict";
+
+    var datalen = 2 * str.length - 1;
+    if ((str.charCodeAt(0) & 0x100) === 0)
+        datalen--;
+    var high = true;
+    var a8 = new Uint8Array(datalen);
+    var i = 0;
+    var j = 0;
+    while (j < datalen) {
+        if (high) {
+            a8[j++] |= str.charCodeAt(i++) & 0xFF;
+            high = false;
+        } else {
+            a8[j++] = (str.charCodeAt(i) >> 8) & 0xFF;
+            high = true;
+        }
+    }
+    return a8.buffer;
+};
+
+/**
+ * Convert an ArrayBuffer containing arbitrary byte data into a Base64
+ * encoded string, suitable for use in a Data-URI
+ * @param ab the ArrayBuffer to convert
+ * @return a String of Base64 bytes (using MIME encoding)
  */
 Utils.ArrayBufferToBase64 = function(ab) {
     "use strict";
 
-    var aBytes = new Uint8Array(ab);
+    var a8 = new Uint8Array(ab);
     var nMod3 = 2;
     var sB64Enc = "";
-    var nLen = aBytes.length;
+    var nLen = a8.length;
 
+    // Convert a base 64 number to the charcode of the character used to
+    // represent it
+    var uint6ToB64 = function(nUint6) {
+        return nUint6 < 26 ?
+            nUint6 + 65
+            : nUint6 < 52 ?
+            nUint6 + 71
+            : nUint6 < 62 ?
+            nUint6 - 4
+            : nUint6 === 62 ?
+            43
+            : nUint6 === 63 ?
+            47
+            :
+            65;
+    };
+
+    // For each byte in the buffer
     for (var nUint24 = 0, nIdx = 0; nIdx < nLen; nIdx++) {
         nMod3 = nIdx % 3;
-        nUint24 |= aBytes[nIdx] << (16 >>> nMod3 & 24);
+        nUint24 |= a8[nIdx] << (16 >>> nMod3 & 24);
         if (nMod3 === 2 || nLen - nIdx === 1) {
             sB64Enc += String.fromCharCode(
-                Utils.uint6ToB64(nUint24 >>> 18 & 63),
-                Utils.uint6ToB64(nUint24 >>> 12 & 63),
-                Utils.uint6ToB64(nUint24 >>> 6 & 63),
-                Utils.uint6ToB64(nUint24 & 63));
+                uint6ToB64(nUint24 >>> 18 & 63),
+                uint6ToB64(nUint24 >>> 12 & 63),
+                uint6ToB64(nUint24 >>> 6 & 63),
+                uint6ToB64(nUint24 & 63));
             nUint24 = 0;
         }
     }
@@ -373,87 +523,47 @@ Utils.ArrayBufferToBase64 = function(ab) {
         + (nMod3 === 2 ? "" : nMod3 === 1 ? "=" : "==");
 };
 
-Utils.Base64ToArrayBuffer = function(byteString) {
-    var ia = new Uint8Array(byteString.length);
-    for (var i = 0; i < byteString.length; i++) {
-        ia[i] = byteString.charCodeAt(i);
-    }
-    return ia.buffer;
-};
-
-/*
- * Base64 encoding of the content of a string
+/**
+ * Convert a MIME-Base64 string into an array buffer of arbitrary
+ * 8-bit data
+ * @param sB64Enc the String to convert
+ * @return an ArrayBuffer
  */
-Utils.StringTo64 = function(str) {
+Utils.Base64ToArrayBuffer = function(sB64) {
     "use strict";
 
-    var nMod3 = 2;
-    var sB64Enc = "";
-    var nLen = str.length;
+    var sB64Enc = sB64.replace(/[^A-Za-z0-9\+\/]/g, ""); // == and =
+    var nInLen = sB64Enc.length;
+    var nOutLen = nInLen * 3 + 1 >> 2;
+    var ta8 = new Uint8Array(nOutLen);
+    // Convert Base64 char (as char code) to the number represented
+    var b64ToUint6 = function(nChr) {
+        return nChr > 64 && nChr < 91 ?
+            nChr - 65
+            : nChr > 96 && nChr < 123 ?
+            nChr - 71
+            : nChr > 47 && nChr < 58 ?
+            nChr + 4
+            : nChr === 43 ?
+            62
+            : nChr === 47 ?
+            63
+            :
+            0;
+    };
 
-    for (var nUint24 = 0, nIdx = 0; nIdx < nLen; nIdx++) {
-        nMod3 = nIdx % 3;
-        nUint24 |= str.charCodeAt(nIdx) << (16 >>> nMod3 & 24);
-        if (nMod3 === 2 || nLen - nIdx === 1) {
-            sB64Enc += String.fromCharCode(
-                Utils.uint6ToB64(nUint24 >>> 18 & 63),
-                Utils.uint6ToB64(nUint24 >>> 12 & 63),
-                Utils.uint6ToB64(nUint24 >>> 6 & 63),
-                Utils.uint6ToB64(nUint24 & 63));
+    for (var nMod3, nMod4, nUint24 = 0, nOutIdx = 0, nInIdx = 0;
+         nInIdx < nInLen; nInIdx++) {
+        nMod4 = nInIdx & 3;
+        nUint24 |= b64ToUint6(sB64Enc.charCodeAt(nInIdx))
+            << 6 * (3 - nMod4);
+        if (nMod4 === 3 || nInLen - nInIdx === 1) {
+            for (nMod3 = 0; nMod3 < 3
+                 && nOutIdx < nOutLen; nMod3++, nOutIdx++) {
+                ta8[nOutIdx] = nUint24 >>> (16 >>> nMod3 & 24) & 255;
+            }
             nUint24 = 0;
         }
     }
-
-    return sB64Enc.substr(0, sB64Enc.length - 2 + nMod3)
-        + (nMod3 === 2 ? "" : nMod3 === 1 ? "=" : "==");
-};
-
-Utils.ArrayBufferToString = function(data) {
-    var s = "";
-    var d = new Uint16Array(data);
-    for (var i = 0; i < d.length; i++)
-        s += String.fromCharCode(d[i]);
-    return s;
-};
-
-Utils.StringToArrayBuffer = function(str) {
-    var buf = new ArrayBuffer(str.length*2); // 2 bytes for each char
-    var bufView = new Uint16Array(buf);
-    for (var i = 0, strLen = str.length; i < strLen; i++) {
-        bufView[i] = str.charCodeAt(i);
-    }
-    return buf;
+    return ta8.buffer;
 }
-
-Utils.ArrayBufferToByteString = function(data) {
-    var s = "";
-    var d = new Uint8Array(data);
-    for (var i = 0; i < d.length; i++)
-        s += String.fromCharCode(d[i]);
-    return s;
-};
-
-Utils.ByteStringToArrayBuffer = function(str) {
-    var buf = new ArrayBuffer(str.length);
-    var bufView = new Uint8Array(buf);
-    for (var i = 0, strLen = str.length; i < strLen; i++) {
-        bufView[i] = str.charCodeAt(i);
-    }
-    return buf;
-}
-
-Utils.StringToUint16Array = function(str) {
-    var buf = new Uint16Array(str.length);
-    for (var i = 0, len = str.length; i < len; i++) {
-        buf[i] = str.charCodeAt(i);
-    }
-    return buf;
-};
-
-Utils.Uint16ArrayToString = function(a) {
-    var buf = "";
-    for (var i = 0, len = a.length; i < len; i++) {
-        buf += String.fromCharCodeAt(a[i]);
-    }
-    return buf;
-};

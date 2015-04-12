@@ -458,10 +458,11 @@ Squirrel.Dialog.ss_change_image = function() {
         file,
         function(data) {
             data = "data:" + file.type + ";base64,"
-                + Utils.StringTo64(data);
+                + Utils.ArrayBufferToBase64(data);
             $("#dlg_ss_thumb")
                 .attr("src", data)
                 .on("load", function() {
+                    $(this).off("load");
                     // Check that we can use the image. This may fail
                     // due to cross-domain or capacity constraints.
                     try {
@@ -477,7 +478,8 @@ Squirrel.Dialog.ss_change_image = function() {
                     }
                 });
         },
-        fail);
+        fail,
+        "arraybuffer");
 };
 
 Squirrel.Dialog.store_settings = function(ok) {

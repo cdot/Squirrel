@@ -22,17 +22,18 @@ LocalStorageStore.prototype.identifier = function() {
 LocalStorageStore.prototype.read = function(path, ok, fail) {
     "use strict";
 
-    var data;
+    var str;
 
     try {
-        data = Utils.Base64ToArrayBuffer(localStorage.getItem(path));
+        str = localStorage.getItem(path);
     } catch (e) {
         fail.call(this, e);
         return;
     }
-    if (data === null) {
+    if (str === null) {
         fail.call(this, AbstractStore.NODATA);
     } else {
+        var data = Utils.PackedStringToArrayBuffer(str);
         ok.call(this, data);
     }
 };
@@ -42,7 +43,8 @@ LocalStorageStore.prototype.write = function(path, data, ok, fail) {
     "use strict";
 
     try {
-        localStorage.setItem(path, Utils.ArrayBufferToBase64(data));
+        var str = Utils.ArrayBufferToPackedString(data);
+        localStorage.setItem(path, str);
     } catch (e) {
         fail.call(this, e);
         return;

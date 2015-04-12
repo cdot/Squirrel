@@ -8,7 +8,6 @@ driveJS = \
 	GoogleDriveStore.uncompressed.js
 
 LIBSJS = \
-	libs/base64.uncompressed.js \
 	libs/jquery-2.1.3.uncompressed.js \
 	libs/jquery-ui.uncompressed.js \
 	libs/jquery-bonsai.uncompressed.js \
