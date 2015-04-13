@@ -11,7 +11,11 @@
     <script type="text/javascript" src="../AbstractStore.uncompressed.js"></script>
     <script type="text/javascript" src="../DropboxStore.uncompressed.js"></script>
     <script type="text/javascript" src="storetests.js"></script>
-    <script type="text/javascript" src="dropbox.js"></script>
+    <script type="text/javascript">
+(function ($) {
+    storetests(DropboxStore);
+})(jQuery);
+</script>
   </head>
   <body>
   </body>

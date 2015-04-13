@@ -1,3 +1,0 @@
-(function ($) {
-    storetests(LocalStorageStore);
-})(jQuery);

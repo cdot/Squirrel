@@ -94,6 +94,11 @@ a:hover {
     background-position:0 -208px;
 }
 
+.squirrel-icon-gear {
+    background-image:url('images/squirrel-icons.png') !important;
+    background-position:0 -224px;
+}
+
 .logo {
     float: left;
     margin: 0.5em 1em 0.5em 1em;
@@ -172,6 +177,18 @@ button.ui-button-icon-only {
     float: left;
 }
 
+.info-button {
+    float: left;
+    margin-right: 0.5em;
+}
+
+.help {
+}
+
+.help-close {
+    float:right;
+}
+
 #signed_in {
     float: right;
 }
@@ -211,10 +228,6 @@ button.ui-button-icon-only {
 
 #dlg_alarm_units-button > span.ui-selectmenu-text {
     padding: 0.2em 2.1em 0.2em .25em;
-}
-
-#dlg_ss_thumb {
-    height: 100px;
 }
 
 #dlg_ss > input {

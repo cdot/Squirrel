@@ -10,7 +10,11 @@
     <script type="text/javascript" src="../AbstractStore.uncompressed.js"></script>
     <script type="text/javascript" src="../GoogleDriveStore.uncompressed.js"></script>
     <script type="text/javascript" src="storetests.js"></script>
-    <script type="text/javascript" src="drive.js"></script>
+    <script type="text/javascript">
+(function ($) {
+    storetests(GoogleDriveStore);
+})(jQuery);
+</script>
   </head>
   <body>
   </body>

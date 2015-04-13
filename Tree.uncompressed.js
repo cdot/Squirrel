@@ -444,7 +444,7 @@ Squirrel.Tree.can_undo = function() {
 /**
  * Undo the most recent action
  */
-Squirrel.undo = function() {
+Squirrel.Tree.undo = function() {
     "use strict";
 
     if (DEBUG && Squirrel.Tree.undos.length === 0) debugger;

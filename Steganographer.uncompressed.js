@@ -3,8 +3,7 @@
  * Steganography using the alpha-channel in an image.
  * Using the alpha channel this way is OK but it's a bit of a giveaway.
  * It might be better to make use of the lower order bits of the
- * colour channels - though something seems to play silly buggers with
- * any values I store there :-(
+ * colour channels.
  */
 
 /**
@@ -24,6 +23,8 @@ function Steganographer(image, maxChunk) {
         this.image.src = image;
     } else
         this.image = image;
+
+    this.channel = 3; // alpha
 }
 
 /**
@@ -120,6 +121,10 @@ Steganographer.prototype.inject = function(message) {
         0, 0, shadowCanvas.width, shadowCanvas.height);
     var data = imageData.data;
 
+    // We have to init the alpha channel of the image, otherwise the
+    // color values can't be manipulated
+    for (i = 3; i < data.length;i+=4) data[i] = 255;
+
     // Message broken down into chunks
     var chunks = [];
 
@@ -192,7 +197,7 @@ Steganographer.prototype.inject = function(message) {
 
     // Embed data length and chunkSize, using a chunkSize of 4
     var numChunks = chunks.length;
-    var offset = 3; // channel
+    var offset = this.channel;
     for (i = 28; i >= 0; i -= 4, offset += 4) {
         data[offset] = 255 - ((numChunks >> i) & 0xF);
     }
@@ -204,13 +209,21 @@ Steganographer.prototype.inject = function(message) {
     for (i = 0; i < chunks.length; i++, offset += 4) {
         if (chunks[i] > mask)
             debugger;
+        if (chunks[i] < 0 || chunks[i] > 255)
+            debugger;
         data[offset] = 255 - chunks[i];
     }
     console.debug(
         "Steg: Embedded " + chunks.length + " chunks of "
             + chunkSize + " bits, " + (chunks.length * chunkSize) + " bits / "
             + (chunks.length * chunkSize / 8) + " bytes of data");
-    imageData.data = data;
+
+    var x = Math.min(shadowCanvas.height, shadowCanvas.width);
+    for (i = 0; i < x; i++) {
+        data[4 * (i * shadowCanvas.width + i)] = 250;
+    }
+     imageData.data = data;
+
     shadowCtx.putImageData(imageData, 0, 0);
 
     return shadowCanvas;
@@ -240,7 +253,7 @@ Steganographer.prototype.extract = function() {
     // Extract data length and chunkSize
     // chunkSize = 4, prime = 17
     var numChunks = 0;
-    var offset = 3;
+    var offset = this.channel;
     for (var i = 0; i < 32; i += 4, offset += 4) {
         numChunks = (numChunks << 4) | (255 - data[offset]);
     }

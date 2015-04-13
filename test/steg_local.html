@@ -12,7 +12,11 @@
     <script type="text/javascript" src="../Steganographer.uncompressed.js"></script>
     <script type="text/javascript" src="../StegaStore.uncompressed.js"></script>
     <script type="text/javascript" src="storetests.js"></script>
-    <script type="text/javascript" src="stegstore.js"></script>
+    <script type="text/javascript">
+(function ($) {
+    storetests(StegaStore, LocalStorageStore);
+})(jQuery);
+</script>
   </head>
   <body>
   </body>

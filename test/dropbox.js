@@ -1,3 +1,0 @@
-(function ($) {
-    storetests(DropboxStore);
-})(jQuery);

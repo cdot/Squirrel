@@ -10,7 +10,11 @@
     <script type="text/javascript" src="../libs/aes-ctr.uncompressed.js"></script>
     <script type="text/javascript" src="../EncryptedStore.uncompressed.js"></script>
     <script type="text/javascript" src="storetests.js"></script>
-    <script type="text/javascript" src="aesstore.js"></script>
+    <script type="text/javascript">
+(function ($) {
+    storetests(EncryptedStore, LocalStorageStore);
+})(jQuery);
+</script>
   </head>
   <body>
   </body>

@@ -2,8 +2,8 @@
 <html>
   <head>
     <meta charset="UTF-8">
-    <meta name="cache-control" content="public">
-    <meta name="expires" content="Wed, 1 Jan 2025 12:00:00 GMT">
+    <!-- meta name="cache-control" content="public">
+    <meta name="expires" content="Wed, 1 Jan 2025 12:00:00 GMT" -->
     <link rel="icon" href="images/favicon.ico" type="image/x-icon" />
     <!--LIBSJS_HTML-->
     <!--COMMONJS_HTML-->
@@ -25,16 +25,12 @@
         <span class="TX_text">Signed in as: </span><span id="whoami"></span>
       </div>
       <div id="toolbar">
+        <button id="extras_button" class="authenticated TX_title TX_text" title="Tools/Options">Tools</button>
         <button id="undo_button" class="icon_button TX_title TX_text" title="Undo last change">Undo</button>
         <button id="save_button" class="icon_button TX_text">Save</button>
-        <input type="checkbox" id="autosave_checkbox">
-        <label for="autosave_checkbox" class="TX_text">
-          Autosave
-        </label>
-        <button id="extras_button" class="authenticated TX_title TX_text" title="Change options">
-          Extras
-        </button>
         <ul id="extras_menu" class="menu TX_title" title="Extras">
+          <li class="TX_text" id="menu_enass" data-command="enass">Enable autosave</li>
+          <li class="TX_text" id="menu_disas" data-command="disas">Disable autosave</li>
           <li class="TX_text" data-command="chss">Change cloud store settings</li>
           <li class="TX_text" data-command="chpw">Change master password</li>
           <li class="TX_text" data-command="copydb">Copy entire database to clipboard (JSON)</li>
@@ -65,13 +61,13 @@
 	  <tr id="dlg_login_uReq">
 	    <td class="TX_text">Username:</td>
 	    <td>
-	      <input size="50" id="dlg_log_user" value="" class="TX_title" title="Enter username" />
+	      <input size="50" id="dlg_login_user" value="" class="TX_title" title="Enter username" />
 	    </td>
 	  </tr>
           <tr id="dlg_login_pReq">
 	    <td class="TX_text">Password:</td>
 	    <td>
-	      <input tabindex="2" type="password" size="50" id="dlg_login_pass" class="TX_title" title="Enter password" value="" />
+	      <input type="password" size="50" id="dlg_login_pass" class="TX_title" title="Enter password" value="" />
 	    </td>
 	  </tr>
 	</tbody>
@@ -217,19 +213,26 @@
       </p>
     </div>
 
-    <div id="dlg_ss" class="dialog TX_title" title="Choose an image to hide your hoard in">
-      <div>
-        <img id="dlg_ss_thumb" src="images/squirrel.png" />
-      </div>
+    <div id="dlg_ss" class="dialog TX_title" title="Store settings">
+      <p class="TX_text help">Choose a local image that will be copied
+        and used to hide your data in the cloud. This should be a complex
+        colour image of at least 1024x768 pixels, preferably with variable
+        transparency. Note that very large images may take a long time to
+        load and save.</p>
       <input type="file" id="dlg_ss_file" class="hidden" />
-      <button id="dlg_ss_choose" class="TX_title TX_text" title="Choose an image file. This should be a colour image of at least 1024x768 pixels">
+      <button id="dlg_ss_choose" class="TX_title TX_text" title="Choose an image file">
         Choose Image File
       </button>
       <p id="dlg_ss_message">
       </p>
-      <p>
+      <p style="clear:both">
+        <p class="TX_text help">
+          Set the pathname of the image on your cloud store (for example
+          if you choose 'photos/stills/grandma.png' it will use the file
+          'grandma.png' in the directory 'photos/stills'.
+        </p>
         <label for="dlg_ss_storepath" class="TX_text">Store path: </label>
-        <input id="dlg_ss_storepath" type="text" value="" class="TX_title" title=" Pathname of the image on your cloud store (for example 'photos/stills/grandma.png' will use the file 'grandma.png' in the directory 'photos/stills'."/>
+        <input id="dlg_ss_storepath" type="text" value="" class="TX_title" title="Pathname of the image in your cloud store"/>
       </p>
       <p>
         <button id="dlg_ss_ok" class="TX_text">OK</button>

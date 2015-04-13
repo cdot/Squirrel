@@ -141,26 +141,28 @@ $.fn.edit_in_place = function(opts) {
     });
 };
 
-/**
- * Shorthand for $el.off(event).one(event, handler)
- * Useful when the handler uses closure variables
- */
-$.fn.reon = function(event, handler) {
-    "use strict";
-
-    return this.each(function() {
-        $(this).off(event).on(event, handler);
-    });
-};
-
 var Utils = { // Namespace
-    waiting: {},
-    // By setting the wait_timeout to a non-null value we block
+    // Hash of events that are waiting to be triggered by the 'sometime'
+    // scheduler.
+    waiting_for_sometime: {},
+
+    // By setting the sometime_timeout to a non-null value we block
     // the wait queue until Utils.sometime is called the first time.
     // This lets us complete the load without too much noise.
-    wait_timeout: true,
+    sometime_timeout: true,
 
-    last_yield: Date.now()
+    // Set by the 'sometime' scheduler, the 'soon' scheduler, and
+    // the 'execute_queue' sequencer to record when the last time we
+    // had a timeout event, indicating that the UI has had a timeslice.
+    // Used by 'soon' to control how often we yield to the UI before
+    // calling the managed function (we don't want to yield unless we
+    // really have to)
+    last_yield: Date.now(),
+
+    // Timeout intervals, milliseconds
+    IMMEDIATE: 1,
+    SOON:      100,
+    SOMETIME:  250
 };
 
 /**
@@ -281,33 +283,39 @@ Utils.read_file = function(file, ok, fail, mode) {
 Utils.sometime = function(event) {
     "use strict";
 
-    if (Utils.waiting[event])
+    if (Utils.waiting_for_sometime[event])
         return;
 
-    Utils.waiting[event] = true;
-    if (Utils.wait_timeout === null)
-        Utils.wait_timeout = window.setTimeout(
-            Utils.sometime_is_now, 250 /*ms*/);
+    Utils.waiting_for_sometime[event] = true;
+    if (Utils.sometime_timeout === null)
+        Utils.sometime_timeout = window.setTimeout(
+            Utils.sometime_is_now, Utils.SOMETIME);
 };
 
 /**
- * Start the sometime sequence
+ * Execute the events that have been waiting for 'sometime'
  */
 Utils.sometime_is_now = function() {
     "use strict";
 
-    Utils.wait_timeout = null;
-    for (var event in Utils.waiting) {
+    Utils.sometime_timeout = null;
+    Utils.last_yield = Date.now();
+    for (var event in Utils.waiting_for_sometime) {
+        // Triggering these handlers make take an appreciable amount of
+        // time and result in new events joining the sometime schedule.
         $(document).triggerHandler(event);
         // Only now delete the event to allow it to be requeued
-        delete Utils.waiting[event];
+        delete Utils.waiting_for_sometime[event];
     }
 };
 
 /**
  * Allow the UI to have a slice of time before we call the given function,
- * but only if it's been a perceptible amount of time since the last UI
- * update.
+ * but only if it's been a perceptible amount of time (>100ms) since the
+ * last UI update. This is used when chaining sequences of function calls.
+ * Note that it is potentially recursive - if you have a rapid sequence
+ * of actions to handle, don't use soon to sequence them or you might blow
+ * the stack. Use execute_queue instead, which is non-recursive.
  * @param fn function to call
  */
 Utils.soon = function(fn) {
@@ -317,11 +325,11 @@ Utils.soon = function(fn) {
     // we yielded to the UI, then set an asynchronous timeout before
     // we activate the next function in the chain. This will allow
     // the UI a timeslice.
-    if (Date.now() - Utils.last_yield > 100 /*ms*/) {
+    if (Date.now() - Utils.last_yield > Utils.SOON) {
         window.setTimeout(function() {
             Utils.last_yield = Date.now();
             fn();
-        }, 1);
+        }, Utils.IMMEDIATE);
     } else
         fn();
 };
@@ -329,13 +337,14 @@ Utils.soon = function(fn) {
 /**
  * Execute each function in the queue, and continue until empty.
  * Execution will not continue until the function being executed has
- * called "ready".
+ * called ready()". The last function in the queue doesn't need to call
+ * ready(), as the queue will then be empty.
  */
 Utils.execute_queue = function(q) {
     "use strict";
 
     var qready = true;
-    var qr = function() {
+    var ready = function() {
         qready = true;
     };
 
@@ -343,7 +352,15 @@ Utils.execute_queue = function(q) {
         if (qready) {
             var fn = q.shift();
             qready = false;
-            fn(qr);
+            fn(ready);
+            // Maintain UI performance
+            if (Date.now() - Utils.last_yield > Utils.SOON) {
+                window.setTimeout(function() {
+                    Utils.last_yield = Date.now();
+                    Utils.execute_queue(q);
+                }, Utils.IMMEDIATE);
+                return;
+            }
         }
     }
 };
@@ -357,6 +374,8 @@ Utils.execute_queue = function(q) {
 Utils.ArrayBufferToString = function(ab) {
     "use strict";
 
+    if (DEBUG && ab.byteLength % 2 !== 0)
+        debugger;
     var a16 = new Uint16Array(ab);
     var str = "";
     for (var i = 0; i < a16.length; i++)

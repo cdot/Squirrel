@@ -109,13 +109,13 @@ GoogleDriveStore.prototype._init = function(params) {
 
     var self = this;
 
-    // Timeout after 30 seconds of waiting for auth
+    // Timeout after 20 seconds of waiting for auth
     var tid = window.setTimeout(function() {
         window.clearTimeout(tid);
         params.fail.call(
             self,
             TX.tx("Timeout trying to authorise access to Google Drive. Are popups blocked in your browser?"));
-    }, 30000);
+    }, 1000); // SMELL: don't check this in
 
     var handleAboutGetResult = function(result) {
         if (result.status === 200) {

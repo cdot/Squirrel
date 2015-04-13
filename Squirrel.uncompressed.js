@@ -272,6 +272,8 @@ Squirrel.update_save = function(/*event*/) {
     "use strict";
 
     $("#undo_button").toggle(Squirrel.Tree.can_undo());
+    $("#menu_disas").toggle(Squirrel.client.hoard.options.autosave);
+    $("#menu_enass").toggle(!Squirrel.client.hoard.options.autosave);
 
     var us = Squirrel.unsaved_changes(3);
     if (us !== null) {
@@ -340,7 +342,9 @@ Squirrel.unsaved_changes = function(max_changes) {
 
     if (Squirrel.cloud.status !== "is loaded") {
         message.unshift(TX.tx("The $1 hoard $2",
-                              Squirrel.cloud.store.identifier(),
+                              Squirrel.cloud.store
+                              ? Squirrel.cloud.store.identifier()
+                              : TX.tx("Cloud"),
                               TX.tx(Squirrel.cloud.status)));
     }
     if (Squirrel.client.status !== "is loaded") {
@@ -375,11 +379,11 @@ Squirrel.save_hoards = function() {
         $messy.append(client_ok && cloud_ok
                       ? TX.tx("Save complete")
                       : TX.tx("Save encountered errors"));
-        if (client_ok && cloud_ok)
-            Utils.sometime(function() {
+        if (client_ok && cloud_ok) {
+            if (Squirrel.client.hoard.options.autosave)
                 $dlg.dialog("close");
-            });
-        else
+            // Otherwise leave it open
+        } else
             // Otherwise leave it open, disable auto-save
             Squirrel.client.hoard.options.autosave = false;
     },
@@ -419,29 +423,32 @@ Squirrel.save_hoards = function() {
     // Save the given hoard into the cloud.
     update_cloud_store = function(cloard) {
         cloard.actions = cloard.actions.concat(Squirrel.client.hoard.actions);
-        Squirrel.cloud.store.writes(
-            Squirrel.client.hoard.options.store_path,
-            JSON.stringify(cloard),
-            function() {
-                Squirrel.client.hoard.actions = [];
-                Squirrel.client.hoard.last_sync = Date.now();
-                $messy.append(
-                    "<div class='notice'>"
-                        + TX.tx("Saved in $1", this.identifier())
-                        + "</div>");
-                // TX.tx("is loaded")
-                Squirrel.cloud.status = "is loaded";
-                Utils.soon(save_client);
-            },
-            function(e) {
-                $messy.append(
-                    "<div class='error'>"
-                        + TX.tx("Failed to save in $1: $2",
-                                this.identifier(), e)
-                        + "</div>");
-                cloud_ok = false;
-                Utils.soon(save_client);
-            });
+        if (Squirrel.cloud.store) {
+            Squirrel.cloud.store.writes(
+                Squirrel.client.hoard.options.store_path,
+                JSON.stringify(cloard),
+                function() {
+                    Squirrel.client.hoard.actions = [];
+                    Squirrel.client.hoard.last_sync = Date.now();
+                    $messy.append(
+                        "<div class='notice'>"
+                            + TX.tx("Saved in $1", this.identifier())
+                            + "</div>");
+                    // TX.tx("is loaded")
+                    Squirrel.cloud.status = "is loaded";
+                    Utils.soon(save_client);
+                },
+                function(e) {
+                    $messy.append(
+                        "<div class='error'>"
+                            + TX.tx("Failed to save in $1: $2",
+                                    this.identifier(), e)
+                            + "</div>");
+                    cloud_ok = false;
+                    Utils.soon(save_client);
+                });
+        } else
+            save_client();
     },
 
     // Construct a new cloud hoard from data in the client. This will
@@ -553,9 +560,6 @@ Squirrel.hoards_loaded = function() {
     // Flush the sometimes, and allow new sometimes to be set
     Utils.sometime_is_now();
 
-    $("#autosave_checkbox")
-        .prop("checked", Squirrel.client.hoard.options.autosave);
-
     $(".unauthenticated").hide();
     $(".authenticated").show();
 };
@@ -599,7 +603,7 @@ Squirrel.load_cloud_hoard = function() {
                     Squirrel.cloud.status = "is empty";
                 } else {
                     Squirrel.Dialog.squeak(
-                        TX.tx("Could not load cloud hoard; do yuo have the correct password? Error was: $1 store error: $2", this.identifier(), e));
+                        TX.tx("Could not load cloud hoard; do you have the correct password? Error was: $1 store error: $2", this.identifier(), e));
                     // Could not contact cloud; continue all the same
                 }
                 Utils.soon(Squirrel.hoards_loaded);
@@ -619,9 +623,10 @@ Squirrel.init_client_hoard = function() {
     Squirrel.client.hoard = new Hoard();
     // TX.tx("is empty")
     Squirrel.client.status = "is empty";
-    Squirrel.Dialog.store_settings(function() {
-        Utils.soon(Squirrel.load_cloud_hoard);
-    });
+    Squirrel.Dialog.store_settings(
+        function() {
+            Utils.soon(Squirrel.load_cloud_hoard);
+        });
 };
 
 /**
@@ -684,9 +689,10 @@ Squirrel.load_client_hoard = function() {
             }
             // Make sure we have a store path
             if (!Squirrel.client.hoard.options.store_path) {
-                Squirrel.Dialog.store_settings(function() {
-                    rebuild_hoard();
-                });
+                Squirrel.Dialog.store_settings(
+                    function() {
+                        rebuild_hoard();
+                    });
             } else
                 rebuild_hoard();
         },
@@ -822,6 +828,39 @@ Squirrel.init_cloud_store = function() {
 Squirrel.init_ui = function() {
     "use strict";
 
+    $(".help").each(function() {
+        var $this = $(this);
+        $this.hide();
+        var $help = $("<button></button>");
+        var $close = $("<button></button>");
+        $help
+            .addClass("info-button")
+            .button({
+                icons: {
+                    primary: "ui-icon-info"
+                },
+                text: false
+            })
+            .on("click", function() {
+                $this.show();
+                $help.hide();
+            })
+            .insertBefore(this);
+        $close
+            .addClass("help-close")
+            .button({
+                icons: {
+                    primary: "ui-icon-circle-close"
+                },
+                text: false
+            })
+            .on("click", function() {
+                $this.hide();
+                $help.show();
+            })
+            .prependTo($this);
+    });
+
     Squirrel.Tree.set_root($("#sites-node"));
 
     $("#save_button")
@@ -869,6 +908,14 @@ Squirrel.init_ui = function() {
             select: function(evt, ui) {
                 $(this).hide();
                 switch (ui.item.data("command")) {
+                case "enass":
+                    Squirrel.client.hoard.options.autosave = true;
+                    Utils.sometime("update_save");
+                    break;
+                case "disas":
+                    Squirrel.client.hoard.options.autosave = false;
+                    Utils.sometime("update_save");
+                    break;
                 case "chpw":
                     Squirrel.Dialog.change_password();
                     break;
@@ -922,7 +969,12 @@ Squirrel.init_ui = function() {
         });
 
     $("#extras_button")
-        .button()
+        .button({
+            icons: {
+                primary: "squirrel-icon-gear"
+            },
+            text: false
+        })
         .on("click", function(/*evt*/) {
             $("#bonsai-root").contextmenu("close");
             $("#extras_menu")
@@ -943,12 +995,6 @@ Squirrel.init_ui = function() {
             Squirrel.close_menus();
             $("#search_hits").text(TX.tx("Searching..."));
             Squirrel.search($(this).val());
-        });
-
-    $("#autosave_checkbox")
-        .on("change", function() {
-            Squirrel.client.hoard.options.autosave = $(this).is(":checked");
-            Utils.sometime("update_save");
         });
 
     Squirrel.ContextMenu.init($("#bonsai-root"));
