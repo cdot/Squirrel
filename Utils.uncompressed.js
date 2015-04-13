@@ -343,26 +343,28 @@ Utils.soon = function(fn) {
 Utils.execute_queue = function(q) {
     "use strict";
 
-    var qready = true;
-    var ready = function() {
-        qready = true;
-    };
+    Utils.q_ready();
+    Utils.q_next(q);
+}
 
-    while (q.length > 0) {
-        if (qready) {
-            var fn = q.shift();
-            qready = false;
-            fn(ready);
-            // Maintain UI performance
-            if (Date.now() - Utils.last_yield > Utils.SOON) {
-                window.setTimeout(function() {
-                    Utils.last_yield = Date.now();
-                    Utils.execute_queue(q);
-                }, Utils.IMMEDIATE);
-                return;
-            }
-        }
+Utils.q_ready = function() {
+    Utils.qready = true;
+};
+
+Utils.q_next = function(q) {
+
+    if (q.length > 0 && Utils.qready) {
+        var fn = q.shift();
+        Utils.qready = false;
+        console.debug("Starting queue item");
+        fn(Utils.q_ready);
     }
+
+    // Maintain UI performance
+    window.setTimeout(function() {
+        Utils.last_yield = Date.now();
+        Utils.q_next(q);
+    }, Utils.SOON);
 };
 
 /**

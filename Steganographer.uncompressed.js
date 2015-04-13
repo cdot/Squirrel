@@ -260,7 +260,7 @@ Steganographer.prototype.extract = function() {
     var chunkSize = 255 - data[offset];
     offset += 4;
 
-    if (numChunks <= 0 || numChunks > data.length
+    if (numChunks < 0 || numChunks > data.length
         || chunkSize <= 0 || chunkSize > 8)
         throw "No message embedded";
 

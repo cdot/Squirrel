@@ -20,7 +20,8 @@ var tests = [
                 ready();
             },
             function(e) {
-                throw this + " writeString failed " + e;
+                report("writeString failed " + e);
+                ready();
             });
     },
 
@@ -37,7 +38,8 @@ var tests = [
                 ready();
             },
             function(e) {
-                throw this + " readString failed: " + e;
+                report("readString failed: " + e);
+                ready();
             });
         
     },
@@ -59,7 +61,8 @@ var tests = [
                 ready(this);
             },
             function(e) {
-                throw this + " writeArrayBuffer failed " + e;
+                report("writeArrayBuffer failed " + e);
+                ready();
             });
     },
 
@@ -71,17 +74,24 @@ var tests = [
                 if (this !== store)
                     throw "Not the same";
                 var a = new Uint8Array(ab);
-                if (a.length !== 255)
-                    throw this + " length " + a.length;
+                if (a.length !== 255) {
+                    report("length " + a.length);
+                    ready();
+                    return;
+                }
                 for (var i = 0; i < 255; i++)
-                    if (a[i] !== i)
-                        throw this + " failed " + i + "=" + a[i]
+                    if (a[i] !== i) {
+                        report("failed " + i + "=" + a[i]);
+                        ready();
+                        return;
+                    }
                     + " != " + ((i << 8) | i);
                 report("readArrayBuffer was OK");
                 ready();
             },
             function(e) {
-                throw this + " readArrayBuffer failed " + e + " " + this;
+                report("readArrayBuffer failed " + e + " " + this);
+                ready();
             });
     },
 
@@ -98,7 +108,8 @@ var tests = [
                 ready();
             },
             function(e) {
-                throw this + " write0 failed " + e;
+                report("write0 failed " + e);
+                ready();
             });
     },
 
@@ -110,14 +121,22 @@ var tests = [
                 if (this !== store)
                     throw "Not the same";
                 var a = new Uint8Array(ab);
-                if (a.length !== 0)
-                    throw this + " length " + a.length;
+                if (a.length !== 0) {
+                    report("length " + a.length);
+                    ready();
+                    return;
+                }
                 report("read0 was OK");
                 ready();
             },
             function(e) {
-                throw this + " read0 failed " + e + " " + this;
+                report("read0 failed " + e + " " + this);
+                ready();
             });
+    },
+
+    function(ready) {
+        report("Tests complete");
     }
 ];
 
