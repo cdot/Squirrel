@@ -6,6 +6,7 @@
  * Requires JQuery and a DOM IMG with id "stegamage"
  *
  * @param params: Standard for LayeredStore
+ * @implements LayeredStore
  */
 function StegaStore(params) {
     "use strict";

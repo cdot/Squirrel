@@ -356,7 +356,6 @@ Utils.q_next = function(q) {
     if (q.length > 0 && Utils.qready) {
         var fn = q.shift();
         Utils.qready = false;
-        console.debug("Starting queue item");
         fn(Utils.q_ready);
     }
 
@@ -364,7 +363,7 @@ Utils.q_next = function(q) {
     window.setTimeout(function() {
         Utils.last_yield = Date.now();
         Utils.q_next(q);
-    }, Utils.SOON);
+    }, Utils.IMMEDIATE);
 };
 
 /**
@@ -422,7 +421,8 @@ Utils.ArrayBufferToPackedString = function(ab) {
     // a8.length == 4, string length = 3, usb = 0 etc.
     var high = true; // have we just packed the high byte?
     var ps = "";
-    for (var i = 0; i < a8.length; i++) {
+    var a8_len = a8.length;
+    for (var i = 0; i < a8_len; i++) {
         if (high) {
             ps += String.fromCharCode(cc | a8[i]);
             high = false;
@@ -431,6 +431,8 @@ Utils.ArrayBufferToPackedString = function(ab) {
             high = true;
         }
     }
+    // Strings are 16-bit data, so the LSB of the last character may have to
+    // be left as 0
     if (high)
         ps += String.fromCharCode(cc);
     return ps;

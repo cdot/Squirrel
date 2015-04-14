@@ -7,6 +7,7 @@
  * store is simply decrypted using the password provided, it's up to the
  * caller to determine if the resulting data is valid or not.
  * @param params: Standard for LayeredStore
+ * @implements LayeredStore
  */
 function EncryptedStore(params) {
     "use strict";
@@ -59,10 +60,11 @@ EncryptedStore.prototype.write = function(path, ab, ok, fail) {
         return;
     }
 
-    ab = Utils.Base64ToArrayBuffer(xstr);
+    var nab = Utils.Base64ToArrayBuffer(xstr);
+
     this.engine.write(
         path,
-        ab,
+        nab,
         function() {
             ok.call(self);
         },

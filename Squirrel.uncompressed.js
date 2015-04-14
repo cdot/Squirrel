@@ -717,7 +717,7 @@ Squirrel.load_client_hoard = function() {
 Squirrel.init_client_store = function() {
     "use strict";
 
-    //new LocalStorageStore({
+    // new LocalStorageStore({
     new EncryptedStore({
         understore: function(params) {
             return new LocalStorageStore(params);

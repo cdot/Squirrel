@@ -4,9 +4,12 @@ function report(s) {
 }
 
 const TESTR = "1234567";
+const DATASIZE = 89344;
+
 var store;
 
 var tests = [
+/*
     function(ready) {
         console.debug("Running writeString");
         var a = TESTR;
@@ -20,7 +23,7 @@ var tests = [
                 ready();
             },
             function(e) {
-                report("writeString failed " + e);
+                report("writeString FAILED " + e);
                 ready();
             });
     },
@@ -38,19 +41,19 @@ var tests = [
                 ready();
             },
             function(e) {
-                report("readString failed: " + e);
+                report("readString FAILED: " + e);
                 ready();
             });
         
     },
-
+*/
     function(ready) {
         console.debug("Running writeArrayBuffer");
         // Deliberately make it an odd length to throw off 16-bit-assuming
         // conversions
-        var a = new Uint8Array(255);
-        for (var i = 0; i < 255; i++)
-            a[i] = i;
+        var a = new Uint8Array(DATASIZE);
+        for (var i = 0; i < DATASIZE; i++)
+            a[i] = (i+1) & 255;
         store.write(
             "test/test.dat",
             a.buffer,
@@ -61,7 +64,7 @@ var tests = [
                 ready(this);
             },
             function(e) {
-                report("writeArrayBuffer failed " + e);
+                report("writeArrayBuffer FAILED " + e);
                 ready();
             });
     },
@@ -74,14 +77,14 @@ var tests = [
                 if (this !== store)
                     throw "Not the same";
                 var a = new Uint8Array(ab);
-                if (a.length !== 255) {
-                    report("length " + a.length);
+                if (a.length !== DATASIZE) {
+                    report("FAILED length " + a.length + " != " + DATASIZE);
                     ready();
                     return;
                 }
-                for (var i = 0; i < 255; i++)
-                    if (a[i] !== i) {
-                        report("failed " + i + "=" + a[i]);
+                for (var i = 0; i < DATASIZE; i++)
+                    if (a[i] !== ((i + 1) & 255)) {
+                        report("FAILED " + (i & 255) + "=" + a[i]);
                         ready();
                         return;
                     }
@@ -90,11 +93,11 @@ var tests = [
                 ready();
             },
             function(e) {
-                report("readArrayBuffer failed " + e + " " + this);
+                report("readArrayBuffer FAILED " + e + " " + this);
                 ready();
             });
     },
-
+/*
     function(ready) {
         console.debug("Running write0");
         var a = [];
@@ -108,7 +111,7 @@ var tests = [
                 ready();
             },
             function(e) {
-                report("write0 failed " + e);
+                report("write0 FAILED " + e);
                 ready();
             });
     },
@@ -130,11 +133,11 @@ var tests = [
                 ready();
             },
             function(e) {
-                report("read0 failed " + e + " " + this);
+                report("read0 FAILED " + e + " " + this);
                 ready();
             });
     },
-
+*/
     function(ready) {
         report("Tests complete");
     }
@@ -149,7 +152,8 @@ function storetests(Class, Underclass, UnderUnderclass) {
         .ready(function() {
             $("<img>")
                 .attr("id", "stegamage")
-                .attr("src", "../images/squirrel.png")
+                .attr("src", "../images/GCHQ.png")
+//                .attr("src", "../images/squirrel.png")
                 .on("load", function() {
                     $(this).off("load");
                     var s = new Class({
