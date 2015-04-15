@@ -53,15 +53,20 @@ just looks like random data.
 The algorithm Squirrel uses to store data is very secure, and the only known
 way to crack it in finite time is to guess your password. So:
 - make your passwords hard to guess
-"Hard to guess for a computer" doesn't mean the same thing as "hard to guess" for a human. Computers can rapidly test millions of passwords in an attempt to find yours. Things that can help computers do this are using things such as real words, people and place names, dates, telephone numbers - all be tested by password crackers. Some people seem to believe that substituting numbers or punctuation for letters - for example, using "0" in place of "O" or "$" in place of "S" - somehow makes their password more secure. If does, a tiny bit, but not enough for it to be a good idea. Hackers know how people think, so try not to think like a person when choosing a password.
+
+"Hard to guess for a computer" doesn't mean the same thing as "hard to guess" for a human. Computers can rapidly test millions of passwords in an attempt to find yours. Things that can help computers do this are using things such as real words, people and place names, dates, telephone numbers - all be tested by password crackers.
+
+Some people seem to believe that substituting numbers or punctuation for letters - for example, using "0" in place of "O" or "$" in place of "S" - somehow makes their password more secure. It does, a tiny bit, but not enough for it to be a good idea. Hackers know how people think, so try not to think like a person when choosing a password.
 - avoid using real words, names, dates, telephone numbers
 - substituting numbers or punctuation for letters doesn't work very well
+
 Your master password needs to be as hard as possible for a computer to crack. Ideally you will choose a long string of random characters, though that might be too hard to remember.
-- A long string of random characters is best
+- a long string of random characters is best.
+
 Despite what many IT departments tell you, writing down your password isn't a bad idea, just so long as you make sure that the physical security of what you have written is very strong.
 - writing down a very strong password may not be a bad idea
 
-Ultimately I'm not going to tell you my best password tips, because I'd be giving away my own secrets. But if you follow the tips above, you should be able to come up with something pretty good. The password generator built into Squirrel generates very strong passwords.
+If you follow the tips above, you should be able to come up with something pretty good. The password generator built into Squirrel generates very strong passwords.
 
 ## Using Squirrel
 

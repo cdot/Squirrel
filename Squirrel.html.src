@@ -229,7 +229,7 @@
       <p id="dlg_ss_message"></p>
       <p style="clear:both">
         <p class="TX_text help">
-          Set the pathname of the image on your cloud store (for example
+          Set the pathname of the image on your cloud store. For example
           if you choose 'photos/stills/grandma.png' it will use the file
           'grandma.png' in the directory 'photos/stills'.
         </p>
