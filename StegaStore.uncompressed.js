@@ -36,6 +36,7 @@ StegaStore.prototype.read = function(path, ok, fail) {
                     try {
                         ab2 = steg.extract();
                     } catch (e) {
+                        if (DEBUG) console.debug("Caught " + e);
                         fail.call(self, e);
                         return;
                     }
@@ -64,6 +65,7 @@ StegaStore.prototype.write = function(path, data, ok, fail) {
         var b64 = datauri.split(",", 2)[1];
         xdata = Utils.Base64ToArrayBuffer(b64);
     } catch (e) {
+        if (DEBUG) console.debug("Caught " + e);
         fail.call(this, e);
         return;
     }

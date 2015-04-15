@@ -84,7 +84,7 @@ Squirrel.ContextMenu.init = function($root) {
                 uiIcon: "squirrel-icon-camera"
             },
             {
-                title: TX.tx("Pick"),
+                title: TX.tx("Pick characters"),
                 cmd: "pick_from",
                 uiIcon: "squirrel-icon-pick"
             },

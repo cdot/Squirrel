@@ -202,7 +202,7 @@
       </div>
     </div>
 
-    <div id="dlg_pick" class="dialog TX_title" title="Pick from string">
+    <div id="dlg_pick" class="dialog TX_title" title="Pick characters">
       <p>
         Click on the Nth character position to see what character it is
       </p>
@@ -227,6 +227,7 @@
       <button id="dlg_ss_choose" class="TX_title TX_text" title="Choose an image file">
         Choose Image File
       </button>
+      <p><img id="stegamage" src="images/GCHQ.png" /></p>
       <p id="dlg_ss_message"></p>
       <p style="clear:both">
         <p class="TX_text help">
@@ -245,7 +246,6 @@
     <!-- Not really a dialog, just a handy way to hide stuff -->
     <div class="dialog">
       <input type="file" id="dlg_load_file" />
-      <img id="stegamage" src="images/GCHQ.png" />
     </div>
   </body>
 </html>

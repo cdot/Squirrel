@@ -46,6 +46,7 @@ LocalStorageStore.prototype.read = function(path, ok, fail) {
     try {
         str = localStorage.getItem(path);
     } catch (e) {
+        if (DEBUG) console.debug("Caught " + e);
         fail.call(this, e);
         return;
     }
@@ -65,6 +66,7 @@ LocalStorageStore.prototype.write = function(path, data, ok, fail) {
         var str = Utils.ArrayBufferToPackedString(data);
         localStorage.setItem(path, str);
     } catch (e) {
+        if (DEBUG) console.debug("Caught " + e);
         fail.call(this, e);
         return;
     }

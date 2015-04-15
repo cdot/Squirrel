@@ -233,3 +233,7 @@ button.ui-button-icon-only {
 #dlg_ss > input {
     width: 100%;
 }
+
+#stegamage {
+    height: 100px;
+}

@@ -130,6 +130,7 @@ AbstractStore.prototype.reads = function(path, ok, fail) {
             try {
                 data = Utils.ArrayBufferToString(ab);
             } catch (e) {
+                if (DEBUG) console.debug("Caught " + e);
                 fail.call(self, e);
                 return;
             }

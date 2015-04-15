@@ -335,7 +335,7 @@ Squirrel.unsaved_changes = function(max_changes) {
 
     $(".node.modified").each(function() {
         if (DEBUG && !$(this).data("path")) debugger; // Missing data-path
-        message.push(TX.tx("$1 has changed", $(this).data("path")));
+        message.push(TX.tx("$1 has changed", $(this).data("path").replace(PATHSEP, "/")));
     });
 
     if (message.length > max_changes) {
@@ -586,10 +586,12 @@ Squirrel.load_cloud_hoard = function() {
                 try {
                     hoard = JSON.parse(data);
                 } catch (e) {
-                    if (DEBUG) console.debug("Client hoard JSON parse failed: " + e);
+                    if (DEBUG)
+                        console.debug("Client hoard JSON parse failed: " + e);
                     Squirrel.Dialog.squeak(
-                        TX.tx("$1 hoard exists, but can't be read. Check that you have the correct password.",
-                        this.identifier()));
+                        TX.tx("$1 hoard exists, but can't be read.",
+                              this.identifier())
+                            + TX.tx("Check that you have the correct password."));
                     // TX.tx("is corrupt")
                     Squirrel.cloud.status = "is corrupt";
                     Utils.soon(Squirrel.hoards_loaded);
@@ -683,6 +685,7 @@ Squirrel.load_client_hoard = function() {
                 // TX.tx("is loaded")
                 Squirrel.client.status = "is loaded";
             } catch (e) {
+                if (DEBUG) console.debug("Caught " + e);
                 Squirrel.Dialog.squeak(
                     TX.tx("$1 hoard exists, but can't be read. Check that you have the correct password.", this.identifier()),
                     Squirrel.init_application);

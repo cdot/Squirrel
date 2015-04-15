@@ -29,6 +29,7 @@ EncryptedStore.prototype.read = function(path, ok, fail) {
             try {
                 data = AES.decrypt(ab, self.engine.pass(), 256);
             } catch (e) {
+                if (DEBUG) console.debug("Caught " + e);
                 fail.call(self, e);
                 return;
             }
@@ -46,6 +47,7 @@ EncryptedStore.prototype.write = function(path, ab, ok, fail) {
     try {
         xa = AES.encrypt(ab, this.engine.pass(), 256);
     } catch (e) {
+        if (DEBUG) console.debug("Caught " + e);
         fail.call(this, e);
         return;
     }

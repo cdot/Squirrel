@@ -476,28 +476,26 @@ Squirrel.Dialog.ss_change_image = function() {
         function(data) {
             data = "data:" + file.type + ";base64,"
                 + Utils.ArrayBufferToBase64(data);
-            var $img = $("<img />")
+            $("#stegamage")
                 .attr("src", data)
                 .on("load", function() {
                     $(this).off("load");
-                    // Check that we can use the image. This may fail
-                    // due to cross-domain or capacity constraints.
+                    // Check that we can use the image.
+                    var steg = new Steganographer(this);
                     try {
-                        var steg = new Steganographer(this);
                         steg.inject("tada");
-                        $("#stegamage").attr("src", data);
-                        $("#dlg_ss_ok").attr("disabled", false);
-                        var h = this.height;
-                        var w = this.width;
-                        this.height = 100;
-                        $("#dlg_ss_message")
-                            .empty()
-                            .append($img)
-                            .append("<br>" + w + " x " + h);
-                        Utils.sometime("update_save");
                     } catch (e) {
-                        fail(e.message);
+                        if (DEBUG) console.debug("Caught " + e);
+                        fail(e);
+                        return;
                     }
+                    $("#dlg_ss_ok").attr("disabled", false);
+                    var h = this.naturalHeight;
+                    var w = this.naturalWidth;
+                    this.height = 100;
+                    $("#dlg_ss_message")
+                        .html("<br>" + w + " x " + h);
+                    Utils.sometime("update_save");
                 });
         },
         fail,
@@ -545,14 +543,10 @@ Squirrel.Dialog.store_settings = function(ok, reason) {
             });
     }
 
-    var $img = $("<img />").attr("src", $("#stegamage").attr("src"));
-    $img.attr("height", 150);
-    $("#dlg_ss_message")
-        .empty()
-        .append($img);
-
     $("#dlg_ss_storepath").val(Squirrel.client.hoard.options.store_path);
 
+    $("#dlg_ss_message")
+        .empty();
     $dlg.dialog({
         modal: true,
         width: "auto"

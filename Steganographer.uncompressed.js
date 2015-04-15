@@ -57,7 +57,7 @@ Steganographer.prototype.adjustToFit = function(size) {
     // number of chunks (32 bits) and chunk size (4 bits) are stored
     // 2 bits per channel, so that means 18 channels, 3 channels
     // per pixel so need 6 pixels for this info.
-    var slots = 3 * this.image.width * this.image.height - 6;
+    var slots = 3 * this.image.naturalWidth * this.image.naturalHeight - 6;
 
     var chunkSize = (bits / slots + 1) >> 0;
     if (DEBUG) {
@@ -105,8 +105,8 @@ Steganographer.prototype.inject = function(message) {
 
     var shadowCanvas = document.createElement("canvas");
     shadowCanvas.style.display = "none";
-    shadowCanvas.width = this.image.width;
-    shadowCanvas.height = this.image.height;
+    shadowCanvas.width = this.image.naturalWidth;
+    shadowCanvas.height = this.image.naturalHeight;
 
     var shadowCtx = shadowCanvas.getContext("2d");
     shadowCtx.drawImage(this.image, 0, 0);
@@ -223,8 +223,8 @@ Steganographer.prototype.extract = function() {
 
     var shadowCanvas = document.createElement("canvas");
     shadowCanvas.style.display = "none";
-    shadowCanvas.width = this.image.width;
-    shadowCanvas.height = this.image.height;
+    shadowCanvas.width = this.image.naturalWidth;
+    shadowCanvas.height = this.image.naturalHeight;
 
     var shadowCtx = shadowCanvas.getContext("2d");
     shadowCtx.drawImage(this.image, 0, 0);
