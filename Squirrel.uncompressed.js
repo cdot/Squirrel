@@ -952,6 +952,11 @@ Squirrel.init_ui = function() {
                 case "readfile":
                     $("#dlg_load_file").trigger("click");
                     break;
+                case "about":
+                    $("#dlg_about").dialog({
+                        modal: true
+                    });
+                    break;
                 default:
                     if (DEBUG) debugger; // Bad data-command
                 }

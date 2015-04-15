@@ -35,6 +35,7 @@
           <li class="TX_text" data-command="chpw">Change master password</li>
           <li class="TX_text" data-command="copydb">Copy entire database to clipboard (JSON)</li>
           <li data-command="readfile" class="TX_text">Load local JSON file</li>
+          <li data-command="about" class="TX_text">About Squirrel</li>
         </ul>
       </div>
       <div id="sites">
@@ -49,9 +50,6 @@
         </ul>
       </div>
     </div>
-    <p id="copyright">
-    Copyright &copy; 2015 Crawford Currie <a href="http://c-dot.co.uk">http://c-dot.co.uk</a>
-    </p>
 
     <!-- Dialogs -->
     <div id="dlg_login" class="dialog TX_title" title="Enter the password for your safe">
@@ -240,6 +238,17 @@
       </p>
       <p>
         <button id="dlg_ss_ok" class="TX_text">OK</button>
+      </p>
+    </div>
+
+    <div id="dlg_about" class="dialog TX_title" title="About Squirrel">
+      <p>
+        Squirrel is Copyright &copy; 2015 Crawford Currie <a href="http://c-dot.co.uk">http://c-dot.co.uk</a>
+      </p>
+      <p>
+        Licensed under the MIT License. Reuse within proprietary software is
+        permitted provided all copies of the licensed software include a
+        copy of the MIT License terms and the copyright notice.
       </p>
     </div>
 
