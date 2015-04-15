@@ -96,36 +96,6 @@ Note that Squirrel uses state-of-the-art Javascript and HTML5, and requires
 the latest browsers to run. If you are stuck with IE8, don't even think about
 it :-(
 
-## Developers
-
-Developers must be able to run the following:
-- GNU `make`
-- `uglifyJS` (requires node.js)
-- `perl`
-
-You are welcome to push proposals for changes/fixes to github.
-
-Squirrel incorporates support for translation of all user messages. The
-configured language in your browser is used which translation to use.
-
-Translations are simply mappings from the English string to the equivalent
-in the other language, using the symbols $1, $2 etc to indicate parameters
-such as key names. Currently a single (google) translation is provided as an
-example, in the file `locales/fr.json`
-
-To generate (or refresh) a translation for a language, for example German
-(language code de):
-- clone the repository
-- `make locales/de.json`
-- manually edit the `locales/de.json` file
-
-Making a translation will also generate a file called `strings.txt`
-which is convenient for pasting into Google Translate as a crude starting
-point.
-
-The `upload.pl` script is provided for those who want to upload a
-production version to an FTP site. See the `upload` target in the `Makefile`.
-
 ## About Squirrel
 
 Squirrel was written by Crawford Currie http://c-dot.co.uk, and uses the following 3rd party libraries:

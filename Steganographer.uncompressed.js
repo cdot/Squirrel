@@ -33,7 +33,6 @@ function Steganographer(image, maxChunk) {
     this.maxChunk = maxChunk || 3;
 
     if (typeof image === "string") {
-        var dataURL = image;
         this.image = new Image();
         this.image.src = image;
     } else
@@ -72,7 +71,7 @@ Steganographer.prototype.adjustToFit = function(size) {
             console.debug(
                 "Steg: Computed chunk size " + chunkSize
                     + " is > " + this.maxChunk
-                    + ", oversized by " + (-slots*(this.maxChunk-chunkSize))
+                    + ", oversized by " + (-slots * (this.maxChunk - chunkSize))
                     + " bits");
         throw (slots * (chunkSize - this.maxChunk))
             + " bits too many to hide in this image";
@@ -123,7 +122,7 @@ Steganographer.prototype.inject = function(message) {
     // colour, we can't modify transparency, and if we manipulate
     // transparency, we lose control over colour. Better on balance to
     // use the colour channels to store our secrets.
-    for (i = 3; i < iData.length; i += 4)
+    for (var i = 3; i < iData.length; i += 4)
         iData[i] = 0xFF;
 
     var a8_len = a8.length;
@@ -184,7 +183,7 @@ Steganographer.prototype.inject = function(message) {
     byte_i = 0;
     var shift = 30;
     while (shift >= 0) {
-        for (channel = 0; channel < 3 && shift >= 0; channel++) {
+        for (var channel = 0; channel < 3 && shift >= 0; channel++) {
             iData[byte_i] = (iData[byte_i] & 0xFC)
                 | ((numChunks >> shift) & 0x3);
             shift -= 2;

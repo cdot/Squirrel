@@ -262,7 +262,7 @@ Squirrel.Dialog.login = function(ok, fail, uReq, pReq) {
         var store = this;
 
         if (uReq) {
-            $user.attr("autofocus", "autofocus")
+            $user.attr("autofocus", "autofocus");
             $user.on("change", function() {
                 (pReq ? $pass : $signin).focus();
             });

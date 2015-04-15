@@ -20,6 +20,7 @@
             "Utils": true,
             "Hoard": true,
             "Aes": true,
+            "AES": true,
             "TX": true,
             "Dropbox": true,
             "gapi" : true,

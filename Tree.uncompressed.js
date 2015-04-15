@@ -33,8 +33,6 @@ Squirrel.Tree = { // Namespace
     undos: []     // undo stack
 };
 
-const PATHSEP = String.fromCharCode(1); // separator used in Path->node mapping
-
 /**
 * Root the DOM tree at the given node
 */
@@ -78,14 +76,14 @@ Squirrel.Tree.path = function($node) {
 
     var ps = $node.data("path"), path;
     if (typeof ps !== "undefined" && ps !== null)
-        return ps.split(PATHSEP);
+        return ps.split(Squirrel.PATHSEP);
 
     if (typeof $node.data("key") !== "undefined") {
         path = Squirrel.Tree.path($node.parent().closest(".node"));
 
         path.push($node.data("key"));
 
-        ps = path.join(PATHSEP);
+        ps = path.join(Squirrel.PATHSEP);
 
         // node->path mapping
         $node.data("path", ps);
@@ -108,7 +106,7 @@ Squirrel.Tree.path = function($node) {
 Squirrel.Tree.node = function(path) {
     "use strict";
 
-    var $node = Squirrel.Tree.cache[path.join(PATHSEP)];
+    var $node = Squirrel.Tree.cache[path.join(Squirrel.PATHSEP)];
     if (DEBUG && $node && $node.length === 0) debugger;
     return $node;
 };

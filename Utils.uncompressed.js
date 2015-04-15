@@ -161,8 +161,8 @@ var Utils = { // Namespace
 
     // Timeout intervals, milliseconds
     IMMEDIATE: 1,
-    SOON:      100,
-    SOMETIME:  250
+    SOON: 100,
+    SOMETIME: 250
 };
 
 /**
@@ -345,13 +345,16 @@ Utils.execute_queue = function(q) {
 
     Utils.q_ready();
     Utils.q_next(q);
-}
+};
 
 Utils.q_ready = function() {
+    "use strict";
+
     Utils.qready = true;
 };
 
 Utils.q_next = function(q) {
+    "use strict";
 
     if (q.length > 0 && Utils.qready) {
         var fn = q.shift();

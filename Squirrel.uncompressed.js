@@ -4,7 +4,9 @@
  * The Squirrel Application namespace and UI
  */
 
-var Squirrel = {};                     // Namespace
+var Squirrel = {
+    PATHSEP: String.fromCharCode(1) // separator used in Path->node mapping
+};
 
 /**
  * Event handler to update the tree view when data changes
@@ -335,7 +337,9 @@ Squirrel.unsaved_changes = function(max_changes) {
 
     $(".node.modified").each(function() {
         if (DEBUG && !$(this).data("path")) debugger; // Missing data-path
-        message.push(TX.tx("$1 has changed", $(this).data("path").replace(PATHSEP, "/")));
+        message.push(TX.tx("$1 has changed",
+                           $(this).data("path")
+                           .replace(Squirrel.PATHSEP, "/")));
     });
 
     if (message.length > max_changes) {
@@ -759,7 +763,7 @@ Squirrel.identify_user = function() {
     }
 
     // If we still need user or password, prompt
-    if (uReq|| pReq) {
+    if (uReq || pReq) {
         Squirrel.Dialog.login.call(
             Squirrel.client.store,
             function(user, pass) {

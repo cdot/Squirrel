@@ -12,13 +12,13 @@ function LocalStorageStore(params) {
     var key;
     var poss_user = null;
     while ((key = localStorage.key(i)) != null) {
-        var m;
-        if (m = /^Squirrel\.(.*)$/.exec(key)) {
+        var m = /^Squirrel\.(.*)$/.exec(key);
+        if (m) {
             if (poss_user) {
                 poss_user = null;
                 break;
             } else
-                poss_user = m[1]
+                poss_user = m[1];
         }
         i++;
     }

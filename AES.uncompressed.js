@@ -105,7 +105,7 @@ AES.encrypt = function(ab, password, nBits) {
     var ct = new Uint8Array(size);
     ct.set(counterBlock);
     var offset = counterBlock.length;
-    for (var b = 0; b < blockCount; b++) {
+    for (b = 0; b < blockCount; b++) {
         ct.set(ciphertxt[b], offset);
         offset += ciphertxt[b].length;
     }
