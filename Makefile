@@ -49,7 +49,7 @@ LPOS=">
 debug: $(patsubst %,%.uncompressed.html,$(STORES))
 
 %.uncompressed.html : Squirrel.html.src $(COMMONJS)
-	./sub.pl Squirrel.html.src \
+	perl build_scripts/sub.pl Squirrel.html.src \
 	LIBSJS_HTML '$(patsubst %,$(SPRE)%$(SPOS),$(LIBSJS))' \
 	COMMONJS_HTML '$(patsubst %,$(SPRE)%$(SPOS),$(COMMONJS))' \
 	STOREJS_HTML '$(patsubst %,$(SPRE)%$(SPOS),$($*JS))' \
@@ -67,7 +67,7 @@ debug: $(patsubst %,%.uncompressed.html,$(STORES))
 	$(patsubst %.uncompressed.css,%.min.css,$(COMMONCSS)) \
 	$(patsubst %.uncompressed.css,%.min.css,$(LIBSCSS)) \
 	$$(subst uncompressed,min,$$($$*JS))
-	./sub.pl Squirrel.html.src \
+	perl build_scripts/sub.pl Squirrel.html.src \
 	LIBSJS_HTML \
 	'$(patsubst %.uncompressed.js,$(SPRE)%.min.js$(SPOS),$(LIBSJS))' \
 	COMMONJS_HTML \
@@ -113,8 +113,8 @@ clean:
 eslint: *.uncompressed.js
 	eslint --config package.json $^
 
-locale/%.json: *.uncompressed.js Squirrel.html.src Makefile translate.pl
-	perl translate.pl $@ *.uncompressed.js Squirrel.html.src
+locale/%.json: *.uncompressed.js Squirrel.html.src
+	perl build_scripts/translate.pl $@ *.uncompressed.js Squirrel.html.src
 
 .SECONDEXPANSION:
 upload: \
@@ -127,5 +127,5 @@ upload: \
 	$(wildcard libs/images/*) \
 	$(wildcard libs/*.swf) \
 	$$(subst uncompressed,min,$(patsubst %,$$(%JS),$(STORES)))
-	./upload.pl $^
+	perl build_scripts/upload.pl $^
 
