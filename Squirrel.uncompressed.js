@@ -219,6 +219,9 @@ Squirrel.insert_data = function(path, data) {
     "use strict";
 
     var load_log = [];
+    $("#dlg_loading").dialog({
+        modal: true
+    });
     Squirrel.client.hoard.actions_from_hierarchy(
         { data: data },
         function(act, next) { // listener
@@ -236,6 +239,7 @@ Squirrel.insert_data = function(path, data) {
         function() { // chain on complete
             Utils.sometime("update_save");
             Utils.sometime("update_tree");
+            $("#dlg_loading").dialog("close");
             Squirrel.Dialog.squeak(
                 TX.tx("JSON has been loaded") + "<br />"
                     + load_log.join("<br />"));
@@ -565,7 +569,7 @@ Squirrel.hoards_loaded = function() {
 };
 
 /**
- * Called when we have a (possibly empty) client hoard.
+ * STEP 6: Called when we have a (possibly empty) client hoard.
 *  Try and synch it from the cloud.
  */
 Squirrel.load_cloud_hoard = function() {
@@ -614,8 +618,8 @@ Squirrel.load_cloud_hoard = function() {
 };
 
 /**
- * Called when there is no existing client hoard, to initialise a new one.
- * Take the opportunity to seed the image used in steganography.
+ * STEP 5: Called when there is no existing client hoard, to initialise
+ * a new one. Take the opportunity to seed the image used in steganography.
  */
 Squirrel.init_client_hoard = function() {
     "use strict";
@@ -630,7 +634,7 @@ Squirrel.init_client_hoard = function() {
 };
 
 /**
- * Once the cloud store and client store have been initialised, we can load
+ * STEP 4: Once the stores have been initialised, we can load
  * the client hoard. This will give us the baseline cache data and the
  * location of the cloud hoard, so we can then chain loading and merging
  * the cloud hoard.
@@ -710,10 +714,74 @@ Squirrel.load_client_hoard = function() {
 };
 
 /**
- * Once the cloud store is loaded, we know the username so can locate
- * the client store. if the cloud store load failed we may also have
- * to prompt for the username here as well.
-*/
+ * STEP 3: Login, fill in details the stores didn't provide, prompt
+ * is needed.
+ */
+Squirrel.identify_user = function() {
+    "use strict";
+
+    var uReq = true;
+    var pReq = true;
+
+    // Spread user information determined during store initialisation
+    // around.
+    if (Squirrel.cloud.store
+        && typeof Squirrel.cloud.store.user() !== "undefined") {
+        // Force the cloud user onto the client store
+        console.debug("Cloud user is preferred");
+        Squirrel.client.store.user(Squirrel.cloud.store.user());
+        uReq = false;
+    } else if (Squirrel.client.store
+               && typeof Squirrel.cloud.store.user() !== "undefined") {
+        // Force the client user onto the cloud store
+        console.debug("Client user is available");
+        if (Squirrel.cloud.store)
+            Squirrel.cloud.store.user(Squirrel.client.store.user());
+        uReq = false;
+    }
+
+    if (Squirrel.cloud.store
+        && typeof Squirrel.cloud.store.pass() !== "undefined") {
+        // Force the cloud pass onto the client store
+        console.debug("Cloud pass is preferred");
+        Squirrel.client.store.pass(Squirrel.cloud.store.pass());
+        pReq = false;
+    } else if (Squirrel.client.store
+               && typeof Squirrel.cloud.store.pass() !== "undefined") {
+        // Force the client pass onto the cloud store
+        console.debug("Client pass is available");
+        if (Squirrel.cloud.store)
+            Squirrel.cloud.store.pass(Squirrel.client.store.pass());
+        pReq = false;
+    }
+
+    // If we still need user or password, prompt
+    if (uReq|| pReq) {
+        Squirrel.Dialog.login.call(
+            Squirrel.client.store,
+            function(user, pass) {
+                if (Squirrel.client.store) {
+                    Squirrel.client.store.user(user);
+                    Squirrel.client.store.pass(pass);
+                }
+                if (Squirrel.cloud.store) {
+                    Squirrel.cloud.store.user(user);
+                    Squirrel.cloud.store.pass(pass);
+                }
+                Utils.soon(Squirrel.load_client_hoard);
+            },
+            function(e) {
+                Squirrel.Dialog.squeak(e);
+            },
+            uReq,
+            pReq);
+    } else
+        Utils.soon(Squirrel.load_client_hoard);
+};
+
+/**
+ * STEP 2: Once the cloud store is loaded, we can move on to the client store.
+ */
 Squirrel.init_client_store = function() {
     "use strict";
 
@@ -728,64 +796,18 @@ Squirrel.init_client_store = function() {
             $("#whoami").text(this.user());
             Squirrel.client.store = this;
             $(".unauthenticated").text(TX.tx("Loading..."));
-            // Chain loading the client store
-            Utils.soon(Squirrel.load_client_hoard);
+            // Chain the login prompt
+            Utils.soon(Squirrel.identify_user);
         },
         fail: function(e) {
             // We did our best!
             Squirrel.Dialog.squeak(TX.tx("Failed ") + e);
-        },
-        identify: function(ok, fail, uReq, pReq) {
-            // Won't ever get here unless uReq || pReq
-            if (uReq && Squirrel.cloud.store
-                && typeof Squirrel.cloud.store.user() !== "undefined") {
-
-                uReq = false; // user is in cloud store
-
-                if (pReq) {
-                    if (Squirrel.cloud.store
-                         && typeof Squirrel.cloud.store.pass() !== "undefined") {
-                        // The cloud store loaded OK, we will re-use the
-                        // password for the client store
-                        ok.call(this,
-                                Squirrel.cloud.store.user(),
-                                Squirrel.cloud.store.pass());
-                        return;
-                    } else {
-                        // The cloud store loaded but didn't require a
-                        // password. SMELL: as they are both Encrypted,
-                        // this should never happen.
-                        if (DEBUG) console.debug("I didn't expect to have to prompt for a client password");
-                        $("#dlg_login_user").val(
-                            Squirrel.cloud.store.user());
-                        // Fall through to prompt for password
-                    }
-                } else {
-                    ok.call(this, Squirrel.cloud.store.user());
-                    return;
-                }
-            } else if (Squirrel.cloud.store
-                       && typeof Squirrel.cloud.store.pass() !== "undefined") {
-                if (!uReq) {
-                    // We were only asked for a password.
-                    ok.call(this, undefined, Squirrel.cloud.store.pass());
-                    return;
-                }
-                // Fall through to prompt for the username
-                $("#dlg_login_pass").val(
-                    Squirrel.cloud.store.pass());
-                pReq = false;
-            }
-            Squirrel.Dialog.login.call(this, ok, fail, uReq, pReq);
         }
     });
 };
 
 /**
- * Establish contact with the cloud, and get user details.
- * Once the cloud store is initialised, we will know who the user
- * is, but we won't know where the cloud hoard actually is until we
- * have initialised the client store and loaded the client hoard.
+ * STEP 1: Establish contact with the cloud, and get user details.
  */
 Squirrel.init_cloud_store = function() {
     "use strict";
@@ -794,7 +816,7 @@ Squirrel.init_cloud_store = function() {
         ok: function() {
             Squirrel.cloud.store = this;
             // Chain the client store startup
-            Squirrel.init_client_store();
+            Utils.soon(Squirrel.init_client_store);
         },
         fail: function(e) {
             Squirrel.Dialog.squeak(
@@ -807,8 +829,7 @@ Squirrel.init_cloud_store = function() {
                     $(".unauthenticated").hide();
                     $(".authfailed").show();
                 });
-        },
-        identify: Squirrel.Dialog.login
+        }
     };
 
     p.understore = function(pp) {

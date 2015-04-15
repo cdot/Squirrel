@@ -15,7 +15,7 @@
   <body>
     <img class="logo" src="images/squirrel.png">
     <h1>Squirrel</h1>
-    <div class="unauthenticated TX_text">Authenticating...</div>
+    <div class="unauthenticated progress TX_text">Authenticating...</div>
     <div class="authfailed TX_text">Authentication failed. Refresh the browser to try again.</div>
     <div class="authenticated">
       <span id="search_label" class="TX_text">Search:</span>
@@ -54,7 +54,7 @@
     </p>
 
     <!-- Dialogs -->
-    <div id="dlg_login" class="dialog TX_title" title="Enter login information">
+    <div id="dlg_login" class="dialog TX_title" title="Enter the password for your safe">
       <p id="dlg_login_foruser"></p>
       <table width="100%">
 	<tbody>
@@ -77,8 +77,12 @@
       </p>
     </div>
 
-    <div id="dlg_saving" class="dialog TX_title" title="Saving">
+    <div id="dlg_saving" class="dialog TX_title" title="Saving...">
       <div id="dlg_saving_message"></div>
+    </div>
+
+    <div id="dlg_loading" class="dialog TX_title" title="Loading...">
+      <div class="TX_text progress">Please wait...</div>
     </div>
 
     <div id="dlg_alert" class="dialog TX_title" title="Alert">
@@ -223,8 +227,7 @@
       <button id="dlg_ss_choose" class="TX_title TX_text" title="Choose an image file">
         Choose Image File
       </button>
-      <p id="dlg_ss_message">
-      </p>
+      <p id="dlg_ss_message"></p>
       <p style="clear:both">
         <p class="TX_text help">
           Set the pathname of the image on your cloud store (for example
@@ -242,7 +245,7 @@
     <!-- Not really a dialog, just a handy way to hide stuff -->
     <div class="dialog">
       <input type="file" id="dlg_load_file" />
-      <img id="stegamage" src="images/squirrel.png" />
+      <img id="stegamage" src="images/GCHQ.png" />
     </div>
   </body>
 </html>

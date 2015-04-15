@@ -17,14 +17,6 @@
  * parameter to the create and invoke that callback when the store
  * is ready for use.
  *
- * If params.uReq of params.pReq are set true, then the store will
- * call the params.identify method in order to find out the username
- * and/or password. Either or both of these may be populated from another
- * source before this base class constructor is called - for example, if
- * the user is already logged in to a cloud data service, then it's
- * redundant to ask them their username again. However if the store
- * is encrypted, then there may need to be a password prompt.
- *
  * @class
  * @param params fields
  *    * ok, called on success
@@ -35,23 +27,7 @@
 function AbstractStore(params) {
     "use strict";
 
-    var self = this;
-
-    var uReq = (params.uReq && typeof this.user() === "undefined");
-    var pReq = (params.pReq && typeof this.pass() === "undefined");
-    if (uReq || pReq) {
-        params.identify.call(
-            this,
-            function(user, pass) {
-                if (uReq)
-                    self.suser = user;
-                if (pReq)
-                    self.spass = pass;
-                params.ok.call(self);
-            },
-            params.fail, uReq, pReq);
-    } else
-        params.ok.call(this);
+    params.ok.call(this);
 }
 
 // Special error message, must be used when a store is otherwise OK but

@@ -1,3 +1,4 @@
+var DEBUG = true;
 var steg;
 
 function update() {
@@ -7,7 +8,7 @@ function update() {
     var text = $textarea.val();
     $('#require').text(text.length);
     var $img = $('#img');
-    var steg = new Steganographer($img[0], 7);
+    var steg = new Steganographer($img[0], 5);
 
     var datauri;
     var tries = 5;
@@ -17,15 +18,19 @@ function update() {
         try {
             var data = new Uint8Array(text.length);
             for (var i = 0; i < text.length; i++)
-                data[i] = text.charCodeAt(i);
+                data[i] = text.charCodeAt(i) & 0xFF;
             datauri = steg.inject(data).toDataURL();
             break;
         } catch (e) {
-            var excess = ((e.p1 / 8 + 1) >> 0);
-            if (excess === 0)
+            var m = /.*?(\d+)/.exec(e);
+            if (m) {
+                var excess = ((Number.parseInt(m[1]) / 8 + 1) >> 0);
+                if (excess === 0)
+                    debugger;
+                console.debug(e);
+                text = text.substr(0, text.length - excess);
+            } else
                 debugger;
-            console.debug(e.message + ", too much by " + excess);
-            text = text.substr(0, text.length - excess);
         }
     }
 

@@ -115,7 +115,7 @@ GoogleDriveStore.prototype._init = function(params) {
         params.fail.call(
             self,
             TX.tx("Timeout trying to authorise access to Google Drive. Are popups blocked in your browser?"));
-    }, 1000); // SMELL: don't check this in
+    }, 20000);
 
     var handleAboutGetResult = function(result) {
         if (result.status === 200) {

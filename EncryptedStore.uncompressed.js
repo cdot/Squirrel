@@ -12,9 +12,6 @@
 function EncryptedStore(params) {
     "use strict";
 
-    // Push the password requirement down onto the embedded store
-    params.pReq = true;
-
     LayeredStore.call(this, params);
 }
 
@@ -29,17 +26,13 @@ EncryptedStore.prototype.read = function(path, ok, fail) {
         path,
         function(ab) {
             var data;
-            // TODO: convert AES to work on ArrayBuffers
-            var xstr = Utils.ArrayBufferToBase64(ab);
-            var str;
             try {
-                str = Aes.Ctr.decrypt(xstr, self.engine.pass(), 256);
+                data = AES.decrypt(ab, self.engine.pass(), 256);
             } catch (e) {
                 fail.call(self, e);
                 return;
             }
-            ab = Utils.Base64ToArrayBuffer(str);
-            ok.call(self, ab);
+            ok.call(self, data.buffer);
         },
         fail);
 };
@@ -48,23 +41,18 @@ EncryptedStore.prototype.write = function(path, ab, ok, fail) {
     "use strict";
 
     var self = this;
-
-    var str = Utils.ArrayBufferToBase64(ab);
-    var xstr;
+    var xa;
 
     try {
-        // TODO: convert AES to work on ArrayBuffers
-        xstr = Aes.Ctr.encrypt(str, this.engine.pass(), 256);
+        xa = AES.encrypt(ab, this.engine.pass(), 256);
     } catch (e) {
         fail.call(this, e);
         return;
     }
 
-    var nab = Utils.Base64ToArrayBuffer(xstr);
-
     this.engine.write(
         path,
-        nab,
+        xa.buffer,
         function() {
             ok.call(self);
         },

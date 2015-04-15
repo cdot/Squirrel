@@ -64,7 +64,7 @@ StegaStore.prototype.write = function(path, data, ok, fail) {
         var b64 = datauri.split(",", 2)[1];
         xdata = Utils.Base64ToArrayBuffer(b64);
     } catch (e) {
-        fail.call(this, e.message);
+        fail.call(this, e);
         return;
     }
 

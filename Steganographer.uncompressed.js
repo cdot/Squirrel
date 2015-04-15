@@ -14,7 +14,12 @@
 
 /**
  * Constructor.
- * @param image An Image, HTMLImageElement or String data-URL
+ * @param image An Image, HTMLImageElement or String data-URL. The image
+ * will be used as the source of hidden data, or the template for a new
+ * embedded image, depending on what methods you call.
+ * @param maxChunk override the default maximum number of bits per colour
+ * channel to use. The default is 3, which is a reasonable compromise between
+ * information capacity and image degradation.
  */
 function Steganographer(image, maxChunk) {
     "use strict";
@@ -22,12 +27,10 @@ function Steganographer(image, maxChunk) {
     // Messages are stored in chunks held in the least significant
     // bits of the three colour channels. The theoretical maximum
     // chunk size, using all the bits of the colour channels, would
-    // be 8 bits, but that would replace the image. A compromise is
-    // to limit the chunk size to a maximum of 4 bits per channel.
-    // We might be able to push that if image degradation isn't too bad.
-    this.maxChunk = maxChunk || 4;
-    if (this.maxChunk > 4)
-        this.maxChunk = 4;
+    // be 8 bits, but that would replace the image.
+    // The degradation becomes rapidly apparent beyond 3 bits, so that
+    // is our default.
+    this.maxChunk = maxChunk || 3;
 
     if (typeof image === "string") {
         var dataURL = image;
@@ -36,43 +39,6 @@ function Steganographer(image, maxChunk) {
     } else
         this.image = image;
 }
-
-/**
- * @private
- * static
- */
-Steganographer.isPrime = function(n) {
-    "use strict";
-
-    if (isNaN(n) || !isFinite(n) || n % 1 || n < 2)
-        return false;
-    if (n % 2 === 0)
-        return n === 2;
-    if (n % 3 === 0)
-        return n === 3;
-    var m = Math.sqrt(n);
-    for (var i = 5; i <= m; i += 6) {
-        if (n % i === 0)
-            return false;
-        if (n % (i + 2) === 0)
-            return false;
-    }
-    return true;
-};
-
-/**
- * @private
- * static
- */
-Steganographer.findNextPrime = function(n) {
-    "use strict";
-
-    if ((n & 1) === 0)
-        n++;
-    while (!Steganographer.isPrime(n))
-        n += 2;
-    return n;
-};
 
 /**
  * @private
@@ -108,8 +74,8 @@ Steganographer.prototype.adjustToFit = function(size) {
                     + " is > " + this.maxChunk
                     + ", oversized by " + (-slots*(this.maxChunk-chunkSize))
                     + " bits");
-
-        return slots * (this.maxChunk - chunkSize);
+        throw (slots * (chunkSize - this.maxChunk))
+            + " bits too many to hide in this image";
     }
 
     if (DEBUG)
@@ -121,9 +87,12 @@ Steganographer.prototype.adjustToFit = function(size) {
 
 /**
  * Inject some content into the given image
- * @param data the content, in an ArrayBuffer.
+ * @param data the content, in an ArrayBuffer. Size must be <= (2^32-1)
+ * @return a canvas object containing the resulting image, not
+ * attached to the document.
  * @throws if the image doesn't have enough capacity given the
- * current parameters
+ * current parameters. The exception is a structure containing a message
+ * and the number of bits that could *not* be accomodated.
  */
 Steganographer.prototype.inject = function(message) {
     // Can't "use strict"; because of the image manipultaion
@@ -150,26 +119,25 @@ Steganographer.prototype.inject = function(message) {
     // is 4 bytes (RGBA)
 
     // We have to init the alpha channel of the image to fully opaque,
-    // otherwise color values can't be manipulated.
+    // otherwise color values can't be manipulated. If we manipulate
+    // colour, we can't modify transparency, and if we manipulate
+    // transparency, we lose control over colour. Better on balance to
+    // use the colour channels to store our secrets.
     for (i = 3; i < iData.length; i += 4)
-        iData[i] = 255;
+        iData[i] = 0xFF;
 
     var a8_len = a8.length;
     var chunkSize = this.adjustToFit(a8_len);
-    if (chunkSize <= 0)
-        throw {
-            message: "Insufficient capacity in the image to hide everything",
-            p1: -chunkSize
-        };
 
-    // Data bytes are written after we have left space for the length,
-    // which is added in once we know it
+    // We reserve the first 24 bytes (6 pixels) for the data length (32 bits)
+    // and chunk size (4 bits) packed 2 bits per colour channel.
     var byte_i = 24;
-    var numChunks = 0;
 
-    // Function to add a chunk into the image. c <= chunkMask
     var chunkMask = (1 << chunkSize) - 1;
     var iChunkMask = ~chunkMask;
+
+    // Function to add a chunk into the image. c <= chunkMask
+    var numChunks = 0;
     var addChunk = function(c) {
         iData[byte_i] = (iData[byte_i] & iChunkMask) | c;
         byte_i++;
@@ -185,23 +153,20 @@ Steganographer.prototype.inject = function(message) {
     var a8_iM1;      // what remains of the i-1'th byte
     var bits;        // Number of bits remaining to process in the i'th byte
     var pending = 0; // number of bits still pending from the i-1'th byte
-    var chunk;
     for (i = 0; i < a8_len; i++) {
         a8_i = a8[i];
         bits = 8;
         if (pending > 0) {
             // Remaining (high) bits of previous byte combined with
             // low order bits of current byte
-            chunk = (a8_iM1 & (chunkMask >> (chunkSize - pending)))
-                | ((a8_i & (chunkMask >> pending)) << pending);
-            addChunk(chunk);
+            addChunk((a8_iM1 & (chunkMask >> (chunkSize - pending)))
+                     | ((a8_i & (chunkMask >> pending)) << pending));
             a8_i >>= (chunkSize - pending);
             bits -= (chunkSize - pending);
         }
         // Get as many whole chunks from the byte as we can
-        while (bits > chunkSize) {
-            chunk = a8_i & chunkMask;
-            addChunk(chunk);
+        while (bits >= chunkSize) {
+            addChunk(a8_i & chunkMask);
             a8_i >>= chunkSize;
             bits -= chunkSize;
         }
@@ -209,13 +174,13 @@ Steganographer.prototype.inject = function(message) {
         a8_iM1 = a8_i;
     }
     if (pending > 0) {
-        // Push the final partial chunk, padding with 0
-        addChunk(a8_iM1 << chunkSize);
+        // Push the final partial chunk
+        addChunk(a8_iM1);
     }
 
     // Embed data length and chunkSize using 2 bits from each
     // colour channel (6 bits per pixel, 32 bit length + 4 bit chunksize
-    // = 36bits, so 6 pixels is just perfect.
+    // = 36bits, so 6 pixels (24 bytes) is just perfect.
     byte_i = 0;
     var shift = 30;
     while (shift >= 0) {
@@ -242,7 +207,6 @@ Steganographer.prototype.inject = function(message) {
                 + (numChunks * chunkSize / 8) + " bytes of data");
 
     imageData.data = iData;
-
     shadowCtx.putImageData(imageData, 0, 0);
 
     return shadowCanvas;
@@ -312,8 +276,10 @@ Steganographer.prototype.extract = function() {
             charCode = mmi >> (chunkSize - bitCount);
         }
     }
-    if (mi < ((numChunks * chunkSize) >> 3))
+    if (mi < ((numChunks * chunkSize) >> 3)) {
+        console.debug("unwhak " + charCode);
         message[mi++] = charCode & 0xFF;
+    }
     if (DEBUG)
         console.debug("Steg: Extracted " + message.length + " bytes");
     return message.buffer;

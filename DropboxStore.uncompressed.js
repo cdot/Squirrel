@@ -31,7 +31,6 @@ function DropboxStore(params) {
                             "Dropbox username " + accountInfo.name);
                         self.db_client = client;
                         self.user(accountInfo.name);
-                        params.uReq = false;
                         AbstractStore.call(self, params);
                     }
                 });

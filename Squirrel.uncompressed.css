@@ -129,7 +129,7 @@ a:hover {
     color: #baec7e;
 }
 
-.unauthenticated {
+.progress {
     background: transparent url("images/progress_bar.gif") no-repeat 13em center;
 }
 

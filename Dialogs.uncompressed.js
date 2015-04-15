@@ -241,8 +241,6 @@ Squirrel.Dialog.change_password = function() {
 /**
  * The login dialog should never be called more than once. If it is,
  * then the uReq/pReq params will be ignored in the second call.
- * This method is called as the 'identify' method of the store constructor,
- * so 'this' is set to the store.
  * @param ok called on dialog closed, passing the user and password
  * and with this set to the store
  * @param fail never called, but could be used if the login failed
@@ -547,9 +545,11 @@ Squirrel.Dialog.store_settings = function(ok, reason) {
             });
     }
 
+    var $img = $("<img />").attr("src", $("#stegamage").attr("src"));
+    $img.attr("height", 150);
     $("#dlg_ss_message")
         .empty()
-        .append($("<img />").attr("src", $("#stegamage").attr("src")));
+        .append($img);
 
     $("#dlg_ss_storepath").val(Squirrel.client.hoard.options.store_path);
 
