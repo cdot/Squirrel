@@ -83,10 +83,12 @@ colour image will usually suffice. It's a good idea to change the image
 you use on a regular basis (and change where it is stored) as you will otherwise
 leave traceable usage patterns (e.g. by updating the same image frequently).
 
-Run Squirrel by loading the HTML file that corresponds to your cloud provider
-(e.g. dropbox.html). You will be prompted for the encryption password you want
-to use. Once in, you will be asked for the image you want to use, and the
-store path in the cloud.
+Run Squirrel by loading the HTML file that corresponds to your cloud provider.
+If you are running from the built version on github, then https://cdn.rawgit.com/cdot/Squirrel/master/drive.html for the Google Drive build, and https://cdn.rawgit.com/cdot/Squirrel/master/dropbox.html for the Dropbox version.
+
+You will be prompted for the encryption password you want
+to use. The first time you run you will be asked for the image you want to
+use, and the store path in the cloud.
 
 You are then presented with a simple interface where you can create keys
 (and keys within keys), and add data associated with those keys. Double-click

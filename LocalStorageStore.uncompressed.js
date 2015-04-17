@@ -22,8 +22,8 @@ function LocalStorageStore(params) {
         }
         i++;
     }
-    if (poss_user !== null) {
-        console.debug("Lss: Identified possible user " + poss_user);
+    if (poss_user) {
+        if (DEBUG) console.debug("Lss: Identified possible user " + poss_user);
         this.user(poss_user);
     }
 
