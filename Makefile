@@ -61,12 +61,12 @@ debug: $(patsubst %,%.uncompressed.html,$(STORES))
 .PRECIOUS: %.min.js %.min.css
 
 .SECONDEXPANSION:
-release/%.html : Squirrel.html.src \
-	$(subst %.uncompressed,release/%.min,$(COMMONJS)) \
-	$(subst %.uncompressed,release/%.min, $(LIBSJS)) \
+%.html : Squirrel.html.src \
+	$(subst uncompressed,min,$(COMMONJS)) \
+	$(subst uncompressed,min, $(LIBSJS)) \
 	$(patsubst %.uncompressed.css,%.min.css,$(COMMONCSS)) \
 	$(patsubst %.uncompressed.css,%.min.css,$(LIBSCSS)) \
-	$$(subst %.uncompressed,release/%.min,$$($$*JS))
+	$$(subst uncompressed,min,$$($$*JS))
 	perl build_scripts/sub.pl Squirrel.html.src \
 	LIBSJS_HTML \
 	'$(patsubst %.uncompressed.js,$(SPRE)%.min.js$(SPOS),$(LIBSJS))' \
@@ -96,10 +96,9 @@ release/%.html : Squirrel.html.src \
 	echo "" > $@; \
 	$(patsubst %,cleancss %>>$@;,$^)
 
-release: \
-	$(subst %.uncompressed,release/%.min, $(COMMONJS)) \
-	$(subst %.uncompressed,release/%.min, $(LIBSJS)) \
-	$(patsubst %,release/%.html,$(STORES))
+release: $(subst uncompressed,min, $(COMMONJS)) \
+	 $(subst uncompressed,min, $(LIBSJS)) \
+	$(patsubst %,%.html,$(STORES))
 	@echo "Done"
 
 # Other targets
@@ -120,13 +119,13 @@ locale/%.json: *.uncompressed.js Squirrel.html.src
 .SECONDEXPANSION:
 upload: \
 	$(patsubst %,%.html,$(STORES)) \
-	$(subst %.uncompressed,release/%.min,$(COMMONJS)) \
-	$(subst %.uncompressed,release/%.min, $(LIBSJS)) \
+	$(subst uncompressed,min,$(COMMONJS)) \
+	$(subst uncompressed,min, $(LIBSJS)) \
 	$(patsubst %.uncompressed.css,%.min.css,$(COMMONCSS)) \
 	$(patsubst %.uncompressed.css,%.min.css,$(LIBSCSS)) \
 	$(wildcard images/*) \
 	$(wildcard libs/images/*) \
 	$(wildcard libs/*.swf) \
-	$$(subst %.uncompressed,release/%.min,$(patsubst %,$$(%JS),$(STORES)))
+	$$(subst uncompressed,min,$(patsubst %,$$(%JS),$(STORES)))
 	perl build_scripts/upload.pl $^
 

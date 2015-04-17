@@ -273,17 +273,19 @@ Utils.escape_selector = function(s) {
  * @return a hash mapping parameter name to decoded value
  */
 Utils.getURLParameters = function() {
+    "use strict";
+
     var params = {};
-    var bits = location.search.split('?', 2);
+    var bits = location.search.split("?", 2);
     if (bits.length < 2)
         return params;
     var pairs = bits[1].split(/[&;]/);
     for (var i = 0; i < pairs.length; i++) {
-        var pair = decodeURIComponent(pairs[i].replace(/\+/g, '%20'));
-        var kv = pair.split('=', 2);
-        params[kv[0]] = kv[1] || null;
+        var pair = decodeURIComponent(pairs[i].replace(/\+/g, "%20"));
+        var kv = pair.split("=", 2);
+        params[kv[0]] = (kv[1] || null);
     }
-}
+};
 
 /**
  * Convert an arbitrary string to a legal HTTP fragment name

@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <!-- meta name="cache-control" content="public">
+    <meta name="expires" content="Wed, 1 Jan 2025 12:00:00 GMT" -->
+    <link rel="icon" href="images/favicon.ico" type="image/x-icon" />
+    <script type="text/javascript" src="libs/jquery-2.1.3.min.js"></script> <script type="text/javascript" src="libs/jquery-ui.min.js"></script> <script type="text/javascript" src="libs/jquery-bonsai.min.js"></script> <script type="text/javascript" src="libs/jquery-ui-contextmenu.min.js"></script> <script type="text/javascript" src="libs/ZeroClipboard.min.js"></script> <script type="text/javascript" src="libs/aes.min.js"></script>
+    <script type="text/javascript" src="Utils.min.js"></script> <script type="text/javascript" src="Translation.min.js"></script> <script type="text/javascript" src="AbstractStore.min.js"></script> <script type="text/javascript" src="LocalStorageStore.min.js"></script> <script type="text/javascript" src="AES.min.js"></script> <script type="text/javascript" src="EncryptedStore.min.js"></script> <script type="text/javascript" src="Steganographer.min.js"></script> <script type="text/javascript" src="StegaStore.min.js"></script> <script type="text/javascript" src="Squirrel.min.js"></script> <script type="text/javascript" src="Tree.min.js"></script> <script type="text/javascript" src="ContextMenu.min.js"></script> <script type="text/javascript" src="Dialogs.min.js"></script> <script type="text/javascript" src="Hoard.min.js"></script>
+    <script type="text/javascript" src="GoogleDriveStore.min.js"></script>
+    <link rel="stylesheet" href="libs/jquery-ui.min.css"> <link rel="stylesheet" href="libs/jquery-bonsai.min.css">
+    <link rel="stylesheet" href="Squirrel.min.css">
+    <!--DEBUG-->
+  </head>
+  <body>
+    <img class="logo" src="images/squirrel.png">
+    <h1>Squirrel</h1>
+    <div class="unauthenticated progress TX_text">Authenticating...</div>
+    <div class="authfailed TX_text">Authentication failed. Refresh the browser to try again.</div>
+    <div class="authenticated">
+      <span id="search_label" class="TX_text">Search:</span>
+      <input id="search" value="" class="TX_title" title="Enter search string" />
+      <span id="search_hits"></span>
+      <div id="signed_in">
+        <span class="TX_text">Signed in as: </span><span id="whoami"></span>
+      </div>
+      <div id="toolbar">
+        <button id="extras_button" class="authenticated TX_title TX_text" title="Tools/Options">Tools</button>
+        <button id="undo_button" class="icon_button TX_title TX_text" title="Undo last change">Undo</button>
+        <button id="save_button" class="icon_button TX_text">Save</button>
+        <ul id="extras_menu" class="menu TX_title" title="Extras">
+          <li class="TX_text" id="menu_enass" data-command="enass">Enable autosave</li>
+          <li class="TX_text" id="menu_disas" data-command="disas">Disable autosave</li>
+          <li class="TX_text" data-command="chss">Change cloud store settings</li>
+          <li class="TX_text" data-command="chpw">Change master password</li>
+          <li class="TX_text" data-command="copydb">Copy entire database to clipboard (JSON)</li>
+          <li data-command="readfile" class="TX_text">Load local JSON file</li>
+          <li data-command="about" class="TX_text">About Squirrel</li>
+        </ul>
+      </div>
+      <div id="sites">
+        <ul id="bonsai-root" name="/" class="bonsai-root">
+          <li id="sites-node" name="/" class="node">
+            <div class="node_div treecollection">
+              <span class="TX_text">Sites</span>
+            </div>
+            <ul id="sites-list">
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Dialogs -->
+    <div id="dlg_login" class="dialog TX_title" title="Enter the password for your safe">
+      <p id="dlg_login_foruser"></p>
+      <table width="100%">
+	<tbody>
+	  <tr id="dlg_login_uReq">
+	    <td class="TX_text">Username:</td>
+	    <td>
+	      <input size="50" id="dlg_login_user" value="" class="TX_title" title="Enter username" />
+	    </td>
+	  </tr>
+          <tr id="dlg_login_pReq">
+	    <td class="TX_text">Password:</td>
+	    <td>
+	      <input type="password" size="50" id="dlg_login_pass" class="TX_title" title="Enter password" value="" />
+	    </td>
+	  </tr>
+	</tbody>
+      </table>
+      <p>
+        <button id="dlg_login_signin" class="TX_text">Sign In</button>
+      </p>
+    </div>
+
+    <div id="dlg_saving" class="dialog TX_title" title="Saving...">
+      <div id="dlg_saving_message"></div>
+    </div>
+
+    <div id="dlg_loading" class="dialog TX_title" title="Loading...">
+      <div class="TX_text progress">Please wait...</div>
+    </div>
+
+    <div id="dlg_alert" class="dialog TX_title" title="Alert">
+      <p id="dlg_alert_message"></p>
+      <button id="dlg_alert_ok" class="TX_text">OK</button>
+      <button id="dlg_alert_cancel" class="TX_text">Cancel</button>
+    </div>
+
+    <div id="dlg_gen_rand" class="dialog TX_title" title="Generate random value">
+      <span class="TX_text">Suggested value for</span>
+      '<span id="dlg_gen_rand_key"></span>': '<span id="dlg_gen_rand_idea" class="value"></span>'
+      <p>
+      <span class="TX_text">Length:</span>
+      <input size="20" value="24" id="dlg_gen_rand_len" class="TX_title" title="Enter password length" />
+      </p>
+      <p>
+      <span class="TX_text">Character range:</span>
+      <input size="20" value="A-Za-z0-9" id="dlg_gen_rand_chs" class="TX_title" title="Enter the characters that are legal in passwords for this site. You can use character ranges like A-Z or 0-9" />
+      </p>
+      <div>
+        <button id="dlg_gen_rand_use" class="TX_text">Use this</button>
+        <button id="dlg_gen_rand_again" class="TX_text">Try again</button>
+        <button id="dlg_gen_rand_cancel" class="TX_text">Cancel</button>
+      </div>
+    </div>
+
+    <div id="dlg_delconf" class="dialog TX_title" title="Delete entry">
+      <p>
+        <span class="TX_text">Are you sure you want to delete</span> '<span id="dlg_delconf_message"></span>'
+        <span id="dlg_delconf_coll" class="TX_text"> and everything under it?</span>
+      </p>
+      <div>
+        <button id="dlg_delconf_cancel" class="TX_text">Cancel</button>
+        <button id="dlg_delconf_delete" class="TX_text">Delete</button>
+      </div>
+    </div>
+    
+    <div id="dlg_conflicts" class="dialog TX_title" title="WARNING!">
+      <p class="TX_text">
+        Conflicts were detected while merging actions from the Cloud:
+      </p>
+      <div id="dlg_conflicts_message">
+      </div>
+      <p class="TX_text">
+        Please review these rejected actions before saving
+      </p>
+    </div>
+
+    <div id="dlg_chpw" class="dialog TX_title" title="Change Password">
+      <p class="warning TX_text">
+        You should ensure that all clients up to date and you
+        are safely connected to the internet before doing this,
+        or you will lose data. Changing the master password will
+        overwrite all data in the cloud with what you can currently
+        see in the browser.
+      </p>
+      <table>
+        <tr>
+          <td>
+            <label for="dlg_chpw_pass" class="TX_text">New password</label>
+          </td>
+          <td>
+            <input type="password" size="50" id="dlg_chpw_pass" class="TX_title" title="Enter new password" value="" />
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <label for="dlg_chpw_conf" class="TX_text">
+              Confirm new password
+            </label>
+          </td>
+          <td>
+            <input type="password" size="50" id="dlg_chpw_conf" class="TX_title" title="Re-enter new password" value="" />
+          </td>
+        </tr>
+      </table>
+      <p>
+        <input type="checkbox" id="dlg_chpw_show">
+        <label for="dlg_chpw_show" class="TX_text">
+          Show password
+        </label>
+      </p>
+      <div>
+        <button id="dlg_chpw_set" class="TX_title TX_text" title="Set new master password">Set new password</button>
+      </div>
+    </div>
+
+    <div id="dlg_alarm" class="dialog TX_title" title="Reminder">
+      <p class="TX_text">
+        Select when you want to be reminded about this entry.
+      </p>
+      <p class="TX_text">
+        The reminder will be reset whenever
+        the entry is modified.
+      </p>
+      <p>
+        <label for="dlg_alarm_number" class="TX_text">Remind after</label>
+        <input id="dlg_alarm_number" />
+        <select id="dlg_alarm_units">
+          <option value="d" class="TX_text">days</option>
+          <option value="w" class="TX_text">weeks</option>
+          <option value="m" selected="selected" class="TX_text">months</option>
+          <option value="y" class="TX_text">years</option>
+        </select>
+      </p>
+      <p>
+        <span class="TX_text">Next reminder is due in</span>
+        <span id="dlg_alarm_next"></span>
+        <span class="dlg_alarm_next d TX_text">days</span>
+        <span class="dlg_alarm_next w TX_text">weeks</span>
+        <span class="dlg_alarm_next m TX_text">months</span>
+        <span class="dlg_alarm_next y TX_text">years</span>
+      </p>
+      <div>
+        <button id="dlg_alarm_set" class="TX_title TX_text" title="Set (or reset) reminder">Set reminder</button>
+        <button id="dlg_alarm_cancel" class="TX_title TX_text" title="Cancel reminder">Cancel reminder</button>
+      </div>
+    </div>
+
+    <div id="dlg_pick" class="dialog TX_title" title="Pick characters">
+      <p>
+        Click on the Nth character position to see what character it is
+      </p>
+      <table>
+        <tbody>
+          <tr id="dlg_pick_which"></tr>
+          <tr id="dlg_pick_from"></tr>
+        </tbody>
+      </table>
+      <p>
+        <button id="dlg_pick_clear" class="TX_text">Clear</button>
+      </p>
+    </div>
+
+    <div id="dlg_ss" class="dialog TX_title" title="Store settings">
+      <p class="TX_text help">Choose a local image that will be copied
+        and used to hide your data in the cloud. This should be a complex
+        colour image of at least 1024x768 pixels, preferably with variable
+        transparency. Note that very large images may take a long time to
+        load and save.</p>
+      <input type="file" id="dlg_ss_file" class="hidden" />
+      <button id="dlg_ss_choose" class="TX_title TX_text" title="Choose an image file">
+        Choose Image File
+      </button>
+      <p><img id="stegamage" src="images/GCHQ.png" /></p>
+      <p id="dlg_ss_message"></p>
+      <p style="clear:both">
+        <p class="TX_text help">
+          Set the pathname of the image on your cloud store. For example
+          if you choose 'photos/stills/grandma.png' it will use the file
+          'grandma.png' in the directory 'photos/stills'.
+        </p>
+        <label for="dlg_ss_storepath" class="TX_text">Store path: </label>
+        <input id="dlg_ss_storepath" type="text" value="" class="TX_title" title="Pathname of the image in your cloud store"/>
+      </p>
+      <p>
+        <button id="dlg_ss_ok" class="TX_text">OK</button>
+      </p>
+    </div>
+
+    <div id="dlg_about" class="dialog TX_title" title="About Squirrel">
+      <p>
+        Squirrel is Copyright &copy; 2015 Crawford Currie <a href="http://c-dot.co.uk">http://c-dot.co.uk</a>
+      </p>
+      <p>
+        Licensed under the MIT License. Reuse within proprietary software is
+        permitted provided all copies of the licensed software include a
+        copy of the MIT License terms and the copyright notice.
+      </p>
+    </div>
+
+    <!-- Not really a dialog, just a handy way to hide stuff -->
+    <div class="dialog">
+      <input type="file" id="dlg_load_file" />
+    </div>
+  </body>
+</html>
