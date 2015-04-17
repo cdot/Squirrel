@@ -5,6 +5,59 @@
  */
 
 /**
+ * Needed to be able to read binary files.
+ * http://www.henryalgus.com/reading-binary-files-using-jquery-ajax/
+*/
+$.ajaxTransport("+binary", function(options, originalOptions, jqXHR){
+    "use strict";
+
+    // check for conditions and support for blob / arraybuffer response type
+    if (window.FormData
+        && ((options.dataType && (options.dataType === "binary"))
+            || (options.data
+                && ((window.ArrayBuffer && options.data instanceof ArrayBuffer)
+                    || (window.Blob && options.data instanceof Blob)))))
+    {
+        return {
+            // create new XMLHttpRequest
+            send: function(headers, callback){
+		// setup all variables
+                var xhr = new XMLHttpRequest(),
+		url = options.url,
+		type = options.type,
+		async = options.async || true,
+		// blob or arraybuffer. Default is blob
+		dataType = options.responseType || "blob",
+		data = options.data || null,
+		username = options.username || null,
+		password = options.password || null;
+					
+                xhr.addEventListener("load", function(){
+			var data2 = {};
+			data2[options.dataType] = xhr.response;
+			// make callback and send data
+			callback(xhr.status, xhr.statusText,
+                                 data2, xhr.getAllResponseHeaders());
+                });
+ 
+                xhr.open(type, url, async, username, password);
+				
+		// setup custom headers
+		for (var i in headers ) {
+			xhr.setRequestHeader(i, headers[i] );
+		}
+				
+                xhr.responseType = dataType;
+                xhr.send(data);
+            },
+            abort: function(){
+                jqXHR.abort();
+            }
+        };
+    }
+});
+
+/**
  * Plugin to generate taphold events on platforms that don't
  * natively support them
  */
@@ -216,14 +269,21 @@ Utils.escape_selector = function(s) {
 */
 
 /**
- * Get the value of a URL parameter
-Utils.getURLParameter = function(name) {
-    var re = new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)');
-    var hits = re.exec(location.search) || [,""];
-    return decodeURIComponent(hits[1].replace(/\+/g, '%20'))
-        || null;
+ * Get the URL parameters
+ * @return a hash mapping parameter name to decoded value
+ */
+Utils.getURLParameters = function() {
+    var params = {};
+    var bits = location.search.split('?', 2);
+    if (bits.length < 2)
+        return params;
+    var pairs = bits[1].split(/[&;]/);
+    for (var i = 0; i < pairs.length; i++) {
+        var pair = decodeURIComponent(pairs[i].replace(/\+/g, '%20'));
+        var kv = pair.split('=', 2);
+        params[kv[0]] = kv[1] || null;
+    }
 }
-*/
 
 /**
  * Convert an arbitrary string to a legal HTTP fragment name

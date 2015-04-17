@@ -20,29 +20,37 @@ StegaStore.prototype.read = function(path, ok, fail) {
     "use strict";
 
     var self = this;
-    
+    var extract = function() {
+        var steg = new Steganographer($("#stegamage")[0]);
+        var ab2;
+        try {
+            ab2 = steg.extract();
+        } catch (e) {
+            if (DEBUG) console.debug("Caught " + e);
+            fail.call(self, e);
+            return;
+        }
+                        
+        ok.call(self, ab2);
+    };
+
     this.engine.read(
         path,
         function(ab) {
             // Make a data-URI
             var datauri = "data:image/png;base64,"
                 + Utils.ArrayBufferToBase64(ab);
-            $("#stegamage")
-                .attr("src", datauri)
-                .on("load", function() {
-                    $(this).off("load");
-                    var steg = new Steganographer(this);
-                    var ab2;
-                    try {
-                        ab2 = steg.extract();
-                    } catch (e) {
-                        if (DEBUG) console.debug("Caught " + e);
-                        fail.call(self, e);
-                        return;
-                    }
-                    
-                    ok.call(self, ab2);
-                });
+            // if the image has changed, wait for it to reload
+            if (datauri !== $("#stegamage").attr("src")) {
+                $("#stegamage")
+                    .attr("src", datauri)
+                    .on("load", function() {
+                        $(this).off("load");
+                        extract();
+                    });
+            } else {
+                extract();
+            }
         },
         fail);
 };

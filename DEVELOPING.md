@@ -36,3 +36,37 @@ drive tests require valid redirects to be set up in the application).
 
 Two additional HTML files, `steg.html` and `aes.html` are used for testing
 steganography and encryption modules respectively.
+
+# Hosting Squirrel on other sites
+
+By default Squirrel is configured to be served only from my own site, using
+the OAuth2 identification parameters set up for this site with various
+storage providers. If you prefer to host Squirrel on a different site, this
+is fairly easy to set up.
+
+## Google Drive
+
+In the Google Drive API console https://console.developers.google.com/project
+you need to create a new project. In the "APIs" section, enable the "Drive" API.
+In the "Credentials" section find the Client ID and replace the CLIENT_ID
+in GoogleDriveStore.uncompressed.js. Configure the "Javascript origins"
+to point to your site.
+
+You can test using `test/drive.html`.
+
+When you are ready, `make drive.html`
+
+## Dropbox
+
+In the Dropbox App Console https://www.dropbox.com/developers/apps you will
+need to create a new application. You need one piece of information, the
+App key. Copy this and replace the APP_KEY constant in
+DropboxStore.uncompressed.js.
+
+You will also have to configure appropriate an Oauth2 redirect URL to point
+to dropbox.html (which must be hosted on an `https:` server.)
+
+You can test using `test/dropbox.html`
+
+When you are ready, `make dropbox.html`.
+

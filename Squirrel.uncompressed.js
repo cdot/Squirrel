@@ -383,6 +383,7 @@ Squirrel.save_hoards = function() {
     });
 
     var finished = function() {
+        if (DEBUG) console.debug("...save finished");
         Utils.sometime("update_save");
         $messy.append(client_ok && cloud_ok
                       ? TX.tx("Save complete")
@@ -397,6 +398,8 @@ Squirrel.save_hoards = function() {
     },
 
     save_client = function() {
+        if (DEBUG) console.debug("...save to client");
+
         if (Squirrel.client.status === "is loaded"
             && $(".modified").length === 0) {
             finished();
@@ -407,6 +410,7 @@ Squirrel.save_hoards = function() {
             "Squirrel." + Squirrel.client.store.user(),
             JSON.stringify(Squirrel.client.hoard),
             function() {
+                if (DEBUG) console.debug("...client save OK");
                 $(".modified").removeClass("modified");
                 // TX.tx("is loaded")
                 Squirrel.client.status = "is loaded";
@@ -418,6 +422,7 @@ Squirrel.save_hoards = function() {
                 finished();
             },
             function(e) {
+                if (DEBUG) console.debug("...client save failed " + e);
                 $messy.append(
                     "<div class='error'>"
                         + TX.tx("Failed to save in $1: $2",
@@ -432,10 +437,12 @@ Squirrel.save_hoards = function() {
     update_cloud_store = function(cloard) {
         cloard.actions = cloard.actions.concat(Squirrel.client.hoard.actions);
         if (Squirrel.cloud.store) {
+            if (DEBUG) console.debug("...save to cloud");
             Squirrel.cloud.store.writes(
                 Squirrel.client.hoard.options.store_path,
                 JSON.stringify(cloard),
                 function() {
+                    if (DEBUG) console.debug("...cloud save OK");
                     Squirrel.client.hoard.actions = [];
                     Squirrel.client.hoard.last_sync = Date.now();
                     $messy.append(
@@ -447,6 +454,7 @@ Squirrel.save_hoards = function() {
                     Utils.soon(save_client);
                 },
                 function(e) {
+                    if (DEBUG) console.debug("...cloud save failed " + e);
                     $messy.append(
                         "<div class='error'>"
                             + TX.tx("Failed to save in $1: $2",
@@ -455,14 +463,17 @@ Squirrel.save_hoards = function() {
                     cloud_ok = false;
                     Utils.soon(save_client);
                 });
-        } else
+        } else {
+            if (DEBUG) console.debug("...no cloud store");
             save_client();
+        }
     },
 
     // Construct a new cloud hoard from data in the client. This will
     // happen if the cloud is read and found to be empty or corrupt,
     // but not if the read failed.
     construct_new_cloud = function() {
+        if (DEBUG) console.debug("...construct cloud ");
         var cloard = new Hoard();
         Squirrel.client.hoard.reconstruct_actions(
             function(a, next) {
@@ -483,6 +494,7 @@ Squirrel.save_hoards = function() {
     // Action on the clouad store being read OK
     cloud_store_read_ok = function(data) {
         var cloard;
+        if (DEBUG) console.debug("...cloud read OK ");
         try {
             cloard = new Hoard(JSON.parse(data));
             // TX.tx("is loaded")
@@ -503,20 +515,24 @@ Squirrel.save_hoards = function() {
         }
                 
         if (Squirrel.cloud.status === "is loaded") {
+            if (DEBUG) console.debug("...merge cloud ");
             Squirrel.client.hoard.merge_from_cloud(
                 cloard, Squirrel.Tree.action);
         }
                 
         if ( Squirrel.cloud.status !== "is loaded"
-             || Squirrel.client.hoard.actions.length !== 0)
+             || Squirrel.client.hoard.actions.length !== 0) {
             // Only save if there actually some changes
+            if (DEBUG) console.debug("...update from cloud ");
             update_cloud_store(cloard);
-        else
+        } else
             Utils.soon(save_client);
     },
 
     // Action on the cloud store read failing
     cloud_store_read_failed = function(e) {
+        if (DEBUG) console.debug("...cloud read failed " + e);
+        if (typeof e !== "string") debugger;
         if (e === AbstractStore.NODATA) {
             if (DEBUG) console.debug(this.identifier() + " contains NODATA");
             // TX.tx("is empty")
@@ -533,13 +549,16 @@ Squirrel.save_hoards = function() {
         }
     };
 
+    if (DEBUG) console.debug("Saving");
     if (Squirrel.cloud.status === "has new password"
         || Squirrel.cloud.status === "is empty") {
         // Don't attempt to resync out before saving, simply
         // overwrite the cloud.
+        if (DEBUG) console.debug("...constructing new cloud because pwchanged");
         construct_new_cloud();
     } else {
         // Reload and save the cloud hoard
+        if (DEBUG) console.debug("...reloading cloud");
         Squirrel.cloud.store.reads(
             Squirrel.client.hoard.options.store_path,
             cloud_store_read_ok,
@@ -735,13 +754,15 @@ Squirrel.identify_user = function() {
     if (Squirrel.cloud.store
         && typeof Squirrel.cloud.store.user() !== "undefined") {
         // Force the cloud user onto the client store
-        console.debug("Cloud user is preferred");
+        if (DEBUG)
+            console.debug("Cloud user is preferred");
         Squirrel.client.store.user(Squirrel.cloud.store.user());
         uReq = false;
     } else if (Squirrel.client.store
                && typeof Squirrel.cloud.store.user() !== "undefined") {
         // Force the client user onto the cloud store
-        console.debug("Client user is available");
+        if (DEBUG)
+            console.debug("Client user is available");
         if (Squirrel.cloud.store)
             Squirrel.cloud.store.user(Squirrel.client.store.user());
         uReq = false;
@@ -750,13 +771,15 @@ Squirrel.identify_user = function() {
     if (Squirrel.cloud.store
         && typeof Squirrel.cloud.store.pass() !== "undefined") {
         // Force the cloud pass onto the client store
-        console.debug("Cloud pass is preferred");
+        if (DEBUG)
+            console.debug("Cloud pass is preferred");
         Squirrel.client.store.pass(Squirrel.cloud.store.pass());
         pReq = false;
     } else if (Squirrel.client.store
                && typeof Squirrel.cloud.store.pass() !== "undefined") {
         // Force the client pass onto the cloud store
-        console.debug("Client pass is available");
+        if (DEBUG)
+            console.debug("Client pass is available");
         if (Squirrel.cloud.store)
             Squirrel.cloud.store.pass(Squirrel.client.store.pass());
         pReq = false;

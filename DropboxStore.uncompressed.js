@@ -4,12 +4,14 @@
  * A store using Dropbox
  * @implements AbstractStore
  */
+const APP_KEY = "37tzcd7ezkaqovy";
+
 function DropboxStore(params) {
     "use strict";
 
     var self = this;
     new Dropbox.Client({
-        key: "37tzcd7ezkaqovy"
+        key: APP_KEY
     }).authenticate(function(error, client) {
         if (error) {
             if (DEBUG) console.debug("Dropbox auth failed: " + error);

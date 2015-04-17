@@ -5,60 +5,8 @@
  * @implements AbstractStore
  */
 
-/**
- * Needed to read binary files. Generic, but only used by Drive
- * http://www.henryalgus.com/reading-binary-files-using-jquery-ajax/
-*/
-$.ajaxTransport("+binary", function(options, originalOptions, jqXHR){
-    "use strict";
-
-    // check for conditions and support for blob / arraybuffer response type
-    if (window.FormData
-        && ((options.dataType && (options.dataType === "binary"))
-            || (options.data
-                && ((window.ArrayBuffer && options.data instanceof ArrayBuffer)
-                    || (window.Blob && options.data instanceof Blob)))))
-    {
-        return {
-            // create new XMLHttpRequest
-            send: function(headers, callback){
-		// setup all variables
-                var xhr = new XMLHttpRequest(),
-		url = options.url,
-		type = options.type,
-		async = options.async || true,
-		// blob or arraybuffer. Default is blob
-		dataType = options.responseType || "blob",
-		data = options.data || null,
-		username = options.username || null,
-		password = options.password || null;
-					
-                xhr.addEventListener("load", function(){
-			var data2 = {};
-			data2[options.dataType] = xhr.response;
-			// make callback and send data
-			callback(xhr.status, xhr.statusText,
-                                 data2, xhr.getAllResponseHeaders());
-                });
- 
-                xhr.open(type, url, async, username, password);
-				
-		// setup custom headers
-		for (var i in headers ) {
-			xhr.setRequestHeader(i, headers[i] );
-		}
-				
-                xhr.responseType = dataType;
-                xhr.send(data);
-            },
-            abort: function(){
-                jqXHR.abort();
-            }
-        };
-    }
-});
-
 const CLIENT_ID = "985219699584-mt1do7j28ifm2vt821d498emarmdukbt.apps.googleusercontent.com";
+
 // While the appfolder would seem to make sense for Squirrel, it does make
 // it absolutely clear to an attacker where to look for Squirrel data files.
 // By granting full drive access, we open up the whole drive for possible
@@ -354,10 +302,12 @@ GoogleDriveStore.prototype.write = function(path, data, ok, fail) {
     var broke = function(reason) {
         fail.call(self, reason);
     };
+
     var create_file = function(parentid) {
         // See if the file already exists, if it does then use it's id
         var query = "title='" + name + "'"
             + " and '" + parentid + "' in parents";
+        if (DEBUG) console.debug("gds: checking existance of " + name);
         gapi.client.drive.files
             .list({ q: query })
             .then(
@@ -374,6 +324,7 @@ GoogleDriveStore.prototype.write = function(path, data, ok, fail) {
                 broke);
     };
 
+    if (DEBUG) console.debug("gds: following " + path);
     this._follow_path(
         "root",
         p,
