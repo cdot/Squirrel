@@ -247,45 +247,48 @@ Squirrel.Dialog.change_password = function() {
  * @param uReq set true if the store requires a username
  * @param pReq set true if the store requires a password
  */
-Squirrel.Dialog.login = function(ok, fail, uReq, pReq) {
+Squirrel.Dialog.login = function(store, ok, fail, uReq, pReq) {
     "use strict";
 
     var $dlg = $("#dlg_login");
 
-    if (typeof $dlg.dialog("instance") === "undefined") {
-        $("#dlg_login_uReq").toggle(uReq);
-        $("#dlg_login_pReq").toggle(pReq);
+    if (DEBUG && typeof $dlg.dialog("instance") !== "undefined")
+        throw "Internal error: Second call to dlg_login";
 
-        var $user = $("#dlg_login_user");
-        var $pass = $("#dlg_login_pass");
-        var $signin = $("#dlg_login_signin");
-        var store = this;
+    $("#dlg_login_uReq").toggle(uReq);
+    $("#dlg_login_pReq").toggle(pReq);
 
-        if (uReq) {
-            $user.attr("autofocus", "autofocus");
-            $user.on("change", function() {
-                (pReq ? $pass : $signin).focus();
-            });
-        } else if (pReq) {
-            $("#dlg_login_foruser")
-                .toggle(this.user() !== null)
-                .text(this.user() || "");
-            $pass.attr("autofocus", "autofocus");
-        }
-        $pass.on("change", function() {
-            $signin.focus();
+    var $user = $("#dlg_login_user");
+    var $pass = $("#dlg_login_pass");
+    var $signin = $("#dlg_login_signin");
+
+    $user.val(store.user());
+    $pass.val(store.pass());
+
+    if (uReq) {
+        $user.attr("autofocus", "autofocus");
+        $user.on("change", function() {
+            (pReq ? $pass : $signin).focus();
         });
-
-        $signin
-            .button()
-            .on("click", function(/*evt*/) {
-                $dlg.dialog("close");
-                ok.call(store,
-                        $user.val(),
-                        $pass.val());
-                return false;
-            });
+    } else if (pReq) {
+        $("#dlg_login_foruser")
+            .toggle(store.user() !== null)
+            .text(store.user() || "");
+        $pass.attr("autofocus", "autofocus");
     }
+    $pass.on("change", function() {
+        $signin.focus();
+    });
+
+    $signin
+        .button()
+        .on("click", function(/*evt*/) {
+            $dlg.dialog("close");
+            ok.call(store,
+                    $user.val(),
+                    $pass.val());
+            return false;
+        });
 
     $dlg.dialog({
         modal: true,
@@ -476,27 +479,31 @@ Squirrel.Dialog.ss_change_image = function() {
         function(data) {
             data = "data:" + file.type + ";base64,"
                 + Utils.ArrayBufferToBase64(data);
-            $("#stegamage")
-                .attr("src", data)
-                .on("load", function() {
-                    $(this).off("load");
-                    // Check that we can use the image.
-                    var steg = new Steganographer(this);
-                    try {
-                        steg.inject("tada");
-                    } catch (e) {
-                        if (DEBUG) console.debug("Caught " + e);
-                        fail(e);
-                        return;
-                    }
-                    $("#dlg_ss_ok").attr("disabled", false);
-                    var h = this.naturalHeight;
-                    var w = this.naturalWidth;
-                    this.height = 100;
-                    $("#dlg_ss_message")
-                        .html("<br>" + w + " x " + h);
-                    Utils.sometime("update_save");
-                });
+            if (data !== $("#stegamage").attr("src", data)) {
+                $("#stegamage")
+                    .attr("src", data)
+                    .on("load", function() {
+                        $(this).off("load");
+                        // Check that we can use the image.
+                        var steg = new Steganographer(this);
+                        try {
+                            steg.inject("tada");
+                        } catch (e) {
+                            if (DEBUG) console.debug("Caught " + e);
+                            fail(e);
+                            return;
+                        }
+                        $("#dlg_ss_ok").attr("disabled", false);
+                        var h = this.naturalHeight;
+                        var w = this.naturalWidth;
+                        this.height = 100;
+                        $("#dlg_ss_message")
+                            .html("<br>" + w + " x " + h);
+                        if (Squirrel.client.status === "is loaded")
+                            Squirrel.client.status = "has new store settings";
+                        Utils.sometime("update_save");
+                    });
+            }
         },
         fail,
         "arraybuffer");
@@ -531,10 +538,9 @@ Squirrel.Dialog.store_settings = function(ok, reason) {
                     $("#dlg_ss_storepath").val()) {
                     Squirrel.client.hoard.options.store_path =
                         $("#dlg_ss_storepath").val();
-                    // TX.tx("has new store path")
-                    if (Squirrel.client.status === "is loaded") {
-                        Squirrel.client.status = "has new store path";
-                    }
+                    // TX.tx("has new store settings")
+                    if (Squirrel.client.status === "is loaded")
+                        Squirrel.client.status = "has new store settings";
                 }
 
                 if (ok)

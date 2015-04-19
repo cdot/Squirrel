@@ -53,6 +53,7 @@ AbstractStore.prototype.user = function(user) {
     "use strict";
 
     if (typeof user !== "undefined")
+        // .suser to avoid name conflict with .user()
         this.suser = user;
     return this.suser;
 };
@@ -66,6 +67,7 @@ AbstractStore.prototype.pass = function(pass) {
     "use strict";
 
     if (arguments.length === 1 && typeof pass !== "undefined")
+        // .spass to avoid name conflict with .pass()
         this.spass = pass;
     return this.spass;
 };

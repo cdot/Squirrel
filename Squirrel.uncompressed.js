@@ -700,6 +700,8 @@ Squirrel.load_client_hoard = function() {
     };
 
     if (DEBUG) console.debug("Load client store");
+    $("#whoami").text(Squirrel.client.store.user());
+
     Squirrel.client.store.reads(
         "Squirrel." + Squirrel.client.store.user(),
         function(data) {
@@ -755,14 +757,14 @@ Squirrel.identify_user = function() {
         && typeof Squirrel.cloud.store.user() !== "undefined") {
         // Force the cloud user onto the client store
         if (DEBUG)
-            console.debug("Cloud user is preferred");
+            console.debug("Cloud user is preferred: " + Squirrel.cloud.store.user());
         Squirrel.client.store.user(Squirrel.cloud.store.user());
         uReq = false;
     } else if (Squirrel.client.store
                && typeof Squirrel.cloud.store.user() !== "undefined") {
         // Force the client user onto the cloud store
         if (DEBUG)
-            console.debug("Client user is available");
+            console.debug("Client user is available: " + Squirrel.client.store.user());
         if (Squirrel.cloud.store)
             Squirrel.cloud.store.user(Squirrel.client.store.user());
         uReq = false;
@@ -787,13 +789,12 @@ Squirrel.identify_user = function() {
 
     // If we still need user or password, prompt
     if (uReq || pReq) {
-        Squirrel.Dialog.login.call(
+        Squirrel.Dialog.login(
             Squirrel.client.store,
             function(user, pass) {
-                if (Squirrel.client.store) {
-                    Squirrel.client.store.user(user);
-                    Squirrel.client.store.pass(pass);
-                }
+                if (DEBUG) console.debug("Login prompt said user was " + user);
+                Squirrel.client.store.user(user);
+                Squirrel.client.store.pass(pass);
                 if (Squirrel.cloud.store) {
                     Squirrel.cloud.store.user(user);
                     Squirrel.cloud.store.pass(pass);
@@ -823,7 +824,6 @@ Squirrel.init_client_store = function() {
 
         ok: function() {
             if (DEBUG) console.debug(this.identifier() + " store is ready");
-            $("#whoami").text(this.user());
             Squirrel.client.store = this;
             $(".unauthenticated").text(TX.tx("Loading..."));
             // Chain the login prompt
