@@ -220,11 +220,10 @@ Squirrel.Dialog.change_password = function() {
                 if (p !== c)
                     Squirrel.Dialog.squeak("Passwords do not match");
                 else {
-                    // TX.tx("has a new password")
                     Squirrel.client.store.pass(p);
-                    Squirrel.client.status = "has a new password";
+                    Squirrel.client.status = Squirrel.NEW_SETTINGS;
                     Squirrel.cloud.store.pass(p);
-                    Squirrel.cloud.status = "has a new password";
+                    Squirrel.cloud.status = Squirrel.NEW_SETTINGS;
                     $("#dlg_chpw").dialog("close");
                     Utils.sometime("update_save");
                 }
@@ -499,8 +498,10 @@ Squirrel.Dialog.ss_change_image = function() {
                         this.height = 100;
                         $("#dlg_ss_message")
                             .html("<br>" + w + " x " + h);
-                        if (Squirrel.client.status === "is loaded")
-                            Squirrel.client.status = "has new store settings";
+                        if (Squirrel.client.status === Squirrel.IS_LOADED)
+                            Squirrel.client.status = Squirrel.NEW_SETTINGS;
+                        if (Squirrel.cloud.status === Squirrel.IS_LOADED)
+                            Squirrel.cloud.status = Squirrel.NEW_SETTINGS;
                         Utils.sometime("update_save");
                     });
             }
@@ -538,9 +539,10 @@ Squirrel.Dialog.store_settings = function(ok, reason) {
                     $("#dlg_ss_storepath").val()) {
                     Squirrel.client.hoard.options.store_path =
                         $("#dlg_ss_storepath").val();
-                    // TX.tx("has new store settings")
-                    if (Squirrel.client.status === "is loaded")
-                        Squirrel.client.status = "has new store settings";
+                    if (Squirrel.client.status === Squirrel.IS_LOADED)
+                        Squirrel.client.status = Squirrel.NEW_SETTINGS;
+                    if (Squirrel.cloud.status === Squirrel.IS_LOADED)
+                        Squirrel.cloud.status = Squirrel.NEW_SETTINGS;
                 }
 
                 if (ok)
