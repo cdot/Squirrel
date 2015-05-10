@@ -79,17 +79,20 @@ GoogleDriveStore.prototype._init = function(params) {
     var handleClientLoad = function() {
         if (DEBUG) console.debug("gds: drive/v2 loaded");
         gapi.client.drive.about.get("name")
-            .then(handleAboutGetResult,
-                  function(e) {
-                      if (e.result.error.message === "Login required")
-                          params.fail.call(
-                              self,
-                              TX.tx("You don't seem to be logged in to Google Drive"));
-                      else
-                          params.fail.call(
-                              self, TX.tx("Google Drive failed: $1",
-                                          e.result.error.message));
-                  });
+            .then(
+                handleAboutGetResult,
+                function(e) {
+                    if (e.result
+                        && e.result.error
+                        && e.result.error.message === "Login required")
+                        params.fail.call(
+                            self,
+                            TX.tx("You don't seem to be logged in to Google Drive"));
+                    else
+                        params.fail.call(
+                            self, TX.tx("Google Drive failed: $1",
+                                        e.body));
+                });
     };
 
     var handleAuthResult = function (authResult) {
@@ -202,8 +205,7 @@ GoogleDriveStore.prototype._follow_path = function(
                 },
                 function(r) {
                     // create failed
-                    debugger;
-                    fail.call(self, r);
+                    fail.call(self, r.body);
                 });
     };
     var query = "title='" + pathel + "'"
@@ -233,7 +235,7 @@ GoogleDriveStore.prototype._follow_path = function(
                 }
             },
             function(r) {
-                fail.call(self, r);
+                fail.call(self, r.body);
             });
 };
 
@@ -288,7 +290,8 @@ GoogleDriveStore.prototype._putfile = function(parentid, name, data, ok, fail, i
                 ok.call(self, response.result);
             },
             function(reason) {
-                fail.call(self, reason);
+                // Sending reason.body so we can work out what happened
+                fail.call(self, reason.body);
             });
 };
 
@@ -299,9 +302,6 @@ GoogleDriveStore.prototype.write = function(path, data, ok, fail) {
 
     var p = path.split("/");
     var name = p.pop();
-    var broke = function(reason) {
-        fail.call(self, reason);
-    };
 
     var create_file = function(parentid) {
         // See if the file already exists, if it does then use it's id
@@ -321,7 +321,9 @@ GoogleDriveStore.prototype.write = function(path, data, ok, fail) {
                         console.debug("gds: creating " + name + " in " + parentid);
                     self._putfile(parentid, name, data, ok, fail, id);
                 },
-                broke);
+                function(reason) {
+                    fail.call(self, reason.body);
+                });
     };
 
     if (DEBUG) console.debug("gds: following " + path);
@@ -329,7 +331,7 @@ GoogleDriveStore.prototype.write = function(path, data, ok, fail) {
         "root",
         p,
         create_file,
-        broke,
+        fail,
         true);
 };
 
@@ -340,9 +342,6 @@ GoogleDriveStore.prototype.read = function(path, ok, fail) {
 
     var p = path.split("/");
     var name = p.pop();
-    var broke = function(reason) {
-        fail.call(self, reason);
-    };
     var self = this;
 
     var get_file = function(parentid) {
@@ -366,13 +365,15 @@ GoogleDriveStore.prototype.read = function(path, ok, fail) {
                         fail.call(self, AbstractStore.NODATA);
                     }
                 },
-                broke);
+                function(reason) {
+                    fail.call(self, reason.body);
+                });
     };
 
     this._follow_path(
         "root",
         p,
         get_file,
-        broke,
+        fail,
         false);
 };

@@ -5,6 +5,8 @@
 # Target file might be for example locales/fr.json
 #
 use JSON;
+use LWP;
+use HTTP::Request;
 
 my $Q = qr/["']/;
 my $C = qr/[-:\w ]*/;
@@ -22,8 +24,11 @@ sub sadd {
 }
 
 my @strings;
-my $outfile = shift @ARGV;
+my $lang = shift @ARGV;
+print STDERR "Translating to $lang\n";
+my $outfile = "locale/$lang.json";
 $/ = undef;
+
 while (@ARGV) {
     my $f = shift @ARGV;
     open(F, "<", $f) || die "Cannot open $f for read";
@@ -53,10 +58,28 @@ if (open(F, "<", $outfile)) {
         }
     }
 }
+my $ua = LWP::UserAgent->new;
 foreach my $k (keys %strings) {
     if (!defined $data->{$k}) {
         print "Adding $k\n";
-        $data->{$k} = "";
+        # See if we can get a translation from MyMemory
+        my $uk = $k;
+        $uk =~ s{([^0-9a-zA-Z-_.:~!*/])}{sprintf('%%%02x',ord($1))}ge;
+        my $uri = "http://api.mymemory.translated.net/get?q=$uk\\&langpair=en\\|$lang";
+        #print STDERR "GET $uri\n";
+
+        # Pass request to the user agent and get a response back
+        my $res = `curl -# $uri`;
+
+        # Check the outcome of the response
+        my $tx;
+        #print STDERR "RESPONSE: $res\n";
+        eval { $res = JSON::from_json($res); };
+        die $@ if ($@);
+        $tx = $res->{responseData}->{translatedText};
+        die $tx if ($tx =~ /INVALID LANGUAGE PAIR SPECIFIED/);
+        $tx =~ s/\$ (\d+)/\$$1/g;
+        $data->{$k} = $tx;
         $changed = 1;
     }
 }

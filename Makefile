@@ -82,11 +82,11 @@ debug: $(patsubst %,%.uncompressed.html,$(STORES))
 
 # Making release 
 
-#		--source-map $(patsubst %.js,%.map,$@) \
 #		--beautify \
 
 %.min.js : %.uncompressed.js
 	uglifyjs \
+		--source-map $(patsubst %.min.js,%.map,$@) \
 		--compress \
 		--define DEBUG=false \
 		-o $@ \
@@ -96,8 +96,10 @@ debug: $(patsubst %,%.uncompressed.html,$(STORES))
 	echo "" > $@; \
 	$(patsubst %,cleancss %>>$@;,$^)
 
-release: $(subst uncompressed,min, $(COMMONJS)) \
-	 $(subst uncompressed,min, $(LIBSJS)) \
+release: $(subst uncompressed,min,$(COMMONJS)) \
+	 $(subst uncompressed.js,map,$(COMMONJS)) \
+	 $(subst uncompressed,min,$(LIBSJS)) \
+	 $(subst uncompressed.js,map,$(LIBSJS)) \
 	$(patsubst %,%.html,$(STORES))
 	@echo "Done"
 
@@ -114,13 +116,15 @@ eslint: *.uncompressed.js
 	eslint --config package.json $^
 
 locale/%.json: *.uncompressed.js Squirrel.html.src
-	perl build_scripts/translate.pl $@ *.uncompressed.js Squirrel.html.src
+	perl build_scripts/translate.pl $(*F) *.uncompressed.js Squirrel.html.src
 
 .SECONDEXPANSION:
 upload: \
 	$(patsubst %,%.html,$(STORES)) \
 	$(subst uncompressed,min,$(COMMONJS)) \
-	$(subst uncompressed,min, $(LIBSJS)) \
+	$(subst uncompressed.js,map,$(COMMONJS)) \
+	$(subst uncompressed,min,$(LIBSJS)) \
+	$(subst uncompressed.js,map,$(LIBSJS)) \
 	$(patsubst %.uncompressed.css,%.min.css,$(COMMONCSS)) \
 	$(patsubst %.uncompressed.css,%.min.css,$(LIBSCSS)) \
 	$(wildcard images/*) \

@@ -2,10 +2,9 @@
 
 Most people have realised by now that to enjoy full online security they need to have a different password for each site they visit, and those passwords need to be long, complex and changed regularly. This creates a problem - how to remember this plethora of passwords and other security information demanded by these sites? So people often have a place - electronic or physical - where they write down their passwords. An unencrypted electronic document is a really bad idea. A physical book is as secure as anything else in your house or office, so can't easily be hacked, but you depend on having physical access to the book.
 
-An excellent free tool that solves this problem the passwdsafe family. This toolset supports most of the features we might require, but falls down in a coupld of key areas:
+An excellent free tool that solves this problem the passwdsafe family. This toolset supports most of the features we might require, but falls down in a couple of key areas:
    - It requires software to be installed to your computer
    - That software has to be maintained and upgraded each time your operating system changes
-   - It can be complex to set up sharing between platforms (though some have mobile apps, for example)
    - It's obvious to an attacker when it is being used
 
 Enter Squirrel. Squirrel:
@@ -30,6 +29,11 @@ Additional features include:
 ## Security risks
 
 In the past browsers have often been highlighted as the source of security problems. As a result, modern browsers are under constant scrutiny and are very well designed. If used properly, they offer a very secure environment in which to run software.
+
+Squirrel is designed to work in a well defined environment:
+- Served from a totally trusted website
+- Using SSL (https:) communications
+- With an uncompromised, modern browser
 
 Squirrel doesn't store your password, nor does it transmit your password over the internet. Is it extremely difficult to extract your password from your stored data (if you forget your password, no-one can help you, so don't forget it). So the major risks you should be aware of are:
 - compromised browser (someone has installed a hacked version of the browser)
