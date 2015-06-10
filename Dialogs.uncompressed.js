@@ -260,34 +260,44 @@ Squirrel.Dialog.login = function(store, ok, fail, uReq, pReq) {
     var $user = $("#dlg_login_user");
     var $pass = $("#dlg_login_pass");
     var $signin = $("#dlg_login_signin");
+    var sign_in = function(/*evt*/) {
+        $dlg.dialog("close");
+        ok.call(store,
+                $user.val(),
+                $pass.val());
+        return false;
+    };
 
     $user.val(store.user());
     $pass.val(store.pass());
 
     if (uReq) {
         $user.attr("autofocus", "autofocus");
-        $user.on("change", function() {
-            (pReq ? $pass : $signin).focus();
-        });
-    } else if (pReq) {
+        if (pReq) {
+            $user.on("change", function() {
+                $pass.focus();
+            });
+        } else {
+            $user.on("change", sign_in);
+        }
+    }
+    if (pReq) {
         $("#dlg_login_foruser")
             .toggle(store.user() !== null)
             .text(store.user() || "");
         $pass.attr("autofocus", "autofocus");
+        if (uReq) {
+            $pass.on("change", function() {
+                $signin.focus();
+            });
+        } else {
+            $pass.on("change", sign_in);
+        }
     }
-    $pass.on("change", function() {
-        $signin.focus();
-    });
 
     $signin
         .button()
-        .on("click", function(/*evt*/) {
-            $dlg.dialog("close");
-            ok.call(store,
-                    $user.val(),
-                    $pass.val());
-            return false;
-        });
+        .on("click", sign_in);
 
     $dlg.dialog({
         modal: true,

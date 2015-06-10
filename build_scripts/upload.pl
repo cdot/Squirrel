@@ -58,29 +58,30 @@ sub putfile {
         my $path = join('/', @path);
         my $res = $ftp->ls($path);
         last if defined $res;
-        unshift(@missing, pop(@path));
+        my $dir = join('/', @path, pop(@path));
+        print "mkdir $dir\n";
+        die unless $ftp->mkdir($dir);
     }
-    while (scalar(@missing)) {
-        my $dir = shift(@missing);
-        die unless $ftp->mkdir(join('/', @path, $dir));
+
+    my $mod = $ftp->mdtm($to);
+    if ($mod < (stat($from))[9]) {
+        print "Uploading $to\n";
+        unless ( $ftp->put($from, $to) ) {
+            print STDERR "FAILED Upload of $from failed $@ $!\n";
+        }
+    } else {
+        print "Skipped $from, $to is up-to-date ($mod)\n";
     }
-    return $ftp->put($from, $to);
 }
 
-foreach my $arg (@ARGV) {
-    my $gen;
+foreach my $arg (sort @ARGV) {
     if ($arg =~ /:/) {
         my ($from, $to) = split(':', $arg);
         my ($vol, $dir, $file) = File::Spec->splitpath($from);
         $dir .= '/' if $dir && $dir !~ m{/$};
-        $gen = putfile($ftp, $from, get_config('PATH')."/$to/$file");
+        putfile($ftp, $from, get_config('PATH')."/$to/$file");
     } else {
-        $gen = putfile($ftp, $arg, get_config('PATH')."/$arg");
-    }
-    if ($gen) {
-        print "Uploaded $gen\n";
-    } else {
-        print STDERR "FAILED Upload of $arg failed $@ $!\n";
+        putfile($ftp, $arg, get_config('PATH')."/$arg");
     }
 }
 $ftp->quit();

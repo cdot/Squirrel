@@ -87,6 +87,7 @@ debug: $(patsubst %,%.uncompressed.html,$(STORES))
 %.min.js : %.uncompressed.js
 	uglifyjs \
 		--source-map $(patsubst %.min.js,%.map,$@) \
+		--source-map-url $(patsubst libs/%,%, $(patsubst %.min.js,%.map,$@)) \
 		--compress \
 		--define DEBUG=false \
 		-o $@ \
@@ -106,11 +107,10 @@ release: $(subst uncompressed,min,$(COMMONJS)) \
 # Other targets
 
 clean:
-	rm -f *~
-	rm -f libs/*.min.*
-	rm -f *.min.*
-	rm -f *.html
-	rm -f *.map
+	find . -name '*~' -exec rm \{\} \;
+	find . -name '*.min.' -exec rm \{\} \;
+	find . -name '*.html' -exec rm \{\} \;
+	find . -name '*.map' -exec rm \{\} \;
 
 eslint: *.uncompressed.js
 	eslint --config package.json $^
@@ -130,6 +130,7 @@ upload: \
 	$(wildcard images/*) \
 	$(wildcard libs/images/*) \
 	$(wildcard libs/*.swf) \
-	$$(subst uncompressed,min,$(patsubst %,$$(%JS),$(STORES)))
+	$$(subst uncompressed,min,$(patsubst %,$$(%JS),$(STORES))) \
+	$$(subst uncompressed.js,map,$(patsubst %,$$(%JS),$(STORES)))
 	perl build_scripts/upload.pl $^
 
