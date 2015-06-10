@@ -109,8 +109,8 @@ release: $(subst uncompressed,min,$(COMMONJS)) \
 clean:
 	find . -name '*~' -exec rm \{\} \;
 	find . -name '*.min.' -exec rm \{\} \;
-	find . -name '*.html' -exec rm \{\} \;
 	find . -name '*.map' -exec rm \{\} \;
+	rm *.html libs/*.html
 
 eslint: *.uncompressed.js
 	eslint --config package.json $^
