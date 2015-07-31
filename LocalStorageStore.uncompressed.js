@@ -7,24 +7,28 @@
 function LocalStorageStore(params) {
     "use strict";
 
-    // See if we can spot a possible user. Specific to Squirrel.
-    var i = 0;
-    var key;
-    var poss_user = null;
-    while ((key = localStorage.key(i)) != null) {
-        var m = /^Squirrel\.(.*)$/.exec(key);
-        if (m) {
-            if (poss_user) {
-                poss_user = null;
-                break;
-            } else
-                poss_user = m[1];
+    if (params.user) {
+        this.user(params.user);
+    } else {
+        // See if we can spot a possible user. Specific to Squirrel.
+        var i = 0;
+        var key;
+        var poss_user = null;
+        while ((key = localStorage.key(i)) != null) {
+            var m = /^Squirrel\.(.*)$/.exec(key);
+            if (m) {
+                if (poss_user) {
+                    poss_user = null;
+                    break;
+                } else
+                    poss_user = m[1];
+            }
+            i++;
         }
-        i++;
-    }
-    if (poss_user) {
-        if (DEBUG) console.debug("Lss: Identified possible user " + poss_user);
-        this.user(poss_user);
+        if (poss_user) {
+            if (DEBUG) console.debug("Lss: Identified possible user " + poss_user);
+            this.user(poss_user);
+        }
     }
 
     AbstractStore.call(this, params);

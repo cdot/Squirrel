@@ -1,4 +1,4 @@
-STORES = dropbox drive
+STORES = dropbox drive tester
 
 dropboxJS = \
 	libs/dropbox.uncompressed.js \
@@ -7,17 +7,23 @@ dropboxJS = \
 driveJS = \
 	GoogleDriveStore.uncompressed.js
 
+testerJS = \
+	TestStore.uncompressed.js
+
 LIBSJS = \
 	libs/jquery-2.1.3.uncompressed.js \
-	libs/jquery-ui.uncompressed.js \
-	libs/jquery-bonsai.uncompressed.js \
-	libs/jquery-ui-contextmenu.uncompressed.js \
+	libs/jquery.mobile-1.4.5.uncompressed.js \
 	libs/ZeroClipboard.uncompressed.js \
 	libs/aes.uncompressed.js
 
 LIBSCSS = \
-	libs/jquery-ui.uncompressed.css \
-	libs/jquery-bonsai.uncompressed.css
+	libs/jquery.mobile-1.4.5.uncompressed.css \
+	libs/jquery.mobile.external-png-1.4.5.uncompressed.css \
+	libs/jquery.mobile.icons-1.4.5.uncompressed.css \
+	libs/jquery.mobile.inline-png-1.4.5.uncompressed.css \
+	libs/jquery.mobile.inline-svg-1.4.5.uncompressed.css \
+	libs/jquery.mobile.structure-1.4.5.uncompressed.css \
+	libs/jquery.mobile.theme-1.4.5.uncompressed.css
 
 COMMONJS = \
 	Utils.uncompressed.js \
@@ -82,12 +88,13 @@ debug: $(patsubst %,%.uncompressed.html,$(STORES))
 
 # Making release 
 
-#		--beautify \
+%.map : %.min.js
 
 %.min.js : %.uncompressed.js
 	uglifyjs \
 		--source-map $(patsubst %.min.js,%.map,$@) \
 		--source-map-url $(patsubst libs/%,%, $(patsubst %.min.js,%.map,$@)) \
+		--source-map-include-sources \
 		--compress \
 		--define DEBUG=false \
 		-o $@ \
@@ -108,9 +115,9 @@ release: $(subst uncompressed,min,$(COMMONJS)) \
 
 clean:
 	find . -name '*~' -exec rm \{\} \;
-	find . -name '*.min.' -exec rm \{\} \;
+	find . -name '*.min.*' -exec rm \{\} \;
 	find . -name '*.map' -exec rm \{\} \;
-	rm *.html libs/*.html
+	rm -f *.html
 
 eslint: *.uncompressed.js
 	eslint --config package.json $^
@@ -120,6 +127,7 @@ locale/%.json: *.uncompressed.js Squirrel.html.src
 
 .SECONDEXPANSION:
 upload: \
+	$(patsubst %,%.uncompressed.html,$(STORES)) \
 	$(patsubst %,%.html,$(STORES)) \
 	$(subst uncompressed,min,$(COMMONJS)) \
 	$(subst uncompressed.js,map,$(COMMONJS)) \
@@ -131,6 +139,7 @@ upload: \
 	$(wildcard libs/images/*) \
 	$(wildcard libs/*.swf) \
 	$$(subst uncompressed,min,$(patsubst %,$$(%JS),$(STORES))) \
-	$$(subst uncompressed.js,map,$(patsubst %,$$(%JS),$(STORES)))
+	$$(subst uncompressed.js,map,$(patsubst %,$$(%JS),$(STORES))) \
+	$(COMMONJS) $(LIBSJS) $(COMMONCSS) $(LIBSCSS) $(driveJS)
 	perl build_scripts/upload.pl $^
 

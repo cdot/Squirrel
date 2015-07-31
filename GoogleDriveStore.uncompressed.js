@@ -52,6 +52,22 @@ function gapi_on_load() {
         gapi_loader();
 }
 
+/**
+ * @private
+ * Analyse an error returned by a promise
+ */
+GoogleDriveStore.prototype._analyse_error = function(r, context, fail) {
+    var mess = context + TX.tx(' failed: ');
+    if (r.status === 401) {
+        mess += TX.tx("Your access token has expired, or you are not logged in. Please refresh the page in order to save in Google Drive");
+    } else if (r.result) {
+        mess += r.result.error.message;
+    } else {
+        mess += r.body;
+    }
+    fail.call(this, mess);
+};
+
 GoogleDriveStore.prototype._init = function(params) {
     "use strict";
 
@@ -65,33 +81,23 @@ GoogleDriveStore.prototype._init = function(params) {
             TX.tx("Timeout trying to authorise access to Google Drive. Are popups blocked in your browser?"));
     }, 20000);
 
-    var handleAboutGetResult = function(result) {
-        if (result.status === 200) {
-            self.user(result.result.user.displayName);
-        } else {
-            if (DEBUG) console.debug("gds: Google Drive about.get failed");
-            params.fail.call(self, TX.tx("Google Drive about.get failed"));
-        }
-        // Finish initialising the store
-        AbstractStore.call(self, params);
-    };
-
     var handleClientLoad = function() {
         if (DEBUG) console.debug("gds: drive/v2 loaded");
         gapi.client.drive.about.get("name")
             .then(
-                handleAboutGetResult,
-                function(e) {
-                    if (e.result
-                        && e.result.error
-                        && e.result.error.message === "Login required")
-                        params.fail.call(
-                            self,
-                            TX.tx("You don't seem to be logged in to Google Drive"));
-                    else
-                        params.fail.call(
-                            self, TX.tx("Google Drive failed: $1",
-                                        e.body));
+                function(result) {
+                    if (result.status === 200) {
+                        self.user(result.result.user.displayName);
+                    } else {
+                        self._analyse_error(
+                            result, TX.tx("Google Drive load"), params.fail);
+                    }
+                    // Finish initialising the store
+                    AbstractStore.call(self, params);
+                },
+                function(r) {
+                    self._analyse_error(
+                        r, TX.tx("Google Drive load"), params.fail);
                 });
     };
 
@@ -165,7 +171,7 @@ GoogleDriveStore.prototype._getfile = function(url, ok, fail) {
         },
         error: function(jqXHR, textStatus, errorThrown) {
             var reason = textStatus + " " + errorThrown;
-            if (DEBUG) console.debug("gds: _getfile failed " + reason);
+            if (DEBUG) console.debug("_getfile failed", reason);
             fail.call(self, reason);
         }
     });
@@ -205,7 +211,7 @@ GoogleDriveStore.prototype._follow_path = function(
                 },
                 function(r) {
                     // create failed
-                    fail.call(self, r.body);
+                    self._analyse_error(r, TX.tx("Create folder"), fail);
                 });
     };
     var query = "title='" + pathel + "'"
@@ -225,8 +231,7 @@ GoogleDriveStore.prototype._follow_path = function(
                     if (DEBUG) console.debug("gds: found " + query + " at " + id);
                     self._follow_path(id, p, ok, fail, create);
                 } else {
-                    if (DEBUG) console.debug(
-                        "gds: could not find " + query);
+                    if (DEBUG) console.debug("gds: could not find " + query);
                     if (create) {
                         create_folder();
                     } else {
@@ -235,7 +240,7 @@ GoogleDriveStore.prototype._follow_path = function(
                 }
             },
             function(r) {
-                fail.call(self, r.body);
+                self._analyse_error(r, TX.tx("Follow path"), fail);
             });
 };
 
@@ -289,9 +294,8 @@ GoogleDriveStore.prototype._putfile = function(parentid, name, data, ok, fail, i
             function(response) {
                 ok.call(self, response.result);
             },
-            function(reason) {
-                // Sending reason.body so we can work out what happened
-                fail.call(self, reason.body);
+            function(r) {
+                self._analyse_error(r, TX.tx("Put"), fail);
             });
 };
 
@@ -321,8 +325,8 @@ GoogleDriveStore.prototype.write = function(path, data, ok, fail) {
                         console.debug("gds: creating " + name + " in " + parentid);
                     self._putfile(parentid, name, data, ok, fail, id);
                 },
-                function(reason) {
-                    fail.call(self, reason.body);
+                function(r) {
+                    self._analyse_error(r, TX.tx("Write"), fail);
                 });
     };
 
@@ -365,8 +369,8 @@ GoogleDriveStore.prototype.read = function(path, ok, fail) {
                         fail.call(self, AbstractStore.NODATA);
                     }
                 },
-                function(reason) {
-                    fail.call(self, reason.body);
+                function(r) {
+                    self._analyse_error(r, TX.tx("Read"), fail);
                 });
     };
 

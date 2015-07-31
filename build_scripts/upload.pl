@@ -59,7 +59,7 @@ sub putfile {
         my $res = $ftp->ls($path);
         last if defined $res;
         my $dir = join('/', @path, pop(@path));
-        print "mkdir $dir\n";
+        print "mkdir $dir for $to\n";
         die unless $ftp->mkdir($dir);
     }
 
@@ -70,7 +70,7 @@ sub putfile {
             print STDERR "FAILED Upload of $from failed $@ $!\n";
         }
     } else {
-        print "Skipped $from, $to is up-to-date ($mod)\n";
+        #print "Skipped $from, $to is up-to-date ($mod)\n";
     }
 }
 

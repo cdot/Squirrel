@@ -24,88 +24,88 @@ a:hover {
     float: right;
 }
 
-.squirrel-icon-add {
+.ui-icon-add {
     background-image:url('images/squirrel-icons.png') !important;
     background-position:0 0px;
 }
 
-.squirrel-icon-camera {
+.ui-icon-camera {
     background-image:url('images/squirrel-icons.png') !important;
     background-position:0 -16px;
 }
 
-.squirrel-icon-pencil {
+.ui-icon-pencil {
     background-image:url('images/squirrel-icons.png') !important;
     background-position:0 -32px;
 }
 
-.squirrel-icon-edit {
+.ui-icon-edit {
     background-image:url('images/squirrel-icons.png') !important;
     background-position:0 -48px;
 }
 
-.squirrel-icon-key {
+.ui-icon-key {
     background-image:url('images/squirrel-icons.png') !important;
     background-position:0 -64px;
 }
 
-.squirrel-icon-add-value {
+.ui-icon-add-value {
     background-image:url('images/squirrel-icons.png') !important;
     background-position:0 -80px;
 }
 
-.squirrel-icon-delete {
+.ui-icon-delete {
     background-image:url('images/squirrel-icons.png') !important;
     background-position:0 -96px;
 }
 
-.squirrel-icon-save {
+.ui-icon-save {
     background-image:url('images/squirrel-icons.png') !important;
     background-position:0 -112px;
 }
 
-.squirrel-icon-undo {
+.ui-icon-undo {
     background-image:url('images/squirrel-icons.png') !important;
     background-position:0 -128px;
 }
 
-.squirrel-icon-copy {
+.ui-icon-copy {
     background-image:url('images/squirrel-icons.png') !important;
     background-position:0 -144px;
 }
 
-.squirrel-icon-paste {
+.ui-icon-paste {
     background-image:url('images/squirrel-icons.png') !important;
     background-position:0 -160px;
 }
 
-.squirrel-icon-alarm {
+.ui-icon-alarm {
     background-image:url('images/squirrel-icons.png') !important;
     background-position:0 -176px;
 }
 
-.squirrel-icon-rung {
+.ui-icon-rung {
     background-image:url('images/squirrel-icons.png') !important;
     background-position:0 -192px;
 }
 
-.squirrel-icon-pick {
+.ui-icon-pick {
     background-image:url('images/squirrel-icons.png') !important;
     background-position:0 -208px;
 }
 
-.squirrel-icon-gear {
+/*.ui-icon-gear {
     background-image:url('images/squirrel-icons.png') !important;
     background-position:0 -224px;
-}
+}*/
 
 .logo {
     float: left;
     margin: 0.5em 1em 0.5em 1em;
 }
 
-.ui-button-text-only .ui-button-text {
-    padding: 0.3em;
+div.ui-btn {
+    padding: 0;
 }
 
 .ui-menu {
@@ -178,8 +178,7 @@ button.ui-button-icon-only {
 }
 
 .info-button {
-    float: left;
-    margin-right: 0.5em;
+    float: right;
 }
 
 .help {
@@ -226,7 +225,7 @@ button.ui-button-icon-only {
     padding: 0.2em 2.1em 0.2em .25em;
 }
 
-#dlg_ss > input {
+#store_settings > input {
     width: 100%;
 }
 

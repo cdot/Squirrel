@@ -38,7 +38,7 @@ Squirrel.Dialog.squeak = function(e, ok, cancel) {
         $("#dlg_alert_message").empty().append(e);
 
     var called_back = false;
-    if (typeof $dlg.dialog("instance") === "undefined") {
+    if (!$dlg.data("squirrel_ready")) {
         $("#dlg_alert_ok")
             .button()
             .on("click", function(/*e*/) {
@@ -46,7 +46,7 @@ Squirrel.Dialog.squeak = function(e, ok, cancel) {
                     ok();
                     called_back = true;
                 }
-                $dlg.dialog("close");
+                $dlg.popup("close");
                 return false;
             });
         $("#dlg_alert_cancel")
@@ -56,15 +56,16 @@ Squirrel.Dialog.squeak = function(e, ok, cancel) {
                     cancel();
                     called_back = true;
                 }
-                $dlg.dialog("close");
+                $dlg.popup("close");
                 return false;
             });
+        $dlg.data("squirrel_ready", true);
     }
 
     $("#dlg_alert_ok").toggle(typeof ok !== "undefined");
     $("#dlg_alert_cancel").toggle(typeof cancel !== "undefined");
         
-    $dlg.dialog({
+    $dlg.popup({
         modal: true,
         close: function() {
             if (!called_back) {
@@ -96,12 +97,12 @@ Squirrel.Dialog.confirm_delete = function($node) {
     $("#dlg_delconf_message").text(p.join("/"));
     $("#dlg_delconf_coll").toggle($node.hasClass("treecollection"));
 
-    if (typeof $dlg.dialog("instance") === "undefined") {
+    if (!$dlg.data("squirrel_ready")) {
         $("#dlg_delconf_delete")
             .button()
             .on("click", function(/*evt*/) {
                 var $ddlg = $("#dlg_delconf");
-                $ddlg.dialog("close");
+                $ddlg.popup("close");
                 var res = Squirrel.client.hoard.record_action(
                     {
                         type: "D",
@@ -123,15 +124,13 @@ Squirrel.Dialog.confirm_delete = function($node) {
         $("#dlg_delconf_cancel")
             .button()
             .on("click", function(/*evt*/) {
-                $("#dlg_delconf").dialog("close");
+                $("#dlg_delconf").popup("close");
                 return false;
             });
+        $dlg.data("squirrel_ready", true);
     }
 
-    $dlg.dialog({
-        modal: true,
-        width: "auto"
-    });
+    $dlg.popup("open");
 };
 
 /**
@@ -153,12 +152,12 @@ Squirrel.Dialog.make_random = function($node) {
     $dlg.data("node", $node);
     $dlg.data("opts", opts);
 
-    if (typeof $dlg.dialog("instance") === "undefined") {
+    if (!$dlg.data("squirrel_ready")) {
         $("#dlg_gen_rand_use")
             .button()
             .on("click", function() {
                 var $ddlg = $("#dlg_gen_rand");
-                $ddlg.dialog("close");
+                $ddlg.popup("close");
                 var pw = $("#dlg_gen_rand_idea").text();
                 var old_path = Squirrel.Tree.path($ddlg.data("node"));
                 Squirrel.Dialog.play_action(
@@ -182,15 +181,13 @@ Squirrel.Dialog.make_random = function($node) {
         $("#dlg_gen_rand_cancel")
             .button()
             .on("click", function() {
-                $("#dlg_gen_rand").dialog("close");
+                $("#dlg_gen_rand").popup("close");
                 return false;
             });
+        $dlg.data("squirrel_ready", true);
     }
 
-    $dlg.dialog({
-        width: "auto",
-        modal: true
-    });
+    $dlg.popup("open");
 };
 
 /**
@@ -201,7 +198,7 @@ Squirrel.Dialog.change_password = function() {
 
     var $dlg = $("#dlg_chpw");
 
-    if (typeof $dlg.dialog("instance") === "undefined") {
+    if (!$dlg.data("squirrel_ready")) {
         $("#dlg_chpw_show")
             .on("change", function() {
                 if ($("#dlg_chpw_show").prop("checked")) {
@@ -224,17 +221,15 @@ Squirrel.Dialog.change_password = function() {
                     Squirrel.client.status = Squirrel.NEW_SETTINGS;
                     Squirrel.cloud.store.pass(p);
                     Squirrel.cloud.status = Squirrel.NEW_SETTINGS;
-                    $("#dlg_chpw").dialog("close");
+                    $("#dlg_chpw").popup("close");
                     Utils.sometime("update_save");
                 }
                 return false;
             });
+        $dlg.data("squirrel_ready", true);
     }
 
-    $dlg.dialog({
-        modal: true,
-        width: "auto"
-    });
+    $dlg.popup("open");
 };
 
 /**
@@ -249,24 +244,23 @@ Squirrel.Dialog.change_password = function() {
 Squirrel.Dialog.login = function(store, ok, fail, uReq, pReq) {
     "use strict";
 
-    var $dlg = $("#dlg_login");
+    $("#login_uReq").toggle(uReq);
+    $("#login_pReq").toggle(pReq);
 
-    if (DEBUG && typeof $dlg.dialog("instance") !== "undefined")
-        throw "Internal error: Second call to dlg_login";
+    var $user = $("#login_user");
+    var $pass = $("#login_pass");
+    var $signin = $("#login_signin");
 
-    $("#dlg_login_uReq").toggle(uReq);
-    $("#dlg_login_pReq").toggle(pReq);
-
-    var $user = $("#dlg_login_user");
-    var $pass = $("#dlg_login_pass");
-    var $signin = $("#dlg_login_signin");
     var sign_in = function(/*evt*/) {
-        $dlg.dialog("close");
-        ok.call(store,
-                $user.val(),
-                $pass.val());
+        Squirrel.pop_page(function() {
+            ok.call(store,
+                    $user.val(),
+                    $pass.val());
+        });
         return false;
     };
+
+    $signin.on("click", sign_in);
 
     $user.val(store.user());
     $pass.val(store.pass());
@@ -282,7 +276,7 @@ Squirrel.Dialog.login = function(store, ok, fail, uReq, pReq) {
         }
     }
     if (pReq) {
-        $("#dlg_login_foruser")
+        $("#login_foruser")
             .toggle(store.user() !== null)
             .text(store.user() || "");
         $pass.attr("autofocus", "autofocus");
@@ -295,18 +289,7 @@ Squirrel.Dialog.login = function(store, ok, fail, uReq, pReq) {
         }
     }
 
-    $signin
-        .button()
-        .on("click", sign_in);
-
-    $dlg.dialog({
-        modal: true,
-        width: "auto",
-        closeOnEscape: false,
-        open: function() {
-            $dlg.parent().find(".ui-dialog-titlebar-close").hide();
-        }
-    });
+    Squirrel.push_page("login");
 };
 
 const units_days = {
@@ -328,7 +311,7 @@ Squirrel.Dialog.alarm = function($node) {
     var path = Squirrel.Tree.path($node);
     var number = 6;
     var units = "m";
-    var is_new = (typeof $dlg.dialog("instance") === "undefined");
+    var is_new = (!$dlg.data("squirrel_ready"));
 
     var update_next = function() {
         var numb = $("#dlg_alarm_number").val()
@@ -367,10 +350,7 @@ Squirrel.Dialog.alarm = function($node) {
     $("#dlg_alarm_units").val(units);
     update_next();
 
-    $dlg.dialog({
-        modal: true,
-        width: "auto"
-    });
+    $dlg.popup("open");
 
     // Doing this after the dialog is initialised, because otherwise the
     // selectmenu is covered
@@ -388,7 +368,7 @@ Squirrel.Dialog.alarm = function($node) {
         $("#dlg_alarm_set")
             .button()
             .on("click", function() {
-                $dlg.dialog("close");
+                $dlg.popup("close");
 
                 var numb = $("#dlg_alarm_number").val()
                     * units_days[$("#dlg_alarm_units").val()];
@@ -404,7 +384,7 @@ Squirrel.Dialog.alarm = function($node) {
         $("#dlg_alarm_cancel")
             .button()
             .on("click", function() {
-                $dlg.dialog("close");
+                $dlg.popup("close");
                 if ($alarm) {
                     Squirrel.Dialog.play_action(
                         { type: "C",
@@ -416,6 +396,7 @@ Squirrel.Dialog.alarm = function($node) {
 
         // Hack around http://bugs.jqueryui.com/ticket/10543
         $dlg.parent().css("overflow", "visible");
+        $dlg.data("squirrel_ready", true);
     }
 };
 
@@ -434,12 +415,13 @@ Squirrel.Dialog.pick_from = function($node) {
             .addClass("picked");
     };
 
-    if (typeof $dlg.dialog("instance") === "undefined") {
+    if (!$dlg.data("squirrel_ready")) {
         $("#dlg_pick_clear")
             .button()
             .on("click", function() {
                 $dlg.find(".picked").removeClass("picked");
             });
+        $dlg.data("squirrel_ready", true);
     }
 
     for (i = 0; i < val.length; i++) {
@@ -467,10 +449,7 @@ Squirrel.Dialog.pick_from = function($node) {
 
     $dlg.find(".picked").removeClass("picked");
 
-    $dlg.dialog({
-        modal: true,
-        width: "auto"
-    });
+    $dlg.popup("open");
 };
 
 /* Helper */
@@ -478,10 +457,10 @@ Squirrel.Dialog.ss_change_image = function() {
     "use strict";
 
     var fail = function(e) {
-        $("#dlg_ss_message").text(TX.tx(
+        $("#store_settings_message").text(TX.tx(
             "Cannot use this image because of this error: $1", e));
     };
-    $("#dlg_ss_ok").attr("disabled", true);
+    $("#store_settings_ok").attr("disabled", true);
     var file = $(this)[0].files[0];
     Utils.read_file(
         file,
@@ -502,11 +481,11 @@ Squirrel.Dialog.ss_change_image = function() {
                             fail(e);
                             return;
                         }
-                        $("#dlg_ss_ok").attr("disabled", false);
+                        $("#store_settings_ok").attr("disabled", false);
                         var h = this.naturalHeight;
                         var w = this.naturalWidth;
                         this.height = 100;
-                        $("#dlg_ss_message")
+                        $("#store_settings_message")
                             .html("<br>" + w + " x " + h);
                         if (Squirrel.client.status === Squirrel.IS_LOADED)
                             Squirrel.client.status = Squirrel.NEW_SETTINGS;
@@ -523,50 +502,44 @@ Squirrel.Dialog.ss_change_image = function() {
 Squirrel.Dialog.store_settings = function(ok, reason) {
     "use strict";
 
-    var $dlg = $("#dlg_ss");
+    var $dlg = $("#store_settings");
 
-    if (typeof $dlg.dialog("instance") === "undefined") {
+    if (!$dlg.data("squirrel_ready")) {
 
-        $("#dlg_ss_file")
+        $("#store_settings_file")
             .hide()
             .on("change", Squirrel.Dialog.ss_change_image);
 
-        $("#dlg_ss_choose").button().click(function(e) {
-            $("#dlg_ss_file").trigger("click", e);
+        $("#store_settings_choose").button().click(function(e) {
+            $("#store_settings_file").trigger("click", e);
         });
 
-        $("#dlg_ss_ok")
+        $("#store_settings_ok")
             .button()
             .on("click", function(/*e*/) {
-                if ($("#dlg_ss_storepath").val() === "") {
-                    $("#dlg_ss_message").text(TX.tx(
+                if ($("#store_settings_storepath").val() === "") {
+                    $("#store_settings_message").text(TX.tx(
                         "Store path may not be empty"));
                     return false;
-                }
-                $dlg.dialog("close");
-
+                }                
                 if (Squirrel.client.hoard.options.store_path !==
-                    $("#dlg_ss_storepath").val()) {
+                    $("#store_settings_storepath").val()) {
                     Squirrel.client.hoard.options.store_path =
-                        $("#dlg_ss_storepath").val();
+                        $("#store_settings_storepath").val();
                     if (Squirrel.client.status === Squirrel.IS_LOADED)
                         Squirrel.client.status = Squirrel.NEW_SETTINGS;
                     if (Squirrel.cloud.status === Squirrel.IS_LOADED)
                         Squirrel.cloud.status = Squirrel.NEW_SETTINGS;
                 }
 
-                if (ok)
-                    ok();
+                Squirrel.pop_page(ok);
                 return false;
             });
+        $dlg.data("squirrel_ready", true);
     }
 
-    $("#dlg_ss_storepath").val(Squirrel.client.hoard.options.store_path);
+    $("#store_settings_storepath").val(Squirrel.client.hoard.options.store_path);
+    $("#store_settings_message").empty();
 
-    $("#dlg_ss_message")
-        .empty();
-    $dlg.dialog({
-        modal: true,
-        width: "auto"
-    });
+    Squirrel.push_page("store_settings");
 };
