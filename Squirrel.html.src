@@ -56,6 +56,8 @@
 	    </tr>
 	  </tbody>
         </table>
+      </div>
+      <div data-role="footer">
         <button id="login_signin" class="TX_text">Sign In</button>
       </div>
     </div>
@@ -84,7 +86,8 @@
         </p>
         <label for="store_settings_storepath" class="TX_text">Store path: </label>
         <input id="store_settings_storepath" type="text" value="" class="TX_title" title="Pathname of the image in your cloud store"/>
-        </p>
+      </div>
+      <div data-role="footer">
         <button id="store_settings_ok" class="TX_text">OK</button>
         <input type="file" id="store_settings_file" class="hidden" />
       </div>
@@ -120,6 +123,9 @@
     </div>
 
     <div data-role="page" id="extras">
+      <div data-role="header">
+        <h1 class="TX_text">Extras</h1>
+      </div>
       <div class="ui-content" role="main">
         <ul id="extras_menu" class="TX_title" title="Extras">
           <li class="TX_text" id="menu_enass" data-command="enass">Enable autosave</li>
@@ -130,6 +136,9 @@
           <li data-command="readfile" class="TX_text">Load local JSON file</li>
           <li data-command="about" class="TX_text">About Squirrel</li>
         </ul>
+      </div>
+      <div data-role="footer">
+        <button id="dlg_alert_ok" class="ui-btn ui-corner-all ui-shadow ui-btn-inline TX_text">OK</button>
       </div>
     </div>
 

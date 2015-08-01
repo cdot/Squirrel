@@ -26,7 +26,10 @@ var Squirrel = {
  * invoked when the transition is complete.
  */
 Squirrel.change_page = function(page_id, fn) {
+if (!page_id)
+    debugger;
     var lastpage = $("body").pagecontainer("getActivePage").attr("id");
+    console.debug("*** Change from " + lastpage + " to " + page_id);
     if (typeof(fn) !== "undefined") {
         if (lastpage === page_id) {
             // pagecontainer will not fire a change event if the page
@@ -52,6 +55,7 @@ Squirrel.change_page = function(page_id, fn) {
  */
 Squirrel.push_page = function(page_id, fn) {
     var lastpage = $("body").pagecontainer("getActivePage").attr("id");
+    console.debug("*** Push " + page_id + " over " + lastpage);
     Squirrel.history.push(lastpage);
     Squirrel.change_page(page_id, fn);
 };
@@ -61,7 +65,9 @@ Squirrel.push_page = function(page_id, fn) {
  * invoked when the transition is complete
  */
 Squirrel.pop_page = function(fn) {
-    Squirrel.change_page(Squirrel.history.pop(), fn);
+    var page_id = Squirrel.history.pop();
+    console.debug("*** Pop to " + page_id + " from " + $("body").pagecontainer("getActivePage").attr("id"));
+    Squirrel.change_page(page_id, fn);
 };
 
 /**
@@ -147,7 +153,7 @@ Squirrel.attach_alarm_handlers = function($node) {
     "use strict";
 
     $node.children(".alarm")
-        .on("click", function() {
+        .on("vclick", function() {
             Squirrel.close_menus();
             Squirrel.Dialog.alarm($node);
         });
@@ -178,7 +184,7 @@ Squirrel.attach_node_handlers = function($node) {
         });
 
     $div.children(".key,.value")
-        .on("click", function(/*e*/) {
+        .on("vclick", function(/*e*/) {
             var $span = $(this);
             Squirrel.close_menus();
             // Prevent click from bubbling, only obey double click
@@ -942,7 +948,7 @@ Squirrel.init_ui = function() {
         var $help = $("<button data-icon='info' data-iconpos='notext'></button>");
         var $close = $("<button data-icon='minus' data-iconpos='notext'></button>");
         $help
-            .on("click", function() {
+            .on("vclick", function() {
                 $this.show();
                 $help.hide();
             })
@@ -952,7 +958,7 @@ Squirrel.init_ui = function() {
         $close
             .addClass("help-close")
             .button()
-            .on("click", function() {
+            .on("vclick", function() {
                 $this.hide();
                 $help.show();
             })
@@ -962,28 +968,16 @@ Squirrel.init_ui = function() {
     Squirrel.Tree.set_root($("#sites-node"));
 
     $("#save_button")
-        .button({
-            icons: {
-                primary: "squirrel-icon-save"
-            },
-            text: false
-        })
         .hide()
-        .on("click", function(/*evt*/) {
+        .on("vclick", function(/*evt*/) {
             Squirrel.close_menus();
             Squirrel.save_hoards();
             return false;
         });
 
     $("#undo_button")
-        .button({
-            icons: {
-                primary: "squirrel-icon-undo"
-            },
-            text: false
-        })
         .hide()
-        .on("click", function(/*evt*/) {
+        .on("vclick", function(/*evt*/) {
             Squirrel.close_menus();
             Squirrel.Tree.undo(Squirrel.squeak);
             return false;
@@ -1054,12 +1048,11 @@ Squirrel.init_ui = function() {
         });
 
     $("#extras_button")
-        .on("click", function(/*evt*/) {
+        .on("vclick", function(/*evt*/) {
             Squirrel.push_page("extras");
         });
 
     $("#search")
-        .on("click", Squirrel.close_menus)
         .on("change", function(/*evt*/) {
             Squirrel.close_menus();
             $("#search_hits").text(TX.tx("Searching..."));
@@ -1103,7 +1096,7 @@ Squirrel.init_application = function() {
     // URL and force our startup screen
     Squirrel.change_page(
         "unauthenticated",
-        // Kick off by initialising the cloud store.
+        // Initialise the cloud store as soon as the page has changed
         Squirrel.init_cloud_store);
 };
 

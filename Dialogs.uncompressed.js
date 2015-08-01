@@ -40,8 +40,7 @@ Squirrel.Dialog.squeak = function(e, ok, cancel) {
     var called_back = false;
     if (!$dlg.data("squirrel_ready")) {
         $("#dlg_alert_ok")
-            .button()
-            .on("click", function(/*e*/) {
+            .on("vclick", function(/*e*/) {
                 if (typeof ok !== "undefined") {
                     ok();
                     called_back = true;
@@ -50,8 +49,7 @@ Squirrel.Dialog.squeak = function(e, ok, cancel) {
                 return false;
             });
         $("#dlg_alert_cancel")
-            .button()
-            .on("click", function(/*e*/) {
+            .on("vclick", function(/*e*/) {
                 if (typeof cancel !== "undefined") {
                     cancel();
                     called_back = true;
@@ -99,8 +97,7 @@ Squirrel.Dialog.confirm_delete = function($node) {
 
     if (!$dlg.data("squirrel_ready")) {
         $("#dlg_delconf_delete")
-            .button()
-            .on("click", function(/*evt*/) {
+            .on("vclick", function(/*evt*/) {
                 var $ddlg = $("#dlg_delconf");
                 $ddlg.popup("close");
                 var res = Squirrel.client.hoard.record_action(
@@ -122,8 +119,7 @@ Squirrel.Dialog.confirm_delete = function($node) {
             });
 
         $("#dlg_delconf_cancel")
-            .button()
-            .on("click", function(/*evt*/) {
+            .on("vclick", function(/*evt*/) {
                 $("#dlg_delconf").popup("close");
                 return false;
             });
@@ -154,8 +150,7 @@ Squirrel.Dialog.make_random = function($node) {
 
     if (!$dlg.data("squirrel_ready")) {
         $("#dlg_gen_rand_use")
-            .button()
-            .on("click", function() {
+            .on("vclick", function() {
                 var $ddlg = $("#dlg_gen_rand");
                 $ddlg.popup("close");
                 var pw = $("#dlg_gen_rand_idea").text();
@@ -168,8 +163,7 @@ Squirrel.Dialog.make_random = function($node) {
             });
 
         $("#dlg_gen_rand_again")
-            .button()
-            .on("click", function() {
+            .on("vclick", function() {
                 var $ddlg = $("#dlg_gen_rand");
                 opts = $ddlg.data("opts");
                 opts.length = $("#dlg_gen_rand_len").val();
@@ -179,8 +173,7 @@ Squirrel.Dialog.make_random = function($node) {
             });
 
         $("#dlg_gen_rand_cancel")
-            .button()
-            .on("click", function() {
+            .on("vclick", function() {
                 $("#dlg_gen_rand").popup("close");
                 return false;
             });
@@ -200,7 +193,7 @@ Squirrel.Dialog.change_password = function() {
 
     if (!$dlg.data("squirrel_ready")) {
         $("#dlg_chpw_show")
-            .on("change", function() {
+            .on("vclick", function() {
                 if ($("#dlg_chpw_show").prop("checked")) {
                     $("#dlg_chpw_pass").attr("type", "text");
                     $("#dlg_chpw_conf").attr("type", "text");
@@ -210,8 +203,8 @@ Squirrel.Dialog.change_password = function() {
                 }
             });
 
-        $("#dlg_chpw_set").button()
-            .on("click", function() {
+        $("#dlg_chpw_set")
+            .on("vclick", function() {
                 var p = $("#dlg_chpw_pass").val(),
                 c = $("#dlg_chpw_conf").val();
                 if (p !== c)
@@ -251,7 +244,10 @@ Squirrel.Dialog.login = function(store, ok, fail, uReq, pReq) {
     var $pass = $("#login_pass");
     var $signin = $("#login_signin");
 
-    var sign_in = function(/*evt*/) {
+    var sign_in = function(evt) {
+        $signin.off("vclick");
+        $user.off("change");
+        $pass.off("change");
         Squirrel.pop_page(function() {
             ok.call(store,
                     $user.val(),
@@ -260,7 +256,8 @@ Squirrel.Dialog.login = function(store, ok, fail, uReq, pReq) {
         return false;
     };
 
-    $signin.on("click", sign_in);
+    console.debug("Attaching handler");
+    $signin.on("vclick", "p", sign_in);
 
     $user.val(store.user());
     $pass.val(store.pass());
@@ -366,8 +363,7 @@ Squirrel.Dialog.alarm = function($node) {
             .on("change", update_next);
 
         $("#dlg_alarm_set")
-            .button()
-            .on("click", function() {
+            .on("vclick", function() {
                 $dlg.popup("close");
 
                 var numb = $("#dlg_alarm_number").val()
@@ -382,8 +378,7 @@ Squirrel.Dialog.alarm = function($node) {
             });
 
         $("#dlg_alarm_cancel")
-            .button()
-            .on("click", function() {
+            .on("vclick", function() {
                 $dlg.popup("close");
                 if ($alarm) {
                     Squirrel.Dialog.play_action(
@@ -417,8 +412,7 @@ Squirrel.Dialog.pick_from = function($node) {
 
     if (!$dlg.data("squirrel_ready")) {
         $("#dlg_pick_clear")
-            .button()
-            .on("click", function() {
+            .on("vclick", function() {
                 $dlg.find(".picked").removeClass("picked");
             });
         $dlg.data("squirrel_ready", true);
@@ -431,12 +425,12 @@ Squirrel.Dialog.pick_from = function($node) {
                 .data("i", i)
                 .addClass("pick_cell i" + i)
                 .text(i + 1)
-                .on("click", item_clicked)
+                .on("change", item_clicked)
                 .appendTo($which);
             $f = $("<td></td>")
                 .data("i", i)
                 .addClass("pick_cell i" + i)
-                .on("click", item_clicked)
+                .on("change", item_clicked)
                 .appendTo($from);
         }
         $f.text(val.charAt(i));
@@ -508,15 +502,15 @@ Squirrel.Dialog.store_settings = function(ok, reason) {
 
         $("#store_settings_file")
             .hide()
-            .on("change", Squirrel.Dialog.ss_change_image);
+            .on("vclick", Squirrel.Dialog.ss_change_image);
 
-        $("#store_settings_choose").button().click(function(e) {
-            $("#store_settings_file").trigger("click", e);
-        });
+        $("#store_settings_choose")
+            .on("vclick", function(e) {
+                $("#store_settings_file").trigger("change", e);
+            });
 
         $("#store_settings_ok")
-            .button()
-            .on("click", function(/*e*/) {
+            .on("vclick", function(e) {
                 if ($("#store_settings_storepath").val() === "") {
                     $("#store_settings_message").text(TX.tx(
                         "Store path may not be empty"));
