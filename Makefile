@@ -13,7 +13,6 @@ testerJS = \
 LIBSJS = \
 	libs/jquery-2.1.3.uncompressed.js \
 	libs/jquery.mobile-1.4.5.uncompressed.js \
-	libs/ZeroClipboard.uncompressed.js \
 	libs/aes.uncompressed.js
 
 LIBSCSS = \
@@ -37,7 +36,7 @@ COMMONJS = \
 	Squirrel.uncompressed.js \
 	Tree.uncompressed.js \
 	ContextMenu.uncompressed.js \
-	Dialogs.uncompressed.js \
+	Pages.uncompressed.js \
 	Hoard.uncompressed.js
 
 COMMONCSS = \

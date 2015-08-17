@@ -14,10 +14,12 @@ const SQUIRREL_STORE = TestStore;
 
 TestStore.prototype = Object.create(LocalStorageStore.prototype);
 
-TestStore.prototype.identifier = function() {
+TestStore.prototype.options = function() {
     "use strict";
 
-    return "Test";
+    return $.extend(LocalStorageStore.prototype.options(), {
+        identifier: "Local Test"
+    });
 };
 
 TestStore.prototype.read = function(path, ok, fail) {

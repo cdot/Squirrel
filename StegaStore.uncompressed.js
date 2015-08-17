@@ -16,6 +16,12 @@ function StegaStore(params) {
 
 StegaStore.prototype = Object.create(LayeredStore.prototype);
 
+StegaStore.prototype.options = function() {
+    return $.extend(this.engine.options(), {
+        needs_image: true
+    });
+}
+
 StegaStore.prototype.read = function(path, ok, fail) {
     "use strict";
 

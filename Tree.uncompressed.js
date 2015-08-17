@@ -3,7 +3,8 @@
  * the content of the client hoard cache.
  *
  * Each node in the client hoard cache is represented in the DOM by an
- * LI node in a UL/LI tree. This LI node has structure as follows:
+ * LI node (or DIV node for the root) in a UL/LI tree. This node has
+ * structure as follows:
  * classes:
  *   node (always)
  *   modified (if UI modified)
@@ -74,6 +75,7 @@ Squirrel.Tree.path = function($node) {
     if (DEBUG && (!$node || $node.length === 0))
         debugger; // Internal error: Failed to find node in tree
 
+    // IMPORTANT: root node MUST NOT have data-path or data-key in HTML
     var ps = $node.data("path"), path;
     if (typeof ps !== "undefined" && ps !== null)
         return ps.split(Squirrel.PATHSEP);
@@ -140,7 +142,9 @@ Squirrel.Tree.action_N = function(action, undoable) {
     var key = parent.pop();
 
     // Get the container
-    var $container = Squirrel.Tree.node(parent).children("ul");
+    var $parent = Squirrel.Tree.node(parent);
+    if (!$parent) debugger;
+    var $container = $parent.children("ul");
     if (DEBUG && $container.length !== 1) debugger;
 
     // Create the new node

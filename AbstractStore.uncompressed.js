@@ -35,13 +35,13 @@ function AbstractStore(params) {
 AbstractStore.NODATA = "not found";
 
 /**
- * Return an textual identifier for the store that will be meaningful to the
- * end user
+ * Return a hash of static options. This is never written, entries are
+ * constants.
  */
-AbstractStore.prototype.identifier = function() {
+AbstractStore.prototype.options = function() {
     "use strict";
 
-    return "abstract";
+    return { identifier: "Unknown" };
 };
 
 /**
@@ -176,7 +176,7 @@ LayeredStore.prototype = Object.create(AbstractStore.prototype);
 LayeredStore.prototype.identifier = function() {
     "use strict";
 
-    return this.engine.identifier();
+    return this.engine.options.identifier;
 };
 
 LayeredStore.prototype.user = function(u) {

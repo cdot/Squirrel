@@ -129,12 +129,6 @@ GoogleDriveStore.prototype._init = function(params) {
         handleAuthResult);
 };
 
-GoogleDriveStore.prototype.identifier = function() {
-    "use strict";
-
-    return "Google Drive";
-};
-
 const BOUNDARY = "-------314159265358979323846";
 const DELIMITER = "\r\n--" + BOUNDARY + "\r\n";
 const RETIMILED = "\r\n--" + BOUNDARY + "--";
@@ -298,6 +292,15 @@ GoogleDriveStore.prototype._putfile = function(parentid, name, data, ok, fail, i
                 self._analyse_error(r, TX.tx("Put"), fail);
             });
 };
+
+GoogleDriveStore.prototype.options = function() {
+    "use strict";
+
+    return $.extend(AbstractStore.prototype.options(), {
+        needs_path: true,
+        identifier: "Google Drive"
+    };
+}
 
 GoogleDriveStore.prototype.write = function(path, data, ok, fail) {
     "use strict";

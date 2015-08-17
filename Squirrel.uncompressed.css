@@ -99,8 +99,13 @@ a:hover {
     background-position:0 -224px;
 }*/
 
+.login {
+    background: url('images/squirrel.png') no-repeat center;
+    background-size: contain;
+}
+
 .logo {
-    float: left;
+    float: right;
     margin: 0.5em 1em 0.5em 1em;
 }
 

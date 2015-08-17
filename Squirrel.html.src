@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- meta name="cache-control" content="public">
     <meta name="expires" content="Wed, 1 Jan 2025 12:00:00 GMT" -->
+    <title>Squirrel</title>
     <link rel="icon" href="images/favicon.ico" type="image/x-icon" />
     <!--LIBSJS_HTML-->
     <!--COMMONJS_HTML-->
@@ -14,9 +15,16 @@
     <!--DEBUG-->
   </head>
   <body>
-    <div id="unauthenticated" data-role="page">
+    <!-- Popups -->
+    <div id="squeak" data-role="popup" data-dismissible="false" data-theme="a" data-overlay-theme="b">
+      <p id="squeak_message"></p>
+      <a id="squeak_close" href="#" data-rel="back" data-role="button" data-theme="b" data-icon="delete" iconpos="notext" class="ui-btn-right">Close</a>
+      <a id="squeak_ok" href="#" data-rel="back" data-role="button" data-theme="a" data-icon="tick" data-iconpos="notext" class="ui-btn-left TX_text">OK</a>
+    </div>
+
+    <!-- Pages -->
+    <div id="unauthenticated" data-role="page" class="login">
       <div data-role="header" class="progress">
-        <img class="logo" src="images/squirrel.png">
         <h1 id="authmessage" class="TX_text">Authenticating...</h1>
       </div>
     </div>
@@ -31,10 +39,9 @@
       </div>
     </div>
 
-    <div id="login" data-role="page">
+    <div id="login" data-role="page" class="login">
       <div data-role="header">
-        <img class="logo" src="images/squirrel.png">
-        <h1 class="TX_text">Authentication</h1>
+        <h1 class="TX_text">Authenticate</h1>
       </div>
       <div class="ui-content" role="main">
         <table width="100%">
@@ -68,50 +75,48 @@
         <h1 class="TX_text">Set up store</h1>
       </div>
       <div class="ui-content" role="main">
-        <p class="TX_text help">Choose a local image that will be copied
-          and used to hide your data in the cloud. This should be a complex
-          colour image of at least 1024x768 pixels, preferably with variable
-          transparency. Note that very large images may take a long time to
-          load and save.
-        </p>
-        <span class="TX_text">Current steganography image:</span><br />
-        <img id="stegamage" src="images/GCHQ.png" /><br />
-        <button id="store_settings_choose" class="TX_title TX_text" data-mini="true" title="Choose an image file">Change Image</button>
-        <p id="store_settings_message"></p>
-        <p style="clear:both">
-        <p class="TX_text help">
-          Set the pathname of the image on your cloud store. For example
-          if you choose 'photos/stills/grandma.png' it will use the file
-          'grandma.png' in the directory 'photos/stills'.
-        </p>
-        <label for="store_settings_storepath" class="TX_text">Store path: </label>
-        <input id="store_settings_storepath" type="text" value="" class="TX_title" title="Pathname of the image in your cloud store"/>
+        <div id="image" style="display:none">
+          <p class="TX_text help">Choose a local image that will be copied
+            and used to hide your data in the cloud. This should be a complex
+            colour image of at least 1024x768 pixels, preferably with variable
+            transparency. Note that very large images may take a long time to
+            load and save.
+          </p>
+          <span class="TX_text">Current steganography image:</span><br />
+          <img id="stegamage" src="images/GCHQ.png" /><br />
+          <button id="choose" class="TX_title TX_text" data-mini="true" title="Choose an image file">Change Image</button>
+          <p id="message"></p>
+          <input type="file" id="file" class="hidden" />
+        </div>
+        <div id="path" style="display:none">
+          <p class="TX_text help">
+            Set the pathname of the file to use in your cloud store. For example
+            if you choose 'photos/stills/grandma.png' it will read and write
+            the file 'grandma.png' in the directory 'photos/stills'.
+          </p>
+          <label for="storepath" class="TX_text">Store path: </label>
+          <input id="storepath" type="text" value="" class="TX_title" title="Pathname of the image in your cloud store"/>
+        </div>
       </div>
       <div data-role="footer">
-        <button id="store_settings_ok" class="TX_text">OK</button>
-        <input type="file" id="store_settings_file" class="hidden" />
+        <button id="ok" class="TX_text">OK</button>
       </div>
     </div>
 
     <div id="authenticated" data-role="page" class="authenticated">
       <div data-role="header">
+        <div id="signed_in">
+          <span class="TX_text">Signed in as: </span><span id="whoami"></span>
+        </div>
         <span id="search_label" class="TX_text">Search:</span>
         <input id="search" value="" class="TX_title" title="Enter search string" />
       </div>
       <div class="ui-content" role="main">
-        <span id="search_hits"></span>
-        <div id="signed_in">
-          <span class="TX_text">Signed in as: </span><span id="whoami"></span>
-        </div>
-        <div id="sites">
-          <ul id="bonsai-root" name="/" class="bonsai-root">
-            <li id="sites-node" name="/" class="node">
-              <div class="node_div treecollection">
-                <span class="TX_text">Sites</span>
-              </div>
-              <ul id="sites-list">
-              </ul>
-            </li>
+        <div id="sites-node" name="/" class="node">
+          <div class="node_div treecollection">
+            <span class="TX_text">Sites</span>
+          </div>
+          <ul id="sites-list" data-role="listview" data-autodividers="true" data-hidedividers="true">
           </ul>
         </div>
       </div>
@@ -122,26 +127,105 @@
       </div>
     </div>
 
-    <div data-role="page" id="extras">
+    <div id="extras" data-role="page">
       <div data-role="header">
-        <h1 class="TX_text">Extras</h1>
+        <h1 class="TX_text">Options</h1>
       </div>
       <div class="ui-content" role="main">
-        <ul id="extras_menu" class="TX_title" title="Extras">
-          <li class="TX_text" id="menu_enass" data-command="enass">Enable autosave</li>
-          <li class="TX_text" id="menu_disas" data-command="disas">Disable autosave</li>
-          <li class="TX_text" data-command="chss">Change cloud store settings</li>
-          <li class="TX_text" data-command="chpw">Change master password</li>
-          <li class="TX_text" data-command="copydb">Copy entire database to clipboard (JSON)</li>
-          <li data-command="readfile" class="TX_text">Load local JSON file</li>
-          <li data-command="about" class="TX_text">About Squirrel</li>
-        </ul>
+        <div data-role="controlgroup">
+          <label for="extras_autosave" class="TX_text">Autosave</label>
+          <select id="extras_autosave" data-role="flipswitch">
+            <option value="off" class="TX_text">Off</option>
+	    <option value="on" class="TX_text">On</option>
+          </select>
+          <button id="extras_chss" class="TX_text">Change cloud store settings</button>
+          <button id="extras_chpw" class="TX_text">Change master password</button>
+          <button id="extras_json" class="TX_text">View/Edit JSON</button>
+          <button id="extras_about" class="TX_text">About Squirrel</button>
+        </div>
       </div>
       <div data-role="footer">
-        <button id="dlg_alert_ok" class="ui-btn ui-corner-all ui-shadow ui-btn-inline TX_text">OK</button>
+        <button id="extras_close" class="TX_text">Close</button>
       </div>
     </div>
 
+    <div id="about" data-role="page">
+      <div data-role="header">
+        <h1 class="TX_text">About Squirrel</h1>
+      </div>
+      <div class="ui-content">
+        &copy; 2015 Crawford Currie <a href="http://c-dot.co.uk">http://c-dot.co.uk</a>
+      </div>
+      <div class="ui-content TX_text">
+        Licensed under the MIT License. Reuse within proprietary software is
+        permitted provided all copies of the licensed software include a
+        copy of the MIT License terms and the copyright notice.
+      </div>
+      <div data-role="footer">
+        <button id="about_close" class="TX_text">Close</button>
+      </div>
+    </div>
+
+    <div id="json" data-role="page">
+      <div data-role="header">
+        <h1 class="TX_text">Database JSON</h1>
+      </div>
+      <div class="ui-content" role="main">
+        <textarea id="json_text">
+        </textarea>
+      </div>
+      <div data-role="footer">
+        <button id="json_ok" class="TX_text">Load JSON</button>
+        <button id="json_cancel" class="TX_text">Cancel</button>
+      </div>
+    </div>
+
+    <div id="chpw" data-role="page">
+      <div data-role="header">
+        <h1 class="TX_text">Change Password</h1>
+      </div>
+      <div class="ui-content" role="main">
+        <p class="warning TX_text">
+          You should ensure that all clients up to date and you
+          are safely connected to the internet before doing this,
+          or you will lose data. Changing the master password will
+          overwrite all data in the cloud with what you can currently
+          see in the browser.
+        </p>
+        <table>
+          <tr>
+            <td>
+              <label for="pass" class="TX_text">New password</label>
+            </td>
+            <td>
+              <input type="password" size="50" id="chpw_pass" class="TX_title" title="Enter new password" value="" />
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <label for="conf" class="TX_text">
+                Confirm new password
+              </label>
+            </td>
+            <td>
+              <input type="password" size="50" id="chpw_conf" class="TX_title" title="Re-enter new password" value="" />
+            </td>
+          </tr>
+        </table>
+        <p>
+          <label for="show" class="TX_text">
+            Show password
+          </label>
+          <input type="checkbox" id="chpw_show">
+        </p>
+        <div data-role="footer">
+          <button id="chpw_ok" class="TX_text">Set new password</button>
+          <button id="chpw_cancel" class="TX_text">Cancel</button>
+        </div>
+      </div>
+    </div>
+   
+    <!-- not processed yet -->
     <div id="dialogs" style="display:none">
       <div id="dlg_saving" data-role="popup"  data-dismissible="false" class="TX_title" title="Saving...">
         <div id="dlg_saving_message"></div>
@@ -149,12 +233,6 @@
 
       <div id="dlg_loading" data-role="popup" data-dismissible="false" class="TX_title" title="Loading...">
         <div class="TX_text progress">Please wait...</div>
-      </div>
-
-      <div id="dlg_alert" data-role="popup" class="TX_title" title="Alert">
-        <p id="dlg_alert_message"></p>
-        <button id="dlg_alert_ok" class="ui-btn ui-corner-all ui-shadow ui-btn-inline TX_text">OK</button>
-        <button id="dlg_alert_cancel" class="ui-btn ui-corner-all ui-shadow ui-btn-inline TX_text">Cancel</button>
       </div>
 
       <div id="dlg_gen_rand" data-role="popup" data-dismissible="false" class="TX_title" title="Generate random value">
@@ -195,45 +273,6 @@
         <p class="TX_text">
           Please review these rejected actions before saving
         </p>
-      </div>
-
-      <div id="dlg_chpw" data-role="popup" class="TX_title" title="Change Password">
-        <p class="warning TX_text">
-          You should ensure that all clients up to date and you
-          are safely connected to the internet before doing this,
-          or you will lose data. Changing the master password will
-          overwrite all data in the cloud with what you can currently
-          see in the browser.
-        </p>
-        <table>
-          <tr>
-            <td>
-              <label for="dlg_chpw_pass" class="TX_text">New password</label>
-            </td>
-            <td>
-              <input type="password" size="50" id="dlg_chpw_pass" class="TX_title" title="Enter new password" value="" />
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <label for="dlg_chpw_conf" class="TX_text">
-                Confirm new password
-              </label>
-            </td>
-            <td>
-              <input type="password" size="50" id="dlg_chpw_conf" class="TX_title" title="Re-enter new password" value="" />
-            </td>
-          </tr>
-        </table>
-        <p>
-          <input type="checkbox" id="dlg_chpw_show">
-          <label for="dlg_chpw_show" class="TX_text">
-            Show password
-          </label>
-        </p>
-        <div>
-          <button id="dlg_chpw_set" class="ui-btn ui-corner-all ui-shadow ui-btn-inline TX_title TX_text" title="Set new master password">Set new password</button>
-        </div>
       </div>
 
       <div id="dlg_alarm" data-role="popup" class="TX_title" title="Reminder">
@@ -280,17 +319,6 @@
         </table>
         <p>
           <button id="dlg_pick_clear"  data-dismissible="false" class="ui-btn ui-corner-all ui-shadow ui-btn-inline TX_text">Clear</button>
-        </p>
-      </div>
-
-      <div id="dlg_about" data-role="popup" class="TX_title" title="About Squirrel">
-        <p>
-          Squirrel is Copyright &copy; 2015 Crawford Currie <a href="http://c-dot.co.uk">http://c-dot.co.uk</a>
-        </p>
-        <p>
-          Licensed under the MIT License. Reuse within proprietary software is
-          permitted provided all copies of the licensed software include a
-          copy of the MIT License terms and the copyright notice.
         </p>
       </div>
 

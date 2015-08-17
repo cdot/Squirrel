@@ -36,10 +36,13 @@ function LocalStorageStore(params) {
 
 LocalStorageStore.prototype = Object.create(AbstractStore.prototype);
 
-LocalStorageStore.prototype.identifier = function() {
+LocalStorageStore.prototype.options = function() {
     "use strict";
 
-    return "browser";
+    return $.extend(AbstractStore.prototype.options(), {
+        needs_path: true,
+        identifier: "browser"
+    });
 };
 
 LocalStorageStore.prototype.read = function(path, ok, fail) {
