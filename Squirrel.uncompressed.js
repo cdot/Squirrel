@@ -25,8 +25,9 @@ var Squirrel = {
  */
 Squirrel.update_tree = function(/*event*/) {
     "use strict";
-
-    $("#sites").listview("refresh");
+    console.debug("Refresh listview");
+    //$("#sites-list").listview("refresh");
+    $("ul.ui-listview").listview("refresh");
 };
 
 // Event handler for check_alarms
@@ -62,10 +63,10 @@ Squirrel.check_alarms = function(/* event */) {
 Squirrel.edit_node = function($node, what) {
     "use strict";
 
-    var $span = $node.children(".node_div").children("." + what);
+    var $span = $node.find("." + what + ":first");
 
     // Fit width to the container
-    var w = $("#bonsai-root").width();
+    var w = $("#sites-node").width();
     $span.parents().each(function() {
         w -= $(this).position().left;
     });
@@ -98,7 +99,7 @@ Squirrel.attach_alarm_handlers = function($node) {
     $node.children(".alarm")
         .off("vclick")
         .on("vclick", function() {
-            Squirrel.close_menus();
+            //Squirrel.close_menus();
             new AlarmPage($node).open();
         });
 };
@@ -113,7 +114,7 @@ Squirrel.attach_node_handlers = function($node) {
 
     $div.hover(
         function(/*evt*/) {
-            Squirrel.close_menus();
+            //Squirrel.close_menus();
             $(this)
                 .addClass("hover");
             $("<div class='lastmod'></div>")
@@ -131,7 +132,7 @@ Squirrel.attach_node_handlers = function($node) {
         .off("vclick")
         .on("vclick", function(/*e*/) {
             var $span = $(this);
-            Squirrel.close_menus();
+            //Squirrel.close_menus();
             // Prevent click from bubbling, only obey double click
             // Not perfect, but good enough.
             $span.data(
@@ -141,11 +142,11 @@ Squirrel.attach_node_handlers = function($node) {
                         if ($span.data("click_timer") !== null) {
                             $span.data("click_timer", null);
                             // Same as the node_div handler below
-                            Squirrel.close_menus();
-                            $("#bonsai-root")
-                                .bonsai(
-                                    $node.hasClass("expanded")
-                                        ? "collapse" : "expand", $node);
+                            //Squirrel.close_menus();
+                            //$("#sites-list")
+                            //    .bonsai(
+                            //        $node.hasClass("expanded")
+                            //            ? "collapse" : "expand", $node);
                         }
                     },
                     250));
@@ -171,9 +172,10 @@ Squirrel.attach_node_handlers = function($node) {
     $div.filter(".treecollection")
         .off("click")
         .on("click", function(/*e*/) {
-            Squirrel.close_menus();
-            $("#bonsai-root")
-                .bonsai(
+            //Squirrel.close_menus();
+            $("#sites-list")
+                .find(".ui-collapsible")
+                .collapsible(
                     $node.hasClass("expanded")
                         ? "collapse" : "expand", $node);
             return false;
@@ -205,11 +207,11 @@ Squirrel.add_child_node = function($node, title, value) {
                 // the new nodes. However this clears after a
                 // save and is a minor niggle only. Classing them
                 // as expanded solves it well enough.
-                $newnode
-                    .addClass("expanded")
-                    .scroll_into_view()
-                    .parents("ul")
-                    .bonsai("expand", $node);
+                //$newnode
+                //    .addClass("expanded")
+                //    .scroll_into_view()
+                //    .parents("ul")
+                //    .listview("expand", $node);
                 if (typeof value !== "string"
                     && typeof value !== "undefined") {
                     Squirrel.insert_data(p, value);
@@ -264,7 +266,7 @@ Squirrel.search = function(s) {
     "use strict";
 
     $(".node .expanded").each(function() {
-        $("#bonsai-root").bonsai("collapse", $(this));
+        $(this).collapsible("collapse");
     });
 
     var re = new RegExp(s, "i");
@@ -273,7 +275,7 @@ Squirrel.search = function(s) {
         if ($(this).text().match(re)) {
             hits++;
             $(this).parents(".node").each(function() {
-                $("#bonsai-root").bonsai("expand", $(this));
+                $(this).collapsible("expand");
             });
         }
     });
@@ -289,7 +291,6 @@ Squirrel.update_save = function(/*event*/) {
     $("#undo_button").toggle(Squirrel.Tree.can_undo());
     $("#menu_disas").toggle(Squirrel.client.hoard.options.autosave);
     $("#menu_enass").toggle(!Squirrel.client.hoard.options.autosave);
-
     var us = Squirrel.unsaved_changes(3);
     if (us !== null) {
         if (Squirrel.client.hoard.options.autosave) {
@@ -592,8 +593,6 @@ Squirrel.hoards_loaded = function() {
     Utils.sometime("update_tree");
     Utils.sometime("update_save");
     Utils.sometime("check_alarms");
-
-    $(".fullpage").hide();
 
     // Flush the sometimes, and allow new sometimes to be set
     Utils.sometime_is_now();
@@ -925,7 +924,7 @@ Squirrel.init_ui = function() {
     $("#save_button")
         .hide()
         .on("vclick", function(/*evt*/) {
-            Squirrel.close_menus();
+            //Squirrel.close_menus();
             Squirrel.save_hoards();
             return false;
         });
@@ -933,7 +932,7 @@ Squirrel.init_ui = function() {
     $("#undo_button")
         .hide()
         .on("vclick", function(/*evt*/) {
-            Squirrel.close_menus();
+            //Squirrel.close_menus();
             Squirrel.Tree.undo(Squirrel.squeak);
             return false;
         });
@@ -945,7 +944,7 @@ Squirrel.init_ui = function() {
 
     $("#search")
         .on("change", function(/*evt*/) {
-            Squirrel.close_menus();
+            //Squirrel.close_menus();
             $("#search_hits").text(TX.tx("Searching..."));
             Squirrel.search($(this).val());
         });

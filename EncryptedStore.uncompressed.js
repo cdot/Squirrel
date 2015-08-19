@@ -17,6 +17,14 @@ function EncryptedStore(params) {
 
 EncryptedStore.prototype = Object.create(LayeredStore.prototype);
 
+EncryptedStore.prototype.options = function() {
+    return $.extend(
+        LayeredStore.prototype.options.call(this),
+        {
+            needs_pass: true
+        });
+}
+
 EncryptedStore.prototype.read = function(path, ok, fail) {
     "use strict";
 

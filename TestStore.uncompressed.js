@@ -24,11 +24,11 @@ TestStore.prototype.options = function() {
 
 TestStore.prototype.read = function(path, ok, fail) {
     "use strict";
-    LocalStorageStore.prototype.read(this, "TEST" + path, ok, fail);
+    LocalStorageStore.prototype.read.call(this, "TEST" + path, ok, fail);
 };
 
 TestStore.prototype.write = function(path, data, ok, fail) {
     "use strict";
 
-   LocalStorageStore.prototype.write(this, "TEST" + path, data, ok, fail);
+   LocalStorageStore.prototype.write.call(this, "TEST" + path, data, ok, fail);
 };

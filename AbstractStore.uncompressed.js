@@ -82,7 +82,7 @@ AbstractStore.prototype.pass = function(pass) {
 AbstractStore.prototype.write = function(/*path, data, ok, fail*/) {
     "use strict";
 
-    if (DEBUG) debugger;
+    fail.call(this, "Store has no write method");
 };
 
 /**
@@ -108,10 +108,10 @@ AbstractStore.prototype.writes = function(path, str, ok, fail) {
  * @param ok called on success with this=self, passed ArrayBuffer
  * @param fail called on failure
  */
-AbstractStore.prototype.read = function(/*path, ok, fail*/) {
+AbstractStore.prototype.read = function(path, ok, fail) {
     "use strict";
 
-    if (DEBUG) debugger;
+    fail.call(this, "Store has no read method");
 };
 
 /**
@@ -173,10 +173,10 @@ function LayeredStore(params) {
 
 LayeredStore.prototype = Object.create(AbstractStore.prototype);
 
-LayeredStore.prototype.identifier = function() {
+LayeredStore.prototype.options = function() {
     "use strict";
 
-    return this.engine.options.identifier;
+    return this.engine.options();
 };
 
 LayeredStore.prototype.user = function(u) {

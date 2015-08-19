@@ -16,8 +16,8 @@
  *     target for tap-hold events. Target for mousover, taphold, and
  *     click events on collections (open, close subtree)
  *     classes:
- *         treeleaf - if this is a leaf node
- *         treecollection - if this is an intermediate node   
+ *         tree_leaf - if this is a leaf node
+ *         tree_collection - if this is an intermediate node   
  *     children:
  *        span: class=key target for click events
  *           text: the key name
@@ -70,16 +70,20 @@ Squirrel.Tree.path = function($node) {
     "use strict";
 
     if (!$node.hasClass("node"))
+        // Get the closest enclosing node
         $node = $node.closest(".node");
 
     if (DEBUG && (!$node || $node.length === 0))
         debugger; // Internal error: Failed to find node in tree
 
     // IMPORTANT: root node MUST NOT have data-path or data-key in HTML
+
+    // Lookup shortcut, if set
     var ps = $node.data("path"), path;
     if (typeof ps !== "undefined" && ps !== null)
         return ps.split(Squirrel.PATHSEP);
 
+    // No shortcut, recurse up the tree
     if (typeof $node.data("key") !== "undefined") {
         path = Squirrel.Tree.path($node.parent().closest(".node"));
 
@@ -87,11 +91,12 @@ Squirrel.Tree.path = function($node) {
 
         ps = path.join(Squirrel.PATHSEP);
 
-        // node->path mapping
+        // node->path shortcut
         $node.data("path", ps);
 
         // path->node mapping
-        if (DEBUG && Squirrel.Tree.cache[ps] && Squirrel.Tree.cache[ps] !== $node)
+        if (DEBUG && Squirrel.Tree.cache[ps]
+            && Squirrel.Tree.cache[ps] !== $node)
             debugger; // Bad mapping
         Squirrel.Tree.cache[ps] = $node;
     } else
@@ -102,7 +107,7 @@ Squirrel.Tree.path = function($node) {
 
 /**
  * Find the DOM node for a path
- * @param path arry of keys representing the path
+ * @param path array of keys representing the path
  * @return a JQuery element
  */
 Squirrel.Tree.node = function(path) {
@@ -140,44 +145,46 @@ Squirrel.Tree.action_N = function(action, undoable) {
 
     var parent = action.path.slice();
     var key = parent.pop();
+    var is_leaf = (typeof action.data !== "undefined" && action.data !== null);
 
     // Get the container
     var $parent = Squirrel.Tree.node(parent);
     if (!$parent) debugger;
-    var $container = $parent.children("ul");
+    var $container = $parent.find("ul:first");
     if (DEBUG && $container.length !== 1) debugger;
 
     // Create the new node
-    var $node = $("<li class='node'></li>")
+    var $node = $("<li class='node' data-role='collapsible' data-mini='true' data-iconpos='right'></li>")
         .data("key", key);
 
-    // Create the div that supports mousover and taphold events
-    var $div = $("<div class='node_div'></div>")
-        .appendTo($node);
-
-    // Create the key span
-    $("<span class='key'></span>")
-        .text(key)
-        .appendTo($div);
-
-    if (typeof action.data !== "undefined" && action.data !== null) {
+    var $button_carrier;
+    if (is_leaf) {
         // Leaf node
-        $div.addClass("treeleaf");
+        $node.addClass("treeleaf");
+        $("<span class='key'></span>")
+            .text(key)
+            .appendTo($node);
         $("<span class='kv_separator'> : </span>")
-            .appendTo($div);
+            .appendTo($node);
         $("<span class='value'></span>")
             .text(action.data)
-            .appendTo($div);
+            .appendTo($node);
+        $button_carrier = $node;
     } else {
         // Intermediate node
-        $div.addClass("treecollection");
-        $("<ul></ul>")
+        $node.addClass("treecollection");
+        $button_carrier = $("<h3 class='key'></h3>")
+            .text(key)
             .appendTo($node);
+        $button_carrier = $node;
+        $("<ul data-role='listview'></ul>")
+            .appendTo($node)
+            .listview();
     }
 
     // Insert-sort into the $container
     var inserted = false;
-    $container.children("li.node").each(function() {
+    $container.children(".node").each(function() {
         if (Squirrel.Tree.compare($(this).data("key"), key) > 0) {
             $node.insertBefore($(this));
             inserted = true;
@@ -186,6 +193,31 @@ Squirrel.Tree.action_N = function(action, undoable) {
     });
     if (!inserted)
         $container.append($node);
+
+    if (!is_leaf)
+        $node.collapsible();
+
+    var $open_menu = $("<button></button>");
+
+    $open_menu.button({
+        icon: "bars",
+        mini: true,
+        inline: true,
+        iconpos: "notext"
+    });
+
+    // F**king JQuery mobile requires the event on the button parent
+    // The collapse event handler is on the h3 in the collabsible, and
+    // for some reason that takes precedence, so have to dodge that
+    var $button_div = $open_menu.parent();
+    $button_carrier.prepend($button_div);
+    $button_div
+        .addClass("tree_menu_button")
+        .on("vclick", function () {
+            var $page = new MenuPage(is_leaf, Squirrel.Tree.path($node).join('>'));
+            // When we close the menu, have to get back to the same place
+            $page.open();
+        });
 
     // Make sure the cache is updated with the new node
     var p = Squirrel.Tree.path($node);
@@ -220,8 +252,8 @@ Squirrel.Tree.action_R = function(action, undoable) {
     $node
         .detach()
         .data("key", action.data)
-        .children(".node_div")
-        .children("span.key")
+        .find(".key")
+        .first()
         .text(action.data);
 
     // Re-insert the element in it's sorted position
@@ -274,15 +306,16 @@ Squirrel.Tree.action_E = function(action, undoable) {
         Squirrel.Tree.undos.push({
             type: "E",
             path: action.path.slice(),
-            data: $node.children(".node_div")
-                .children("span.value")
+            data: $node
+                .find(".value")
+                .first()
                 .text()
         });
     }
 
     $node
-        .children(".node_div")
-        .children("span.value")
+        .find(".value")
+        .first()
         .text(action.data);
 
     Squirrel.Tree.set_modified($node, action.time);
@@ -304,8 +337,9 @@ Squirrel.Tree.action_D = function(action, undoable) {
         Squirrel.Tree.undos.push({
             type: "N",
             path: action.path.slice(),
-            data: $node.children(".node_div")
-                .children("span.value")
+            data: $node
+                .find(".value")
+                .first()
                 .text()
         });
     }

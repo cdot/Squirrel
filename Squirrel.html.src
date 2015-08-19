@@ -114,16 +114,15 @@
       <div class="ui-content" role="main">
         <div id="sites-node" name="/" class="node">
           <div class="node_div treecollection">
-            <span class="TX_text">Sites</span>
           </div>
-          <ul id="sites-list" data-role="listview" data-autodividers="true" data-hidedividers="true">
+          <ul id="sites-list" data-role="listview" data-inset="false">
           </ul>
         </div>
       </div>
       <div data-role="footer">
         <button id="extras_button" data-icon="gear" data-iconpos="notext" data-inline="true" class="authenticated TX_title TX_text" title="Tools/Options">Tools</button>
         <button id="undo_button" data-icon="back" data-iconpos="notext" data-inline="true" class="TX_title TX_text" title="Undo last change">Undo</button>
-        <button id="save_button" data-icon="check" data-iconpos="left" data-inline="true" class="TX_text">Save</button>
+        <button id="save_button" data-icon="cloud" data-iconpos="left" data-inline="true" class="TX_text">Save</button>
       </div>
     </div>
 
@@ -224,7 +223,21 @@
         </div>
       </div>
     </div>
-   
+
+    <div id="menu" data-role="page">
+      <div id="menu_header" data-role="header">
+      </div>
+      <button id="menu_pick" class="leaf_only TX_text">Pick characters</button>
+      <button id="menu_add_alarm" class="TX_text">Add reminder</button>
+      <button id="menu_rename" class="TX_text">Rename</button>
+      <button id="menu_edit" class="leaf_only TX_text">Edit value</button>
+      <button id="menu_randomise" class="leaf_only TX_text">Generate new random value</button>
+      <button id="menu_add_value" class="collection_only TX_text">Add new value</button>
+      <button id="menu_add_subtree" class="collection_only TX_text">Add new folder</button>
+      <button id="menu_delete" class="TX_text">Delete</button>
+      <button id="menu_close" class="TX_text">Close</button>
+    </div>
+
     <!-- not processed yet -->
     <div id="dialogs" style="display:none">
       <div id="dlg_saving" data-role="popup"  data-dismissible="false" class="TX_title" title="Saving...">
@@ -320,11 +333,6 @@
         <p>
           <button id="dlg_pick_clear"  data-dismissible="false" class="ui-btn ui-corner-all ui-shadow ui-btn-inline TX_text">Clear</button>
         </p>
-      </div>
-
-      <!-- Not really a dialog, just a handy way to hide stuff -->
-      <div data-role="popup" class="">
-        <input type="file" id="dlg_load_file" />
       </div>
     </div>
   </body>

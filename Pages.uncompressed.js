@@ -8,7 +8,7 @@ var Pages = {
  */
 Pages.change_page = function(page_id, fn) {
     var lastpage = $("body").pagecontainer("getActivePage").attr("id");
-    console.debug("**** Change from " + lastpage + " to " + page_id);
+    //console.debug("**** Change from " + lastpage + " to " + page_id);
     if (typeof(fn) !== "undefined") {
         if (lastpage === page_id) {
             // pagecontainer will not fire a change event if the page
@@ -74,7 +74,7 @@ Page.prototype.open = function(pass_on) {
     }
     var old_page = Pages.stack[Pages.stack.length - 1];
     Pages.stack.push(this.id)
-    console.debug("*** Push " + this.id + " over " + old_page);
+    //console.debug("*** open(" + this.id + ") -> " + old_page);
     Pages.change_page(this.id, pass_on);
 };
 
@@ -88,7 +88,7 @@ Page.prototype.close = function(pass_on) {
 
     Pages.stack.pop();
     var new_page = Pages.stack[Pages.stack.length - 1];
-    console.debug("*** Pop from " + this.id + " to " + new_page);
+    //console.debug("*** close(" + this.id + ") -> " + new_page);
     Pages.change_page(new_page, pass_on);
 };
 
@@ -208,7 +208,6 @@ function LoginPage(store, ok, fail, uReq, pReq) {
         return false;
     };
 
-    console.debug("Attaching handler");
     $signin
         .off("vclick")
         .on("vclick", "p", sign_in);
@@ -486,6 +485,15 @@ function AboutPage() {
 
 AboutPage.prototype = Object.create(Page.prototype);
 
+function MenuPage(is_leaf, path) {
+    Page.call(this, "menu");
+    this.control("header").text(path);
+    $("#menu").find(".leaf_only").toggle(is_leaf);
+    $("#menu").find(".collection_only").toggle(!is_leaf);
+}
+
+MenuPage.prototype = Object.create(Page.prototype);
+
 /****************************/
 
 /**
@@ -551,7 +559,7 @@ Page.make_random = function($node) {
     };
 
     $("#dlg_gen_rand_key").text(
-        $node.children(".node_div").children(".key").text());
+        $node.find(".key:first").text());
     $("#dlg_gen_rand_idea").text(Utils.generate_password(opts));
 
     $dlg.data("node", $node);
@@ -709,7 +717,7 @@ Page.pick_from = function($node) {
     "use strict";
 
     var $dlg = $("#dlg_pick"),
-    val = $node.children(".node_div").children(".value").text(),
+    val = $node.find(".value:first").text(),
     $which = $("#dlg_pick_which"),
     $from = $("#dlg_pick_from"), i, $f,
 
@@ -758,3 +766,4 @@ Page.pick_from = function($node) {
 
     $dlg.popup("open");
 };
+

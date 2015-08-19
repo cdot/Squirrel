@@ -345,13 +345,18 @@ Utils.read_file = function(file, ok, fail, mode) {
 Utils.sometime = function(event) {
     "use strict";
 
-    if (Utils.waiting_for_sometime[event])
+    //console.debug("...sometime " + event);
+    if (Utils.waiting_for_sometime[event]) {
+        //console.debug("......already waiting");
         return;
+    }
 
     Utils.waiting_for_sometime[event] = true;
-    if (Utils.sometime_timeout === null)
+    if (Utils.sometime_timeout === null) {
+        //console.debug("......set timeout");
         Utils.sometime_timeout = window.setTimeout(
             Utils.sometime_is_now, Utils.SOMETIME);
+    }
 };
 
 /**
@@ -360,6 +365,7 @@ Utils.sometime = function(event) {
 Utils.sometime_is_now = function() {
     "use strict";
 
+    //console.debug("...sometime is now");
     Utils.sometime_timeout = null;
     Utils.last_yield = Date.now();
     for (var event in Utils.waiting_for_sometime) {
@@ -390,10 +396,13 @@ Utils.soon = function(fn) {
     if (Date.now() - Utils.last_yield > Utils.SOON) {
         window.setTimeout(function() {
             Utils.last_yield = Date.now();
+            //console.debug("soon is now");
             fn();
         }, Utils.IMMEDIATE);
-    } else
+    } else {
+        //console.debug("soon is immediate");
         fn();
+    }
 };
 
 /**
