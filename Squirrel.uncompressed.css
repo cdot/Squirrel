@@ -42,72 +42,7 @@ a:hover {
     border-bottom-width: 0;
 }
 
-.ui-icon-add {
-    background-image:url('images/squirrel-icons.png') !important;
-    background-position:0 0px;
-}
-
-.ui-icon-camera {
-    background-image:url('images/squirrel-icons.png') !important;
-    background-position:0 -16px;
-}
-
-.ui-icon-pencil {
-    background-image:url('images/squirrel-icons.png') !important;
-    background-position:0 -32px;
-}
-
-.ui-icon-key {
-    background-image:url('images/squirrel-icons.png') !important;
-    background-position:0 -64px;
-}
-
-.ui-icon-add-value {
-    background-image:url('images/squirrel-icons.png') !important;
-    background-position:0 -80px;
-}
-
-.ui-icon-delete {
-    background-image:url('images/squirrel-icons.png') !important;
-    background-position:0 -96px;
-}
-
-.ui-icon-save {
-    background-image:url('images/squirrel-icons.png') !important;
-    background-position:0 -112px;
-}
-
-.ui-icon-undo {
-    background-image:url('images/squirrel-icons.png') !important;
-    background-position:0 -128px;
-}
-
-.ui-icon-copy {
-    background-image:url('images/squirrel-icons.png') !important;
-    background-position:0 -144px;
-}
-
-.ui-icon-paste {
-    background-image:url('images/squirrel-icons.png') !important;
-    background-position:0 -160px;
-}
-
-.ui-icon-alarm {
-    background-image:url('images/squirrel-icons.png') !important;
-    background-position:0 -176px;
-}
-
-.ui-icon-rung {
-    background-image:url('images/squirrel-icons.png') !important;
-    background-position:0 -192px;
-}
-
-.ui-icon-pick {
-    background-image:url('images/squirrel-icons.png') !important;
-    background-position:0 -208px;
-}
-
-.login {
+#unauthenticated, #login {
     background: url('images/squirrel.png') no-repeat center;
     background-size: contain;
 }
@@ -222,4 +157,8 @@ button.ui-button-icon-only {
 
 #stegamage {
     height: 100px;
+}
+
+.hidden {
+    display: none;
 }
