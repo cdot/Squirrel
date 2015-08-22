@@ -158,7 +158,6 @@ Tree.action_N = function(action, undoable) {
     var $node = $("<li class='node' data-role='collapsible' data-mini='true' data-iconpos='right'></li>")
         .data("key", key);
 
-    var $button_carrier;
     if (is_leaf) {
         // Leaf node
         $node.addClass("treeleaf");
@@ -170,14 +169,12 @@ Tree.action_N = function(action, undoable) {
         $("<span class='value'></span>")
             .text(action.data)
             .appendTo($node);
-        $button_carrier = $node;
     } else {
         // Intermediate node
         $node.addClass("treecollection");
-        $button_carrier = $("<h3 class='key'></h3>")
+        $("<h3 class='key'></h3>")
             .text(key)
             .appendTo($node);
-        $button_carrier = $node;
         $("<ul data-role='listview'></ul>")
             .appendTo($node)
             .listview();
@@ -198,7 +195,18 @@ Tree.action_N = function(action, undoable) {
     if (!is_leaf)
         $node.collapsible();
 
-    var $open_menu = $("<button></button>");
+    var $open_menu = $("<button class='ui-btn-inline'></button>");
+
+    // Make sure the cache is updated with the new node
+    var p = Tree.path($node);
+
+    // F**king JQuery mobile requires the event on the button parent
+    // The collapse event handler is on the h3 in the collabsible, and
+    // for some reason that takes precedence, so have to dodge that
+    var $button_div = $("<div style='display:inline' class='button_div'></div>");
+    $node.prepend($button_div);
+
+    $button_div.prepend($open_menu);
 
     $open_menu.button({
         icon: "bars",
@@ -207,15 +215,7 @@ Tree.action_N = function(action, undoable) {
         iconpos: "notext"
     });
 
-    // Make sure the cache is updated with the new node
-    var p = Tree.path($node);
-
-    // F**king JQuery mobile requires the event on the button parent
-    // The collapse event handler is on the h3 in the collabsible, and
-    // for some reason that takes precedence, so have to dodge that
-    var $button_div = $open_menu.parent();
-    $button_carrier.prepend($button_div);
-    $button_div
+    $open_menu.parent()
         .addClass("tree_menu_button")
         .on("vclick", function () {
             // When we close the menu, have to get back to the same place
@@ -379,24 +379,28 @@ Tree.action_A = function(action, undoable) {
         }
     } else {
         Tree.set_modified($node, action.time);
-        $("<button></button>")
+        var $button = $("<button 'ui-btn-inline'></button>");
+        $node.find(".button_div").first().append($button);
+        $button
             .addClass("alarm")
             .data("alarm", action.data)
             .button(
                 {
-                    icons: {
-                        primary: "squirrel-icon-alarm"
-                    },
-                    text: false
-                })
-            .prependTo($node);
+                    icon: "clock",
+                    iconpos: "notext",
+                    mini: true,
+                    inline: true
+                });
         if (undoable) {
             Tree.undos.push({
                 type: "C",
                 path: action.path.slice()
             });
         }
-        Squirrel.attach_alarm_handlers($node);
+        $button
+            .on("vclick", function() {
+                Page_get("alarm").open({ node: $node, path: Tree.path($node) });
+            });
     }
 
     return $node;

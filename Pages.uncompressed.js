@@ -95,8 +95,8 @@ function Page(id) {
     self.control("ok")
         .off("vclick")
         .on("vclick", function () {
-            if (typeof this.options.on_ok !== "undefined"
-                && !this.options.on_ok.call(self))
+            if (typeof self.options.on_ok !== "undefined"
+                && !self.options.on_ok.call(self))
                 return false; // abort the close
             self.close();
             return true;
@@ -186,6 +186,40 @@ Page.prototype.squeak = function(e, ok, cancel) {
         on_cancel: cancel
     });
 }
+
+Pages.authenticated = {
+    construct: function() {
+        this.control("search")
+            .on("change", function(/*evt*/) {
+                Squirrel.search($(this).val());
+            });
+        this.control("save")
+            .hide()
+            .on("vclick", function(/*evt*/) {
+                //Squirrel.close_menus();
+                Squirrel.save_hoards();
+                return false;
+            });
+
+        this.control("undo")
+            .hide()
+            .on("vclick", function(/*evt*/) {
+                //Squirrel.close_menus();
+                Tree.undo(Squirrel.squeak);
+                return false;
+            });
+
+    this.control("extras")
+        .on("vclick", function(/*evt*/) {
+            Page_get("extras").open();
+        });
+    },
+
+    open: function(options) {
+        this.control("whoami").text(Squirrel.client.store.user());
+    }
+};
+
 /**
  * options:
  * ok - function called on dialog closed, passing the user and password
@@ -501,7 +535,7 @@ Pages.json = {
 
 Pages.menu = {
     construct: function() {
-        self = this;
+        var self = this;
         this.control("pick").on("vclick", function() {
             var opts = $.extend({}, self.options);
             self.close();
@@ -674,79 +708,86 @@ Pages.pick = {
     }
 };
 
-const units_days = {
-    d: 1,
-    w: 7,
-    m: 30,
-    y: 365
-};
+const units_days = [
+    'y', 365,
+    'm', 30,
+    'w', 7,
+    'd', 1
+];
+
 const ms_in_day = 24 * 60 * 60 * 1000;
 
 /**
  * Reminder setting dialog
  */
-Page.alarm = {
+Pages.alarm = {
 
     construct: function() {
+        var self = this;
         this.update_next = function() {
-            var numb = self.control("number").val()
-                * units_days[self.control("units").val()];
+            var numb = self.control("number").val();
+            if (numb !== "") {
+                self.control("set").hide();
+                return;
+            }
+            self.control("set").show();
+            numb = numb * units_days[self.control("units").val()];
             var elapsed = Math.round(
                 (Date.now() - self.options.node.data("last-time")) / ms_in_day);
             if (elapsed < numb)
                 numb -= elapsed;
-            var uns = "d";
-            if (numb % units_days.y === 0) {
-                numb /= units_days.y; uns = "y";
-            } else if (numb % units_days.m === 0) {
-                numb /= units_days.m; uns = "m";
-            } else if (numb % units_days.w === 0) {
-                numb /= units_days.w; uns = "w";
-            }
-            self.control("next").text(numb);
             self.control().find(".alarm_next").hide();
-            self.control.find(".alarm_next." + uns).show();
+            for (var i = 0; i < units_days.length; i += 2) {
+                var uns = units_days[i];
+                var n = units_days[i + 1];
+                var v = Math.round(numb / n);
+                if (v !== 0) {
+                    numb = numb % n;
+                    self.control().find(".alarm_next." + uns)
+                        .val(v)
+                        .show();
+                }
+            }
         };
+
         this.control("units")
             .on("change", this.update_next);
 
         this.control("number")
-            .spinner({
-                min: 1
-            })
             .on("change", this.update_next);
    },
     
     open: function(options) {
-        var self = this;
-        var $node = this.options.node;
+        var $node = options.node;
         var $alarm = $node.children(".alarm");
-        var path = this.options.path;
         var number = 6;
         var units = "m";
 
         if ($alarm.length > 0) {
             number = $alarm.data("alarm");
-            if (number % units_days.y === 0) {
-                number /= units_days.y; units = "y";
-            } else if (number % units_days.m === 0) {
-                number /= units_days.m; units = "m";
-            } else if (number % units_days.w === 0) {
-                number /= units_days.w; units = "w";
-            } else
-                units = "d";
+            for (var i = 0; i < units_days.length; i += 2) {
+                var uns = units_days[i];
+                var n = units_days[i + 1];
+                var v = Math.round(number / n);
+                if (v === 0) {
+                    number /= n;
+                    units = uns;
+                    break;
+                }
+            }
         }
 
         this.control("number").val(number);
         this.control("units").val(units);
 
+        var self = this;
         options.on_ok = function() {
             var numb = self.control("number").val()
                 * units_days[self.control("units").val()];
 
             self.play_action(
                 { type: "A",
-                  path: self.options.path,
+                  path: this.options.path,
                   data: numb
                 });
             self.close();
@@ -757,7 +798,7 @@ Page.alarm = {
             if ($alarm) {
                 self.play_action(
                     { type: "C",
-                      path: self.options.path
+                      path: this.options.path
                     });
             }
             self.close();

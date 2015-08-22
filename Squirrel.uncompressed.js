@@ -26,7 +26,6 @@ var Squirrel = {
 Squirrel.update_tree = function(/*event*/) {
     "use strict";
     console.debug("Refresh listview");
-    //$("#sites-list").listview("refresh");
     $("ul.ui-listview").listview("refresh");
 };
 
@@ -93,18 +92,6 @@ Squirrel.edit_node = function($node, what) {
                 Page_get("squeak").open({message: e.message});
         }
     });
-};
-
-// Attach handlers to an alarm button
-Squirrel.attach_alarm_handlers = function($node) {
-    "use strict";
-
-    $node.children(".alarm")
-        .off("vclick")
-        .on("vclick", function() {
-            //Squirrel.close_menus();
-            Page_get("alarm").open();
-        });
 };
 
 /**
@@ -204,7 +191,6 @@ Squirrel.search = function(s) {
             });
         }
     });
-    $("#search_hits").text(TX.tx("$1 found", hits));
 };
 
 /**
@@ -213,21 +199,23 @@ Squirrel.search = function(s) {
 Squirrel.update_save = function(/*event*/) {
     "use strict";
 
-    $("#undo_button").toggle(Tree.can_undo());
+    var authpage = Page_get("authenticated");
+    authpage.control("undo").toggle(Tree.can_undo());
     $("#menu_disas").toggle(Squirrel.client.hoard.options.autosave);
     $("#menu_enass").toggle(!Squirrel.client.hoard.options.autosave);
     var us = Squirrel.unsaved_changes(3);
+    var $sb = authpage.control("save");
     if (us !== null) {
         if (Squirrel.client.hoard.options.autosave) {
             Squirrel.save_hoards();
         } else {
-            $("#save_button").attr(
+            $sb.attr(
                 "title",
                 TX.tx("Save is required because: ") + us);
-            $("#save_button").show();
+            $sb.show();
         }
     } else {
-        $("#save_button").hide();
+        $sb.hide();
     }
 };
 
@@ -639,7 +627,6 @@ Squirrel.load_client_hoard = function() {
     };
 
     if (DEBUG) console.debug("Load client store");
-    $("#whoami").text(Squirrel.client.store.user());
 
     Squirrel.client.store.reads(
         "Squirrel." + Squirrel.client.store.user(),
@@ -854,34 +841,6 @@ Squirrel.init_ui = function() {
     });
 
     Tree.set_root($("#sites-node"));
-
-    $("#save_button")
-        .hide()
-        .on("vclick", function(/*evt*/) {
-            //Squirrel.close_menus();
-            Squirrel.save_hoards();
-            return false;
-        });
-
-    $("#undo_button")
-        .hide()
-        .on("vclick", function(/*evt*/) {
-            //Squirrel.close_menus();
-            Tree.undo(Squirrel.squeak);
-            return false;
-        });
-
-    $("#extras_button")
-        .on("vclick", function(/*evt*/) {
-            Page_get("extras").open();
-        });
-
-    $("#search")
-        .on("change", function(/*evt*/) {
-            //Squirrel.close_menus();
-            $("#search_hits").text(TX.tx("Searching..."));
-            Squirrel.search($(this).val());
-        });
 
     $(document)
         .on("check_alarms", Squirrel.check_alarms)

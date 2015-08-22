@@ -64,7 +64,7 @@ div.ui-btn {
     font-family: 'Poiret One',cursive,Helvetica,Arial,sans-serif;
 }
 
-.tree_menu_button {
+.button_div {
     float: left;
 }
 
@@ -114,10 +114,6 @@ button.ui-button-icon-only {
 .picked {
     background-color: yellow;
     color: black;
-}
-
-.alarm {
-    float: left;
 }
 
 .info-button {

@@ -18,7 +18,7 @@
     <!-- Pages -->
 
     <div id="squeak" data-role="page" data-dismissible="false" data-theme="a" data-overlay-theme="b">
-      <div class="ui-content" id="squeak_message"></div>
+      <div class="ui-content" role="main" id="squeak_message"></div>
       <div data-role="footer">
         <button id="squeak_close" data-rel="back" data-icon="delete" iconpos="notext" class="TX_text">Close</button>
         <button id="squeak_ok" data-rel="back" data-icon="tick" data-iconpos="notext" class="TX_text">OK</button>
@@ -52,7 +52,7 @@
 	      <td class="TX_text">Username:</td>
 	      <td>
                 <span id="login_uReq">
-	          <input size="50" id="login_user" value="" class="TX_title" title="Enter username" />
+	          <input id="login_user" type="text" size="50" value="" class="TX_title" title="Enter username" />
                 </span>
                 <span id="login_foruser"></span>
 	      </td>
@@ -60,7 +60,7 @@
             <tr id="login_pReq">
 	      <td class="TX_text">Password:</td>
 	      <td>
-	        <input type="password" size="50" id="login_pass" class="TX_title" title="Enter password" value="" />
+	        <input id="login_pass" type="password" size="50" class="TX_title" title="Enter password" value="" />
 	      </td>
 	    </tr>
 	  </tbody>
@@ -77,7 +77,7 @@
         <h1 class="TX_text">Set up store</h1>
       </div>
       <div class="ui-content" role="main">
-        <div id="image" style="display:none">
+        <div id="store_settings_image" style="display:none">
           <p class="TX_text help">Choose a local image that will be copied
             and used to hide your data in the cloud. This should be a complex
             colour image of at least 1024x768 pixels, preferably with variable
@@ -85,36 +85,32 @@
             load and save.
           </p>
           <span class="TX_text">Current steganography image:</span><br />
-          <img id="stegamage" src="images/GCHQ.png" /><br />
-          <button id="choose" class="TX_title TX_text" data-mini="true" title="Choose an image file">Change Image</button>
-          <p id="message"></p>
-          <input type="file" id="file" class="hidden" />
+          <img id="store_settings_stegamage" src="images/GCHQ.png" /><br />
+          <button id="store_settings_choose" class="TX_title TX_text" data-mini="true" title="Choose an image file">Change Image</button>
+          <p id="store_settings_message"></p>
+          <input id="store_settings_file" type="file" class="hidden" />
         </div>
-        <div id="path" style="display:none">
+        <div id="store_settings_path" style="display:none">
           <p class="TX_text help">
             Set the pathname of the file to use in your cloud store. For example
             if you choose 'photos/stills/grandma.png' it will read and write
             the file 'grandma.png' in the directory 'photos/stills'.
           </p>
-          <label for="storepath" class="TX_text">Store path: </label>
-          <input id="storepath" type="text" value="" class="TX_title" title="Pathname of the image in your cloud store"/>
+          <label for="store_settings_storepath" class="TX_text">Store path: </label>
+          <input id="store_settings_storepath" type="text" value="" class="TX_title" title="Pathname of the image in your cloud store"/>
         </div>
       </div>
       <div data-role="footer">
-        <button id="ok" class="TX_text">OK</button>
+        <button id="store_settings_ok" class="TX_text">OK</button>
       </div>
     </div>
 
     <div id="authenticated" data-role="page" class="authenticated">
-      <div data-role="header">
-        <div data-role="header" class="hidden">
-          <h1>Squirrel</h1><!-- just to get title set -->
-        </div>
-        <div id="signed_in">
-          <span class="TX_text">Signed in as: </span><span id="whoami"></span>
-        </div>
-        <span id="search_label" class="TX_text">Search:</span>
-        <input id="search" value="" class="TX_title" title="Enter search string" />
+      <div data-role="header" class="hidden">
+        <h1>Squirrel</h1><!-- just to get title set -->
+        <div id="authenticated_whoami" style="float:right"></div>
+        <span class="TX_text">Search:</span>
+        <input id="authenticated_search" type="text" value="" class="TX_title" title="Enter search string" />
       </div>
       <div class="ui-content" role="main">
         <div id="sites-node" name="/" class="node">
@@ -125,9 +121,9 @@
         </div>
       </div>
       <div data-role="footer">
-        <button id="extras_button" data-icon="gear" data-iconpos="notext" data-inline="true" class="authenticated TX_title TX_text" title="Tools/Options">Tools</button>
-        <button id="undo_button" data-icon="back" data-iconpos="notext" data-inline="true" class="TX_title TX_text" title="Undo last change">Undo</button>
-        <button id="save_button" data-icon="cloud" data-iconpos="left" data-inline="true" class="TX_text">Save</button>
+        <button id="authenticated_extras" data-icon="gear" data-iconpos="notext" data-inline="true" class="authenticated TX_title TX_text" title="Tools/Options">Tools</button>
+        <button id="authenticated_undo" data-icon="back" data-iconpos="notext" data-inline="true" class="TX_title TX_text" title="Undo last change">Undo</button>
+        <button id="authenticated_save" data-icon="cloud" data-iconpos="left" data-inline="true" class="TX_text">Save</button>
       </div>
     </div>
 
@@ -157,13 +153,13 @@
       <div data-role="header">
         <h1 class="TX_text">About Squirrel</h1>
       </div>
-      <div class="ui-content">
+      <div class="ui-content" role="main">
         &copy; 2015 Crawford Currie <a href="http://c-dot.co.uk">http://c-dot.co.uk</a>
-      </div>
-      <div class="ui-content TX_text">
-        Licensed under the MIT License. Reuse within proprietary software is
-        permitted provided all copies of the licensed software include a
-        copy of the MIT License terms and the copyright notice.
+        <div class="TX_text">
+          Licensed under the MIT License. Reuse within proprietary software is
+          permitted provided all copies of the licensed software include a
+          copy of the MIT License terms and the copyright notice.
+        </div>
       </div>
       <div data-role="footer">
         <button id="about_close" class="TX_text">Close</button>
@@ -253,15 +249,15 @@
       <div data-role="header">
         <h1><span class="TX_text">Generate random value for</span> <span id="randomise_path"></span></h1>
       </div>
-      <div class="ui-content">
+      <div class="ui-content" role="main">
         <span class="TX_text">Suggestion: '<span id="randomise_idea" class="value"></span>'
         <p>
           <span class="TX_text">Length:</span>
-          <input size="20" value="24" id="randomise_len" class="TX_title" title="Enter password length" />
+          <input id="randomise_len" type="number" size="20" value="24" class="TX_title" title="Enter password length" />
         </p>
         <p>
           <span class="TX_text">Character range:</span>
-          <input size="20" value="A-Za-z0-9" id="randomise_chs" class="TX_title" title="Enter the characters that are legal in passwords for this site. You can use character ranges like A-Z or 0-9" />
+          <input id="randomise_chs" type="text" size="20" value="A-Za-z0-9" class="TX_title" title="Enter the characters that are legal in passwords for this site. You can use character ranges like A-Z or 0-9" />
         </p>
       </div>
       <div data-role="footer">
@@ -275,7 +271,7 @@
       <div data-role="header">
         <h1 class="TX_text">Confirm Delete</h1>
       </div>
-      <div class="ui-content">
+      <div class="ui-content" role="main">
         <span class="TX_text">Are you sure you want to delete </span>
         '<span id="delete_node_path"></span>'
         <span id="delete_node_coll" class="TX_text"> and everything under it?</span>
@@ -290,15 +286,17 @@
       <div data-role="page">
         <h1 class="TX_text">Pick characters</h1>
       </div>
-      <div class="ui-content" class="TX_text">
-        Click on the Nth character position to see what character it is
+      <div class="ui-content" role="main">
+        <div class="TX_text">
+          Click on the Nth character position to see what character it is
+        </div>
+        <table>
+          <tbody>
+            <tr id="pick_which"></tr>
+            <tr id="pick_from"></tr>
+          </tbody>
+        </table>
       </div>
-      <table>
-        <tbody>
-          <tr id="pick_which"></tr>
-          <tr id="pick_from"></tr>
-        </tbody>
-      </table>
       <div data-role="footer">
         <button id="pick_clear" class="TX_text">Clear</button>
         <button id="pick_close" class="TX_text">Close</button>
@@ -309,31 +307,34 @@
       <div data-role="header">
         <h1 class="TX_title">Reminder</h1>
       </div>
-      <div class="ui-content">
-        <p class="TX_text">
+      <div class="ui-content" role="main">
+        <div class="TX_text">
           Select when you want to be reminded about this entry.
-        </p>
-        <p class="TX_text">
           The reminder will be reset whenever the entry is modified.
-        </p>
-        <p>
-          <label for="dlg_alarm_number" class="TX_text">Remind after</label>
-          <input id="dlg_alarm_number" />
-          <select id="dlg_alarm_units">
-            <option value="d" class="TX_text">days</option>
-            <option value="w" class="TX_text">weeks</option>
-            <option value="m" selected="selected" class="TX_text">months</option>
-            <option value="y" class="TX_text">years</option>
-          </select>
-        </p>
-        <p>
+        </div>
+        <div>
+          <table>
+            <td>
+              <label for="dlg_alarm_number" class="TX_text">Remind after</label>
+              <input id="dlg_alarm_number" type="number" data-mini="true" data-inine="true" />
+            </td>
+            <td>
+              <select id="dlg_alarm_units" data-native-menu="false" data-mini="true">
+                <option value="d" class="TX_text">days</option>
+                <option value="w" class="TX_text">weeks</option>
+                <option value="m" selected="selected" class="TX_text">months</option>
+                <option value="y" class="TX_text">years</option>
+              </select>
+            </td>
+          </table>
+        </div>
+        <div id="alarm_set">
           <span class="TX_text">Next reminder is due in</span>
-          <span id="alarm_next"></span>
-          <span class="alarm_next d TX_text">days</span>
-          <span class="alarm_next w TX_text">weeks</span>
-          <span class="alarm_next m TX_text">months</span>
-          <span class="alarm_next y TX_text">years</span>
-        </p>
+          <span class="alarm_next y"><span class="TX_text">years</span></span>
+          <span class="alarm_next m"><span class="TX_text">months</span></span>
+          <span class="alarm_next w"><span class="TX_text">weeks</span></span>
+          <span class="alarm_next d"><span class="TX_text">days</span></span>
+        </div>
       </div>
       <div data-role="footer">
         <button id="alarm_ok" class="TX_text">Set (or reset) reminder</button>
