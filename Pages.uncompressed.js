@@ -533,58 +533,6 @@ Pages.json = {
     }
 };
 
-Pages.menu = {
-    construct: function() {
-        var self = this;
-        this.control("pick").on("vclick", function() {
-            var opts = $.extend({}, self.options);
-            self.close();
-            Page_get("pick").open(opts);
-        });
-        this.control("add_alarm").on("vclick", function() {
-            var opts = $.extend({}, self.options);
-            self.close();
-            Page_get("alarm").open(opts);
-        });
-        this.control("rename").on("vclick", function() {
-            var $node = self.options.node;
-            self.close();
-            Squirrel.edit_node($node, "key");
-        });
-        this.control("edit").on("vclick", function() {
-            var $node = self.options.node;
-            self.close();
-            Squirrel.edit_node($node, "value");
-        });
-        this.control("randomise").on("vclick", function() {
-            var opts = $.extend({}, self.options);
-            self.close();
-            Page_get("randomise").open(opts);
-        });
-        this.control("add_value").on("vclick", function() {
-            var opts = $.extend({}, self.options);
-            self.close();
-            Page_get("add_value").open(opts);
-        });
-        this.control("add_subtree").on("vclick", function() {
-            var opts = $.extend({}, self.options);
-            self.close();
-            Page_get("add_subtree").open(opts);
-        });
-        this.control("delete_node").on("vclick", function() {
-            var opts = $.extend({}, self.options);
-            self.close();
-            Page_get("delete_node").open(opts);
-        });
-    },
-
-    open: function(options) {
-        this.control("nav").text(options.path.join("/"));
-        $("#menu").find(".leaf_only").toggle(options.is_leaf);
-        $("#menu").find(".collection_only").toggle(!options.is_leaf);
-    }
-};
-
 /**
  * Confirm deletion of a node
  */

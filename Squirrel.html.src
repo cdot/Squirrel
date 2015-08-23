@@ -225,26 +225,6 @@
       </div>
     </div>
 
-    <div id="menu" data-role="page">
-      <div data-role="header">
-        <span class="TX_text">Actions on</span> <span id="menu_nav"></span>
-      </div>
-      <div data-role="controlgroup">
-        <button id="menu_pick" data-icon="grid" data-iconpos="left" class="leaf_only TX_text">Pick characters</button>
-        <button id="menu_add_alarm" data-icon="clock" data-iconpos="left" class="TX_text">Add reminder</button>
-        <button id="menu_rename" data-icon="refresh" data-iconpos="left"class="TX_text">Rename</button>
-        <button id="menu_edit" data-icon="edit" data-iconpos="left" class="leaf_only TX_text">Edit value</button>
-        <button id="menu_randomise" data-icon="recycle" data-iconpos="left"class="leaf_only TX_text">Generate new random value</button>
-        <button id="menu_add_value" data-icon="plus" data-iconpos="left"class="collection_only TX_text">Add new value</button>
-        <button id="menu_add_subtree" class="collection_only TX_text">Add new folder</button>
-        <button id="menu_delete_node" data-icon="delete" data-iconpos="left" class="TX_text">Delete</button>
-
-      </div>
-      <div data-role="footer">
-        <button id="menu_close" class="TX_text">Close</button>
-      </div>
-    </div>
-
     <div id="randomise" data-role="page">
       <div data-role="header">
         <h1><span class="TX_text">Generate random value for</span> <span id="randomise_path"></span></h1>
@@ -340,6 +320,20 @@
         <button id="alarm_ok" class="TX_text">Set (or reset) reminder</button>
         <button id="alarm_cancel" class="TX_text">Cancel reminder</button>
         <button id="alarm_close" class="TX_text">Close</button>
+      </div>
+    </div>
+
+    <div id="menu" data-role="panel" data-theme="b">
+      <div id="menu_controls" data-role="controlgroup">
+        <button id="menu_pick" data-icon="grid" data-iconpos="left" class="leaf_only TX_text">Pick characters</button>
+        <button id="menu_add_alarm" data-icon="clock" data-iconpos="left" class="TX_text">Add reminder</button>
+        <button id="menu_rename" data-icon="refresh" data-iconpos="left"class="TX_text">Rename</button>
+        <button id="menu_edit" data-icon="edit" data-iconpos="left" class="leaf_only TX_text">Edit value</button>
+        <button id="menu_randomise" data-icon="recycle" data-iconpos="left"class="leaf_only TX_text">Generate new random value</button>
+        <button id="menu_add_value" data-icon="plus" data-iconpos="left"class="collection_only TX_text">Add new value</button>
+        <button id="menu_add_subtree" data-icon="bullets" class="collection_only TX_text">Add new folder</button>
+        <button id="menu_delete_node" data-icon="delete" data-iconpos="left" class="TX_text">Delete</button>
+        <a data-role="button" data-theme="b" href="#" data-rel="close">Close menu</a>
       </div>
     </div>
 

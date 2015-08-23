@@ -195,18 +195,28 @@ Tree.action_N = function(action, undoable) {
     if (!is_leaf)
         $node.collapsible();
 
+    var path = Tree.path($node);
+
     var $open_menu = $("<button class='ui-btn-inline'></button>");
+    var $close_menu = $("<button class='ui-btn-inline'></button>");
 
-    // Make sure the cache is updated with the new node
-    var p = Tree.path($node);
-
-    // F**king JQuery mobile requires the event on the button parent
-    // The collapse event handler is on the h3 in the collabsible, and
-    // for some reason that takes precedence, so have to dodge that
     var $button_div = $("<div style='display:inline' class='button_div'></div>");
     $node.prepend($button_div);
 
-    $button_div.prepend($open_menu);
+    $button_div
+        .append($close_menu)
+        .append($open_menu);
+
+    $close_menu.button({
+        icon: "arrow-l",
+        mini: true,
+        inline: true,
+        iconpos: "notext"
+    });
+    $close_menu
+        .parent()
+        .addClass("close-menu")
+        .hide();
 
     $open_menu.button({
         icon: "bars",
@@ -215,22 +225,29 @@ Tree.action_N = function(action, undoable) {
         iconpos: "notext"
     });
 
-    $open_menu.parent()
+    $open_menu
+        .parent()
         .addClass("tree_menu_button")
+        .addClass("open-menu")
         .on("vclick", function () {
-            // When we close the menu, have to get back to the same place
-            Page_get("menu").open(
-                {
-                    is_leaf: is_leaf,
-                    path: p,
-                    node: $node
-                });
+            $("#menu").find(".leaf_only").toggle(is_leaf);
+            $("#menu").find(".collection_only").toggle(!is_leaf);
+            $("#menu").trigger("updatelayout");
+            $("#menu").data("node", 
+                            {
+                                node: $node,
+                                path: path
+                            });
+            //$node.find(".open-menu").first().hide();
+            $("#sites-node").find(".open-menu").hide();
+            $node.find(".close-menu").first().show();
+            $("#menu").panel("open");
         });
 
     if (undoable) {
         Tree.undos.push({
             type: "D",
-            path: p
+            path: path
         });
     }
 

@@ -201,8 +201,6 @@ Squirrel.update_save = function(/*event*/) {
 
     var authpage = Page_get("authenticated");
     authpage.control("undo").toggle(Tree.can_undo());
-    $("#menu_disas").toggle(Squirrel.client.hoard.options.autosave);
-    $("#menu_enass").toggle(!Squirrel.client.hoard.options.autosave);
     var us = Squirrel.unsaved_changes(3);
     var $sb = authpage.control("save");
     if (us !== null) {
@@ -815,6 +813,49 @@ Squirrel.init_ui = function() {
 
     $("body").pagecontainer({
         defaults: true
+    });
+
+    // Initialise pull-right node panel
+    $("#menu").panel({
+        close: function(event, ui) {
+            var info = $("#menu").data("node");
+            info.node.find(".close-menu").first().hide();
+            //info.node.find(".open-menu").first().show();
+            $("#sites-node").find(".open-menu").show();
+        }});
+    $("#menu_controls").controlgroup();
+
+    $("#menu_pick").on("vclick", function() {
+        var info = $("#menu").data("node");
+        Page_get("pick").open(info);
+    });
+    $("#menu_add_alarm").on("vclick", function() {
+        var info = $("#menu").data("node");
+        Page_get("alarm").open(info);
+    });
+    $("#menu_rename").on("vclick", function() {
+        var info = $("#menu").data("node");
+        Squirrel.edit_node(info.node, "key");
+    });
+    $("#menu_edit").on("vclick", function() {
+        var info = $("#menu").data("node");
+        Squirrel.edit_node($node, "value");
+    });
+    $("#menu_randomise").on("vclick", function() {
+        var info = $("#menu").data("node");
+        Page_get("randomise").open(info);
+    });
+    $("#menu_add_value").on("vclick", function() {
+        var info = $("#menu").data("node");
+        Page_get("add_value").open(info);
+    });
+    $("#menu_add_subtree").on("vclick", function() {
+        var info = $("#menu").data("node");
+        Page_get("add_subtree").open(info);
+    });
+    $("#menu_delete_node").on("vclick", function() {
+        var info = $("#menu").data("node");
+        Page_get("delete_node").open(info);
     });
 
     $(".help").each(function() {
