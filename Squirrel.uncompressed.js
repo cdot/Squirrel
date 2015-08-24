@@ -25,8 +25,7 @@ var Squirrel = {
  */
 Squirrel.update_tree = function(/*event*/) {
     "use strict";
-    console.debug("Refresh listview");
-    $("ul.ui-listview").listview("refresh");
+    console.debug("Refresh tree");
 };
 
 // Event handler for check_alarms
@@ -60,41 +59,6 @@ Squirrel.check_alarms = function(/* event */) {
 };
 
 /**
- * Edit a node in place, used for renaming and revaluing
- */
-Squirrel.edit_node = function($node, what) {
-    "use strict";
-
-    var $span = $node.find("." + what + ":first");
-
-    // Fit width to the container
-    var w = $("#sites-node").width();
-    $span.parents().each(function() {
-        w -= $(this).position().left;
-    });
-
-    $span.edit_in_place({
-        width: w,
-        changed: function(s) {
-            var e = Squirrel.client.hoard.record_action(
-                { type: what === "key" ? "R" : "E",
-                  path: Tree.path($node),
-                  data: s },
-                function(ea) {
-                    Tree.action(
-                        ea,
-                        function(/*$newnode*/) {
-                            Utils.sometime("update_save");
-                            Utils.sometime("update_tree");
-                        }, true);
-                });
-            if (e !== null)
-                Page_get("squeak").open({message: e.message});
-        }
-    });
-};
-
-/**
  * A (manual) new tree node action
  */
 Squirrel.add_child_node = function($node, title, value) {
@@ -104,6 +68,8 @@ Squirrel.add_child_node = function($node, title, value) {
     if (typeof value === "string")
         sval = value;
     p.push(title);
+
+    $node.treenode("open");
 
     var res = Squirrel.client.hoard.record_action(
         {
@@ -128,7 +94,9 @@ Squirrel.add_child_node = function($node, title, value) {
                     && typeof value !== "undefined") {
                     Squirrel.insert_data(p, value);
                 }
-                Squirrel.edit_node($newnode, "key");
+                //Squirrel.edit_node($newnode, "key");
+                Utils.sometime("update_save");
+                Utils.sometime("update_tree");
             }, true);
         });
     if (res !== null)
@@ -178,7 +146,7 @@ Squirrel.search = function(s) {
     "use strict";
 
     $(".node .expanded").each(function() {
-        $(this).collapsible("collapse");
+        $(this).treenode("close");
     });
 
     var re = new RegExp(s, "i");
@@ -187,7 +155,7 @@ Squirrel.search = function(s) {
         if ($(this).text().match(re)) {
             hits++;
             $(this).parents(".node").each(function() {
-                $(this).collapsible("expand");
+                $(this).treenode("open");
             });
         }
     });
@@ -215,6 +183,33 @@ Squirrel.update_save = function(/*event*/) {
     } else {
         $sb.hide();
     }
+};
+
+Squirrel.open_menu = function($node) {
+    var path = Tree.path($node);
+
+    var is_leaf = $node.data("is_leaf");
+    var value = $node.find(".value").first().text();
+    var key = $node.find(".key").first().text();
+    var $menu = $("#menu");
+
+    $menu.find(".leaf_only").toggle(is_leaf);
+    $menu.find(".collection_only").toggle(!is_leaf);
+    $menu.trigger("updatelayout");
+    $menu.data("node", 
+                    {
+                        node: $node,
+                        path: path
+                    });
+    $("#menu_name").text(key);
+    var pp = path.slice();
+    pp.pop();
+    $("#menu_parent_path").text(pp.join("/") + "/");
+    if (is_leaf)
+        $("#menu_value").text(value);
+    $("#sites-node").find(".open-menu").hide();
+    $node.find(".close-menu").first().show();
+    $menu.panel("open");
 };
 
 Squirrel.get_updates_from_cloud = function(cloard, chain) {
@@ -256,7 +251,8 @@ Squirrel.unsaved_changes = function(max_changes) {
     var message = [];
 
     $(".node.modified").each(function() {
-        if (DEBUG && !$(this).data("path")) debugger; // Missing data-path
+        if (DEBUG && !$(this).data("path")
+           && !$(this).hasClass("root")) debugger; // Missing data-path
         var path = $(this).data("path") || 'node';
         message.push(TX.tx("$1 has changed",
                            path.replace(Squirrel.PATHSEP, "/")));
@@ -815,6 +811,8 @@ Squirrel.init_ui = function() {
         defaults: true
     });
 
+    $("#sites-node").treenode();
+
     // Initialise pull-right node panel
     $("#menu").panel({
         close: function(event, ui) {
@@ -833,13 +831,59 @@ Squirrel.init_ui = function() {
         var info = $("#menu").data("node");
         Page_get("alarm").open(info);
     });
-    $("#menu_rename").on("vclick", function() {
+    $("#menu_path").on("vclick", function() {
         var info = $("#menu").data("node");
-        Squirrel.edit_node(info.node, "key");
+        var w = $("#menu_path").width() - $("#menu_name").position().left;
+        $("#menu_name").parents().each(function() {
+            w -= $(this).position().left;
+        });
+        $("#menu_name").edit_in_place({
+            width: w,
+            changed: function(s) {
+                $("#menu_name").text(s);
+                var e = Squirrel.client.hoard.record_action(
+                    { type: "R",
+                      path: Tree.path(info.node),
+                      data: s },
+                    function(ea) {
+                        Tree.action(
+                            ea,
+                            function(/*$newnode*/) {
+                                Utils.sometime("update_save");
+                                Utils.sometime("update_tree");
+                            }, true);
+                    });
+                if (e !== null)
+                    Page_get("squeak").open({message: e.message});
+            }
+        });
     });
-    $("#menu_edit").on("vclick", function() {
+    $("#menu_value").on("vclick", function() {
         var info = $("#menu").data("node");
-        Squirrel.edit_node($node, "value");
+        var w = $("#menu_path").width();
+        $("#menu_value").parents().each(function() {
+            w -= $(this).position().left;
+        });
+        $("#menu_value").edit_in_place({
+            width: w,
+            changed: function(s) {
+                $("#menu_value").text(s);
+                var e = Squirrel.client.hoard.record_action(
+                    { type: "E",
+                      path: Tree.path(info.node),
+                      data: s },
+                    function(ea) {
+                        Tree.action(
+                            ea,
+                            function(/*$newnode*/) {
+                                Utils.sometime("update_save");
+                                Utils.sometime("update_tree");
+                            }, true);
+                    });
+                if (e !== null)
+                    Page_get("squeak").open({message: e.message});
+            }
+        });
     });
     $("#menu_randomise").on("vclick", function() {
         var info = $("#menu").data("node");
@@ -847,7 +891,7 @@ Squirrel.init_ui = function() {
     });
     $("#menu_add_value").on("vclick", function() {
         var info = $("#menu").data("node");
-        Page_get("add_value").open(info);
+        Squirrel.add_child_node(info.node, "New value", "none");
     });
     $("#menu_add_subtree").on("vclick", function() {
         var info = $("#menu").data("node");

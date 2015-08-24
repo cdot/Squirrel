@@ -2,33 +2,85 @@
  * Functions involved in the management of the DOM tree that represents
  * the content of the client hoard cache.
  *
- * Each node in the client hoard cache is represented in the DOM by an
- * LI node (or DIV node for the root) in a UL/LI tree. This node has
- * structure as follows:
- * classes:
- *   node (always)
- *   modified (if UI modified)
- * data:
- *   key, the key name the node is for (simple name, not a path)
- *   path: the full pathname of the node (string)
- * children:
- *   DIV: class=node_div
- *     target for tap-hold events. Target for mousover, taphold, and
- *     click events on collections (open, close subtree)
- *     classes:
- *         tree_leaf - if this is a leaf node
- *         tree_collection - if this is an intermediate node   
- *     children:
- *        span: class=key target for click events
- *           text: the key name
- *        span: class=kv_separator
- *        span: class=value - if this is a leaf node, text is the leaf value
- *
- * The DOM tree is built and maintained through the use of actions sent
+  * The DOM tree is built and maintained through the use of actions sent
  * to the Squirrel client hoard, which are then passed on in a callback to
  * the DOM tree. Nodes in the DOM tree are never manipulated directly outside
  * this namespace (other than to add the 'modified' class)
  */
+
+/*
+ * Massively simplified list view / tree view widget, specific to
+ * this application
+ */
+$.widget("squirrel.treenode", {
+    _create: function() {
+        // this.element is the object it's called on
+        // This will be a div for the root, and an li for any other node
+        // this.options is the options passed
+        var $node = $(this.element);
+        if (!$node.hasClass("treeroot")) {
+            // Add open/close button, except on root which is
+            // always open.
+            var $control = $("<button></button>");
+            $control
+                .appendTo($node)
+                .addClass("open-close")
+                .button({
+                    mini: true,
+                    inline: true,
+                    icon: "carat-r",
+                    iconpos: "notext"
+                });
+            $control.parent().on("vclick", function() {
+                $node.treenode("toggle");
+                return false;
+            });
+            $node.data("treenode-open", true);
+        }
+        // Add the children
+        $node.append("<ul class='treenode-subnodes'></ul>");
+        // Toggle to close, which will hide the ul
+        $node.treenode("toggle");
+    },
+
+    // Switch from open to closed or vice versa
+    toggle: function() {
+        var $node = $(this.element);
+        if ($node.data("treenode-open")) {
+            $node.treenode("close");
+        } else {
+            $node.treenode("open");
+        }
+    },
+
+    // Force the node open
+    open: function () {
+        var $node = $(this.element);
+        $node
+            .find(".open-close")
+            .first()
+            .button("option", "icon", "carat-d");
+        $node.children(".treenode-subnodes").show();
+        $node.data("treenode-open", true);
+    },
+
+    // Force the node closed
+    close: function () {
+        var $node = $(this.element);
+        $node
+            .find(".open-close")
+            .first()
+            .button("option", "icon","carat-r");
+        $node.children(".treenode-subnodes").hide();
+        $node.data("treenode-open", false);
+    },
+
+    // Do we need this any more?
+    refresh: function() {
+        console.debug("Called treenode.refresh");
+    }
+});
+
 Tree = { // Namespace
     menu: null,
     cache: {},    // Path->node mapping
@@ -151,33 +203,32 @@ Tree.action_N = function(action, undoable) {
     // Get the container
     var $parent = Tree.node(parent);
     if (!$parent) debugger;
-    var $container = $parent.find("ul:first");
+    var $container = $parent.children("ul");
     if (DEBUG && $container.length !== 1) debugger;
 
     // Create the new node
-    var $node = $("<li class='node' data-role='collapsible' data-mini='true' data-iconpos='right'></li>")
+    var $node = $("<li class='node'></li>")
         .data("key", key);
+    var value;
 
+    $("<span class='key'></span>")
+        .text(key)
+        .appendTo($node);
     if (is_leaf) {
         // Leaf node
         $node.addClass("treeleaf");
-        $("<span class='key'></span>")
-            .text(key)
-            .appendTo($node);
+        $node.data("is_leaf", true);
         $("<span class='kv_separator'> : </span>")
             .appendTo($node);
+        value = action.data;
         $("<span class='value'></span>")
-            .text(action.data)
+            .text(value)
             .appendTo($node);
     } else {
         // Intermediate node
+        $node.data("is_leaf", false);
         $node.addClass("treecollection");
-        $("<h3 class='key'></h3>")
-            .text(key)
-            .appendTo($node);
-        $("<ul data-role='listview'></ul>")
-            .appendTo($node)
-            .listview();
+        $node.treenode();
     }
 
     // Insert-sort into the $container
@@ -192,57 +243,14 @@ Tree.action_N = function(action, undoable) {
     if (!inserted)
         $container.append($node);
 
-    if (!is_leaf)
-        $node.collapsible();
 
+    $node.on("vclick", function() {
+        Squirrel.open_menu($node);
+        return false;
+    });
+
+    // This is a new node, this lookup will side-effect add it to the cache
     var path = Tree.path($node);
-
-    var $open_menu = $("<button class='ui-btn-inline'></button>");
-    var $close_menu = $("<button class='ui-btn-inline'></button>");
-
-    var $button_div = $("<div style='display:inline' class='button_div'></div>");
-    $node.prepend($button_div);
-
-    $button_div
-        .append($close_menu)
-        .append($open_menu);
-
-    $close_menu.button({
-        icon: "arrow-l",
-        mini: true,
-        inline: true,
-        iconpos: "notext"
-    });
-    $close_menu
-        .parent()
-        .addClass("close-menu")
-        .hide();
-
-    $open_menu.button({
-        icon: "bars",
-        mini: true,
-        inline: true,
-        iconpos: "notext"
-    });
-
-    $open_menu
-        .parent()
-        .addClass("tree_menu_button")
-        .addClass("open-menu")
-        .on("vclick", function () {
-            $("#menu").find(".leaf_only").toggle(is_leaf);
-            $("#menu").find(".collection_only").toggle(!is_leaf);
-            $("#menu").trigger("updatelayout");
-            $("#menu").data("node", 
-                            {
-                                node: $node,
-                                path: path
-                            });
-            //$node.find(".open-menu").first().hide();
-            $("#sites-node").find(".open-menu").hide();
-            $node.find(".close-menu").first().show();
-            $("#menu").panel("open");
-        });
 
     if (undoable) {
         Tree.undos.push({

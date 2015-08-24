@@ -33,7 +33,7 @@ function Page_change(page_id, on_open) {
     }
     // else no follow-on function, simply fire the change
 
-    $("body").pagecontainer("change", $("#" + page_id));
+    $("body").pagecontainer("change", $("#" + page_id), { transition: "fade" });
 };
 
 /**
@@ -196,7 +196,6 @@ Pages.authenticated = {
         this.control("save")
             .hide()
             .on("vclick", function(/*evt*/) {
-                //Squirrel.close_menus();
                 Squirrel.save_hoards();
                 return false;
             });
@@ -204,7 +203,6 @@ Pages.authenticated = {
         this.control("undo")
             .hide()
             .on("vclick", function(/*evt*/) {
-                //Squirrel.close_menus();
                 Tree.undo(Squirrel.squeak);
                 return false;
             });
@@ -552,9 +550,11 @@ Pages.delete_node = {
                             Utils.sometime("update_tree");
                         }, true);
                 });
-            if (res !== null)
+            if (res !== null) {
                 this.squeak(res.message);
-            return false;
+                return false;
+            }
+            return true;
         };
 
         this.control("path").text(options.path.join("/"));

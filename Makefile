@@ -35,7 +35,6 @@ COMMONJS = \
 	StegaStore.uncompressed.js \
 	Squirrel.uncompressed.js \
 	Tree.uncompressed.js \
-	ContextMenu.uncompressed.js \
 	Pages.uncompressed.js \
 	Hoard.uncompressed.js
 

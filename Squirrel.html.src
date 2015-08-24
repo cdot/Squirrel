@@ -113,11 +113,7 @@
         <input id="authenticated_search" type="text" value="" class="TX_title" title="Enter search string" />
       </div>
       <div class="ui-content" role="main">
-        <div id="sites-node" name="/" class="node">
-          <div class="node_div treecollection">
-          </div>
-          <ul id="sites-list" data-role="listview" data-inset="false">
-          </ul>
+        <div id="sites-node" name="/" class="node treeroot">
         </div>
       </div>
       <div data-role="footer">
@@ -324,16 +320,16 @@
     </div>
 
     <div id="menu" data-role="panel" data-theme="b">
+      <h3 id="menu_path"><span id="menu_parent_path"></span><span id="menu_name">Name</span></h3>
+      <h4 id="menu_value" class="leaf_only">Value</h4>
       <div id="menu_controls" data-role="controlgroup">
         <button id="menu_pick" data-icon="grid" data-iconpos="left" class="leaf_only TX_text">Pick characters</button>
         <button id="menu_add_alarm" data-icon="clock" data-iconpos="left" class="TX_text">Add reminder</button>
-        <button id="menu_rename" data-icon="refresh" data-iconpos="left"class="TX_text">Rename</button>
-        <button id="menu_edit" data-icon="edit" data-iconpos="left" class="leaf_only TX_text">Edit value</button>
-        <button id="menu_randomise" data-icon="recycle" data-iconpos="left"class="leaf_only TX_text">Generate new random value</button>
+        <button id="menu_randomise" data-icon="recycle" data-iconpos="left"class="leaf_only TX_text">Randomise</button>
         <button id="menu_add_value" data-icon="plus" data-iconpos="left"class="collection_only TX_text">Add new value</button>
         <button id="menu_add_subtree" data-icon="bullets" class="collection_only TX_text">Add new folder</button>
         <button id="menu_delete_node" data-icon="delete" data-iconpos="left" class="TX_text">Delete</button>
-        <a data-role="button" data-theme="b" href="#" data-rel="close">Close menu</a>
+        <a data-role="button" href="#" data-rel="close">Close</a>
       </div>
     </div>
 

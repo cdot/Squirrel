@@ -42,6 +42,11 @@ a:hover {
     border-bottom-width: 0;
 }
 
+/* Because otherwise we don't see the watermark */
+#unauthenticated > .ui-panel-wrapper, #login > .ui-panel-wrapper {
+    background-color: transparent !important;
+}
+
 #unauthenticated, #login {
     background: url('images/squirrel.png') no-repeat center;
     background-size: contain;
@@ -65,7 +70,7 @@ div.ui-btn {
 }
 
 .button_div {
-    float: left;
+/*    float: left; */
 }
 
 .dialog {
@@ -157,4 +162,17 @@ button.ui-button-icon-only {
 
 .hidden {
     display: none;
+}
+
+.open-close {
+    margin-left: 2em;
+}
+
+ul.treenode-subnodes {
+    list-style-type: none;
+    -webkit-padding-start: 0;
+}
+
+ul.treenode-subnodes li {
+    padding-left: 1em;
 }
