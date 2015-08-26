@@ -41,7 +41,7 @@ Squirrel.check_alarms = function(/* event */) {
                 .find(".squirrel-icon-alarm")
                 .removeClass("squirrel-icon-alarm")
                 .addClass("squirrel-icon-rung");
-            Page_get("squeak").open(
+            Page_get("activity").open(
                 {
                     message:
                     $("<p></p>")
@@ -53,6 +53,7 @@ Squirrel.check_alarms = function(/* event */) {
                                       expired.toLocaleDateString())),
                     on_close: function() {
                         next();
+                        return true;
                     }
                 });
         });
@@ -100,7 +101,9 @@ Squirrel.add_child_node = function($node, title, value) {
             }, true);
         });
     if (res !== null)
-        Page.prototype.squeak(res.message);
+        Page_get("activity").open({
+            message: res.message
+        });
 };
 
 /**
@@ -111,10 +114,10 @@ Squirrel.add_child_node = function($node, title, value) {
 Squirrel.insert_data = function(path, data) {
     "use strict";
 
-    var load_log = [];
-    $("#dlg_loading").dialog({
-        modal: true
-    });
+    Page_get("activity").open({ title: "Loading" });
+
+    var $messy = $("#activity_message");
+
     Squirrel.client.hoard.actions_from_hierarchy(
         { data: data },
         function(act, next) { // listener
@@ -125,17 +128,14 @@ Squirrel.insert_data = function(path, data) {
                     Tree.action(sact, next);
                 });
             if (res !== null)
-                load_log.push(res.message);
+                $messy.append(res.message + "<br />");
             if (next)
                 next();
         },
         function() { // chain on complete
             Utils.sometime("update_save");
             Utils.sometime("update_tree");
-            $("#dlg_loading").dialog("close");
-            Page.prototype.squeak(
-                TX.tx("JSON has been loaded") + "<br />"
-                    + load_log.join("<br />"));
+            $messy.append(TX.tx("JSON has been loaded"));
         });
 };
 
@@ -195,6 +195,11 @@ Squirrel.open_menu = function($node) {
 
     $menu.find(".leaf_only").toggle(is_leaf);
     $menu.find(".collection_only").toggle(!is_leaf);
+    $("#menu_alarm_action").text(TX.tx("Add reminder"));
+    // If there's an existing alarm, change the text
+    $node.children(".alarm").each(function() {
+        $("#menu_alarm_action").text(TX.tx("Modify reminder"));
+    });
     $menu.trigger("updatelayout");
     $menu.data("node", 
                     {
@@ -286,18 +291,15 @@ Squirrel.unsaved_changes = function(max_changes) {
 Squirrel.save_hoards = function() {
     "use strict";
 
-    var $messy = $("#dlg_saving_message"),
-
-    $dlg = $("#dlg_saving"),
-    client_ok = true,
-    cloud_ok = true;
-
-    $messy.empty();
-
-    $dlg.dialog({
-        modal: true
+    Page_get("activity").open({
+        title: TX.tx("Saving"),
+        message: ""
     });
 
+    var client_ok = true;
+    var cloud_ok = true;
+
+    var $messy = $("#activity_message");
     var finished = function() {
         if (DEBUG) console.debug("...save finished");
         Utils.sometime("update_save");
@@ -527,10 +529,12 @@ Squirrel.load_cloud_hoard = function() {
                 } catch (e) {
                     if (DEBUG)
                         console.debug("Client hoard JSON parse failed: " + e);
-                    Page.prototype.squeak(
-                        TX.tx("$1 hoard exists, but can't be read.",
-                              this.options().identifier)
-                            + TX.tx("Check that you have the correct password."));
+                    Page_get("activity").open({
+                        title: TX.tx("Error"),
+                        message: TX.tx("$1 hoard exists, but can't be read.",
+                                       this.options().identifier)
+                            + TX.tx("Check that you have the correct password.")
+                    });
                     Squirrel.cloud.status = Squirrel.IS_CORRUPT;
                     Utils.soon(Squirrel.hoards_loaded);
                     return;
@@ -545,8 +549,12 @@ Squirrel.load_cloud_hoard = function() {
                         this.options().identifier + " contains NODATA");
                     Squirrel.cloud.status = Squirrel.IS_EMPTY;
                 } else {
-                    Page.prototype.squeak(
-                        TX.tx("Could not load cloud hoard; do you have the correct password? Error was: $1 store error: $2", this.options().identifier, e));
+                    Page_get("activity").open({
+                        title: TX.tx("Error"),
+                        message:
+                        TX.tx("Could not load cloud hoard; do you have the correct password? Error was: $1 store error: $2",
+                              this.options().identifier, e)
+                    });
                     // Could not contact cloud; continue all the same
                 }
                 Utils.soon(Squirrel.hoards_loaded);
@@ -566,8 +574,8 @@ Squirrel.init_client_hoard = function() {
     if (DEBUG) console.debug("Setting up client hoard");
     Squirrel.client.hoard = new Hoard();
     Squirrel.client.status = Squirrel.IS_EMPTY;
-    if (Squirrel.client.store.options.needs_path
-        || Squirrel.cloud.store.options.needs_path) {
+debugger;
+    if (Squirrel.cloud.store.options.needs_path) {
         Page_get("store_settings").open(
             {
                 on_close: function() {
@@ -630,9 +638,11 @@ Squirrel.load_client_hoard = function() {
                 Squirrel.client.status = Squirrel.IS_LOADED;
             } catch (e) {
                 if (DEBUG) console.debug("Caught " + e);
-                Page.prototype.squeak(
-                    TX.tx("$1 hoard exists, but can't be read. Check that you have the correct password.", this.options().identifier),
-                    Squirrel.init_application);
+                Page_get("activity").open({
+                    title: TX.tx("Error"),
+                    message: TX.tx("$1 hoard exists, but can't be read. Check that you have the correct password.", this.options().identifier),
+                    on_close: Squirrel.init_application
+                });
                 return;
                 //Squirrel.client.hoard = new Hoard();
                 //Squirrel.client.status = Squirrel.IS_CORRUPT;
@@ -645,6 +655,7 @@ Squirrel.load_client_hoard = function() {
                     {
                         on_close: function() {
                             rebuild_hoard();
+                            return true;
                         }
                     });
             } else {
@@ -657,9 +668,11 @@ Squirrel.load_client_hoard = function() {
                 // Construct a new client hoard
                 Utils.soon(Squirrel.init_client_hoard);
             } else {
-                Page.prototype.squeak(
-                    TX.tx("$1 store error: $2", this.options().identifier, e),
-                    Squirrel.init_application);
+                Page_get("activity").open({
+                    title: TX.tx("$1 store error", this.options().identifier),
+                    message: e,
+                    on_close: Squirrel.init_application
+                });
             }
         });
 };
@@ -751,7 +764,8 @@ Squirrel.init_client_store = function() {
         },
 
         ok: function() {
-            if (DEBUG) console.debug(this.options().identifier + " store is ready");
+            if (DEBUG) console.debug(this.options().identifier
+                                     + " store is ready");
             Squirrel.client.store = this;
             $("#authmessage").text(TX.tx("Loading..."));
             // Chain the login prompt
@@ -759,7 +773,10 @@ Squirrel.init_client_store = function() {
         },
         fail: function(e) {
             // We did our best!
-            Page.prototype.squeak(TX.tx("Failed ") + e);
+            Page_get("activity").open({
+                title: TX.tx("Error"),
+                message: e
+            });
         }
     });
 };
@@ -777,25 +794,32 @@ Squirrel.init_cloud_store = function() {
             Utils.soon(Squirrel.init_client_store);
         },
         fail: function(e) {
-            Page.prototype.squeak(
-                TX.tx("Could not open cloud store: $1", e)
-                    + "<p>"
+            Page_get("activity").open({
+                title: TX.tx("Could not open cloud store"),
+                message: e + "<p>"
                     + TX.tx("Do you want to continue (only the client store will be available)?"),
-                Squirrel.init_client_store,
-                function() {
+                on_ok: Squirrel.init_client_store,
+                on_cancel: function() {
                     if (DEBUG) console.debug("Cancelled");
                     Squirrel.change_page("page_authfailed");
-                });
+                    return true;
+                }
+            });
         }
     };
 
     p.understore = function(pp) {
-        pp.understore = function(ppp) {
-            // SQUIRREL_STORE is a constant set by the low-level
-            // store module selected in the Makefile
-            return new SQUIRREL_STORE(ppp);
-        };
-        return new StegaStore(pp);
+        // USE_STEGANOGRAPHY is a global var set in the HTML
+        // SQUIRREL_STORE is a constant set by the low-level
+        // store module selected in the Makefile
+        if (USE_STEGANOGRAPHY) {
+            pp.understore = function(ppp) {
+                return new SQUIRREL_STORE(ppp);
+            };
+            return new StegaStore(pp);
+        } else {            
+            return new SQUIRREL_STORE(pp);
+        }
     };
 
     return new EncryptedStore(p);
@@ -854,7 +878,10 @@ Squirrel.init_ui = function() {
                             }, true);
                     });
                 if (e !== null)
-                    Page_get("squeak").open({message: e.message});
+                    Page_get("activity").open({
+                        title: TX.tx("Error"),
+                        message: e.message
+                    });
             }
         });
     });
@@ -881,7 +908,10 @@ Squirrel.init_ui = function() {
                             }, true);
                     });
                 if (e !== null)
-                    Page_get("squeak").open({message: e.message});
+                    Page_get("activity").open({
+                        title: TX.tx("Error"),
+                        message: e.message
+                    });
             }
         });
     });
@@ -904,25 +934,42 @@ Squirrel.init_ui = function() {
 
     $(".help").each(function() {
         var $this = $(this);
-        $this.hide();
-        var $help = $("<button data-icon='info' data-iconpos='notext'></button>");
-        var $close = $("<button data-icon='minus' data-iconpos='notext'></button>");
-        $help
+        var $help = $("<button></button>");
+        var $close = $("<button></button>");
+
+        var $enhanced_help = $help
+            .insertBefore($this)
+            .button({
+                mini: true,
+                inline: true,
+                icon: "info",
+                iconpos: "notext"
+            })
+            .parent();
+        $enhanced_help
+            .addClass("info-button")
             .on("vclick", function() {
                 $this.show();
-                $help.hide();
+               $enhanced_help.hide();
+            });
+
+        var $enhanced_close = $close
+            .prependTo($this)
+            .button({
+                mini: true,
+                inline: true,
+                icon: "minus",
+                iconpos: "notext"
             })
-            .addClass("info-button")
-            .button()
-            .insertBefore(this);
-        $close
+            .parent();
+        $enhanced_close
             .addClass("help-close")
-            .button()
             .on("vclick", function() {
                 $this.hide();
-                $help.show();
-            })
-            .prependTo($this);
+                $enhanced_help.show();
+            });
+
+        $this.hide();
     });
 
     Tree.set_root($("#sites-node"));

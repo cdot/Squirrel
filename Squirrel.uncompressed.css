@@ -176,3 +176,11 @@ ul.treenode-subnodes {
 ul.treenode-subnodes li {
     padding-left: 1em;
 }
+
+#store_settings_message, #chpw_nomatch {
+    color: red;
+}
+
+.alarm {
+    float: left;
+}

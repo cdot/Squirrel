@@ -33,7 +33,10 @@ function Page_change(page_id, on_open) {
     }
     // else no follow-on function, simply fire the change
 
-    $("body").pagecontainer("change", $("#" + page_id), { transition: "fade" });
+    $("body").pagecontainer("change", $("#" + page_id), {
+        transition: "fade",
+        changeHash: false
+    });
 };
 
 /**
@@ -76,24 +79,26 @@ function Page(id) {
     var self = this;
 
     // Generic buttons
-    // The .off is required to clear handlers on any previous instance
-    // of the page
+
     self.control("close")
-        .off("vclick")
         .on("vclick", function() {
+            if (typeof self.options.on_close !== "undefined"
+                && !self.options.on_close.call(self))
+                return false; // abort the close
             self.close();
             return true;
         });
 
     self.control("cancel")
-        .off("vclick")
         .on("vclick", function () {
+            if (typeof self.options.on_cancel !== "undefined"
+                && !self.options.on_cancel.call(self))
+                return false; // abort the close
             self.close();
             return true;
         });
 
     self.control("ok")
-        .off("vclick")
         .on("vclick", function () {
             if (typeof self.options.on_ok !== "undefined"
                 && !self.options.on_ok.call(self))
@@ -131,7 +136,9 @@ Page.prototype.close = function() {
     Page_stack.pop();
     var new_page = Page_stack[Page_stack.length - 1];
     console.debug("*** close(" + this.id + ") to " + new_page);
-    Page_change(new_page, this.options.on_close);
+if (!this.options)
+    debugger;
+Page_change(new_page, this.options.on_close);
 
     this.options = null;
 };
@@ -166,26 +173,28 @@ Page.prototype.play_action = function(action) {
                 }, true);
         });
     if (res !== null)
-        this.squeak(res.message);
+        Page_get("activity").open({
+            title: TX.tx("Error"),
+            message: res.message
+        });
 };
 
-/**
- * Generate a popup with optional "OK" and "Cancel" buttons
- * @param e message (HTML)
- * @param ok callback on OK button press, or dialog closed
- * when there is no cancel callback
- * @param cancel callback on Cancel press, or dialog closed and there is a
- * cancel callback
- */
-Page.prototype.squeak = function(e, ok, cancel) {
-    "use strict";
+Pages.activity = {
+    open: function(options) {
+        this.control("title").text(options.title ? options.title : "");
+        this.control("cancel").toggle(typeof options.on_cancel === "function");
+        this.control("ok").toggle(typeof options.on_ok === "function");
+        this.control("close").toggle(
+            !(typeof options.on_ok === "function"
+              || typeof options.on_cancel === "function"));
 
-    Page_get("squeak").open({
-        message: e,
-        on_ok: ok,
-        on_cancel: cancel
-    });
-}
+        this.control("message").empty();
+        if (typeof options.message === "string")
+            this.control("message").html(options.message);
+        else
+            this.control("message").empty().append(options.message);
+    }
+};
 
 Pages.authenticated = {
     construct: function() {
@@ -203,7 +212,12 @@ Pages.authenticated = {
         this.control("undo")
             .hide()
             .on("vclick", function(/*evt*/) {
-                Tree.undo(Squirrel.squeak);
+                Tree.undo(function(mess) {
+                    Page_get("activity").open({
+                        title: "Undo",
+                        message: mess
+                    });
+                });
                 return false;
             });
 
@@ -289,15 +303,6 @@ Pages.login = {
     }
 };
 
-Pages.squeak = {
-    open: function(options) {
-        if (typeof options.message === "string")
-            this.control("message").html(options.message);
-        else
-            this.control("message").empty().append(options.message);
-    }
-};
-
 Pages.extras = {
     construct: function() {
         var self = this;
@@ -310,33 +315,29 @@ Pages.extras = {
             });
 
         self.control("chpw").on("vclick", function() {
-            Page_get("ChpwPage").open();
+            Page_get("chpw").open();
         });
 
         self.control("chss").on("vclick", function() {
-            Page_get("StoreSettingsPage").open();
+            Page_get("store_settings").open();
         });
 
         self.control("json").on("vclick", function() {
-            Page_get("JsonPage").open();
+            Page_get("json").open();
         });
 
         self.control("about").on("vclick", function() {
-            Page_get("AboutPage").open();
+            Page_get("about").open();
         });
     },
 
     open: function(options) {
-        options.on_open = function() {
-            if (!(Squirrel.client.store.options.needs_path
-                  || Squirrel.client.store.options.needs_image
-                  || Squirrel.cloud.store.options.needs_path
-                  || Squirrel.cloud.store.options.needs_image)) {
-                this.control("chss").hide();
-            }
-            this.control("autosave").val(
-                Squirrel.client.hoard.options.autosave ? "on" : "off");
-        };
+        if (!(USE_STEGANOGRAPHY
+              || Squirrel.cloud.store.options().needs_path)) {
+            this.control("chss").hide();
+        }
+        this.control("autosave").val(
+            Squirrel.client.hoard.options.autosave ? "on" : "off");
     }
 };
 
@@ -346,8 +347,6 @@ Pages.extras = {
 Pages.chpw = {
     construct: function() {
         "use strict";
-
-        Page.call(this, "chpw");
 
         var self = this;
 
@@ -361,19 +360,26 @@ Pages.chpw = {
                     self.control("conf").attr("type", "password");
                 }
             });
+        this.validate = function() {
+            var p = self.control("pass").val(),
+            c = self.control("conf").val();
+
+            self.control("nomatch").toggle(p != c);
+            return (p == c);
+        };
+        self.control("conf").on("change", this.validate);
     },
 
     open: function(options) {
         "use strict";
 
+        this.validate();
+
         var self = this;
+
         options.on_ok = function() {
-            var p = self.control("pass").val(),
-            c = self.control("conf").val();
-            if (p !== c) {
-                this.squeak("Passwords do not match");
+            if (!self.validate)
                 return false;
-            }
             Squirrel.client.store.pass(p);
             Squirrel.client.status = Squirrel.NEW_SETTINGS;
             Squirrel.cloud.store.pass(p);
@@ -388,34 +394,26 @@ Pages.chpw = {
 Pages.store_settings = {
     construct: function() {
         var self = this;
-        this.control("file")
-            .hide()
-            .on("vclick", function (e) {
-                Pages.store_settings.ss_change_image.call(self);
-            });
+        if (USE_STEGANOGRAPHY) {
+            this.control("file")
+                .hide()
+                .on("vclick", function (e) {
+                    Pages.store_settings.ss_change_image.call(self);
+                });
 
-        this.control("choose")
-            .on("vclick", function(e) {
-                self.control("file").trigger("change", e);
-            });
-
-        this.on_open = function() {
-            this.control("message").empty();
-        };
+            this.control("choose_image")
+                .on("vclick", function(e) {
+                    self.control("file").trigger("change", e);
+                });
+        }
     },
 
     open: function(options) {
         var self = this;
 
-        if (Squirrel.cloud.store.options.needs_image
-            || Squirrel.client.store.options.needs_image) {
+        this.control("message").empty();
 
-            // Show the "change image" controls
-            this.control("image").show();
-        }
-
-        if (Squirrel.cloud.store.options.needs_path
-            || Squirrel.client.store.options.needs_path) {
+        if (Squirrel.cloud.store.options().needs_path) {
 
             this.control("storepath").val(
                 Squirrel.client.hoard.options.store_path);
@@ -440,7 +438,9 @@ Pages.store_settings = {
 
             // Show the "change path" controls
             self.control("path").show();
-        }
+
+        } else
+            self.control("path").hide();
     },
 
     /* Helper */
@@ -504,26 +504,26 @@ Pages.json = {
 
     open: function(options) {
 
-        options.on_open = function() {
-            var data = Squirrel.client.hoard.cache;
-            if (data)
-                data = data.data;
-            this.control("text")
-                .text(JSON.stringify(data))
-                .select();
-            this.control("load").prop("disabled", true);
-        };
+        var data = Squirrel.client.hoard.cache;
+        if (data)
+            data = data.data;
+        this.control("text")
+            .text(JSON.stringify(data))
+            .select();
+        this.control("ok").prop("disabled", true);
 
         options.on_ok = function () {
             var data;
             try {
                 data = JSON.parse(this.control("text").val());
             } catch (e) {
-                Page.prototype.squeak(TX.tx(
-                    "JSON could not be parsed") + ": " + e);
+                Page_get("activity").open({
+                    title: TX.tx("JSON could not be parsed"),
+                    message: e
+                });
                 return false;
             }
-            this.control("load").prop("disabled", true);
+            this.control("ok").prop("disabled", true);
             if (DEBUG) console.debug("Importing...");
             Squirrel.insert_data([], data);
             return true;
@@ -551,7 +551,10 @@ Pages.delete_node = {
                         }, true);
                 });
             if (res !== null) {
-                this.squeak(res.message);
+                Page_get("activity").open({
+                    title: TX.tx("Error"),
+                    message: res.message
+                });
                 return false;
             }
             return true;
@@ -732,7 +735,6 @@ Pages.alarm = {
         options.on_ok = function() {
             var numb = self.control("number").val()
                 * units_days[self.control("units").val()];
-
             self.play_action(
                 { type: "A",
                   path: this.options.path,
@@ -756,5 +758,3 @@ Pages.alarm = {
         this.update_next();
     }
 };
-
-

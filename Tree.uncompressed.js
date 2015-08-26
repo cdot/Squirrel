@@ -405,26 +405,28 @@ Tree.action_A = function(action, undoable) {
     } else {
         Tree.set_modified($node, action.time);
         var $button = $("<button 'ui-btn-inline'></button>");
-        $node.find(".button_div").first().append($button);
-        $button
-            .addClass("alarm")
-            .data("alarm", action.data)
+        $node.prepend($button);
+        var $enhanced_button = $button
             .button(
                 {
                     icon: "clock",
                     iconpos: "notext",
                     mini: true,
                     inline: true
-                });
+                })
+            .parent();
         if (undoable) {
             Tree.undos.push({
                 type: "C",
                 path: action.path.slice()
             });
         }
-        $button
+        $enhanced_button
+            .data("alarm", action.data)
+            .addClass("alarm")
             .on("vclick", function() {
                 Page_get("alarm").open({ node: $node, path: Tree.path($node) });
+                return false;
             });
     }
 
@@ -447,7 +449,7 @@ Tree.action_C = function(action, undoable) {
                 data: $alarm.data("alarm")
             });
         }
-        $alarm.remove();
+        $alarm.children("button").button("destroy").remove();
         Tree.set_modified($node, action.time);
     }
 
@@ -536,5 +538,8 @@ Tree.undo = function() {
                 });
         });
     if (res !== null)
-        Squirrel.Dialog.squeak(res.message);
+        Page_get("activity").open({
+            title: TX.tx("Error"),
+            message: res.message
+        });
 };

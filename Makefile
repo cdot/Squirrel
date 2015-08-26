@@ -1,13 +1,19 @@
-STORES = dropbox drive tester
+# Set this to "true" to compile with steganography. Steganography is
+# useful to help obscure the database stored in the cloud - for example
+# if your cloud store is open to public view - but is expensive, and
+# should not be enabled unless you really need it.
+USE_STEGANOGRAPHY := false
 
-dropboxJS = \
+STORES := dropbox drive tester
+
+dropboxJS := \
 	libs/dropbox.uncompressed.js \
 	DropboxStore.uncompressed.js
 
-driveJS = \
+driveJS := \
 	GoogleDriveStore.uncompressed.js
 
-testerJS = \
+testerJS := \
 	TestStore.uncompressed.js
 
 LIBSJS = \
@@ -15,7 +21,7 @@ LIBSJS = \
 	libs/jquery.mobile-1.4.5.uncompressed.js \
 	libs/aes.uncompressed.js
 
-LIBSCSS = \
+LIBSCSS := \
 	libs/jquery.mobile-1.4.5.uncompressed.css \
 	libs/jquery.mobile.external-png-1.4.5.uncompressed.css \
 	libs/jquery.mobile.icons-1.4.5.uncompressed.css \
@@ -24,22 +30,31 @@ LIBSCSS = \
 	libs/jquery.mobile.structure-1.4.5.uncompressed.css \
 	libs/jquery.mobile.theme-1.4.5.uncompressed.css
 
-COMMONJS = \
+COMMONJS := \
 	Utils.uncompressed.js \
 	Translation.uncompressed.js \
 	AbstractStore.uncompressed.js \
 	LocalStorageStore.uncompressed.js \
 	AES.uncompressed.js \
 	EncryptedStore.uncompressed.js \
-	Steganographer.uncompressed.js \
-	StegaStore.uncompressed.js \
 	Squirrel.uncompressed.js \
 	Tree.uncompressed.js \
 	Pages.uncompressed.js \
 	Hoard.uncompressed.js
 
-COMMONCSS = \
+COMMONCSS := \
 	Squirrel.uncompressed.css
+
+ifeq ($(USE_STEGANOGRAPHY),true)
+COMMONJS += \
+	Steganographer.uncompressed.js \
+	StegaStore.uncompressed.js
+START_STEG = '<!--Steganography-->'
+END_STEG = '<!--/Steganography-->'
+else
+START_STEG = '<!--Steganography'
+END_STEG = '/Steganography-->'
+endif
 
 # Making debug
 # e.g make dropbox.uncompressed.html
@@ -60,6 +75,9 @@ debug: $(patsubst %,%.uncompressed.html,$(STORES))
 	LIBSCSS_HTML '$(patsubst %,$(LPRE)%$(LPOS),$(LIBSCSS))' \
 	COMMONCSS_HTML '$(patsubst %,$(LPRE)%$(LPOS),$(COMMONCSS))' \
 	DEBUG '<script type="text/javascript">const DEBUG=true;</script>' \
+	USE_STEGANOGRAPHY '<script type="text/javascript">const USE_STEGANOGRAPHY=$(USE_STEGANOGRAPHY);</script>' \
+	STEGANOGRAPHY $(START_STEG) \
+	YHPARGONAGETS $(END_STEG) \
 	> $@
 
 .PRECIOUS: %.min.js %.min.css
@@ -95,6 +113,7 @@ debug: $(patsubst %,%.uncompressed.html,$(STORES))
 		--source-map-include-sources \
 		--compress \
 		--define DEBUG=false \
+		--define STEGANOGRAPHY=$(STEGANOGRAPHY)
 		-o $@ \
 		-- $^
 

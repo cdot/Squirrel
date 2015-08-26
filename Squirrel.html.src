@@ -13,16 +13,17 @@
     <!--LIBSCSS_HTML-->
     <!--COMMONCSS_HTML-->
     <!--DEBUG-->
+    <!--USE_STEGANOGRAPHY-->
   </head>
   <body>
     <!-- Pages -->
 
-    <div id="squeak" data-role="page" data-dismissible="false" data-theme="a" data-overlay-theme="b">
-      <div class="ui-content" role="main" id="squeak_message"></div>
-      <div data-role="footer">
-        <button id="squeak_close" data-rel="back" data-icon="delete" iconpos="notext" class="TX_text">Close</button>
-        <button id="squeak_ok" data-rel="back" data-icon="tick" data-iconpos="notext" class="TX_text">OK</button>
+    <div id="activity" data-role="page" data-dialog="true" data-close-btn="none">
+      <div data-role="header">
+        <h1 id="activity_title">Saving...</h1>
+        <button id="activity_close" data-icon="delete" data-iconpos="notext" class="TX_text">Close</button>
       </div>
+      <div id="activity_message" class="ui-content"></div>
     </div>
 
     <div id="unauthenticated" data-role="page">
@@ -41,7 +42,7 @@
       </div>
     </div>
 
-    <div id="login" data-role="page">
+    <div id="login" data-role="page" data-dialog="true" data-close-btn="none">
       <div data-role="header">
         <h1 class="TX_text">Authenticate</h1>
       </div>
@@ -71,13 +72,15 @@
       </div>
     </div>
 
-    <div id="store_settings" data-role="page">
+    <div id="store_settings" data-role="page" data-dialog="true" data-close-btn="none">
       <div data-role="header">
-        <img class="logo" src="images/squirrel.png">
+        <button id="store_settings_ok" data-icon="delete" data-iconpos="notext" class="TX_text">Close</button>
         <h1 class="TX_text">Set up store</h1>
       </div>
       <div class="ui-content" role="main">
-        <div id="store_settings_image" style="display:none">
+        <div id="store_settings_message"></div>
+        <!--STEGANOGRAPHY-->
+        <div id="store_settings_image">
           <p class="TX_text help">Choose a local image that will be copied
             and used to hide your data in the cloud. This should be a complex
             colour image of at least 1024x768 pixels, preferably with variable
@@ -85,23 +88,21 @@
             load and save.
           </p>
           <span class="TX_text">Current steganography image:</span><br />
-          <img id="store_settings_stegamage" src="images/GCHQ.png" /><br />
+          <img id="stegamage" src="images/GCHQ.png" /><br />
           <button id="store_settings_choose" class="TX_title TX_text" data-mini="true" title="Choose an image file">Change Image</button>
           <p id="store_settings_message"></p>
           <input id="store_settings_file" type="file" class="hidden" />
         </div>
-        <div id="store_settings_path" style="display:none">
+        <!--YHPARGONAGETS-->
+        <div id="store_settings_path">
           <p class="TX_text help">
             Set the pathname of the file to use in your cloud store. For example
             if you choose 'photos/stills/grandma.png' it will read and write
             the file 'grandma.png' in the directory 'photos/stills'.
           </p>
           <label for="store_settings_storepath" class="TX_text">Store path: </label>
-          <input id="store_settings_storepath" type="text" value="" class="TX_title" title="Pathname of the image in your cloud store"/>
+          <input id="store_settings_storepath" type="text" value="" class="TX_title" title="Pathname of the image in your cloud store" data-mini="true"/>
         </div>
-      </div>
-      <div data-role="footer">
-        <button id="store_settings_ok" class="TX_text">OK</button>
       </div>
     </div>
 
@@ -145,8 +146,9 @@
       </div>
     </div>
 
-    <div id="about" data-role="page">
+    <div id="about" data-role="page" data-dialog="true" data-close-btn="none">
       <div data-role="header">
+       <button id="about_close" data-icon="delete" data-iconpos="notext" class="TX_text">Close</button>
         <h1 class="TX_text">About Squirrel</h1>
       </div>
       <div class="ui-content" role="main">
@@ -156,9 +158,6 @@
           permitted provided all copies of the licensed software include a
           copy of the MIT License terms and the copyright notice.
         </div>
-      </div>
-      <div data-role="footer">
-        <button id="about_close" class="TX_text">Close</button>
       </div>
     </div>
 
@@ -171,13 +170,14 @@
         </textarea>
       </div>
       <div data-role="footer">
-        <button id="json_ok" class="TX_text">Load JSON</button>
+        <button id="json_ok" class="TX_text">Reload this JSON</button>
         <button id="json_cancel" class="TX_text">Cancel</button>
       </div>
     </div>
 
-    <div id="chpw" data-role="page">
+    <div id="chpw" data-role="page" data-dialog="true">
       <div data-role="header">
+        <button id="chpw_cancel" data-icon="delete" data-iconpos="notext" class="TX_text">Close</button>
         <h1 class="TX_text">Change Password</h1>
       </div>
       <div class="ui-content" role="main">
@@ -208,15 +208,15 @@
             </td>
           </tr>
         </table>
+        <div id="chpw_nomatch" class="TX_text">Passwords do not match</div>
         <p>
           <label for="show" class="TX_text">
             Show password
           </label>
-          <input type="checkbox" id="chpw_show">
+          <input type="checkbox" id="chpw_show" data-inline="true">
         </p>
         <div data-role="footer">
           <button id="chpw_ok" class="TX_text">Set new password</button>
-          <button id="chpw_cancel" class="TX_text">Cancel</button>
         </div>
       </div>
     </div>
@@ -279,9 +279,10 @@
       </div>
     </div>
 
-    <div id="alarm" data-role="page">
+    <div id="alarm" data-role="page" data-dialog="true" data-close-btn="none">
       <div data-role="header">
         <h1 class="TX_title">Reminder</h1>
+        <button id="alarm_close" data-icon="delete" data-iconpos="notext" class="TX_text">Close</button>
       </div>
       <div class="ui-content" role="main">
         <div class="TX_text">
@@ -315,7 +316,6 @@
       <div data-role="footer">
         <button id="alarm_ok" class="TX_text">Set (or reset) reminder</button>
         <button id="alarm_cancel" class="TX_text">Cancel reminder</button>
-        <button id="alarm_close" class="TX_text">Close</button>
       </div>
     </div>
 
@@ -324,7 +324,7 @@
       <h4 id="menu_value" class="leaf_only">Value</h4>
       <div id="menu_controls" data-role="controlgroup">
         <button id="menu_pick" data-icon="grid" data-iconpos="left" class="leaf_only TX_text">Pick characters</button>
-        <button id="menu_add_alarm" data-icon="clock" data-iconpos="left" class="TX_text">Add reminder</button>
+        <button id="menu_add_alarm" data-icon="clock" data-iconpos="left" class="TX_text"><span id="menu_alarm_action">Add</span></button>
         <button id="menu_randomise" data-icon="recycle" data-iconpos="left"class="leaf_only TX_text">Randomise</button>
         <button id="menu_add_value" data-icon="plus" data-iconpos="left"class="collection_only TX_text">Add new value</button>
         <button id="menu_add_subtree" data-icon="bullets" class="collection_only TX_text">Add new folder</button>
@@ -335,13 +335,6 @@
 
     <!-- not processed yet -->
     <div id="dialogs" style="display:none">
-      <div id="dlg_saving" data-role="popup"  data-dismissible="false" class="TX_title" title="Saving...">
-        <div id="dlg_saving_message"></div>
-      </div>
-
-      <div id="dlg_loading" data-role="popup" data-dismissible="false" class="TX_title" title="Loading...">
-        <div class="TX_text progress">Please wait...</div>
-      </div>
 
       <div id="dlg_conflicts" data-role="popup" data-dismissible="false" class="TX_title" title="WARNING!">
         <p class="TX_text">

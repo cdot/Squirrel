@@ -18,7 +18,8 @@ TestStore.prototype.options = function() {
     "use strict";
 
     return $.extend(LocalStorageStore.prototype.options(), {
-        identifier: "Local Test"
+        identifier: "Local Test",
+        needs_path: true
     });
 };
 
