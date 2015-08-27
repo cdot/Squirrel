@@ -106,21 +106,40 @@
       </div>
     </div>
 
+    <div id="search" data-role="page" data-dialog="true" data-close-btn="none">
+      <div data-role="header">
+        <h1>Search</h1>
+       <button id="search_close" data-icon="delete" data-iconpos="notext" class="TX_text">Close</button>
+      </div>
+      <div class="ui-content">
+        <p class="help TX_text">
+          Entering a search string will open every entry that matches the
+          search, and hide all others.
+        </p>
+        <label for="search_string" class="TX_text">Search for</label>
+        <input id="search_string" type="text" value="" class="TX_title" title="Enter search string" />
+      </div>
+      <div data-role="footer">
+       <button id="search_ok" data-icon="search" data-iconpos="left" class="TX_text">Search</button>
+      </div>
+    </div>
+
     <div id="authenticated" data-role="page" class="authenticated">
-      <div data-role="header" class="hidden">
-        <h1>Squirrel</h1><!-- just to get title set -->
-        <div id="authenticated_whoami" style="float:right"></div>
-        <span class="TX_text">Search:</span>
-        <input id="authenticated_search" type="text" value="" class="TX_title" title="Enter search string" />
+      <div data-role="header">
+        <h1 style="display:none">Squirrel</h1><!-- just to get title set -->
+        <div>
+          <button id="authenticated_extras" data-icon="gear" data-iconpos="notext" class="TX_title" title="Tools and Options"></button>
+          <button id="authenticated_undo" data-icon="back" data-iconpos="notext" class="TX_title" title="Undo last change"></button>
+          <button id="authenticated_save" data-icon="cloud" data-iconpos="left" class="TX_title TX_text" title="Save changes">Save</button>
+          <button id="authenticated_search" data-icon="search" data-iconpos="none" class="TX_title" title="Search"></button>
+        </div>
       </div>
       <div class="ui-content" role="main">
         <div id="sites-node" name="/" class="node treeroot">
         </div>
       </div>
       <div data-role="footer">
-        <button id="authenticated_extras" data-icon="gear" data-iconpos="notext" data-inline="true" class="authenticated TX_title TX_text" title="Tools/Options">Tools</button>
-        <button id="authenticated_undo" data-icon="back" data-iconpos="notext" data-inline="true" class="TX_title TX_text" title="Undo last change">Undo</button>
-        <button id="authenticated_save" data-icon="cloud" data-iconpos="left" data-inline="true" class="TX_text">Save</button>
+        <span class="TX_text">Authenticated as:</span> <span id="authenticated_whoami"></span>
       </div>
     </div>
 

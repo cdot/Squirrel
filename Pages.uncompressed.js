@@ -196,11 +196,23 @@ Pages.activity = {
     }
 };
 
+Pages.search = {
+    construct: function() {
+        var self = this;
+
+        this.control("ok")
+            .on("vclick", function() {
+                Squirrel.search(self.control("string").val());
+                // Allow event to bubble to the default handler
+            });
+    }
+};
+
 Pages.authenticated = {
     construct: function() {
         this.control("search")
-            .on("change", function(/*evt*/) {
-                Squirrel.search($(this).val());
+            .on("vclick", function(/*evt*/) {
+                Page_get("search").open();
             });
         this.control("save")
             .hide()
@@ -498,12 +510,29 @@ Pages.json = {
 
         self.control("text")
             .on("input", function () {
-                self.control("load").prop("disabled", false);
+                self.control("ok").prop("disabled", false);
+            });
+
+        self.control("ok")
+            .on("vclick", function () {
+                var data;
+                try {
+                    data = JSON.parse(self.control("text").val());
+                } catch (e) {
+                    Page_get("activity").open({
+                        title: TX.tx("JSON could not be parsed"),
+                        message: e
+                    });
+                    return false;
+                }
+                self.control("ok").prop("disabled", true);
+                if (DEBUG) console.debug("Importing...");
+                Squirrel.insert_data([], data);
+                return true;
             });
     },
 
     open: function(options) {
-
         var data = Squirrel.client.hoard.cache;
         if (data)
             data = data.data;
@@ -511,23 +540,6 @@ Pages.json = {
             .text(JSON.stringify(data))
             .select();
         this.control("ok").prop("disabled", true);
-
-        options.on_ok = function () {
-            var data;
-            try {
-                data = JSON.parse(this.control("text").val());
-            } catch (e) {
-                Page_get("activity").open({
-                    title: TX.tx("JSON could not be parsed"),
-                    message: e
-                });
-                return false;
-            }
-            this.control("ok").prop("disabled", true);
-            if (DEBUG) console.debug("Importing...");
-            Squirrel.insert_data([], data);
-            return true;
-        };
     }
 };
 
