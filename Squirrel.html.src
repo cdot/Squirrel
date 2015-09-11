@@ -20,10 +20,14 @@
 
     <div id="activity" data-role="page" data-dialog="true" data-close-btn="none">
       <div data-role="header">
-        <h1 id="activity_title">Saving...</h1>
+        <h1 id="activity_title">Activity...</h1>
         <button id="activity_close" data-icon="delete" data-iconpos="notext" class="TX_text">Close</button>
       </div>
       <div id="activity_message" class="ui-content"></div>
+      <div data-role="footer">
+        <button id="activity_ok" class="TX_text">OK</button>
+        <button id="activity_cancel" class="TX_text">Cancel</button>
+      </div>
     </div>
 
     <div id="unauthenticated" data-role="page">
@@ -32,17 +36,7 @@
       </div>
     </div>
 
-    <div id="page_authfailed" data-role="page">
-      <div data-role="header">
-        <img class="logo" src="images/squirrel.png">
-        <h1 class="TX_text">Authentication failed</h1>
-      </div>
-      <div class="ui-content" role="main">
-        <span class="TX_text">Refresh the browser to try again</span>
-      </div>
-    </div>
-
-    <div id="login" data-role="page" data-dialog="true" data-close-btn="none">
+    <div id="login" data-role="page">
       <div data-role="header">
         <h1 class="TX_text">Authenticate</h1>
       </div>
@@ -113,8 +107,8 @@
       </div>
       <div class="ui-content">
         <p class="help TX_text">
-          Entering a search string will open every entry that matches the
-          search, and hide all others.
+          Entering a search string will open all entries that match the search.
+          You can use regular expressions in the search.
         </p>
         <label for="search_string" class="TX_text">Search for</label>
         <input id="search_string" type="text" value="" class="TX_title" title="Enter search string" />
@@ -131,11 +125,11 @@
           <button id="authenticated_extras" data-icon="gear" data-iconpos="notext" class="TX_title" title="Tools and Options"></button>
           <button id="authenticated_undo" data-icon="back" data-iconpos="notext" class="TX_title" title="Undo last change"></button>
           <button id="authenticated_save" data-icon="cloud" data-iconpos="left" class="TX_title TX_text" title="Save changes">Save</button>
-          <button id="authenticated_search" data-icon="search" data-iconpos="none" class="TX_title" title="Search"></button>
+          <button id="authenticated_search" data-icon="search" data-iconpos="notext" class="TX_title" title="Search"></button>
         </div>
       </div>
       <div class="ui-content" role="main">
-        <div id="sites-node" name="/" class="node treeroot">
+        <div id="sites-node" name="/" class="treenode treenode-root">
         </div>
       </div>
       <div data-role="footer">

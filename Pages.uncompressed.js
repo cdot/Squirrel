@@ -6,7 +6,7 @@
  * construct and open methods (the subclass methods do NOT need to
  * call the superclass, that's automatic)
  */
-var Page_stack = [];
+var Page_active = null;
 var Pages = {};
 
 /**
@@ -17,7 +17,6 @@ function Page_change(page_id, on_open) {
     "use strict";
 
     var lastpage = $("body").pagecontainer("getActivePage").attr("id");
-    console.debug("**** Change from " + lastpage + " to " + page_id);
     if (typeof(on_open) !== "undefined") {
         if (lastpage === page_id) {
             // pagecontainer will not fire a change event if the page
@@ -82,28 +81,36 @@ function Page(id) {
 
     self.control("close")
         .on("vclick", function() {
-            if (typeof self.options.on_close !== "undefined"
+            if (typeof self.options.on_close === "function"
                 && !self.options.on_close.call(self))
                 return false; // abort the close
             self.close();
+            if (typeof self.options.after_close === "function")
+                self.options.after_close.call(self);
             return true;
         });
 
     self.control("cancel")
         .on("vclick", function () {
-            if (typeof self.options.on_cancel !== "undefined"
+            if (typeof self.options.on_cancel === "function"
                 && !self.options.on_cancel.call(self))
                 return false; // abort the close
             self.close();
+            if (typeof self.options.after_cancel === "function")
+                self.options.after_cancel.call(self);
             return true;
         });
 
     self.control("ok")
         .on("vclick", function () {
-            if (typeof self.options.on_ok !== "undefined"
+            if (typeof self.options.on_ok === "function"
                 && !self.options.on_ok.call(self))
                 return false; // abort the close
+            var aok = self.options.after_ok;
             self.close();
+            if (typeof aok === "function") {
+                aok.call(self);
+            }
             return true;
         });
 }
@@ -116,13 +123,33 @@ function Page(id) {
 Page.prototype.open = function(options) {
     if (!options)
         options = {};
+
+    if (options.replace)
+        console.debug("*** replace " +
+                  + (Page_active !== null ? Page_active.id : "<no page>")
+                  + " with " + this.id);
+    else
+        console.debug("*** open " + this.id + " over "
+                  + (Page_active !== null ? Page_active.id : "<no page>"));
+
+    if (options.replace && Page_active) {
+        this.parent_page = Page_active.parent_page;
+        if (typeof Page_active.options.on_close === "function")
+            Page_active.options.on_close.call(Page_active);
+        Page_active.parent_page = null;
+        var ac = Page_active.options.after_close;
+        Page_active.options = null;
+        if (typeof ac === "function")
+            ac.call(Page_active);
+    } else
+        this.parent_page = Page_active;
+
     if (typeof Pages[this.id].open === "function") {
         Pages[this.id].open.call(this, options);
     }
-    console.debug("*** open(" + this.id + ") from "
-                  + Page_stack[Page_stack.length - 1]);
-    Page_stack.push(this.id)
+
     this.options = options;
+    Page_active = this;
     Page_change(this.id, options.on_open);
 };
 
@@ -133,14 +160,13 @@ Page.prototype.open = function(options) {
 Page.prototype.close = function() {
     "use strict";
 
-    Page_stack.pop();
-    var new_page = Page_stack[Page_stack.length - 1];
-    console.debug("*** close(" + this.id + ") to " + new_page);
-if (!this.options)
-    debugger;
-Page_change(new_page, this.options.on_close);
-
-    this.options = null;
+    var new_page = this.parent_page;
+    console.debug("*** close(" + this.id + ") to " + new_page.id);
+    var closer = this.options.on_close;
+    this.parent_page = null;
+    Page_active = new_page;
+    if (new_page)
+        Page_change(new_page.id, closer);
 };
 
 /**
@@ -174,19 +200,24 @@ Page.prototype.play_action = function(action) {
         });
     if (res !== null)
         Page_get("activity").open({
-            title: TX.tx("Error"),
+            title: Pages.activity.titles.error,
             message: res.message
         });
 };
 
 Pages.activity = {
+    titles: {
+        error: TX.tx("Error")
+    },
     open: function(options) {
+        var can_cancel = typeof options.on_cancel === "function"
+            || typeof options.after_cancel === "function";
+        var can_ok = typeof options.on_ok === "function"
+            || typeof options.after_ok === "function";
         this.control("title").text(options.title ? options.title : "");
-        this.control("cancel").toggle(typeof options.on_cancel === "function");
-        this.control("ok").toggle(typeof options.on_ok === "function");
-        this.control("close").toggle(
-            !(typeof options.on_ok === "function"
-              || typeof options.on_cancel === "function"));
+        this.control("cancel").toggle(can_cancel);
+        this.control("ok").toggle(can_ok);
+        this.control("close").toggle(!(can_ok || can_cancel));
 
         this.control("message").empty();
         if (typeof options.message === "string")
@@ -204,6 +235,10 @@ Pages.search = {
             .on("vclick", function() {
                 Squirrel.search(self.control("string").val());
                 // Allow event to bubble to the default handler
+            });
+        this.control("string")
+            .on("change", function() {
+                self.control("ok").trigger("vclick");
             });
     }
 };
@@ -269,13 +304,10 @@ Pages.login = {
             $signin.off("vclick");
             $user.off("change");
             $pass.off("change");
-            self.options.on_close = function() {
-                options.on_signin.call(options.store,
+            options.on_signin.call(options.store,
                                    $user.val(),
                                    $pass.val());
-            };
-            self.close();
-            return false;
+            return true;
         };
 
         $signin
@@ -345,7 +377,8 @@ Pages.extras = {
 
     open: function(options) {
         if (!(USE_STEGANOGRAPHY
-              || Squirrel.cloud.store.options().needs_path)) {
+              || Squirrel.cloud.store
+              && Squirrel.cloud.store.options().needs_path)) {
             this.control("chss").hide();
         }
         this.control("autosave").val(
@@ -564,7 +597,7 @@ Pages.delete_node = {
                 });
             if (res !== null) {
                 Page_get("activity").open({
-                    title: TX.tx("Error"),
+                    title: Pages.activity.titles.error,
                     message: res.message
                 });
                 return false;

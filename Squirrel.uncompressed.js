@@ -51,9 +51,8 @@ Squirrel.check_alarms = function(/* event */) {
                         .append(TX.tx("Reminder on '$1' was due on $2",
                                       path.join("/"),
                                       expired.toLocaleDateString())),
-                    on_close: function() {
-                        next();
-                        return true;
+                    after_close: function() {
+                        Utils.soon(next);
                     }
                 });
         });
@@ -145,20 +144,28 @@ Squirrel.insert_data = function(path, data) {
 Squirrel.search = function(s) {
     "use strict";
 
-    $(".node .expanded").each(function() {
-        $(this).treenode("close");
-    });
-
     var re = new RegExp(s, "i");
-    var hits = 0;
+    var hits = [];
     $(".key,.value").each(function() {
         if ($(this).text().match(re)) {
-            hits++;
-            $(this).parents(".node").each(function() {
-                $(this).treenode("open");
-            });
+            hits.push(this);
         }
     });
+    if (hits.length === 0) {
+        Page_get("activity").open(
+            {
+                message: TX.tx("'$1' not found", s)
+            });
+    } else {
+        $("li.treenode-open").each(function() {
+            $(this).treenode("close");
+        });
+        $.each(hits, function(n, v) {
+            $(v).parents(".treenode.treenode-collection").each(function() {
+                $(this).treenode("open");
+            });
+        });
+    }
 };
 
 /**
@@ -255,7 +262,7 @@ Squirrel.unsaved_changes = function(max_changes) {
 
     var message = [];
 
-    $(".node.modified").each(function() {
+    $(".treenode.modified").each(function() {
         if (DEBUG && !$(this).data("path")
            && !$(this).hasClass("root")) debugger; // Missing data-path
         var path = $(this).data("path") || 'node';
@@ -505,8 +512,6 @@ Squirrel.hoards_loaded = function() {
 
     // Flush the sometimes, and allow new sometimes to be set
     Utils.sometime_is_now();
-
-    $(".authenticated").show();
 };
 
 /**
@@ -530,9 +535,10 @@ Squirrel.load_cloud_hoard = function() {
                     if (DEBUG)
                         console.debug("Client hoard JSON parse failed: " + e);
                     Page_get("activity").open({
-                        title: TX.tx("Error"),
-                        message: TX.tx("$1 hoard exists, but can't be read.",
-                                       this.options().identifier)
+                        title: Pages.activity.titles.error,
+                        message:
+                        TX.tx("$1 hoard exists, but can't be read.",
+                              this.options().identifier)
                             + TX.tx("Check that you have the correct password.")
                     });
                     Squirrel.cloud.status = Squirrel.IS_CORRUPT;
@@ -550,10 +556,12 @@ Squirrel.load_cloud_hoard = function() {
                     Squirrel.cloud.status = Squirrel.IS_EMPTY;
                 } else {
                     Page_get("activity").open({
-                        title: TX.tx("Error"),
+                        title: Pages.activity.titles.error,
                         message:
-                        TX.tx("Could not load cloud hoard; do you have the correct password? Error was: $1 store error: $2",
-                              this.options().identifier, e)
+                        TX.tx("Could not load cloud hoard.")
+                            + TX.tx("Check that you have the correct password.")
+                            + TX.tx("Error was: $1 store error: $2",
+                                    this.options().identifier, e)
                     });
                     // Could not contact cloud; continue all the same
                 }
@@ -575,7 +583,7 @@ Squirrel.init_client_hoard = function() {
     Squirrel.client.hoard = new Hoard();
     Squirrel.client.status = Squirrel.IS_EMPTY;
 debugger;
-    if (Squirrel.cloud.store.options.needs_path) {
+    if (Squirrel.cloud.store.options().needs_path) {
         Page_get("store_settings").open(
             {
                 on_close: function() {
@@ -639,17 +647,22 @@ Squirrel.load_client_hoard = function() {
             } catch (e) {
                 if (DEBUG) console.debug("Caught " + e);
                 Page_get("activity").open({
-                    title: TX.tx("Error"),
-                    message: TX.tx("$1 hoard exists, but can't be read. Check that you have the correct password.", this.options().identifier),
-                    on_close: Squirrel.init_application
+                    title: Pages.activity.titles.error,
+                    message:
+                    TX.tx("$1 hoard exists, but can't be read.",
+                          this.options().identifier)
+                        + TX.tx("Check that you have the correct password."),
+                    after_close: Squirrel.init_application
                 });
                 return;
                 //Squirrel.client.hoard = new Hoard();
                 //Squirrel.client.status = Squirrel.IS_CORRUPT;
             }
             // Make sure we have a store path
-            if ((Squirrel.client.store.options.needs_path
-                 || Squirrel.cloud.store.options.needs_path)
+            if ((Squirrel.client.store
+                 && Squirrel.client.store.options().needs_path
+                 || Squirrel.cloud.store
+                 && Squirrel.cloud.store.options().needs_path)
                 && !Squirrel.client.hoard.options.store_path) {
                 Page_get("store_settings").open(
                     {
@@ -671,7 +684,7 @@ Squirrel.load_client_hoard = function() {
                 Page_get("activity").open({
                     title: TX.tx("$1 store error", this.options().identifier),
                     message: e,
-                    on_close: Squirrel.init_application
+                    after_close: Squirrel.init_application
                 });
             }
         });
@@ -697,7 +710,7 @@ Squirrel.identify_user = function() {
         Squirrel.client.store.user(Squirrel.cloud.store.user());
         uReq = false;
     } else if (Squirrel.client.store
-               && typeof Squirrel.cloud.store.user() !== "undefined") {
+               && typeof Squirrel.client.store.user() !== "undefined") {
         // Force the client user onto the cloud store
         if (DEBUG)
             console.debug("Client user is available: " + Squirrel.client.store.user());
@@ -711,10 +724,11 @@ Squirrel.identify_user = function() {
         // Force the cloud pass onto the client store
         if (DEBUG)
             console.debug("Cloud pass is preferred");
-        Squirrel.client.store.pass(Squirrel.cloud.store.pass());
+        if (Squirrel.client.store)
+            Squirrel.client.store.pass(Squirrel.cloud.store.pass());
         pReq = false;
     } else if (Squirrel.client.store
-               && typeof Squirrel.cloud.store.pass() !== "undefined") {
+               && typeof Squirrel.client.store.pass() !== "undefined") {
         // Force the client pass onto the cloud store
         if (DEBUG)
             console.debug("Client pass is available");
@@ -727,6 +741,7 @@ Squirrel.identify_user = function() {
     if (uReq || pReq) {
         Page_get("login").open(
             {
+                replace: true,
                 store: Squirrel.client.store,
                 on_signin: function(user, pass) {
                     if (DEBUG) console.debug("Login prompt said user was " + user);
@@ -736,9 +751,9 @@ Squirrel.identify_user = function() {
                         Squirrel.cloud.store.user(user);
                         Squirrel.cloud.store.pass(pass);
                     }
-                    // SMELL: close the login page?
                     Page_get("authenticated").open(
                         {
+                            replace: true,
                             on_open: function () {
                                 Utils.soon(Squirrel.load_client_hoard);
                             }
@@ -774,7 +789,7 @@ Squirrel.init_client_store = function() {
         fail: function(e) {
             // We did our best!
             Page_get("activity").open({
-                title: TX.tx("Error"),
+                title: Pages.activity.titles.error,
                 message: e
             });
         }
@@ -795,14 +810,12 @@ Squirrel.init_cloud_store = function() {
         },
         fail: function(e) {
             Page_get("activity").open({
-                title: TX.tx("Could not open cloud store"),
-                message: e + "<p>"
+                title: Pages.activity.titles.error,
+                message: TX.tx("Could not open cloud store.")
+                    + "<p>" + e + "</p>"
                     + TX.tx("Do you want to continue (only the client store will be available)?"),
-                on_ok: Squirrel.init_client_store,
-                on_cancel: function() {
-                    if (DEBUG) console.debug("Cancelled");
-                    Squirrel.change_page("page_authfailed");
-                    return true;
+                after_ok: function () {
+                    Squirrel.init_client_store();
                 }
             });
         }
@@ -835,7 +848,7 @@ Squirrel.init_ui = function() {
         defaults: true
     });
 
-    $("#sites-node").treenode();
+    $(".treenode-root").treenode();
 
     // Initialise pull-right node panel
     $("#menu").panel({
@@ -879,7 +892,7 @@ Squirrel.init_ui = function() {
                     });
                 if (e !== null)
                     Page_get("activity").open({
-                        title: TX.tx("Error"),
+                        title: Pages.activity.titles.error,
                         message: e.message
                     });
             }
@@ -909,7 +922,7 @@ Squirrel.init_ui = function() {
                     });
                 if (e !== null)
                     Page_get("activity").open({
-                        title: TX.tx("Error"),
+                        title: Pages.activity.titles.error,
                         message: e.message
                     });
             }
@@ -1009,6 +1022,7 @@ Squirrel.init_application = function() {
     // URL and force our startup screen
     Page_get("unauthenticated").open(
         {
+            replace: true,
             // Initialise the cloud store as soon as the page has changed
             on_open: Squirrel.init_cloud_store
         });

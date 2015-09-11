@@ -113,7 +113,6 @@ debug: $(patsubst %,%.uncompressed.html,$(STORES))
 		--source-map-include-sources \
 		--compress \
 		--define DEBUG=false \
-		--define STEGANOGRAPHY=$(STEGANOGRAPHY)
 		-o $@ \
 		-- $^
 

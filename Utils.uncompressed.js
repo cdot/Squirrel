@@ -162,24 +162,24 @@ $.fn.edit_in_place = function(opts) {
             .css("height", h)
             .css("width", w)
 
-            .change(function() {
+            .on("change", function() {
                 var val = $(this).val();
                 blurb();
                 if (val !== $self.text())
                     changed.call($self, val);
             })
 
-            .mouseup(function(e) {
+            .on("mouseup", function(e) {
                 // Override the parent click handler
                 e.stopPropagation();
             })
 
-            .mousedown(function(e) {
+            .on("mousedown", function(e) {
                 // Override the parent click handler
                 e.stopPropagation();
             })
 
-            .keydown(function(e) { // Escape means cancel
+            .on("keydown", function(e) { // Escape means cancel
                 if (e.keyCode === 27
                     || (e.keyCode === 13
                         && $(this).val() === $self.text())) {

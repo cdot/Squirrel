@@ -18,7 +18,7 @@ $.widget("squirrel.treenode", {
         // This will be a div for the root, and an li for any other node
         // this.options is the options passed
         var $node = $(this.element);
-        if (!$node.hasClass("treeroot")) {
+        if (!$node.hasClass("treenode-root")) {
             // Add open/close button, except on root which is
             // always open.
             var $control = $("<button></button>");
@@ -35,18 +35,18 @@ $.widget("squirrel.treenode", {
                 $node.treenode("toggle");
                 return false;
             });
-            $node.data("treenode-open", true);
+            $node.addClass("treenode-open");
         }
         // Add the children
         $node.append("<ul class='treenode-subnodes'></ul>");
-        // Toggle to close, which will hide the ul
+        // Close to hide the children (or to open the root)
         $node.treenode("toggle");
     },
 
     // Switch from open to closed or vice versa
     toggle: function() {
         var $node = $(this.element);
-        if ($node.data("treenode-open")) {
+        if ($node.hasClass("treenode-open")) {
             $node.treenode("close");
         } else {
             $node.treenode("open");
@@ -56,23 +56,31 @@ $.widget("squirrel.treenode", {
     // Force the node open
     open: function () {
         var $node = $(this.element);
+        if ($node.hasClass("treenode-open"))
+            return;
         $node
+            .addClass("treenode-open")
             .find(".open-close")
             .first()
             .button("option", "icon", "carat-d");
-        $node.children(".treenode-subnodes").show();
-        $node.data("treenode-open", true);
+        $node
+            .children(".treenode-subnodes")
+            .show();
     },
 
     // Force the node closed
     close: function () {
         var $node = $(this.element);
+        if (!$node.hasClass("treenode-open"))
+            return;
         $node
+            .removeClass("treenode-open")
             .find(".open-close")
             .first()
             .button("option", "icon","carat-r");
-        $node.children(".treenode-subnodes").hide();
-        $node.data("treenode-open", false);
+        $node
+            .children(".treenode-subnodes")
+            .hide();
     },
 
     // Do we need this any more?
@@ -122,9 +130,9 @@ Tree.set_modified = function($node, time) {
 Tree.path = function($node) {
     "use strict";
 
-    if (!$node.hasClass("node"))
+    if (!$node.hasClass("treenode"))
         // Get the closest enclosing node
-        $node = $node.closest(".node");
+        $node = $node.closest(".treenode");
 
     if (DEBUG && (!$node || $node.length === 0))
         debugger; // Internal error: Failed to find node in tree
@@ -138,7 +146,7 @@ Tree.path = function($node) {
 
     // No shortcut, recurse up the tree
     if (typeof $node.data("key") !== "undefined") {
-        path = Tree.path($node.parent().closest(".node"));
+        path = Tree.path($node.parent().closest(".treenode"));
 
         path.push($node.data("key"));
 
@@ -207,7 +215,8 @@ Tree.action_N = function(action, undoable) {
     if (DEBUG && $container.length !== 1) debugger;
 
     // Create the new node
-    var $node = $("<li class='node'></li>")
+    var $node = $("<li></li>")
+        .addClass("treenode")
         .data("key", key);
     var value;
 
@@ -216,7 +225,7 @@ Tree.action_N = function(action, undoable) {
         .appendTo($node);
     if (is_leaf) {
         // Leaf node
-        $node.addClass("treeleaf");
+        $node.addClass("treenode-leaf");
         $node.data("is_leaf", true);
         $("<span class='kv_separator'> : </span>")
             .appendTo($node);
@@ -227,13 +236,13 @@ Tree.action_N = function(action, undoable) {
     } else {
         // Intermediate node
         $node.data("is_leaf", false);
-        $node.addClass("treecollection");
+        $node.addClass("treenode-collection");
         $node.treenode();
     }
 
     // Insert-sort into the $container
     var inserted = false;
-    $container.children(".node").each(function() {
+    $container.children(".treenode").each(function() {
         if (Tree.compare($(this).data("key"), key) > 0) {
             $node.insertBefore($(this));
             inserted = true;
@@ -286,7 +295,7 @@ Tree.action_R = function(action, undoable) {
 
     // Re-insert the element in it's sorted position
     var inserted = false;
-    $container.children("li.node").each(function() {
+    $container.children("li.treenode").each(function() {
         if (Tree.compare($(this).data("key"), action.data) > 0) {
             $node.insertBefore($(this));
             inserted = true;
@@ -300,7 +309,7 @@ Tree.action_R = function(action, undoable) {
     // they get added to Tree.cache. This will also update
     // the mapping for $node.
     $node
-        .find(".node")
+        .find(".treenode")
         .each(function() {
             Tree.path($(this));
         });
@@ -371,7 +380,7 @@ Tree.action_D = function(action, undoable) {
                 .text()
         });
     }
-    var $parent = $node.parent().closest(".node");
+    var $parent = $node.parent().closest(".treenode");
 
     Tree.set_modified($parent, action.time);
 
@@ -487,14 +496,14 @@ Tree.action = function(action, chain, undoable) {
 Tree.demap = function($node) {
     "use strict";
 
-    if (!$node.hasClass("node"))
-        $node = $node.closest(".node");
+    if (!$node.hasClass("treenode"))
+        $node = $node.closest(".treenode");
 
     delete Tree.cache[$node.data("path")];
     $node
         .data("path", null)
         // Reset the path of all subnodes
-        .find(".node")
+        .find(".treenode")
         .each(function() {
             var $s = $(this);
             delete Tree.cache[$s.data("path")];

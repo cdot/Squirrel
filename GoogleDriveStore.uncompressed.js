@@ -299,7 +299,7 @@ GoogleDriveStore.prototype.options = function() {
     return $.extend(AbstractStore.prototype.options(), {
         needs_path: true,
         identifier: "Google Drive"
-    };
+    });
 }
 
 GoogleDriveStore.prototype.write = function(path, data, ok, fail) {

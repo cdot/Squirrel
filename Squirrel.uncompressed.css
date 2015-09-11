@@ -81,15 +81,7 @@ div.ui-btn {
     background: transparent url("images/progress_bar.gif") no-repeat 13em center;
 }
 
-.authfailed {
-    display: none;
-}
-
-.authenticated {
-    display: none;
-}
-
-.modified > .node_div > .key {
+.modified > .key {
     color: orange;
 }
 
@@ -126,6 +118,8 @@ button.ui-button-icon-only {
 }
 
 .help {
+    background-color: #fcee21;
+    padding: 1em;
 }
 
 .help-close {

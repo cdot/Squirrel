@@ -7,6 +7,9 @@
 function TestStore(params) {
     "use strict";
     params.user = "TEST";
+    params.ok = function() {
+        params.fail.call(this, "Fuck off");
+    };
     LocalStorageStore.call(this, params);
 }
 
