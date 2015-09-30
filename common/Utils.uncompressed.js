@@ -57,143 +57,6 @@ $.ajaxTransport("+binary", function(options, originalOptions, jqXHR){
     }
 });
 
-/**
- * Plugin to generate taphold events on platforms that don't
- * natively support them
- */
-$.fn.linger = function() {
-    "use strict";
-
-    var eventType = {
-        mousedown: "ontouchstart" in window ? "touchstart" : "mousedown",
-        mouseup: "ontouchend" in window ? "touchend" : "mouseup"
-    };
-
-    return this.each(function() {
-        var timeout;
-        $(this)
-            .on(eventType.mousedown + ".linger", function(e) {
-                timeout = window.setTimeout(function() {
-                    $(e.currentTarget).trigger("taphold");
-                }, 1000);
-                return false; // stop bubble
-            })
-            .on(eventType.mouseup + ".linger", function(/*evt*/) {
-                window.clearTimeout(timeout);
-            })
-            .on(eventType.click + ".linger", function(/*evt*/) {
-                window.clearTimeout(timeout);
-            })
-            .on("contextmenu.linger", function(/*evt*/) {
-                window.clearTimeout(timeout);
-            });
-    });
-};
-
-/**
- * A wrapper for a file input that replaces it with a button that
- * uses the input's title attribute for its label
- */
-$.fn.file_input = function() {
-    "use strict";
-
-    return this.each(function() {
-        var $self = $(this)
-            .wrap($("<div></div>")
-                  /*.css("position", "relative")
-                  .css("display", "inline-block")*/);
-        $self.hide();
-        $self.parent().append(
-            $("<button></button>")
-                .button({
-                    label: $self.attr("title")
-                })
-                .click(function(evt) {
-                    $self.trigger(evt);
-                }));
-    });
-};
-
-/**
- * Scroll the view to this element
- */
-$.fn.scroll_into_view = function () {
-    "use strict";
-
-    return this.each(function () {
-        var offset = $(this).offset().top - $(window).scrollTop();
-
-        if (offset > window.innerHeight){
-            // Not in view so scroll to it
-            $("html,body").animate({scrollTop: offset - 16}, 500);
-            return false;
-        }
-        return true;
-    });
-};
-
-/**
- * Simple in-place editing
- */
-$.fn.edit_in_place = function(opts) {
-    "use strict";
-
-    return this.each(function() {
-
-        var $self = $(this);
-        var h = opts.height || $self.height();
-        var w = opts.width || $self.width();
-        var changed = opts.changed ||
-            function(/*text*/) {
-                $self.text();
-            };
-        var $input = $("<input/>"),
-        blurb = function() {
-            $input.remove();
-            $self.show();
-        };
-
-        $self.hide();
-
-        $input
-            .insertBefore($self)
-            .addClass("in_place_editor")
-            .val($self.text())
-            .css("height", h)
-            .css("width", w)
-
-            .on("change", function() {
-                var val = $(this).val();
-                blurb();
-                if (val !== $self.text())
-                    changed.call($self, val);
-            })
-
-            .on("mouseup", function(e) {
-                // Override the parent click handler
-                e.stopPropagation();
-            })
-
-            .on("mousedown", function(e) {
-                // Override the parent click handler
-                e.stopPropagation();
-            })
-
-            .on("keydown", function(e) { // Escape means cancel
-                if (e.keyCode === 27
-                    || (e.keyCode === 13
-                        && $(this).val() === $self.text())) {
-                    blurb();
-                    return false;
-                } else
-                    return true;
-            })
-
-            .blur(blurb)
-            .select();
-    });
-};
-
 var Utils = { // Namespace
     // Hash of events that are waiting to be triggered by the 'sometime'
     // scheduler.
@@ -630,4 +493,62 @@ Utils.Base64ToArrayBuffer = function(sB64) {
         }
     }
     return ta8.buffer;
+};
+
+// Simplistic dynamic loader. Won't work with file:// URLs or cross-origin.
+Utils._loaded = function(file, expect, on_loaded) {
+    //console.debug("Loaded " + file);
+    delete expect[file];
+    if (Object.keys(expect).length === 0) {
+        if (typeof on_loaded === "function") {
+            //console.debug("Calling on_loaded");
+            on_loaded();
+        }
+    } else {
+        //console.debug("Still waiting for " + Object.keys(expect));
+    }
+};
+
+
+Utils._add_load = function(file, expect, on_loaded) {
+    if (DEBUG)
+        file = file.replace(/(\.[^.]*)$/, ".uncompressed$1")
+
+    //console.debug("Loading " + file);
+    expect[file] = true;
+    if (/\.js$/.test(file)) {
+        $.getScript(file)
+            .done(function() {
+                //console.debug("Loaded script " + file);
+                Utils._loaded(file, expect, on_loaded);
+            })
+            .fail(function(jqXHR, settings, exception) {
+                debugger;
+            });
+    } else if (/\.css$/.test(file)) {
+        $("link")
+            .appendTo('head')
+            .attr({ type: "text/css", rel: "stylesheet" })
+            .attr("href", file);
+        Utils._loaded(file, expect, on_loaded);
+    } else if (/\.html$/.test(file)) {
+        $.get(file)
+            .done(function(data) {
+                //console.debug("Loaded HTML " + file);
+                $(data)
+                    .appendTo('body');
+                Utils._loaded(file, expect, on_loaded);
+            })
+            .fail(function(jqXHR, settings, exception) {
+                debugger;
+            });
+    }
+};
+
+// on_loaded is called when all libs have been loaded
+Utils.load = function(libs, on_loaded) {
+    var expect = {};
+    for (var i = 0; i < libs.length; i++) {
+        Utils._add_load(libs[i], expect, on_loaded);
+    }
 };

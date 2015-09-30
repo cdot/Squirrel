@@ -21,6 +21,7 @@ a:hover {
 }
 
 .lastmod {
+    margin-left: 4em;
     float: right;
 }
 
@@ -124,13 +125,22 @@ a:hover {
   display: none;
 }
 
-.node_div.hover {
-    background: #44372c url("libs/images/ui-bg_gloss-wave_30_44372c_500x100.png") 50% 50% repeat-x;
+.treenode.hover {
+    background: #44372c url("../libs/images/ui-bg_gloss-wave_30_44372c_500x100.png") 50% 50% repeat-x;
     color: #baec7e;
 }
 
+ul.treenode-subnodes {
+    list-style-type: none;
+    -webkit-padding-start: 0;
+}
+
+ul.treenode-subnodes li {
+    padding-left: 1em;
+}
+
 .progress {
-    background: transparent url("images/progress_bar.gif") no-repeat 13em center;
+    background: transparent url("../images/progress_bar.gif") no-repeat 13em center;
 }
 
 .authfailed {
@@ -141,7 +151,7 @@ a:hover {
     display: none;
 }
 
-.modified > .node_div > .key {
+.modified {
     color: orange;
 }
 
@@ -232,4 +242,21 @@ button.ui-button-icon-only {
 
 #stegamage {
     height: 100px;
+}
+
+#home {
+    margin-left: 1em;
+}
+
+.open-close {
+    margin-right: 1em;
+}
+
+/* Puch the leaf out to the same indent as subtrees */
+.treenode-leaf {
+    margin-left: 1em;
+}
+
+.treenode-info {
+    display: inline-block;
 }

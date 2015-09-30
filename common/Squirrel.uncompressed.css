@@ -1,0 +1,4 @@
+/* Test for mobile devices */
+@media only screen and (max-width: 760px) {
+  #screen-width-element { display: none; }
+}

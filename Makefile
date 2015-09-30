@@ -4,6 +4,7 @@
 # should not be enabled unless you really need it.
 USE_STEGANOGRAPHY := false
 
+# Sources specific to different stores
 STORES := dropbox drive tester
 
 dropboxJS := \
@@ -16,39 +17,17 @@ driveJS := \
 testerJS := \
 	TestStore.uncompressed.js
 
-LIBSJS = \
-	libs/jquery-2.1.3.uncompressed.js \
-	libs/jquery.mobile-1.4.5.uncompressed.js \
-	libs/aes.uncompressed.js
+# Sources specific to the mobile platform
+MOBILEHTML := \
+	mobile/Squirrel.html.src
 
-LIBSCSS := \
-	libs/jquery.mobile-1.4.5.uncompressed.css \
-	libs/jquery.mobile.external-png-1.4.5.uncompressed.css \
-	libs/jquery.mobile.icons-1.4.5.uncompressed.css \
-	libs/jquery.mobile.inline-png-1.4.5.uncompressed.css \
-	libs/jquery.mobile.inline-svg-1.4.5.uncompressed.css \
-	libs/jquery.mobile.structure-1.4.5.uncompressed.css \
-	libs/jquery.mobile.theme-1.4.5.uncompressed.css
-
-COMMONJS := \
-	Utils.uncompressed.js \
-	Translation.uncompressed.js \
-	AbstractStore.uncompressed.js \
-	LocalStorageStore.uncompressed.js \
-	AES.uncompressed.js \
-	EncryptedStore.uncompressed.js \
-	Squirrel.uncompressed.js \
-	Tree.uncompressed.js \
-	Pages.uncompressed.js \
-	Hoard.uncompressed.js
-
-COMMONCSS := \
-	Squirrel.uncompressed.css
+# Sources specific to the desktop platform
+DESKTOPJS := \
 
 ifeq ($(USE_STEGANOGRAPHY),true)
 COMMONJS += \
-	Steganographer.uncompressed.js \
-	StegaStore.uncompressed.js
+	common/Steganographer.uncompressed.js \
+	common/StegaStore.uncompressed.js
 START_STEG = '<!--Steganography-->'
 END_STEG = '<!--/Steganography-->'
 else
@@ -56,10 +35,21 @@ START_STEG = '<!--Steganography'
 END_STEG = '/Steganography-->'
 endif
 
-# Making debug
-# e.g make dropbox.uncompressed.html
-# make drive.uncompressed.html
+%.map %.min.js : %.uncompressed.js
+	uglifyjs \
+		--source-map $(patsubst %.min.js,%.map,$@) \
+		--source-map-url $(patsubst libs/%,%, $(patsubst %.min.js,%.map,$@)) \
+		--source-map-include-sources \
+		--compress \
+		--define DEBUG=false \
+		-o $@ \
+		-- $^
 
+%.min.css : %.uncompressed.css
+	echo "" > $@; \
+	$(patsubst %,cleancss %>>$@;,$^)
+
+#########################################
 SPRE=<script type="text/javascript" src="
 SPOS="></script>
 LPRE=<link rel="stylesheet" href="
@@ -106,19 +96,6 @@ debug: $(patsubst %,%.uncompressed.html,$(STORES))
 
 %.map : %.min.js
 
-%.min.js : %.uncompressed.js
-	uglifyjs \
-		--source-map $(patsubst %.min.js,%.map,$@) \
-		--source-map-url $(patsubst libs/%,%, $(patsubst %.min.js,%.map,$@)) \
-		--source-map-include-sources \
-		--compress \
-		--define DEBUG=false \
-		-o $@ \
-		-- $^
-
-%.min.css : %.uncompressed.css
-	echo "" > $@; \
-	$(patsubst %,cleancss %>>$@;,$^)
 
 release: $(subst uncompressed,min,$(COMMONJS)) \
 	 $(subst uncompressed.js,map,$(COMMONJS)) \

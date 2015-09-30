@@ -27,8 +27,17 @@ Squirrel.Dialog.play_action = function(action) {
  * @param cancel callback on Cancel press, or dialog closed and there is a
  * cancel callback
  */
-Squirrel.Dialog.squeak = function(e, ok, cancel) {
+Squirrel.Dialog.squeak = function(p) {
     "use strict";
+
+    var e, ok, cancel;
+    if (typeof p === "string")
+        e = p;
+    else {
+        e = p.message;
+        ok = p.after_close;
+        cancel = p.on_cancel;
+    }
 
     var $dlg = $("#dlg_alert");
 
@@ -77,6 +86,10 @@ Squirrel.Dialog.squeak = function(e, ok, cancel) {
     });
 };
 
+Squirrel.Dialog.squeak_more = function(mess) {
+    $("#dlg_alert_message").append(mess);
+};
+
 /**
  * Squirrel dialog handlers.
  * Requires the Squirrel namespace to be already set up.
@@ -89,12 +102,12 @@ Squirrel.Dialog.confirm_delete = function($node) {
     "use strict";
 
     var $dlg = $("#dlg_delconf"),
-    p = Squirrel.Tree.path($node);
+    p = $node.treenode("get_path");
 
     $dlg.data("path", p);
 
     $("#dlg_delconf_message").text(p.join("/"));
-    $("#dlg_delconf_coll").toggle($node.hasClass("treecollection"));
+    $("#dlg_delconf_coll").toggle($node.hasClass("treenode-collection"));
 
     if (typeof $dlg.dialog("instance") === "undefined") {
         $("#dlg_delconf_delete")
@@ -147,7 +160,7 @@ Squirrel.Dialog.make_random = function($node) {
     };
 
     $("#dlg_gen_rand_key").text(
-        $node.children(".node_div").children(".key").text());
+        $node.find(".key").first().text());
     $("#dlg_gen_rand_idea").text(Utils.generate_password(opts));
 
     $dlg.data("node", $node);
@@ -160,7 +173,7 @@ Squirrel.Dialog.make_random = function($node) {
                 var $ddlg = $("#dlg_gen_rand");
                 $ddlg.dialog("close");
                 var pw = $("#dlg_gen_rand_idea").text();
-                var old_path = Squirrel.Tree.path($ddlg.data("node"));
+                var old_path = $ddlg.data("node").treenode("get_path");
                 Squirrel.Dialog.play_action(
                     { type: "E",
                       path: old_path,
@@ -246,9 +259,10 @@ Squirrel.Dialog.change_password = function() {
  * @param uReq set true if the store requires a username
  * @param pReq set true if the store requires a password
  */
-Squirrel.Dialog.login = function(store, ok, fail, uReq, pReq) {
+Squirrel.Dialog.login = function(p) {
     "use strict";
 
+    var store = p.store, ok = p.on_signin, uReq = p.user_required, pReq = p.pass_required;
     var $dlg = $("#dlg_login");
 
     if (DEBUG && typeof $dlg.dialog("instance") !== "undefined")
@@ -320,12 +334,12 @@ const ms_in_day = 24 * 60 * 60 * 1000;
 /**
  * Reminder setting dialog
  */
-Squirrel.Dialog.alarm = function($node) {
+Squirrel.Dialog.alarm = function(p) {
     "use strict";
 
+    var $node = p.node;
+    var path = p.path;
     var $dlg = $("#dlg_alarm");
-    var $alarm = $node.children(".alarm");
-    var path = Squirrel.Tree.path($node);
     var number = 6;
     var units = "m";
     var is_new = (typeof $dlg.dialog("instance") === "undefined");
@@ -350,8 +364,8 @@ Squirrel.Dialog.alarm = function($node) {
         $(".dlg_alarm_next." + uns).show();
     };
 
-    if ($alarm.length > 0) {
-        number = $alarm.data("alarm");
+    if ($node.data("alarm")) {
+        number = $node.data("alarm");
         if (number % units_days.y === 0) {
             number /= units_days.y; units = "y";
         } else if (number % units_days.m === 0) {
@@ -360,6 +374,9 @@ Squirrel.Dialog.alarm = function($node) {
             number /= units_days.w; units = "w";
         } else
             units = "d";
+        $("#dlg_alarm_cancel").show();
+    } else {
+        $("#dlg_alarm_cancel").hide();
     }
 
     $dlg.data("path", path);
@@ -405,12 +422,10 @@ Squirrel.Dialog.alarm = function($node) {
             .button()
             .on("click", function() {
                 $dlg.dialog("close");
-                if ($alarm) {
-                    Squirrel.Dialog.play_action(
-                        { type: "C",
-                          path: $dlg.data("path")
-                        });
-                }
+                Squirrel.Dialog.play_action(
+                    { type: "C",
+                      path: $dlg.data("path")
+                    });
                 return false;
             });
 
@@ -423,7 +438,7 @@ Squirrel.Dialog.pick_from = function($node) {
     "use strict";
 
     var $dlg = $("#dlg_pick"),
-    val = $node.children(".node_div").children(".value").text(),
+    val = $node.find(".value").first().text(),
     $which = $("#dlg_pick_which"),
     $from = $("#dlg_pick_from"), i, $f,
 

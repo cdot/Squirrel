@@ -7,17 +7,35 @@
     <meta name="expires" content="Wed, 1 Jan 2025 12:00:00 GMT" -->
     <title>Squirrel</title>
     <link rel="icon" href="images/favicon.ico" type="image/x-icon" />
-    <!--LIBSJS_HTML-->
-    <!--COMMONJS_HTML-->
-    <!--STOREJS_HTML-->
-    <!--LIBSCSS_HTML-->
-    <!--COMMONCSS_HTML-->
-    <!--DEBUG-->
-    <!--USE_STEGANOGRAPHY-->
+    <link rel="stylesheet" href="common/Squirrel.uncompressed.css" />
+    <script src="libs/jquery-2.1.3.uncompressed.js"></script>
+    <script src="libs/aes.uncompressed.js"></script>
+    <script src="common/Utils.uncompressed.js"></script>
+    <script src="common/Translation.uncompressed.js"></script>
+    <script src="common/AbstractStore.uncompressed.js"></script>
+    <script src="common/LocalStorageStore.uncompressed.js"></script>
+    <script src="common/AES.uncompressed.js"></script>
+    <script src="common/EncryptedStore.uncompressed.js"></script>
+    <script src="common/Hoard.uncompressed.js"></script>
+    <script src="common/Squirrel.uncompressed.js"></script>
+    <script src="common/Tree.uncompressed.js"></script>
+    <script src="common/scroll_into_view.uncompressed.js"></script>
+
+    <link rel="stylesheet" href="libs/jquery.mobile-1.4.5.uncompressed.css" />
+    <link rel="stylesheet" href="libs/jquery.mobile.external-png-1.4.5.uncompressed.css" />
+    <link rel="stylesheet" href="libs/jquery.mobile.icons-1.4.5.uncompressed.css" />
+    <link rel="stylesheet" href="libs/jquery.mobile.inline-png-1.4.5.uncompressed.css" />
+    <link rel="stylesheet" href="libs/jquery.mobile.inline-svg-1.4.5.uncompressed.css" />
+    <link rel="stylesheet" href="libs/jquery.mobile.structure-1.4.5.uncompressed.css" />
+    <link rel="stylesheet" href="libs/jquery.mobile.theme-1.4.5.uncompressed.css" />
+    <link rel="stylesheet" href="Squirrel.uncompressed.css" />
+    <script src="libs/jquery.mobile-1.4.5.uncompressed.js"></script>
+    <script src="Dialogs.uncompressed.js"></script>
+    <script src="Tree.uncompressed.js"></script>
+    <script src="Pages.uncompressed.js"></script>
+    <script src="Squirrel.uncompressed.js"></script>
   </head>
   <body>
-    <!-- Pages -->
-
     <div id="activity" data-role="page" data-dialog="true" data-close-btn="none">
       <div data-role="header">
         <h1 id="activity_title">Activity...</h1>
@@ -29,20 +47,20 @@
         <button id="activity_cancel" class="TX_text">Cancel</button>
       </div>
     </div>
-
+    
     <div id="unauthenticated" data-role="page">
       <div data-role="header" class="progress">
         <h1 id="authmessage" class="TX_text">Authenticating...</h1>
       </div>
     </div>
-
+    
     <div id="login" data-role="page">
       <div data-role="header">
         <h1 class="TX_text">Authenticate</h1>
       </div>
       <div class="ui-content" role="main">
         <table width="100%">
-	  <tbody>
+          <tbody>
 	    <tr>
 	      <td class="TX_text">Username:</td>
 	      <td>
@@ -58,14 +76,14 @@
 	        <input id="login_pass" type="password" size="50" class="TX_title" title="Enter password" value="" />
 	      </td>
 	    </tr>
-	  </tbody>
+          </tbody>
         </table>
       </div>
       <div data-role="footer">
         <button id="login_signin" class="TX_text">Sign In</button>
       </div>
     </div>
-
+    
     <div id="store_settings" data-role="page" data-dialog="true" data-close-btn="none">
       <div data-role="header">
         <button id="store_settings_ok" data-icon="delete" data-iconpos="notext" class="TX_text">Close</button>
@@ -73,8 +91,7 @@
       </div>
       <div class="ui-content" role="main">
         <div id="store_settings_message"></div>
-        <!--STEGANOGRAPHY-->
-        <div id="store_settings_image">
+        <div id="store_settings_image" class="using_steganography">
           <p class="TX_text help">Choose a local image that will be copied
             and used to hide your data in the cloud. This should be a complex
             colour image of at least 1024x768 pixels, preferably with variable
@@ -87,7 +104,6 @@
           <p id="store_settings_message"></p>
           <input id="store_settings_file" type="file" class="hidden" />
         </div>
-        <!--YHPARGONAGETS-->
         <div id="store_settings_path">
           <p class="TX_text help">
             Set the pathname of the file to use in your cloud store. For example
@@ -99,11 +115,11 @@
         </div>
       </div>
     </div>
-
+    
     <div id="search" data-role="page" data-dialog="true" data-close-btn="none">
       <div data-role="header">
         <h1>Search</h1>
-       <button id="search_close" data-icon="delete" data-iconpos="notext" class="TX_text">Close</button>
+        <button id="search_close" data-icon="delete" data-iconpos="notext" class="TX_text">Close</button>
       </div>
       <div class="ui-content">
         <p class="help TX_text">
@@ -114,10 +130,10 @@
         <input id="search_string" type="text" value="" class="TX_title" title="Enter search string" />
       </div>
       <div data-role="footer">
-       <button id="search_ok" data-icon="search" data-iconpos="left" class="TX_text">Search</button>
+        <button id="search_ok" data-icon="search" data-iconpos="left" class="TX_text">Search</button>
       </div>
     </div>
-
+    
     <div id="authenticated" data-role="page" class="authenticated">
       <div data-role="header">
         <h1 style="display:none">Squirrel</h1><!-- just to get title set -->
@@ -129,14 +145,13 @@
         </div>
       </div>
       <div class="ui-content" role="main">
-        <div id="sites-node" name="/" class="treenode treenode-root">
-        </div>
+        <div id="sites-node" name="/"></div>
       </div>
       <div data-role="footer">
         <span class="TX_text">Authenticated as:</span> <span id="authenticated_whoami"></span>
       </div>
     </div>
-
+    
     <div id="extras" data-role="page">
       <div data-role="header">
         <h1 class="TX_text">Options</h1>
@@ -158,10 +173,10 @@
         <button id="extras_close" class="TX_text">Close</button>
       </div>
     </div>
-
+    
     <div id="about" data-role="page" data-dialog="true" data-close-btn="none">
       <div data-role="header">
-       <button id="about_close" data-icon="delete" data-iconpos="notext" class="TX_text">Close</button>
+        <button id="about_close" data-icon="delete" data-iconpos="notext" class="TX_text">Close</button>
         <h1 class="TX_text">About Squirrel</h1>
       </div>
       <div class="ui-content" role="main">
@@ -173,7 +188,7 @@
         </div>
       </div>
     </div>
-
+    
     <div id="json" data-role="page">
       <div data-role="header">
         <h1 class="TX_text">Database JSON</h1>
@@ -187,7 +202,7 @@
         <button id="json_cancel" class="TX_text">Cancel</button>
       </div>
     </div>
-
+    
     <div id="chpw" data-role="page" data-dialog="true">
       <div data-role="header">
         <button id="chpw_cancel" data-icon="delete" data-iconpos="notext" class="TX_text">Close</button>
@@ -233,21 +248,21 @@
         </div>
       </div>
     </div>
-
+    
     <div id="randomise" data-role="page">
       <div data-role="header">
         <h1><span class="TX_text">Generate random value for</span> <span id="randomise_path"></span></h1>
       </div>
       <div class="ui-content" role="main">
         <span class="TX_text">Suggestion: '<span id="randomise_idea" class="value"></span>'
-        <p>
-          <span class="TX_text">Length:</span>
-          <input id="randomise_len" type="number" size="20" value="24" class="TX_title" title="Enter password length" />
-        </p>
-        <p>
-          <span class="TX_text">Character range:</span>
-          <input id="randomise_chs" type="text" size="20" value="A-Za-z0-9" class="TX_title" title="Enter the characters that are legal in passwords for this site. You can use character ranges like A-Z or 0-9" />
-        </p>
+          <p>
+            <span class="TX_text">Length:</span>
+            <input id="randomise_len" type="number" size="20" value="24" class="TX_title" title="Enter password length" />
+          </p>
+          <p>
+            <span class="TX_text">Character range:</span>
+            <input id="randomise_chs" type="text" size="20" value="A-Za-z0-9" class="TX_title" title="Enter the characters that are legal in passwords for this site. You can use character ranges like A-Z or 0-9" />
+          </p>
       </div>
       <div data-role="footer">
         <button id="randomise_use" class="TX_text">Use this</button>
@@ -255,7 +270,7 @@
         <button id="randomise_cancel" class="TX_text">Cancel</button>
       </div>
     </div>
-
+    
     <div id="delete_node" data-role="page">
       <div data-role="header">
         <h1 class="TX_text">Confirm Delete</h1>
@@ -270,7 +285,7 @@
         <button id="delete_node_ok" class="TX_text">Delete</button>
       </div>
     </div>
-
+    
     <div id="pick" data-role="page">
       <div data-role="page">
         <h1 class="TX_text">Pick characters</h1>
@@ -291,7 +306,7 @@
         <button id="pick_close" class="TX_text">Close</button>
       </div>
     </div>
-
+    
     <div id="alarm" data-role="page" data-dialog="true" data-close-btn="none">
       <div data-role="header">
         <h1 class="TX_title">Reminder</h1>
@@ -331,7 +346,7 @@
         <button id="alarm_cancel" class="TX_text">Cancel reminder</button>
       </div>
     </div>
-
+    
     <div id="menu" data-role="panel" data-theme="b">
       <h3 id="menu_path"><span id="menu_parent_path"></span><span id="menu_name">Name</span></h3>
       <h4 id="menu_value" class="leaf_only">Value</h4>
@@ -345,10 +360,10 @@
         <a data-role="button" href="#" data-rel="close">Close</a>
       </div>
     </div>
-
+    
     <!-- not processed yet -->
     <div id="dialogs" style="display:none">
-
+      
       <div id="dlg_conflicts" data-role="popup" data-dismissible="false" class="TX_title" title="WARNING!">
         <p class="TX_text">
           Conflicts were detected while merging actions from the Cloud:
@@ -360,5 +375,7 @@
         </p>
       </div>
     </div>
+    
+    <div id="screen-width-element"></div>
   </body>
 </html>

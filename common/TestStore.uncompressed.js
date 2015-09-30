@@ -1,15 +1,17 @@
 /* Copyright (C) 2015 Crawford Currie http://c-dot.co.uk / MIT */
 
 /**
- * A store engine using HTML5 localStorage.
- * @implements AbstractStore
+ * A test store engine
+ * @extends LocalStorageStore
  */
 function TestStore(params) {
     "use strict";
     params.user = "TEST";
+/*
     params.ok = function() {
         params.fail.call(this, "Fuck off");
     };
+*/
     LocalStorageStore.call(this, params);
 }
 
@@ -22,17 +24,26 @@ TestStore.prototype.options = function() {
 
     return $.extend(LocalStorageStore.prototype.options(), {
         identifier: "Local Test",
-        needs_path: true
+        needs_path: false, // vary this
+        needs_image: false // vary this
     });
 };
 
 TestStore.prototype.read = function(path, ok, fail) {
     "use strict";
-    LocalStorageStore.prototype.read.call(this, "TEST" + path, ok, fail);
+    if (this.pass() != "x") {
+        fail.call(this, "TestStore.read expects password 'x'");
+    } else {
+        LocalStorageStore.prototype.read.call(this, "TEST" + path, ok, fail);
+    }
 };
 
 TestStore.prototype.write = function(path, data, ok, fail) {
     "use strict";
 
-   LocalStorageStore.prototype.write.call(this, "TEST" + path, data, ok, fail);
+    if (this.pass() != "x") {
+        fail.call(this, "TestStore.write expects password 'x'");
+    } else {
+        LocalStorageStore.prototype.write.call(this, "TEST" + path, data, ok, fail);
+    }
 };

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <style>
+@media only screen and (max-width: 760px) {
+  #screen-width-element { display: none; }
+}
+    </style>
+  </head>
+  <body onload="redirect()">
+    <div id="screen-width-element"></div>
+    <script type="text/javascript">
+      var swe = document.getElementById("screen-width-element");
+      if (swe.style.display == "none")
+          window.location = "mobile/Components.uncompressed.html"
+      else
+          window.location = "desktop/Components.uncompressed.html"
+    </script>
+  </body>
+</html>

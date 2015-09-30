@@ -1,3 +1,5 @@
+/* Copyright (C) 2015 Crawford Currie http://c-dot.co.uk / MIT */
+
 /**
  * Pages are defined by an id that is the id of a div with data-role=page
  * in the HTML.

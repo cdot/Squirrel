@@ -1,35 +1,41 @@
+/* Copyright (C) 2015 Crawford Currie http://c-dot.co.uk / MIT */
+
 Squirrel.ContextMenu = {};
 
 /**
  * Context menu handling
  */
 
-Squirrel.ContextMenu.init = function($root) {
+Squirrel.ContextMenu.init = function() {
     "use strict";
 
+    var $root = $("body");
     var before_open = function(e, ui) {
-        var $div = (ui.target.is(".node_div"))
+        var $node = (ui.target.is(".treenode"))
             ? ui.target
-            : $div = ui.target.parents(".node_div").first(),
-        $val = $div.children(".value"),
-        hasalarm = ui.target.closest(".node").children(".alarm").length > 0,
-        isvalue = ($val.length > 0),
-        zc,
-        isroot = ui.target.closest("li").is("#sites-node");
+            : $node = ui.target.parents(".treenode").first();
+        var $val = $node.find(".value").first();
+        var has_alarm = typeof $node.treenode("get_alarm") !== "undefined";
+        var is_leaf = $node.hasClass("treenode-leaf");
+        var is_root = ui.target.closest(".treenode").is("#sites-node");
+        var is_open = $node.hasClass("treenode-open");
+        var zc;
 
         $root
-            .contextmenu("showEntry", "rename", !isroot)
-            .contextmenu("showEntry", "copy_value", isvalue)
-            .contextmenu("showEntry", "pick_from", isvalue)
-            .contextmenu("showEntry", "make_copy", !isroot)
-            .contextmenu("showEntry", "delete", !isroot)
-            .contextmenu("showEntry", "add_alarm", !hasalarm && !isroot)
-            .contextmenu("showEntry", "edit", isvalue)
-            .contextmenu("showEntry", "randomise", isvalue)
-            .contextmenu("showEntry", "add_subtree", !isvalue)
-            .contextmenu("showEntry", "add_value", !isvalue && !isroot)
+            .contextmenu("showEntry", "rename", !is_root)
+            .contextmenu("showEntry", "copy_value", is_leaf)
+            .contextmenu("showEntry", "pick_from", is_leaf)
+            .contextmenu("showEntry", "make_copy", !is_root)
+            .contextmenu("showEntry", "delete", !is_root)
+            .contextmenu("showEntry", "add_alarm", !has_alarm && !is_root)
+            .contextmenu("showEntry", "edit", is_leaf)
+            .contextmenu("showEntry", "randomise", is_leaf)
+            .contextmenu("showEntry", "add_subtree", !is_leaf)
+            .contextmenu("enableEntry", "add_subtree", is_open)
+            .contextmenu("showEntry", "add_value", !is_leaf && !is_root)
+            .contextmenu("enableEntry", "add_value", is_open)
             .contextmenu("showEntry", "insert_copy",
-                         !isvalue && Squirrel.clipboard !== null);
+                         !is_leaf && Squirrel.clipboard !== null);
 
         if (!$root.data("zc_copy")) {
             // First time, attach zero clipboard handler
@@ -63,7 +69,7 @@ Squirrel.ContextMenu.init = function($root) {
             zc.on("copy", function(event) {
                 if (DEBUG) console.debug("Copying JSON to clipboard");
                 var pa = $root.data("zc_cut");
-                var p = Squirrel.Tree.path(pa);
+                var p = pa.treenode("get_path");
                 var n = Squirrel.client.hoard.get_node(p);
                 var json = JSON.stringify(n);
 
@@ -72,11 +78,11 @@ Squirrel.ContextMenu.init = function($root) {
             });
             $root.data("ZC", zc); // remember it to protect from GC
         }
-        $root.data("zc_cut", $div.closest(".node"));
+        $root.data("zc_cut", $node.closest(".treenode"));
     },
 
     menu = {
-        delegate: ".node_div",
+        delegate: ".treenode",
         menu: [
             {
                 title: TX.tx("Copy value"),
@@ -135,9 +141,6 @@ Squirrel.ContextMenu.init = function($root) {
             }
         ],
         beforeOpen: before_open,
-        // We map long mouse hold to taphold
-        // Right click still works
-        taphold: true,
         select: Squirrel.ContextMenu.choice
     };
 
@@ -150,7 +153,7 @@ Squirrel.ContextMenu.init = function($root) {
 Squirrel.ContextMenu.choice = function(e, ui) {
     "use strict";
 
-    var $node = ui.target.closest("li");
+    var $node = ui.target.closest(".treenode");
 
     switch (ui.cmd) {
     case "copy_value":
@@ -171,16 +174,16 @@ Squirrel.ContextMenu.choice = function(e, ui) {
 
     case "rename":
         if (DEBUG) console.debug("Renaming");
-	Squirrel.edit_node($node, "key");
+	$node.treenode("edit", "key");
         break;
 
     case "edit":
         if (DEBUG) console.debug("Editing");
-	Squirrel.edit_node($node, "value");
+	$node.treenode("edit", "value");
         break;
 
     case "add_value":
-        if (DEBUG) console.debug("Adding value to " + Squirrel.Tree.path($node).join("/"));
+        if (DEBUG) console.debug("Adding value to " + $node.treenode("get_path").join("/"));
         Squirrel.add_child_node($node, TX.tx("A new value"), TX.tx("None"));
         break;
 

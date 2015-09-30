@@ -48,7 +48,7 @@ a:hover {
 }
 
 #unauthenticated, #login {
-    background: url('images/squirrel.png') no-repeat center;
+    background: url('../images/squirrel.png') no-repeat center;
     background-size: contain;
 }
 
@@ -78,7 +78,7 @@ div.ui-btn {
 }
 
 .progress {
-    background: transparent url("images/progress_bar.gif") no-repeat 13em center;
+    background: transparent url("../images/progress_bar.gif") no-repeat 13em center;
 }
 
 .modified > .key {
