@@ -62,6 +62,10 @@ button.ui-button-icon-only {
 .help {
 }
 
+.alarm {
+    float: left;
+}
+
 button.alarm {
     margin: 0.2em;
 }
