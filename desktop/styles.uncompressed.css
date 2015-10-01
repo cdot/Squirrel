@@ -1,0 +1,130 @@
+/**
+ * Styles specific to desktop platform
+ */
+.logo {
+    float: left;
+    margin: 0.5em 1em 0.5em 1em;
+}
+
+.ui-button-text-only .ui-button-text {
+    padding: 0.3em;
+}
+
+.ui-menu {
+    z-index: 1000;
+}
+
+.ui-widget {
+    font-family: 'Poiret One',cursive,Helvetica,Arial,sans-serif;
+}
+
+.dialog {
+  display: none;
+}
+
+.menu {
+  display: none;
+}
+
+.treenode.hover {
+    background: #44372c url("../libs/images/ui-bg_gloss-wave_30_44372c_500x100.png") 50% 50% repeat-x;
+    color: #baec7e;
+}
+
+ul.treenode-subnodes {
+    list-style-type: none;
+    -webkit-padding-start: 0;
+}
+
+ul.treenode-subnodes li {
+    padding-left: 1em;
+}
+
+.authfailed {
+    display: none;
+}
+
+.authenticated {
+    display: none;
+}
+
+button.ui-button-icon-only {
+    width: 16px;
+    height: 16px;
+    padding: 0;
+}
+
+.pick_cell {
+    font-family: "Courier New", Courier, monospace;
+    border: 1px solid grey;
+}
+
+.info-button {
+    float: left;
+    margin-right: 0.5em;
+}
+
+.help {
+}
+
+.help-close {
+    float:right;
+}
+
+#signed_in {
+    float: right;
+}
+
+#toolbar {
+    clear: both;
+    margin-left: 2em;
+}
+
+#sites {
+    border-top: 1px solid white;
+    padding-top: 1em;
+    margin-left: 2em;
+    margin-top: 1.5em;
+}
+
+#tree {
+    margin-top: 1em;
+    margin-bottom: 2em;
+}
+
+#dlg_alarm_number {
+    width: 3em;
+}
+
+#dlg_alarm_units {
+    width: 7em;
+}
+
+#dlg_alarm_units-button {
+    top: 0.65em;
+}
+
+#dlg_alarm_units-button > span.ui-selectmenu-text {
+    padding: 0.2em 2.1em 0.2em .25em;
+}
+
+#dlg_ss > input {
+    width: 100%;
+}
+
+#stegamage {
+    height: 100px;
+}
+
+#home {
+    margin-left: 1em;
+}
+
+.open-close {
+    margin-right: 1em;
+}
+
+/* Push the leaf out to the same indent as subtrees */
+.treenode-leaf {
+    margin-left: 1em;
+}

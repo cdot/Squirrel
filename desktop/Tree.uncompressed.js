@@ -5,14 +5,15 @@
  */
 (function($) {
     var map_treenode_icon = {
-        "closed": "ui-icon-folder-collapsed",
-        "open": "ui-icon-folder-open",
-        "alarm": "squirrel-icon-alarm"
+        "closed": "ui-icon-squirrel-folder-closed",
+        "open": "ui-icon-squirrel-folder-open",
+        "alarm": "ui-icon-squirrel-alarm"
     };
 
+    // Extend the treenode widget with platform specifics
     $.widget("squirrel.treenode", $.squirrel.treenode, {
         /**
-         * Edit a node in place, used for renaming and revaluing.
+         * Implements superclass edit.
          * Requires edit_in_place.
          */
         edit: function(what) {
@@ -74,6 +75,40 @@
                 break;
             }
             return $node;
+        },
+
+        attach_handlers: function() {
+            var $node = $(this.element);
+            var $info = $node.children(".treenode-info");
+            $info.hover(
+                function(/*evt*/) {
+                    Squirrel.close_menus();
+                    if ($(this).find(".in_place_editor").length == 0) {
+                        $(this)
+                            .addClass("hover");
+                        $("<div></div>")
+                            .addClass("lastmod")
+                            .text($node.data("last-mod"))
+                            .appendTo($(this));
+                        return false;
+                    }
+                },
+                function(/*evt*/) {
+                    $(this)
+                        .removeClass("hover")
+                        .find(".lastmod")
+                        .remove();
+                });
+            $info
+                .children(".key")
+                .on("dblclick", function(e) {
+                    $node.treenode("edit", "key");
+                });
+            $info
+                .children(".value")
+                .on("dblclick", function() {
+                    $node.treenode("edit", "value");
+                });
         }
     });
 })(jQuery);

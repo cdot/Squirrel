@@ -62,7 +62,7 @@ Squirrel.check_alarms = function(/* event */) {
                 $("<p></p>")
                     .append(
                         $("<span></span>")
-                        .addClass("ui-icon squirrel-icon-rung"))
+                        .addClass("ui-icon ui-icon-squirrel-rung"))
                     .append(TX.tx("Reminder on '$1' was due on $2",
                                   path.join("/"),
                                   expired.toLocaleDateString())),
@@ -70,6 +70,10 @@ Squirrel.check_alarms = function(/* event */) {
                     next();
                 });
         });
+};
+
+Squirrel.close_menus = function() {
+    // Designed to be overridden
 };
 
 /**
@@ -227,7 +231,7 @@ Squirrel.save_hoards = function() {
     var finished = function() {
         if (DEBUG) console.debug("...save finished");
         Utils.sometime("update_save");
-        Squirrel.Dialog_squeak_more(client_ok && cloud_ok
+        Squirrel.Dialog.squeak_more(client_ok && cloud_ok
                       ? TX.tx("Save complete")
                       : TX.tx("Save encountered errors"));
         if (client_ok && cloud_ok) {

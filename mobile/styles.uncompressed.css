@@ -1,29 +1,6 @@
-@font-face {
-  font-family: 'Poiret One';
-  font-style: normal;
-  font-weight: 400;
-  src: local('Poiret One'), local('PoiretOne-Regular'), url(https://fonts.gstatic.com/s/poiretone/v4/HrI4ZJpJ3Fh0wa5ofYMK8S3USBnSvpkopQaUR-2r7iU.ttf) format('truetype');
-}
-
-body {
-/*    background-color: #393939;
-    font-family: 'Poiret One',cursive,Helvetica,Arial,sans-serif;
-    color: white;*/
-}
-
-a {
-    color: yellow;
-    text-decoration: none;
-}
-
-a:hover {
-    font-weight: bold;
-}
-
-.lastmod {
-    float: right;
-}
-
+/**
+ * Styles specific to mobile platform
+ */
 .ui-li-static.ui-collapsible > .ui-collapsible-heading {
     margin: 0;
 }
@@ -77,26 +54,6 @@ div.ui-btn {
   display: none;
 }
 
-.progress {
-    background: transparent url("../images/progress_bar.gif") no-repeat 13em center;
-}
-
-.modified > .key {
-    color: orange;
-}
-
-.value {
-    font-family: "Courier New", Courier, monospace;
-}
-
-.kv_separator {
-    color: orange;
-}
-
-input {
-    font-family: "Courier New", Courier, monospace;
-}
-
 button.ui-button-icon-only {
     width: 16px;
     height: 16px;
@@ -106,11 +63,6 @@ button.ui-button-icon-only {
 .pick_cell {
     font-family: "Courier New", Courier, monospace;
     border: 1px solid grey;
-}
-
-.picked {
-    background-color: yellow;
-    color: black;
 }
 
 .info-button {
@@ -173,8 +125,4 @@ ul.treenode-subnodes li {
 
 #store_settings_message, #chpw_nomatch {
     color: red;
-}
-
-.alarm {
-    float: left;
 }

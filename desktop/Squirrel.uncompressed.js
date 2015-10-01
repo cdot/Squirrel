@@ -93,7 +93,7 @@ Squirrel.init_ui = function() {
     $("#save_button")
         .button({
             icons: {
-                primary: "squirrel-icon-save"
+                primary: "ui-icon-squirrel-save"
             },
             text: false
         })
@@ -107,7 +107,7 @@ Squirrel.init_ui = function() {
     $("#undo_button")
         .button({
             icons: {
-                primary: "squirrel-icon-undo"
+                primary: "ui-icon-squirrel-undo"
             },
             text: false
         })
@@ -203,12 +203,12 @@ Squirrel.init_ui = function() {
     $("#extras_button")
         .button({
             icons: {
-                primary: "squirrel-icon-gear"
+                primary: "ui-icon-squirrel-gear"
             },
             text: false
         })
         .on("click", function(/*evt*/) {
-            $("#sites-node").contextmenu("close");
+            //$("#sites-node").contextmenu("close");
             $("#extras_menu")
                 .show()
                 .position({

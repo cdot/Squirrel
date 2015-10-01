@@ -10,6 +10,7 @@
         "alarm": "clock"
     };
 
+    // Extend the treenode widget with platform specifics
     $.widget("squirrel.treenode", $.squirrel.treenode, {
         icon_button: function(action, selector, icon, on_click) {
             var $node = $(this.element);
@@ -38,6 +39,25 @@
                 break;
             }
             return $node;
+        },
+
+        attach_handlers: function() {
+            var $node = $(this.element);
+            $node.on("taphold", function() {
+                Squirrel.open_menu($node);
+                return false;
+            });
+            var $info = $node.children(".treenode-info");
+            $info
+                .children(".key")
+                .on("dblclick", function() {
+                    $node.treenode("edit", "key");
+                });
+            $info
+                .children(".value")
+                .on("dblclick", function() {
+                    $node.treenode("edit", "value");
+                });
         }
     });
 })(jQuery);

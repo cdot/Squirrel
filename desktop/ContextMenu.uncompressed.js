@@ -87,57 +87,57 @@ Squirrel.ContextMenu.init = function() {
             {
                 title: TX.tx("Copy value"),
                 cmd: "copy_value",
-                uiIcon: "squirrel-icon-camera"
+                uiIcon: "ui-icon-squirrel-camera"
             },
             {
                 title: TX.tx("Pick characters"),
                 cmd: "pick_from",
-                uiIcon: "squirrel-icon-pick"
+                uiIcon: "ui-icon-squirrel-pick"
             },
             {
                 title: TX.tx("Rename"),
                 cmd: "rename",
-                uiIcon: "squirrel-icon-pencil" 
+                uiIcon: "ui-icon-squirrel-pencil" 
             },
             {
                 title: TX.tx("Edit value"),
                 cmd: "edit",
-                uiIcon: "squirrel-icon-edit" 
+                uiIcon: "ui-icon-squirrel-edit" 
             },
             {
                 title: TX.tx("Add reminder"),
                 cmd: "add_alarm",
-                uiIcon: "squirrel-icon-alarm" 
+                uiIcon: "ui-icon-squirrel-alarm" 
             },
             {
                 title: TX.tx("Generate new random value"),
                 cmd: "randomise",
-                uiIcon: "squirrel-icon-key" 
+                uiIcon: "ui-icon-squirrel-key" 
             },               
             {
                 title: TX.tx("Add new value"),
                 cmd: "add_value",
-                uiIcon: "squirrel-icon-add-value" 
+                uiIcon: "ui-icon-squirrel-add-value" 
             },
             {
                 title: TX.tx("Add new folder"),
                 cmd: "add_subtree",
-                uiIcon: "squirrel-icon-add" 
+                uiIcon: "ui-icon-squirrel-add-folder" 
             },
             {
                 title: TX.tx("Copy folder"),
                 cmd: "make_copy",
-                uiIcon: "squirrel-icon-copy"
+                uiIcon: "ui-icon-squirrel-copy"
             },
             {
                 title: TX.tx("Insert copy"),
                 cmd: "insert_copy",
-                uiIcon: "squirrel-icon-paste"
+                uiIcon: "ui-icon-squirrel-paste"
             },
             {
                 title: TX.tx("Delete"),
                 cmd: "delete",
-                uiIcon: "squirrel-icon-delete" 
+                uiIcon: "ui-icon-squirrel-delete" 
             }
         ],
         beforeOpen: before_open,

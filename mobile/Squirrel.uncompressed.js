@@ -87,13 +87,12 @@ Squirrel.init_ui = function() {
     "use strict";
 
     // Initialise widgets
-debugger;
 
     $("body").pagecontainer({
         defaults: true
     });
 
-    $("[data-role='page']").trigger("create");
+    //$("[data-role='page']").trigger("create");
 
     $("#sites-node").treenode({
         is_root: true
@@ -234,8 +233,6 @@ debugger;
 
         $this.hide();
     });
-
-    Squirrel.Tree.set_root($("#sites-node"));
 
     $(document)
         .on("check_alarms", Squirrel.check_alarms)

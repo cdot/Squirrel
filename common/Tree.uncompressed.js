@@ -5,18 +5,19 @@
  * the content of the client hoard cache.
  *
  * Each node in the client hoard cache is represented in the DOM by an
- * LI node in a UL/LI tree. This LI node has structure as follows:
+ * LI node in a UL/LI tree. A node has structure as follows:
  * classes:
  *   treenode (always)
  *   treenode-leaf - if this is a leaf node
  *   treenode-collection - if this is an intermediate node   
  *   modified (if UI modified)
+ *   treenode-root - only on the root of the tree (which need not be an LI)
  * data:
  *   data-key: the key name the node is for (simple name, not a path)
  *        NOTE: the root doesn't have a data-key
+ *   data-value: if this is a leaf node
  *   data-path: the full pathname of the node (string)
  *   data-alarm: if there is an alarm on the node
- *   data-value: if this is a leaf node
  * children:
  *   various buttons used to open/close nodes
  *   div.treenode-info:
@@ -27,22 +28,26 @@
  *          should be same as data-value
  *   ul: child treenode, if treenode-collection
  *
- * Other items of furniture may be added, such as open/close buttons.
  * The DOM tree is built and maintained through the use of actions sent
  * to the Squirrel client hoard, which are then passed on in a callback to
  * the DOM tree. Nodes in the DOM tree are never manipulated directly outside
  * this namespace (other than to add the 'modified' class)
+ *
+ * Nodes are managed using the squirrel.treenode widget. Additional
+ * services are provided through the functions of the Squirrel.Tree
+ * namespace. These functions support a static cache mapping node path
+ * names to DOM nodes, and an undo stack. There is also a set of functions
+ * that perform hoard actions on the DOM.
  */
 Squirrel.Tree = { // Namespace
-    menu: null,
     cache: {},    // Path->node mapping
     undos: []     // undo stack
 };
 
 (function($) {
     /**
-     * Baseclass of treenode widgets. These are customised for different environments
-     * e.g. desktop with raw jQuery, mobile wih jQuery mobile.
+     * Baseclass of treenode widgets. These are customised for different
+     * environments e.g. desktop with raw jQuery, mobile wih jQuery mobile.
      */
     $.widget("squirrel.treenode", {
         _create: function() {
@@ -100,33 +105,11 @@ Squirrel.Tree = { // Namespace
             // Create the key span
             var $key = $("<span></span>")
                 .addClass("key")
-                .text(key)
-                .on("dblclick", function(e) {
-                    $node.treenode("edit", "key");
-                });
+                .text(key);
 
             var $div = $("<div></div>")
-                .appendTo($node)
                 .addClass("treenode-info")
-                .hover(
-                    function(/*evt*/) {
-                        Squirrel.close_menus();
-                        if ($(this).find(".in_place_editor").length == 0) {
-                            $(this)
-                                .addClass("hover");
-                            $("<div></div>")
-                                .addClass("lastmod")
-                                .text($node.data("last-mod"))
-                                .appendTo($(this));
-                            return false;
-                        }
-                    },
-                    function(/*evt*/) {
-                        $(this)
-                            .removeClass("hover")
-                            .find(".lastmod")
-                            .remove();
-                    })
+                .appendTo($node)
                 .append($key);
             
             if (is_leaf) {
@@ -136,10 +119,7 @@ Squirrel.Tree = { // Namespace
                 var $value = $("<span></span>")
                     .appendTo($div)
                     .addClass("value")
-                    .text(this.options.value)
-                    .on("dblclick", function() {
-                        $node.treenode("edit", "value");
-                    });
+                    .text(this.options.value);
             }
 
             if (!is_leaf) {
@@ -166,6 +146,9 @@ Squirrel.Tree = { // Namespace
                 if (!inserted)
                     $container.append($node);
             }
+
+            // Platform-specific subclass provides handlers
+            $node.treenode("attach_handlers");
 
             if (typeof this.options.time !== "undefined")
                 $node.treenode("set_modified", this.options.time);
@@ -211,15 +194,71 @@ Squirrel.Tree = { // Namespace
         },
 
         /**
-         * Abstract method for manipulating buttons. Subclasses are expected to
-         * override this method. Must handle actions "create", "change" and "destroy".
-         * selector may be a string selector or a jQuery object, and should uniquely
-         * identify the button to be manipulated. on_click may be a function to
-         * handle click events, and is only passed to "create".
+         * Abstract method for manipulating buttons. Subclasses are expected
+         * to override this method.
+         * @param action one of"create", "change", or "destroy".
+         * @param selector may be a string selector or a jQuery object,
+         * and should uniquely identify the button to be manipulated.
+         * @param icon is the abstract name of the icon to use, one
+         * of "open", "closed" or "alarm".
+         * @param on_click may be a function to handle click events,
+         * and is only used when action is "create".
          */
         icon_button: function(action, selector, icon, on_click) {
             "use strict";
             throw "Expected icon_button to be subclassed";
+        },
+
+        /**
+         * Attach platforms-specific handlers to parts of the node.
+         * This has to be platform-specific because different platforms
+         * handle nodes differently.
+         */
+        attach_handlers: function() {
+            "use strict";
+            throw "Expected attach_handlers to be subclassed";
+        },
+
+        /**
+         * Edit a node in place, used for renaming and revaluing.
+         * @param what either "key" or "value" depending on what is to be
+         * edited.
+         */
+        /**
+         * Implements superclass edit.
+         * Requires edit_in_place.
+         */
+        edit: function(what) {
+            "use strict";
+            var $node = $(this.element);
+
+            var $span = $node.find("." + what).first();
+
+            // Fit width to the container
+            var w = $("#sites-node").width();
+            $span.parents().each(function() {
+                w -= $(this).position().left;
+            });
+
+            $span.edit_in_place({
+                width: w,
+                changed: function(s) {
+                    var e = Squirrel.client.hoard.record_action(
+                        { type: what === "key" ? "R" : "E",
+                          path: $node.treenode("get_path"),
+                          data: s },
+                        function(ea) {
+                            Squirrel.Tree.action(
+                                ea,
+                                function(/*$newnode*/) {
+                                    Utils.sometime("update_save");
+                                    Utils.sometime("update_tree");
+                                }, true);
+                        });
+                    if (e !== null)
+                        Squirrel.Dialog.squeak(e.message);
+                }
+            });
         },
 
         // Do we need this any more?
@@ -267,9 +306,9 @@ Squirrel.Tree = { // Namespace
             return $(this.element)
                 .find(".alarm")
                 .addClass("expired")
-                .find(".squirrel-icon-alarm")
-                .removeClass("squirrel-icon-alarm")
-                .addClass("squirrel-icon-rung");
+                .find(".ui-icon-squirrel-alarm")
+                .removeClass("ui-icon-squirrel-alarm")
+                .addClass("ui-icon-squirrel-rung");
         },
 
         /**
@@ -349,6 +388,7 @@ Squirrel.Tree.get_node = function(path) {
 };
 
 /**
+ * @private
  * Custom key comparison, such that "User" and "Pass" always bubble
  * to the top of the keys
  */
@@ -368,12 +408,13 @@ Squirrel.Tree.compare = function(a, b) {
 };
 
 /**
+ * @private
  * Action handler to construct new node
  */
 Squirrel.Tree.action_N = function(action, undoable, follow) {
     "use strict";
 
-    // Create the new node. Automatically adds it to the parent.
+    // Create the new node. Automatically adds it to the right parent.
     $("<li></li>")
         .treenode({
             path: action.path,
@@ -396,6 +437,7 @@ Squirrel.Tree.action_N = function(action, undoable, follow) {
 };
 
 /**
+ * @private
  * Action handle for value edit
  */
 Squirrel.Tree.action_E = function(action, undoable, follow) {
@@ -425,6 +467,7 @@ Squirrel.Tree.action_E = function(action, undoable, follow) {
 };
 
 /**
+ * @private
  * Action handler for node delete
  */
 Squirrel.Tree.action_D = function(action, undoable, follow) {
@@ -456,6 +499,7 @@ Squirrel.Tree.action_D = function(action, undoable, follow) {
 };
 
 /**
+ * @private
  * Action handler for alarm add
  */
 Squirrel.Tree.action_A = function(action, undoable, follow) {
