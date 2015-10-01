@@ -225,12 +225,6 @@ Squirrel.init_ui = function() {
     });
     Squirrel.ContextMenu.init();
 
-    $("#home").button({
-        icons: {
-            primary: "ui-icon-home"
-        },
-        text: false
-    });
     $("#search")
         .on("click", Squirrel.close_menus)
         .on("change", function(/*evt*/) {

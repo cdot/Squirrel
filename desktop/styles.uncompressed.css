@@ -1,11 +1,6 @@
 /**
  * Styles specific to desktop platform
  */
-.logo {
-    float: left;
-    margin: 0.5em 1em 0.5em 1em;
-}
-
 .ui-button-text-only .ui-button-text {
     padding: 0.3em;
 }
@@ -67,8 +62,17 @@ button.ui-button-icon-only {
 .help {
 }
 
+button.alarm {
+    margin: 0.2em;
+}
+
 .help-close {
     float:right;
+}
+
+#logo {
+    float: left;
+    margin: 0 2em 0 1em;
 }
 
 #signed_in {

@@ -334,11 +334,10 @@ const ms_in_day = 24 * 60 * 60 * 1000;
 /**
  * Reminder setting dialog
  */
-Squirrel.Dialog.alarm = function(p) {
+Squirrel.Dialog.alarm = function($node) {
     "use strict";
 
-    var $node = p.node;
-    var path = p.path;
+    var path = $node.treenode("get_path");
     var $dlg = $("#dlg_alarm");
     var number = 6;
     var units = "m";

@@ -272,48 +272,42 @@ Hoard.prototype._reconstruct_actions = function(data, path, listener, chain) {
 
     // Handle a node
     var handle_node = function(node, p, ready) {
-        var time = (typeof node.time !== "undefined" ? node.time : Date.now());
-
-        if (typeof node.data === "string") {
-            listener.call(
-                self,
-                {
-                    type: "N", 
-                    path: p,
-                    time: time,
-                    data: node.data
-                },
-                function() {
-                    if (node.alarm) {
-                        listener.call(
-                            self,
-                            {
-                                type: "A", 
-                                // slice this time, to avoid re-use of the "N"
-                                path: p.slice(),
-                                time: time,
-                                data: node.alarm
-                            });
-                    }
-                    ready();
-                });
+        if (p.length === 0) {
+            // No action for the root
+            ready();
             return;
-        } else if (typeof node.data !== "undefined") {
-            if (p.length > 0) {
-                // No action for the root
-                listener.call(
-                    self,
-                    {
-                        type: "N", 
-                        time: time,
-                        path: p
-                    },
-                    ready);
-            } else
-                ready();
-        } else if (DEBUG) {
+        }
+        var time = (typeof node.time !== "undefined" ? node.time : Date.now());
+        var action = {
+            type: "N",
+            path: p,
+            time: time
+        };
+
+        if (typeof node.data === "string")
+            action.data = node.data;      
+        else if (DEBUG && typeof node.data === "undefined")
             debugger;
-        }        
+
+        // slice this time, to avoid re-use of the same object
+        // in alarms
+        var pal = p.slice();
+        listener.call(
+            self,
+            action,
+            function() {
+                if (node.alarm) {
+                    listener.call(
+                        self,
+                        {
+                            type: "A", 
+                            path: pal,
+                            time: time,
+                            data: node.alarm
+                        });
+                }
+                ready();
+            });
     };
 
     // Recursively build a list of all nodes, starting at the root

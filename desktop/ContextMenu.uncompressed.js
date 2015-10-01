@@ -15,7 +15,7 @@ Squirrel.ContextMenu.init = function() {
             ? ui.target
             : $node = ui.target.parents(".treenode").first();
         var $val = $node.find(".value").first();
-        var has_alarm = typeof $node.treenode("get_alarm") !== "undefined";
+        var has_alarm = typeof $node.data("alarm") !== "undefined";
         var is_leaf = $node.hasClass("treenode-leaf");
         var is_root = ui.target.closest(".treenode").is("#sites-node");
         var is_open = $node.hasClass("treenode-open");
@@ -155,6 +155,9 @@ Squirrel.ContextMenu.choice = function(e, ui) {
 
     var $node = ui.target.closest(".treenode");
 
+    if (!$node)
+        throw "No node for contextmenu";
+
     switch (ui.cmd) {
     case "copy_value":
         // Handled by the ZeroClipboard event handler
@@ -174,16 +177,17 @@ Squirrel.ContextMenu.choice = function(e, ui) {
 
     case "rename":
         if (DEBUG) console.debug("Renaming");
-	$node.treenode("edit", "key");
+        $node.treenode("edit", "key");
         break;
 
     case "edit":
         if (DEBUG) console.debug("Editing");
-	$node.treenode("edit", "value");
+        $node.treenode("edit", "value");
         break;
 
     case "add_value":
-        if (DEBUG) console.debug("Adding value to " + $node.treenode("get_path").join("/"));
+        if (DEBUG) console.debug("Adding value to "
+                                 + $node.treenode("get_path").join("/"));
         Squirrel.add_child_node($node, TX.tx("A new value"), TX.tx("None"));
         break;
 

@@ -57,21 +57,19 @@ Squirrel.Tree = { // Namespace
             // this.options is the options passed
             var $node = $(this.element);
             var is_leaf = false;
+            var is_root = !this.options.path;
+            var parent, key = "", $parent;
 
-            var parent, key, $parent;
-
-            if (this.options.path) {
+            if (!is_root) {
                 parent = this.options.path;
                 key = parent.pop();
                 $parent = Squirrel.Tree.get_node(parent);
                 $node.data("key", key);
-            } else {
-                key = "";
             }
 
             $node.addClass("treenode");
 
-            if (!this.options.path) {
+            if (is_root) {
                 Squirrel.Tree.cache[""] = $node;
                 $node.addClass("treenode-root");
             }
@@ -102,24 +100,26 @@ Squirrel.Tree = { // Namespace
                     .addClass("treenode-open");
             }
 
-            // Create the key span
-            var $key = $("<span></span>")
-                .addClass("key")
-                .text(key);
+            if (!is_root) {
+                // Create the key span
+                var $key = $("<span></span>")
+                    .addClass("key")
+                    .text(key);
 
-            var $div = $("<div></div>")
-                .addClass("treenode-info")
-                .appendTo($node)
-                .append($key);
+                var $div = $("<div></div>")
+                    .addClass("treenode-info")
+                    .appendTo($node)
+                    .append($key);
             
-            if (is_leaf) {
-                $("<span> : </span>")
-                    .addClass("kv_separator")
-                    .appendTo($div);
-                var $value = $("<span></span>")
-                    .appendTo($div)
-                    .addClass("value")
-                    .text(this.options.value);
+                if (is_leaf) {
+                    $("<span> : </span>")
+                        .addClass("kv_separator")
+                        .appendTo($div);
+                    var $value = $("<span></span>")
+                        .appendTo($div)
+                        .addClass("value")
+                        .text(this.options.value);
+                }
             }
 
             if (!is_leaf) {
@@ -267,31 +267,29 @@ Squirrel.Tree = { // Namespace
             console.debug("Called treenode.refresh");
         },
 
-        set_alarm: function() {
-            "use strict";
-            var $button = $("<button></button>")
-                .addClass("alarm");
-            $node
-                .prepend($button)
-                .treenode(
-                    "icon_button",
-                    "create",
-                    $button,
-                    "alarm",
-                    function() {
-                        Squirrel.close_menus();
-                        Squirrel.Dialog.alarm({
-                            node: $node,
-                            path: $node.treenode("get_path")
-                        });
-                        return false;
-                    });
-        },
-
-        get_alarm: function() {
+        set_alarm: function(data) {
             "use strict";
             var $node = $(this.element);
-            return $node.data("alarm");
+            if (typeof $node.data("alarm") === "undefined") {
+                var $button = $("<button></button>")
+                    .addClass("alarm");
+                $node
+                    .find(".key")
+                    .first()
+                    .before($button);
+                $node
+                    .treenode(
+                        "icon_button",
+                        "create",
+                        $button,
+                        "alarm",
+                        function() {
+                            Squirrel.close_menus();
+                            Squirrel.Dialog.alarm($node);
+                            return false;
+                        });
+            }
+            $node.data("alarm", data);
         },
 
         cancel_alarm: function() {
@@ -508,7 +506,7 @@ Squirrel.Tree.action_A = function(action, undoable, follow) {
     var $node = Squirrel.Tree.get_node(action.path);
 
     // Check there's an alarm already
-    var alarm = $node.treenode("get_alarm");
+    var alarm = $node.data("alarm");
     if (typeof alarm !== "undefined") {
         if (alarm !== action.data) {
             if (undoable) {
@@ -541,7 +539,7 @@ Squirrel.Tree.action_C = function(action, undoable, follow) {
     "use strict";
 
     var $node = Squirrel.Tree.get_node(action.path);
-    var alarm = $node.treenode("get_alarm");
+    var alarm = $node.data("alarm");
     if (typeof alarm !== "undefined") {
         if (undoable) {
             Squirrel.Tree.undos.push({
