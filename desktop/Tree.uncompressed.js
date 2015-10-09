@@ -82,7 +82,6 @@
             var $info = $node.children(".treenode-info");
             $info.hover(
                 function(/*evt*/) {
-                    Squirrel.close_menus();
                     if ($(this).find(".in_place_editor").length == 0) {
                         $(this)
                             .addClass("hover");

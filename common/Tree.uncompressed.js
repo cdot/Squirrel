@@ -284,7 +284,6 @@ Squirrel.Tree = { // Namespace
                         $button,
                         "alarm",
                         function() {
-                            Squirrel.close_menus();
                             Squirrel.Dialog.alarm($node);
                             return false;
                         });
@@ -306,7 +305,7 @@ Squirrel.Tree = { // Namespace
                 .addClass("expired")
                 .find(".ui-icon-squirrel-alarm")
                 .removeClass("ui-icon-squirrel-alarm")
-                .addClass("ui-icon-squirrel-rung");
+                .addClass("ui-icon-squirrel-rang");
         },
 
         /**

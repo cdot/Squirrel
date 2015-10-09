@@ -7,11 +7,15 @@ Squirrel.Dialog = {};
 // extra methods in the namespace:
 //
 // squeak
-// squeak_more
-// close_squeak
+//    title
+//    message (string or $object or element)
+//    after_close
 // init_dialog
 // open_dialog
 // close_dialog
+Squirrel.Dialog.squeak_more = function(mess) {
+    $("#activity_message").append(mess);
+};
 
 Squirrel.Dialog.play_action = function(action) {
     "use strict";
@@ -107,6 +111,7 @@ Squirrel.Dialog.login = function(options) {
         }
     });
 */
+
     if ($dlg.hasClass("hidden"))
         Squirrel.Dialog.init_dialog($dlg);
 
@@ -572,6 +577,50 @@ Squirrel.Dialog.json = function() {
         .text(JSON.stringify(data))
         .select();
     $("#json_ok").prop("disabled", true);
+
+    Squirrel.Dialog.open_dialog($dlg);
+};
+
+Squirrel.Dialog.extras = function() {
+    var $dlg = $("#extras");
+
+    if ($dlg.hasClass("hidden")) {
+        $("#extras_autosave")
+            .on("change", function(e) {
+                Squirrel.client.hoard.options.autosave =
+                    ($("#extras_autosave").val() === "on");
+                Utils.sometime("update_save");
+            });
+
+        $("#extras_chpw").click(function() {
+            Squirrel.Dialog.close_dialog($dlg);
+            Squirrel.Dialog.chpw();
+        });
+
+        $("#extras_chss").click(function() {
+            Squirrel.Dialog.close_dialog($dlg);
+            Squirrel.Dialog.store_settings();
+        });
+
+        $("#extras_json").click(function() {
+            Squirrel.Dialog.close_dialog($dlg);
+            Squirrel.Dialog.json();
+        });
+
+        $("#extras_about").click(function() {
+            Squirrel.Dialog.close_dialog($dlg);
+            Squirrel.Dialog.about();
+        });
+        Squirrel.Dialog.init_dialog($dlg);
+    }
+
+    if (!(USE_STEGANOGRAPHY
+          || Squirrel.cloud.store
+          && Squirrel.cloud.store.options().needs_path)) {
+        $("#extras_chss").hide();
+    }
+    $("#extras_autosave").val(
+        Squirrel.client.hoard.options.autosave ? "on" : "off");
 
     Squirrel.Dialog.open_dialog($dlg);
 };

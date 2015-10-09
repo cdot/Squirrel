@@ -19,6 +19,7 @@
     <script src="common/EncryptedStore.uncompressed.js"></script>
     <script src="common/Hoard.uncompressed.js"></script>
     <script src="common/Squirrel.uncompressed.js"></script>
+    <script src="common/Dialogs.uncompressed.js"></script>
     <script src="common/scroll_into_view.uncompressed.js"></script>
     <script src="common/edit_in_place.uncompressed.js"></script>
 
@@ -30,6 +31,7 @@
     <link rel="stylesheet" href="libs/jquery.mobile.structure-1.4.5.uncompressed.css" />
     <link rel="stylesheet" href="libs/jquery.mobile.theme-1.4.5.uncompressed.css" />
     <link rel="stylesheet" href="mobile/styles.uncompressed.css" />
+    <script src="mobile/Defaults.uncompressed.js"></script>
     <script src="libs/jquery.mobile-1.4.5.uncompressed.js"></script>
     <script src="common/Tree.uncompressed.js"></script>
     <script src="mobile/Dialogs.uncompressed.js"></script>
@@ -38,105 +40,298 @@
     <script src="mobile/Squirrel.uncompressed.js"></script>
   </head>
   <body>
-    <div id="activity" data-role="page" data-dialog="true" data-close-btn="none">
+    <div id="activity" data-role="popup" class="ui-content hidden" data-position-to="window">
       <div data-role="header">
         <h1 id="activity_title">Activity...</h1>
-        <button id="activity_close" data-icon="delete" data-iconpos="notext" class="TX_text">Close</button>
       </div>
       <div id="activity_message" class="ui-content"></div>
       <div data-role="footer">
-        <button id="activity_ok" class="TX_text">OK</button>
-        <button id="activity_cancel" class="TX_text">Cancel</button>
+        <button id="activity_close" class="TX_text">Close</button>
       </div>
     </div>
     
     <div id="unauthenticated" data-role="page">
+      <div id="login" data-role="popup" data-dismissible="false">
+        <div data-role="header">
+          <h1 class="TX_text">Authenticate</h1>
+        </div>
+        <div class="ui-content" role="main">
+          <table width="100%">
+            <tbody>
+	      <tr>
+	        <td class="TX_text">Username:</td>
+	        <td>
+                  <span id="login_uReq">
+	            <input id="login_user" type="text" size="50" value="" class="TX_title" title="Enter username" />
+                  </span>
+                  <span id="login_foruser"></span>
+	        </td>
+	      </tr>
+              <tr id="login_pReq">
+	        <td class="TX_text">Password:</td>
+	        <td>
+	          <input id="login_pass" type="password" size="50" class="TX_title" title="Enter password" value="" />
+	        </td>
+	      </tr>
+            </tbody>
+          </table>
+        </div>
+        <div data-role="footer">
+          <button id="login_signin" class="TX_text">Sign In</button>
+        </div>
+      </div>
+
       <div data-role="header" class="progress">
         <h1 id="authmessage" class="TX_text">Authenticating...</h1>
       </div>
     </div>
-    
-    <div id="login" data-role="page">
-      <div data-role="header">
-        <h1 class="TX_text">Authenticate</h1>
-      </div>
-      <div class="ui-content" role="main">
-        <table width="100%">
-          <tbody>
-	    <tr>
-	      <td class="TX_text">Username:</td>
-	      <td>
-                <span id="login_uReq">
-	          <input id="login_user" type="text" size="50" value="" class="TX_title" title="Enter username" />
-                </span>
-                <span id="login_foruser"></span>
-	      </td>
-	    </tr>
-            <tr id="login_pReq">
-	      <td class="TX_text">Password:</td>
-	      <td>
-	        <input id="login_pass" type="password" size="50" class="TX_title" title="Enter password" value="" />
-	      </td>
-	    </tr>
-          </tbody>
-        </table>
-      </div>
-      <div data-role="footer">
-        <button id="login_signin" class="TX_text">Sign In</button>
-      </div>
-    </div>
-    
-    <div id="store_settings" data-role="page" data-dialog="true" data-close-btn="none">
-      <div data-role="header">
-        <button id="store_settings_ok" data-icon="delete" data-iconpos="notext" class="TX_text">Close</button>
-        <h1 class="TX_text">Set up store</h1>
-      </div>
-      <div class="ui-content" role="main">
-        <div id="store_settings_message"></div>
-        <div id="store_settings_image" class="using_steganography">
-          <p class="TX_text help">Choose a local image that will be copied
-            and used to hide your data in the cloud. This should be a complex
-            colour image of at least 1024x768 pixels, preferably with variable
-            transparency. Note that very large images may take a long time to
-            load and save.
-          </p>
-          <span class="TX_text">Current steganography image:</span><br />
-          <img id="stegamage" src="images/GCHQ.png" /><br />
-          <button id="store_settings_choose" class="TX_title TX_text" data-mini="true" title="Choose an image file">Change Image</button>
-          <p id="store_settings_message"></p>
-          <input id="store_settings_file" type="file" class="hidden" />
-        </div>
-        <div id="store_settings_path">
-          <p class="TX_text help">
-            Set the pathname of the file to use in your cloud store. For example
-            if you choose 'photos/stills/grandma.png' it will read and write
-            the file 'grandma.png' in the directory 'photos/stills'.
-          </p>
-          <label for="store_settings_storepath" class="TX_text">Store path: </label>
-          <input id="store_settings_storepath" type="text" value="" class="TX_title" title="Pathname of the image in your cloud store" data-mini="true"/>
-        </div>
-      </div>
-    </div>
-    
-    <div id="search" data-role="page" data-dialog="true" data-close-btn="none">
-      <div data-role="header">
-        <h1>Search</h1>
-        <button id="search_close" data-icon="delete" data-iconpos="notext" class="TX_text">Close</button>
-      </div>
-      <div class="ui-content">
-        <p class="help TX_text">
-          Entering a search string will open all entries that match the search.
-          You can use regular expressions in the search.
-        </p>
-        <label for="search_string" class="TX_text">Search for</label>
-        <input id="search_string" type="text" value="" class="TX_title" title="Enter search string" />
-      </div>
-      <div data-role="footer">
-        <button id="search_ok" data-icon="search" data-iconpos="left" class="TX_text">Search</button>
-      </div>
-    </div>
-    
+               
     <div id="authenticated" data-role="page" class="authenticated">
+      <div id="search" data-role="popup" class="hidden">
+        <div data-role="header">
+          <h1>Search</h1>
+        </div>
+        <div class="ui-content">
+          <p class="help TX_text">
+            Entering a search string will open all entries that match the search.
+            You can use regular expressions in the search.
+          </p>
+          <label for="search_string" class="TX_text">Search for</label>
+          <input id="search_string" type="text" value="" class="TX_title" title="Enter search string" />
+        </div>
+        <div data-role="footer">
+          <button id="search_ok" data-icon="search" data-iconpos="left" class="TX_text">Search</button>
+        </div>
+      </div>
+
+      <div id="extras" data-role="popup" class="hidden">
+        <div data-role="header">
+          <h1 class="TX_text">Options</h1>
+        </div>
+        <div class="ui-content" role="main">
+          <div data-role="controlgroup">
+            <span class="TX_text">Autosave</span>
+            <select id="extras_autosave" data-role="flipswitch" data-mini="true">
+              <option value="off" class="TX_text">Off</option>
+	      <option value="on" class="TX_text">On</option>
+            </select>
+            <button id="extras_chss" class="TX_text">Change cloud store settings</button>
+            <button id="extras_chpw" class="TX_text">Change master password</button>
+            <button id="extras_json" class="TX_text">View/Edit JSON</button>
+            <button id="extras_about" class="TX_text">About Squirrel</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="chpw" data-role="popup" class="hidden">
+        <div data-role="header">
+          <h1 class="TX_text">Change Password</h1>
+        </div>
+        <div class="ui-content" role="main">
+          <p class="warning TX_text">
+            You should ensure that all clients up to date and you
+            are safely connected to the internet before doing this,
+            or you will lose data. Changing the master password will
+            overwrite all data in the cloud with what you can currently
+            see in the browser.
+          </p>
+          <table>
+            <tr>
+              <td>
+                <label for="pass" class="TX_text">New password</label>
+              </td>
+              <td>
+                <input type="password" size="50" id="chpw_pass" class="TX_title" title="Enter new password" value="" />
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <label for="conf" class="TX_text">
+                  Confirm new password
+                </label>
+              </td>
+              <td>
+                <input type="password" size="50" id="chpw_conf" class="TX_title" title="Re-enter new password" value="" />
+              </td>
+            </tr>
+          </table>
+          <div id="chpw_nomatch" class="TX_text">Passwords do not match</div>
+          <p>
+            <label for="show" class="TX_text">
+              Show password
+            </label>
+            <input type="checkbox" id="chpw_show" data-inline="true">
+          </p>
+          <div data-role="footer">
+            <button id="chpw_ok" class="TX_text">Set new password</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="pick" data-role="popup" class="hidden">
+        <div data-role="header">
+          <h1 class="TX_text">Pick characters</h1>
+        </div>
+        <div class="ui-content" role="main">
+          <div class="TX_text">
+            Click on the Nth character position to see what character it is
+          </div>
+          <table>
+            <tbody>
+              <tr id="pick_which"></tr>
+              <tr id="pick_from"></tr>
+            </tbody>
+          </table>
+        </div>
+        <div data-role="footer">
+          <button id="pick_clear" class="TX_text">Clear</button>
+        </div>
+      </div>
+
+      <div id="alarm" data-role="popup" class="hidden">
+        <div data-role="header">
+          <h1 class="TX_title">Reminder</h1>
+        </div>
+        <div class="ui-content" role="main">
+          <p>
+            <span class="TX_text">Select when you want to be reminded about</span>
+            <span id="alarm_path"></span>
+          </p>
+          <p class="TX_text">
+            The reminder will be reset whenever the entry is modified.
+          </p>
+          <p>
+            <label for="alarm_number" class="TX_text">Remind after</label>
+            <input type="number" id="alarm_number" />
+            <select id="alarm_units" data-role="none">
+              <option value="d" class="TX_text">days</option>
+              <option value="w" class="TX_text">weeks</option>
+              <option value="m" class="TX_text">months</option>
+              <option value="y" class="TX_text">years</option>
+            </select>
+          </p>
+          <p>
+            <span class="TX_text">Next reminder is due in</span>
+            <span id="alarm_next"></span>
+            <span class="alarm_next d TX_text">days</span>
+            <span class="alarm_next w TX_text">weeks</span>
+            <span class="alarm_next m TX_text">months</span>
+            <span class="alarm_next y TX_text">years</span>
+          </p>
+        </div>
+        <div data-role="footer">
+          <button id="alarm_set" class="TX_text">Set (or reset) reminder</button>
+          <button id="alarm_clear" class="TX_text">Cancel alarm</button>
+        </div>
+      </div>
+      
+      <div id="randomise" data-role="popup" class="hidden">
+        <div data-role="header">
+          <h1><span class="TX_text">Generate random value for</span> <span id="randomise_path"></span></h1>
+        </div>
+        <div class="ui-content" role="main">
+          <span class="TX_text">Suggestion: '<span id="randomise_idea" class="value"></span>'
+            <p>
+              <span class="TX_text">Length:</span>
+              <input id="randomise_len" type="number" size="20" value="24" class="TX_title" title="Enter password length" />
+            </p>
+            <p>
+              <span class="TX_text">Character range:</span>
+              <input id="randomise_chs" type="text" size="20" value="A-Za-z0-9" class="TX_title" title="Enter the characters that are legal in passwords for this site. You can use character ranges like A-Z or 0-9" />
+            </p>
+        </div>
+        <div data-role="footer">
+          <button id="randomise_use" class="TX_text">Use this</button>
+          <button id="randomise_again" class="TX_text">Try again</button>
+        </div>
+      </div>
+
+      <div id="about" data-role="popup" class="hidden">
+        <div data-role="header">
+          <h1 class="TX_text">About Squirrel</h1>
+        </div>
+        <div class="ui-content" role="main">
+          &copy; 2015 Crawford Currie <a href="http://c-dot.co.uk">http://c-dot.co.uk</a>
+          <div class="TX_text">
+            Licensed under the MIT License. Reuse within proprietary software is
+            permitted provided all copies of the licensed software include a
+            copy of the MIT License terms and the copyright notice.
+          </div>
+        </div>
+      </div>
+
+      <div id="json" data-role="popup" class="hidden">
+        <div data-role="header">
+          <h1 class="TX_text">Database JSON</h1>
+        </div>
+        <div class="ui-content" role="main">
+          <textarea id="json_text">
+          </textarea>
+        </div>
+        <div data-role="footer">
+          <button id="json_ok" class="TX_text">Reload this JSON</button>
+          <button id="json_cancel" class="TX_text">Cancel</button>
+        </div>
+      </div>
+   
+      <div id="delete_node" data-role="popup" class="hidden">
+        <div data-role="header">
+          <h1 class="TX_text">Confirm Delete</h1>
+        </div>
+        <div class="ui-content" role="main">
+          <span class="TX_text">Are you sure you want to delete </span>
+          '<span id="delete_node_path"></span>'
+          <span id="delete_node_coll" class="TX_text"> and everything under it?</span>
+        </div>
+        <div data-role="footer">
+          <button id="delete_node_ok" class="TX_text">Delete</button>
+        </div>
+      </div>
+
+      <div id="store_settings" data-role="popup">
+        <div data-role="header">
+          <h1 class="TX_text">Set up store</h1>
+        </div>
+        <div class="ui-content" role="main">
+          <div id="store_settings_message"></div>
+          <div id="store_settings_image" class="using_steganography">
+            <p class="TX_text help">Choose a local image that will be copied
+              and used to hide your data in the cloud. This should be a complex
+              colour image of at least 1024x768 pixels, preferably with variable
+              transparency. Note that very large images may take a long time to
+              load and save.
+            </p>
+            <span class="TX_text">Current steganography image:</span><br />
+            <img id="stegamage" src="images/GCHQ.png" /><br />
+            <button id="store_settings_choose" class="TX_title TX_text" data-mini="true" title="Choose an image file">Change Image</button>
+            <p id="store_settings_message"></p>
+            <input id="store_settings_file" type="file" class="hidden" />
+          </div>
+          <div id="store_settings_path">
+            <p class="TX_text help">
+              Set the pathname of the file to use in your cloud store. For example
+              if you choose 'photos/stills/grandma.png' it will read and write
+              the file 'grandma.png' in the directory 'photos/stills'.
+            </p>
+            <label for="store_settings_storepath" class="TX_text">Store path: </label>
+            <input id="store_settings_storepath" type="text" value="" class="TX_title" title="Pathname of the image in your cloud store" data-mini="true"/>
+          </div>
+        </div>
+      </div>
+
+      <div id="menu" data-role="panel" data-theme="b">
+        <h3 id="menu_path"><span id="menu_parent_path"></span><span id="menu_name">Name</span></h3>
+        <h4 id="menu_value" class="leaf_only">Menu</h4>
+        <div id="menu_controls" data-role="controlgroup">
+          <button id="menu_pick" data-icon="grid" data-iconpos="left" class="leaf_only TX_text">Pick characters</button>
+          <button id="menu_add_alarm" data-icon="clock" data-iconpos="left" class="TX_text"><span id="menu_alarm_action">Add</span></button>
+          <button id="menu_randomise" data-icon="recycle" data-iconpos="left"class="leaf_only TX_text">Randomise</button>
+          <button id="menu_add_value" data-icon="plus" data-iconpos="left"class="collection_only TX_text">Add new value</button>
+          <button id="menu_add_subtree" data-icon="bullets" class="collection_only TX_text">Add new folder</button>
+          <button id="menu_delete_node" data-icon="delete" data-iconpos="left" class="TX_text">Delete</button>
+        </div>
+      </div>
+
       <div data-role="header">
         <h1 style="display:none">Squirrel</h1><!-- just to get title set -->
         <div>
@@ -153,216 +348,7 @@
         <span class="TX_text">Authenticated as:</span> <span id="authenticated_whoami"></span>
       </div>
     </div>
-    
-    <div id="extras" data-role="page">
-      <div data-role="header">
-        <h1 class="TX_text">Options</h1>
-      </div>
-      <div class="ui-content" role="main">
-        <div data-role="controlgroup">
-          <label for="extras_autosave" class="TX_text">Autosave</label>
-          <select id="extras_autosave" data-role="flipswitch">
-            <option value="off" class="TX_text">Off</option>
-	    <option value="on" class="TX_text">On</option>
-          </select>
-          <button id="extras_chss" class="TX_text">Change cloud store settings</button>
-          <button id="extras_chpw" class="TX_text">Change master password</button>
-          <button id="extras_json" class="TX_text">View/Edit JSON</button>
-          <button id="extras_about" class="TX_text">About Squirrel</button>
-        </div>
-      </div>
-      <div data-role="footer">
-        <button id="extras_close" class="TX_text">Close</button>
-      </div>
-    </div>
-    
-    <div id="about" data-role="page" data-dialog="true" data-close-btn="none">
-      <div data-role="header">
-        <button id="about_close" data-icon="delete" data-iconpos="notext" class="TX_text">Close</button>
-        <h1 class="TX_text">About Squirrel</h1>
-      </div>
-      <div class="ui-content" role="main">
-        &copy; 2015 Crawford Currie <a href="http://c-dot.co.uk">http://c-dot.co.uk</a>
-        <div class="TX_text">
-          Licensed under the MIT License. Reuse within proprietary software is
-          permitted provided all copies of the licensed software include a
-          copy of the MIT License terms and the copyright notice.
-        </div>
-      </div>
-    </div>
-    
-    <div id="json" data-role="page">
-      <div data-role="header">
-        <h1 class="TX_text">Database JSON</h1>
-      </div>
-      <div class="ui-content" role="main">
-        <textarea id="json_text">
-        </textarea>
-      </div>
-      <div data-role="footer">
-        <button id="json_ok" class="TX_text">Reload this JSON</button>
-        <button id="json_cancel" class="TX_text">Cancel</button>
-      </div>
-    </div>
-    
-    <div id="chpw" data-role="page" data-dialog="true">
-      <div data-role="header">
-        <button id="chpw_cancel" data-icon="delete" data-iconpos="notext" class="TX_text">Close</button>
-        <h1 class="TX_text">Change Password</h1>
-      </div>
-      <div class="ui-content" role="main">
-        <p class="warning TX_text">
-          You should ensure that all clients up to date and you
-          are safely connected to the internet before doing this,
-          or you will lose data. Changing the master password will
-          overwrite all data in the cloud with what you can currently
-          see in the browser.
-        </p>
-        <table>
-          <tr>
-            <td>
-              <label for="pass" class="TX_text">New password</label>
-            </td>
-            <td>
-              <input type="password" size="50" id="chpw_pass" class="TX_title" title="Enter new password" value="" />
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <label for="conf" class="TX_text">
-                Confirm new password
-              </label>
-            </td>
-            <td>
-              <input type="password" size="50" id="chpw_conf" class="TX_title" title="Re-enter new password" value="" />
-            </td>
-          </tr>
-        </table>
-        <div id="chpw_nomatch" class="TX_text">Passwords do not match</div>
-        <p>
-          <label for="show" class="TX_text">
-            Show password
-          </label>
-          <input type="checkbox" id="chpw_show" data-inline="true">
-        </p>
-        <div data-role="footer">
-          <button id="chpw_ok" class="TX_text">Set new password</button>
-        </div>
-      </div>
-    </div>
-    
-    <div id="randomise" data-role="page">
-      <div data-role="header">
-        <h1><span class="TX_text">Generate random value for</span> <span id="randomise_path"></span></h1>
-      </div>
-      <div class="ui-content" role="main">
-        <span class="TX_text">Suggestion: '<span id="randomise_idea" class="value"></span>'
-          <p>
-            <span class="TX_text">Length:</span>
-            <input id="randomise_len" type="number" size="20" value="24" class="TX_title" title="Enter password length" />
-          </p>
-          <p>
-            <span class="TX_text">Character range:</span>
-            <input id="randomise_chs" type="text" size="20" value="A-Za-z0-9" class="TX_title" title="Enter the characters that are legal in passwords for this site. You can use character ranges like A-Z or 0-9" />
-          </p>
-      </div>
-      <div data-role="footer">
-        <button id="randomise_use" class="TX_text">Use this</button>
-        <button id="randomise_again" class="TX_text">Try again</button>
-        <button id="randomise_cancel" class="TX_text">Cancel</button>
-      </div>
-    </div>
-    
-    <div id="delete_node" data-role="page">
-      <div data-role="header">
-        <h1 class="TX_text">Confirm Delete</h1>
-      </div>
-      <div class="ui-content" role="main">
-        <span class="TX_text">Are you sure you want to delete </span>
-        '<span id="delete_node_path"></span>'
-        <span id="delete_node_coll" class="TX_text"> and everything under it?</span>
-      </div>
-      <div data-role="footer">
-        <button id="delete_node_cancel" class="TX_text">Cancel</button>
-        <button id="delete_node_ok" class="TX_text">Delete</button>
-      </div>
-    </div>
-    
-    <div id="pick" data-role="page">
-      <div data-role="page">
-        <h1 class="TX_text">Pick characters</h1>
-      </div>
-      <div class="ui-content" role="main">
-        <div class="TX_text">
-          Click on the Nth character position to see what character it is
-        </div>
-        <table>
-          <tbody>
-            <tr id="pick_which"></tr>
-            <tr id="pick_from"></tr>
-          </tbody>
-        </table>
-      </div>
-      <div data-role="footer">
-        <button id="pick_clear" class="TX_text">Clear</button>
-        <button id="pick_close" class="TX_text">Close</button>
-      </div>
-    </div>
-    
-    <div id="alarm" data-role="page" data-dialog="true" data-close-btn="none">
-      <div data-role="header">
-        <h1 class="TX_title">Reminder</h1>
-        <button id="alarm_close" data-icon="delete" data-iconpos="notext" class="TX_text">Close</button>
-      </div>
-      <div class="ui-content" role="main">
-        <div class="TX_text">
-          Select when you want to be reminded about this entry.
-          The reminder will be reset whenever the entry is modified.
-        </div>
-        <div>
-          <table>
-            <td>
-              <label for="dlg_alarm_number" class="TX_text">Remind after</label>
-              <input id="dlg_alarm_number" type="number" data-mini="true" data-inine="true" />
-            </td>
-            <td>
-              <select id="dlg_alarm_units" data-native-menu="false" data-mini="true">
-                <option value="d" class="TX_text">days</option>
-                <option value="w" class="TX_text">weeks</option>
-                <option value="m" selected="selected" class="TX_text">months</option>
-                <option value="y" class="TX_text">years</option>
-              </select>
-            </td>
-          </table>
-        </div>
-        <div id="alarm_set">
-          <span class="TX_text">Next reminder is due in</span>
-          <span class="alarm_next y"><span class="TX_text">years</span></span>
-          <span class="alarm_next m"><span class="TX_text">months</span></span>
-          <span class="alarm_next w"><span class="TX_text">weeks</span></span>
-          <span class="alarm_next d"><span class="TX_text">days</span></span>
-        </div>
-      </div>
-      <div data-role="footer">
-        <button id="alarm_ok" class="TX_text">Set (or reset) reminder</button>
-        <button id="alarm_cancel" class="TX_text">Cancel reminder</button>
-      </div>
-    </div>
-    
-    <div id="menu" data-role="panel" data-theme="b">
-      <h3 id="menu_path"><span id="menu_parent_path"></span><span id="menu_name">Name</span></h3>
-      <h4 id="menu_value" class="leaf_only">Value</h4>
-      <div id="menu_controls" data-role="controlgroup">
-        <button id="menu_pick" data-icon="grid" data-iconpos="left" class="leaf_only TX_text">Pick characters</button>
-        <button id="menu_add_alarm" data-icon="clock" data-iconpos="left" class="TX_text"><span id="menu_alarm_action">Add</span></button>
-        <button id="menu_randomise" data-icon="recycle" data-iconpos="left"class="leaf_only TX_text">Randomise</button>
-        <button id="menu_add_value" data-icon="plus" data-iconpos="left"class="collection_only TX_text">Add new value</button>
-        <button id="menu_add_subtree" data-icon="bullets" class="collection_only TX_text">Add new folder</button>
-        <button id="menu_delete_node" data-icon="delete" data-iconpos="left" class="TX_text">Delete</button>
-        <a data-role="button" href="#" data-rel="close">Close</a>
-      </div>
-    </div>
-    
+   
     <!-- not processed yet -->
     <div id="dialogs" style="display:none">
       

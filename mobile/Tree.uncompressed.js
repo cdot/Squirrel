@@ -26,8 +26,8 @@
                         icon: map_treenode_icon[icon],
                         iconpos: "notext"
                     });
-                if (on_click)
-                    $control.parent().on("vclick", on_click);
+                if (typeof on_click === "function")
+                    $control.parent().click(on_click);
                 break;
             case "change":
                 $control.button({
@@ -43,8 +43,12 @@
 
         attach_handlers: function() {
             var $node = $(this.element);
-            $node.on("taphold", function() {
+            if ($node.hasClass("treenode-root"))
+                return;
+            $node.on("taphold", function(e) {
+                e.stopPropagation();
                 Squirrel.open_menu($node);
+
                 return false;
             });
             var $info = $node.children(".treenode-info");

@@ -198,7 +198,7 @@ Squirrel.ContextMenu.choice = function(e, ui) {
 
     case "randomise":
         if (DEBUG) console.debug("Randomising");
-        Squirrel.Dialog.make_random($node);
+        Squirrel.Dialog.randomise($node);
         break;
 
     case "add_alarm":
@@ -208,12 +208,12 @@ Squirrel.ContextMenu.choice = function(e, ui) {
 
     case "delete":
         if (DEBUG) console.debug("Deleting");
-        Squirrel.Dialog.confirm_delete($node);
+        Squirrel.Dialog.delete_node($node);
         break;
 
     case "pick_from":
         if (DEBUG) console.debug("Picking");
-        Squirrel.Dialog.pick_from($node);
+        Squirrel.Dialog.pick($node);
         break;
 
     default:

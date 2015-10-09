@@ -26,6 +26,45 @@ var Squirrel = {
     IS_EMPTY: "is empty"
 };
 
+Squirrel.init_common_ui = function() {
+    $("#authenticated_save")
+        .hide()
+        .click(function(/*evt*/) {
+            Squirrel.save_hoards();
+            return false;
+        });
+
+    $("#authenticated_undo")
+        .hide()
+        .click(function(/*evt*/) {
+            Tree.undo(function(mess) {
+                Squirrel.Dialog.squeak({
+                    title: "Undo",
+                    message: mess
+                });
+            });
+            return false;
+        });
+
+    $("#authenticated_extras")
+        .click(function(/*evt*/) {
+            Squirrel.Dialog.extras();
+        });
+
+    $("#search")
+        .on("change", function(/*evt*/) {
+            $("#search_hits").text(TX.tx("Searching..."));
+            Squirrel.search($(this).val());
+        });
+
+    $("#authenticated_search")
+        .click(function(/*evt*/) {
+            Squirrel.Dialog.search();
+        });
+
+    Squirrel.init_ui();
+};
+
 /**
  * Initialise application data (new Squirrel(), effectively)
  */
@@ -47,7 +86,7 @@ Squirrel.init_application = function() {
     };
 
     // Initialise UI components
-    Squirrel.init_ui();
+    Squirrel.init_common_ui();
 };
 
 // Event handler for check_alarms
@@ -59,21 +98,17 @@ Squirrel.check_alarms = function(/* event */) {
             var $node = Squirrel.Tree.get_node(path);
             $node.treenode("ring_alarm");
             Squirrel.Dialog.squeak(
-                $("<p></p>")
-                    .append(
-                        $("<span></span>")
-                        .addClass("ui-icon ui-icon-squirrel-rung"))
-                    .append(TX.tx("Reminder on '$1' was due on $2",
-                                  path.join("/"),
-                                  expired.toLocaleDateString())),
-                function() {
-                    next();
+                {
+                    message: $("<p></p>")
+                        .append(
+                            $("<span></span>")
+                                .addClass("ui-icon ui-icon-squirrel-rang"))
+                        .append(TX.tx("Reminder on '$1' was due on $2",
+                                      path.join("/"),
+                                      expired.toLocaleDateString())),
+                    after_close: next
                 });
         });
-};
-
-Squirrel.close_menus = function() {
-    // Designed to be overridden
 };
 
 /**
@@ -221,8 +256,7 @@ Squirrel.save_hoards = function() {
     "use strict";
 
     Squirrel.Dialog.squeak({
-        title: TX.tx("Saving"),
-        message: ""
+        title: TX.tx("Saving")
     });
 
     var client_ok = true;
@@ -236,7 +270,7 @@ Squirrel.save_hoards = function() {
                       : TX.tx("Save encountered errors"));
         if (client_ok && cloud_ok) {
             if (Squirrel.client.hoard.options.autosave)
-                Squirrel.Dialog.close_squeak();
+                Squirrel.Dialog.close_dialog($("#activity"));
             // Otherwise leave it open
         } else
             // Otherwise leave it open, disable auto-save
@@ -410,6 +444,28 @@ Squirrel.save_hoards = function() {
             Squirrel.client.hoard.options.store_path,
             cloud_store_read_ok,
             cloud_store_read_failed);
+    }
+};
+
+Squirrel.update_save = function(/*event*/) {
+    "use strict";
+
+    $("#authenticated_undo").toggle(Squirrel.Tree.can_undo());
+    $("#extras_autosave").val(Squirrel.client.hoard.options.autosave ? "on" : "off");
+    var us = Squirrel.unsaved_changes(3);
+    var $sb = $("#authenticated_save");
+
+    if (us !== null) {
+        if (Squirrel.client.hoard.options.autosave) {
+            Squirrel.save_hoards();
+        } else {
+            $sb.attr(
+                "title",
+                TX.tx("Save is required because: ") + us);
+            $sb.show();
+        }
+    } else {
+        $("#save_button").hide();
     }
 };
 
@@ -649,6 +705,7 @@ Squirrel.identify_user = function() {
 
     // If we still need user or password, prompt
     if (uReq || pReq) {
+        console.debug("Open login dialog");
         Squirrel.Dialog.login({
             store: Squirrel.client.store,
             on_signin: function(user, pass) {
@@ -714,13 +771,8 @@ Squirrel.init_cloud_store = function() {
             Squirrel.Dialog.squeak({
                 message: TX.tx("Could not open cloud store: $1", e)
                     + "<p>"
-                    + TX.tx("Do you want to continue (only the client store will be available)?"),
-                after_close: Squirrel.init_client_store,
-                on_cancel: function() {
-                    if (DEBUG) console.debug("Cancelled");
-                    $(".unauthenticated").hide();
-                    $(".authfailed").show();
-                }
+                    + TX.tx("If you continue, only the client store will be available"),
+                after_close: Squirrel.init_client_store
             });
         }
     };

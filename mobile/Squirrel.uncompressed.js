@@ -1,5 +1,12 @@
 /* Copyright (C) 2015 Crawford Currie http://c-dot.co.uk / MIT */
 
+// Rewire handlers click to vclick
+$.fn.click = function(listener) {
+    return this.each(function() {
+        $(this).on('vclick', listener);
+    });
+};
+
 /**
  * Event handler to update the tree view when data changes
  */
@@ -24,59 +31,38 @@ Squirrel.authenticated = function() {
         });
 }
 
-/**
- * Event handler to update the save button based on hoard state
- */
-Squirrel.update_save = function(/*event*/) {
-    "use strict";
-
-    var authpage = Page_get("authenticated");
-    authpage.control("undo").toggle(Squirrel.Tree.can_undo());
-    var us = Squirrel.unsaved_changes(3);
-    var $sb = authpage.control("save");
-    if (us !== null) {
-        if (Squirrel.client.hoard.options.autosave) {
-            Squirrel.save_hoards();
-        } else {
-            $sb.attr(
-                "title",
-                TX.tx("Save is required because: ") + us);
-            $sb.show();
-        }
-    } else {
-        $sb.hide();
-    }
-};
-
 Squirrel.open_menu = function($node) {
+    var $menu = $("#menu");
+
+    // Is menu already open/opening? We get this because taphold
+    // stopPropagation doesn't seem to work (or perhaps there are
+    // multiple taphold events?)
+    if ($menu.hasClass("menu-open"))
+        return;
+    $menu.addClass("menu-open");
+
     var path = $node.treenode("get_path");
 
     var is_leaf = $node.data("is_leaf");
     var value = $node.find(".value").first().text();
     var key = $node.find(".key").first().text();
-    var $menu = $("#menu");
 
     $menu.find(".leaf_only").toggle(is_leaf);
     $menu.find(".collection_only").toggle(!is_leaf);
-    $("#menu_alarm_action").text(TX.tx("Add reminder"));
-    // If there's an existing alarm, change the text
-    $node.children(".alarm").each(function() {
+    if (typeof $node.data("alarm") !== "undefined")
         $("#menu_alarm_action").text(TX.tx("Modify reminder"));
-    });
+    else
+        $("#menu_alarm_action").text(TX.tx("Add reminder"));
+
     $menu.trigger("updatelayout");
-    $menu.data("node", 
-                    {
-                        node: $node,
-                        path: path
-                    });
+    $menu.data("node", $node);
+
     $("#menu_name").text(key);
     var pp = path.slice();
     pp.pop();
     $("#menu_parent_path").text(pp.join("/") + "/");
     if (is_leaf)
         $("#menu_value").text(value);
-    $("#sites-node").find(".open-menu").hide();
-    $node.find(".close-menu").first().show();
     $menu.panel("open");
 };
 
@@ -92,31 +78,30 @@ Squirrel.init_ui = function() {
         defaults: true
     });
 
-    //$("[data-role='page']").trigger("create");
-
     $("#sites-node").treenode({
         is_root: true
     });
 
     // Initialise pull-right node panel
-    $("#menu").panel({
-        close: function(event, ui) {
-            var info = $("#menu").data("node");
-            info.node.find(".close-menu").first().hide();
-            //info.node.find(".open-menu").first().show();
-            $("#sites-node").find(".open-menu").show();
-        }});
+    $("#menu")
+        .removeClass("hidden") // If it's there
+        .panel({
+            close: function(event, ui) {
+                $("#menu")
+                    .removeClass("menu-open");
+            }
+        });
     $("#menu_controls").controlgroup();
 
-    $("#menu_pick").on("vclick", function() {
-        var info = $("#menu").data("node");
-        Page_get("pick").open(info);
+    $("#menu_pick").click(function() {
+        $("#menu").panel("close");
+        Squirrel.Dialog.pick($("#menu").data("node"));
     });
-    $("#menu_add_alarm").on("vclick", function() {
-        var info = $("#menu").data("node");
-        Page_get("alarm").open(info);
+    $("#menu_add_alarm").click(function() {
+        $("#menu").panel("close");
+        Squirrel.Dialog.alarm($("#menu").data("node"));
     });
-    $("#menu_path").on("vclick", function() {
+    $("#menu_path").click(function() {
         var info = $("#menu").data("node");
         var w = $("#menu_path").width() - $("#menu_name").position().left;
         $("#menu_name").parents().each(function() {
@@ -146,7 +131,7 @@ Squirrel.init_ui = function() {
             }
         });
     });
-    $("#menu_value").on("vclick", function() {
+    $("#menu_value").click(function() {
         var info = $("#menu").data("node");
         var w = $("#menu_path").width();
         $("#menu_value").parents().each(function() {
@@ -176,22 +161,25 @@ Squirrel.init_ui = function() {
             }
         });
     });
-    $("#menu_randomise").on("vclick", function() {
-        var info = $("#menu").data("node");
-        Page_get("randomise").open(info);
+    $("#menu_randomise").click(function() {
+        $("#menu").panel("close");
+        Squirrel.Dialog.randomise($("#menu").data("node"));
     });
-    $("#menu_add_value").on("vclick", function() {
-        var info = $("#menu").data("node");
-        info.node.treenode("open");
-        Squirrel.add_child_node(info.node, "New value", "none");
+    $("#menu_add_value").click(function() {
+        $("#menu").panel("close");
+        var node = $("#menu").data("node");
+        node.treenode("open");
+        Squirrel.add_child_node(node, TX.tx("A new value"), TX.tx("none"));
     });
-    $("#menu_add_subtree").on("vclick", function() {
-        var info = $("#menu").data("node");
-        Page_get("add_subtree").open(info);
+    $("#menu_add_subtree").click(function() {
+        $("#menu").panel("close");
+        var node = $("#menu").data("node");
+        node.treenode("open");
+        Squirrel.add_child_node(node, TX.tx("A new folder"));
     });
-    $("#menu_delete_node").on("vclick", function() {
-        var info = $("#menu").data("node");
-        Page_get("delete_node").open(info);
+    $("#menu_delete_node").click(function() {
+        $("#menu").panel("close");
+        Squirrel.Dialog.delete_node($("#menu").data("node"));
     });
 
     $(".help").each(function() {
@@ -210,7 +198,7 @@ Squirrel.init_ui = function() {
             .parent();
         $enhanced_help
             .addClass("info-button")
-            .on("vclick", function() {
+            .click(function() {
                 $this.show();
                $enhanced_help.hide();
             });
@@ -226,7 +214,7 @@ Squirrel.init_ui = function() {
             .parent();
         $enhanced_close
             .addClass("help-close")
-            .on("vclick", function() {
+            .click(function() {
                 $this.hide();
                 $enhanced_help.show();
             });

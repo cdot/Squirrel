@@ -4,90 +4,24 @@
  */
 
 /* Default icons, 16x16 */
-.ui-icon-squirrel-add-folder {
-    /* no-repeat rgba(0, 0, 0, 0.4) !important; */
-    background-image:url('../images/add-folder16.png');
-}
-
-.ui-icon-squirrel-camera {
-    background-image:url('../images/camera16.png') !important;
-}
-
-.ui-icon-squirrel-pencil {
-    background-image:url('../images/pencil16.png') !important;
-}
-
-.ui-icon-squirrel-gear {
-    background-image:url('../images/gear16.png') !important;
-}
-
-.ui-icon-squirrel-add-value {
-    background-image:url('../images/add-value16.png') !important;
-}
-
-.ui-icon-squirrel-undo {
-    background-image:url('../images/undo16.png') !important;
-}
-
-.ui-icon-squirrel-save {
-    background-image:url('../images/save16.png') !important;
-}
-
-.ui-icon-squirrel-copy {
-    background-image:url('../images/camera16.png') !important;
-}
-
-.ui-icon-squirrel-alarm {
-    background-image:url('../images/alarm16.png') !important;
-}
-
-.ui-icon-squirrel-rung {
-    background-image:url('../images/rung16.png') !important;
-}
-
-.ui-icon-squirrel-delete {
-    background-image:url('../images/delete16.png') !important;
-}
-
-.ui-icon-squirrel-paste {
-    background-image:url('../images/paste16.png') !important;
-}
-
-.ui-icon-squirrel-edit {
-    background-image:url('../images/edit16.png') !important;
-}
-
-.ui-icon-squirrel-pick {
-    background-image:url('../images/pick16.png') !important;
-}
-
-.ui-icon-squirrel-key {
-    background-image:url('../images/key16.png') !important;
-}
-
-.ui-icon-squirrel-folder-open {
-    background-image:url('../images/folder-open16.png') !important;
-}
-
-.ui-icon-squirrel-folder-closed {
-    background-image:url('../images/folder-closed16.png') !important;
-}
-
-/** JQuery Mobile, 18x18 icons are 18x18 and 32x32 */
-@media only screen and (max-width: 760px) {
-    .ui-icon-squirrel-add {
-        background-position:0 0px;
-    }
-
-    @media only screen and (-webkit-min-device-pixel-ratio: 2) {
-        .ui-icon-squirrel-add {
-	    background: url("../images/squirrel-icons32.png")  !important;
-	    background-size: 18px 18px;
-            background-position:0 0px;
-        }
-        // more declarations here
-    }
-}
+/* no-repeat rgba(0, 0, 0, 0.4) !important; */
+.ui-icon-squirrel-add-folder { background-image:url('../images/add-folder16.png'); !important }
+.ui-icon-squirrel-camera { background-image:url('../images/camera16.png') !important; }
+.ui-icon-squirrel-pencil { background-image:url('../images/pencil16.png') !important; }
+.ui-icon-squirrel-gear { background-image:url('../images/gear16.png') !important; }
+.ui-icon-squirrel-add-value { background-image:url('../images/add-value16.png') !important; }
+.ui-icon-squirrel-undo { background-image:url('../images/undo16.png') !important; }
+.ui-icon-squirrel-save { background-image:url('../images/save16.png') !important; }
+.ui-icon-squirrel-copy { background-image:url('../images/camera16.png') !important; }
+.ui-icon-squirrel-alarm { background-image:url('../images/alarm16.png') !important; }
+.ui-icon-squirrel-rang { background-image:url('../images/rang16.png') !important; }
+.ui-icon-squirrel-delete { background-image:url('../images/delete16.png') !important; }
+.ui-icon-squirrel-paste { background-image:url('../images/paste16.png') !important; }
+.ui-icon-squirrel-edit { background-image:url('../images/edit16.png') !important; }
+.ui-icon-squirrel-pick { background-image:url('../images/pick16.png') !important; }
+.ui-icon-squirrel-key { background-image:url('../images/key16.png') !important; }
+.ui-icon-squirrel-folder-open { background-image:url('../images/folder-open16.png') !important; }
+.ui-icon-squirrel-folder-closed { background-image:url('../images/folder-closed16.png') !important; }
 
 @font-face {
   font-family: 'Poiret One';
@@ -109,6 +43,10 @@ a {
 
 a:hover {
     font-weight: bold;
+}
+
+.hidden {
+    display: none;
 }
 
 .lastmod {

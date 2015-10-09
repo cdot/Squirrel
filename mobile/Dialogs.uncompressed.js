@@ -1,37 +1,47 @@
-Squirrel.Dialog = {
-    squeak: function(p) {
-        if (typeof p === "string") {
-            p = {
-                message: p
-            };
-        } else if (p.after_close) {
-            p.after_close = function() {
-                    Utils.soon(p.after_close);
-            }
-        }
-        Page_get("activity").open(p);
-    },
-    squeak_more: function(mess) {
-        $("#activity_message").append(mess);
-    },
-    close_squeak: function() {
-        // change page....
-    },
-    store_settings: function(next) {
-        Page_get("store_settings").open(
-            {
-                on_close: function() {
-                    next();
-                    return true;
-                }
-            });
-    },
-    login: function(p) {
-        p.replace = true;
-        Page_get("login").open(p);
-    },
+/* Copyright (C) 2015 Crawford Currie http://c-dot.co.uk / MIT */
 
-    alarm: function(p) {
-        Page_get("alarm").open(p);
+// Mobile customisation of dialogs
+Squirrel.Dialog.init_dialog = function($dlg) {
+    $dlg
+        .removeClass("hidden")
+        .popup({ history: false });
+};
+
+Squirrel.Dialog.open_dialog = function($dlg) {
+    $dlg.popup("open");
+}
+
+Squirrel.Dialog.close_dialog = function($dlg) {
+    $dlg.popup("close");
+};
+
+Squirrel.Dialog.squeak = function(p) {
+    "use strict";
+
+    var $dlg = $("#activity");
+
+    if (typeof p === "string")
+        p = { message: p };
+
+    if (typeof p.title === "string")
+        $("#activity_title").text(p.title).show();
+    else
+        $("#activity_title").hide(); 
+    
+    if ($dlg.hasClass("hidden")) {
+        $("#activity_close")
+            .click(function() {
+                $dlg.popup("close");
+                if (typeof p.after_close === "function")
+                    Utils.soon(p.after_close);
+            });
+        Squirrel.Dialog.init_dialog($dlg);
     }
+
+    if (typeof p.message === "string")
+        $("#activity_message").html(p.message);
+    else
+        $("#activity_message").empty().append(p.message);
+
+    Squirrel.Dialog.open_dialog($dlg);
 };

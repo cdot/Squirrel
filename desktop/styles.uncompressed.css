@@ -136,3 +136,8 @@ button.alarm {
 .treenode-leaf {
     margin-left: 1em;
 }
+
+.json_text: {
+    width:98%;
+    height: 15em;
+}
