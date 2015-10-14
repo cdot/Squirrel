@@ -35,11 +35,13 @@
     <script src="desktop/Dialogs.uncompressed.js"></script>
   </head>
   <body>
-    <img id="logo" src="images/squirrel36.png">
-    <h1>Squirrel</h1>
-    <div id="authmessage" class="unauthenticated progress TX_text">Authenticating...</div>
-    <div class="authfailed TX_text">Authentication failed. Refresh the browser to try again.</div>
+    <div class="unauthenticated">
+      <h1>Squirrel</h1>
+      <div id="authmessage" class="progress TX_text">Authenticating...</div>
+      <div class="authfailed TX_text">Authentication failed. Refresh the browser to try again.</div>
+    </div>
     <div class="authenticated">
+      <img id="logo" src="images/squirrel.svg">
       <span id="search_label" class="TX_text">Search:</span>
       <input id="search" value="" class="TX_title" title="Enter search string" />
       <span id="search_hits"></span>

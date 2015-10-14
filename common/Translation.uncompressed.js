@@ -59,5 +59,7 @@ var TX = {
         }
 
         return s;
-    }
+    },
+
+    error: function() { return TX.error(); }
 };

@@ -31,7 +31,7 @@ Squirrel.Dialog.play_action = function(action) {
         });
     if (res !== null)
         Squirrel.Dialog.squeak({
-            title: TX.tx("Error"),
+            title: TX.error(),
             message: res.message
         });
 };
@@ -139,12 +139,11 @@ Squirrel.Dialog.delete_node = function($node) {
                             e,
                             function() {
                                 Utils.sometime("update_save");
-                                Utils.sometime("update_tree");
                             }, true);
                     });
                 if (res !== null) {
                     Squirrel.Dialog.squeak({
-                        title: TX.tx("Error"),
+                        title: TX.error(),
                         message: res.message
                     });
                     return false;

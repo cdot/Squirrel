@@ -101,7 +101,7 @@ Squirrel.check_alarms = function(/* event */) {
                 {
                     message: $("<p></p>")
                         .append(
-                            $("<span></span>")
+                            $("<div></div>")
                                 .addClass("ui-icon ui-icon-squirrel-rang"))
                         .append(TX.tx("Reminder on '$1' was due on $2",
                                       path.join("/"),
@@ -139,7 +139,6 @@ Squirrel.add_child_node = function($node, title, value) {
                 $newnode.treenode("edit", "key");
 
                 Utils.sometime("update_save");
-                Utils.sometime("update_tree");
 
             }, true);
         });
@@ -247,7 +246,6 @@ Squirrel.insert_data = function(path, data) {
         },
         function() { // chain on complete
             Utils.sometime("update_save");
-            Utils.sometime("update_tree");
             Squirrel.Dialog.squeak_more(TX.tx("JSON has been loaded"));
         });
 };
@@ -483,7 +481,6 @@ Squirrel.hoards_loaded = function() {
         }
     });
 
-    Utils.sometime("update_tree");
     Utils.sometime("update_save");
     Utils.sometime("check_alarms");
 
@@ -512,7 +509,7 @@ Squirrel.load_cloud_hoard = function() {
                     if (DEBUG)
                         console.debug("Client hoard JSON parse failed: " + e);
                     Squirrel.Dialog.squeak({
-                        title: TX.tx("Error"),
+                        title: TX.error(),
                         message:
                         TX.tx("$1 hoard exists, but can't be read.",
                               this.options().identifier)
@@ -533,7 +530,7 @@ Squirrel.load_cloud_hoard = function() {
                     Squirrel.cloud.status = Squirrel.IS_EMPTY;
                 } else {
                     Squirrel.Dialog.squeak({
-                        title: TX.tx("Error"),
+                        title: TX.error(),
                         message:
                         TX.tx("Could not load cloud hoard.")
                             + TX.tx("Check that you have the correct password.")
@@ -619,7 +616,7 @@ Squirrel.load_client_hoard = function() {
             } catch (e) {
                 if (DEBUG) console.debug("Caught " + e);
                 Squirrel.Dialog.squeak({
-                    title: TX.tx("Error"),
+                    title: TX.error(),
                     message:
                     TX.tx("$1 hoard exists, but can't be read.",
                           this.options().identifier)

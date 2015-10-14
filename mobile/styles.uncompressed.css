@@ -1,44 +1,10 @@
 /**
  * Styles specific to mobile platform
  */
-.ui-icon-squirrel-add-folder { background-image:url('../images/add-folder18.png'); }
-.ui-icon-squirrel-camera { background-image:url('../images/camera18.png'); }
-.ui-icon-squirrel-pencil { background-image:url('../images/pencil18.png'); }
-.ui-icon-squirrel-gear { background-image:url('../images/gear18.png'); }
-.ui-icon-squirrel-add-value { background-image:url('../images/add-value18.png'); }
-.ui-icon-squirrel-undo { background-image:url('../images/undo18.png'); }
-.ui-icon-squirrel-save { background-image:url('../images/save18.png'); }
-.ui-icon-squirrel-copy { background-image:url('../images/camera18.png'); }
-.ui-icon-squirrel-alarm { background-image:url('../images/alarm18.png'); }
-.ui-icon-squirrel-rang { background-image:url('../images/rang18.png'); }
-.ui-icon-squirrel-delete { background-image:url('../images/delete18.png'); }
-.ui-icon-squirrel-paste { background-image:url('../images/paste18.png'); }
-.ui-icon-squirrel-edit { background-image:url('../images/edit18.png'); }
-.ui-icon-squirrel-pick { background-image:url('../images/pick18.png'); }
-.ui-icon-squirrel-key { background-image:url('../images/key18.png'); }
-.ui-icon-squirrel-folder-open { background-image:url('../images/folder-open18.png'); }
-.ui-icon-squirrel-folder-closed { background-image:url('../images/folder-closed18.png'); }
-
-@media only screen and (min-resolution: 2dppx),
-only screen and (-webkit-min-device-pixel-ratio: 2) {
-    /* High density screen */
-    .ui-icon-squirrel-add-folder { background-image:url('../images/add-folder36.png'); background-size: 18px 18px; }
-    .ui-icon-squirrel-camera { background-image:url('../images/camera36.png'); background-size: 18px 18px; }
-    .ui-icon-squirrel-pencil { background-image:url('../images/pencil36.png'); background-size: 18px 18px; }
-    .ui-icon-squirrel-gear { background-image:url('../images/gear36.png'); background-size: 18px 18px; }
-    .ui-icon-squirrel-add-value { background-image:url('../images/add-value36.png'); background-size: 18px 18px; }
-    .ui-icon-squirrel-undo { background-image:url('../images/undo36.png'); background-size: 18px 18px; }
-    .ui-icon-squirrel-save { background-image:url('../images/save36.png'); background-size: 18px 18px; }
-    .ui-icon-squirrel-copy { background-image:url('../images/camera36.png'); background-size: 18px 18px; }
-    .ui-icon-squirrel-alarm { background-image:url('../images/alarm36.png'); background-size: 18px 18px; }
-    .ui-icon-squirrel-rang { background-image:url('../images/rang36.png'); background-size: 18px 18px; }
-    .ui-icon-squirrel-delete { background-image:url('../images/delete36.png'); background-size: 18px 18px; }
-    .ui-icon-squirrel-paste { background-image:url('../images/paste36.png'); background-size: 18px 18px; }
-    .ui-icon-squirrel-edit { background-image:url('../images/edit36.png'); background-size: 18px 18px; }
-    .ui-icon-squirrel-pick { background-image:url('../images/pick36.png'); background-size: 18px 18px; }
-    .ui-icon-squirrel-key { background-image:url('../images/key36.png'); background-size: 18px 18px; }
-    .ui-icon-squirrel-folder-open { background-image:url('../images/folder-open36.png') background-size: 18px 18px;;}
-    .ui-icon-squirrel-folder-closed { background-image:url('../images/folder-closed36.png'); background-size: 18px 18px; }
+.ui-icon {
+    width:22px;
+    height: 22px;
+    background-size: 22px 22px;
 }
 
 .ui-li-static.ui-collapsible > .ui-collapsible-heading {
@@ -65,7 +31,7 @@ only screen and (-webkit-min-device-pixel-ratio: 2) {
 }
 
 #unauthenticated {
-    background: url('../images/squirrel300.png') no-repeat center;
+    background: url('../images/squirrel.svg') no-repeat center;
     background-size: contain;
 }
 

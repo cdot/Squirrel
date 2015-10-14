@@ -252,7 +252,6 @@ Squirrel.Tree = { // Namespace
                                 ea,
                                 function(/*$newnode*/) {
                                     Utils.sometime("update_save");
-                                    Utils.sometime("update_tree");
                                 }, true);
                         });
                     if (e !== null)
@@ -694,12 +693,11 @@ Squirrel.Tree.undo = function() {
                     if (Squirrel.Tree.length === 0)
                         $(".modified").removeClass("modified");
                     Utils.sometime("update_save");
-                    Utils.sometime("update_tree");
                 });
         });
     if (res !== null)
         Squirrel.Dialog.squeak({
-            title: TX.tx("Error"),
+            title: TX.error(),
             message: res.message
         });
 };

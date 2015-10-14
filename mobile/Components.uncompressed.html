@@ -36,7 +36,6 @@
     <script src="common/Tree.uncompressed.js"></script>
     <script src="mobile/Dialogs.uncompressed.js"></script>
     <script src="mobile/Tree.uncompressed.js"></script>
-    <script src="mobile/Pages.uncompressed.js"></script>
     <script src="mobile/Squirrel.uncompressed.js"></script>
   </head>
   <body>
@@ -86,7 +85,7 @@
       </div>
     </div>
                
-    <div id="authenticated" data-role="page" class="authenticated">
+    <div id="authenticated" data-role="page">
       <div id="search" data-role="popup" class="hidden">
         <div data-role="header">
           <h1>Search</h1>
@@ -339,13 +338,11 @@
           <button id="authenticated_undo" data-icon="back" data-iconpos="notext" class="TX_title" title="Undo last change"></button>
           <button id="authenticated_save" data-icon="cloud" data-iconpos="left" class="TX_title TX_text" title="Save changes">Save</button>
           <button id="authenticated_search" data-icon="search" data-iconpos="notext" class="TX_title" title="Search"></button>
+          <div id="authenticated_whoami" style="float:right"></div>
         </div>
       </div>
       <div class="ui-content" role="main">
         <div id="sites-node" name="/"></div>
-      </div>
-      <div data-role="footer">
-        <span class="TX_text">Authenticated as:</span> <span id="authenticated_whoami"></span>
       </div>
     </div>
    

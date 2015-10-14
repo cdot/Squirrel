@@ -21,6 +21,15 @@
   display: none;
 }
 
+.unauthenticated {
+    background-image: url("images/squirrel.svg");
+}
+
+#logo {
+    width:40px;
+    height: 40px;
+}
+
 .treenode.hover {
     background: #44372c url("../libs/images/ui-bg_gloss-wave_30_44372c_500x100.png") 50% 50% repeat-x;
     color: #baec7e;
@@ -42,6 +51,23 @@ ul.treenode-subnodes li {
 .authenticated {
     display: none;
 }
+
+.ui-icon-squirrel-add-folder { width: 16px; height: 16px; background-size: 16px 16px; }
+.ui-icon-squirrel-copy { width: 16px; height: 16px; background-size: 16px 16px; }
+.ui-icon-squirrel-gear { width: 16px; height: 16px; background-size: 16px 16px; }
+.ui-icon-squirrel-add-value { width: 16px; height: 16px; background-size: 16px 16px; }
+.ui-icon-squirrel-undo { width: 16px; height: 16px; background-size: 16px 16px; }
+.ui-icon-squirrel-save { width: 16px; height: 16px; background-size: 16px 16px; }
+.ui-icon-squirrel-copy { width: 16px; height: 16px; background-size: 16px 16px; }
+.ui-icon-squirrel-alarm { width: 16px; height: 16px; background-size: 16px 16px; }
+.ui-icon-squirrel-rang { width: 16px; height: 16px; background-size: 16px 16px; }
+.ui-icon-squirrel-delete { width: 16px; height: 16px; background-size: 16px 16px; }
+.ui-icon-squirrel-paste { width: 16px; height: 16px; background-size: 16px 16px; }
+.ui-icon-squirrel-edit { width: 16px; height: 16px; background-size: 16px 16px; }
+.ui-icon-squirrel-pick { width: 16px; height: 16px; background-size: 16px 16px; }
+.ui-icon-squirrel-key { width: 16px; height: 16px; background-size: 16px 16px; }
+.ui-icon-squirrel-folder-open { width: 16px; height: 16px; background-size: 16px 16px; }
+.ui-icon-squirrel-folder-closed { width: 16px; height: 16px; background-size: 16px 16px; }
 
 button.ui-button-icon-only {
     width: 16px;

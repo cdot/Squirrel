@@ -1,5 +1,9 @@
 /* Copyright (C) 2015 Crawford Currie http://c-dot.co.uk / MIT */
 
+/**
+ * Customisation for JQuery mobile
+ */
+
 // Rewire handlers click to vclick
 $.fn.click = function(listener) {
     return this.each(function() {
@@ -7,29 +11,23 @@ $.fn.click = function(listener) {
     });
 };
 
-/**
- * Event handler to update the tree view when data changes
- */
-Squirrel.update_tree = function(/*event*/) {
-    "use strict";
-    console.debug("Refresh tree");
-};
-
-Squirrel.expand_new_node = function ($node) {
-    // SMELL: not sure this is right or needed?
-    $node.treenode("open");
-};
-
 // Once logged in, switch to "authenticated" state
 Squirrel.authenticated = function() {
-    Page_get("authenticated").open(
-        {
-            replace: true,
-            on_open: function () {
-                Utils.soon(Squirrel.load_client_hoard);
-            }
+    $("body")
+        .pagecontainer()
+        .on("pagecontainerchange", function () {
+            $("body").pagecontainer().off("pagecontainerchange");
+            $("#authenticated_whoami").text(Squirrel.client.store.user());
+            Utils.soon(Squirrel.load_client_hoard);
         });
+    $("body").pagecontainer("change", $("#authenticated"), {
+        transition: "fade",
+        changeHash: false
+    });
 }
+
+Squirrel.init_menus = function() {
+};
 
 Squirrel.open_menu = function($node) {
     var $menu = $("#menu");
@@ -120,12 +118,11 @@ Squirrel.init_ui = function() {
                             ea,
                             function(/*$newnode*/) {
                                 Utils.sometime("update_save");
-                                Utils.sometime("update_tree");
                             }, true);
                     });
                 if (e !== null)
                     Squirrel.Dialog.squeak({
-                        title: Pages.activity.titles.error,
+                        title: TX.error(),
                         message: e.message
                     });
             }
@@ -150,12 +147,11 @@ Squirrel.init_ui = function() {
                             ea,
                             function(/*$newnode*/) {
                                 Utils.sometime("update_save");
-                                Utils.sometime("update_tree");
                             }, true);
                     });
                 if (e !== null)
                     Squirrel.Dialog.squeak({
-                        title: Pages.activity.titles.error,
+                        title: TX.error,
                         message: e.message
                     });
             }
@@ -224,17 +220,9 @@ Squirrel.init_ui = function() {
 
     $(document)
         .on("check_alarms", Squirrel.check_alarms)
-        .on("update_save", Squirrel.update_save)
-        .on("update_tree", Squirrel.update_tree);
+        .on("update_save", Squirrel.update_save);
 
-    // Have to do a change_page to override any #page fragment in the
-    // URL and force our startup screen
-    Page_get("unauthenticated").open(
-        {
-            replace: true,
-            // Initialise the cloud store as soon as the page has changed
-            on_open: Squirrel.init_cloud_store
-        });
+    Squirrel.init_cloud_store();
 };
 
 

@@ -40,7 +40,6 @@
                                 ea,
                                 function(/*$newnode*/) {
                                     Utils.sometime("update_save");
-                                    Utils.sometime("update_tree");
                                 }, true);
                         });
                     if (e !== null)
