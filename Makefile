@@ -1,3 +1,7 @@
+SOURCES := $(wildcard *.uncompressed.* */*.uncompressed.*)
+
+MIN := $(subst .uncompressed.,.min.,$(SOURCES))
+
 %.map %.min.js : %.uncompressed.js
 	uglifyjs \
 		--source-map $(patsubst %.min.js,%.map,$@) \
@@ -11,14 +15,14 @@
 %.min.css : %.uncompressed.css
 	cleancss $^ > $@
 
-%.min.html : %.uncompressed.html \
+%.min.html : %.uncompressed.html
 	cat $^ | sed -e 's/\.uncompressed\./.min./g' > $@
 
 # Making release 
 
 %.map : %.min.js
 
-release: $(wildcard *.uncompressed.*)
+release: $(MIN)
 	@echo "Done"
 
 # Other targets
@@ -27,9 +31,8 @@ clean:
 	find . -name '*~' -exec rm \{\} \;
 	find . -name '*.min.*' -exec rm \{\} \;
 	find . -name '*.map' -exec rm \{\} \;
-	rm -f *.html
 
-eslint: $(wildcard *.uncompressed.*)
+eslint: $(wildcard *.uncompressed.js */*.uncompressed.js)
 	eslint --config package.json $^
 
 locale/%.json: *.uncompressed.js Squirrel.html.src
