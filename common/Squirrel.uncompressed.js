@@ -841,9 +841,9 @@ Squirrel.search = function(s) {
             if (typeof qs.steg !== "undefined")
                 Squirrel.USE_STEGANOGRAPHY = true;
 
-            var store_bits = [ "common/" + store + ".js" ];
+            var store_bits = [ "common/" + store + ".min.js" ];
             if (Squirrel.USE_STEGANOGRAPHY)
-                store_bits.push("common/StegaStore.js");
+                store_bits.push("common/StegaStore.min.js");
             else
                 $(".using_steganography").remove();
             Utils.load(store_bits, function () {

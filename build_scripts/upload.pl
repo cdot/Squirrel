@@ -48,19 +48,29 @@ die "FTP login failed\n" unless
 
 $ftp->binary();
 
+my %okpaths;
+
 sub putfile {
     my ($ftp, $from, $to) = @_;
+    #print "putfile $to\n";
     my @path = split(/\/+/, $to);
     pop(@path);
     my @missing;
-
-    while (scalar @path) {
-        my $path = join('/', @path);
-        my $res = $ftp->ls($path);
-        last if defined $res;
-        my $dir = join('/', @path, pop(@path));
-        print "mkdir $dir for $to\n";
-        die unless $ftp->mkdir($dir);
+    unless ($okpaths{join("/", @path)}) {
+        my @lost;
+        while (scalar @path) {
+            my $path = join('/', @path);
+            my $res = $ftp->ls($path);
+            last if defined $res;
+            unshift(@lost, pop(@path));
+        }
+        while (scalar(@lost)) {
+            push(@path, shift(@lost));
+            my $dir = join('/', @path);
+            print "mkdir $dir for $to\n";
+            die unless $ftp->mkdir($dir);
+        }
+        $okpaths{join("/", @path)} = 1;
     }
 
     my $mod = $ftp->mdtm($to);
@@ -70,19 +80,12 @@ sub putfile {
             print STDERR "FAILED Upload of $from failed $@ $!\n";
         }
     } else {
-        #print "Skipped $from, $to is up-to-date ($mod)\n";
+        #print "$to is up-to-date ($mod)\n";
     }
 }
 
 foreach my $arg (sort @ARGV) {
-    if ($arg =~ /:/) {
-        my ($from, $to) = split(':', $arg);
-        my ($vol, $dir, $file) = File::Spec->splitpath($from);
-        $dir .= '/' if $dir && $dir !~ m{/$};
-        putfile($ftp, $from, get_config('PATH')."/$to/$file");
-    } else {
-        putfile($ftp, $arg, get_config('PATH')."/$arg");
-    }
+    putfile($ftp, $arg, get_config('PATH')."/$arg");
 }
 $ftp->quit();
 

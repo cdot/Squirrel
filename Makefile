@@ -1,5 +1,4 @@
 SOURCES := $(wildcard *.uncompressed.* */*.uncompressed.*)
-
 MIN := $(subst .uncompressed.,.min.,$(SOURCES))
 
 %.map %.min.js : %.uncompressed.js
@@ -38,21 +37,10 @@ eslint: $(wildcard *.uncompressed.js */*.uncompressed.js)
 locale/%.json: *.uncompressed.js Squirrel.html.src
 	perl build_scripts/translate.pl $(*F) *.uncompressed.js Squirrel.html.src
 
-.SECONDEXPANSION:
-upload: \
-	$(patsubst %,%.uncompressed.html,$(STORES)) \
-	$(patsubst %,%.html,$(STORES)) \
-	$(subst uncompressed,min,$(COMMONJS)) \
-	$(subst uncompressed.js,map,$(COMMONJS)) \
-	$(subst uncompressed,min,$(LIBSJS)) \
-	$(subst uncompressed.js,map,$(LIBSJS)) \
-	$(patsubst %.uncompressed.css,%.min.css,$(COMMONCSS)) \
-	$(patsubst %.uncompressed.css,%.min.css,$(LIBSCSS)) \
-	$(wildcard images/*) \
-	$(wildcard libs/images/*) \
-	$(wildcard libs/*.swf) \
-	$$(subst uncompressed,min,$(patsubst %,$$(%JS),$(STORES))) \
-	$$(subst uncompressed.js,map,$(patsubst %,$$(%JS),$(STORES))) \
-	$(COMMONJS) $(LIBSJS) $(COMMONCSS) $(LIBSCSS) $(driveJS)
+#	$(wildcard libs/images/icons-png/*.png  libs/images/icons-svg/*.svg) 
+upload: $(MIN) \
+	$(wildcard images/*.svg images/*.ico images/*.png images/*.gif) \
+	$(wildcard libs/images/*.png libs/images/*.gif) \
+	$(wildcard libs/*.swf)
 	perl build_scripts/upload.pl $^
 

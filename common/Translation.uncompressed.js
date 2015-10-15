@@ -61,5 +61,5 @@ var TX = {
         return s;
     },
 
-    error: function() { return TX.error(); }
+    error: function() { return TX.tx("Error"); }
 };

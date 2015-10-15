@@ -521,7 +521,7 @@ Utils.load = function(libs, on_loaded) {
     // fire off a resource load
     var _add_load = function(file, expect, on_loaded) {
         if (DEBUG)
-            file = file.replace(/(\.[^.]*)$/, ".uncompressed$1")
+            file = file.replace(".min.", ".uncompressed.")
 
         console.debug("Loading " + file);
         expect[file] = true;
