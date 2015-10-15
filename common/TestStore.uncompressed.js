@@ -24,8 +24,8 @@ TestStore.prototype.options = function() {
 
     return $.extend(LocalStorageStore.prototype.options(), {
         identifier: "Local Test",
-        needs_path: false, // vary this
-        needs_image: false // vary this
+        needs_path: true, // vary this
+        needs_image: true // vary this
     });
 };
 

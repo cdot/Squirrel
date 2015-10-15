@@ -1,7 +1,6 @@
 /* Copyright (C) 2015 Crawford Currie http://c-dot.co.uk / MIT */
 
-// Desktop customisation of dialogs
-
+// Desktop customisation of dialogs 
 Squirrel.Dialog.init_dialog = function($dlg) {
     $('#' + $dlg.attr("id") + "_cancel")
         .button()
@@ -14,7 +13,8 @@ Squirrel.Dialog.init_dialog = function($dlg) {
 Squirrel.Dialog.open_dialog = function($dlg) {
     $dlg.dialog({
         modal: true,
-        width: "auto"
+        width: "auto",
+        closeOnEscape: false
     });
 };
 

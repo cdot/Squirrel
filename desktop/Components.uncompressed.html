@@ -236,6 +236,7 @@
     </div>
     
     <div id="store_settings" class="dialog TX_title hidden" title="Store settings">
+      <p id="store_settings_message"></p>
       <div class="using_steganography">
         <p class="TX_text help">Choose a local image that will be copied
           and used to hide your data in the cloud. This should be a complex
@@ -243,11 +244,10 @@
           transparency. Note that very large images may take a long time to
           load and save.</p>
         <input type="file" id="store_settings_file" class="hidden" />
-        <button id="store_settings_choose" class="TX_title TX_text" title="Choose an image file">
+        <button id="store_settings_choose_image" class="TX_title TX_text" title="Choose an image file">
           Choose Image File
         </button>
         <p><img id="stegamage" src="images/GCHQ.png" /></p>
-        <p id="store_settings_message"></p>
       </div>
       <p class="TX_text help">
         Set the pathname of the image on your cloud store. For example

@@ -287,7 +287,7 @@
         </div>
       </div>
 
-      <div id="store_settings" data-role="popup">
+      <div id="store_settings" class="hidden" data-role="popup" data-dismissible="false">
         <div data-role="header">
           <h1 class="TX_text">Set up store</h1>
         </div>
@@ -315,6 +315,9 @@
             <label for="store_settings_storepath" class="TX_text">Store path: </label>
             <input id="store_settings_storepath" type="text" value="" class="TX_title" title="Pathname of the image in your cloud store" data-mini="true"/>
           </div>
+        </div>
+        <div data-role="footer">
+          <button id="store_settings_ok" class="TX_text">OK</button>
         </div>
       </div>
 

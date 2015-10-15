@@ -63,7 +63,7 @@ var Utils = { // Namespace
     waiting_for_sometime: {},
 
     // By setting the sometime_timeout to a non-null value we block
-    // the wait queue until Utils.sometime is called the first time.
+    // the wait queue until Utils.sometime_is_now is called the first time.
     // This lets us complete the load without too much noise.
     sometime_timeout: true,
 
@@ -495,60 +495,101 @@ Utils.Base64ToArrayBuffer = function(sB64) {
     return ta8.buffer;
 };
 
-// Simplistic dynamic loader. Won't work with file:// URLs or cross-origin.
-Utils._loaded = function(file, expect, on_loaded) {
-    //console.debug("Loaded " + file);
-    delete expect[file];
-    if (Object.keys(expect).length === 0) {
-        if (typeof on_loaded === "function") {
-            //console.debug("Calling on_loaded");
-            on_loaded();
-        }
-    } else {
-        //console.debug("Still waiting for " + Object.keys(expect));
-    }
-};
-
-
-Utils._add_load = function(file, expect, on_loaded) {
-    if (DEBUG)
-        file = file.replace(/(\.[^.]*)$/, ".uncompressed$1")
-
-    //console.debug("Loading " + file);
-    expect[file] = true;
-    if (/\.js$/.test(file)) {
-        $.getScript(file)
-            .done(function() {
-                //console.debug("Loaded script " + file);
-                Utils._loaded(file, expect, on_loaded);
-            })
-            .fail(function(jqXHR, settings, exception) {
-                debugger;
-            });
-    } else if (/\.css$/.test(file)) {
-        $("link")
-            .appendTo('head')
-            .attr({ type: "text/css", rel: "stylesheet" })
-            .attr("href", file);
-        Utils._loaded(file, expect, on_loaded);
-    } else if (/\.html$/.test(file)) {
-        $.get(file)
-            .done(function(data) {
-                //console.debug("Loaded HTML " + file);
-                $(data)
-                    .appendTo('body');
-                Utils._loaded(file, expect, on_loaded);
-            })
-            .fail(function(jqXHR, settings, exception) {
-                debugger;
-            });
-    }
-};
-
-// on_loaded is called when all libs have been loaded
+/**
+ * Simple dynamic loader. Won't work with file:// URLs or cross-origin.
+ * Load a list of resources - .js, .css or .html. JS gets loaded and
+ * executes, CSS gets loaded using <link>, HTML gets loaded and appended
+ * to the document body.
+ * @param libs list of resources
+ * @param on_loaded is called when all libs have been loaded
+ */
 Utils.load = function(libs, on_loaded) {
+    // action when a resource is loaded
+    var _loaded = function(file, expect, on_loaded) {
+        console.debug("Loaded " + file);
+        delete expect[file];
+        if (Object.keys(expect).length === 0) {
+            if (typeof on_loaded === "function") {
+                console.debug("Calling on_loaded");
+                on_loaded();
+            }
+        } else {
+            console.debug("Still waiting for " + Object.keys(expect));
+        }
+    };
+
+    // fire off a resource load
+    var _add_load = function(file, expect, on_loaded) {
+        if (DEBUG)
+            file = file.replace(/(\.[^.]*)$/, ".uncompressed$1")
+
+        console.debug("Loading " + file);
+        expect[file] = true;
+        if (/\.js$/.test(file)) {
+            $.getScript(file)
+                .done(function() {
+                    //console.debug("Loaded script " + file);
+                    _loaded(file, expect, on_loaded);
+                })
+                .fail(function(jqXHR, settings, exception) {
+                    debugger;
+                });
+        } else if (/\.css$/.test(file)) {
+            $("link")
+                .appendTo('head')
+                .attr({ type: "text/css", rel: "stylesheet" })
+                .attr("href", file);
+            _loaded(file, expect, on_loaded);
+        } else if (/\.html$/.test(file)) {
+            $.get(file)
+                .done(function(data) {
+                    console.debug("Loaded HTML " + file);
+                    $(data)
+                        .appendTo('body');
+                    _loaded(file, expect, on_loaded);
+                })
+                .fail(function(jqXHR, settings, exception) {
+                    debugger;
+                });
+        }
+    };
+
     var expect = {};
     for (var i = 0; i < libs.length; i++) {
-        Utils._add_load(libs[i], expect, on_loaded);
+        _add_load(libs[i], expect, on_loaded);
     }
+};
+
+/**
+ * Parse the query string, and return a map of key=>value
+ */
+Utils.query_string = function () {
+    var query = {};
+    var vars = window.location.search.substring(1).split(/[&;]+/);
+    for (var i = 0; i < vars.length; i++) {
+        var ass = vars[i].split("=");
+        // If first entry with this name
+        if (typeof query[ass[0]] === "undefined") {
+            query[ass[0]] = decodeURIComponent(ass[1]);
+            // If second entry with this name
+        } else if (typeof query[ass[0]] === "string") {
+            var arr = [ query[ass[0]], decodeURIComponent(ass[1]) ];
+            query[ass[0]] = arr;
+            // If third or later entry with this name
+        } else {
+            query[ass[0]].push(decodeURIComponent(ass[1]));
+        }
+    } 
+    return query;
+};
+
+Utils.make_query_string = function(qs) {
+    var params = "";
+    var sep = "?";
+    for (var k in qs) {
+        params += sep + encodeURIComponent(k)
+            + "=" + encodeURIComponent(qs[k]);
+        sep = "&";
+    }
+    return params;
 };

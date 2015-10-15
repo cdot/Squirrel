@@ -7,15 +7,21 @@
   #screen-width-element { display: none; }
 }
     </style>
+    <script src="libs/jquery-2.1.3.uncompressed.js"></script>
+    <script src="common/Utils.uncompressed.js"></script>
   </head>
   <body onload="redirect()">
     <div id="screen-width-element"></div>
     <script type="text/javascript">
       var swe = document.getElementById("screen-width-element");
+      var qs = Utils.query_string();
+      if (typeof qs.store === "undefined")
+          qs.store = "TestStore";
+      var params = Utils.make_query_string(qs);
       if (swe.style.display == "none")
-          window.location = "mobile/Components.uncompressed.html"
+          window.location = "mobile/Components.uncompressed.html" + params;
       else
-          window.location = "desktop/Components.uncompressed.html"
+          window.location = "desktop/Components.uncompressed.html" + params;
     </script>
   </body>
 </html>

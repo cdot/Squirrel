@@ -10,9 +10,10 @@ Squirrel.Dialog = {};
 //    title
 //    message (string or $object or element)
 //    after_close
-// init_dialog
-// open_dialog
-// close_dialog
+// init_dialog($dlg)
+// open_dialog($dlg)
+// close_dialog($dlg)
+
 Squirrel.Dialog.squeak_more = function(mess) {
     $("#activity_message").append(mess);
 };
@@ -151,8 +152,7 @@ Squirrel.Dialog.delete_node = function($node) {
                 return true;
             });
         $("#delete_node_cancel")
-            .button()
-            .on("click", function(/*evt*/) {
+            .click(function(/*evt*/) {
                 Squirrel.Dialog.close_dialog($dlg);
                 return false;
             });
@@ -401,7 +401,6 @@ Squirrel.Dialog.ss_change_image = function() {
         $("#store_settings_message").text(TX.tx(
             "Cannot use this image because of this error: $1", e));
     };
-    $("#store_settings_ok").attr("disabled", true);
     var file = $(this)[0].files[0];
     Utils.read_file(
         file,
@@ -445,18 +444,46 @@ Squirrel.Dialog.store_settings = function(store) {
     var $dlg = $("#store_settings");
 
     if ($dlg.hasClass("hidden")) {
-        if (USE_STEGANOGRAPHY) {
-            $("#store_settings_file")
-                .hide()
-                .click(function (e) {
-                    Squirrel.Dialog.ss_change_image();
-                });
+        $("#store_settings_file")
+            .hide()
+            .click(function (e) {
+                Squirrel.Dialog.ss_change_image();
+            });
 
-            $("#store_settings_choose_image")
-                .click(function(e) {
-                    $("#store_settings_file").trigger("change", e);
-                });
-        }
+        $("#store_settings_choose_image")
+            .click(function(e) {
+                $("#store_settings_file").trigger("change", e);
+            });
+
+        $("#store_settings_storepath").on("keyup", function(e) {
+            if ($("#store_settings_storepath").val() === "") {
+                $("#store_settings_message").text(TX.tx(
+                    "Store path may not be empty"));
+                return false;
+            }
+            if (Squirrel.client.hoard.options.store_path !==
+                $("#store_settings_storepath").val()) {
+                Squirrel.client.hoard.options.store_path =
+                    $("#store_settings_storepath").val();
+                if (Squirrel.client.status === Squirrel.IS_LOADED)
+                    Squirrel.client.status = Squirrel.NEW_SETTINGS;
+                if (Squirrel.cloud.status === Squirrel.IS_LOADED)
+                    Squirrel.cloud.status = Squirrel.NEW_SETTINGS;
+                Utils.sometime("update_save");
+            }
+            return true;
+        });
+
+        $("#store_settings_ok")
+            .click(function (e) {
+                if ($("#store_settings_storepath").val() === "") {
+                    $("#store_settings_message").text(TX.tx(
+                        "Store path may not be empty"));
+                    return false;
+                }
+                Squirrel.Dialog.close_dialog($dlg);
+            });
+
         Squirrel.Dialog.init_dialog($dlg);
     };
 
@@ -465,23 +492,7 @@ Squirrel.Dialog.store_settings = function(store) {
     $("#store_settings_storepath").val(
         Squirrel.client.hoard.options.store_path);
 
-    options.on_ok = function(e) {
-        if ($("#store_settings_storepath").val() === "") {
-            $("#store_settings_message").text(TX.tx(
-                "Store path may not be empty"));
-            return false;
-        }                
-        if (Squirrel.client.hoard.options.store_path !==
-            $("#store_settings_storepath").val()) {
-            Squirrel.client.hoard.options.store_path =
-                $("#store_settings_storepath").val();
-            if (Squirrel.client.status === Squirrel.IS_LOADED)
-                Squirrel.client.status = Squirrel.NEW_SETTINGS;
-            if (Squirrel.cloud.status === Squirrel.IS_LOADED)
-                Squirrel.cloud.status = Squirrel.NEW_SETTINGS;
-        }
-        return true;
-    };
+    Squirrel.Dialog.open_dialog($dlg);
 };
 
 /**
@@ -613,7 +624,7 @@ Squirrel.Dialog.extras = function() {
         Squirrel.Dialog.init_dialog($dlg);
     }
 
-    if (!(USE_STEGANOGRAPHY
+    if (!(Squirrel.USE_STEGANOGRAPHY
           || Squirrel.cloud.store
           && Squirrel.cloud.store.options().needs_path)) {
         $("#extras_chss").hide();

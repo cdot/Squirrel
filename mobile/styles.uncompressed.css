@@ -1,11 +1,23 @@
 /**
  * Styles specific to mobile platform
  */
-.ui-icon {
-    width:22px;
-    height: 22px;
-    background-size: 22px 22px;
-}
+.ui-btn { background-repeat: no-repeat; background-color: white; };
+.ui-icon-squirrel-add-folder { background-size: 18px 18px; background-position: 5px 5px; }
+.ui-icon-squirrel-copy { background-size: 18px 18px; background-position: 5px 5px; }
+.ui-icon-squirrel-gear { background-size: 18px 18px; background-position: 5px 5px; }
+.ui-icon-squirrel-add-value { background-size: 18px 18px; background-position: 5px 5px; }
+.ui-icon-squirrel-undo { background-size: 18px 18px; background-position: 5px 5px; }
+.ui-icon-squirrel-save { background-size: 18px 18px; background-position: 5px 5px; }
+.ui-icon-squirrel-copy { background-size: 18px 18px; background-position: 5px 5px; }
+.ui-icon-squirrel-alarm { background-size: 18px 18px; background-position: 5px 5px; }
+.ui-icon-squirrel-rang { background-size: 18px 18px; background-position: 5px 5px; }
+.ui-icon-squirrel-delete { background-size: 18px 18px; background-position: 5px 5px; }
+.ui-icon-squirrel-paste { background-size: 18px 18px; background-position: 5px 5px; }
+.ui-icon-squirrel-edit { background-size: 18px 18px; background-position: 5px 5px; }
+.ui-icon-squirrel-pick { background-size: 18px 18px; background-position: 5px 5px; }
+.ui-icon-squirrel-key { background-size: 18px 18px; background-position: 5px 5px; }
+.ui-icon-squirrel-folder-open { background-size: 18px 18px; background-position: 5px 5px; }
+.ui-icon-squirrel-folder-closed { background-size: 18px 18px; background-position: 5px 5px; }
 
 .ui-li-static.ui-collapsible > .ui-collapsible-heading {
     margin: 0;

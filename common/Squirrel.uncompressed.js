@@ -3,8 +3,6 @@
  */
 
 var DEBUG = true;
-var USE_STEGANOGRAPHY = false;
-var USE_STORE = "TestStore";
 
 /*
  * The Squirrel Application namespace and UI
@@ -23,7 +21,9 @@ var Squirrel = {
     // TX.tx("is corrupt")
     IS_CORRUPT: "is corrupt",
     // TX.tx("is empty")
-    IS_EMPTY: "is empty"
+    IS_EMPTY: "is empty",
+
+    USE_STEGANOGRAPHY: false
 };
 
 Squirrel.init_common_ui = function() {
@@ -87,6 +87,8 @@ Squirrel.init_application = function() {
 
     // Initialise UI components
     Squirrel.init_common_ui();
+
+    Utils.sometime_is_now();
 };
 
 // Event handler for check_alarms
@@ -463,7 +465,7 @@ Squirrel.update_save = function(/*event*/) {
             $sb.show();
         }
     } else {
-        $("#save_button").hide();
+        $("#authenticated_save").hide();
     }
 };
 
@@ -775,10 +777,9 @@ Squirrel.init_cloud_store = function() {
     };
 
     p.understore = function(pp) {
-        // USE_STEGANOGRAPHY is a global var set in the HTML
         // SQUIRREL_STORE is a constant set by the low-level
-        // store module selected in the Makefile
-        if (USE_STEGANOGRAPHY) {
+        // store module selected by dynamic load
+        if (Squirrel.USE_STEGANOGRAPHY) {
             pp.understore = function(ppp) {
                 return new SQUIRREL_STORE(ppp);
             };
@@ -834,8 +835,14 @@ Squirrel.search = function(s) {
             // possible is cached locally
             if (!DEBUG) $.ajaxSetup({ cache: true });
 
-            var store_bits = [ "common/" + USE_STORE + ".js" ];
-            if (USE_STEGANOGRAPHY)
+            var qs = Utils.query_string();
+
+            var store = qs.store || "TestStore";
+            if (typeof qs.steg !== "undefined")
+                Squirrel.USE_STEGANOGRAPHY = true;
+
+            var store_bits = [ "common/" + store + ".js" ];
+            if (Squirrel.USE_STEGANOGRAPHY)
                 store_bits.push("common/StegaStore.js");
             else
                 $(".using_steganography").remove();
