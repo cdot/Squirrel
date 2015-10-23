@@ -5,9 +5,9 @@
  * uses the input's title attribute for its label
  */
 (function($) {
+    "use strict";
     $.widget("squirrel.file_input", {
         _create: function() {
-            "use strict";
 
             var $self = $(this.element)
                 .wrap($("<div></div>")
@@ -23,5 +23,5 @@
                         $self.trigger(evt);
                     }));
         }
-    })
+    });
 })(jQuery);

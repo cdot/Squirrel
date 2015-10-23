@@ -2,16 +2,19 @@
 
 // Mobile customisation of dialogs
 Squirrel.Dialog.init_dialog = function($dlg) {
+    "use strict";
     $dlg
         .removeClass("hidden")
         .popup({ history: false });
 };
 
 Squirrel.Dialog.open_dialog = function($dlg) {
+    "use strict";
     $dlg.popup("open");
-}
+};
 
 Squirrel.Dialog.close_dialog = function($dlg) {
+    "use strict";
     $dlg.popup("close");
 };
 

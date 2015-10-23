@@ -1,5 +1,6 @@
-SOURCES := $(wildcard *.uncompressed.* */*.uncompressed.*)
-MIN := $(subst .uncompressed.,.min.,$(SOURCES))
+LIBS := $(wildcard libs/*.uncompressed.*)
+SOURCES := $(wildcard *.uncompressed.* common/*.uncompressed.* desktop/*.uncompressed.* mobile/*.uncompressed.*)
+MIN := $(subst .uncompressed.,.min.,$(SOURCES) $(LIBS))
 
 %.map %.min.js : %.uncompressed.js
 	uglifyjs \
@@ -25,14 +26,17 @@ release: $(MIN)
 	@echo "Done"
 
 # Other targets
+%.esl : %.uncompressed.js
+	eslint --config package.json $^
+	touch $@
 
 clean:
 	find . -name '*~' -exec rm \{\} \;
 	find . -name '*.min.*' -exec rm \{\} \;
 	find . -name '*.map' -exec rm \{\} \;
+	find . -name '*.esl' -exec rm \{\} \;
 
-eslint: $(wildcard *.uncompressed.js */*.uncompressed.js)
-	eslint --config package.json $^
+eslint: $(subst .uncompressed.js,.esl,$(SOURCES))
 
 locale/%.json: *.uncompressed.js Squirrel.html.src
 	perl build_scripts/translate.pl $(*F) *.uncompressed.js Squirrel.html.src

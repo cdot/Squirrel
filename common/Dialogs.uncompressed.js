@@ -15,6 +15,7 @@ Squirrel.Dialog = {};
 // close_dialog($dlg)
 
 Squirrel.Dialog.squeak_more = function(p) {
+    "use strict";
     $(".squeak-while").remove();
     if (typeof p === "string")
         p = { message: p, severity: "notice" };
@@ -133,6 +134,7 @@ Squirrel.Dialog.login = function(options) {
  * Confirm deletion of a node
  */
 Squirrel.Dialog.delete_node = function($node) {
+    "use strict";
     var $dlg = $("#delete_node");
     $dlg.data("node", $node);
 
@@ -177,6 +179,7 @@ Squirrel.Dialog.delete_node = function($node) {
 };
 
 Squirrel.Dialog.about = function($node) {
+    "use strict";
     var $dlg = $("#about");
     if ($dlg.hasClass("hidden"))
         Squirrel.Dialog.init_dialog($dlg);
@@ -184,6 +187,7 @@ Squirrel.Dialog.about = function($node) {
 };
 
 Squirrel.Dialog.pick = function($node) {
+    "use strict";
     var $dlg = $("#pick");
 
     if ($dlg.hasClass("hidden")) {
@@ -243,6 +247,7 @@ Squirrel.Dialog.pick = function($node) {
  * Password generation for the given leaf node
  */
 Squirrel.Dialog.randomise = function($node) {
+    "use strict";
     var $dlg = $("#randomise");
     $dlg.data("node", $node);
 
@@ -275,12 +280,13 @@ Squirrel.Dialog.randomise = function($node) {
 
     $("#randomise_path").text(path.join("/"));
     $("#randomise_key").text($node.find(".key:first").text());
-    $("#randomise_again").trigger('click');
+    $("#randomise_again").trigger("click");
 
     Squirrel.Dialog.open_dialog($dlg);
 };
 
 Squirrel.Dialog.search = function() {
+    "use strict";
     var $dlg = $("#search");
 
     if ($dlg.hasClass("hidden")) {
@@ -298,12 +304,12 @@ Squirrel.Dialog.search = function() {
     Squirrel.Dialog.open_dialog($dlg);
 };
 
-const unit_names = [ 'y', 'm', 'w', 'd' ];
+const unit_names = [ "y", "m", "w", "d" ];
 const units_days = {
-    'y': 365,
-    'm': 30,
-    'w': 7,
-    'd': 1
+    "y": 365,
+    "m": 30,
+    "w": 7,
+    "d": 1
 };
 
 const ms_in_day = 24 * 60 * 60 * 1000;
@@ -312,6 +318,7 @@ const ms_in_day = 24 * 60 * 60 * 1000;
  * Reminder setting dialog
  */
 Squirrel.Dialog.alarm = function($node) {
+    "use strict";
     var $dlg = $("#alarm");
 
     if ($dlg.hasClass("hidden")) {
@@ -327,11 +334,11 @@ Squirrel.Dialog.alarm = function($node) {
 
             // Find largest unit for text message
             var uns = "d";
-            for (var i = 0; i < unit_names.length; i++) {
-                var n = units_days[unit_names[i]];
-                if (numb % n == 0) {
-                    numb /= n;
-                    uns = unit_names[i];
+            for (var ui = 0; ui < unit_names.length; ui++) {
+                var un = units_days[unit_names[ui]];
+                if (numb % un === 0) {
+                    numb /= un;
+                    uns = unit_names[ui];
                     break;
                 }
             }
@@ -364,12 +371,10 @@ Squirrel.Dialog.alarm = function($node) {
 
         $("#alarm_clear")
             .click(function() {
-                if ($alarm) {
-                    Squirrel.Dialog.play_action(
-                        { type: "C",
-                          path: $dlg.data("node").treenode("get_path")
-                        });
-                }
+                Squirrel.Dialog.play_action(
+                    { type: "C",
+                      path: $dlg.data("node").treenode("get_path")
+                    });
                 Squirrel.Dialog.close_dialog($dlg);
                 return false;
             });
@@ -385,7 +390,7 @@ Squirrel.Dialog.alarm = function($node) {
         units = "d";
         for (var i = 0; i < unit_names.length; i++) {
             var n = units_days[unit_names[i]];
-            if (number % n == 0) {
+            if (number % n === 0) {
                 number /= n;
                 units = unit_names[i];
                 break;
@@ -452,6 +457,7 @@ Squirrel.Dialog.ss_change_image = function() {
 };
 
 Squirrel.Dialog.store_settings = function(chain) {
+    "use strict";
     var $dlg = $("#store_settings");
 
     if ($dlg.hasClass("hidden")) {
@@ -499,7 +505,7 @@ Squirrel.Dialog.store_settings = function(chain) {
             });
 
         Squirrel.Dialog.init_dialog($dlg);
-    };
+    }
 
     $("#store_settings_message").empty();
     $dlg.data("callback", chain);
@@ -534,8 +540,8 @@ Squirrel.Dialog.chpw = function() {
             var p = $("#chpw_pass").val(),
             c = $("#chpw_conf").val();
 
-            $("#chpw_nomatch").toggle(p != c);
-            return (p == c);
+            $("#chpw_nomatch").toggle(p !== c);
+            return (p === c);
         });
 
         $("#chpw_conf").on("change", function() {
@@ -543,7 +549,7 @@ Squirrel.Dialog.chpw = function() {
         });
 
         Squirrel.Dialog.init_dialog($dlg);
-    };
+    }
 
     $dlg.data("validate").call();
 
@@ -567,6 +573,7 @@ Squirrel.Dialog.chpw = function() {
 
 Squirrel.Dialog.json = function() {
 
+    "use strict";
     var $dlg = $("#json");
 
     if ($dlg.hasClass("hidden")) {
@@ -578,9 +585,9 @@ Squirrel.Dialog.json = function() {
         $("#json_ok")
             .click(function () {
                 Squirrel.Dialog.close_dialog($dlg);
-                var data;
+                var datum;
                 try {
-                    data = JSON.parse($("#json_text").val());
+                    datum = JSON.parse($("#json_text").val());
                 } catch (e) {
                     Squirrel.Dialog.squeak({
                         title: TX.tx("JSON could not be parsed"),
@@ -591,7 +598,7 @@ Squirrel.Dialog.json = function() {
                 }
                 $("#json_ok").prop("disabled", true);
                 if (DEBUG) console.debug("Importing...");
-                Squirrel.insert_data([], data);
+                Squirrel.insert_data([], datum);
                 return true;
             });
         Squirrel.Dialog.init_dialog($dlg);
@@ -609,6 +616,7 @@ Squirrel.Dialog.json = function() {
 };
 
 Squirrel.Dialog.extras = function() {
+    "use strict";
     var $dlg = $("#extras");
 
     if ($dlg.hasClass("hidden")) {

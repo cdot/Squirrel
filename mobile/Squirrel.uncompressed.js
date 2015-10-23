@@ -6,13 +6,16 @@
 
 // Rewire handlers click to vclick
 $.fn.click = function(listener) {
+    "use strict";
+
     return this.each(function() {
-        $(this).on('vclick', listener);
+        $(this).on("vclick", listener);
     });
 };
 
 // Once logged in, switch to "authenticated" state
 Squirrel.authenticated = function() {
+    "use strict";
     $("body")
         .pagecontainer()
         .on("pagecontainerchange", function () {
@@ -24,12 +27,14 @@ Squirrel.authenticated = function() {
         transition: "fade",
         changeHash: false
     });
-}
+};
 
 Squirrel.init_menus = function() {
+    "use strict";
 };
 
 Squirrel.open_menu = function($node) {
+    "use strict";
     var $menu = $("#menu");
 
     // Is menu already open/opening? We get this because taphold
@@ -153,7 +158,7 @@ Squirrel.init_ui = function() {
                 if (e !== null)
                     Squirrel.Dialog.squeak({
                         title: TX.error,
-                        severity: "error"
+                        severity: "error",
                         message: e.message
                     });
             }
@@ -226,5 +231,3 @@ Squirrel.init_ui = function() {
 
     Squirrel.init_cloud_store();
 };
-
-

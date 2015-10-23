@@ -4,9 +4,10 @@
  * Plugin to scroll the view to this element
  */
 (function($) {
-    $.fn.scroll_into_view = function () {
-        "use strict";
+    
+    "use strict";
 
+    $.fn.scroll_into_view = function () {
         return this.each(function () {
             var offset = $(this).offset().top - $(window).scrollTop();
 

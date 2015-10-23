@@ -79,7 +79,7 @@ AbstractStore.prototype.pass = function(pass) {
  * @param ok called on success with this=self
  * @param fail called on failure with this=self
  */
-AbstractStore.prototype.write = function(/*path, data, ok, fail*/) {
+AbstractStore.prototype.write = function(path, data, ok, fail) {
     "use strict";
 
     fail.call(this, "Store has no write method");

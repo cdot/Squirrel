@@ -4,6 +4,7 @@
  * Subclass of squirrel.treenode, specific to jQuery mobile
  */
 (function($) {
+    "use strict";
     var map_treenode_icon = {
         "closed": "carat-r",
         "open": "carat-d",

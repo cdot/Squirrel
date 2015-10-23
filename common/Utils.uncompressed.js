@@ -504,8 +504,9 @@ Utils.Base64ToArrayBuffer = function(sB64) {
  * @param on_loaded is called when all libs have been loaded
  */
 Utils.load = function(libs, on_loaded) {
+    "use strict";
     // action when a resource is loaded
-    var _loaded = function(file, expect, on_loaded) {
+    var _loaded = function(file) {
         console.debug("Loaded " + file);
         delete expect[file];
         if (Object.keys(expect).length === 0) {
@@ -519,9 +520,9 @@ Utils.load = function(libs, on_loaded) {
     };
 
     // fire off a resource load
-    var _add_load = function(file, expect, on_loaded) {
+    var _add_load = function(file) {
         if (DEBUG)
-            file = file.replace(".min.", ".uncompressed.")
+            file = file.replace(".min.", ".uncompressed.");
 
         console.debug("Loading " + file);
         expect[file] = true;
@@ -529,24 +530,24 @@ Utils.load = function(libs, on_loaded) {
             $.getScript(file)
                 .done(function() {
                     //console.debug("Loaded script " + file);
-                    _loaded(file, expect, on_loaded);
+                    _loaded(file);
                 })
                 .fail(function(jqXHR, settings, exception) {
                     debugger;
                 });
         } else if (/\.css$/.test(file)) {
             $("link")
-                .appendTo('head')
+                .appendTo("head")
                 .attr({ type: "text/css", rel: "stylesheet" })
                 .attr("href", file);
-            _loaded(file, expect, on_loaded);
+            _loaded(file);
         } else if (/\.html$/.test(file)) {
             $.get(file)
                 .done(function(data) {
                     console.debug("Loaded HTML " + file);
                     $(data)
-                        .appendTo('body');
-                    _loaded(file, expect, on_loaded);
+                        .appendTo("body");
+                    _loaded(file);
                 })
                 .fail(function(jqXHR, settings, exception) {
                     debugger;
@@ -556,7 +557,7 @@ Utils.load = function(libs, on_loaded) {
 
     var expect = {};
     for (var i = 0; i < libs.length; i++) {
-        _add_load(libs[i], expect, on_loaded);
+        _add_load(libs[i]);
     }
 };
 
@@ -564,6 +565,7 @@ Utils.load = function(libs, on_loaded) {
  * Parse the query string, and return a map of key=>value
  */
 Utils.query_string = function () {
+    "use strict";
     var query = {};
     var vars = window.location.search.substring(1).split(/[&;]+/);
     for (var i = 0; i < vars.length; i++) {
@@ -584,6 +586,7 @@ Utils.query_string = function () {
 };
 
 Utils.make_query_string = function(qs) {
+    "use strict";
     var params = "";
     var sep = "?";
     for (var k in qs) {

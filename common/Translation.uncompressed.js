@@ -61,7 +61,13 @@ var TX = {
         return s;
     },
 
-    error: function() { return TX.tx("Error"); },
+    error: function() {
+        "use strict";
+        return TX.tx("Error");
+    },
 
-    warning: function() { return TX.tx("Warning"); }
+    warning: function() {
+        "use strict";
+        return TX.tx("Warning");
+    }
 };

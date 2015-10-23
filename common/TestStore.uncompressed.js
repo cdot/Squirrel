@@ -31,7 +31,7 @@ TestStore.prototype.options = function() {
 
 TestStore.prototype.read = function(path, ok, fail) {
     "use strict";
-    if (this.pass() != "x") {
+    if (this.pass() !== "x") {
         fail.call(this, "TestStore.read expects password 'x'");
     } else {
         LocalStorageStore.prototype.read.call(this, "TEST" + path, ok, fail);
@@ -41,7 +41,7 @@ TestStore.prototype.read = function(path, ok, fail) {
 TestStore.prototype.write = function(path, data, ok, fail) {
     "use strict";
 
-    if (this.pass() != "x") {
+    if (this.pass() !== "x") {
         fail.call(this, "TestStore.write expects password 'x'");
     } else {
         LocalStorageStore.prototype.write.call(this, "TEST" + path, data, ok, fail);

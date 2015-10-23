@@ -4,8 +4,8 @@
  * Simple in-place editing widget
  */
 (function($) {
+    "use strict";
     $.fn.edit_in_place = function(options) {
-        "use strict";
 
         var $self = $(this);
         var h = options.height || $self.height();
@@ -60,4 +60,3 @@
             .select();
     };
 })(jQuery);
-    

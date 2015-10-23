@@ -45,11 +45,12 @@ const SQUIRREL_STORE = DropboxStore;
 DropboxStore.prototype = Object.create(AbstractStore.prototype);
 
 DropboxStore.prototype.options = function() {
+    "use strict";
     return $.extend(AbstractStore.prototype.options(), {
         needs_path: true,
         identifier: "Dropbox"
     });
-}
+};
 
 DropboxStore.prototype.write = function(path, data, ok, fail) {
     "use strict";

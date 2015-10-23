@@ -45,13 +45,14 @@ Squirrel.Tree = { // Namespace
 };
 
 (function($) {
+    "use strict";
     /**
      * Baseclass of treenode widgets. These are customised for different
      * environments e.g. desktop with raw jQuery, mobile wih jQuery mobile.
      */
     $.widget("squirrel.treenode", {
         _create: function() {
-            "use strict";
+
             // this.element is the object it's called on
             // This will be a div for the root, and an li for any other node
             // this.options is the options passed
@@ -159,7 +160,7 @@ Squirrel.Tree = { // Namespace
 
         // Switch from open to closed or vice versa
         toggle: function() {
-            "use strict";
+
             var $node = $(this.element);
             if ($node.hasClass("treenode-open"))
                 return $node.treenode("close");
@@ -168,7 +169,7 @@ Squirrel.Tree = { // Namespace
 
         // Force the node open
         open: function () {
-            "use strict";
+
             var $node = $(this.element);
             if ($node.hasClass("treenode-open"))
                 return $node;
@@ -182,7 +183,7 @@ Squirrel.Tree = { // Namespace
 
         // Force the node closed
         close: function () {
-            "use strict";
+
             var $node = $(this.element);
             if (!$node.hasClass("treenode-open"))
                 return $node;
@@ -205,7 +206,6 @@ Squirrel.Tree = { // Namespace
          * and is only used when action is "create".
          */
         icon_button: function(action, selector, icon, on_click) {
-            "use strict";
             throw "Expected icon_button to be subclassed";
         },
 
@@ -215,7 +215,6 @@ Squirrel.Tree = { // Namespace
          * handle nodes differently.
          */
         attach_handlers: function() {
-            "use strict";
             throw "Expected attach_handlers to be subclassed";
         },
 
@@ -229,7 +228,6 @@ Squirrel.Tree = { // Namespace
          * Requires edit_in_place.
          */
         edit: function(what) {
-            "use strict";
             var $node = $(this.element);
 
             var $span = $node.find("." + what).first();
@@ -262,12 +260,10 @@ Squirrel.Tree = { // Namespace
 
         // Do we need this any more?
         refresh: function() {
-            "use strict";
             console.debug("Called treenode.refresh");
         },
 
         set_alarm: function(data) {
-            "use strict";
             var $node = $(this.element);
             if (typeof $node.data("alarm") === "undefined") {
                 var $button = $("<button></button>")
@@ -291,14 +287,12 @@ Squirrel.Tree = { // Namespace
         },
 
         cancel_alarm: function() {
-            "use strict";
             return $(this.element)
                 .removeData("alarm")
                 .treenode("icon_button", "destroy", ".alarm:first");
         },
 
         ring_alarm: function() {
-            "use strict";
             return $(this.element)
                 .find(".alarm")
                 .addClass("expired")
@@ -312,7 +306,6 @@ Squirrel.Tree = { // Namespace
          * the title of nodes.
          */
         set_modified: function(time) {
-            "use strict";
             var d = new Date(time);
             return $(this.element)
                 .addClass("modified")
@@ -327,9 +320,7 @@ Squirrel.Tree = { // Namespace
          * within a node.
          * @return an array containing the path to the node, one string per key
          */
-        get_path: function($node) {
-            "use strict";
-            
+        get_path: function() {
             var $node = $(this.element);
 
             if (!$node.hasClass("treenode"))

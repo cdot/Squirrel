@@ -17,12 +17,13 @@ function StegaStore(params) {
 StegaStore.prototype = Object.create(LayeredStore.prototype);
 
 StegaStore.prototype.options = function() {
+    "use strict";
     return $.extend(
         LayeredStore.prototype.options.call(this),
         {
             needs_image: true
         });
-}
+};
 
 StegaStore.prototype.read = function(path, ok, fail) {
     "use strict";

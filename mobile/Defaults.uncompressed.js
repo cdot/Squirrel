@@ -1,4 +1,5 @@
 (function($) {
+    "use strict";
     $(document).on("mobileinit", function() {
         // See https://api.jquerymobile.com/global-config/
         $.mobile.ajaxEnabled = false;

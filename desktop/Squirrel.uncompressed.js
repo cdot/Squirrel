@@ -6,6 +6,7 @@
 
 // Once logged in, switch to "authenticated" state
 Squirrel.authenticated = function() {
+    "use strict";
     $(".unauthenticated").hide();
     $(".authenticated").show();
     $("#whoami").text(Squirrel.client.store.user());
@@ -91,7 +92,6 @@ Squirrel.init_menus = function() {
      * Handler for context menu items
      */
     var handle_choice = function(e, ui) {
-        "use strict";
 
         var $node = ui.target.closest(".treenode");
 
@@ -271,7 +271,7 @@ Squirrel.init_ui = function() {
         var opts = {};
 
         if (typeof self.data("icon") !== "undefined") {
-            opts.icons =  {
+            opts.icons = {
                 primary: self.data("icon")
             };
             opts.text = false;

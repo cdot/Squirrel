@@ -4,6 +4,7 @@
  * Subclass of squirrel.treenode, specific to desktop jQuery
  */
 (function($) {
+    "use strict";
     var map_treenode_icon = {
         "closed": "ui-icon-squirrel-folder-closed",
         "open": "ui-icon-squirrel-folder-open",
@@ -17,7 +18,6 @@
          * Requires edit_in_place.
          */
         edit: function(what) {
-            "use strict";
             var $node = $(this.element);
 
             var $span = $node.find("." + what).first();
@@ -81,7 +81,7 @@
             var $info = $node.children(".treenode-info");
             $info.hover(
                 function(/*evt*/) {
-                    if ($(this).find(".in_place_editor").length == 0) {
+                    if ($(this).find(".in_place_editor").length === 0) {
                         $(this)
                             .addClass("hover");
                         $("<div></div>")

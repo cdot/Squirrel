@@ -2,7 +2,8 @@
 
 // Desktop customisation of dialogs 
 Squirrel.Dialog.init_dialog = function($dlg) {
-    $('#' + $dlg.attr("id") + "_cancel")
+    "use strict";
+    $("#" + $dlg.attr("id") + "_cancel")
         .button()
         .click(function() {
             $dlg.dialog("close");
@@ -11,6 +12,7 @@ Squirrel.Dialog.init_dialog = function($dlg) {
 };
 
 Squirrel.Dialog.open_dialog = function($dlg) {
+    "use strict";
     $dlg.dialog({
         modal: true,
         width: "auto",
@@ -19,6 +21,7 @@ Squirrel.Dialog.open_dialog = function($dlg) {
 };
 
 Squirrel.Dialog.close_dialog = function($dlg) {
+    "use strict";
     $dlg.dialog("close");
 };
 
@@ -42,7 +45,7 @@ Squirrel.Dialog.squeak = function(p) {
     if ($dlg.hasClass("hidden")) {
         $("#squeak_close")
             .button()
-            .click(function(/*e*/) {
+            .click(function(e) {
                 if (typeof p.after_close !== "undefined") {
                     p.after_close();
                     called_back = true;

@@ -27,6 +27,8 @@ var Squirrel = {
 };
 
 Squirrel.init_common_ui = function() {
+    "use strict";
+
     $("#authenticated_save")
         .hide()
         .click(function(/*evt*/) {
@@ -189,7 +191,7 @@ Squirrel.unsaved_changes = function(max_changes) {
     $(".treenode.modified").each(function() {
         if (DEBUG && !$(this).data("path")
            && !$(this).hasClass("treenode-root")) debugger; // Missing data-path
-        var path = $(this).data("path") || 'node';
+        var path = $(this).data("path") || "node";
         message.push(TX.tx("$1 has changed",
                            path.replace(Squirrel.PATHSEP, "/")));
     });
@@ -289,7 +291,7 @@ Squirrel.save_hoards = function() {
                 $(".modified").removeClass("modified");
                 Squirrel.client.status = Squirrel.IS_LOADED;
                 Squirrel.Dialog.squeak_more(
-                        + TX.tx("Saved in $1", this.options().identifier))
+                        TX.tx("Saved in $1", this.options().identifier));
                 finished();
             },
             function(e) {

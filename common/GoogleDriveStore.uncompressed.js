@@ -57,7 +57,8 @@ function gapi_on_load() {
  * Analyse an error returned by a promise
  */
 GoogleDriveStore.prototype._analyse_error = function(r, context, fail) {
-    var mess = context + TX.tx(' failed: ');
+    "use strict";
+    var mess = context + TX.tx(" failed: ");
     if (r.status === 401) {
         mess += TX.tx("Your access token has expired, or you are not logged in. Please refresh the page in order to save in Google Drive");
     } else if (r.result) {
@@ -300,7 +301,7 @@ GoogleDriveStore.prototype.options = function() {
         needs_path: true,
         identifier: "Google Drive"
     });
-}
+};
 
 GoogleDriveStore.prototype.write = function(path, data, ok, fail) {
     "use strict";
