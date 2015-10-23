@@ -34,7 +34,7 @@ AES.encrypt = function(ab, password, nBits) {
 
     // use 1st 16/24/32 chars of password for key, zero padded
     for (var i = 0; i < nBytes; i++) {
-        if (i > password.length)
+        if (i < password.length)
             pwBytes[i] = password.charCodeAt(i) & 255;
         else
             pwBytes[i] = 0;
@@ -134,7 +134,7 @@ AES.decrypt = function(ab, password, nBits) {
     var nBytes = nBits / 8;  // no bytes in key
     var pwBytes = new Uint8Array(nBytes);
     for (var i = 0; i < nBytes; i++) {
-        if (i > password.length)
+        if (i < password.length)
             pwBytes[i] = password.charCodeAt(i) & 255;
         else
             pwBytes[i] = 0;

@@ -39,13 +39,13 @@
     <script src="mobile/Squirrel.uncompressed.js"></script>
   </head>
   <body>
-    <div id="activity" data-role="popup" class="ui-content hidden" data-position-to="window">
+    <div id="squeak" data-role="popup" class="ui-content hidden" data-position-to="window">
       <div data-role="header">
-        <h1 id="activity_title">Activity...</h1>
+        <h1 id="squeak_title">Activity...</h1>
       </div>
-      <div id="activity_message" class="ui-content"></div>
+      <div id="squeak_message" class="ui-content"></div>
       <div data-role="footer">
-        <button id="activity_close" class="TX_text">Close</button>
+        <button id="squeak_close" class="TX_text">Close</button>
       </div>
     </div>
     
@@ -348,22 +348,6 @@
         <div id="sites-node" name="/"></div>
       </div>
     </div>
-   
-    <!-- not processed yet -->
-    <div id="dialogs" style="display:none">
-      
-      <div id="dlg_conflicts" data-role="popup" data-dismissible="false" class="TX_title" title="WARNING!">
-        <p class="TX_text">
-          Conflicts were detected while merging actions from the Cloud:
-        </p>
-        <div id="dlg_conflicts_message">
-        </div>
-        <p class="TX_text">
-          Please review these rejected actions before saving
-        </p>
-      </div>
-    </div>
-    
     <div id="screen-width-element"></div>
   </body>
 </html>

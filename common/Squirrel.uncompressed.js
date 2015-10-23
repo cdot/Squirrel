@@ -101,13 +101,12 @@ Squirrel.check_alarms = function(/* event */) {
             $node.treenode("ring_alarm");
             Squirrel.Dialog.squeak(
                 {
-                    message: $("<p></p>")
-                        .append(
-                            $("<div></div>")
-                                .addClass("ui-icon ui-icon-squirrel-rang"))
-                        .append(TX.tx("Reminder on '$1' was due on $2",
-                                      path.join("/"),
-                                      expired.toLocaleDateString())),
+                    severity: "warning",
+                    message:
+                    "<div class='ui-icon ui-icon-squirrel-rang'></div>"
+                        + TX.tx("Reminder on '$1' was due on $2",
+                                path.join("/"),
+                                expired.toLocaleDateString()),
                     after_close: next
                 });
         });
@@ -160,18 +159,18 @@ Squirrel.get_updates_from_cloud = function(cloard, chain) {
         Squirrel.Tree.action,
         function(conflicts) {
             if (conflicts.length > 0) {
-                var $dlg = $("#dlg_conflicts");
-                var $msg = $("#dlg_conflicts_message");
-                $msg.empty();
+                Squirrel.Dialog.squeak({
+                    title: TX.warning(),
+                    severity: "warning",
+                    message: 
+                    TX.tx("Conflicts were detected while merging actions from the Cloud. Please review these rejected actions before saving.")
+                });
                 $.each(conflicts, function(i, c) {
                     var e = c.conflict;
-                    $("<div></div>")
-                        .text(Hoard.stringify_action(e)
-                              + ": " + c.message)
-                        .appendTo($msg);
-                });
-                $dlg.dialog({
-                    width: "auto"
+                    Squirrel.Dialog.squeak_more({
+                        severity: "warning",
+                        message: Hoard.stringify_action(e)
+                            + ": " + c.message });
                 });
             }
             Squirrel.cloud.status = Squirrel.IS_LOADED;
@@ -189,7 +188,7 @@ Squirrel.unsaved_changes = function(max_changes) {
 
     $(".treenode.modified").each(function() {
         if (DEBUG && !$(this).data("path")
-           && !$(this).hasClass("root")) debugger; // Missing data-path
+           && !$(this).hasClass("treenode-root")) debugger; // Missing data-path
         var path = $(this).data("path") || 'node';
         message.push(TX.tx("$1 has changed",
                            path.replace(Squirrel.PATHSEP, "/")));
@@ -230,7 +229,7 @@ Squirrel.insert_data = function(path, data) {
 
     Squirrel.Dialog.squeak({ title: "Loading" });
 
-    var $messy = $("#activity_message");
+    var $messy = $("#squeak_message");
 
     Squirrel.client.hoard.actions_from_hierarchy(
         { data: data },
@@ -242,7 +241,7 @@ Squirrel.insert_data = function(path, data) {
                     Squirrel.Tree.action(sact, next);
                 });
             if (res !== null)
-                Squirrel.Dialog.squeak_more(res.message + "<br />");
+                Squirrel.Dialog.squeak_more(res.message);
             if (next)
                 next();
         },
@@ -265,16 +264,44 @@ Squirrel.save_hoards = function() {
     var finished = function() {
         if (DEBUG) console.debug("...save finished");
         Utils.sometime("update_save");
-        Squirrel.Dialog.squeak_more(client_ok && cloud_ok
-                      ? TX.tx("Save complete")
-                      : TX.tx("Save encountered errors"));
         if (client_ok && cloud_ok) {
             if (Squirrel.client.hoard.options.autosave)
-                Squirrel.Dialog.close_dialog($("#activity"));
-            // Otherwise leave it open
-        } else
+                Squirrel.Dialog.close_dialog($("#squeak"));
+            else
+                // Otherwise leave it open
+                Squirrel.Dialog.squeak_more(TX.tx("Save complete"));
+
+        } else {
             // Otherwise leave it open, disable auto-save
+            Squirrel.Dialog.squeak_more({
+                severity: "error",
+                message: TX.tx("Save encountered errors")});
             Squirrel.client.hoard.options.autosave = false;
+        }
+    },
+
+    write_client_store = function() {
+        Squirrel.client.store.writes(
+            "Squirrel." + Squirrel.client.store.user(),
+            JSON.stringify(Squirrel.client.hoard),
+            function() {
+                if (DEBUG) console.debug("...client save OK");
+                $(".modified").removeClass("modified");
+                Squirrel.client.status = Squirrel.IS_LOADED;
+                Squirrel.Dialog.squeak_more(
+                        + TX.tx("Saved in $1", this.options().identifier))
+                finished();
+            },
+            function(e) {
+                if (DEBUG) console.debug("...client save failed " + e);
+                Squirrel.Dialog.squeak_more({
+                    severity: "error",
+                    message: TX.tx("Failed to save in $1: $2",
+                                   this.options().identifier, e)
+                });
+                client_ok = false;
+                finished();
+            });
     },
 
     save_client = function() {
@@ -288,29 +315,35 @@ Squirrel.save_hoards = function() {
 
         Squirrel.client.status = Squirrel.PENDING_SAVE;
 
-        Squirrel.client.store.writes(
-            "Squirrel." + Squirrel.client.store.user(),
-            JSON.stringify(Squirrel.client.hoard),
-            function() {
-                if (DEBUG) console.debug("...client save OK");
-                $(".modified").removeClass("modified");
-                Squirrel.client.status = Squirrel.IS_LOADED;
-                Squirrel.Dialog.squeak_more(
-                    "<div class='notice'>"
-                        + TX.tx("Saved in $1", this.options().identifier)
-                        + "</div>");
+        Squirrel.Dialog.squeak_more({
+            severity: "while",
+            message: TX.tx("Saving in $1",
+                           Squirrel.client.store.options().identifier)});
 
-                finished();
+        Utils.soon(write_client_store);
+    },
+
+    write_cloud_store = function(cloard) {
+        Squirrel.cloud.store.writes(
+            Squirrel.client.hoard.options.store_path,
+            JSON.stringify(cloard),
+            function() {
+                if (DEBUG) console.debug("...cloud save OK");
+                Squirrel.client.hoard.actions = [];
+                Squirrel.client.hoard.last_sync = Date.now();
+                Squirrel.Dialog.squeak_more(
+                    TX.tx("Saved in $1", this.options().identifier));
+                Squirrel.cloud.status = Squirrel.IS_LOADED;
+                save_client();
             },
             function(e) {
-                if (DEBUG) console.debug("...client save failed " + e);
-                Squirrel.Dialog.squeak_more(
-                    "<div class='error'>"
-                        + TX.tx("Failed to save in $1: $2",
-                                this.options().identifier, e)
-                        + "</div>");
-                client_ok = false;
-                finished();
+                if (DEBUG) console.debug("...cloud save failed " + e);
+                Squirrel.Dialog.squeak_more({
+                    severity: "error",
+                    message: TX.tx("Failed to save in $1: $2",
+                                   this.options().identifier, e)});
+                cloud_ok = false;
+                save_client();
             });
     },
 
@@ -320,32 +353,14 @@ Squirrel.save_hoards = function() {
         if (Squirrel.cloud.store) {
             if (DEBUG) console.debug("...save to cloud");
 
+            Squirrel.Dialog.squeak_more({
+                severity: "while",
+                message: TX.tx("Saving in $1",
+                               Squirrel.cloud.store.options().identifier)});
+
             Squirrel.cloud.status = Squirrel.PENDING_SAVE;
 
-            Squirrel.cloud.store.writes(
-                Squirrel.client.hoard.options.store_path,
-                JSON.stringify(cloard),
-                function() {
-                    if (DEBUG) console.debug("...cloud save OK");
-                    Squirrel.client.hoard.actions = [];
-                    Squirrel.client.hoard.last_sync = Date.now();
-                    Squirrel.Dialog.squeak_more(
-                        "<div class='notice'>"
-                            + TX.tx("Saved in $1", this.options().identifier)
-                            + "</div>");
-                    Squirrel.cloud.status = Squirrel.IS_LOADED;
-                    Utils.soon(save_client);
-                },
-                function(e) {
-                    if (DEBUG) console.debug("...cloud save failed " + e);
-                    Squirrel.Dialog.squeak_more(
-                        "<div class='error'>"
-                            + TX.tx("Failed to save in $1: $2",
-                                    this.options().identifier, e)
-                            + "</div>");
-                    cloud_ok = false;
-                    Utils.soon(save_client);
-                });
+            Utils.soon(function() { write_cloud_store(cloard); });
         } else {
             if (DEBUG) console.debug("...no cloud store");
             save_client();
@@ -384,11 +399,10 @@ Squirrel.save_hoards = function() {
         } catch (e) {
             // We'll get here if decryption failed....
             if (DEBUG) console.debug("Cloud hoard JSON parse failed: " + e);
-            Squirrel.Dialog.squeak_more(
-                "<div class='error'>"
-                    + TX.tx("$1 hoard can't be read for update",
-                            this.options().identifier)
-                    + "</div>");
+            Squirrel.Dialog.squeak_more({
+                severity: "error",
+                message: TX.tx("$1 hoard can't be read for update",
+                            this.options().identifier)});
             Squirrel.cloud.status = Squirrel.IS_CORRUPT;
             cloud_ok = false;
             construct_new_cloud();
@@ -419,11 +433,10 @@ Squirrel.save_hoards = function() {
             Squirrel.cloud.status = Squirrel.IS_EMPTY;
             construct_new_cloud();
         } else {
-            Squirrel.Dialog.squeak_more(
-                "<div class='error'>"
-                    + TX.tx("Failed to refresh from $1",
-                            this.options().identifier)
-                    + "<br>" + e + "</div>");
+            Squirrel.Dialog.squeak_more({
+                severity: "error",
+                message: TX.tx("Failed to refresh from $1: $2",
+                               this.options().identifier, e)});
             cloud_ok = false;
             Utils.soon(save_client);
         }
@@ -512,9 +525,11 @@ Squirrel.load_cloud_hoard = function() {
                         console.debug("Client hoard JSON parse failed: " + e);
                     Squirrel.Dialog.squeak({
                         title: TX.error(),
+                        severity: "error",
                         message:
                         TX.tx("$1 hoard exists, but can't be read.",
                               this.options().identifier)
+                            + " "
                             + TX.tx("Check that you have the correct password.")
                     });
                     Squirrel.cloud.status = Squirrel.IS_CORRUPT;
@@ -533,9 +548,12 @@ Squirrel.load_cloud_hoard = function() {
                 } else {
                     Squirrel.Dialog.squeak({
                         title: TX.error(),
+                        severity: "error",
                         message:
                         TX.tx("Could not load cloud hoard.")
+                            + " "
                             + TX.tx("Check that you have the correct password.")
+                            + " "
                             + TX.tx("Error was: $1 store error: $2",
                                     this.options().identifier, e)
                     });
@@ -607,7 +625,8 @@ Squirrel.load_client_hoard = function() {
             });
     };
 
-    if (DEBUG) console.debug("Load client store");
+    if (DEBUG)
+        console.debug("Load client store");
 
     Squirrel.client.store.reads(
         "Squirrel." + Squirrel.client.store.user(),
@@ -619,9 +638,11 @@ Squirrel.load_client_hoard = function() {
                 if (DEBUG) console.debug("Caught " + e);
                 Squirrel.Dialog.squeak({
                     title: TX.error(),
+                    severity: "error",
                     message:
                     TX.tx("$1 hoard exists, but can't be read.",
                           this.options().identifier)
+                        + " "
                         + TX.tx("Check that you have the correct password."),
                     after_close: Squirrel.init_application
                 });
@@ -647,8 +668,10 @@ Squirrel.load_client_hoard = function() {
                 Utils.soon(Squirrel.init_client_hoard);
             } else {
                 Squirrel.Dialog.squeak({
-                    title: TX.tx("$1 store error", this.options().identifier),
-                    message: e,
+                    title: TX.error(),
+                    severity: "error",
+                    message: TX.tx("$1 store error: $2",
+                                   this.options().identifier, e),
                     after_close: Squirrel.init_application
                 });
             }
@@ -704,7 +727,6 @@ Squirrel.identify_user = function() {
 
     // If we still need user or password, prompt
     if (uReq || pReq) {
-        console.debug("Open login dialog");
         Squirrel.Dialog.login({
             store: Squirrel.client.store,
             on_signin: function(user, pass) {
@@ -747,8 +769,9 @@ Squirrel.init_client_store = function() {
         fail: function(e) {
             // We did our best!
             Squirrel.Dialog.squeak({
-                title: Pages.activity.titles.error,
-                message: e
+                title: TX.error(),
+                severity: "error",
+                message: TX.tx("Encryption error: $1", e)
             });
         }
     });
@@ -768,10 +791,14 @@ Squirrel.init_cloud_store = function() {
         },
         fail: function(e) {
             Squirrel.Dialog.squeak({
-                message: TX.tx("Could not open cloud store: $1", e)
-                    + "<p>"
-                    + TX.tx("If you continue, only the client store will be available"),
+                title: TX.warning(),
+                severity: "warning",
+                message: TX.tx("Could not open cloud store: $1", e),
                 after_close: Squirrel.init_client_store
+            });
+            Squirrel.Dialog.squeak_more({
+                severity: "warning",
+                message: TX.tx("If you continue, only the client store will be available")
             });
         }
     };
@@ -842,9 +869,10 @@ Squirrel.search = function(s) {
                 Squirrel.USE_STEGANOGRAPHY = true;
 
             var store_bits = [ "common/" + store + ".min.js" ];
-            if (Squirrel.USE_STEGANOGRAPHY)
+            if (Squirrel.USE_STEGANOGRAPHY) {
+                store_bits.push("common/Steganographer.min.js");
                 store_bits.push("common/StegaStore.min.js");
-            else
+            } else
                 $(".using_steganography").remove();
             Utils.load(store_bits, function () {
                 // Initialise translation module,

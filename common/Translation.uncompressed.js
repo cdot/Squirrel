@@ -61,5 +61,7 @@ var TX = {
         return s;
     },
 
-    error: function() { return TX.tx("Error"); }
+    error: function() { return TX.tx("Error"); },
+
+    warning: function() { return TX.tx("Warning"); }
 };

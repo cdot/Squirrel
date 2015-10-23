@@ -123,6 +123,7 @@ Squirrel.init_ui = function() {
                 if (e !== null)
                     Squirrel.Dialog.squeak({
                         title: TX.error(),
+                        severity: "error",
                         message: e.message
                     });
             }
@@ -152,6 +153,7 @@ Squirrel.init_ui = function() {
                 if (e !== null)
                     Squirrel.Dialog.squeak({
                         title: TX.error,
+                        severity: "error"
                         message: e.message
                     });
             }

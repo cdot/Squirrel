@@ -18,18 +18,18 @@ Squirrel.Dialog.close_dialog = function($dlg) {
 Squirrel.Dialog.squeak = function(p) {
     "use strict";
 
-    var $dlg = $("#activity");
+    var $dlg = $("#squeak");
 
     if (typeof p === "string")
         p = { message: p };
 
     if (typeof p.title === "string")
-        $("#activity_title").text(p.title).show();
+        $("#squeak_title").text(p.title).show();
     else
-        $("#activity_title").hide(); 
+        $("#squeak_title").hide(); 
     
     if ($dlg.hasClass("hidden")) {
-        $("#activity_close")
+        $("#squeak_close")
             .click(function() {
                 $dlg.popup("close");
                 if (typeof p.after_close === "function")
@@ -39,9 +39,9 @@ Squirrel.Dialog.squeak = function(p) {
     }
 
     if (typeof p.message === "string")
-        $("#activity_message").html(p.message);
+        $("#squeak_message").html(p.message);
     else
-        $("#activity_message").empty().append(p.message);
+        $("#squeak_message").empty().append(p.message);
 
     Squirrel.Dialog.open_dialog($dlg);
 };

@@ -698,6 +698,7 @@ Squirrel.Tree.undo = function() {
     if (res !== null)
         Squirrel.Dialog.squeak({
             title: TX.error(),
+            severity: "error",
             message: res.message
         });
 };

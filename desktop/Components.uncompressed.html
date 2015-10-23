@@ -41,7 +41,9 @@
       <div class="authfailed TX_text">Authentication failed. Refresh the browser to try again.</div>
     </div>
     <div class="authenticated">
-      <div id="logo"></div>
+      <div id="logo">
+        <button id="authenticated_extras" class="TX_title TX_text" title="Tools/Options" data-icon="ui-icon-squirrel-gear">Tools</button>
+      </div>
       <span id="search_label" class="TX_text">Search:</span>
       <input id="search" value="" class="TX_title" title="Enter search string" />
       <span id="search_hits"></span>
@@ -49,7 +51,6 @@
         <span class="TX_text">Signed in as: </span><span id="whoami"></span>
       </div>
       <div id="toolbar">
-        <button id="authenticated_extras" class="TX_title TX_text" title="Tools/Options" data-icon="ui-icon-squirrel-gear">Tools</button>
         <button id="authenticated_undo" class="TX_title TX_text" title="Undo last change" data-icon="ui-icon-squirrel-undo">Undo</button>
         <button id="authenticated_save" class="TX_text" data-icon="ui-icon-squirrel-save">Save</button>
       </div>
@@ -62,15 +63,25 @@
     
     <!-- Dialogs -->
     <div id="extras" class="dialog TX_title hidden" title="Extras">
-      <span class="TX_text">Autosave</span>
-      <select id="extras_autosave">
-        <option value="off" class="TX_text">Off</option>
-	<option value="on" class="TX_text">On</option>
-      </select><br />
-      <button id="extras_chss" class="TX_text">Change cloud store settings</button><br />
-      <button id="extras_chpw" class="TX_text">Change master password</button><br />
-      <button id="extras_json" class="TX_text">View/Edit JSON</button><br />
-      <button id="extras_about" class="TX_text">About Squirrel</button>
+      <p>
+        <span class="TX_text">Autosave</span>
+        <select id="extras_autosave">
+          <option value="off" class="TX_text">Off</option>
+	  <option value="on" class="TX_text">On</option>
+        </select>
+      </p>
+      <p>
+        <button id="extras_chss" class="TX_text">Change cloud store settings</button>
+      </p>
+      <p>
+        <button id="extras_chpw" class="TX_text">Change master password</button>
+      </p>
+      <p>
+        <button id="extras_json" class="TX_text">View/Edit JSON</button>
+      </p>
+      <p>
+        <button id="extras_about" class="TX_text">About Squirrel</button>
+      </p>
     </div>
 
     <div id="login" class="dialog TX_title hidden" title="Enter the password for your safe">
@@ -96,17 +107,9 @@
       </p>
     </div>
     
-    <div id="dlg_saving" class="dialog TX_title" title="Saving...">
-      <div id="dlg_saving_message"></div>
-    </div>
-    
-    <div id="dlg_loading" class="dialog TX_title" title="Loading...">
-      <div class="TX_text progress">Please wait...</div>
-    </div>
-    
-    <div id="activity" class="dialog TX_title hidden" title="Alert">
-      <p id="activity_message"></p>
-      <button id="activity_close" class="TX_text">OK</button>
+    <div id="squeak" class="dialog TX_title hidden" title="Alert">
+      <p id="squeak_message"></p>
+      <button id="squeak_close" class="TX_text">OK</button>
     </div>
     
     <div id="randomise" class="dialog TX_title hidden" title="Generate random value">
@@ -136,17 +139,6 @@
         <button id="delete_node_cancel" class="TX_text">Cancel</button>
         <button id="delete_node_ok" class="TX_text">Delete</button>
       </div>
-    </div>
-    
-    <div id="dlg_conflicts" class="dialog TX_title hidden" title="WARNING!">
-      <p class="TX_text">
-        Conflicts were detected while merging actions from the Cloud:
-      </p>
-      <div id="dlg_conflicts_message">
-      </div>
-      <p class="TX_text">
-        Please review these rejected actions before saving
-      </p>
     </div>
     
     <div id="chpw" class="dialog TX_title hidden" title="Change Password">
@@ -254,8 +246,9 @@
         if you choose 'photos/stills/grandma.png' it will use the file
         'grandma.png' in the directory 'photos/stills'.
       </p>
-      <label for="store_settings_storepath" class="TX_text">Store path: </label>
-      <input id="store_settings_storepath" type="text" value="" class="TX_title" title="Pathname of the image in your cloud store"/>
+      <p>
+        <label for="store_settings_storepath" class="TX_text">Store path: </label>
+        <input id="store_settings_storepath" type="text" value="" class="TX_title" title="Pathname of the image in your cloud store"/>
       </p>
       <p>
         <button id="store_settings_ok" class="TX_text">OK</button>
@@ -263,29 +256,23 @@
     </div>
     
     <div id="about" class="dialog TX_title hidden" title="About Squirrel">
-      <p>
+      <p class="TX_text">
         Squirrel is Copyright &copy; 2015 Crawford Currie <a href="http://c-dot.co.uk">http://c-dot.co.uk</a>
       </p>
-      <p>
+      <p class="TX_text">
         Licensed under the MIT License. Reuse within proprietary software is
         permitted provided all copies of the licensed software include a
         copy of the MIT License terms and the copyright notice.
       </p>
     </div>
     
-      <div id="json" class="dialog TX_title hidden" title="Database JSON">
-        <textarea id="json_text">
-        </textarea>
-        <div>
-          <button id="json_ok" class="TX_text">Reload this JSON</button>
-          <button id="json_cancel" class="TX_text">Cancel</button>
-        </div>
+    <div id="json" class="dialog TX_title hidden" title="Database JSON">
+      <textarea id="json_text">
+      </textarea>
+      <div>
+        <button id="json_ok" class="TX_text">Reload this JSON</button>
+        <button id="json_cancel" class="TX_text">Cancel</button>
       </div>
-
-    <!-- Not really a dialog, just a handy way to hide stuff -->
-    <div class="dialog">
-      <input type="file" id="dlg_load_file" />
     </div>
-    
   </body>
 </html>

@@ -14,8 +14,17 @@ Squirrel.Dialog = {};
 // open_dialog($dlg)
 // close_dialog($dlg)
 
-Squirrel.Dialog.squeak_more = function(mess) {
-    $("#activity_message").append(mess);
+Squirrel.Dialog.squeak_more = function(p) {
+    $(".squeak-while").remove();
+    if (typeof p === "string")
+        p = { message: p, severity: "notice" };
+
+    if (!p.severity)
+        p.severity = "notice";
+
+    $("#squeak_message").append(
+        $("<div class='squeak-" + p.severity + "'></div>")
+            .append(p.message));
 };
 
 Squirrel.Dialog.play_action = function(action) {
@@ -33,6 +42,7 @@ Squirrel.Dialog.play_action = function(action) {
     if (res !== null)
         Squirrel.Dialog.squeak({
             title: TX.error(),
+            severity: "error",
             message: res.message
         });
 };
@@ -145,6 +155,7 @@ Squirrel.Dialog.delete_node = function($node) {
                 if (res !== null) {
                     Squirrel.Dialog.squeak({
                         title: TX.error(),
+                        severity: "error",
                         message: res.message
                     });
                     return false;
@@ -440,7 +451,7 @@ Squirrel.Dialog.ss_change_image = function() {
         "arraybuffer");
 };
 
-Squirrel.Dialog.store_settings = function(store) {
+Squirrel.Dialog.store_settings = function(chain) {
     var $dlg = $("#store_settings");
 
     if ($dlg.hasClass("hidden")) {
@@ -482,13 +493,16 @@ Squirrel.Dialog.store_settings = function(store) {
                     return false;
                 }
                 Squirrel.Dialog.close_dialog($dlg);
+                var cb = $dlg.data("callback");
+                if (typeof cb === "function")
+                    cb();
             });
 
         Squirrel.Dialog.init_dialog($dlg);
     };
 
     $("#store_settings_message").empty();
-
+    $dlg.data("callback", chain);
     $("#store_settings_storepath").val(
         Squirrel.client.hoard.options.store_path);
 
@@ -533,10 +547,12 @@ Squirrel.Dialog.chpw = function() {
 
     $dlg.data("validate").call();
 
-    $("#chpw_ok")
+    $("#chpw_set")
         .click(function () {
             if (!$dlg.data("validate").call())
                 return false;
+            Squirrel.Dialog.close_dialog($dlg);
+            var p = $("#chpw_pass").val();
             Squirrel.client.store.pass(p);
             Squirrel.client.status = Squirrel.NEW_SETTINGS;
             Squirrel.cloud.store.pass(p);
@@ -568,6 +584,7 @@ Squirrel.Dialog.json = function() {
                 } catch (e) {
                     Squirrel.Dialog.squeak({
                         title: TX.tx("JSON could not be parsed"),
+                        severity: "error",
                         message: e
                     });
                     return false;

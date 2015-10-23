@@ -27,6 +27,8 @@ StegaStore.prototype.options = function() {
 StegaStore.prototype.read = function(path, ok, fail) {
     "use strict";
 
+    if (DEBUG)
+        console.debug("StegaStore: reading " + path);
     var self = this;
     var extract = function() {
         var steg = new Steganographer($("#stegamage")[0]);
@@ -65,6 +67,9 @@ StegaStore.prototype.read = function(path, ok, fail) {
 
 StegaStore.prototype.write = function(path, data, ok, fail) {
     "use strict";
+
+    if (DEBUG)
+        console.debug("StegaStore: writing " + path);
 
     var self = this;
     var image = document.getElementById("stegamage");

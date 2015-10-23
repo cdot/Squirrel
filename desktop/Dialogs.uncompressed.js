@@ -27,20 +27,20 @@ Squirrel.Dialog.close_dialog = function($dlg) {
  * @param p either a string message, or a structure containing:
  *  title - dialog title
  *  message - (string or $object or elem)
+ *  severity - may be one of notice (default), warning, error
  *  after_close - callback on dialog closed
  */
 Squirrel.Dialog.squeak = function(p) {
     "use strict";
 
-    var $dlg = $("#activity");
+    var $dlg = $("#squeak");
 
     if (typeof p === "string")
-        p = { message: p };
-
+        p = { message: p, severity: "notice" };
 
     var called_back = false;
     if ($dlg.hasClass("hidden")) {
-        $("#activity_close")
+        $("#squeak_close")
             .button()
             .click(function(/*e*/) {
                 if (typeof p.after_close !== "undefined") {
@@ -53,10 +53,8 @@ Squirrel.Dialog.squeak = function(p) {
         $dlg.removeClass("hidden");
     }
 
-    if (typeof message === "string")
-        $("#activity_message").html(p.message);
-    else
-        $("#activity_message").empty().append(p.message);
+    $("#squeak_message").empty();
+    Squirrel.Dialog.squeak_more(p);
 
     var options = {
         modal: true,
