@@ -6,8 +6,9 @@ Squirrel.Dialog = {};
 // The code below requires the environment to define the following
 // extra methods in the namespace:
 //
-// squeak
+// squeak(p) where p is a string or a structure:
 //    title
+//    severity (erro, warning, notice, while)
 //    message (string or $object or element)
 //    after_close
 // init_dialog($dlg)
@@ -601,6 +602,12 @@ Squirrel.Dialog.json = function() {
                 Squirrel.insert_data([], datum);
                 return true;
             });
+
+        $("#json_close")
+            .click(function() {
+                Squirrel.Dialog.close_dialog($dlg);
+            });
+
         Squirrel.Dialog.init_dialog($dlg);
     }
 
@@ -608,7 +615,7 @@ Squirrel.Dialog.json = function() {
     if (data)
         data = data.data;
     $("#json_text")
-        .text(JSON.stringify(data))
+        .text(JSON.stringify(data, null, " "))
         .select();
     $("#json_ok").prop("disabled", true);
 

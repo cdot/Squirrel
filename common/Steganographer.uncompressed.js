@@ -59,27 +59,25 @@ Steganographer.prototype.adjustToFit = function(size) {
     var slots = 3 * this.image.naturalWidth * this.image.naturalHeight - 6;
 
     var chunkSize = (bits / slots + 1) >> 0;
-    if (DEBUG) {
-        console.debug("Storage required " + bits + " bits, " + size + " bytes");
-        console.debug("Max image capacity "
-                      + this.maxChunk * slots + " bits, "
-                      + this.maxChunk * slots / 8 + " bytes");
-    }
+    if (DEBUG) console.debug(
+        "Storage required " + bits + " bits, " + size + " bytes"
+            + " Max image capacity "
+            + this.maxChunk * slots + " bits, "
+            + this.maxChunk * slots / 8 + " bytes");
 
     if (chunkSize > this.maxChunk) {
-        if (DEBUG)
-            console.debug(
-                "Steg: Computed chunk size " + chunkSize
-                    + " is > " + this.maxChunk
-                    + ", oversized by " + (-slots * (this.maxChunk - chunkSize))
-                    + " bits");
+        if (DEBUG) console.debug(
+            "Steg: Computed chunk size " + chunkSize
+                + " is > " + this.maxChunk
+                + ", oversized by " + (-slots * (this.maxChunk - chunkSize))
+                + " bits");
         throw (slots * (chunkSize - this.maxChunk))
             + " bits too many to hide in this image";
     }
 
-    if (DEBUG)
-        console.debug("Steg: Computed chunk size " + chunkSize
-                      + " (" + slots + " slots)");
+    if (DEBUG) console.debug(
+        "Steg: Computed chunk size " + chunkSize
+            + " (" + slots + " slots)");
 
     return chunkSize;
 };
@@ -98,9 +96,9 @@ Steganographer.prototype.inject = function(message) {
 
     var a8 = new Uint8Array(message);
 
-    if (DEBUG)
-        console.debug("Steg: Embedding " + a8.length + " bytes ("
-                      + (a8.length * 8) + " bits)");
+    if (DEBUG) console.debug(
+        "Steg: Embedding " + a8.length + " bytes ("
+            + (a8.length * 8) + " bits)");
 
     var shadowCanvas = document.createElement("canvas");
     shadowCanvas.style.display = "none";
@@ -199,11 +197,10 @@ Steganographer.prototype.inject = function(message) {
     iData[byte_i] = (iData[byte_i] & 0xFC) | (chunkSize & 0x3);
     byte_i += 2; // blue + alpha
 
-    if (DEBUG)
-        console.debug(
-            "Steg: Embedded " + numChunks + " chunks of "
-                + chunkSize + " bits, " + (numChunks * chunkSize) + " bits / "
-                + (numChunks * chunkSize / 8) + " bytes of data");
+    if (DEBUG) console.debug(
+        "Steg: Embedded " + numChunks + " chunks of "
+            + chunkSize + " bits, " + (numChunks * chunkSize) + " bits / "
+            + (numChunks * chunkSize / 8) + " bytes of data");
 
     imageData.data = iData;
     shadowCtx.putImageData(imageData, 0, 0);
@@ -252,11 +249,11 @@ Steganographer.prototype.extract = function() {
         throw "No message embedded";
 
     var message = new Uint8Array((numChunks * chunkSize) >> 3);
-    if (DEBUG)
-        console.debug("Steg: Extracting " + numChunks + " chunks of "
-                      + chunkSize + " bits, "
-                      + (numChunks * chunkSize) + " bits / "
-                      + (numChunks * chunkSize / 8) + " bytes of data");
+    if (DEBUG) console.debug(
+        "Steg: Extracting " + numChunks + " chunks of "
+            + chunkSize + " bits, "
+            + (numChunks * chunkSize) + " bits / "
+            + (numChunks * chunkSize / 8) + " bytes of data");
 
     var charCode = 0;
     var bitCount = 0;
@@ -276,10 +273,10 @@ Steganographer.prototype.extract = function() {
         }
     }
     if (mi < ((numChunks * chunkSize) >> 3)) {
-        console.debug("unwhak " + charCode);
+        //console.debug("unwhak " + charCode);
         message[mi++] = charCode & 0xFF;
     }
-    if (DEBUG)
-        console.debug("Steg: Extracted " + message.length + " bytes");
+    if (DEBUG) console.debug(
+        "Steg: Extracted " + message.length + " bytes");
     return message.buffer;
 };

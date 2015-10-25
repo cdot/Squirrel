@@ -16,13 +16,12 @@ $.fn.click = function(listener) {
 // Once logged in, switch to "authenticated" state
 Squirrel.authenticated = function() {
     "use strict";
-    $("body")
+    $("#authenticated_whoami").text(Squirrel.client.store.user());
+/*    $("body")
         .pagecontainer()
         .on("pagecontainerchange", function () {
             $("body").pagecontainer().off("pagecontainerchange");
-            $("#authenticated_whoami").text(Squirrel.client.store.user());
-            Utils.soon(Squirrel.load_client_hoard);
-        });
+        });*/
     $("body").pagecontainer("change", $("#authenticated"), {
         transition: "fade",
         changeHash: false
@@ -72,7 +71,7 @@ Squirrel.open_menu = function($node) {
 /**
  * Initialise handlers and jQuery UI components
  */
-Squirrel.init_ui = function() {
+Squirrel.init_custom_ui = function() {
     "use strict";
 
     // Initialise widgets
@@ -224,10 +223,4 @@ Squirrel.init_ui = function() {
 
         $this.hide();
     });
-
-    $(document)
-        .on("check_alarms", Squirrel.check_alarms)
-        .on("update_save", Squirrel.update_save);
-
-    Squirrel.init_cloud_store();
 };

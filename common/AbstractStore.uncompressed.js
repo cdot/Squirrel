@@ -18,15 +18,12 @@
  * is ready for use.
  *
  * @class
- * @param params fields
+ * @param params default fields (some stores may require more)
  *    * ok, called on success
  *    * fail, called on failure
- *    * identify, called to identify the user of the store,
- *      if needed
  */
 function AbstractStore(params) {
     "use strict";
-
     params.ok.call(this);
 }
 
@@ -160,8 +157,8 @@ function LayeredStore(params) {
     params.ok = function() {
         // 'this' is the engine.
         // Don't call AbstractStore(), it doesn't do anything useful
-        // for us. The identity prompt has already been issued by the
-        // engine constructor.
+        // for us - we don't want to call params.ok for this layer,
+        // only in the understore.
         self.engine = this;
         pok.call(self);
     };    

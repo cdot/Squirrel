@@ -260,7 +260,7 @@ Squirrel.Tree = { // Namespace
 
         // Do we need this any more?
         refresh: function() {
-            console.debug("Called treenode.refresh");
+            //console.debug("Called treenode.refresh");
         },
 
         set_alarm: function(data) {

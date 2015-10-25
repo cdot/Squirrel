@@ -7,10 +7,9 @@
 // Once logged in, switch to "authenticated" state
 Squirrel.authenticated = function() {
     "use strict";
+    $("#whoami").text(Squirrel.client.store.user());
     $(".unauthenticated").hide();
     $(".authenticated").show();
-    $("#whoami").text(Squirrel.client.store.user());
-    Utils.soon(Squirrel.load_client_hoard);
 };
 
 Squirrel.init_menus = function() {
@@ -230,7 +229,7 @@ Squirrel.init_menus = function() {
 /**
  * Initialise handlers and jQuery UI components
  */
-Squirrel.init_ui = function() {
+Squirrel.init_custom_ui = function() {
     "use strict";
 
     $(".help").each(function() {
@@ -286,11 +285,4 @@ Squirrel.init_ui = function() {
     Squirrel.init_menus();
 
     Squirrel.clipboard = null;
-
-    $(document)
-        .on("check_alarms", Squirrel.check_alarms)
-        .on("update_save", Squirrel.update_save);
-
-    // Kick off by initialising the cloud store.
-    Squirrel.init_cloud_store();
 };

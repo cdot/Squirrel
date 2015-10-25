@@ -26,7 +26,7 @@ function LocalStorageStore(params) {
             i++;
         }
         if (poss_user) {
-            if (DEBUG) console.debug("Lss: Identified possible user " + poss_user);
+            if (DEBUG) console.debug("LocalStorageStore: Identified possible user " + poss_user);
             this.user(poss_user);
         }
     }
@@ -50,8 +50,7 @@ LocalStorageStore.prototype.read = function(path, ok, fail) {
 
     var str;
 
-    if (DEBUG)
-        console.debug("LocalStorageStore: Reading " + path);
+    if (DEBUG) console.debug("LocalStorageStore: Reading " + path);
     try {
         str = localStorage.getItem(path);
     } catch (e) {
@@ -71,8 +70,7 @@ LocalStorageStore.prototype.read = function(path, ok, fail) {
 LocalStorageStore.prototype.write = function(path, data, ok, fail) {
     "use strict";
 
-    if (DEBUG)
-        console.debug("LocalStorageStore: Writing " + path);
+    if (DEBUG) console.debug("LocalStorageStore: Writing " + path);
     try {
         var str = Utils.ArrayBufferToPackedString(data);
         localStorage.setItem(path, str);

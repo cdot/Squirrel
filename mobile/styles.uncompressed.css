@@ -69,7 +69,12 @@ div.ui-btn {
 }
 
 .dialog {
-  display: none;
+    display: none;
+}
+
+.dialog-close-button {
+    margin-right: 0.5em;
+    float: right;
 }
 
 button.ui-button-icon-only {

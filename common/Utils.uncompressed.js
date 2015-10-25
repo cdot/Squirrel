@@ -208,7 +208,7 @@ Utils.read_file = function(file, ok, fail, mode) {
 Utils.sometime = function(event) {
     "use strict";
 
-    //console.debug("...sometime " + event);
+    //console.debug("...queue sometime " + event);
     if (Utils.waiting_for_sometime[event]) {
         //console.debug("......already waiting");
         return;
@@ -228,12 +228,12 @@ Utils.sometime = function(event) {
 Utils.sometime_is_now = function() {
     "use strict";
 
-    //console.debug("...sometime is now");
     Utils.sometime_timeout = null;
     Utils.last_yield = Date.now();
     for (var event in Utils.waiting_for_sometime) {
-        // Triggering these handlers make take an appreciable amount of
+        // Triggering these handlers may take an appreciable amount of
         // time and result in new events joining the sometime schedule.
+        //console.debug("...sometime for " + event + " is now");
         $(document).triggerHandler(event);
         // Only now delete the event to allow it to be requeued
         delete Utils.waiting_for_sometime[event];
@@ -507,16 +507,15 @@ Utils.load = function(libs, on_loaded) {
     "use strict";
     // action when a resource is loaded
     var _loaded = function(file) {
-        console.debug("Loaded " + file);
+        //console.debug("Loaded " + file);
         delete expect[file];
         if (Object.keys(expect).length === 0) {
             if (typeof on_loaded === "function") {
-                console.debug("Calling on_loaded");
+                //console.debug("Calling on_loaded");
                 on_loaded();
             }
-        } else {
-            console.debug("Still waiting for " + Object.keys(expect));
         }
+        //else console.debug("Still waiting for " + Object.keys(expect));
     };
 
     // fire off a resource load
@@ -524,7 +523,7 @@ Utils.load = function(libs, on_loaded) {
         if (DEBUG)
             file = file.replace(".min.", ".uncompressed.");
 
-        console.debug("Loading " + file);
+        //console.debug("Loading " + file);
         expect[file] = true;
         if (/\.js$/.test(file)) {
             $.getScript(file)
@@ -544,7 +543,7 @@ Utils.load = function(libs, on_loaded) {
         } else if (/\.html$/.test(file)) {
             $.get(file)
                 .done(function(data) {
-                    console.debug("Loaded HTML " + file);
+                    //console.debug("Loaded HTML " + file);
                     $(data)
                         .appendTo("body");
                     _loaded(file);

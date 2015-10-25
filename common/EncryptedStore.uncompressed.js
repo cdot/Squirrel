@@ -31,17 +31,16 @@ EncryptedStore.prototype.read = function(path, ok, fail) {
 
     var self = this;
 
-    if (DEBUG)
-        console.debug("EncryptedStore: reading " + path
+    if (DEBUG) console.debug("EncryptedStore: reading " + path
                       + " with password " + self.engine.pass());
     this.engine.read(
         path,
         function(ab) {
             var data;
             try {
-                if (DEBUG)
-                    console.debug("EncryptedStore: decrypting using password "
-                                  + self.engine.pass());
+                if (DEBUG) console.debug(
+                    "EncryptedStore: decrypting using password "
+                        + self.engine.pass());
                 data = AES.decrypt(ab, self.engine.pass(), 256);
             } catch (e) {
                 if (DEBUG) console.debug("Caught " + e);
@@ -58,9 +57,8 @@ EncryptedStore.prototype.write = function(path, ab, ok, fail) {
 
     var self = this;
 
-    if (DEBUG)
-        console.debug("EncryptedStore: writing " + path
-                      + " with password " + self.engine.pass());
+    if (DEBUG) console.debug("EncryptedStore: writing " + path
+                             + " with password " + self.engine.pass());
     var xa;
 
     try {

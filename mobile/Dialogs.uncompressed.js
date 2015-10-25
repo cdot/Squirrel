@@ -3,6 +3,12 @@
 // Mobile customisation of dialogs
 Squirrel.Dialog.init_dialog = function($dlg) {
     "use strict";
+    // Add a close button
+    $("<button class='ui-btn ui-icon-delete ui-btn-icon-notext ui-shadow ui-corner-all dialog-close-button'></button>")
+        .prependTo($("div[data-role='header']", $dlg))
+        .click(function() {
+            $dlg.popup("close");
+        });
     $dlg
         .removeClass("hidden")
         .popup({ history: false });

@@ -7,6 +7,6 @@
         $.mobile.linkBindingEnabled = false;
         // Require call to $.mobile.initializePage
         //$.mobile.autoInitializePage = false;
-        console.debug("Load defaults");
+        //console.debug("Load defaults");
     });
 })(jQuery);

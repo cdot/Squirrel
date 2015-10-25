@@ -326,8 +326,8 @@ GoogleDriveStore.prototype.write = function(path, data, ok, fail) {
                     if (items.length > 0) {
                         id = items[0].id;
                         if (DEBUG) console.debug("GoogleDriveStore: updating " + name + " id " + id);
-                    } else if (DEBUG)
-                        console.debug("GoogleDriveStore: creating " + name + " in " + parentid);
+                    } else
+                        if (DEBUG) console.debug("GoogleDriveStore: creating " + name + " in " + parentid);
                     self._putfile(parentid, name, data, ok, fail, id);
                 },
                 function(r) {

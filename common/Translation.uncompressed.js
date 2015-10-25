@@ -22,10 +22,14 @@ var TX = {
                 success: function(data) {
                     TX.translations = data;
                     $(".TX_title").each(function() {
-                        $(this).attr("title", TX.tx($(this).attr("title")));
+                        $(this)
+                            .attr("title", TX.tx($(this).attr("title")))
+                            .removeClass("TX_title");
                     });
                     $(".TX_text").each(function() {
-                        $(this).text(TX.tx($(this).text()));
+                        $(this)
+                            .text(TX.tx($(this).text()))
+                            .removeClass("TX_text");
                     });
                     if (DEBUG) console.debug("Using language '" + TX.lingo + "'");
                     tx_ready();

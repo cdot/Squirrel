@@ -37,20 +37,21 @@ Squirrel.Dialog.squeak = function(p) {
     "use strict";
 
     var $dlg = $("#squeak");
-
     if (typeof p === "string")
         p = { message: p, severity: "notice" };
+
+    $dlg.data("after_close", p.after_close);
 
     var called_back = false;
     if ($dlg.hasClass("hidden")) {
         $("#squeak_close")
             .button()
             .click(function(e) {
-                if (typeof p.after_close !== "undefined") {
-                    p.after_close();
-                    called_back = true;
-                }
+                var ac = $dlg.data("after_close");
+                $dlg.removeData("after_close");
                 $dlg.dialog("close");
+                if (typeof ac === "function")
+                    ac();
                 return false;
             });
         $dlg.removeClass("hidden");
@@ -63,7 +64,7 @@ Squirrel.Dialog.squeak = function(p) {
         modal: true,
         close: function() {
             if (!called_back) {
-                if (typeof p.after_close !== "undefined")
+                if (typeof p.after_close === "function")
                     p.after_close();
             }
         }
