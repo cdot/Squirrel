@@ -1,3 +1,4 @@
+/*@preserve Copyright (C) 2015 Crawford Currie http://c-dot.co.uk license MIT*/
 /**
  * @class
  * Store engine for data embedded in the alpha channel of an image. Uses

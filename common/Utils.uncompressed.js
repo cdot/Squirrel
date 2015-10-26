@@ -1,4 +1,4 @@
-/* Copyright (C) 2015 Crawford Currie http://c-dot.co.uk / MIT */
+/*@preserve Copyright (C) 2015 Crawford Currie http://c-dot.co.uk license MIT*/
 
 /**
  * Utilities and plugins used by Squirrel
@@ -568,16 +568,18 @@ Utils.query_string = function () {
     var query = {};
     var vars = window.location.search.substring(1).split(/[&;]+/);
     for (var i = 0; i < vars.length; i++) {
+        if (vars[i] === "")
+            continue;
         var ass = vars[i].split("=");
-        // If first entry with this name
         if (typeof query[ass[0]] === "undefined") {
+            // If first entry with this name, assign simple string
             query[ass[0]] = decodeURIComponent(ass[1]);
-            // If second entry with this name
         } else if (typeof query[ass[0]] === "string") {
+            // If second entry with this name, make an array
             var arr = [ query[ass[0]], decodeURIComponent(ass[1]) ];
             query[ass[0]] = arr;
-            // If third or later entry with this name
         } else {
+            // If third or later entry with this name, push it
             query[ass[0]].push(decodeURIComponent(ass[1]));
         }
     } 

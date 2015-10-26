@@ -1,4 +1,4 @@
-/* Copyright (C) 2015 Crawford Currie http://c-dot.co.uk / MIT */
+/*@preserve Copyright (C) 2015 Crawford Currie http://c-dot.co.uk license MIT*/
 
 /**
  * Functions involved in the management of the DOM tree that represents
@@ -39,13 +39,16 @@
  * names to DOM nodes, and an undo stack. There is also a set of functions
  * that perform hoard actions on the DOM.
  */
-Squirrel.Tree = { // Namespace
-    cache: {},    // Path->node mapping
-    undos: []     // undo stack
-};
 
-(function($) {
+(function($, S) {
     "use strict";
+
+    var ST = S.Tree;
+    var SD = S.Dialog;
+
+    ST.cache = {};    // Path->node mapping
+    ST.undos = [];    // undo stack
+
     /**
      * Baseclass of treenode widgets. These are customised for different
      * environments e.g. desktop with raw jQuery, mobile wih jQuery mobile.
@@ -64,14 +67,14 @@ Squirrel.Tree = { // Namespace
             if (!is_root) {
                 parent = this.options.path;
                 key = parent.pop();
-                $parent = Squirrel.Tree.get_node(parent);
+                $parent = ST.get_node(parent);
                 $node.data("key", key);
             }
 
             $node.addClass("treenode");
 
             if (is_root) {
-                Squirrel.Tree.cache[""] = $node;
+                ST.cache[""] = $node;
                 $node.addClass("treenode-root");
             }
             else if (typeof this.options.value !== "undefined"
@@ -111,7 +114,7 @@ Squirrel.Tree = { // Namespace
                     .addClass("treenode-info")
                     .appendTo($node)
                     .append($key);
-            
+                
                 if (is_leaf) {
                     $("<span> : </span>")
                         .addClass("kv_separator")
@@ -137,7 +140,7 @@ Squirrel.Tree = { // Namespace
                 var inserted = false;
                 var $container = $parent.find("ul").first();
                 $container.children(".treenode").each(function() {
-                    if (Squirrel.Tree.compare(
+                    if (ST.compare(
                         $(this).data("key"), key) > 0) {
                         $node.insertBefore($(this));
                         inserted = true;
@@ -241,19 +244,19 @@ Squirrel.Tree = { // Namespace
             $span.edit_in_place({
                 width: w,
                 changed: function(s) {
-                    var e = Squirrel.client.hoard.record_action(
+                    var e = S.client.hoard.record_action(
                         { type: what === "key" ? "R" : "E",
                           path: $node.treenode("get_path"),
                           data: s },
                         function(ea) {
-                            Squirrel.Tree.action(
+                            ST.action(
                                 ea,
                                 function(/*$newnode*/) {
                                     Utils.sometime("update_save");
                                 }, true);
                         });
                     if (e !== null)
-                        Squirrel.Dialog.squeak(e.message);
+                        SD.squeak(e.message);
                 }
             });
         },
@@ -279,7 +282,7 @@ Squirrel.Tree = { // Namespace
                         $button,
                         "alarm",
                         function() {
-                            Squirrel.Dialog.alarm($node);
+                            SD.alarm($node);
                             return false;
                         });
             }
@@ -335,7 +338,7 @@ Squirrel.Tree = { // Namespace
             // Lookup shortcut, if set
             var ps = $node.data("path"), path;
             if (typeof ps !== "undefined" && ps !== null)
-                return ps.split(Squirrel.PATHSEP);
+                return ps.split(S.PATHSEP);
             
             // No shortcut, recurse up the tree
             if (typeof $node.data("key") !== "undefined") {
@@ -343,353 +346,329 @@ Squirrel.Tree = { // Namespace
                 
                 path.push($node.data("key"));
                 
-                ps = path.join(Squirrel.PATHSEP);
+                ps = path.join(S.PATHSEP);
                 
                 // node->path shortcut
                 $node.data("path", ps);
                 
                 // path->node mapping
-                if (DEBUG && Squirrel.Tree.cache[ps]
-                    && Squirrel.Tree.cache[ps] !== $node)
+                if (DEBUG && ST.cache[ps]
+                    && ST.cache[ps] !== $node)
                     debugger; // Bad mapping
-                Squirrel.Tree.cache[ps] = $node;
+                ST.cache[ps] = $node;
             } else
                 path = [];
             
             return path;
         }
     });
-})(jQuery);
 
-/**
- * Find the DOM node for a path
- * @param path array of keys representing the path
- * @return a JQuery element
- */
-Squirrel.Tree.get_node = function(path) {
-    "use strict";
+    /**
+     * Find the DOM node for a path
+     * @param path array of keys representing the path
+     * @return a JQuery element
+     */
+    ST.get_node = function(path) {
+        var $node = ST.cache[path.join(S.PATHSEP)];
+        if (DEBUG && $node && $node.length === 0) debugger;
+        return $node;
+    };
 
-    var $node = Squirrel.Tree.cache[path.join(Squirrel.PATHSEP)];
-    if (DEBUG && $node && $node.length === 0) debugger;
-    return $node;
-};
+    /**
+     * @private
+     * Custom key comparison, such that "User" and "Pass" always bubble
+     * to the top of the keys
+     */
+    ST.compare = function(a, b) {
+        a = a.toLowerCase(); b = b.toLowerCase();
+        if (a === "user") // the lowest possible key
+            return (b === "user") ? 0 : -1;
+        if (b === "user")
+            return 1;
+        if (a === "pass") // The next lowest key
+            return (b === "pass") ? 0 : -1;
+        if (b === "pass")
+            return 1;
+        return (a === b) ? 0 : (a < b) ? -1 : 1;
+    };
 
-/**
- * @private
- * Custom key comparison, such that "User" and "Pass" always bubble
- * to the top of the keys
- */
-Squirrel.Tree.compare = function(a, b) {
-    "use strict";
+    /**
+     * @private
+     * Action handler to construct new node
+     */
+    ST.action_N = function(action, undoable, follow) {
+        // Create the new node. Automatically adds it to the right parent.
+        $("<li></li>")
+            .treenode({
+                path: action.path,
+                value: action.data,
+                time: action.time,
+                on_create: function() {
+                    // This is a new node, this lookup will side-effect add it
+                    // to the cache, so do it outside the condition
+                    var path = $(this).treenode("get_path");
 
-    a = a.toLowerCase(); b = b.toLowerCase();
-    if (a === "user") // the lowest possible key
-        return (b === "user") ? 0 : -1;
-    if (b === "user")
-        return 1;
-    if (a === "pass") // The next lowest key
-        return (b === "pass") ? 0 : -1;
-    if (b === "pass")
-        return 1;
-    return (a === b) ? 0 : (a < b) ? -1 : 1;
-};
+                    if (undoable) {
+                        ST.undos.push({
+                            type: "D",
+                            path: path
+                        });
+                    }
+                    follow.call(this);
+                }
+            });
+    };
 
-/**
- * @private
- * Action handler to construct new node
- */
-Squirrel.Tree.action_N = function(action, undoable, follow) {
-    "use strict";
+    /**
+     * @private
+     * Action handle for value edit
+     */
+    ST.action_E = function(action, undoable, follow) {
+        var $node = ST.get_node(action.path);
 
-    // Create the new node. Automatically adds it to the right parent.
-    $("<li></li>")
-        .treenode({
-            path: action.path,
-            value: action.data,
-            time: action.time,
-            on_create: function() {
-                // This is a new node, this lookup will side-effect add it
-                // to the cache, so do it outside the condition
-                var path = $(this).treenode("get_path");
+        if (undoable) {
+            ST.undos.push({
+                type: "E",
+                path: action.path.slice(),
+                data: $node
+                    .find(".value")
+                    .first()
+                    .text()
+            });
+        }
 
+        $node
+            .find(".value")
+            .first()
+            .text(action.data);
+
+        $node.treenode("set_modified", action.time);
+
+        follow.call($node);
+    };
+
+    /**
+     * @private
+     * Action handler for node delete
+     */
+    ST.action_D = function(action, undoable, follow) {
+        var $node = ST.get_node(action.path);
+
+        ST.demap($node);
+
+        if (undoable) {
+            // Not enough - all the subtree would need to be
+            // regenerated
+            ST.undos.push({
+                type: "N",
+                path: action.path.slice(),
+                data: $node
+                    .find(".value")
+                    .first()
+                    .text()
+            });
+        }
+        var $parent = $node.parent().closest(".treenode");
+
+        $parent.treenode("set_modified", action.time);
+
+        $node.remove();
+
+        follow.call($node);
+    };
+
+    /**
+     * @private
+     * Action handler for alarm add
+     */
+    ST.action_A = function(action, undoable, follow) {
+        var $node = ST.get_node(action.path);
+
+        // Check there's an alarm already
+        var alarm = $node.data("alarm");
+        if (typeof alarm !== "undefined") {
+            if (alarm !== action.data) {
                 if (undoable) {
-                    Squirrel.Tree.undos.push({
-                        type: "D",
-                        path: path
+                    ST.undos.push({
+                        type: "A",
+                        path: action.path.slice(),
+                        data: $node.data("alarm")
                     });
                 }
-                follow.call(this);
+                $node.treenode("set_modified", action.time);
             }
-        });
-};
-
-/**
- * @private
- * Action handle for value edit
- */
-Squirrel.Tree.action_E = function(action, undoable, follow) {
-    "use strict";
-
-    var $node = Squirrel.Tree.get_node(action.path);
-
-    if (undoable) {
-        Squirrel.Tree.undos.push({
-            type: "E",
-            path: action.path.slice(),
-            data: $node
-                .find(".value")
-                .first()
-                .text()
-        });
-    }
-
-    $node
-        .find(".value")
-        .first()
-        .text(action.data);
-
-    $node.treenode("set_modified", action.time);
-
-    follow.call($node);
-};
-
-/**
- * @private
- * Action handler for node delete
- */
-Squirrel.Tree.action_D = function(action, undoable, follow) {
-    "use strict";
-
-    var $node = Squirrel.Tree.get_node(action.path);
-
-    Squirrel.Tree.demap($node);
-
-    if (undoable) {
-        // Not enough - all the subtree would need to be
-        // regenerated
-        Squirrel.Tree.undos.push({
-            type: "N",
-            path: action.path.slice(),
-            data: $node
-                .find(".value")
-                .first()
-                .text()
-        });
-    }
-    var $parent = $node.parent().closest(".treenode");
-
-    $parent.treenode("set_modified", action.time);
-
-    $node.remove();
-
-    follow.call($node);
-};
-
-/**
- * @private
- * Action handler for alarm add
- */
-Squirrel.Tree.action_A = function(action, undoable, follow) {
-    "use strict";
-
-    var $node = Squirrel.Tree.get_node(action.path);
-
-    // Check there's an alarm already
-    var alarm = $node.data("alarm");
-    if (typeof alarm !== "undefined") {
-        if (alarm !== action.data) {
+        } else {
+            $node.treenode("set_modified", action.time);
             if (undoable) {
-                Squirrel.Tree.undos.push({
+                ST.undos.push({
+                    type: "C",
+                    path: action.path.slice()
+                });
+            }
+        }
+        $node.treenode("set_alarm", action.data);
+
+        follow.call($node);
+    };
+
+    /**
+     * Action handler for cancelling an alarm
+     */
+    ST.action_C = function(action, undoable, follow) {
+        var $node = ST.get_node(action.path);
+        var alarm = $node.data("alarm");
+        if (typeof alarm !== "undefined") {
+            if (undoable) {
+                ST.undos.push({
                     type: "A",
                     path: action.path.slice(),
-                    data: $node.data("alarm")
+                    data: alarm
                 });
             }
+            $node.treenode("cancel_alarm");
             $node.treenode("set_modified", action.time);
         }
-    } else {
-        $node.treenode("set_modified", action.time);
-        if (undoable) {
-            Squirrel.Tree.undos.push({
-                type: "C",
-                path: action.path.slice()
-            });
-        }
-    }
-    $node.treenode("set_alarm", action.data);
 
-    follow.call($node);
-};
+        follow.call($node);
+    };
 
-/**
- * Action handler for cancelling an alarm
- */
-Squirrel.Tree.action_C = function(action, undoable, follow) {
-    "use strict";
+    /**
+     * Action handler for node rename
+     */
+    ST.action_R = function(action, undoable, follow) {
+        // Detach the li from the DOM
+        var $node = ST.get_node(action.path);
+        var key = action.path[action.path.length - 1]; // record old node name
+        var $container = $node.closest("ul");
 
-    var $node = Squirrel.Tree.get_node(action.path);
-    var alarm = $node.data("alarm");
-    if (typeof alarm !== "undefined") {
-        if (undoable) {
-            Squirrel.Tree.undos.push({
-                type: "A",
-                path: action.path.slice(),
-                data: alarm
-            });
-        }
-        $node.treenode("cancel_alarm");
-        $node.treenode("set_modified", action.time);
-    }
+        ST.demap($node);
 
-    follow.call($node);
-};
+        $node
+            .detach()
+            .data("key", action.data)
+            .find(".key")
+            .first()
+            .text(action.data);
 
-/**
- * Action handler for node rename
- */
-Squirrel.Tree.action_R = function(action, undoable, follow) {
-    "use strict";
-
-    // Detach the li from the DOM
-    var $node = Squirrel.Tree.get_node(action.path);
-    var key = action.path[action.path.length - 1]; // record old node name
-    var $container = $node.closest("ul");
-
-    Squirrel.Tree.demap($node);
-
-    $node
-        .detach()
-        .data("key", action.data)
-        .find(".key")
-        .first()
-        .text(action.data);
-
-    // Re-insert the element in it's sorted position
-    var inserted = false;
-    $container.children(".treenode").each(function() {
-        if (Squirrel.Tree.compare($(this).data("key"), action.data) > 0) {
-            $node.insertBefore($(this));
-            inserted = true;
-            return false;
-        }
-    });
-    if (!inserted)
-        $container.append($node);
-
-    // Reset the path of all subnodes. We have to do this so
-    // they get added to Squirrel.Tree.cache. This will also update
-    // the mapping for $node.
-    $node
-        .find(".treenode")
-        .each(function() {
-            $(this).treenode("get_path");
-        });
-
-    // refresh data-path and update fragment ID
-    var p = $node.treenode("get_path"); // get new path
-    $node.scroll_into_view();
-
-    $node.treenode("set_modified", action.time);
-
-    if (undoable) {
-        Squirrel.Tree.undos.push({
-            type: "R",
-            path: p, // no need to slice, not re-used
-            data: key
-        });
-    }
-
-    follow.call($node);
-};
-
-/**
- * Callback for use when managing hoards; plays an action that is being
- * played into the hoard into the DOM as well.
- * @param e action to play
- * @param chain function to call once the action has been played. May
- * be undefined. Passed the modified node.
- * @param undoable set true if the inverse of this action is to be added
- * to the undo chain.
- */
-Squirrel.Tree.action = function(action, chain, undoable) {
-    "use strict";
-
-    Squirrel.Tree["action_" + action.type](
-        action,
-        undoable,
-        function () {
-            var $node = this;
-            Utils.sometime("update_save");
-
-            if (typeof chain !== "undefined") {
-                Utils.soon(function() {
-                    chain($node);
-                });
+        // Re-insert the element in it's sorted position
+        var inserted = false;
+        $container.children(".treenode").each(function() {
+            if (ST.compare($(this).data("key"), action.data) > 0) {
+                $node.insertBefore($(this));
+                inserted = true;
+                return false;
             }
         });
-};
+        if (!inserted)
+            $container.append($node);
 
-/**
- * @private
- * Remove the node (and all subnodes) from the node->path->node mappings
- * @param $node node to remove
- */
-Squirrel.Tree.demap = function($node) {
-    "use strict";
+        // Reset the path of all subnodes. We have to do this so
+        // they get added to ST.cache. This will also update
+        // the mapping for $node.
+        $node
+            .find(".treenode")
+            .each(function() {
+                $(this).treenode("get_path");
+            });
 
-    if (!$node.hasClass("treenode"))
-        $node = $node.closest(".treenode");
+        // refresh data-path and update fragment ID
+        var p = $node.treenode("get_path"); // get new path
+        $node.scroll_into_view();
 
-    delete Squirrel.Tree.cache[$node.data("path")];
-    $node
-        .data("path", null)
-    // Reset the path of all subnodes
-        .find(".treenode")
-        .each(function() {
-            var $s = $(this);
-            delete Squirrel.Tree.cache[$s.data("path")];
-            $s.data("path", null);
-        });
-};
+        $node.treenode("set_modified", action.time);
 
-/**
- * Return true if there is at least one undoable operation
- */
-Squirrel.Tree.can_undo = function() {
-    "use strict";
+        if (undoable) {
+            ST.undos.push({
+                type: "R",
+                path: p, // no need to slice, not re-used
+                data: key
+            });
+        }
 
-    return Squirrel.Tree.undos.length !== 0;
-};
+        follow.call($node);
+    };
 
-/**
- * Undo the most recent action
- */
-Squirrel.Tree.undo = function() {
-    "use strict";
+    /**
+     * Callback for use when managing hoards; plays an action that is being
+     * played into the hoard into the DOM as well.
+     * @param e action to play
+     * @param chain function to call once the action has been played. May
+     * be undefined. Passed the modified node.
+     * @param undoable set true if the inverse of this action is to be added
+     * to the undo chain.
+     */
+    ST.action = function(action, chain, undoable) {
+        ST["action_" + action.type](
+            action,
+            undoable,
+            function () {
+                var $node = this;
+                Utils.sometime("update_save");
 
-    if (DEBUG && Squirrel.Tree.undos.length === 0) debugger;
+                if (typeof chain !== "undefined") {
+                    Utils.soon(function() {
+                        chain($node);
+                    });
+                }
+            });
+    };
 
-    var a = Squirrel.Tree.undos.pop();
-    a.time = Date.now();
-    if (DEBUG) console.debug("Undo " + Hoard.stringify_action(a));
-    var res = Squirrel.client.hoard.record_action(
-        a,
-        function(e) {
-            Squirrel.Tree.action(
-                e,
-                function() {
-                    // If there are no undos, there can be no modifications.
-                    // The hoard status will not be changed, though, so a
-                    // save may still be required.
-                    if (Squirrel.Tree.length === 0)
-                        $(".modified").removeClass("modified");
-                    Utils.sometime("update_save");
-                });
-        });
-    if (res !== null)
-        Squirrel.Dialog.squeak({
-            title: TX.error(),
-            severity: "error",
-            message: res.message
-        });
-};
+    /**
+     * @private
+     * Remove the node (and all subnodes) from the node->path->node mappings
+     * @param $node node to remove
+     */
+    ST.demap = function($node) {
+        if (!$node.hasClass("treenode"))
+            $node = $node.closest(".treenode");
+
+        delete ST.cache[$node.data("path")];
+        $node
+            .data("path", null)
+        // Reset the path of all subnodes
+            .find(".treenode")
+            .each(function() {
+                var $s = $(this);
+                delete ST.cache[$s.data("path")];
+                $s.data("path", null);
+            });
+    };
+
+    /**
+     * Return true if there is at least one undoable operation
+     */
+    ST.can_undo = function() {
+        return ST.undos.length !== 0;
+    };
+
+    /**
+     * Undo the most recent action
+     */
+    ST.undo = function() {
+        if (DEBUG && ST.undos.length === 0) debugger;
+
+        var a = ST.undos.pop();
+        a.time = Date.now();
+        if (DEBUG) console.debug("Undo " + Hoard.stringify_action(a));
+        var res = S.client.hoard.record_action(
+            a,
+            function(e) {
+                ST.action(
+                    e,
+                    function() {
+                        // If there are no undos, there can be no modifications.
+                        // The hoard status will not be changed, though, so a
+                        // save may still be required.
+                        if (ST.length === 0)
+                            $(".modified").removeClass("modified");
+                        Utils.sometime("update_save");
+                    });
+            });
+        if (res !== null)
+            SD.squeak({
+                title: TX.error(),
+                severity: "error",
+                message: res.message
+            });
+    };
+})(jQuery, Squirrel);

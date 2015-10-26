@@ -1,3 +1,5 @@
+# Copyright (C) 2015 Crawford Currie http://c-dot.co.uk / MIT
+
 LIBS := $(wildcard libs/*.uncompressed.*)
 SOURCES := $(wildcard *.uncompressed.* common/*.uncompressed.* desktop/*.uncompressed.* mobile/*.uncompressed.*)
 MIN := $(subst .uncompressed.,.min.,$(SOURCES) $(LIBS))
@@ -7,6 +9,7 @@ MIN := $(subst .uncompressed.,.min.,$(SOURCES) $(LIBS))
 		--source-map $(patsubst %.min.js,%.map,$@) \
 		--source-map-url $(patsubst libs/%,%, $(patsubst %.min.js,%.map,$@)) \
 		--source-map-include-sources \
+		--comments \
 		--compress \
 		--define DEBUG=false \
 		-o $@ \

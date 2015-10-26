@@ -1,6 +1,6 @@
+/*@preserve Copyright (C) 2015 Crawford Currie http://c-dot.co.uk license MIT*/
 /**
  * Translations module. Determines the language to use from the browser,
- * picks up translations from 
  */
 var TX = {
     lingo: window.navigator.userLanguage || window.navigator.language || "en",

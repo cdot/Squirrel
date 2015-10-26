@@ -1,9 +1,9 @@
-/* Copyright (C) 2015 Crawford Currie http://c-dot.co.uk / MIT */
+/*@preserve Copyright (C) 2015 Crawford Currie http://c-dot.co.uk license MIT*/
 
 /**
  * Subclass of squirrel.treenode, specific to desktop jQuery
  */
-(function($) {
+(function($, S) {
     "use strict";
     var map_treenode_icon = {
         "closed": "ui-icon-squirrel-folder-closed",
@@ -31,19 +31,19 @@
             $span.edit_in_place({
                 width: w,
                 changed: function(s) {
-                    var e = Squirrel.client.hoard.record_action(
+                    var e = S.client.hoard.record_action(
                         { type: what === "key" ? "R" : "E",
                           path: $node.treenode("get_path"),
                           data: s },
                         function(ea) {
-                            Squirrel.Tree.action(
+                            S.Tree.action(
                                 ea,
                                 function(/*$newnode*/) {
                                     Utils.sometime("update_save");
                                 }, true);
                         });
                     if (e !== null)
-                        Squirrel.Dialog.squeak(e.message);
+                        S.Dialog.squeak(e.message);
                 }
             });
         },
@@ -109,4 +109,4 @@
                 });
         }
     });
-})(jQuery);
+})(jQuery, Squirrel);

@@ -1,21 +1,21 @@
-/* Copyright (C) 2015 Crawford Currie http://c-dot.co.uk / MIT */
+/*@preserve Copyright (C) 2015 Crawford Currie http://c-dot.co.uk license MIT*/
 
 /**
  * Customisation for desktop (raw JQuery)
  */
 
 // Once logged in, switch to "authenticated" state
-Squirrel.authenticated = function() {
+(function($, S) {
     "use strict";
-    $("#whoami").text(Squirrel.client.store.user());
-    $(".unauthenticated").hide();
-    $(".authenticated").show();
-};
 
-Squirrel.init_menus = function() {
-    "use strict";
+    S.authenticated = function() {
+        $("#whoami").text(S.client.store.user());
+        $(".unauthenticated").hide();
+        $(".authenticated").show();
+    };
 
     var $root = $("body");
+
     var before_open = function(e, ui) {
         var $node = (ui.target.is(".treenode"))
             ? ui.target
@@ -41,7 +41,7 @@ Squirrel.init_menus = function() {
             .contextmenu("showEntry", "add_value", !is_leaf && !is_root)
             .contextmenu("enableEntry", "add_value", is_open)
             .contextmenu("showEntry", "insert_copy",
-                         !is_leaf && Squirrel.clipboard !== null);
+                         !is_leaf && S.clipboard !== null);
 
         if (!$root.data("zc_copy")) {
             // First time, attach zero clipboard handler
@@ -76,10 +76,10 @@ Squirrel.init_menus = function() {
                 if (DEBUG) console.debug("Copying JSON to clipboard");
                 var pa = $root.data("zc_cut");
                 var p = pa.treenode("get_path");
-                var n = Squirrel.client.hoard.get_node(p);
+                var n = S.client.hoard.get_node(p);
                 var json = JSON.stringify(n);
 
-                Squirrel.clipboard = json;
+                S.clipboard = json;
                 event.clipboardData.setData("text/plain", json);
             });
             $root.data("ZC", zc); // remember it to protect from GC
@@ -108,9 +108,9 @@ Squirrel.init_menus = function() {
 
         case "insert_copy":
             if (DEBUG) console.debug("Pasting");
-            if (Squirrel.clipboard) {
-                var data = JSON.parse(Squirrel.clipboard);
-                Squirrel.add_child_node($node, TX.tx("A copy"), data.data);
+            if (S.clipboard) {
+                var data = JSON.parse(S.clipboard);
+                S.add_child_node($node, TX.tx("A copy"), data.data);
             }
             break;
 
@@ -127,32 +127,32 @@ Squirrel.init_menus = function() {
         case "add_value":
             if (DEBUG) console.debug("Adding value to "
                                      + $node.treenode("get_path").join("/"));
-            Squirrel.add_child_node($node, TX.tx("A new value"), TX.tx("None"));
+            S.add_child_node($node, TX.tx("A new value"), TX.tx("None"));
             break;
 
         case "add_subtree":
             if (DEBUG) console.debug("Adding subtree");
-            Squirrel.add_child_node($node, TX.tx("A new folder"));
+            S.add_child_node($node, TX.tx("A new folder"));
             break;
 
         case "randomise":
             if (DEBUG) console.debug("Randomising");
-            Squirrel.Dialog.randomise($node);
+            S.Dialog.randomise($node);
             break;
 
         case "add_alarm":
             if (DEBUG) console.debug("Adding reminder");
-            Squirrel.Dialog.alarm($node);
+            S.Dialog.alarm($node);
             break;
 
         case "delete":
             if (DEBUG) console.debug("Deleting");
-            Squirrel.Dialog.delete_node($node);
+            S.Dialog.delete_node($node);
             break;
 
         case "pick_from":
             if (DEBUG) console.debug("Picking");
-            Squirrel.Dialog.pick($node);
+            S.Dialog.pick($node);
             break;
 
         default:
@@ -160,129 +160,128 @@ Squirrel.init_menus = function() {
         }
     };
 
-    var menu = {
-        delegate: ".treenode",
-        menu: [
-            {
-                title: TX.tx("Copy value"),
-                cmd: "copy_value",
-                uiIcon: "ui-icon-squirrel-copy"
-            },
-            {
-                title: TX.tx("Pick characters"),
-                cmd: "pick_from",
-                uiIcon: "ui-icon-squirrel-pick"
-            },
-            {
-                title: TX.tx("Rename"),
-                cmd: "rename",
-                uiIcon: "ui-icon-squirrel-edit" 
-            },
-            {
-                title: TX.tx("Edit value"),
-                cmd: "edit",
-                uiIcon: "ui-icon-squirrel-edit" 
-            },
-            {
-                title: TX.tx("Add reminder"),
-                cmd: "add_alarm",
-                uiIcon: "ui-icon-squirrel-alarm" 
-            },
-            {
-                title: TX.tx("Generate new random value"),
-                cmd: "randomise",
-                uiIcon: "ui-icon-squirrel-key" 
-            },               
-            {
-                title: TX.tx("Add new value"),
-                cmd: "add_value",
-                uiIcon: "ui-icon-squirrel-add-value" 
-            },
-            {
-                title: TX.tx("Add new folder"),
-                cmd: "add_subtree",
-                uiIcon: "ui-icon-squirrel-add-folder" 
-            },
-            {
-                title: TX.tx("Copy folder"),
-                cmd: "make_copy",
-                uiIcon: "ui-icon-squirrel-copy"
-            },
-            {
-                title: TX.tx("Insert copy"),
-                cmd: "insert_copy",
-                uiIcon: "ui-icon-squirrel-paste"
-            },
-            {
-                title: TX.tx("Delete"),
-                cmd: "delete",
-                uiIcon: "ui-icon-squirrel-delete" 
-            }
-        ],
-        beforeOpen: before_open,
-        select: handle_choice
+    var init_menus = function() {
+        var menu = {
+            delegate: ".treenode",
+            menu: [
+                {
+                    title: TX.tx("Copy value"),
+                    cmd: "copy_value",
+                    uiIcon: "ui-icon-squirrel-copy"
+                },
+                {
+                    title: TX.tx("Pick characters"),
+                    cmd: "pick_from",
+                    uiIcon: "ui-icon-squirrel-pick"
+                },
+                {
+                    title: TX.tx("Rename"),
+                    cmd: "rename",
+                    uiIcon: "ui-icon-squirrel-edit" 
+                },
+                {
+                    title: TX.tx("Edit value"),
+                    cmd: "edit",
+                    uiIcon: "ui-icon-squirrel-edit" 
+                },
+                {
+                    title: TX.tx("Add reminder"),
+                    cmd: "add_alarm",
+                    uiIcon: "ui-icon-squirrel-alarm" 
+                },
+                {
+                    title: TX.tx("Generate new random value"),
+                    cmd: "randomise",
+                    uiIcon: "ui-icon-squirrel-key" 
+                },               
+                {
+                    title: TX.tx("Add new value"),
+                    cmd: "add_value",
+                    uiIcon: "ui-icon-squirrel-add-value" 
+                },
+                {
+                    title: TX.tx("Add new folder"),
+                    cmd: "add_subtree",
+                    uiIcon: "ui-icon-squirrel-add-folder" 
+                },
+                {
+                    title: TX.tx("Copy folder"),
+                    cmd: "make_copy",
+                    uiIcon: "ui-icon-squirrel-copy"
+                },
+                {
+                    title: TX.tx("Insert copy"),
+                    cmd: "insert_copy",
+                    uiIcon: "ui-icon-squirrel-paste"
+                },
+                {
+                    title: TX.tx("Delete"),
+                    cmd: "delete",
+                    uiIcon: "ui-icon-squirrel-delete" 
+                }
+            ],
+            beforeOpen: before_open,
+            select: handle_choice
+        };
+
+        $root.contextmenu(menu);
     };
 
-    $root.contextmenu(menu);
-};
+    /**
+     * Initialise handlers and jQuery UI components
+     */
+    S.init_custom_ui = function() {
+        $(".help").each(function() {
+            var $this = $(this);
+            $this.hide();
+            var $help = $("<button></button>");
+            var $close = $("<button></button>");
+            $help
+                .addClass("info-button")
+                .button({
+                    icons: {
+                        primary: "ui-icon-info"
+                    },
+                    text: false
+                })
+                .on("click", function() {
+                    $this.show();
+                    $help.hide();
+                })
+                .insertBefore(this);
+            $close
+                .addClass("help-close")
+                .button({
+                    icons: {
+                        primary: "ui-icon-circle-close"
+                    },
+                    text: false
+                })
+                .on("click", function() {
+                    $this.hide();
+                    $help.show();
+                })
+                .prependTo($this);
+        });
 
-/**
- * Initialise handlers and jQuery UI components
- */
-Squirrel.init_custom_ui = function() {
-    "use strict";
+        $("button").each(function() {
+            var $this = $(this);
+            var opts = {};
 
-    $(".help").each(function() {
-        var $this = $(this);
-        $this.hide();
-        var $help = $("<button></button>");
-        var $close = $("<button></button>");
-        $help
-            .addClass("info-button")
-            .button({
-                icons: {
-                    primary: "ui-icon-info"
-                },
-                text: false
-            })
-            .on("click", function() {
-                $this.show();
-                $help.hide();
-            })
-            .insertBefore(this);
-        $close
-            .addClass("help-close")
-            .button({
-                icons: {
-                    primary: "ui-icon-circle-close"
-                },
-                text: false
-            })
-            .on("click", function() {
-                $this.hide();
-                $help.show();
-            })
-            .prependTo($this);
-    });
+            if (typeof $this.data("icon") !== "undefined") {
+                opts.icons = {
+                    primary: $this.data("icon")
+                };
+                opts.text = false;
+            }
+            $this.button(opts);
+        });
 
-    $("button").each(function() {
-        var self = $(this);
-        var opts = {};
+        $("#sites-node").treenode({
+            is_root: true
+        });
+        init_menus();
 
-        if (typeof self.data("icon") !== "undefined") {
-            opts.icons = {
-                primary: self.data("icon")
-            };
-            opts.text = false;
-        }
-        self.button(opts);
-    });
-
-    var $root = $("#sites-node");
-    $root.treenode({
-        is_root: true
-    });
-    Squirrel.init_menus();
-
-    Squirrel.clipboard = null;
-};
+        S.clipboard = null;
+    };
+})(jQuery, Squirrel);

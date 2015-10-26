@@ -1,4 +1,4 @@
-/* Copyright (C) 2015 Crawford Currie http://c-dot.co.uk / MIT */
+/*@preserve Copyright (C) 2015 Crawford Currie http://c-dot.co.uk license MIT*/
 
 /**
  * A combined hierarchical data store with change log, designed to be

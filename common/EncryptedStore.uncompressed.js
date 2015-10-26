@@ -1,3 +1,4 @@
+/*@preserve Copyright (C) 2015 Crawford Currie http://c-dot.co.uk license MIT*/
 /**
  * @class
  * Store engine for encrypted data. Uses an underlying engine to actually

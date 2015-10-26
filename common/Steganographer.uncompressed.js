@@ -1,5 +1,5 @@
+/*@preserve Copyright (C) 2015 Crawford Currie http://c-dot.co.uk license MIT*/
 /* 
- * Copyright 2015 Crawford Currie http://c-dot.co.uk
  * Steganography using the least-significant bits of the
  * colour channels in an image.
  *

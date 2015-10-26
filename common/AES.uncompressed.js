@@ -1,6 +1,6 @@
+/*@preserve Copyright (C) 2015 Crawford Currie http://c-dot.co.uk license MIT*/
 /**
  * AES Counter-mode implementation in JavaScript
- * Copyright (C) 2015 Crawford Currie / MIT Licence
  * Based on Chris Veness' work (C) 2005-2014 Chris Veness / MIT Licence
  *
  * See http://csrc.nist.gov/publications/nistpubs/800-38a/sp800-38a.pdf

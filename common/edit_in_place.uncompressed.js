@@ -1,4 +1,4 @@
-/* Copyright (C) 2015 Crawford Currie http://c-dot.co.uk / MIT */
+/*@preserve Copyright (C) 2015 Crawford Currie http://c-dot.co.uk license MIT*/
 
 /**
  * Simple in-place editing widget
@@ -7,33 +7,33 @@
     "use strict";
     $.fn.edit_in_place = function(options) {
 
-        var $self = $(this);
-        var h = options.height || $self.height();
-        var w = options.width || $self.width();
+        var $this = $(this);
+        var h = options.height || $this.height();
+        var w = options.width || $this.width();
         var changed = options.changed ||
             function(/*text*/) {
-                $self.text();
+                $this.text();
             };
         var $input = $("<input/>"),
         blurb = function() {
             $input.remove();
-            $self.show();
+            $this.show();
         };
 
-        $self.hide();
+        $this.hide();
 
         $input
-            .insertBefore($self)
+            .insertBefore($this)
             .addClass("in_place_editor")
-            .val($self.text())
+            .val($this.text())
             .css("height", h)
             .css("width", w)
 
             .on("change", function() {
                 var val = $(this).val();
                 blurb();
-                if (val !== $self.text())
-                    changed.call($self, val);
+                if (val !== $this.text())
+                    changed.call($this, val);
             })
 
             .on("mouseup", function(e) {
@@ -49,7 +49,7 @@
             .on("keydown", function(e) { // Escape means cancel
                 if (e.keyCode === 27
                     || (e.keyCode === 13
-                        && $(this).val() === $self.text())) {
+                        && $(this).val() === $this.text())) {
                     blurb();
                     return false;
                 } else

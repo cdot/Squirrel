@@ -1,9 +1,9 @@
-/* Copyright (C) 2015 Crawford Currie http://c-dot.co.uk / MIT */
+/*@preserve Copyright (C) 2015 Crawford Currie http://c-dot.co.uk license MIT*/
 
 /**
  * Subclass of squirrel.treenode, specific to jQuery mobile
  */
-(function($) {
+(function($, S) {
     "use strict";
     var map_treenode_icon = {
         "closed": "carat-r",
@@ -48,7 +48,7 @@
                 return;
             $node.on("taphold", function(e) {
                 e.stopPropagation();
-                Squirrel.open_menu($node);
+                S.open_menu($node);
 
                 return false;
             });
@@ -65,4 +65,4 @@
                 });
         }
     });
-})(jQuery);
+})(jQuery, Squirrel);

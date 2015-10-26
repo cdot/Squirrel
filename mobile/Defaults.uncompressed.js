@@ -1,3 +1,4 @@
+/*@preserve Copyright (C) 2015 Crawford Currie http://c-dot.co.uk license MIT*/
 (function($) {
     "use strict";
     $(document).on("mobileinit", function() {
