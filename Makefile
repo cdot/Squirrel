@@ -3,11 +3,12 @@
 LIBS := $(wildcard libs/*.uncompressed.*)
 SOURCES := $(wildcard *.uncompressed.* common/*.uncompressed.* desktop/*.uncompressed.* mobile/*.uncompressed.*)
 MIN := $(subst .uncompressed.,.min.,$(SOURCES) $(LIBS))
+MAP := $(subst .uncompressed.js,.map,$(filter %.uncompressed.js,$(SOURCES) $(LIBS)))
 
 %.map %.min.js : %.uncompressed.js
 	uglifyjs \
 		--source-map $(patsubst %.min.js,%.map,$@) \
-		--source-map-url $(patsubst libs/%,%, $(patsubst %.min.js,%.map,$@)) \
+		--source-map-url $(subst libs/,,$(subst desktop/,,$(subst mobile/,,$(subst common/,,$(patsubst %.min.js,%.map,$@))))) \
 		--source-map-include-sources \
 		--comments \
 		--compress \
@@ -45,7 +46,7 @@ locale/%.json: *.uncompressed.js Squirrel.html.src
 	perl build_scripts/translate.pl $(*F) *.uncompressed.js Squirrel.html.src
 
 #	$(wildcard libs/images/icons-png/*.png  libs/images/icons-svg/*.svg) 
-upload: $(MIN) \
+upload: $(MIN) $(MAP) \
 	$(wildcard images/*.svg images/*.ico images/*.png images/*.gif) \
 	$(wildcard libs/images/*.png libs/images/*.gif) \
 	$(wildcard libs/*.swf)

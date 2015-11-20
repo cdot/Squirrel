@@ -547,7 +547,7 @@ var Squirrel = {
                             severity: "error",
                             message: TX.tx("Could not load cloud hoard.")
                         });
-                        S.squeak_more(
+                        SD.squeak_more(
                             TX.tx("Check that you have the correct password."));
                         // Could not contact cloud; continue all the same
                     }

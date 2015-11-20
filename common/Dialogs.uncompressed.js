@@ -298,15 +298,15 @@
         SD.open_dialog($dlg);
     };
 
-    const unit_names = [ "y", "m", "w", "d" ];
-    const units_days = {
+    var unit_names = [ "y", "m", "w", "d" ];
+    var units_days = {
         "y": 365,
         "m": 30,
         "w": 7,
         "d": 1
     };
 
-    const ms_in_day = 24 * 60 * 60 * 1000;
+    var ms_in_day = 24 * 60 * 60 * 1000;
 
     /**
      * Reminder setting dialog

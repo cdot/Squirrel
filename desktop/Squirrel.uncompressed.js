@@ -14,8 +14,6 @@
         $(".authenticated").show();
     };
 
-    var $root = $("body");
-
     var before_open = function(e, ui) {
         var $node = (ui.target.is(".treenode"))
             ? ui.target
@@ -26,6 +24,7 @@
         var is_root = ui.target.closest(".treenode").is("#sites-node");
         var is_open = $node.hasClass("treenode-open");
         var zc;
+        var $root = $("body");
 
         $root
             .contextmenu("showEntry", "rename", !is_root)
@@ -224,7 +223,7 @@
             select: handle_choice
         };
 
-        $root.contextmenu(menu);
+        $("body").contextmenu(menu);
     };
 
     /**
