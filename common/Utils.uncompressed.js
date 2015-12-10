@@ -3,6 +3,7 @@
 /**
  * Utilities and plugins used by Squirrel
  */
+var DEBUG = false; // Override in URI params
 
 /**
  * Needed to be able to read binary files.
@@ -501,10 +502,12 @@ Utils.Base64ToArrayBuffer = function(sB64) {
  * executes, CSS gets loaded using <link>, HTML gets loaded and appended
  * to the document body.
  * @param libs list of resources
+ * @param uncompressed true to load uncompressed libs, otherwise use min
  * @param on_loaded is called when all libs have been loaded
  */
-Utils.load = function(libs, on_loaded) {
+Utils.load = function(libs, uncompressed, on_loaded) {
     "use strict";
+
     // action when a resource is loaded
     var _loaded = function(file) {
         //console.debug("Loaded " + file);
@@ -520,7 +523,7 @@ Utils.load = function(libs, on_loaded) {
 
     // fire off a resource load
     var _add_load = function(file) {
-        if (DEBUG)
+        if (uncompressed)
             file = file.replace(".min.", ".uncompressed.");
 
         //console.debug("Loading " + file);

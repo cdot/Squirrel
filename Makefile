@@ -12,9 +12,11 @@ MAP := $(subst .uncompressed.js,.map,$(filter %.uncompressed.js,$(SOURCES) $(LIB
 		--source-map-include-sources \
 		--comments \
 		--compress \
-		--define DEBUG=false \
 		-o $@ \
 		-- $^
+
+# To strip DEBUG completely, use:
+#		--define DEBUG=false \
 
 %.min.css : %.uncompressed.css
 	cleancss $^ > $@
@@ -26,7 +28,7 @@ MAP := $(subst .uncompressed.js,.map,$(filter %.uncompressed.js,$(SOURCES) $(LIB
 
 %.map : %.min.js
 
-release: $(MIN)
+release: $(MIN) $(MAP)
 	@echo "Done"
 
 # Other targets

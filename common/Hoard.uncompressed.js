@@ -86,7 +86,6 @@ Hoard.stringify_action = function(action) {
         + " @" + new Date(action.time).toLocaleString();
 };
 
-
 /**
  * Clear down the actions in the hoard. The cache is left untouched.
  * This is used when the client hoard has been synched with the cloud
@@ -177,6 +176,7 @@ Hoard.prototype.record_action = function(e, listener, no_push) {
             return c(TX.tx("Cannot delete, '$1' does not exist",
                            e.path.join("/")));
         delete parent.data[name];
+        parent.time = e.time; // collection is being modified
         break;
 
     case "R": // Rename
@@ -188,6 +188,7 @@ Hoard.prototype.record_action = function(e, listener, no_push) {
                            e.path.join("/"), e.data));
         parent.data[e.data] = parent.data[name];
         delete parent.data[name];
+        parent.time = e.time; // collection is being modified
         break;
 
     case "E": // Edit
@@ -195,6 +196,7 @@ Hoard.prototype.record_action = function(e, listener, no_push) {
             return c(TX.tx("Cannot change value, '$1' does not exist",
                            e.path.join("/")));
         parent.data[name].data = e.data;
+        parent.data[name].time = e.time;
         break;
 
     case "A": // Alarm
@@ -212,7 +214,7 @@ Hoard.prototype.record_action = function(e, listener, no_push) {
         break;
 
     default:
-        // Internal error uUnrecognised action type
+        // Internal error unrecognised action type
         if (DEBUG) debugger;
     }
 
@@ -399,6 +401,10 @@ Hoard.prototype.merge_from_cloud = function(cloud, listener, chain) {
                 conflicts.push(c);
             }
         }
+        else if (DEBUG) {
+            console.debug(
+                "Skip " + Hoard.stringify_action(cloud.actions[i]));
+        }
     }
 
     // Restore the saved actions list
@@ -406,6 +412,18 @@ Hoard.prototype.merge_from_cloud = function(cloud, listener, chain) {
     this.last_sync = Date.now();
     if (chain)
         chain(conflicts);
+};
+
+/**
+ * Return a dump of the current state of the hoard.
+ * @return a string with the JSON of the cache, and a list of the actions.
+ */
+Hoard.prototype.dump = function() {
+    var data = this.JSON() + "\n"; // get the cache
+    for (var i = 0; i < this.actions.length; i++) {
+        data = data + Hoard.stringify_action(this.actions[i]) + "\n";
+    }
+    return data;
 };
 
 /**
@@ -476,4 +494,15 @@ Hoard.prototype.check_alarms = function(callback) {
         alarm: callback
     };
     this.each_alarm();
+};
+
+/**
+ * Generate a JSON dump of the cache.
+ * @return a string containing a formatted JSON dump
+ */
+Hoard.prototype.JSON = function() {
+    var data = "";
+    if (this.cache)
+        data = JSON.stringify(this.cache.data, null, "\t");
+    return data;
 };

@@ -153,7 +153,6 @@ var Squirrel = {
             SD.squeak(res.message);
     };
 
-    // SMELL: not ported to mobile yet
     S.get_updates_from_cloud = function(cloard, chain) {
         // This will get triggered whenever both hoards are
         // successfully loaded.
@@ -425,7 +424,6 @@ var Squirrel = {
         // Action on the cloud store read failing
         cloud_store_read_failed = function(e) {
             if (DEBUG) console.debug("...cloud read failed " + e);
-            if (typeof e !== "string") debugger;
             if (e === AbstractStore.NODATA) {
                 if (DEBUG) console.debug(this.options().identifier + " contains NODATA");
                 S.cloud.status = S.IS_EMPTY;
@@ -530,6 +528,7 @@ var Squirrel = {
                         Utils.soon(S.hoards_loaded);
                         return;
                     }
+                    //if (DEBUG) console.debug("Cloud hoard " + data);
                     S.get_updates_from_cloud(
                         new Hoard(hoard),
                         S.hoards_loaded);
@@ -837,9 +836,16 @@ var Squirrel = {
             // requests to avoid them being cached by the browser.
             // Disable this functionality by default so that as much as
             // possible is cached locally
-            if (!DEBUG) $.ajaxSetup({ cache: true });
 
             var qs = Utils.query_string();
+
+            // Use uncompressed if the current document is uncompressed
+            var unco = document.location.href.match(/\.(min|uncompressed)\.html/)[1] == "uncompressed";
+
+            if (qs.debug)
+                DEBUG = true;
+
+            if (!DEBUG) $.ajaxSetup({ cache: true });
 
             var store = qs.store || "TestStore";
             if (typeof qs.steg !== "undefined")
@@ -851,7 +857,7 @@ var Squirrel = {
                 store_bits.push("common/StegaStore.min.js");
             } else
                 $(".using_steganography").remove();
-            Utils.load(store_bits, function () {
+            Utils.load(store_bits, unco, function () {
                 // Initialise translation module,
                 // and chain the application init
                 TX.init(function() {

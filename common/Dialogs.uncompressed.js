@@ -5,6 +5,7 @@
 (function($, S) {
     "use strict";
     var SD = S.Dialog;
+    var ST = S.Tree;
 
     // The code below requires the environment to define the following
     // extra methods in the namespace:
@@ -146,7 +147,7 @@
                             path: $dlg.data("node").treenode("get_path")
                         },
                         function(e) {
-                            Tree.action(
+                            ST.action(
                                 e,
                                 function() {
                                     Utils.sometime("update_save");
@@ -474,8 +475,10 @@
                         $("#store_settings_storepath").val();
                     if (S.client.status === S.IS_LOADED)
                         S.client.status = S.NEW_SETTINGS;
-                    if (S.cloud.status === S.IS_LOADED)
-                        S.cloud.status = S.NEW_SETTINGS;
+                    // No - the cloud isn't affected by the store path,
+                    // so don't mark it as changed
+                    // if (S.cloud.status === S.IS_LOADED)
+                    //     S.cloud.status = S.NEW_SETTINGS;
                     Utils.sometime("update_save");
                 }
                 return true;
@@ -596,11 +599,9 @@
             SD.init_dialog($dlg);
         }
 
-        var data = S.client.hoard.cache;
-        if (data)
-            data = data.data;
+        var data = S.client.hoard.JSON();
         $("#json_text")
-            .text(JSON.stringify(data, null, " "))
+            .text(data)
             .select();
         $("#json_ok").prop("disabled", true);
 
