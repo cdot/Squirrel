@@ -5,13 +5,13 @@
  * @implements AbstractStore
  */
 
-const CLIENT_ID = "985219699584-mt1do7j28ifm2vt821d498emarmdukbt.apps.googleusercontent.com";
+var CLIENT_ID = "985219699584-mt1do7j28ifm2vt821d498emarmdukbt.apps.googleusercontent.com";
 
 // While the appfolder would seem to make sense for Squirrel, it does make
 // it absolutely clear to an attacker where to look for Squirrel data files.
 // By granting full drive access, we open up the whole drive for possible
 // places to hoard.
-const SCOPE = "https://www.googleapis.com/auth/drive";
+var SCOPE = "https://www.googleapis.com/auth/drive";
 
 var gapi_is_loaded = false;
 var gapi_loader;
@@ -41,7 +41,7 @@ function GoogleDriveStore(params) {
 
 GoogleDriveStore.prototype = Object.create(AbstractStore.prototype);
 
-const SQUIRREL_STORE = GoogleDriveStore;
+var SQUIRREL_STORE = GoogleDriveStore;
 
 function gapi_on_load() {
     "use strict";

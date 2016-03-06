@@ -566,7 +566,7 @@ var Squirrel = {
         S.client.hoard = new Hoard();
         S.client.status = S.IS_EMPTY;
 
-        if (S.cloud.store.options().needs_path) {
+        if (S.cloud.store && S.cloud.store.options().needs_path) {
             SD.store_settings(S.load_cloud_hoard);
         } else {
             S.load_cloud_hoard();

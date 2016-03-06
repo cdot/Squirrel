@@ -40,7 +40,7 @@ function DropboxStore(params) {
     });
 }
 
-const SQUIRREL_STORE = DropboxStore;
+var SQUIRREL_STORE = DropboxStore;
 
 DropboxStore.prototype = Object.create(AbstractStore.prototype);
 

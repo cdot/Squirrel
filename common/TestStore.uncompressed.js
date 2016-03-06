@@ -15,7 +15,7 @@ function TestStore(params) {
     LocalStorageStore.call(this, params);
 }
 
-const SQUIRREL_STORE = TestStore;
+var SQUIRREL_STORE = TestStore;
 
 TestStore.prototype = Object.create(LocalStorageStore.prototype);
 
