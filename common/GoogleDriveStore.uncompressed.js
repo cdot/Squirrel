@@ -130,9 +130,9 @@ GoogleDriveStore.prototype._init = function(params) {
         handleAuthResult);
 };
 
-const BOUNDARY = "-------314159265358979323846";
-const DELIMITER = "\r\n--" + BOUNDARY + "\r\n";
-const RETIMILED = "\r\n--" + BOUNDARY + "--";
+var BOUNDARY = "-------314159265358979323846";
+var DELIMITER = "\r\n--" + BOUNDARY + "\r\n";
+var RETIMILED = "\r\n--" + BOUNDARY + "--";
 
 /**
  * @private
