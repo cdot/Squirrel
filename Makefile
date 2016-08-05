@@ -29,7 +29,7 @@ MAP := $(subst .uncompressed.js,.map,$(filter %.uncompressed.js,$(SOURCES) $(LIB
 %.map : %.min.js
 
 release: $(MIN) $(MAP)
-	@echo "Done"
+	@echo "Done $(MIN) $(MAP)"
 
 # Other targets
 %.esl : %.uncompressed.js
@@ -47,6 +47,7 @@ eslint: $(subst .uncompressed.js,.esl,$(SOURCES))
 locale/%.json: *.uncompressed.js Squirrel.html.src
 	perl build_scripts/translate.pl $(*F) *.uncompressed.js Squirrel.html.src
 
+# Upload to FTP
 #	$(wildcard libs/images/icons-png/*.png  libs/images/icons-svg/*.svg) 
 upload: $(MIN) $(MAP) \
 	$(wildcard images/*.svg images/*.ico images/*.png images/*.gif) \
