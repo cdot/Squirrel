@@ -228,8 +228,6 @@ var Squirrel = {
     S.insert_data = function(path, data) {
         SD.squeak({ title: "Loading" });
 
-        var $messy = $("#squeak_message");
-
         S.client.hoard.actions_from_hierarchy(
             { data: data },
             function(act, next) { // listener
@@ -840,7 +838,7 @@ var Squirrel = {
             var qs = Utils.query_string();
 
             // Use uncompressed if the current document is uncompressed
-            var unco = document.location.href.match(/\.(min|uncompressed)\.html/)[1] == "uncompressed";
+            var unco = document.location.href.match(/\.(min|uncompressed)\.html/)[1] === "uncompressed";
 
             if (qs.debug)
                 DEBUG = true;

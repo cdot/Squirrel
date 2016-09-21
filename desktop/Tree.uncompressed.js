@@ -2,6 +2,7 @@
 
 /**
  * Subclass of squirrel.treenode, specific to desktop jQuery
+ * See common/Tree.uncompressed.js
  */
 (function($, S) {
     "use strict";

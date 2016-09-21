@@ -44,8 +44,8 @@ clean:
 
 eslint: $(subst .uncompressed.js,.esl,$(SOURCES))
 
-locale/%.json: *.uncompressed.js Squirrel.html.src
-	perl build_scripts/translate.pl $(*F) *.uncompressed.js Squirrel.html.src
+locale/%.json: $(SOURCES)
+	perl build_scripts/translate.pl $(*F) $^
 
 # Upload to FTP
 #	$(wildcard libs/images/icons-png/*.png  libs/images/icons-svg/*.svg) 

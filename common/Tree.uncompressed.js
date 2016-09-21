@@ -119,7 +119,7 @@
                     $("<span> : </span>")
                         .addClass("kv_separator")
                         .appendTo($div);
-                    var $value = $("<span></span>")
+                    $("<span></span>")
                         .appendTo($div)
                         .addClass("value")
                         .text(this.options.value);

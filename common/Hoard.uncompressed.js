@@ -419,6 +419,8 @@ Hoard.prototype.merge_from_cloud = function(cloud, listener, chain) {
  * @return a string with the JSON of the cache, and a list of the actions.
  */
 Hoard.prototype.dump = function() {
+    "use strict";
+
     var data = this.JSON() + "\n"; // get the cache
     for (var i = 0; i < this.actions.length; i++) {
         data = data + Hoard.stringify_action(this.actions[i]) + "\n";
@@ -501,6 +503,8 @@ Hoard.prototype.check_alarms = function(callback) {
  * @return a string containing a formatted JSON dump
  */
 Hoard.prototype.JSON = function() {
+    "use strict";
+
     var data = "";
     if (this.cache)
         data = JSON.stringify(this.cache.data, null, "\t");

@@ -13,7 +13,7 @@ Enter Squirrel. Squirrel:
    - encrypts *everything* that it stores, sends or receives
    - doesn't require a special website to store stuff (it can use a number of different online cloud services as a store, and you can even add more)
    - uses 256 bit AES (Rijndael), one of the toughest ciphers to crack
-   - uses image steganography to mask its use
+   - can use image steganography to mask its use
    - caches your encrypted safe locally, so you don't need to be online to use it
    - works with all modern browsers
    - is entirely open source, allowing you to inspect, and if you want, propose modifications to the code
@@ -46,7 +46,7 @@ These are basically all the same risks all other online tools face.
 Data stored on the web is exposed to other risks, such as security agencies
 taking an interest in why you are storing encrypted data. For most of us this
 isn't a problem, but there are areas of the world where the use of encryption
-is frowned upon. For this reason, Squirrel uses image steganography to store
+is frowned upon. For this reason, Squirrel can use image steganography to store
 data on the web. The algorithm used is proprietary, and we believe it is
 difficult to detect its use, given a sufficiently complex image. Even if the
 image steganography is decoded, the underlying data is AES encrypted and
@@ -74,25 +74,32 @@ If you follow the tips above, you should be able to come up with something prett
 
 ## Using Squirrel
 
-Using Squirrel is as easy as visiting the Squirrel page that corresponds to
-the cloud service you want to use (currently Dropbox or Google Drive). Once
-the sources have been cached in your browser, there is no need to worry about
-them again.
+To run Squirrel visit `Squirrel.min.html` and pass the name of the store you want to use.
+For example,
+```
+https://mysite.com/Squirrel/Squirrel.min.html?store=GoogleDriveStore
+```
+If you want to use steganography, pass the `steg` parameter as well:
+```
+https://mysite.com/Squirrel/Squirrel.min.html?steg&store=DropboxStore
+```
+For best security you are recommended to
+only use a version you have built yourself from sources, served from a HTTPS server you
+control. Remember, your browser will cache a copy of the code, and there is a risk that
+could be compromised.
 
-Before you use Squirrel for the first time, you need to choose an image from
-your local drive. Your password safe will be embedded into
+If you run with steganography enabled, you need to choose an image from
+your local drive before running Squirrel. Your password safe will be embedded into
 this image, so it needs to be large enough to store all the data without
 degrading the image too much. For an average sized password store, a 1024x768
-colour image will usually suffice. It's a good idea to change the image
-you use on a regular basis (and change where it is stored) as you will otherwise
-leave traceable usage patterns (e.g. by updating the same image frequently).
-
-Run Squirrel by loading the HTML file that corresponds to your cloud provider.
-If you are running from the built version on github, then https://cdn.rawgit.com/cdot/Squirrel/master/drive.html for the Google Drive build, and https://cdn.rawgit.com/cdot/Squirrel/master/dropbox.html for the Dropbox version.
+RGB colour image will usually suffice. It's a good idea to change the image
+you use on a regular basis (and change where it is stored) as you may otherwise
+leave traceable usage patterns (e.g. by updating the same image frequently with no
+obvious visual change).
 
 You will be prompted for the encryption password you want
 to use. The first time you run you will be asked for the image you want to
-use, and the store path in the cloud.
+use (if using steganography), and the store path in the cloud.
 
 You are then presented with a simple interface where you can create keys
 (and keys within keys), and add data associated with those keys. Double-click
