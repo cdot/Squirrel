@@ -205,11 +205,10 @@
          * and should uniquely identify the button to be manipulated.
          * @param icon is the abstract name of the icon to use, one
          * of "open", "closed" or "alarm".
-         * @param on_hover is an optional hover handler
          * @param on_click may be a function to handle click events,
          * and is only used when action is "create".
          */
-        icon_button: function(action, selector, icon, on_click, on_hover) {
+        icon_button: function(action, selector, icon, on_click) {
             throw "Expected icon_button to be subclassed";
         },
 
@@ -276,6 +275,7 @@
                     .find(".key")
                     .first()
                     .before($button);
+
                 $node
                     .treenode(
                         "icon_button",
@@ -285,12 +285,6 @@
                         function() {
                             SD.alarm($node);
                             return false;
-                        },
-                        function() {
-                            var d = new Date($node.data("last-time")
-                                             + $node.data("alarm") * 24 * 60 * 60 * 1000);
-                            d.setHours(0, 0, 0, 0);
-                            $node.attr("title", d.toLocaleString());
                         });
             }
             $node.data("alarm", data);
@@ -319,8 +313,7 @@
             var d = new Date(time);
             return $(this.element)
                 .addClass("modified")
-                .data("last-time", time)
-                .data("last-mod", d.toLocaleString());
+                .data("last-time", time);
         },
 
         /**

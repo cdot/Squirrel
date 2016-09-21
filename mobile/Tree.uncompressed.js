@@ -13,7 +13,7 @@
 
     // Extend the treenode widget with platform specifics
     $.widget("squirrel.treenode", $.squirrel.treenode, {
-        icon_button: function(action, selector, icon, on_click, on_hover) {
+        icon_button: function(action, selector, icon, on_click) {
             var $node = $(this.element);
             var $control = (typeof selector === "string") ?
                 $node.find(selector).first() : selector;
@@ -29,8 +29,6 @@
                     });
                 if (typeof on_click === "function")
                     $control.parent().click(on_click);
-                if (typeof on_hover === "function")
-                    $control.parent().hover(on_hover);
                 break;
             case "change":
                 $control.button({

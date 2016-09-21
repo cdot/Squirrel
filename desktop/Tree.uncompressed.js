@@ -49,7 +49,7 @@
             });
         },
 
-        icon_button: function(action, selector, icon, on_click, on_hover) {
+        icon_button: function(action, selector, icon, on_click) {
             var $node = $(this.element);
             var $control = (typeof selector === "string") ?
                 $node.find(selector) : selector;
@@ -64,8 +64,6 @@
                 });
                 if (on_click)
                     $button.on("click", on_click);
-                if (on_hover)
-                    $button.on("hover", on_hover);
                 break;
             case "change":
                 if ($control.length > 0)
@@ -87,9 +85,17 @@
                     if ($(this).find(".in_place_editor").length === 0) {
                         $(this)
                             .addClass("hover");
+                        var mod = new Date($node.data("last-time")).toLocaleString();
+                        if (typeof $node.data("alarm") !== "undefined") {
+                            var alm = new Date($node.data("last-time")
+                                               + 24 * 60 * 60 * 1000);
+                            alm.setHours(0, 0, 0, 0);
+                            mod += " @" + alm.toLocaleString();
+                        }
+
                         $("<div></div>")
                             .addClass("lastmod")
-                            .text($node.data("last-mod"))
+                            .text(mod)
                             .appendTo($(this));
                         return false;
                     }
