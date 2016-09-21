@@ -49,7 +49,7 @@
             });
         },
 
-        icon_button: function(action, selector, icon, on_click) {
+        icon_button: function(action, selector, icon, on_click, on_hover) {
             var $node = $(this.element);
             var $control = (typeof selector === "string") ?
                 $node.find(selector) : selector;
@@ -64,6 +64,8 @@
                 });
                 if (on_click)
                     $button.on("click", on_click);
+                if (on_hover)
+                    $button.on("hover", on_hover);
                 break;
             case "change":
                 if ($control.length > 0)
