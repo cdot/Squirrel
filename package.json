@@ -45,7 +45,8 @@
             "dot-notation" : 1,
             "no-trailing-spaces" : 0,
             "strict" : 1,
-            "no-use-before-define": "3 nofunc"
+            "no-use-before-define": "3 nofunc",
+            "quotes": 0
         }
     }
 }

@@ -77,6 +77,16 @@ input {
     display: inline-block;
 }
 
+.has_alarms:not(.treenode-open) {
+    border-left: 2px solid magenta;
+}
+
+.inline-icon {
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+}
+
 .picked {
     background-color: yellow;
     color: black;

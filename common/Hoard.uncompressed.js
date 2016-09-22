@@ -40,6 +40,8 @@
  * @param {Function} chain
  */
 
+const MSPERDAY = 24 * 60 * 60 * 1000;
+
 /**
  * Create a new Hoard
  * @class
@@ -444,9 +446,6 @@ Hoard.prototype.get_node = function(path) {
     return node;
 };
 
-// Milliseconds in a day
-const MSDAY = 24 * 60 * 60 * 1000;
-
 /**
 * @private
 */
@@ -472,10 +471,10 @@ Hoard.prototype.each_alarm = function() {
             }
 
         if (typeof node.alarm !== "undefined"
-            && (Date.now() - node.time) >= (node.alarm * MSDAY)) {
+            && (Date.now() - node.time) >= (node.alarm * MSPERDAY)) {
             this.check.alarm(
                 item.path,
-                new Date(node.time + node.alarm * MSDAY),
+                new Date(node.time + node.alarm * MSPERDAY),
                 alarum);
             return;
         }

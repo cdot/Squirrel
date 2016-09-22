@@ -286,12 +286,29 @@
                             SD.alarm($node);
                             return false;
                         });
+
+                // Run up the tree, incrementing the alarm count
+                $node.parents(".treenode").each(function($n) {
+                    var c = $(this).data("alarm-count") || 0;
+                    $(this).data("alarm-count", c + 1);
+                    $(this).addClass("has_alarms");
+                });
             }
             $node.data("alarm", data);
         },
 
         cancel_alarm: function() {
-            return $(this.element)
+            var $node = $(this.element);
+            // Run up the tree decrementing the alarm count
+            $node.parents(".treenode").each(function($n) {
+                var c = $(this).data("alarm-count") || 0;
+                c = c - 1;
+                $(this).data("alarm-count", c);
+                if (c === 0)
+                    $(this).removeClass("has_alarms");
+            });
+
+            return $node
                 .removeData("alarm")
                 .treenode("icon_button", "destroy", ".alarm:first");
         },

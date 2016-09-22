@@ -4,6 +4,9 @@
  * Subclass of squirrel.treenode, specific to desktop jQuery
  * See common/Tree.uncompressed.js
  */
+
+const MSPERDAY = 24 * 60 * 60 * 1000;
+
 (function($, S) {
     "use strict";
     var map_treenode_icon = {
@@ -83,20 +86,27 @@
             $info.hover(
                 function(/*evt*/) {
                     if ($(this).find(".in_place_editor").length === 0) {
+                        var $status = $("<div></div>");
+                        $status
+                            .addClass("lastmod");
                         $(this)
-                            .addClass("hover");
-                        var mod = new Date($node.data("last-time")).toLocaleString();
-                        if (typeof $node.data("alarm") !== "undefined") {
-                            var alm = new Date($node.data("last-time")
-                                               + 24 * 60 * 60 * 1000);
-                            alm.setHours(0, 0, 0, 0);
-                            mod += " @" + alm.toLocaleString();
-                        }
+                            .addClass("hover")
+                            .append($status);
 
-                        $("<div></div>")
-                            .addClass("lastmod")
-                            .text(mod)
-                            .appendTo($(this));
+                        var mod = new Date($node.data("last-time"))
+                            .toLocaleString();
+                        $status.append("<span>" + mod + " </span");
+
+                        if (typeof $node.data("alarm") !== "undefined") {
+                            $status.append(
+                                '<div class="inline-icon ui-icon-squirrel-alarm"></div>');
+                            $status.append(
+                                '<div class="treenode-info">'
+                                    + S.Dialog.until_alarms(
+                                        new Date($node.data("last-time")
+                                                 + $node.data("alarm") * MSPERDAY))
+                                    + "</div>");
+                         }
                         return false;
                     }
                 },
