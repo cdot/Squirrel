@@ -1,5 +1,10 @@
 /*@preserve Copyright (C) 2015 Crawford Currie http://c-dot.co.uk license MIT*/
 
+/* global DEBUG */
+/* global TX */
+/* global Squirrel */
+/* global ZeroClipboard */
+
 /**
  * Customisation for desktop (raw JQuery)
  */
@@ -23,7 +28,6 @@
         var is_leaf = $node.hasClass("treenode-leaf");
         var is_root = ui.target.closest(".treenode").is("#sites-node");
         var is_open = $node.hasClass("treenode-open");
-        var zc;
         var $root = $("body");
 
         $root
@@ -42,48 +46,51 @@
             .contextmenu("showEntry", "insert_copy",
                          !is_leaf && S.clipboard !== null);
 
-        if (!$root.data("zc_copy")) {
-            // First time, attach zero clipboard handler
-            if (DEBUG) console.debug("Attaching ZC copy");
-            // Whack a Flash movie over the menu item li
-            zc = new ZeroClipboard(
-                ui.menu.children("li[data-command='copy_value']"));
-            // Handle the "copy" event that comes from
-            // the Flash movie and populate the event with our data
-            zc.on("copy", function(event) {
-                if (DEBUG) { console.debug("Copying to clipboard"); }
-                event.clipboardData.setData(
-                    "text/plain",
-                    $root.data("zc_copy").text());
-            });
-            $root.data("ZC", zc); // remember it to protect from GC
-        }
-        $root.data("zc_copy", $val);
+        if (typeof ZeroClipboard !== "undefined") {
+            var zc;
+            if (!$root.data("zc_copy")) {
+                // First time, attach zero clipboard handler
+                if (DEBUG) console.debug("Attaching ZC copy");
+                // Whack a Flash movie over the menu item li
+                zc = new ZeroClipboard(
+                    ui.menu.children("li[data-command='copy_value']"));
+                // Handle the "copy" event that comes from
+                // the Flash movie and populate the event with our data
+                zc.on("copy", function(event) {
+                    if (DEBUG) { console.debug("Copying to clipboard"); }
+                    event.clipboardData.setData(
+                        "text/plain",
+                        $root.data("zc_copy").text());
+                });
+                $root.data("ZC", zc); // remember it to protect from GC
+            }
+            $root.data("zc_copy", $val);
 
-        if (!$root.data("zc_cut")) {
-            // First time, attach zero clipboard handler
-            if (DEBUG) console.debug("Attaching ZC cut");
-            // Whack a Flash movie over the menu item li
-            zc = new ZeroClipboard(
-                ui.menu.children("li[data-command='make_copy']"));
-            // Handle the "copy" event that comes from
-            // the Flash movie and populate the event with our data.
-            // Note that this populates the system clipboard, but that
-            // clipboard is not accessible from Javascript so we
-            // can only insert things copied from Squirrel
-            zc.on("copy", function(event) {
-                if (DEBUG) console.debug("Copying JSON to clipboard");
-                var pa = $root.data("zc_cut");
-                var p = pa.treenode("get_path");
-                var n = S.client.hoard.get_node(p);
-                var json = JSON.stringify(n);
+            if (!$root.data("zc_cut")) {
+                // First time, attach zero clipboard handler
+                if (DEBUG) console.debug("Attaching ZC cut");
+                // Whack a Flash movie over the menu item li
+                zc = new ZeroClipboard(
+                    ui.menu.children("li[data-command='make_copy']"));
+                // Handle the "copy" event that comes from
+                // the Flash movie and populate the event with our data.
+                // Note that this populates the system clipboard, but that
+                // clipboard is not accessible from Javascript so we
+                // can only insert things copied from Squirrel
+                zc.on("copy", function(event) {
+                    if (DEBUG) console.debug("Copying JSON to clipboard");
+                    var pa = $root.data("zc_cut");
+                    var p = pa.treenode("get_path");
+                    var n = S.client.hoard.get_node(p);
+                    var json = JSON.stringify(n);
 
-                S.clipboard = json;
-                event.clipboardData.setData("text/plain", json);
-            });
-            $root.data("ZC", zc); // remember it to protect from GC
+                    S.clipboard = json;
+                    event.clipboardData.setData("text/plain", json);
+                });
+                $root.data("ZC", zc); // remember it to protect from GC
+            }
+            $root.data("zc_cut", $node.closest(".treenode"));
         }
-        $root.data("zc_cut", $node.closest(".treenode"));
     };
 
     /**

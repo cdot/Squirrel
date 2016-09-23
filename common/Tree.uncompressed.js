@@ -1,5 +1,11 @@
 /*@preserve Copyright (C) 2015 Crawford Currie http://c-dot.co.uk license MIT*/
 
+/* global DEBUG */
+/* global Utils */
+/* global TX */
+/* global Hoard */
+/* global Squirrel */
+
 /**
  * Functions involved in the management of the DOM tree that represents
  * the content of the client hoard cache.

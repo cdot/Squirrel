@@ -1,5 +1,12 @@
 /*@preserve Copyright (C) 2015 Crawford Currie http://c-dot.co.uk license MIT*/
 
+/* global DEBUG */
+/* global TX */
+/* global AbstractStore */
+/* global Utils */
+/* global gapi */
+/* global SQUIRREL_STORE:true */
+
 /**
  * A store using Google Drive
  * @implements AbstractStore
@@ -41,7 +48,7 @@ function GoogleDriveStore(params) {
 
 GoogleDriveStore.prototype = Object.create(AbstractStore.prototype);
 
-var SQUIRREL_STORE = GoogleDriveStore;
+SQUIRREL_STORE = GoogleDriveStore;
 
 function gapi_on_load() {
     "use strict";

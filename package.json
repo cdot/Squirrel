@@ -10,27 +10,6 @@
             "blockBindings": true
         },
         "globals": {
-            "assert": true,
-            "AbstractStore": true,
-            "LayeredStore": true,
-            "GoogleDriveStore": true,
-            "DropboxStore": true,
-            "LocalStorageStore": true,
-            "EncryptedStore": true,
-            "Utils": true,
-            "Hoard": true,
-            "Aes": true,
-            "AES": true,
-            "TX": true,
-            "Tree": true,
-            "Dropbox": true,
-            "gapi" : true,
-            "ZeroClipboard": true,
-            "DEBUG": true,
-            "SQUIRREL_STORE": true,
-            "StegaStore": true,
-            "Steganographer": true,
-            "Squirrel": true
         },
         "rules": {
             "no-underscore-dangle": 0,

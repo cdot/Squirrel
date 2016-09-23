@@ -16,8 +16,8 @@ sub sadd {
     $s =~ s/\s+/ /g;
     $s =~ s/$Q + $Q/ /g;
     $s =~ s/\s+/ /g;
-    $s =~ s/^\s//;
-    $s =~ s/\s^//;
+    $s =~ s/^\s+//;
+    $s =~ s/\s+^//;
     return $i if $strings{$s};
     $strings{$s} = 1;
     return $i;
@@ -36,9 +36,13 @@ while (@ARGV) {
     $f = <F>;
     close(F);
 
+    $f =~ s/(\/\/ TX (.*))/sadd($2,$1)/gem;
+
     $f =~ s/(\bTX.tx\(($Q)(.+?)\2)/sadd($3,$1)/ges;
+
     #       1        2  2                              3  34   4  1
     $f =~ s/(\bclass=($Q)$C?\bTX_title\b$C\2.*?\btitle=($Q)(.+?)\3)/sadd($4,$1)/ges;
+
     #       1        2  2                       3   3 1
     $f =~ s/(\bclass=($Q)$C?\bTX_text\b$C?\2.*?>(.+?)<)/sadd($3,$1)/ges;
     close(F);

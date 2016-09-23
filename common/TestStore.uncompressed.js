@@ -1,5 +1,8 @@
 /*@preserve Copyright (C) 2015 Crawford Currie http://c-dot.co.uk license MIT*/
 
+/* global LocalStorageStore */
+/* global SQUIRREL_STORE:true */
+
 /**
  * A test store engine
  * @extends LocalStorageStore
@@ -15,7 +18,7 @@ function TestStore(params) {
     LocalStorageStore.call(this, params);
 }
 
-var SQUIRREL_STORE = TestStore;
+SQUIRREL_STORE = TestStore;
 
 TestStore.prototype = Object.create(LocalStorageStore.prototype);
 

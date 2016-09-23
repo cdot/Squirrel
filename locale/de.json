@@ -1,11 +1,14 @@
 {
+   "$1 day$?($1!=1,s,)" : "$1 Tag$?($1!=1,e,)",
    "$1 found" : "$1 gefunden",
    "$1 has changed" : "$1 wurde geändert",
    "$1 hoard can't be read for update" : "$1 horten kann nicht für die Aktualisierung zu lesen",
    "$1 hoard exists, but can't be read." : "$1 Hort vorhanden ist, aber nicht gelesen werden kann.",
+   "$1 month$?($1!=1,s,)" : "$1 Monat$?($1!=1,e,)",
    "$1 store error: $2" : "$1 Shop Fehler: $2",
+   "$1 year$?($1!=1,s,)" : "$1 Jahr$?($1!=1,e,)",
    "'$1' not found" : "\"$1\" nicht gefunden",
-   "... and $1 more changes" : "... Und $1 mehr Änderungen",
+   "... and $1 more change$?($1!=1,s,)" : "... und noch $1 änderung$?($1!=1,en,)",
    "A copy" : "Eine Kopie",
    "A new folder" : "Zielordner",
    "A new value" : "Ein neuer Wert",
@@ -40,7 +43,6 @@
    "Check that you have the correct password." : "Überprüfen Sie, ob Sie das richtige Passwort haben.",
    "Choose Image File " : "Bild wählen",
    "Choose a local image that will be copied and used to hide your data in the cloud. This should be a complex colour image of at least 1024x768 pixels, preferably with variable transparency. Note that very large images may take a long time to load and save." : "Wählen Sie ein lokales Bild, das kopiert und verwendet werden, um Ihre Daten in der Cloud zu verstecken wird. Dies sollte eine komplexe Farbbild von mindestens 1024x768 Pixel, vorzugsweise mit variabler Transparenz. Beachten Sie, dass sehr großen Bildern kann einige Zeit zum Laden und Speichern zu nehmen.",
-   "Choose a local image that will be copied and used to hide your data in the cloud. This should be a complex colour image of at least 1024x768 pixels, preferably with variable transparency. Note that very large images may take a long time to load and save. " : "Wählen Sie ein lokales Bild, das kopiert und verwendet, um Ihre Daten in der Cloud zu verstecken. Dies sollte eine komplexe Farbbild von mindestens 1024 x 768 Pixel, vorzugsweise mit variabler Transparenz sein. Beachten Sie, dass sehr große Bilder dauern eine lange Zeit zum Laden und speichern.",
    "Choose an image file" : "Wählen Sie eine Bilddatei",
    "Clear" : "Felder leeren",
    "Click on the Nth character position to see what character it is " : "Klicken Sie auf die n-te Zeichenposition zu sehen, was es Charakter ist",
@@ -163,6 +165,7 @@
    "months" : "Monate",
    "needs to be saved" : "muss gespeichert werden",
    "none" : "keiner",
-   "weeks" : "Wochen",
+   "on " : "ein",
+   "string" : "String",
    "years" : "Jahren"
 }

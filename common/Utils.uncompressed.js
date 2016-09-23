@@ -1,5 +1,7 @@
 /*@preserve Copyright (C) 2015 Crawford Currie http://c-dot.co.uk license MIT*/
 
+/* global TX */
+
 /**
  * Utilities and plugins used by Squirrel
  */
@@ -74,12 +76,34 @@ var Utils = { // Namespace
     // Used by 'soon' to control how often we yield to the UI before
     // calling the managed function (we don't want to yield unless we
     // really have to)
+
     last_yield: Date.now(),
 
     // Timeout intervals, milliseconds
     IMMEDIATE: 1,
     SOON: 100,
-    SOMETIME: 250
+    SOMETIME: 250,
+    MSPERDAY: 24 * 60 * 60 * 1000,
+    TIMEUNITS: {
+        y: {
+            days: 360,
+            ms: 364 * 24 * 60 * 60 * 1000,
+            // TX $1 year$?($1!=1,s,)
+            format: "$1 year$?($1!=1,s,)"
+        },
+        m: {
+            days: 30,
+            ms: 30 * 24 * 60 * 60 * 1000,
+            // TX $1 month$?($1!=1,s,)
+            format: "$1 month$?($1!=1,s,)"
+        },
+        d: {
+            days: 1,
+            ms: 24 * 60 * 60 * 1000,
+            // TX $1 day$?($1!=1,s,)
+            format: "$1 day$?($1!=1,s,)"
+        }
+    }
 };
 
 /**
@@ -599,4 +623,41 @@ Utils.make_query_string = function(qs) {
         sep = "&";
     }
     return params;
+};
+
+/**
+ * Given a time value, return a breakdown of the period between now
+ * and that time. For example, "1 years 6 months 4 days". Resolution is
+ * days. Any time less than a day will be reported as 0 days.
+ * @param time either a Date object specifying an absolute time or
+ * a number of ms until the time/
+ * @return array of structures each containing `id` (one of `d`, `w`, `m`, `y`),
+ * `number` of those, and `name` translated pluralised name e.g. `months`
+ */
+Utils.deltaTimeString = function(date) {
+    "use strict";
+
+    date = new Date(date.getTime() - Date.now());
+
+    var s = [];
+
+    var delta = date.getUTCFullYear() - 1970;
+    if (delta > 0)
+        s.push(TX.tx(Utils.TIMEUNITS.y.format, delta));
+
+    // Normalise to year zero
+    date.setUTCFullYear(1970);
+
+    delta = date.getUTCMonth();
+    if (delta > 0)
+        s.push(TX.tx(Utils.TIMEUNITS.m.format, delta));
+
+    // Normalise to the same month (January)
+    date.setUTCMonth(0);
+
+    delta = date.getUTCDate();
+    if (delta > 0 || s.length === 0)
+        s.push(TX.tx(Utils.TIMEUNITS.d.format, delta));
+
+    return s.join(" ");
 };

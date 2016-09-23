@@ -198,10 +198,9 @@
           </p>
           <p>
             <label for="alarm_number" class="TX_text">Remind after</label>
-            <input type="number" id="alarm_number" />
+            <input type="number" id="alarm_number" value="6"/>
             <select id="alarm_units" data-role="none">
               <option value="d" class="TX_text">days</option>
-              <option value="w" class="TX_text">weeks</option>
               <option value="m" class="TX_text">months</option>
               <option value="y" class="TX_text">years</option>
             </select>
@@ -292,8 +291,7 @@
               and used to hide your data in the cloud. This should be a complex
               colour image of at least 1024x768 pixels, preferably with variable
               transparency. Note that very large images may take a long time to
-              load and save.
-            </p>
+              load and save.</p>
             <span class="TX_text">Current steganography image:</span><br />
             <img id="stegamage" src="images/GCHQ.png" /><br />
             <button id="store_settings_choose" class="TX_title TX_text" data-mini="true" title="Choose an image file">Change Image</button>

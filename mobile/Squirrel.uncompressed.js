@@ -1,5 +1,10 @@
 /*@preserve Copyright (C) 2015 Crawford Currie http://c-dot.co.uk license MIT*/
 
+/* eslint-env jquery */
+/* global Utils */
+/* global TX */
+/* global Squirrel */
+
 /**
  * Customisation for JQuery mobile
  */

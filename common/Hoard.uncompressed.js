@@ -1,5 +1,9 @@
 /*@preserve Copyright (C) 2015 Crawford Currie http://c-dot.co.uk license MIT*/
 
+/* global DEBUG */
+/* global TX */
+/* global Utils */
+
 /**
  * A combined hierarchical data store with change log, designed to be
  * used in a client-cloud topology where a single cloud hoard is synched
@@ -39,8 +43,6 @@
  * @param {Action} action
  * @param {Function} chain
  */
-
-const MSPERDAY = 24 * 60 * 60 * 1000;
 
 /**
  * Create a new Hoard
@@ -471,10 +473,10 @@ Hoard.prototype.each_alarm = function() {
             }
 
         if (typeof node.alarm !== "undefined"
-            && (Date.now() - node.time) >= (node.alarm * MSPERDAY)) {
+            && (Date.now() - node.time) >= (node.alarm * Utils.MSPERDAY)) {
             this.check.alarm(
                 item.path,
-                new Date(node.time + node.alarm * MSPERDAY),
+                new Date(node.time + node.alarm * Utils.MSPERDAY),
                 alarum);
             return;
         }

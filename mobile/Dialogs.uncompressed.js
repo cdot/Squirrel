@@ -1,5 +1,9 @@
 /*@preserve Copyright (C) 2015 Crawford Currie http://c-dot.co.uk license MIT*/
 
+/* eslint-env jquery */
+/* global Utils */
+/* global Squirrel */
+
 // Mobile customisation of dialogs
 (function($, S) {
         "use strict";

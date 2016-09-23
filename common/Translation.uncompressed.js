@@ -1,6 +1,30 @@
 /*@preserve Copyright (C) 2015 Crawford Currie http://c-dot.co.uk license MIT*/
+
+/* eslint no-eval: 1 */
+/* global DEBUG */
+
 /**
- * Translations module. Determines the language to use from the browser,
+ * Translations module. Determines the language to use from the browser.
+ *
+ * Translatable strings are declared in code using `TX.tx(string)` or in
+ * HTML using
+ * `<... class="TX_title" title="string">` or
+ * `<... class="TX_text">string</...>` 
+ * These are format strings that may be populated with expandable arguments
+ * `$1..$N`, for example: `TX.text("$1 days of Christmas", 12)`
+ * There is limited support for conditional expansion using the
+ * `$?(bexpr,then,else)` macro.
+ * If `bexpr1` eval()s to true then the expression will expand to
+ * `then`, otherwise it will expand to `else`.
+ * Both `then` and `else` must be given, though can be empty.
+ * For example, considr `TX.tx("$1 day$?($1!=1,s,)", ndays)`.
+ * If `$1!=1` succeeds then the macro expands to `s` otherwise
+ * to the empty string. Thus if `ndays` is `1` it will expand to `1 day`
+ * but if it is `11` it will expand to `11 days`
+ * NOTE: format strings are evalled and could thus be used for cross
+ * scripting. User input must never be passed to the formatter. There is
+ * no error checking on the eval, and it will throw an exception if the
+ * syntax is incorrect.
  */
 var TX = {
     lingo: window.navigator.userLanguage || window.navigator.language || "en",
@@ -59,9 +83,16 @@ var TX = {
         }
 
         for (i = arguments.length - 1; i > 0; i--) {
-            s = s.replace("\$" + i, arguments[i]);
+            s = s.replace(new RegExp("\\$" + i, "g"), arguments[i]);
         }
 
+        s = s.replace(
+                /\$\?\((.*?),(.*?),(.*?)\)/g,
+            function(m, test, pass, fail) {
+                var result = false;
+                eval("result=(" + test + ")");
+                return result ? pass : fail;
+            });
         return s;
     },
 

@@ -1,11 +1,13 @@
 /*@preserve Copyright (C) 2015 Crawford Currie http://c-dot.co.uk license MIT*/
 
+/* eslint-env jquery */
+/* global Utils */
+/* global Squirrel */
+
 /**
  * Subclass of squirrel.treenode, specific to desktop jQuery
  * See common/Tree.uncompressed.js
  */
-
-const MSPERDAY = 24 * 60 * 60 * 1000;
 
 (function($, S) {
     "use strict";
@@ -102,9 +104,10 @@ const MSPERDAY = 24 * 60 * 60 * 1000;
                                 '<div class="inline-icon ui-icon-squirrel-alarm"></div>');
                             $status.append(
                                 '<div class="treenode-info">'
-                                    + S.Dialog.until_alarms(
+                                    + Utils.deltaTimeString(
                                         new Date($node.data("last-time")
-                                                 + $node.data("alarm") * MSPERDAY))
+                                                 + $node.data("alarm")
+                                                 * Utils.MSPERDAY))
                                     + "</div>");
                          }
                         return false;

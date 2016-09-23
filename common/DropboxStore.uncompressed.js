@@ -1,5 +1,10 @@
 /*@preserve Copyright (C) 2015 Crawford Currie http://c-dot.co.uk license MIT*/
 
+/* global DEBUG */
+/* global AbstractStore */
+/* global Dropbox */
+/* global SQUIRREL_STORE:true */
+
 /**
  * A store using Dropbox
  * @implements AbstractStore
@@ -40,7 +45,7 @@ function DropboxStore(params) {
     });
 }
 
-var SQUIRREL_STORE = DropboxStore;
+SQUIRREL_STORE = DropboxStore;
 
 DropboxStore.prototype = Object.create(AbstractStore.prototype);
 

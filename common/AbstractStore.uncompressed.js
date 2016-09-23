@@ -1,5 +1,8 @@
 /*@preserve Copyright (C) 2015 Crawford Currie http://c-dot.co.uk license MIT*/
 
+/* global DEBUG */
+/* global Utils */
+
 /**
  * Pure virtual base class of store providers.
  *

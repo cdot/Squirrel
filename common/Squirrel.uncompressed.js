@@ -1,5 +1,17 @@
 /*@preserve Copyright (C) 2015 Crawford Currie http://c-dot.co.uk license MIT*/
 
+/* eslint-env jquery */
+/* global DEBUG:true */
+/* global TX */
+/* global Utils */
+/* global AbstractStore */
+/* global EncryptedStore */
+/* global LocalStorageStore */
+/* global StegaStore */
+/* global Hoard */
+/* global Tree */
+/* global SQUIRREL_STORE */
+
 /*
  * The Squirrel Application namespace and UI. The code in this module is
  * common to all environments and is expected to be extended by functions
@@ -189,7 +201,8 @@ var Squirrel = {
 
         $(".treenode.modified").each(function() {
             if (DEBUG && !$(this).data("path")
-                && !$(this).hasClass("treenode-root")) debugger; // Missing data-path
+                && !$(this).hasClass("treenode-root"))
+                debugger; // Missing data-path
             var path = $(this).data("path") || "node";
             message.push(TX.tx("$1 has changed",
                                path.replace(S.PATHSEP, "/")));
@@ -198,7 +211,7 @@ var Squirrel = {
         if (message.length > max_changes) {
             var l = message.length;
             message = message.slice(0, max_changes);
-            message.push(TX.tx("... and $1 more changes", l - 5));
+            message.push(TX.tx("... and $1 more change$?($1!=1,s,)", l - 5));
         }
 
         if (S.cloud.status !== S.IS_LOADED) {

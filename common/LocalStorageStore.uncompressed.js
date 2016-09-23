@@ -1,5 +1,9 @@
 /*@preserve Copyright (C) 2015 Crawford Currie http://c-dot.co.uk license MIT*/
 
+/* global DEBUG */
+/* global AbstractStore */
+/* global Utils */
+
 /**
  * A store engine using HTML5 localStorage.
  * @implements AbstractStore

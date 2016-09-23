@@ -1,8 +1,16 @@
 /*@preserve Copyright (C) 2015 Crawford Currie http://c-dot.co.uk license MIT*/
 
-// Common code for dialogs
+/* eslint-env jquery */
+/* global Utils */
+/* global TX */
+/* global DEBUG */
+/* global Steganographer */
+/* global Squirrel */
 
-const MSPERDAY = 24 * 60 * 60 * 1000;
+/**
+ * Common code for dialogs. This is enhanced by mixins in the mobile
+ * and desktop domains.
+*/
 
 (function($, S) {
     "use strict";
@@ -301,74 +309,6 @@ const MSPERDAY = 24 * 60 * 60 * 1000;
         SD.open_dialog($dlg);
     };
 
-    // @private
-    var units = {
-        y: {
-            days: 365,
-            name: TX.tx("years")
-        },
-        m: {
-            days: 30,
-            name: TX.tx("months")
-        },
-        w: {
-            days: 7,
-            name: TX.tx("weeks")
-        },
-        d: {
-            days: 1,
-            name: TX.tx("days")
-        }
-    };
-
-    /**
-     * Given a number of days, return a breakdown of that period.
-     * @param number number of days we are interested in (or a Date object with an
-     * absolute date in it)
-     * @return array of structures each containing `id` (one of `d`, `w`, `m`, `y`),
-     * `number` of those, and `name` translated pluralised name e.g. `months`
-     */
-    SD.until_alarm = function(number) {
-        if (typeof number === "object")
-            return SD.until_alarm(
-                Math.floor((number.getTime() - Date.now()) / MSPERDAY));
-
-        var uns = [];
-        for (var i = 0; i < 3; i++) {
-            var id = "ymw".charAt(i);
-            var n = units[id].days;
-            var count = Math.floor(number / n);
-            if (count !== 0) {
-                uns.push({
-                    id: id,
-                    number: count,
-                    name: units[id].name
-                });
-                number -= count * units[id].days;
-            }
-        }
-        if (uns.length === 0 || number > 0)
-            uns.push({
-                id: "d",
-                number: number,
-                name: units.d.name
-            });
-        return uns;
-    };
-
-    /**
-     * Format a string this shows the time until the given date (or number of days)
-     */
-    SD.until_alarms = function(n) {
-        var uns = SD.until_alarm(n);
-        var s = [];
-        for (var i = 0; i < uns.length; i++) {
-            s.push(uns[i].number);
-            s.push(uns[i].name);
-        }
-        return s.join(" ");
-    };
-
     /**
      * Reminder setting dialog
      */
@@ -379,11 +319,11 @@ const MSPERDAY = 24 * 60 * 60 * 1000;
             $dlg.data("update_next", function() {
                 var numb = $("#alarm_number").val();
                 // Convert to days
-                numb = numb * units[$("#alarm_units").val()].days;
+                numb = numb * Utils.TIMEUNITS[$("#alarm_units").val()].days;
                 var last_time = $dlg.data("node").data("last-time");
-                var alarmd = new Date(last_time + numb * MSPERDAY);
+                var alarmd = new Date(last_time + numb * Utils.MSPERDAY);
                 $('#alarm_when').text(alarmd.toLocaleDateString());
-                $("#alarm_next").text(SD.until_alarms(alarmd));
+                $("#alarm_next").text(Utils.deltaTimeString(alarmd));
             });
 
             $("#alarm_units")
@@ -400,7 +340,7 @@ const MSPERDAY = 24 * 60 * 60 * 1000;
                 .click(function() {
                     SD.close_dialog($dlg);
                     var numb = $("#alarm_number").val()
-                        * units[$("#alarm_units").val()].days;
+                        * Utils.TIMEUNITS[$("#alarm_units").val()].days;
                     SD.play_action(
                         { type: "A",
                           path: $dlg.data("node").treenode("get_path"),
@@ -422,20 +362,7 @@ const MSPERDAY = 24 * 60 * 60 * 1000;
             SD.init_dialog($dlg);
         }
         
-        var number = 6;
-        var uk = "m";
-
-        if (typeof $node.data("alarm") !== "undefined") {
-            number = $node.data("alarm");
-            var uns = SD.until_alarm(number);
-            uk = uns[uns.length - 1].id;
-            number /= units[uk].days;
-        }
-
         $("#alarm_path").text($node.treenode("get_path").join("/"));
-        $("#alarm_number").val(number);
-        $("#alarm_units option[value='" + uk + "']")
-            .attr("selected", "selected");
 
         $dlg.data("node", $node);
         $dlg.data("update_next").call();
