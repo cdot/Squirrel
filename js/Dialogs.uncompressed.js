@@ -91,7 +91,7 @@
 
         $signin
             .off(SD.click)
-            .click("p", sign_in);
+            .on($.getTapEvent(), "p", sign_in);
 
         $user.off("change").val(options.store.user());
         $pass.off("change").val(options.store.pass());
@@ -149,7 +149,7 @@
 
         if ($dlg.hasClass("hidden")) {
             $("#delete_node_ok")
-                .click(function() {
+                .on($.getTapEvent(), function() {
                     SD.close_dialog($dlg);
                     var res = S.client.hoard.record_action(
                         {
@@ -174,7 +174,7 @@
                     return true;
                 });
             $("#delete_node_cancel")
-                .click(function(/*evt*/) {
+                .on($.getTapEvent(), function(/*evt*/) {
                     SD.close_dialog($dlg);
                     return false;
                 });
@@ -199,7 +199,7 @@
 
         if ($dlg.hasClass("hidden")) {
             $("#pick_clear")
-                .click(function() {
+                .on($.getTapEvent(), function() {
                     $dlg.find(".picked").removeClass("picked");
                 });
             
@@ -229,12 +229,12 @@
                     .data("i", i)
                     .addClass("pick_cell i" + i)
                     .text(i + 1)
-                    .click(item_clicked)
+                    .on($.getTapEvent(), item_clicked)
                     .appendTo($which);
                 $f = $("<td></td>")
                     .data("i", i)
                     .addClass("pick_cell i" + i)
-                    .click(item_clicked)
+                    .on($.getTapEvent(), item_clicked)
                     .appendTo($from);
             }
             $f.text(val.charAt(i));
@@ -259,7 +259,7 @@
 
         if ($dlg.hasClass("hidden")) {
             $("#randomise_again")
-                .click(function() {
+                .on($.getTapEvent(), function() {
                     $("#randomise_idea").text(Utils.generate_password(
                         {
                             length: $("#randomise_len").val(),
@@ -268,7 +268,7 @@
                     return false;
                 });
             $("#randomise_use")
-                .click(function() {
+                .on($.getTapEvent(), function() {
                     SD.close_dialog($dlg);
                     SD.play_action(
                         { 
@@ -296,7 +296,7 @@
 
         if ($dlg.hasClass("hidden")) {
             $("#search_ok")
-                .click(function() {
+                .on($.getTapEvent(), function() {
                     SD.close_dialog($dlg);
                     S.search($("#search_string").val());
                 });
@@ -337,7 +337,7 @@
                 });
 
             $("#alarm_set")
-                .click(function() {
+                .on($.getTapEvent(), function() {
                     SD.close_dialog($dlg);
                     var numb = $("#alarm_number").val()
                         * Utils.TIMEUNITS[$("#alarm_units").val()].days;
@@ -350,7 +350,7 @@
                 });
 
             $("#alarm_clear")
-                .click(function() {
+                .on($.getTapEvent(), function() {
                     SD.play_action(
                         { type: "C",
                           path: $dlg.data("node").treenode("get_path")
@@ -421,12 +421,12 @@
         if ($dlg.hasClass("hidden")) {
             $("#store_settings_file")
                 .hide()
-                .click(function (e) {
+                .on($.getTapEvent(), function (e) {
                     SD.ss_change_image();
                 });
 
             $("#store_settings_choose_image")
-                .click(function(e) {
+                .on($.getTapEvent(), function(e) {
                     $("#store_settings_file").trigger("change", e);
                 });
 
@@ -452,7 +452,7 @@
             });
 
             $("#store_settings_ok")
-                .click(function (e) {
+                .on($.getTapEvent(), function (e) {
                     if ($("#store_settings_storepath").val() === "") {
                         $("#store_settings_message").text(TX.tx(
                             "Store path may not be empty"));
@@ -512,7 +512,7 @@
         $dlg.data("validate").call();
 
         $("#chpw_set")
-            .click(function () {
+            .on($.getTapEvent(), function () {
                 if (!$dlg.data("validate").call())
                     return false;
                 SD.close_dialog($dlg);
@@ -539,7 +539,7 @@
                 });
 
             $("#json_ok")
-                .click(function () {
+                .on($.getTapEvent(), function () {
                     SD.close_dialog($dlg);
                     var datum;
                     try {
@@ -559,7 +559,7 @@
                 });
 
             $("#json_close")
-                .click(function() {
+                .on($.getTapEvent(), function() {
                     SD.close_dialog($dlg);
                 });
 
@@ -586,22 +586,22 @@
                     Utils.sometime("update_save");
                 });
 
-            $("#extras_chpw").click(function() {
+            $("#extras_chpw").on($.getTapEvent(), function() {
                 SD.close_dialog($dlg);
                 SD.chpw();
             });
 
-            $("#extras_chss").click(function() {
+            $("#extras_chss").on($.getTapEvent(), function() {
                 SD.close_dialog($dlg);
                 SD.store_settings();
             });
 
-            $("#extras_json").click(function() {
+            $("#extras_json").on($.getTapEvent(), function() {
                 SD.close_dialog($dlg);
                 SD.json();
             });
 
-            $("#extras_about").click(function() {
+            $("#extras_about").on($.getTapEvent(), function() {
                 SD.close_dialog($dlg);
                 SD.about();
             });
@@ -617,5 +617,74 @@
             S.client.hoard.options.autosave ? "on" : "off");
 
         SD.open_dialog($dlg);
+    };
+
+    SD.init_dialog = function($dlg) {
+        $("#" + $dlg.attr("id") + "_cancel")
+            .button()
+            .on($.getTapEvent(), function() {
+                $dlg.dialog("close");
+                return false;
+            });
+    };
+
+    SD.open_dialog = function($dlg) {
+        $dlg.dialog({
+            modal: true,
+            width: "auto",
+            closeOnEscape: false
+        });
+    };
+
+    SD.close_dialog = function($dlg) {
+        $dlg.dialog("close");
+    };
+
+    /**
+     * Generate a modal alert dialog
+     * @param p either a string message, or a structure containing:
+     *  title - dialog title
+     *  message - (string or $object or elem)
+     *  severity - may be one of notice (default), warning, error
+     *  after_close - callback on dialog closed
+     */
+    SD.squeak = function(p) {
+        var $dlg = $("#squeak");
+        if (typeof p === "string")
+            p = { message: p, severity: "notice" };
+
+        $dlg.data("after_close", p.after_close);
+
+        var called_back = false;
+        if ($dlg.hasClass("hidden")) {
+            $("#squeak_close")
+                .button()
+                .on($.getTapEvent(), function(e) {
+                    var ac = $dlg.data("after_close");
+                    $dlg.removeData("after_close");
+                    $dlg.dialog("close");
+                    if (typeof ac === "function")
+                        ac();
+                    return false;
+                });
+            $dlg.removeClass("hidden");
+        }
+
+        $("#squeak_message").empty();
+        SD.squeak_more(p);
+
+        var options = {
+            modal: true,
+            close: function() {
+                if (!called_back) {
+                    if (typeof p.after_close === "function")
+                        p.after_close();
+                }
+            }
+        };
+        if (p.title)
+            options.title = p.title;
+
+        $dlg.dialog(options);
     };
 })(jQuery, Squirrel);

@@ -36,11 +36,12 @@ release: $(MIN) $(MAP)
 	eslint --config package.json $^
 	touch $@
 
+FIND := find . -name 'jquery*' -prune -o -name
 clean:
-	find . -name '*~' -exec rm \{\} \;
-	find . -name '*.min.*' -exec rm \{\} \;
-	find . -name '*.map' -exec rm \{\} \;
-	find . -name '*.esl' -exec rm \{\} \;
+	$(FIND) '*~' -exec rm \{\} \;
+	$(FIND)  '*.min.*' -exec rm \{\} \;
+	$(FIND) '*.map' -exec rm \{\} \;
+	$(FIND) '*.esl' -exec rm \{\} \;
 
 eslint: $(subst .uncompressed.js,.esl,$(SOURCES))
 

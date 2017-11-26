@@ -19,7 +19,7 @@
                     .button({
                         label: $self.attr("title")
                     })
-                    .click(function(evt) {
+                    .on($.getTapEvent(), function(evt) {
                         $self.trigger(evt);
                     }));
         }
