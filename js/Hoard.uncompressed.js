@@ -123,7 +123,7 @@ Hoard.prototype.clear_actions = function() {
 Hoard.prototype.record_action = function(e, listener, no_push) {
     "use strict";
 
-    var parent, name, i, c;
+    var node, name, i, c;
 
     if (typeof e.time === "undefined" || e.time === null)
         e.time = Date.now();
@@ -136,35 +136,41 @@ Hoard.prototype.record_action = function(e, listener, no_push) {
             data: e.data
         });
 
-    // Update the cache; the listener will only be called if this
-    // succeeds
-    parent = this.cache;
-    for (i = 0; i < e.path.length - 1; i++) {
-        name = e.path[i];
-        if (parent && typeof parent.data === "string") {
-            // "Cannot " + e.type + " over leaf node";
-            if (DEBUG) debugger;
-        } else if (parent && parent.data[name]) {
-            parent = parent.data[name];
-        } else {
-            return { conflict: e, message:
-                     "'" + e.path.slice(0, i + 1).join("/") + "' "
-                     + TX.tx("does not exist") };
+    function locateParent(path, node) {
+        // Locate the parent in the cache
+        for (i = 0; i < path.length - 1; i++) {
+            var name = path[i];
+            if (node && typeof node.data === "string") {
+                // "Cannot " + e.type + " over leaf node";
+                if (DEBUG) debugger;
+            } else if (node && node.data[name]) {
+                node = node.data[name];
+            } else {
+                return undefined;
+            }
         }
-    }
-    name = e.path[i];
-
-    if (!parent) {
-        parent = this.cache = { data: {} };
+        // Should now be positioned one above the end of the path
+        return node;
     }
 
     c = function(mess) {
         return { conflict: e, message: mess };
     };
 
+    var parent = locateParent(e.path, this.cache);
+    if (!parent)
+        return c("'" + e.path.join("/") + "' "
+                 + TX.tx("does not exist"));
+
+    var name = e.path[e.path.length - 1];
+    var node = parent.data[name];
+    
+    if (!parent)
+        parent = this.cache = { data: {} };
+
     switch (e.type) {
     case "N": // New
-        if (parent.data[name])
+        if (node)
             return c(TX.tx("Cannot create, '$1' already exists",
                            e.path.join("/")));
         parent.time = e.time; // collection is being modified
@@ -175,8 +181,32 @@ Hoard.prototype.record_action = function(e, listener, no_push) {
         };
         break;
 
+    case "M": // Move
+        if (!node) {
+            return c(TX.tx("Cannot move, '$1' does not exist",
+                           e.path.join("/")));
+        }
+
+        // e.data is the path of the new parent
+        if (e.data.length > 0) {
+            var npp = locateParent(e.data, this.cache), new_parent;
+            if (npp)
+                new_parent = npp.data[e.data[e.data.length - 1]];
+        }
+        else
+            new_parent = this.cache; // root
+        
+        if (!new_parent)
+            return c("Cannot move, '" + e.data.join("/") + "' "
+                     + TX.tx("does not exist"));
+
+        new_parent.time = parent.time = e.time; // collection is being modified
+        delete parent.data[name];
+        new_parent.data[name] = node;
+        break;
+
     case "D": // Delete
-        if (!parent.data[name])
+        if (!node)
             return c(TX.tx("Cannot delete, '$1' does not exist",
                            e.path.join("/")));
         delete parent.data[name];

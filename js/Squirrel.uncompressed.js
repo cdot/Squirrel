@@ -79,18 +79,140 @@ var Squirrel = {
             .on($.getTapEvent(), function(/*evt*/) {
                 SD.search();
             });
+        
+        $(".help").each(function() {
+            var $this = $(this);
+            $this.hide();
+            var $help = $("<button></button>");
+            var $close = $("<button></button>");
+            $help
+                .addClass("info-button")
+                .button({
+                    icons: {
+                        primary: "ui-icon-info"
+                    },
+                    text: false
+                })
+                .on($.getTapEvent(), function() {
+                    $this.show();
+                    $help.hide();
+                })
+                .insertBefore(this);
+            $close
+                .addClass("help-close")
+                .button({
+                    icons: {
+                        primary: "ui-icon-circle-close"
+                    },
+                    text: false
+                })
+                .on($.getTapEvent(), function() {
+                    $this.hide();
+                    $help.show();
+                })
+                .prependTo($this);
+        });
 
-        S.init_custom_ui();
+        $("button").each(function() {
+            var $this = $(this);
+            var opts = {};
+
+            if (typeof $this.data("icon") !== "undefined") {
+                opts.icons = {
+                    primary: $this.data("icon")
+                };
+                opts.text = false;
+            }
+            $this.button(opts);
+        });
+
+        $("#sites-node").tree({
+            is_root: true
+        });
+        init_menus();
+
+        S.clipboard = null;
 
         // Set up event handlers for sometime scheduler
         $(document)
             .on("init_application", S.init_application)
             .on("check_alarms", S.check_alarms)
-            .on("update_save", S.update_save);
-
+            .on("update_save", S.update_save)
+            .on("reset_styling", S.resetStyling);
+        S.resetStyling();
+        
         Utils.sometime_is_now();
     };
 
+    S.resetStyling = function() {
+        // Copy subset of ui-widget styling into base
+        var $body = $("body");
+        var $el = $("<div></div>")
+            .addClass("ui-widget")
+            .addClass("ui-widget-content")
+            .addClass("dlg-hidden");
+        $body.append($el);
+        var bgcol = $el.css("background-color");
+        var style = "body {";
+        for (var attr in {
+            "font" : 0,
+            "color": 0,
+            "background-color": 0
+        }) {
+            var av = $el.css(attr);
+            style += attr + ": " + av + ";";
+        }
+        style += "}";
+        $el.remove();
+
+        // Do we need bright highlights in user classes?
+        var want_bright = (bgcol && bgcol != "transparent" &&
+                           new RGBA(bgcol).luma() < 0.65);
+
+        if (S.bright && !want_bright || !S.bright && want_bright) {
+            // Invert colours
+            for (var i = 0; i < document.styleSheets.length; i++) {
+                var sheet = document.styleSheets[i];
+                if (!sheet)
+                    continue;
+                var rules = sheet.rules || sheet.cssRules;
+                if (!rules)
+                    continue;               
+                for (var j = 0; j < rules.length; j++) {
+                    var rule = rules[j];
+                    if (/\.[-:a-z0-9]*$/i.test(rule.selectorText)) {
+                        // Class definition
+                        var s = "";
+                        if (rule.style.color) {
+                            try {
+                                var a = new RGBA(rule.style.color);
+                                s += "color: " +
+                                    a.inverse().unparse() + ";"
+                            } catch (e) {
+                            }
+                        }
+                        if (rule.style.backgroundColor) {
+                            try {
+                                var a = new RGBA(
+                                    rule.style.backgroundColor);
+                                s += "background-color: " +
+                                    a.inverse().unparse() + ";"
+                            } catch (e) {
+                            }
+                        }
+                        if (s.length > 0)
+                            style += rule.selectorText + "{" + s + "}";
+                    }
+                }
+            }
+            S.bright = want_bright;
+        }
+
+        $("#computed-styles").remove();
+        style = "<style id='computed-styles'>" + style + "</style>";
+        $body.append(style);
+    };
+    
     /**
      * Initialise application data (new Squirrel(), effectively)
      */
@@ -118,7 +240,7 @@ var Squirrel = {
         S.client.hoard.check_alarms(
             function(path, expired, next) {
                 var $node = ST.get_node(path);
-                $node.treenode("ring_alarm");
+                ST.ring_alarm($node);
                 SD.squeak(
                     {
                         severity: "warning",
@@ -136,7 +258,7 @@ var Squirrel = {
      * A (manual) new tree node action
      */
     S.add_child_node = function($node, title, value) {
-        var p = $node.treenode("get_path"), sval;
+        var p = ST.get_path($node), sval;
         if (typeof value === "string")
             sval = value;
         p.push(title);
@@ -150,12 +272,12 @@ var Squirrel = {
             function(e) {
                 ST.action(e, function($newnode) {
                     if (DEBUG && !$newnode) debugger;
-                    $newnode.treenode("open");
+                    ST.open($newnode);
                     if (typeof value !== "string"
                         && typeof value !== "undefined") {
                         S.insert_data(p, value);
                     }
-                    $newnode.treenode("edit", "key");
+                    ST.edit($newnode, "key");
 
                     Utils.sometime("update_save");
 
@@ -199,9 +321,9 @@ var Squirrel = {
     S.unsaved_changes = function(max_changes) {
         var message = [];
 
-        $(".treenode.modified").each(function() {
+        $(".tree-node .tree-modified").each(function() {
             if (DEBUG && !$(this).data("path")
-                && !$(this).hasClass("treenode-root"))
+                && !$(this).hasClass("tree-root"))
                 debugger; // Missing data-path
             var path = $(this).data("path") || "node";
             message.push(TX.tx("$1 has changed",
@@ -294,7 +416,7 @@ var Squirrel = {
                 JSON.stringify(S.client.hoard),
                 function() {
                     if (DEBUG) console.debug("...client save OK");
-                    $(".modified").removeClass("modified");
+                    $(".tree-modified").removeClass("tree-modified");
                     S.client.status = S.IS_LOADED;
                     SD.squeak_more(
                         TX.tx("Saved in $1", this.options().identifier));
@@ -316,7 +438,7 @@ var Squirrel = {
             if (DEBUG) console.debug("...save to client");
 
             if (S.client.status === S.IS_LOADED
-                && $(".modified").length === 0) {
+                && $(".tree-modified").length === 0) {
                 finished();
                 return;
             }
@@ -603,7 +725,7 @@ var Squirrel = {
                 function() { // on complete
                     // Reset the UI modification list; we just loaded the
                     // client hoard
-                    $(".modified").removeClass("modified");
+                    $(".tree-modified").removeClass("tree-modified");
                     // Mark all the nodes in the pending actions list as
                     // modified. If a node isn't found, back up the tree
                     // until we find a parent that does exist and mark it.
@@ -613,7 +735,7 @@ var Squirrel = {
                         while (p.length > 0) {
                             $node = ST.get_node(p);
                             if ($node) {
-                                $node.addClass("modified");
+                                $node.addClass("tree-modified");
                                 break;
                             }
                             p.pop();
@@ -830,12 +952,12 @@ var Squirrel = {
                     message: TX.tx("'$1' not found", s)
                 });
         } else {
-            $("li.treenode-open").each(function() {
-                $(this).treenode("close");
+            $("li.tree-open").each(function() {
+                ST.close($(this));
             });
             $.each(hits, function(n, v) {
-                $(v).parents(".treenode.treenode-collection").each(function() {
-                    $(this).treenode("open");
+                $(v).parents(".tree-node.tree-collection").each(function() {
+                    ST.open($(this));
                 });
             });
         }
@@ -862,10 +984,10 @@ var Squirrel = {
             if (typeof qs.steg !== "undefined")
                 S.USE_STEGANOGRAPHY = true;
 
-            var store_bits = [ "common/" + store + ".min.js" ];
+            var store_bits = [ "js/" + store + ".min.js" ];
             if (S.USE_STEGANOGRAPHY) {
-                store_bits.push("common/Steganographer.min.js");
-                store_bits.push("common/StegaStore.min.js");
+                store_bits.push("js/Steganographer.min.js");
+                store_bits.push("js/StegaStore.min.js");
             } else
                 $(".using_steganography").remove();
             Utils.load(store_bits, unco, function () {
@@ -880,20 +1002,20 @@ var Squirrel = {
         });
 
         S.authenticated = function() {
-        $("#whoami").text(S.client.store.user());
-        $(".unauthenticated").hide();
-        $(".authenticated").show();
-    };
+            $("#whoami").text(S.client.store.user());
+            $("#unauthenticated").hide();
+            $("#authenticated").show();
+        };
 
     var before_open = function(e, ui) {
-        var $node = (ui.target.is(".treenode"))
+        var $node = (ui.target.is(".tree-node"))
             ? ui.target
-            : $node = ui.target.parents(".treenode").first();
+            : ui.target.parents(".tree-node").first();
         var $val = $node.find(".value").first();
         var has_alarm = typeof $node.data("alarm") !== "undefined";
-        var is_leaf = $node.hasClass("treenode-leaf");
-        var is_root = ui.target.closest(".treenode").is("#sites-node");
-        var is_open = $node.hasClass("treenode-open");
+        var is_leaf = $node.hasClass("tree-leaf");
+        var is_root = ui.target.closest(".tree-node").is("#sites-node");
+        var is_open = $node.hasClass("tree-open");
         var $root = $("body");
 
         $root
@@ -946,7 +1068,7 @@ var Squirrel = {
                 zc.on("copy", function(event) {
                     if (DEBUG) console.debug("Copying JSON to clipboard");
                     var pa = $root.data("zc_cut");
-                    var p = pa.treenode("get_path");
+                    var p = ST.get_path(pa);
                     var n = S.client.hoard.get_node(p);
                     var json = JSON.stringify(n);
 
@@ -955,7 +1077,7 @@ var Squirrel = {
                 });
                 $root.data("ZC", zc); // remember it to protect from GC
             }
-            $root.data("zc_cut", $node.closest(".treenode"));
+            $root.data("zc_cut", $node.closest(".tree-node"));
         }
     };
 
@@ -964,7 +1086,7 @@ var Squirrel = {
      */
     var handle_choice = function(e, ui) {
 
-        var $node = ui.target.closest(".treenode");
+        var $node = ui.target.closest(".tree-node");
 
         if (!$node)
             throw "No node for contextmenu";
@@ -988,17 +1110,17 @@ var Squirrel = {
 
         case "rename":
             if (DEBUG) console.debug("Renaming");
-            $node.treenode("edit", "key");
+            ST.edit($node, ".tree-key");
             break;
 
         case "edit":
             if (DEBUG) console.debug("Editing");
-            $node.treenode("edit", "value");
+            ST.edit($node, ".tree-value");
             break;
 
         case "add_value":
             if (DEBUG) console.debug("Adding value to "
-                                     + $node.treenode("get_path").join("/"));
+                                     + ST.get_path($node).join("/"));
             S.add_child_node($node, TX.tx("A new value"), TX.tx("None"));
             break;
 
@@ -1034,7 +1156,7 @@ var Squirrel = {
 
     var init_menus = function() {
         var menu = {
-            delegate: ".treenode",
+            delegate: ".tree-node",
             menu: [
                 {
                     title: TX.tx("Copy value"),
@@ -1097,64 +1219,6 @@ var Squirrel = {
         };
 
         $("body").contextmenu(menu);
-    };
-
-    /**
-     * Initialise handlers and jQuery UI components
-     */
-    S.init_custom_ui = function() {
-        $(".help").each(function() {
-            var $this = $(this);
-            $this.hide();
-            var $help = $("<button></button>");
-            var $close = $("<button></button>");
-            $help
-                .addClass("info-button")
-                .button({
-                    icons: {
-                        primary: "ui-icon-info"
-                    },
-                    text: false
-                })
-                .on("click", function() {
-                    $this.show();
-                    $help.hide();
-                })
-                .insertBefore(this);
-            $close
-                .addClass("help-close")
-                .button({
-                    icons: {
-                        primary: "ui-icon-circle-close"
-                    },
-                    text: false
-                })
-                .on("click", function() {
-                    $this.hide();
-                    $help.show();
-                })
-                .prependTo($this);
-        });
-
-        $("button").each(function() {
-            var $this = $(this);
-            var opts = {};
-
-            if (typeof $this.data("icon") !== "undefined") {
-                opts.icons = {
-                    primary: $this.data("icon")
-                };
-                opts.text = false;
-            }
-            $this.button(opts);
-        });
-
-        $("#sites-node").treenode({
-            is_root: true
-        });
-        init_menus();
-
-        S.clipboard = null;
     };
 
 })(jQuery, Squirrel);

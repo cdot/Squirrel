@@ -1,0 +1,32 @@
+.dlg-dialog {}
+
+.dlg-hidden {
+    display: none;
+}
+
+.dlg-pick-cell {
+    font-family: "Courier New", Courier, monospace;
+    border: 1px solid grey;
+}
+
+.dlg-picked {
+    background-color: blue;  /* may be complemented in code */
+    color: white;
+}
+
+.dlg-error {
+    color: red; /* may be complemented in code */
+}
+
+.dlg-warning {
+    color: mistyrose; /* may be complemented in code */
+}
+
+.dlg-notice {
+    color: green; /* may be complemented in code */
+}
+
+.dlg-while {
+    color: midnightblue; /* may be complemented in code */
+}
+

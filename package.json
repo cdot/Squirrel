@@ -2,6 +2,9 @@
     "name": "Squirrel",
     "version": "0.0.1",
     "eslintConfig": {
+        "parserOptions": {
+            "ecmaVersion": 6
+        },
         "env": {
             "browser": true,
             "jquery": true
@@ -12,6 +15,7 @@
         "globals": {
         },
         "rules": {
+            "strict": [ "error", "global" ],
             "no-underscore-dangle": 0,
             "curly": 0,
             "camelcase": 0,
@@ -24,7 +28,9 @@
             "dot-notation" : 1,
             "no-trailing-spaces" : 0,
             "strict" : 1,
-            "no-use-before-define": "3 nofunc",
+            "no-use-before-define": 1,
+            "no-loop-func": 1,
+            "no-eval": 2,
             "quotes": 0
         }
     }

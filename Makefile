@@ -1,14 +1,14 @@
 # Copyright (C) 2015 Crawford Currie http://c-dot.co.uk / MIT
 
 LIBS := $(wildcard libs/*.uncompressed.*)
-SOURCES := $(wildcard *.uncompressed.* common/*.uncompressed.* desktop/*.uncompressed.* mobile/*.uncompressed.*)
+SOURCES := $(wildcard *.uncompressed.* js/*.uncompressed.js)
 MIN := $(subst .uncompressed.,.min.,$(SOURCES) $(LIBS))
 MAP := $(subst .uncompressed.js,.map,$(filter %.uncompressed.js,$(SOURCES) $(LIBS)))
 
 %.map %.min.js : %.uncompressed.js
 	uglifyjs \
 		--source-map $(patsubst %.min.js,%.map,$@) \
-		--source-map-url $(subst libs/,,$(subst desktop/,,$(subst mobile/,,$(subst common/,,$(patsubst %.min.js,%.map,$@))))) \
+		--source-map-url $(subst js/,,$(patsubst %.min.js,%.map,$@)) \
 		--source-map-include-sources \
 		--comments \
 		--compress \

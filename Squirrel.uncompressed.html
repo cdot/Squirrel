@@ -2,50 +2,45 @@
 <html>
   <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- meta name="cache-control" content="public">
     <meta name="expires" content="Wed, 1 Jan 2025 12:00:00 GMT" -->
     <title>Squirrel</title>
-    <base href="..">
     <link rel="icon" href="images/favicon.ico" type="image/x-icon" />
-    <!--link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css"-->
-    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/start/jquery-ui.css">
-    <link rel="stylesheet" href="common/styles.uncompressed.css" />
 
     <script src="//code.jquery.com/jquery-3.2.1.min.js"></script>
     <script src="//code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery.ui-contextmenu/1.18.1/jquery.ui-contextmenu.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-touch-events/1.0.5/jquery.mobile-events.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-touch-events/1.0.5/jquery.mobile-events.js"></script>
     
     <script src="libs/aes.uncompressed.js"></script>
-    <script src="common/Utils.uncompressed.js"></script>
-    <script src="common/Translation.uncompressed.js"></script>
-    <script src="common/AbstractStore.uncompressed.js"></script>
-    <script src="common/LocalStorageStore.uncompressed.js"></script>
-    <script src="common/AES.uncompressed.js"></script>
-    <script src="common/EncryptedStore.uncompressed.js"></script>
-    <script src="common/Hoard.uncompressed.js"></script>
-    <script src="common/Squirrel.uncompressed.js"></script>
-    <script src="common/Dialogs.uncompressed.js"></script>
-    <script src="common/scroll_into_view.uncompressed.js"></script>
+    <script src="js/Utils.uncompressed.js"></script>
+    <script src="js/Translation.uncompressed.js"></script>
+    <script src="js/AbstractStore.uncompressed.js"></script>
+    <script src="js/LocalStorageStore.uncompressed.js"></script>
+    <script src="js/AES.uncompressed.js"></script>
+    <script src="js/EncryptedStore.uncompressed.js"></script>
+    <script src="js/Hoard.uncompressed.js"></script>
 
-    <!--link rel="stylesheet" href="libs/jquery-ui.uncompressed.css" -->
-    <link rel="stylesheet" href="desktop/styles.uncompressed.css" />
-
-    <script src="common/edit_in_place.uncompressed.js"></script>
-    <script src="common/Tree.uncompressed.js"></script>
+    <script src="js/edit_in_place.uncompressed.js"></script>
+    <script src="js/scroll_into_view.uncompressed.js"></script>
     <script src="libs/ZeroClipboard.uncompressed.js",></script>
-    <script src="desktop/Squirrel.uncompressed.js"></script>
-    <script src="desktop/Tree.uncompressed.js",></script>
-    <script src="desktop/Dialogs.uncompressed.js"></script>
+    <script src="js/Squirrel.uncompressed.js"></script>
+    <script src="js/Tree.uncompressed.js",></script>
+    <script src="js/Dialogs.uncompressed.js"></script>
+
+<!--    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/ui-darkness/jquery-ui.css">-->
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/redmond/jquery-ui.css">
+    <link rel="stylesheet" href="css/styles.uncompressed.css" />
+    <link rel="stylesheet" href="css/Tree.uncompressed.css" />
+    <link rel="stylesheet" href="css/Dialogs.uncompressed.css" />
   </head>
   <body>
-    <div class="unauthenticated">
+    <div id="unauthenticated">
       <h1>Squirrel</h1>
-      <div id="authmessage" class="progress TX_text">Authenticating...</div>
+      <div id="authmessage" class="TX_text">Authenticating...</div>
       <div class="authfailed TX_text">Authentication failed. Refresh the browser to try again.</div>
     </div>
-    <div class="authenticated">
+    <div id="authenticated">
       <div id="logo">
         <button id="authenticated_extras" class="TX_title TX_text" title="Tools/Options" data-icon="ui-icon-squirrel-gear">Tools</button>
       </div>
@@ -67,13 +62,16 @@
     </div>
     
     <!-- Dialogs -->
-    <div id="extras" class="dialog TX_title hidden" title="Extras">
+    <div id="extras" class="dlg-dialog TX_title dlg-hidden" title="Extras">
       <p>
         <span class="TX_text">Autosave</span>
         <select id="extras_autosave">
           <option value="off" class="TX_text">Off</option>
 	  <option value="on" class="TX_text">On</option>
         </select>
+      </p>
+      <p>
+        <button id="extras_theme" class="TX_text">Change colour theme</button>
       </p>
       <p>
         <button id="extras_chss" class="TX_text">Change cloud store settings</button>
@@ -89,7 +87,7 @@
       </p>
     </div>
 
-    <div id="login" class="dialog TX_title hidden" title="Enter the password for your safe">
+    <div id="login" class="dlg-dialog TX_title dlg-hidden" title="Enter the password for your safe">
       <p id="login_foruser"></p>
       <table width="100%">
         <tbody>
@@ -112,14 +110,14 @@
       </p>
     </div>
     
-    <div id="squeak" class="dialog TX_title hidden" title="Alert">
+    <div id="squeak" class="dlg-dialog TX_title dlg-hidden" title="Alert">
       <p id="squeak_message"></p>
       <button id="squeak_close" class="TX_text">OK</button>
     </div>
     
-    <div id="randomise" class="dialog TX_title hidden" title="Generate random value">
+    <div id="randomise" class="dlg-dialog TX_title dlg-hidden" title="Generate random value">
       <span class="TX_text">Suggested value for</span>
-      '<span id="randomise_key"></span>': '<span id="randomise_idea" class="value"></span>'
+      '<span id="randomise_key"></span>': '<span id="randomise_idea" class="dlg-value"></span>'
       <p>
         <span class="TX_text">Length:</span>
         <input size="20" value="24" id="randomise_len" class="TX_title" title="Enter password length" />
@@ -135,7 +133,7 @@
       </div>
     </div>
     
-    <div id="delete_node" class="dialog TX_title hidden" title="Delete entry">
+    <div id="delete_node" class="dlg-dialog TX_title dlg-hidden" title="Delete entry">
       <p>
         <span class="TX_text">Are you sure you want to delete</span> '<span id="delete_node_path"></span>'
         <span id="delete_node_coll" class="TX_text"> and everything under it?</span>
@@ -146,8 +144,8 @@
       </div>
     </div>
     
-    <div id="chpw" class="dialog TX_title hidden" title="Change Password">
-      <p class="warning TX_text">
+    <div id="chpw" class="dlg-dialog TX_title dlg-hidden" title="Change Password">
+      <p class="dlg-warning TX_text">
         You should ensure that all clients up to date and you
         are safely connected to the internet before doing this,
         or you will lose data. Changing the master password will
@@ -185,7 +183,7 @@
       </div>
     </div>
     
-    <div id="alarm" class="dialog TX_title hidden" title="Reminder">
+    <div id="alarm" class="dlg-dialog TX_title dlg-hidden" title="Reminder">
       <p>
         <span class="TX_text">Select when you want to be reminded about</span>
         <span id="alarm_path"></span>
@@ -214,7 +212,7 @@
       </div>
     </div>
     
-    <div id="pick" class="dialog TX_title hidden" title="Pick characters">
+    <div id="pick" class="dlg-dialog TX_title dlg-hidden" title="Pick characters">
       <p>
         Click on the Nth character position to see what character it is
       </p>
@@ -228,8 +226,38 @@
         <button id="pick_clear" class="TX_text">Clear</button>
       </p>
     </div>
+
+    <div id="theme" class="dlg-dialog TX_title dlg-hidden" title="Theme">
+      <select id="theme_select">
+        <option value="base">Base</option>
+        <option value="ui-lightness">UI Lightness</option>
+        <option value="ui-darkness">UI Darkness</option>
+        <option value="smoothness">Smoothness</option>
+        <option value="start">Start</option>
+        <option value="redmond">Redmond</option>
+        <option value="sunny">Sunny</option>
+        <option value="overcast">Overcast</option>
+        <option value="le-frog">Le Frog</option>
+        <option value="flick">Flick</option>
+        <option value="pepper-grinder">Pepper Grinder</option>
+        <option value="eggplant">Eggplant</option>
+        <option value="dark-hive">Dark Hive</option>
+        <option value="cupertino">Cupertino</option>
+        <option value="south-street">South Street</option>
+        <option value="blitzer">Blitzer</option>
+        <option value="humanity">Humanity</option>
+        <option value="hot-sneaks">Hot Sneaks</option>
+        <option value="excite-bike">Excite Bike</option>
+        <option value="vader">Vader</option>
+        <option value="dot-luv">Dot Luv</option>
+        <option value="mint-choc">Mint Choc</option>
+        <option value="black-tie">Black Tie</option>
+        <option value="trontastic">Trontastic</option>
+        <option value="swanky-purse">Swanky Purse</option>
+      </select>
+    </div>
     
-    <div id="store_settings" class="dialog TX_title hidden" title="Store settings">
+    <div id="store_settings" class="dlg-dialog TX_title dlg-hidden" title="Store settings">
       <p id="store_settings_message"></p>
       <div class="using_steganography">
         <p class="TX_text help">Choose a local image that will be copied
@@ -237,7 +265,7 @@
           colour image of at least 1024x768 pixels, preferably with variable
           transparency. Note that very large images may take a long time to
           load and save.</p>
-        <input type="file" id="store_settings_file" class="hidden" />
+        <input type="file" id="store_settings_file" class="dlg-hidden" />
         <button id="store_settings_choose_image" class="TX_title TX_text" title="Choose an image file">
           Choose Image File
         </button>
@@ -257,7 +285,7 @@
       </p>
     </div>
     
-    <div id="about" class="dialog TX_title hidden" title="About Squirrel">
+    <div id="about" class="dlg-dialog TX_title dlg-hidden" title="About Squirrel">
       <p class="TX_text">
         Squirrel is Copyright &copy; 2015 Crawford Currie <a href="http://c-dot.co.uk">http://c-dot.co.uk</a>
       </p>
@@ -268,7 +296,7 @@
       </p>
     </div>
     
-    <div id="json" class="dialog TX_title hidden" title="Database JSON">
+    <div id="json" class="dlg-dialog TX_title dlg-hidden" title="Database JSON">
       <textarea id="json_text">
       </textarea>
       <div>

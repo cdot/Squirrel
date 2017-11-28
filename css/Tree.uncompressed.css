@@ -1,0 +1,61 @@
+.tree-node {}
+.tree-root {}
+.tree-collection {}
+.tree-open {}
+
+.tree-subnodes {
+    list-style-type: none;
+    -webkit-padding-start: 0;
+}
+
+.tree-subnodes li {
+    padding-left: 1em;
+}
+
+.tree-lastmod {
+    margin-left: 4em;
+    float: right;
+}
+
+.tree-hover {}
+
+.tree-alarm {
+    float: left;
+}
+
+button .tree-alarm {
+    margin: 0.2em;
+}
+
+.tree-modified {
+    color: rgb(0, 89, 255); /* may be complemented in code */
+}
+
+.tree-value {
+    font-family: "Courier New", Courier, monospace;
+}
+
+.tree-separator {
+    color: rgb(0, 100, 105); /* may be complemented in code */
+}
+
+.tree-info {
+    display: inline-block;
+}
+
+/* Push the leaf out to the same indent as subtrees */
+.tree-leaf {
+    margin-left: 1em;
+}
+
+.tree-open-close {
+    margin-right: 1em;
+}
+
+.tree-has-alarms:not(.tree-open) {
+    border-left: 2px solid magenta;
+}
+
+.drop-target {
+    border: 1px solid green;
+}

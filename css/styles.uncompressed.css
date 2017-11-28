@@ -1,27 +1,45 @@
-/*  Copyright (C) 2015 Crawford Currie http://c-dot.co.uk / MIT */
+/*  Copyright (C) 2015-2017 Crawford Currie http://c-dot.co.uk / MIT */
 /**
- * Styles common to all platforms
+ * Colours default to assuming a theme with a light background. There's
+ * code in Squirrel.uncompresed.js that will complement the colours in
+ * here if a dark background is detected.
  */
 
-/* Default icons, 16x16 */
-/* no-repeat rgba(0, 0, 0, 0.4) !important; */
-.ui-icon-squirrel-add-folder { background-image:url('../images/add-folder.svg')!important; }
-.ui-icon-squirrel-copy { background-image:url('../images/copy.svg')!important; }
-.ui-icon-squirrel-gear { background-image:url('../images/gear.svg')!important; }
-.ui-icon-squirrel-add-value { background-image:url('../images/add-value.svg')!important; }
-.ui-icon-squirrel-undo { background-image:url('../images/undo.svg')!important; }
-.ui-icon-squirrel-save { background-image:url('../images/save.svg')!important; }
-.ui-icon-squirrel-copy { background-image:url('../images/copy.svg')!important; }
-.ui-icon-squirrel-alarm { background-image:url('../images/alarm.svg')!important; }
-.ui-icon-squirrel-rang { background-image:url('../images/rang.svg')!important; }
-.ui-icon-squirrel-delete { background-image:url('../images/delete.svg')!important; }
-.ui-icon-squirrel-paste { background-image:url('../images/paste.svg')!important; }
-.ui-icon-squirrel-edit { background-image:url('../images/edit.svg')!important; }
-.ui-icon-squirrel-pick { background-image:url('../images/pick.svg')!important; }
-.ui-icon-squirrel-key { background-image:url('../images/key.svg')!important; }
-.ui-icon-squirrel-folder-open { background-image:url('../images/folder-open.svg')!important; }
-.ui-icon-squirrel-folder-closed { background-image:url('../images/folder-closed.svg')!important; }
+/* Default icons */
+.ui-icon-squirrel-add-folder {
+    background-image:url('../images/add-folder.svg')!important; }
+.ui-icon-squirrel-copy {
+    background-image:url('../images/copy.svg')!important; }
+.ui-icon-squirrel-gear {
+    background-image:url('../images/gear.svg')!important; }
+.ui-icon-squirrel-add-value {
+    background-image:url('../images/add-value.svg')!important; }
+.ui-icon-squirrel-undo {
+    background-image:url('../images/undo.svg')!important; }
+.ui-icon-squirrel-save {
+    background-image:url('../images/save.svg')!important; }
+.ui-icon-squirrel-copy {
+    background-image:url('../images/copy.svg')!important; }
+.ui-icon-squirrel-alarm {
+    background-image:url('../images/alarm.svg')!important; }
+.ui-icon-squirrel-rang {
+    background-image:url('../images/rang.svg')!important; }
+.ui-icon-squirrel-delete {
+    background-image:url('../images/delete.svg')!important; }
+.ui-icon-squirrel-paste {
+    background-image:url('../images/paste.svg')!important; }
+.ui-icon-squirrel-edit {
+    background-image:url('../images/edit.svg')!important; }
+.ui-icon-squirrel-pick {
+    background-image:url('../images/pick.svg')!important; }
+.ui-icon-squirrel-key {
+    background-image:url('../images/key.svg')!important; }
+.ui-icon-squirrel-folder-open {
+    background-image:url('../images/folder-open.svg')!important; }
+.ui-icon-squirrel-folder-closed {
+    background-image:url('../images/folder-closed.svg')!important; }
 
+/* Default "theme" */
 @font-face {
   font-family: 'Poiret One';
   font-style: normal;
@@ -29,82 +47,14 @@
   src: local('Poiret One'), local('PoiretOne-Regular'), url(https://fonts.gstatic.com/s/poiretone/v4/HrI4ZJpJ3Fh0wa5ofYMK8S3USBnSvpkopQaUR-2r7iU.ttf) format('truetype');
 }
 
-body {
-/*    background-color: #393939;
-    color: white;*/
-    font-family: 'Poiret One',cursive,Helvetica,Arial,sans-serif;
-}
-
-a {
-    color: yellow;
-    text-decoration: none;
-}
-
-a:hover {
-    font-weight: bold;
-}
-
-.hidden {
-    display: none;
-}
-
-.lastmod {
-    margin-left: 4em;
-    float: right;
-}
-
-.modified {
-    color: orange;
-}
-
-.value {
-    font-family: "Courier New", Courier, monospace;
-}
-
-.kv_separator {
-    color: orange;
-}
-
-.progress {
-    background: transparent url("../images/progress_bar.gif") no-repeat 13em center;
-}
-
 input {
     font-family: "Courier New", Courier, monospace;
-}
-
-.treenode-info {
-    display: inline-block;
-}
-
-.has_alarms:not(.treenode-open) {
-    border-left: 2px solid magenta;
 }
 
 .inline-icon {
     width: 16px;
     height: 16px;
     display: inline-block;
-}
-
-.picked {
-    background-color: yellow;
-    color: black;
-}
-
-.squeak-error {
-    color: red;
-}
-
-.squeak-warning {
-    color: orange;
-}
-
-.squeak-notice {
-}
-
-.squeak-while {
-    color: yellow;
 }
 
 .ui-button-text-only .ui-button-text {
@@ -115,19 +65,21 @@ input {
     z-index: 1000;
 }
 
+/*
 .ui-widget {
     font-family: 'Poiret One',cursive,Helvetica,Arial,sans-serif;
 }
-
-.dialog {
-  display: none;
-}
+*/
 
 .menu {
   display: none;
 }
 
-.unauthenticated {
+#authmessage {
+    background: transparent url("../images/progress_bar.gif") no-repeat 13em center;
+}
+
+#unauthenticated {
     height: 300px;
     background: url("../images/squirrel.svg") no-repeat;
 }
@@ -140,25 +92,11 @@ input {
     display: inline-block;
 }
 
-.treenode.hover {
-    background: #44372c url("../libs/images/ui-bg_gloss-wave_30_44372c_500x100.png") 50% 50% repeat-x;
-    color: #baec7e;
-}
-
-ul.treenode-subnodes {
-    list-style-type: none;
-    -webkit-padding-start: 0;
-}
-
-ul.treenode-subnodes li {
-    padding-left: 1em;
-}
-
 .authfailed {
     display: none;
 }
 
-.authenticated {
+#authenticated {
     display: none;
 }
 
@@ -185,25 +123,12 @@ button.ui-button-icon-only {
     padding: 0;
 }
 
-.pick_cell {
-    font-family: "Courier New", Courier, monospace;
-    border: 1px solid grey;
-}
-
 .info-button {
     float: left;
     margin-right: 0.5em;
 }
 
 .help {
-}
-
-.alarm {
-    float: left;
-}
-
-button.alarm {
-    margin: 0.2em;
 }
 
 .help-close {
@@ -261,15 +186,6 @@ button.alarm {
 }
 
 #home {
-    margin-left: 1em;
-}
-
-.open-close {
-    margin-right: 1em;
-}
-
-/* Push the leaf out to the same indent as subtrees */
-.treenode-leaf {
     margin-left: 1em;
 }
 

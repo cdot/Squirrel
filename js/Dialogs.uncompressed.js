@@ -30,7 +30,7 @@
     // SD.close_dialog($dlg)
 
     SD.squeak_more = function(p) {
-        $(".squeak-while").remove();
+        $(".dlg-while").remove();
         if (typeof p === "string")
             p = { message: p, severity: "notice" };
 
@@ -38,7 +38,7 @@
             p.severity = "notice";
 
         $("#squeak_message").append(
-            $("<div class='squeak-" + p.severity + "'></div>")
+            $("<div class='dlg-" + p.severity + "'></div>")
                 .append(p.message));
     };
 
@@ -80,7 +80,7 @@
 
         var sign_in = function(evt) {
             SD.close_dialog($dlg);
-            $signin.off(SD.click);
+            $signin.off($.getTapEvent());
             $user.off("change");
             $pass.off("change");
             options.on_signin.call(options.store,
@@ -90,7 +90,7 @@
         };
 
         $signin
-            .off(SD.click)
+            .off($.getTapEvent())
             .on($.getTapEvent(), "p", sign_in);
 
         $user.off("change").val(options.store.user());
@@ -123,19 +123,8 @@
                 $pass.on("change", sign_in);
             }
         }
-        /** desktop old
-            $dlg.dialog({
-            modal: true,
-            width: "auto",
-            closeOnEscape: false,
-            open: function() {
-            $dlg.parent().find(".ui-dialog-titlebar-close").hide();
-            }
-            });
-        */
 
-        if ($dlg.hasClass("hidden"))
-            SD.init_dialog($dlg);
+        SD.init_dialog($dlg);
 
         SD.open_dialog($dlg);
     };
@@ -147,14 +136,15 @@
         var $dlg = $("#delete_node");
         $dlg.data("node", $node);
 
-        if ($dlg.hasClass("hidden")) {
-            $("#delete_node_ok")
-                .on($.getTapEvent(), function() {
+        SD.init_dialog(
+            $dlg,
+            function($dlg, id) {
+                $(id + "ok").on($.getTapEvent(), function() {
                     SD.close_dialog($dlg);
                     var res = S.client.hoard.record_action(
                         {
                             type: "D",
-                            path: $dlg.data("node").treenode("get_path")
+                            path: ST.get_path($dlg.data("node"))
                         },
                         function(e) {
                             ST.action(
@@ -173,53 +163,47 @@
                     }
                     return true;
                 });
-            $("#delete_node_cancel")
-                .on($.getTapEvent(), function(/*evt*/) {
+                $("#delete_node_cancel").on($.getTapEvent(), function() {
                     SD.close_dialog($dlg);
                     return false;
                 });
-            SD.init_dialog($dlg);
-        }
+            });
+
         $("#delete_node_path").text(
-            $node.treenode("get_path").join("/"));
-        $("#delete_node_coll").toggle(!$node.hasClass("treenode-leaf"));
+            ST.get_path($node).join("/"));
+        $("#delete_node_coll").toggle(!$node.hasClass("tree-leaf"));
         
         SD.open_dialog($dlg);
     };
 
     SD.about = function($node) {
         var $dlg = $("#about");
-        if ($dlg.hasClass("hidden"))
-            SD.init_dialog($dlg);
+        SD.init_dialog($dlg);
         SD.open_dialog($dlg);
     };
 
     SD.pick = function($node) {
         var $dlg = $("#pick");
 
-        if ($dlg.hasClass("hidden")) {
-            $("#pick_clear")
+        SD.init_dialog($dlg, function($dlg, id) {
+            $(id + "clear")
                 .on($.getTapEvent(), function() {
-                    $dlg.find(".picked").removeClass("picked");
+                    $dlg.find(".dlg-picked").removeClass("dlg-picked");
                 });
-            
-            $dlg
-                .removeClass("hidden")
-                .popup({ history: false });
-        }
+        });
 
-        var val = $node.find(".value:first").text();
+        var val = $node.find(".tree-value:first").text();
         var $which = $("#pick_which");
         var $from = $("#pick_from");
         var i, $f;
 
-        $("#pick").find(".pick_cell").remove();
+        $("#pick").find(".dlg-pick-cell").remove();
 
         var item_clicked = function() {
             var ii = $(this).data("i");
             $dlg
                 .find("td.i" + ii)
-                .addClass("picked");
+                .addClass("dlg-picked");
         };
 
         for (i = 0; i < val.length; i++) {
@@ -227,13 +211,13 @@
             if ($f.length === 0) {
                 $("<td></td>")
                     .data("i", i)
-                    .addClass("pick_cell i" + i)
+                    .addClass("dlg-pick-cell i" + i)
                     .text(i + 1)
                     .on($.getTapEvent(), item_clicked)
                     .appendTo($which);
                 $f = $("<td></td>")
                     .data("i", i)
-                    .addClass("pick_cell i" + i)
+                    .addClass("dlg-pick-cell i" + i)
                     .on($.getTapEvent(), item_clicked)
                     .appendTo($from);
             }
@@ -245,7 +229,7 @@
             i++;
         }
 
-        $dlg.find(".picked").removeClass("picked");
+        $dlg.find(".dlg-picked").removeClass("dlg-picked");
         
         SD.open_dialog($dlg);
     };
@@ -257,32 +241,30 @@
         var $dlg = $("#randomise");
         $dlg.data("node", $node);
 
-        if ($dlg.hasClass("hidden")) {
-            $("#randomise_again")
-                .on($.getTapEvent(), function() {
-                    $("#randomise_idea").text(Utils.generate_password(
+        SD.init_dialog(
+            $dlg,
+            function($dlg, id) {
+                $(id + "again").on($.getTapEvent(), function() {
+                    $(id + "idea").text(Utils.generate_password(
                         {
-                            length: $("#randomise_len").val(),
-                            charset: $("#randomise_chs").val()
+                            length: $(id + "len").val(),
+                            charset: $(id + "chs").val()
                         }));
                     return false;
                 });
-            $("#randomise_use")
-                .on($.getTapEvent(), function() {
+                $(id + "use").on($.getTapEvent(), function() {
                     SD.close_dialog($dlg);
                     SD.play_action(
                         { 
                             type: "E",
-                            path: $dlg.data("node").treenode("get_path"),
-                            data: $("#randomise_idea").text()
+                            path: ST.get_path($dlg.data("node")),
+                            data: $(id + "idea").text()
                         });
                     return true;
                 });
+            });
 
-            SD.init_dialog($dlg);
-        }
-
-        var path = $node.treenode("get_path");
+        var path = ST.get_path($node);
 
         $("#randomise_path").text(path.join("/"));
         $("#randomise_key").text($node.find(".key:first").text());
@@ -294,18 +276,19 @@
     SD.search = function() {
         var $dlg = $("#search");
 
-        if ($dlg.hasClass("hidden")) {
-            $("#search_ok")
-                .on($.getTapEvent(), function() {
-                    SD.close_dialog($dlg);
-                    S.search($("#search_string").val());
-                });
-            $("#search_string")
-                .on("change", function() {
-                    $("#search_ok").trigger(SD.click);
-                });
-            SD.init_dialog($dlg);
-        }
+        SD.init_dialog(
+            $dlg,
+            function ($dlg, id) {
+                $(id + "ok")
+                    .on($.getTapEvent(), function() {
+                        SD.close_dialog($dlg);
+                        S.search($("#search_string").val());
+                    });
+                $(id + "string")
+                    .on("change", function() {
+                        $("#search_ok").trigger($.getTapEvent());
+                    });
+            });
         SD.open_dialog($dlg);
     };
 
@@ -315,54 +298,54 @@
     SD.alarm = function($node) {
         var $dlg = $("#alarm");
 
-        if ($dlg.hasClass("hidden")) {
+        SD.init_dialog($dlg, function($dlg, id) {
+ 
             $dlg.data("update_next", function() {
-                var numb = $("#alarm_number").val();
+                var numb = $(id + "number").val();
                 // Convert to days
-                numb = numb * Utils.TIMEUNITS[$("#alarm_units").val()].days;
+                numb = numb * Utils.TIMEUNITS[$(id + "units").val()].days;
                 var last_time = $dlg.data("node").data("last-time");
                 var alarmd = new Date(last_time + numb * Utils.MSPERDAY);
                 $('#alarm_when').text(alarmd.toLocaleDateString());
-                $("#alarm_next").text(Utils.deltaTimeString(alarmd));
+                $(id + "next").text(Utils.deltaTimeString(alarmd));
             });
 
-            $("#alarm_units")
+            $(id + "units")
                 .on("change", function() {
                     $dlg.data("update_next").call();
                 });
 
-            $("#alarm_number")
+            $(id + "number")
                 .on("change", function() {
                     $dlg.data("update_next").call();
                 });
 
-            $("#alarm_set")
+            $(id + "set")
                 .on($.getTapEvent(), function() {
                     SD.close_dialog($dlg);
-                    var numb = $("#alarm_number").val()
-                        * Utils.TIMEUNITS[$("#alarm_units").val()].days;
+                    var numb = $(id + "number").val()
+                        * Utils.TIMEUNITS[$(id + "units").val()].days;
                     SD.play_action(
                         { type: "A",
-                          path: $dlg.data("node").treenode("get_path"),
+                          path: ST.get_path($dlg.data("node")),
                           data: numb
                         });
                     return false;
                 });
 
-            $("#alarm_clear")
+            $(id + "clear")
                 .on($.getTapEvent(), function() {
                     SD.play_action(
                         { type: "C",
-                          path: $dlg.data("node").treenode("get_path")
+                          path: ST.get_path($dlg.data("node"))
                         });
                     SD.close_dialog($dlg);
                     return false;
                 });
 
-            SD.init_dialog($dlg);
-        }
+        });
         
-        $("#alarm_path").text($node.treenode("get_path").join("/"));
+        $("#alarm_path").text(ST.get_path($node).join("/"));
 
         $dlg.data("node", $node);
         $dlg.data("update_next").call();
@@ -418,19 +401,19 @@
     SD.store_settings = function(chain) {
         var $dlg = $("#store_settings");
 
-        if ($dlg.hasClass("hidden")) {
-            $("#store_settings_file")
+        SD.init_dialog($dlg, function($dlg, id) {
+            $(id + "file")
                 .hide()
                 .on($.getTapEvent(), function (e) {
                     SD.ss_change_image();
                 });
 
-            $("#store_settings_choose_image")
+            $(id + "image")
                 .on($.getTapEvent(), function(e) {
                     $("#store_settings_file").trigger("change", e);
                 });
 
-            $("#store_settings_storepath").on("keyup", function(e) {
+            $(id + "storepath").on("keyup", function(e) {
                 if ($("#store_settings_storepath").val() === "") {
                     $("#store_settings_message").text(TX.tx(
                         "Store path may not be empty"));
@@ -451,7 +434,7 @@
                 return true;
             });
 
-            $("#store_settings_ok")
+            $(id + "ok")
                 .on($.getTapEvent(), function (e) {
                     if ($("#store_settings_storepath").val() === "") {
                         $("#store_settings_message").text(TX.tx(
@@ -463,9 +446,7 @@
                     if (typeof cb === "function")
                         cb();
                 });
-
-            SD.init_dialog($dlg);
-        }
+        });
 
         $("#store_settings_message").empty();
         $dlg.data("callback", chain);
@@ -481,9 +462,8 @@
     SD.chpw = function() {
         var $dlg = $("#chpw");
 
-        if ($dlg.hasClass("hidden")) {
-
-            $("#chpw_show")
+        SD.init_dialog($dlg, function($dlg, id) {
+            $(id + "show")
                 .on("change", function() {
                     if ($("#chpw_show").prop("checked")) {
                         $("#chpw_pass").attr("type", "text");
@@ -502,29 +482,27 @@
                 return (p === c);
             });
 
-            $("#chpw_conf").on("change", function() {
+            $(id + "conf").on("change", function() {
                 $dlg.data("validate").call();
             });
 
-            SD.init_dialog($dlg);
-        }
+            $(id + "set")
+                .on($.getTapEvent(), function () {
+                    if (!$dlg.data("validate").call())
+                        return false;
+                    SD.close_dialog($dlg);
+                    var p = $("#chpw_pass").val();
+                    S.client.store.pass(p);
+                    S.client.status = S.NEW_SETTINGS;
+                    S.cloud.store.pass(p);
+                    S.cloud.status = S.NEW_SETTINGS;
+                    Utils.sometime("update_save");
+
+                    return true;
+                });
+        });
 
         $dlg.data("validate").call();
-
-        $("#chpw_set")
-            .on($.getTapEvent(), function () {
-                if (!$dlg.data("validate").call())
-                    return false;
-                SD.close_dialog($dlg);
-                var p = $("#chpw_pass").val();
-                S.client.store.pass(p);
-                S.client.status = S.NEW_SETTINGS;
-                S.cloud.store.pass(p);
-                S.cloud.status = S.NEW_SETTINGS;
-                Utils.sometime("update_save");
-
-                return true;
-            });
 
         SD.open_dialog($dlg);
     };
@@ -532,13 +510,13 @@
     SD.json = function() {
         var $dlg = $("#json");
 
-        if ($dlg.hasClass("hidden")) {
-            $("#json_text")
+        SD.init_dialog($dlg, function($dlg, id) {
+            $(id + "text")
                 .on("input", function () {
                     $("#json_ok").prop("disabled", false);
                 });
 
-            $("#json_ok")
+            $(id + "ok")
                 .on($.getTapEvent(), function () {
                     SD.close_dialog($dlg);
                     var datum;
@@ -557,14 +535,7 @@
                     S.insert_data([], datum);
                     return true;
                 });
-
-            $("#json_close")
-                .on($.getTapEvent(), function() {
-                    SD.close_dialog($dlg);
-                });
-
-            SD.init_dialog($dlg);
-        }
+        });
 
         var data = S.client.hoard.JSON();
         $("#json_text")
@@ -575,57 +546,89 @@
         SD.open_dialog($dlg);
     };
 
+    SD.theme = function() {
+        var $dlg = $("#theme");
+
+        SD.init_dialog($dlg, function($dlg, id) {
+            $(id + "select")
+                .on("change", function () {
+                    var theme = $(this).val();
+                    $("link").filter(function() {
+                        return this.href && this.href.indexOf('/themes/') > 0;
+                    }).each(function() {
+                        this.href = this.href.replace(
+                                /\/themes\/[^\/]+/, "/themes/" + theme);
+                        $(this).replaceWith($(this));
+                        Utils.sometime("reset_styling");
+                    });
+
+                });
+        });
+
+        SD.open_dialog($dlg);
+    };
+
     SD.extras = function() {
         var $dlg = $("#extras");
 
-        if ($dlg.hasClass("hidden")) {
-            $("#extras_autosave")
+        SD.init_dialog($dlg, function($dlg, id) {
+            $(id + "autosave")
                 .on("change", function(e) {
                     S.client.hoard.options.autosave =
                         ($("#extras_autosave").val() === "on");
                     Utils.sometime("update_save");
                 });
 
-            $("#extras_chpw").on($.getTapEvent(), function() {
+            $(id + "chpw").on($.getTapEvent(), function() {
                 SD.close_dialog($dlg);
                 SD.chpw();
             });
 
-            $("#extras_chss").on($.getTapEvent(), function() {
+            $(id + "chss").on($.getTapEvent(), function() {
                 SD.close_dialog($dlg);
                 SD.store_settings();
             });
+            $(id + "theme").on($.getTapEvent(), function() {
+                SD.close_dialog($dlg);
+                SD.theme();
+            });
 
-            $("#extras_json").on($.getTapEvent(), function() {
+            $(id + "json").on($.getTapEvent(), function() {
                 SD.close_dialog($dlg);
                 SD.json();
             });
 
-            $("#extras_about").on($.getTapEvent(), function() {
+            $(id + "about").on($.getTapEvent(), function() {
                 SD.close_dialog($dlg);
                 SD.about();
             });
-            SD.init_dialog($dlg);
-        }
+        });
 
         if (!(S.USE_STEGANOGRAPHY
               || S.cloud.store
               && S.cloud.store.options().needs_path)) {
             $("#extras_chss").hide();
         }
+
         $("#extras_autosave").val(
             S.client.hoard.options.autosave ? "on" : "off");
 
         SD.open_dialog($dlg);
     };
 
-    SD.init_dialog = function($dlg) {
-        $("#" + $dlg.attr("id") + "_cancel")
+    SD.init_dialog = function($dlg, extra) {
+        if ($dlg.hasClass("dlg-initialised"))
+            return;
+        $dlg.addClass("dlg-initialised");
+        var id = "#" + $dlg.attr("id") + "_";
+        $(id + "cancel")
             .button()
             .on($.getTapEvent(), function() {
                 $dlg.dialog("close");
                 return false;
             });
+        if (extra)
+            extra($dlg, id);
     };
 
     SD.open_dialog = function($dlg) {
@@ -656,7 +659,7 @@
         $dlg.data("after_close", p.after_close);
 
         var called_back = false;
-        if ($dlg.hasClass("hidden")) {
+        if ($dlg.hasClass("dlg-hidden")) {
             $("#squeak_close")
                 .button()
                 .on($.getTapEvent(), function(e) {
@@ -667,7 +670,7 @@
                         ac();
                     return false;
                 });
-            $dlg.removeClass("hidden");
+            $dlg.removeClass("dlg-hidden");
         }
 
         $("#squeak_message").empty();

@@ -36,13 +36,15 @@
                     changed.call($this, val);
             })
 
-            .on("mouseup", function(e) {
+            .on($.getEndEvent(), function(e) {
                 // Override the parent click handler
+                e.preventDefault();
                 e.stopPropagation();
             })
 
-            .on("mousedown", function(e) {
+            .on($.getStartEvent(), function(e) {
                 // Override the parent click handler
+                e.preventDefault();
                 e.stopPropagation();
             })
 
