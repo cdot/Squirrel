@@ -30,6 +30,7 @@
 
 <!--    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/ui-darkness/jquery-ui.css">-->
     <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/redmond/jquery-ui.css">
+    <link rel="stylesheet" href="css/Icons.uncompressed.css" />
     <link rel="stylesheet" href="css/styles.uncompressed.css" />
     <link rel="stylesheet" href="css/Tree.uncompressed.css" />
     <link rel="stylesheet" href="css/Dialogs.uncompressed.css" />
@@ -41,15 +42,15 @@
       <div class="authfailed TX_text">Authentication failed. Refresh the browser to try again.</div>
     </div>
     <div id="authenticated">
-      <div id="logo">
-        <button id="authenticated_extras" class="TX_title TX_text" title="Tools/Options" data-icon="ui-icon-squirrel-gear">Tools</button>
-      </div>
       <span id="search_label" class="TX_text">Search:</span>
       <input id="search" value="" class="TX_title" title="Enter search string" />
+      <button id="search_button" class="TX_title TX_text" title="Search" data-icon="ui-icon-squirrel-search"></button>
+
       <span id="search_hits"></span>
       <div id="signed_in">
         <span class="TX_text">Signed in as: </span><span id="whoami"></span>
       </div>
+      <button id="authenticated_extras" class="TX_title TX_text" title="Tools/Options" data-icon="ui-icon-squirrel-gear"></button>
       <div id="toolbar">
         <button id="authenticated_undo" class="TX_title TX_text" title="Undo last change" data-icon="ui-icon-squirrel-undo">Undo</button>
         <button id="authenticated_save" class="TX_text" data-icon="ui-icon-squirrel-save">Save</button>
@@ -61,8 +62,9 @@
       </div>
     </div>
     
-    <!-- Dialogs -->
+    <!-- Dialogs -->    
     <div id="extras" class="dlg-dialog TX_title dlg-hidden" title="Extras">
+      <div id="logo"></div>
       <p>
         <span class="TX_text">Autosave</span>
         <select id="extras_autosave">
@@ -129,6 +131,7 @@
       <div>
         <button id="randomise_use" class="TX_text">Use this</button>
         <button id="randomise_again" class="TX_text">Try again</button>
+        <button id="randomise_remember" class="TX_text">Remember constraints</button>
         <button id="randomise_cancel" class="TX_text">Cancel</button>
       </div>
     </div>
@@ -193,7 +196,7 @@
       </p>
       <p>
         <label for="alarm_number" class="TX_text">Remind after</label>
-        <input id="alarm_number" value="6" />
+        <input id="alarm_number" size="3" value="6" />
         <select id="alarm_units">
           <option value="d" class="TX_text">days</option>
           <option value="m" selected="selected" class="TX_text">months</option>
@@ -212,8 +215,22 @@
       </div>
     </div>
     
-    <div id="pick" class="dlg-dialog TX_title dlg-hidden" title="Pick characters">
+    <div id="add" class="dlg-dialog dlg-hidden">
+      <p id ="add_help"></p>
+      <span id="add_path"></span>
+      <input id="add_key" type="text" value="" />
+      <div id="add_value_parts">
+        Value:
+        <input id="add_value" type="text" value="" title="Enter value"/>
+      </div>
       <p>
+        <button id="add_ok" class="TX_text TX_title" title="Add new entry" >OK</button>
+        <button id="add_cancel" class="TX_text TX_title" title="Cancel add">Cancel</button>
+      </p>
+    </div>
+
+    <div id="pick" class="dlg-dialog TX_title dlg-hidden" title="Pick characters">
+      <p class="TX_text">
         Click on the Nth character position to see what character it is
       </p>
       <table>

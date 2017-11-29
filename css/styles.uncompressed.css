@@ -5,56 +5,8 @@
  * here if a dark background is detected.
  */
 
-/* Default icons */
-.ui-icon-squirrel-add-folder {
-    background-image:url('../images/add-folder.svg')!important; }
-.ui-icon-squirrel-copy {
-    background-image:url('../images/copy.svg')!important; }
-.ui-icon-squirrel-gear {
-    background-image:url('../images/gear.svg')!important; }
-.ui-icon-squirrel-add-value {
-    background-image:url('../images/add-value.svg')!important; }
-.ui-icon-squirrel-undo {
-    background-image:url('../images/undo.svg')!important; }
-.ui-icon-squirrel-save {
-    background-image:url('../images/save.svg')!important; }
-.ui-icon-squirrel-copy {
-    background-image:url('../images/copy.svg')!important; }
-.ui-icon-squirrel-alarm {
-    background-image:url('../images/alarm.svg')!important; }
-.ui-icon-squirrel-rang {
-    background-image:url('../images/rang.svg')!important; }
-.ui-icon-squirrel-delete {
-    background-image:url('../images/delete.svg')!important; }
-.ui-icon-squirrel-paste {
-    background-image:url('../images/paste.svg')!important; }
-.ui-icon-squirrel-edit {
-    background-image:url('../images/edit.svg')!important; }
-.ui-icon-squirrel-pick {
-    background-image:url('../images/pick.svg')!important; }
-.ui-icon-squirrel-key {
-    background-image:url('../images/key.svg')!important; }
-.ui-icon-squirrel-folder-open {
-    background-image:url('../images/folder-open.svg')!important; }
-.ui-icon-squirrel-folder-closed {
-    background-image:url('../images/folder-closed.svg')!important; }
-
-/* Default "theme" */
-@font-face {
-  font-family: 'Poiret One';
-  font-style: normal;
-  font-weight: 400;
-  src: local('Poiret One'), local('PoiretOne-Regular'), url(https://fonts.gstatic.com/s/poiretone/v4/HrI4ZJpJ3Fh0wa5ofYMK8S3USBnSvpkopQaUR-2r7iU.ttf) format('truetype');
-}
-
 input {
     font-family: "Courier New", Courier, monospace;
-}
-
-.inline-icon {
-    width: 16px;
-    height: 16px;
-    display: inline-block;
 }
 
 .ui-button-text-only .ui-button-text {
@@ -64,12 +16,6 @@ input {
 .ui-menu {
     z-index: 1000;
 }
-
-/*
-.ui-widget {
-    font-family: 'Poiret One',cursive,Helvetica,Arial,sans-serif;
-}
-*/
 
 .menu {
   display: none;
@@ -88,8 +34,11 @@ input {
     width: 64px;
     height: 64px;
     background: url("../images/squirrel.svg") no-repeat;
-    background-size: 64px 64px;
+    background-size: 90% 90%;
+    background-position: 10% 10%;
     display: inline-block;
+    float: left;
+    margin: 0 2em 0 0;
 }
 
 .authfailed {
@@ -98,29 +47,6 @@ input {
 
 #authenticated {
     display: none;
-}
-
-.ui-icon-squirrel-add-folder { width: 16px; height: 16px; background-size: 16px 16px; }
-.ui-icon-squirrel-copy { width: 16px; height: 16px; background-size: 16px 16px; }
-.ui-icon-squirrel-gear { width: 16px; height: 16px; background-size: 16px 16px; }
-.ui-icon-squirrel-add-value { width: 16px; height: 16px; background-size: 16px 16px; }
-.ui-icon-squirrel-undo { width: 16px; height: 16px; background-size: 16px 16px; }
-.ui-icon-squirrel-save { width: 16px; height: 16px; background-size: 16px 16px; }
-.ui-icon-squirrel-copy { width: 16px; height: 16px; background-size: 16px 16px; }
-.ui-icon-squirrel-alarm { width: 16px; height: 16px; background-size: 16px 16px; }
-.ui-icon-squirrel-rang { width: 16px; height: 16px; background-size: 16px 16px; }
-.ui-icon-squirrel-delete { width: 16px; height: 16px; background-size: 16px 16px; }
-.ui-icon-squirrel-paste { width: 16px; height: 16px; background-size: 16px 16px; }
-.ui-icon-squirrel-edit { width: 16px; height: 16px; background-size: 16px 16px; }
-.ui-icon-squirrel-pick { width: 16px; height: 16px; background-size: 16px 16px; }
-.ui-icon-squirrel-key { width: 16px; height: 16px; background-size: 16px 16px; }
-.ui-icon-squirrel-folder-open { width: 16px; height: 16px; background-size: 16px 16px; }
-.ui-icon-squirrel-folder-closed { width: 16px; height: 16px; background-size: 16px 16px; }
-
-button.ui-button-icon-only {
-    width: 16px;
-    height: 16px;
-    padding: 0;
 }
 
 .info-button {
@@ -133,11 +59,6 @@ button.ui-button-icon-only {
 
 .help-close {
     float:right;
-}
-
-#logo {
-    float: left;
-    margin: 0 2em 0 1em;
 }
 
 #signed_in {

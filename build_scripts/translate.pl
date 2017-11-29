@@ -64,28 +64,27 @@ if (open(F, "<", $outfile)) {
 }
 my $ua = LWP::UserAgent->new;
 foreach my $k (keys %strings) {
-    if (!defined $data->{$k}) {
-        print "Adding $k\n";
-        # See if we can get a translation from MyMemory
-        my $uk = $k;
-        $uk =~ s{([^0-9a-zA-Z-_.:~!*/])}{sprintf('%%%02x',ord($1))}ge;
-        my $uri = "http://api.mymemory.translated.net/get?q=$uk\\&langpair=en\\|$lang";
-        #print STDERR "GET $uri\n";
+    next if (defined $data->{$k});
+    print "Adding $k\n";
+    # See if we can get a translation from MyMemory
+    my $uk = $k;
+    $uk =~ s{([^0-9a-zA-Z-_.:~!*/])}{sprintf('%%%02x',ord($1))}ge;
+    my $uri = "http://api.mymemory.translated.net/get?q=$uk\\&langpair=en\\|$lang";
+    #print STDERR "GET $uri\n";
 
-        # Pass request to the user agent and get a response back
-        my $res = `curl -# $uri`;
+    # Pass request to the user agent and get a response back
+    my $res = `curl -# $uri`;
 
-        # Check the outcome of the response
-        my $tx;
-        #print STDERR "RESPONSE: $res\n";
-        eval { $res = JSON::from_json($res); };
-        die $@ if ($@);
-        $tx = $res->{responseData}->{translatedText};
-        die $tx if ($tx =~ /INVALID LANGUAGE PAIR SPECIFIED/);
-        $tx =~ s/\$ (\d+)/\$$1/g;
-        $data->{$k} = $tx;
-        $changed = 1;
-    }
+    # Check the outcome of the response
+    my $tx;
+    #print STDERR "RESPONSE: $res\n";
+    eval { $res = JSON::from_json($res); };
+    die $@ if ($@);
+    $tx = $res->{responseData}->{translatedText};
+    die $tx if ($tx =~ /INVALID LANGUAGE PAIR SPECIFIED/);
+    $tx =~ s/\$ (\d+)/\$$1/g;
+    $data->{$k} = $tx;
+    $changed = 1;
 }
 
 if ($changed) {

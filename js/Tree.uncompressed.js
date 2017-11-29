@@ -109,7 +109,7 @@
             ST.icon_button($node,
                            "create",
                            $control,
-                           "closed",
+                           "folder-closed",
                            function() {
                                ST.toggle($node);
                                return false;
@@ -204,7 +204,7 @@
         if (options.on_create)
             options.on_create.call($node);
     }
-    
+
     /**
      * @param action one of"create", "change", or "destroy".
      * @param selector may be a string selector or a jQuery object,
@@ -222,7 +222,10 @@
         case "create":
             var $button = $control.button({
                 icons: {
-                    primary: map_icon[icon]
+                    primary: "ui-icon-squirrel-" + icon
+                },
+                classes: {
+                    "ui-button-icon": "squirrel-icon"
                 },
                 text: false
             });
@@ -232,7 +235,8 @@
         case "change":
             if ($control.length > 0)
                 $control.button(
-                    "option", "icons", { primary: map_icon[icon] });
+                    "option", "icons", {
+                        primary: "ui-icon-squirrel-" + icon });
             break;
         case "destroy":
             $control.remove();
@@ -269,7 +273,8 @@
                             ea,
                             function(/*$newnode*/) {
                                 Utils.sometime("update_save");
-                            }, true);
+                            },
+                            true);
                     });
                 if (e !== null)
                     S.Dialog.squeak(e.message);
@@ -373,7 +378,7 @@
                     },
                     function(ea) {
                         ST.action(
-                            ea,
+                            ea, true,
                             function() {
                                 Utils.sometime("update_save");
                             });
@@ -492,7 +497,8 @@
     ST.open = function($node) {
         if ($node.hasClass("tree-open"))
             return $node;
-        ST.icon_button($node, "change", ".tree-open-close:first", "open");
+        ST.icon_button($node, "change",
+                       ".tree-open-close:first", "folder-open");
         return $node
             .addClass("tree-open")
             .children(".tree-subnodes")
@@ -503,7 +509,8 @@
     ST.close = function($node) {
         if (!$node.hasClass("tree-open"))
             return $node;
-        ST.icon_button($node, "change", ".tree-open-close:first", "closed");
+        ST.icon_button($node, "change",
+                       ".tree-open-close:first", "folder-closed");
         return $node
             .removeClass("tree-open")
             .children(".tree-subnodes")
@@ -659,7 +666,6 @@
      * Action handler for moving a node
      */
     ST.action_M = function(action, undoable, follow) {
-        console.log("Action M");
         var oldpath = action.path.slice();
         var newpath = action.data.slice();
 
@@ -726,12 +732,12 @@
      * Callback for use when managing hoards; plays an action that is being
      * played into the hoard into the DOM as well.
      * @param e action to play
-     * @param chain function to call once the action has been played. May
-     * be undefined. Passed the modified node.
-     * @param undoable set true if the inverse of this action is to be added
-     * to the undo chain.
+     * @param undoable set true if the inverse of this action is to be
+     * added to the undo chain.
+     * @param chain function to call once the action has been
+     * played. Passed the modified node.
      */
-    ST.action = function(action, chain, undoable) {
+    ST.action = function(action, undoable, chain) {
         ST["action_" + action.type](
             action,
             undoable,
@@ -810,7 +816,7 @@
             a,
             function(e) {
                 ST.action(
-                    e,
+                    e, false,
                     function() {
                         // If there are no undos, there can be no modifications.
                         // The hoard status will not be changed, though, so a

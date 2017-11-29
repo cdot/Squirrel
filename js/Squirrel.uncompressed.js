@@ -55,7 +55,7 @@ var Squirrel = {
         $("#authenticated_undo")
             .hide()
             .on($.getTapEvent(), function(/*evt*/) {
-                Tree.undo(function(mess) {
+                ST.undo(function(mess) {
                     SD.squeak({
                         title: "Undo",
                         message: mess
@@ -73,6 +73,12 @@ var Squirrel = {
             .on("change", function(/*evt*/) {
                 $("#search_hits").text(TX.tx("Searching..."));
                 S.search($(this).val());
+            });
+
+        $("#search_button")
+            .on($.getTapEvent(), function(/*evt*/) {
+                $("#search_hits").text(TX.tx("Searching..."));
+                S.search($("#search").val());
             });
 
         $("#authenticated_search")
@@ -115,13 +121,18 @@ var Squirrel = {
 
         $("button").each(function() {
             var $this = $(this);
-            var opts = {};
+            var opts;
 
             if (typeof $this.data("icon") !== "undefined") {
-                opts.icons = {
-                    primary: $this.data("icon")
+                opts = {
+                    icons: {
+                        primary: $this.data("icon")
+                    },
+                    classes: {
+                        "ui-button-icon": "squirrel-icon"
+                    },
+                    text: false
                 };
-                opts.text = false;
             }
             $this.button(opts);
         });
@@ -270,18 +281,18 @@ var Squirrel = {
                 data: sval
             },
             function(e) {
-                ST.action(e, function($newnode) {
-                    if (DEBUG && !$newnode) debugger;
-                    ST.open($newnode);
-                    if (typeof value !== "string"
-                        && typeof value !== "undefined") {
-                        S.insert_data(p, value);
-                    }
-                    ST.edit($newnode, "key");
+                ST.action(
+                    e, true,
+                    function($newnode) {
+                        if (DEBUG && !$newnode) debugger;
+                        ST.open($newnode);
+                        if (typeof value !== "string"
+                            && typeof value !== "undefined") {
+                            S.insert_data(p, value);
+                        }
 
-                    Utils.sometime("update_save");
-
-                }, true);
+                        Utils.sometime("update_save");
+                    });
             });
         if (res !== null)
             SD.squeak(res.message);
@@ -370,7 +381,7 @@ var Squirrel = {
                 act.path = path.slice().concat(act.path);
                 var res = S.client.hoard.record_action(
                     act, function (sact) {
-                        ST.action(sact, next);
+                        ST.action(sact, false, next);
                     });
                 if (res !== null)
                     SD.squeak_more(res.message);
@@ -717,10 +728,7 @@ var Squirrel = {
             if (DEBUG) console.debug("Reconstructing UI tree from cache");
             S.client.hoard.reconstruct_actions(
                 function(a, next) {
-                    ST.action(a);
-                    // reconstruct_actions uses a queue, so don't chain
-                    if (next)
-                        next();
+                    ST.action(a, false, next);
                 },
                 function() { // on complete
                     // Reset the UI modification list; we just loaded the
@@ -937,9 +945,18 @@ var Squirrel = {
      * Perform a text search
      */
     S.search = function(s) {
-        var re = new RegExp(s, "i");
+        var re;
+        try {
+            re = new RegExp(s, "i");
+        } catch (e) {
+            SD.squeak(
+                {
+                    message: TX.tx("Error in search expression '$1': ", s)
+                        + e
+                });
+        }
         var hits = [];
-        $(".key,.value").each(function() {
+        $(".tree-key,.tree-value").each(function() {
             if ($(this).text().match(re)) {
                 hits.push(this);
             }
@@ -952,11 +969,11 @@ var Squirrel = {
                     message: TX.tx("'$1' not found", s)
                 });
         } else {
-            $("li.tree-open").each(function() {
+            $(".tree-open").each(function() {
                 ST.close($(this));
             });
             $.each(hits, function(n, v) {
-                $(v).parents(".tree-node.tree-collection").each(function() {
+                $(v).parents(".tree-collection").each(function() {
                     ST.open($(this));
                 });
             });
@@ -999,6 +1016,7 @@ var Squirrel = {
                     S.init_application();
                 });
             });
+            //$(this).tooltip();
         });
 
         S.authenticated = function() {
@@ -1119,14 +1137,11 @@ var Squirrel = {
             break;
 
         case "add_value":
-            if (DEBUG) console.debug("Adding value to "
-                                     + ST.get_path($node).join("/"));
-            S.add_child_node($node, TX.tx("A new value"), TX.tx("None"));
+            SD.add($node, true);
             break;
 
         case "add_subtree":
-            if (DEBUG) console.debug("Adding subtree");
-            S.add_child_node($node, TX.tx("A new folder"));
+            SD.add($node, false);
             break;
 
         case "randomise":

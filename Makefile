@@ -43,7 +43,7 @@ clean:
 	$(FIND) '*.map' -exec rm \{\} \;
 	$(FIND) '*.esl' -exec rm \{\} \;
 
-eslint: $(subst .uncompressed.js,.esl,$(SOURCES))
+lint: $(subst .uncompressed.js,.esl,$(SOURCES))
 
 locale/%.json: $(SOURCES)
 	perl build_scripts/translate.pl $(*F) $^

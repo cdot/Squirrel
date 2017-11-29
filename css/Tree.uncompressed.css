@@ -43,9 +43,7 @@ button .tree-alarm {
     display: inline-block;
 }
 
-/* Push the leaf out to the same indent as subtrees */
 .tree-leaf {
-    margin-left: 1em;
 }
 
 .tree-open-close {

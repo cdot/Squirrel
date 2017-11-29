@@ -42,15 +42,18 @@
                 .append(p.message));
     };
 
-    SD.play_action = function(action) {
+    SD.play_action = function(action, more) {
         var res = S.client.hoard.record_action(
             action,
             function(e) {
-                S.Tree.action(
+                ST.action(
                     e,
-                    function() {
+                    true,
+                    function($node) {
+                        if (more)
+                            more($node);
                         Utils.sometime("update_save");
-                    }, true);
+                    });
             });
         if (res !== null)
             SD.squeak({
@@ -148,10 +151,10 @@
                         },
                         function(e) {
                             ST.action(
-                                e,
+                                e, true,
                                 function() {
                                     Utils.sometime("update_save");
-                                }, true);
+                                });
                         });
                     if (res !== null) {
                         SD.squeak({
@@ -238,8 +241,9 @@
      * Password generation for the given leaf node
      */
     SD.randomise = function($node) {
-        var $dlg = $("#randomise");
-        $dlg.data("node", $node);
+        var id = "#randomise";
+        var $dlg = $(id);
+        id += "_";
 
         SD.init_dialog(
             $dlg,
@@ -262,13 +266,67 @@
                         });
                     return true;
                 });
+                $(id + "remember").on($.getTapEvent(), function() {
+                    var constraints = $(id + "len").val() +
+                        TX.tx(" characters from ") +
+                        '[' + $(id + "chs").val() + ']';
+                    var $ibling = $dlg.data("constraints");
+                    if ($ibling) {
+                        if (constraints != $ibling.data("value")) {
+                            SD.play_action(
+                                { 
+                                    type: "E",
+                                    path: ST.get_path($ibling),
+                                    data: constraints
+                                }, function() {
+                                    $ibling.data("value", constraints);
+                                });
+                        }
+                    } else {
+                        var $node = $dlg.data("node");
+                        var p = ST.get_path($node).slice();
+                        var k = TX.tx("$1 constraints", p.pop());
+                        p.push(k); 
+                        SD.play_action(
+                            { 
+                                type: "N",
+                                path: p,
+                                data: constraints
+                            }, function($new) {
+                                $dlg.data("constraints", $new);
+                            });
+                    }
+                });
             });
 
-        var path = ST.get_path($node);
+        var my_key = $node.data("key");
+        $dlg.data("node", $node);
 
-        $("#randomise_path").text(path.join("/"));
-        $("#randomise_key").text($node.find(".key:first").text());
-        $("#randomise_again").trigger("click");
+        var constraints_key = TX.tx("$1 constraints", $node.data("key"));
+        var vre = new RegExp(
+            "(\\d+)" +
+                TX.tx(" characters from ")
+                .replace(/[-\/\\^$*+?.()|\[\]\{\}]/g, "\\$&")
+                + "\\[(.*)\\]");
+        $dlg.removeData("constraints");
+        $node.parent().children(".tree-leaf").each(function() {
+            var $ibling = $(this);
+            var k = $ibling.data("key");
+            if (k == constraints_key) {
+                var v = $ibling.data("value");
+                var m = vre.exec(v);
+                if (m) {
+                    $dlg.data("constraints", $ibling);
+                    $(id + "len").val(m[1]);
+                    $(id + "chs").val(m[2]);
+                }
+            }
+        });
+
+        var path = ST.get_path($node);
+        $(id + "path").text(path.join("/"));
+        $(id + "key").text(my_key);
+        $(id + "again").trigger("click");
 
         SD.open_dialog($dlg);
     };
@@ -616,6 +674,71 @@
         SD.open_dialog($dlg);
     };
 
+    SD.add = function($parent, is_value) {
+        var id = "#add"
+        var $dlg = $(id);
+        id += "_";
+        $dlg.data("parent", $parent);
+        $dlg.data("adding_value", is_value);
+        var $ul = $parent.find("ul:first");
+
+        SD.init_dialog($dlg, function($dlg, id) {
+            $(id + "key")
+                .on("input", function() {
+                    var enabled = true;
+                    var val = $(this).val();
+                    $ul.children(".tree-node").each(function() {
+                        if (ST.compare($(this).data("key"), val) == 0) {
+                            enabled = false;
+                            return false;
+                        }
+                    });
+                    if (enabled) {
+                        $(id + "ok").button("enable");
+                        $(id + "key")
+                            .removeClass("dlg-disabled")
+                            .attr("title", TX.tx("Enter new name"));
+                    } else {
+                        $(id + "ok").button("disable");
+                        $(id + "key")
+                            .addClass("dlg-disabled")
+                            .attr("title", TX.tx("Name is already in use"));
+                    }
+                })
+                .autocomplete({ source: [
+                    TX.tx("User"), TX.tx("Pass") ]});
+
+            $(id + "ok")
+                .button()
+                .on($.getTapEvent(), function() {
+                    $dlg.dialog("close");
+                    var $parent = $dlg.data("parent");
+                    S.add_child_node(
+                        $parent, $(id + "key").val(),
+                        $dlg.data("adding_value") ?
+                            $(id + "value").val() : undefined);
+                    return false;
+                });
+        });
+
+        $(id + "path").text(ST.get_path($parent).join(" > ") + " > ");
+        if (is_value) {
+            $dlg.attr("title", TX.tx("Add value"));
+            $(id + "help").text(TX.tx(
+                "Enter the name and value for the new entry"));
+            $(id + "value_parts").show();
+            $(id + "key").autocomplete("enable");
+        } else {
+            $dlg.attr("title", TX.tx("Add folder"));
+            $(id + "help").text(TX.tx(
+                "Enter the name for the new folder"));
+            $(id + "value_parts").hide();
+            $(id + "key").autocomplete("disable");
+        }
+        
+        SD.open_dialog($dlg);
+    };
+    
     SD.init_dialog = function($dlg, extra) {
         if ($dlg.hasClass("dlg-initialised"))
             return;

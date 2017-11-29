@@ -30,3 +30,6 @@
     color: midnightblue; /* may be complemented in code */
 }
 
+.dlg-disabled {
+    color: red;
+}
