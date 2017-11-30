@@ -10,7 +10,7 @@
     <script src="//code.jquery.com/jquery-3.2.1.min.js"></script>
     <script src="//code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery.ui-contextmenu/1.18.1/jquery.ui-contextmenu.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-touch-events/1.0.5/jquery.mobile-events.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-touch-events/1.0.9/jquery.mobile-events.js"></script>
     
     <script src="libs/aes.uncompressed.js"></script>
     <script src="js/Utils.uncompressed.js"></script>
@@ -28,7 +28,6 @@
     <script src="js/Tree.uncompressed.js",></script>
     <script src="js/Dialogs.uncompressed.js"></script>
 
-<!--    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/ui-darkness/jquery-ui.css">-->
     <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/redmond/jquery-ui.css">
     <link rel="stylesheet" href="css/Icons.uncompressed.css" />
     <link rel="stylesheet" href="css/styles.uncompressed.css" />
@@ -40,6 +39,7 @@
       <h1>Squirrel</h1>
       <div id="authmessage" class="TX_text">Authenticating...</div>
       <div class="authfailed TX_text">Authentication failed. Refresh the browser to try again.</div>
+      <div id="splash"><img id="splash" src="images/squirrel.svg" /></div>
     </div>
     <div id="authenticated">
       <span id="search_label" class="TX_text">Search:</span>
@@ -64,7 +64,7 @@
     
     <!-- Dialogs -->    
     <div id="extras" class="dlg-dialog TX_title dlg-hidden" title="Extras">
-      <div id="logo"></div>
+      <div id="extras_logo"></div>
       <p>
         <span class="TX_text">Autosave</span>
         <select id="extras_autosave">

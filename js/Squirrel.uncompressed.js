@@ -181,7 +181,9 @@ var Squirrel = {
                            new RGBA(bgcol).luma() < 0.65);
 
         if (S.bright && !want_bright || !S.bright && want_bright) {
-            // Invert colours
+            // Invert colours. Takes account of the fact that only
+            // local stylesheets can be found this way. Stylesheets
+            // loading from other domains (i.e. CDNs) are not local.
             for (var i = 0; i < document.styleSheets.length; i++) {
                 var sheet = document.styleSheets[i];
                 if (!sheet)

@@ -38,14 +38,14 @@
 
             .on($.getEndEvent(), function(e) {
                 // Override the parent click handler
-                e.preventDefault();
                 e.stopPropagation();
+                // e.preventDefault(); Kills mouse events on desktop input
             })
 
             .on($.getStartEvent(), function(e) {
                 // Override the parent click handler
-                e.preventDefault();
                 e.stopPropagation();
+                // e.preventDefault(); Kills mouse events on desktop input
             })
 
             .on("keydown", function(e) { // Escape means cancel

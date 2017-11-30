@@ -1,4 +1,5 @@
 # Copyright (C) 2015 Crawford Currie http://c-dot.co.uk / MIT
+FIND := find . -name 'jquery*' -prune -o -name
 
 LIBS := $(wildcard libs/*.uncompressed.*)
 SOURCES := $(wildcard *.uncompressed.* js/*.uncompressed.js)
@@ -36,7 +37,9 @@ release: $(MIN) $(MAP)
 	eslint --config package.json $^
 	touch $@
 
-FIND := find . -name 'jquery*' -prune -o -name
+test:
+	$(FIND) js -prune -o -name test -type d -exec mocha \{\}/*.js \;
+
 clean:
 	$(FIND) '*~' -exec rm \{\} \;
 	$(FIND)  '*.min.*' -exec rm \{\} \;

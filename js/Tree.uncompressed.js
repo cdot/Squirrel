@@ -262,7 +262,7 @@
         });
 
         $span.edit_in_place({
-            width: w,
+            width: w / 2,
             changed: function(s) {
                 var e = S.client.hoard.record_action(
                     { type: action,
@@ -270,11 +270,10 @@
                       data: s },
                     function(ea) {
                         ST.action(
-                            ea,
+                            ea, true,
                             function(/*$newnode*/) {
                                 Utils.sometime("update_save");
-                            },
-                            true);
+                            });
                     });
                 if (e !== null)
                     S.Dialog.squeak(e.message);

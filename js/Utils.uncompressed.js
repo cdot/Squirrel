@@ -894,6 +894,9 @@ function RGBA(r, g, b, a) {
 RGBA.prototype.inverse = function() {
     return new RGBA(1 - this.r, 1 - this.g, 1 - this.b);
 /*
+  Alternative method, but doesn't work very well. Needs unit tests to
+  explore and cover edge cases (such as black to white)
+
     var hsv = this.toHSV();
     return RGBA.fromHSV(
         (hsv[0] + 180) % 360,
@@ -904,8 +907,10 @@ RGBA.prototype.inverse = function() {
 };
 
 /**
-* Find the approximate brightness of an RGBA colour in the range 0..1
-*/
+ * Find the approximate brightness of an RGBA colour in the range 0..1
+ * Anything above 0.65 is closer to white, below that to black
+ * @see https://en.wikipedia.org/wiki/HSL_and_HSV
+ */
 RGBA.prototype.luma = function() {
     // SMPTE C, Rec. 709 weightings
     return (0.2126 * this.r) + (0.7152 * this.g) + (0.0722 * this.b);
@@ -927,25 +932,37 @@ RGBA.prototype.unparse = function() {
 };
 
 /**
- * Generate an HSV value as a tuple in an array
- * @see https://stackoverflow.com/questions/1664140/js-function-to-calculate-complementary-colour
+ * Generate an HS[V|L] value as a [ H, S, [V|L] ]
+ * e.g. var hsl = new RGBA("blue").toHS('L')
+ * @see https://en.wikipedia.org/wiki/HSL_and_HSV
  * @return [ hue (0..360), saturation (0..1), value (0..1) ]
  */
-RGBA.prototype.toHSV = function() {
+/* Not used, requires testing */
+RGBA.prototype.toHS = function(model) {
     var hsv = [ 0, 0, 0 ];
-    var v = Math.max(this.r, this.g, this.b); 
-    var diff = v - Math.min(this.r, this.g, this.b);
+    var M = Math.max(this.r, this.g, this.b);
+    var m = Math.min(this.r, this.g, this.b);
+    var C = M - m; // saturation / chroma
 
-    hsv[1] = diff / v;
-    hsv[2] = v;
+    if (model === "V") {
+        var V = M;
+        hsv[1] = (V == 0) ? 0 : (C / V); // sat (= chroma)
+        hsv[2] = V;
+    } else {
+        function unsign(x) { return x < 0 ? -x : x; }
+        var L = (M + m) / 2;
+        hsv[1] = (L == 1) ? 0 : (C / (1 - unsign(2 * L - 1)));
+        hsv[2] = L;
+    }
 
-    if (diff != 0) {
-        if (this.r === v)
-            hsv[0] = 60 * (this.g - this.r) / diff;
-        else if (this.g === v)
-            hsv[0] = 120 + 60 * (this.b = this.r) / diff;
-        else if (this.b === v)
-            hsv[0] = 240 + 60 * (this.r - this.g) / diff;
+    if (C != 0) {
+        // not achromatic, calculate hue
+        if (this.r === M)
+            hsv[0] = 60 * (((this.g - this.b) / C) % 6);
+        else if (this.g === M)
+            hsv[0] = 60 * ((this.b - this.r) / C + 2);
+        else if (this.b === M)
+            hsv[0] = 60 * ((this.r - this.g) / C + 4);
         
         if (hsv[0] < 0)
             hsv[0] += 360;
