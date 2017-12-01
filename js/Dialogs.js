@@ -673,7 +673,7 @@
         SD.open_dialog($dlg);
     };
 
-    function validate_unique($node, $input) {
+    function validate_unique($node, $input, id) {
         // Disable OK if key value exists or is invalid
         var $ul = $node.find("ul:first");
         var enabled = true;
@@ -692,12 +692,12 @@
             
         if (enabled) {
             $(id + "_ok").button("enable");
-            $(id + "_key")
+            $input
                 .removeClass("dlg-disabled")
                 .attr("title", TX.tx("Enter new name"));
         } else {
             $(id + "_ok").button("disable");
-            $(id + "_key")
+            $input
                 .addClass("dlg-disabled")
                 .attr("title", TX.tx("Name is already in use"));
         }
@@ -710,7 +710,7 @@
         SD.init_dialog($dlg, function($dlg, id) {
             $(id + "_key")
                 .on("input", function() {
-                    validate_unique($dlg.data("parent"), $(this));
+                    validate_unique($dlg.data("parent"), $(this), id);
                 });
             $(id + "_ok")
                 .button()
@@ -745,7 +745,7 @@
 
         SD.init_dialog($dlg, function($dlg, id) {
             $(id + "_key")
-                .on("input", function() { validate_unique($parent, $(this)); })
+                .on("input", function() { validate_unique($parent, $(this), id); })
                 .autocomplete({ source: [
                     TX.tx("User"), TX.tx("Pass") ]});
 
@@ -777,7 +777,7 @@
             $(id + "_key").autocomplete("disable");
         }
 
-        validate_unique($parent, $(id + "_key"));
+        validate_unique($parent, $(id + "_key"), id);
 
         SD.open_dialog($dlg);
     };

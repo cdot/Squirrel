@@ -165,7 +165,7 @@ var Squirrel = {
         var $el = $("<div></div>")
             .addClass("ui-widget")
             .addClass("ui-widget-content")
-            .addClass("dlg-hidden");
+            .hide();
         $body.append($el);
         var bgcol = $el.css("background-color");
         var style = "body {";
