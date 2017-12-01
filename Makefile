@@ -48,7 +48,7 @@ release: $(MIN) $(MAP)
 
 # Other targets
 %.esl : %.js
-	eslint --config package.json $^
+	eslint $^
 	touch $@
 
 test:

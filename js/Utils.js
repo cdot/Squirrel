@@ -1,6 +1,10 @@
 /*@preserve Copyright (C) 2015 Crawford Currie http://c-dot.co.uk license MIT*/
 
 /* global TX */
+/* global ArrayBuffer */
+/* global Uint8Array */
+/* global Uint16Array */
+/* global module */
 
 /**
  * Utilities and plugins used by Squirrel
@@ -512,32 +516,32 @@ Utils.ArrayBufferToBase64 = function(ab) {
 
     // Convert a base 64 number to the charcode of the character used to
     // represent it
-    var uint6ToB64 = function(nUint6) {
-        return nUint6 < 26 ?
-            nUint6 + 65
-            : nUint6 < 52 ?
-            nUint6 + 71
-            : nUint6 < 62 ?
-            nUint6 - 4
-            : nUint6 === 62 ?
+    var uint6ToB64 = function(nUInt6) {
+        return nUInt6 < 26 ?
+            nUInt6 + 65
+            : nUInt6 < 52 ?
+            nUInt6 + 71
+            : nUInt6 < 62 ?
+            nUInt6 - 4
+            : nUInt6 === 62 ?
             43
-            : nUint6 === 63 ?
+            : nUInt6 === 63 ?
             47
             :
             65;
     };
 
     // For each byte in the buffer
-    for (var nUint24 = 0, nIdx = 0; nIdx < nLen; nIdx++) {
+    for (var nUInt24 = 0, nIdx = 0; nIdx < nLen; nIdx++) {
         nMod3 = nIdx % 3;
-        nUint24 |= a8[nIdx] << (16 >>> nMod3 & 24);
+        nUInt24 |= a8[nIdx] << (16 >>> nMod3 & 24);
         if (nMod3 === 2 || nLen - nIdx === 1) {
             sB64Enc += String.fromCharCode(
-                uint6ToB64(nUint24 >>> 18 & 63),
-                uint6ToB64(nUint24 >>> 12 & 63),
-                uint6ToB64(nUint24 >>> 6 & 63),
-                uint6ToB64(nUint24 & 63));
-            nUint24 = 0;
+                uint6ToB64(nUInt24 >>> 18 & 63),
+                uint6ToB64(nUInt24 >>> 12 & 63),
+                uint6ToB64(nUInt24 >>> 6 & 63),
+                uint6ToB64(nUInt24 & 63));
+            nUInt24 = 0;
         }
     }
 
@@ -559,7 +563,7 @@ Utils.Base64ToArrayBuffer = function(sB64) {
     var nOutLen = nInLen * 3 + 1 >> 2;
     var ta8 = new Uint8Array(nOutLen);
     // Convert Base64 char (as char code) to the number represented
-    var b64ToUint6 = function(nChr) {
+    var b64ToUInt6 = function(nChr) {
         return nChr > 64 && nChr < 91 ?
             nChr - 65
             : nChr > 96 && nChr < 123 ?
@@ -574,17 +578,17 @@ Utils.Base64ToArrayBuffer = function(sB64) {
             0;
     };
 
-    for (var nMod3, nMod4, nUint24 = 0, nOutIdx = 0, nInIdx = 0;
+    for (var nMod3, nMod4, nUInt24 = 0, nOutIdx = 0, nInIdx = 0;
          nInIdx < nInLen; nInIdx++) {
         nMod4 = nInIdx & 3;
-        nUint24 |= b64ToUint6(sB64Enc.charCodeAt(nInIdx))
+        nUInt24 |= b64ToUInt6(sB64Enc.charCodeAt(nInIdx))
             << 6 * (3 - nMod4);
         if (nMod4 === 3 || nInLen - nInIdx === 1) {
             for (nMod3 = 0; nMod3 < 3
                  && nOutIdx < nOutLen; nMod3++, nOutIdx++) {
-                ta8[nOutIdx] = nUint24 >>> (16 >>> nMod3 & 24) & 255;
+                ta8[nOutIdx] = nUInt24 >>> (16 >>> nMod3 & 24) & 255;
             }
-            nUint24 = 0;
+            nUInt24 = 0;
         }
     }
     return ta8.buffer;

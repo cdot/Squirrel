@@ -123,8 +123,6 @@ Hoard.prototype.clear_actions = function() {
 Hoard.prototype.record_action = function(e, listener, no_push) {
     "use strict";
 
-    var node, name, i, c;
-
     if (typeof e.time === "undefined" || e.time === null)
         e.time = Date.now();
 
@@ -138,7 +136,7 @@ Hoard.prototype.record_action = function(e, listener, no_push) {
 
     function locateParent(path, node) {
         // Locate the parent in the cache
-        for (i = 0; i < path.length - 1; i++) {
+        for (var i = 0; i < path.length - 1; i++) {
             var name = path[i];
             if (node && typeof node.data === "string") {
                 // "Cannot " + e.type + " over leaf node";
@@ -153,9 +151,9 @@ Hoard.prototype.record_action = function(e, listener, no_push) {
         return node;
     }
 
-    c = function(mess) {
+    function c(mess) {
         return { conflict: e, message: mess };
-    };
+    }
 
     var parent = locateParent(e.path, this.cache);
     if (!parent) {

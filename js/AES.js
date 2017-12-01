@@ -1,6 +1,9 @@
 /*@preserve Copyright (C) 2015 Crawford Currie http://c-dot.co.uk license MIT*/
 
+/* eslint-env browser */
+
 /* global Aes */
+/* global Uint8Array */
 
 /**
  * AES Counter-mode implementation in JavaScript

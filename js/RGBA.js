@@ -2,6 +2,7 @@
  * Class to represent an RGBA colour, and convert to/from other
  * representations
  */
+/* global module */
 
 /* Table of HTMl colour names and their RGB values */
 const CSSColours = {
@@ -163,9 +164,9 @@ const CSSColours = {
  * @param b a number (if r is defined and is a number)
  * @param a a number (if r is defined and is a number)
  */
-function RGBA(r, g, b, a) {
-    var a;
-    
+function RGBA(r, g, b, a) {   
+    "use strict";
+
     function parseComponent(value, max) {
         if (/%\s*$/.test(value)) {
             var pc = parseFloat(value);
@@ -249,6 +250,7 @@ function RGBA(r, g, b, a) {
  * Crude RGB inversion - simply invert the colour components
  */
 RGBA.prototype.inverse = function() {
+    "use strict";
     return new RGBA(1 - this.r, 1 - this.g, 1 - this.b, this.a);
 }
 
@@ -256,6 +258,7 @@ RGBA.prototype.inverse = function() {
  * More sophisticated HSV complement
  */
 RGBA.prototype.complement = function() {
+    "use strict";
     var hsv = this.toHSV();
     return RGBA.fromHSV((hsv[0] + 180) % 360, hsv[1], hsv[2], this.a);
 };
@@ -266,6 +269,7 @@ RGBA.prototype.complement = function() {
  * @see https://en.wikipedia.org/wiki/HSL_and_HSV
  */
 RGBA.prototype.luma = function() {
+    "use strict";
     // SMPTE C, Rec. 709 weightings
     return (0.2126 * this.r) + (0.7152 * this.g) + (0.0722 * this.b);
 };
@@ -275,9 +279,11 @@ RGBA.prototype.luma = function() {
  * used if there is no A, a css rgba() otherwise.
  */
 RGBA.prototype.toString = function() {
+    "use strict";
+
     var tuple = [ Math.round(255 * this.r),
-                  G = Math.round(255 * this.g),
-                  B = Math.round(255 * this.b) ];
+                  Math.round(255 * this.g),
+                  Math.round(255 * this.b) ];
 
     if (typeof this.a !== "undefined") {
         tuple.push(this.a);
@@ -285,7 +291,7 @@ RGBA.prototype.toString = function() {
     } else {
         var s = "#";
         for (var i = 0; i < 3; i++) {
-            v = tuple[i].toString(16);
+            var v = tuple[i].toString(16);
             s += v.length == 1 ? "0" + v : v;
         }
         return s.toUpperCase();
@@ -299,6 +305,8 @@ RGBA.prototype.toString = function() {
  * @return [ hue (0..360), saturation (0..1), value (0..1) ]
  */
 RGBA.prototype.toHSV = function() {
+    "use strict";
+
     var M = Math.max(this.r, this.g, this.b);
     var m = Math.min(this.r, this.g, this.b);
     var C = M - m; // saturation / chroma
@@ -334,6 +342,8 @@ RGBA.prototype.toHSV = function() {
  * @return [ hue (0..360), saturation (0..1), lightness (0..1) ]
  */
 RGBA.prototype.toHSL = function() {
+    "use strict";
+
     var M = Math.max(this.r, this.g, this.b);
     var m = Math.min(this.r, this.g, this.b);
     var C = M - m; // saturation / chroma
@@ -373,7 +383,9 @@ RGBA.prototype.toHSL = function() {
  * or H will be assumed to be a tuple if S is undefined.
  */
 RGBA.fromHSV = function(H, S, V, A) {
-    var R, G, B, A;
+    "use strict";
+
+    var R, G, B;
 
     if (arguments.length === 1) {
         A = H[3];
@@ -410,6 +422,8 @@ RGBA.fromHSV = function(H, S, V, A) {
  * or H can be a tuple.
  */
 RGBA.fromHSL = function(H, S, L, A) {
+    "use strict";
+
     function hue2RGB(p, q, t){
         if (t < 0) t += 1;
         if (t > 1) t -= 1;
@@ -419,7 +433,7 @@ RGBA.fromHSL = function(H, S, L, A) {
         return p;
     }
 
-    var R, G, B, A;
+    var R, G, B;
 
     if (arguments.length === 1) {
         A = H[3];

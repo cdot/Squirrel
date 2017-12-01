@@ -1,8 +1,6 @@
 /* Squirrel icons */
 .ui-icon-squirrel-add-folder {
-    background-image: url('../images/add-folder.svg')!important;
-    width: 1em; height: 1em; background-size: 1em 1em;
-}
+    background-image: url('../images/add-folder.svg')!important; }
 .ui-icon-squirrel-copy {
     background-image: url('../images/copy.svg')!important; }
 .ui-icon-squirrel-gear {

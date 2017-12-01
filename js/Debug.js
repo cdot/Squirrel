@@ -3,4 +3,4 @@
 // uglifyjs --define DEBUG=false
 // will automatically strip the debug code from the built modules,
 // leaving this as a NOP.
-var DEBUG = true;
+DEBUG = true;

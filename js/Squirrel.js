@@ -9,7 +9,8 @@
 /* global LocalStorageStore */
 /* global StegaStore */
 /* global Hoard */
-/* global Tree */
+/* global RGBA */
+/* global ZeroClipboard */
 /* global SQUIRREL_STORE */
 
 /*
@@ -33,7 +34,8 @@ var Squirrel = {
 
     USE_STEGANOGRAPHY: false,
     Dialog: {},
-    Tree: {}
+    Tree: {},
+    clipboard: { data: undefined, contentType: "text/plain" }
 };
 
 (function($, S) {
@@ -146,8 +148,6 @@ var Squirrel = {
         });
         init_menus();
 
-        S.clipboard = null;
-
         // Set up event handlers for sometime scheduler
         $(document)
             .on("init_application", S.init_application)
@@ -199,22 +199,24 @@ var Squirrel = {
                     var rule = rules[j];
                     if (/\.[-:a-z0-9]*$/i.test(rule.selectorText)) {
                         // Class definition
-                        var s = "";
+                        var s = "", a;
                         if (rule.style.color) {
                             try {
-                                var a = new RGBA(rule.style.color);
+                                a = new RGBA(rule.style.color);
                                 s += "color: " +
                                     a.inverse().toString() + ";"
                             } catch (e) {
+                                console.log(e);
                             }
                         }
                         if (rule.style.backgroundColor) {
                             try {
-                                var a = new RGBA(
+                                a = new RGBA(
                                     rule.style.backgroundColor);
                                 s += "background-color: " +
                                     a.inverse().toString() + ";"
                             } catch (e) {
+                                console.log(e);
                             }
                         }
                         if (s.length > 0)
@@ -291,12 +293,11 @@ var Squirrel = {
                     e, true,
                     function($newnode) {
                         if (DEBUG && !$newnode) debugger;
-                        ST.open($newnode);
                         if (typeof value !== "string"
                             && typeof value !== "undefined") {
-                            S.insert_data(p, value);
+                            S.insert_data(ST.get_path($newnode), value);
                         }
-
+                        ST.open($newnode);
                         Utils.sometime("update_save");
                     });
             });
@@ -986,6 +987,80 @@ var Squirrel = {
         }
     };
 
+    function init_zeroClipboard() {
+        
+        if (typeof S.ZeroClipboardUseable === "undefined") {
+            if (typeof ZeroClipboard === "undefined" ||
+                ZeroClipboard.isFlashUnusable()) {
+                if (DEBUG) console.debug("ZeroClipboard is unusable");
+                S.ZeroClipboardUseable = false;
+                return;
+            }
+
+            console.debug("Initialising ZeroClipboard");
+            ZeroClipboard.config({
+                debug: DEBUG
+            });
+        
+            ZeroClipboard.on("ready", function(e) {
+                S.create_clipboard(
+                    $("li[data-command='copy_value']"),
+                    function($node) {
+                        if (DEBUG) console.debug("clip val from: " +  $node.data("key"));
+                        S.clipboard.data = $node.find(".tree-value:first").text();
+                        S.clipboard.contentType = "text/plain";
+                    });
+                S.create_clipboard(
+                    $("li[data-command='make_copy']"),
+                    function($node) {
+                        if (DEBUG) console.debug("clip json from: " +  $node.data("key"));
+                        var p = ST.get_path($node);
+                        var n = S.client.hoard.get_node(p);
+                        S.clipboard.data = JSON.stringify(n);
+                        S.clipboard.contentType = "text/json";
+                    });
+                S.ZeroClipboardUseable = true;
+            });
+            
+            ZeroClipboard.on("error", function(e) {
+                if (e.name == "flash-deactivated") {
+                    for (var i = 0; i < S.ZeroClipboards.length; i++)
+                        S.ZeroClipboards[i].destroy();
+                    S.ZeroClipboardUseable = false;
+                } else
+                    console.log("ZeroClipboard warning: " + e.name)
+            });
+            
+            var $dummy = $("<div></div>");
+            $("body").append($dummy);
+            new ZeroClipboard($dummy);
+        }
+
+        S.ZeroClipboards = [];
+
+        return S.ZeroClipboardUseable;
+    };
+    
+    // Initialise the context menu zero clipboards when the menu is first shown
+    S.create_clipboard = function($item, handler) {
+        // S.$zc_node points to the node most recently under
+        // the context menu.
+
+        // attach zero clipboard handler to copy_value
+        // item in the global context menu
+        var zc = new ZeroClipboard($item);
+        
+        // Handle the "copy" event that comes from
+        // the Flash movie and populate the event with our data
+        zc.on("copy", function(event) {
+            handler(S.$zc_node);
+            // ZC only works sensibly with text/plain
+            event.clipboardData.setData("text/plain", S.clipboard.data);
+        });
+
+        S.ZeroClipboards.push(zc); // remember in case we need to destroy
+    };
+    
     $(document)
         .ready(function() {
             // By default, jQuery timestamps datatype 'script' and 'jsonp'
@@ -1040,85 +1115,39 @@ var Squirrel = {
             $("#authenticated").show();
         };
 
-    var before_open = function(e, ui) {
+    function before_menu_open(e, ui) {
         var $node = (ui.target.is(".tree-node"))
             ? ui.target
-            : ui.target.parents(".tree-node").first();
-        var $val = $node.find(".value").first();
+            : ui.target.closest(".tree-node");
+
         var has_alarm = typeof $node.data("alarm") !== "undefined";
         var is_leaf = $node.hasClass("tree-leaf");
         var is_root = ui.target.closest(".tree-node").is("#sites-node");
         var is_open = $node.hasClass("tree-open");
         var $root = $("body");
-
+        
+        if (DEBUG) console.debug("contextmenu on " + $node.data("key") + " " + is_leaf);
         $root
-            .contextmenu("showEntry", "rename", !is_root)
-            .contextmenu("showEntry", "copy_value", is_leaf)
-            .contextmenu("showEntry", "pick_from", is_leaf)
-            .contextmenu("showEntry", "make_copy", !is_root)
-            .contextmenu("showEntry", "delete", !is_root)
             .contextmenu("showEntry", "add_alarm", !has_alarm && !is_root)
+            .contextmenu("showEntry", "add_subtree", is_open && !is_leaf)
+            .contextmenu("showEntry", "add_value", is_open && !is_leaf && !is_root)
+            .contextmenu("showEntry", "copy_value", is_leaf)
+            .contextmenu("showEntry", "delete", !is_root)
             .contextmenu("showEntry", "edit", is_leaf)
+           .contextmenu("showEntry", "insert_copy", !is_leaf &&
+                         (typeof S.clipboard.data !== "undefined"))
+            .contextmenu("showEntry", "make_copy", !is_root)
+            .contextmenu("showEntry", "pick_from", is_leaf)
             .contextmenu("showEntry", "randomise", is_leaf)
-            .contextmenu("showEntry", "add_subtree", !is_leaf)
-            .contextmenu("enableEntry", "add_subtree", is_open)
-            .contextmenu("showEntry", "add_value", !is_leaf && !is_root)
-            .contextmenu("enableEntry", "add_value", is_open)
-            .contextmenu("showEntry", "insert_copy",
-                         !is_leaf && S.clipboard !== null);
+            .contextmenu("showEntry", "rename", !is_root);
 
-        if (typeof ZeroClipboard !== "undefined") {
-            var zc;
-            if (!$root.data("zc_copy")) {
-                // First time, attach zero clipboard handler
-                if (DEBUG) console.debug("Attaching ZC copy");
-                // Whack a Flash movie over the menu item li
-                zc = new ZeroClipboard(
-                    ui.menu.children("li[data-command='copy_value']"));
-                // Handle the "copy" event that comes from
-                // the Flash movie and populate the event with our data
-                zc.on("copy", function(event) {
-                    if (DEBUG) { console.debug("Copying to clipboard"); }
-                    event.clipboardData.setData(
-                        "text/plain",
-                        $root.data("zc_copy").text());
-                });
-                $root.data("ZC", zc); // remember it to protect from GC
-            }
-            $root.data("zc_copy", $val);
-
-            if (!$root.data("zc_cut")) {
-                // First time, attach zero clipboard handler
-                if (DEBUG) console.debug("Attaching ZC cut");
-                // Whack a Flash movie over the menu item li
-                zc = new ZeroClipboard(
-                    ui.menu.children("li[data-command='make_copy']"));
-                // Handle the "copy" event that comes from
-                // the Flash movie and populate the event with our data.
-                // Note that this populates the system clipboard, but that
-                // clipboard is not accessible from Javascript so we
-                // can only insert things copied from Squirrel
-                zc.on("copy", function(event) {
-                    if (DEBUG) console.debug("Copying JSON to clipboard");
-                    var pa = $root.data("zc_cut");
-                    var p = ST.get_path(pa);
-                    var n = S.client.hoard.get_node(p);
-                    var json = JSON.stringify(n);
-
-                    S.clipboard = json;
-                    event.clipboardData.setData("text/plain", json);
-                });
-                $root.data("ZC", zc); // remember it to protect from GC
-            }
-            $root.data("zc_cut", $node.closest(".tree-node"));
-        }
+        S.$zc_node = $node;
     };
 
     /**
      * Handler for context menu items
      */
-    var handle_menu_choice = function(e, ui) {
-
+    function handle_menu_choice(e, ui) {
         var $node = ui.target.closest(".tree-node");
 
         if (!$node)
@@ -1126,18 +1155,31 @@ var Squirrel = {
 
         switch (ui.cmd) {
         case "copy_value":
-            // Handled by the ZeroClipboard event handler
+            if (!S.ZeroClipboardUseable) {
+                S.clipboard.data = $node.find(".tree-value:first").text();
+                S.clipboard.contentType = "text/plain";
+            }
+            // else handled by the ZeroClipboard event handler
             break;
 
         case "make_copy":
-            // Handled by the ZeroClipboard event handler
+            if (!S.ZeroClipboardUseable) {
+                var p = ST.get_path($node);
+                var n = S.client.hoard.get_node(p);
+                S.clipboard.data = JSON.stringify(n);
+                S.clipboard.contentType = "text/json";
+            }
+            // else handled by the ZeroClipboard event handler
             break;
 
         case "insert_copy":
-            if (DEBUG) console.debug("Pasting");
-            if (S.clipboard) {
-                var data = JSON.parse(S.clipboard);
-                S.add_child_node($node, TX.tx("A copy"), data.data);
+            if (S.clipboard.data && S.clipboard.contentType === "text/json") {
+                try {
+                    var data = JSON.parse(S.clipboard.data);
+                    SD.insert($node, data);
+                } catch (e) {
+                    if (DEBUG) debugger;
+                }
             }
             break;
 
@@ -1186,72 +1228,73 @@ var Squirrel = {
 
     var init_menus = function() {
         var menu = {
-            delegate: ".tree-info",
+            delegate: ".tree-info,.tree-open-close",
             menu: [
                 {
                     title: TX.tx("Copy value"),
                     cmd: "copy_value",
-                    uiIcon: "ui-icon-squirrel-copy"
+                    uiIcon: "ui-icon-squirrel-copy squirrel-icon"
                 },
                 {
                     title: TX.tx("Pick characters"),
                     cmd: "pick_from",
-                    uiIcon: "ui-icon-squirrel-pick"
+                    uiIcon: "ui-icon-squirrel-pick squirrel-icon"
                 },
                 {
                     title: TX.tx("Rename"),
                     cmd: "rename",
-                    uiIcon: "ui-icon-squirrel-edit" 
+                    uiIcon: "ui-icon-squirrel-edit squirrel-icon"
                 },
                 {
                     title: TX.tx("Edit value"),
                     cmd: "edit",
-                    uiIcon: "ui-icon-squirrel-edit" 
+                    uiIcon: "ui-icon-squirrel-edit squirrel-icon"
                 },
                 {
                     title: TX.tx("Add reminder"),
                     cmd: "add_alarm",
-                    uiIcon: "ui-icon-squirrel-alarm" 
+                    uiIcon: "ui-icon-squirrel-alarm squirrel-icon" 
                 },
                 {
                     title: TX.tx("Generate new random value"),
                     cmd: "randomise",
-                    uiIcon: "ui-icon-squirrel-key" 
+                    uiIcon: "ui-icon-squirrel-key squirrel-icon" 
                 },               
                 {
                     title: TX.tx("Add new value"),
                     cmd: "add_value",
-                    uiIcon: "ui-icon-squirrel-add-value" 
+                    uiIcon: "ui-icon-squirrel-add-value squirrel-icon" 
                 },
                 {
                     title: TX.tx("Add new folder"),
                     cmd: "add_subtree",
-                    uiIcon: "ui-icon-squirrel-add-folder" 
+                    uiIcon: "ui-icon-squirrel-add-folder squirrel-icon" 
                 },
                 {
                     title: TX.tx("Copy folder"),
                     cmd: "make_copy",
-                    uiIcon: "ui-icon-squirrel-copy"
+                    uiIcon: "ui-icon-squirrel-copy squirrel-icon"
                 },
                 {
-                    title: TX.tx("Insert copy"),
+                    title: TX.tx("Add copy"),
                     cmd: "insert_copy",
-                    uiIcon: "ui-icon-squirrel-paste"
+                    uiIcon: "ui-icon-squirrel-paste squirrel-icon"
                 },
                 {
                     title: TX.tx("Delete"),
                     cmd: "delete",
-                    uiIcon: "ui-icon-squirrel-delete" 
+                    uiIcon: "ui-icon-squirrel-delete squirrel-icon" 
                 }
             ],
             preventContextMenuForPopup: true,
             preventSelect: true,
             taphold: true,
-            beforeOpen: before_open,
+            beforeOpen: before_menu_open,
             select: handle_menu_choice
         };
 
         $("body").contextmenu(menu);
+        init_zeroClipboard();
     };
 
 })(jQuery, Squirrel);

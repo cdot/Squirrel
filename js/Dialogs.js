@@ -81,7 +81,7 @@
         var $pass = $("#login_pass");
         var $signin = $("#login_signin");
 
-        var sign_in = function(evt) {
+        var sign_in = function() {
             SD.close_dialog($dlg);
             $signin.off($.getTapEvent());
             $user.off("change");
@@ -179,7 +179,7 @@
         SD.open_dialog($dlg);
     };
 
-    SD.about = function($node) {
+    SD.about = function() {
         var $dlg = $("#about");
         SD.init_dialog($dlg);
         SD.open_dialog($dlg);
@@ -243,33 +243,32 @@
     SD.randomise = function($node) {
         var id = "#randomise";
         var $dlg = $(id);
-        id += "_";
 
         SD.init_dialog(
             $dlg,
             function($dlg, id) {
-                $(id + "again").on($.getTapEvent(), function() {
-                    $(id + "idea").text(Utils.generate_password(
+                $(id + "_again").on($.getTapEvent(), function() {
+                    $(id + "_idea").text(Utils.generate_password(
                         {
-                            length: $(id + "len").val(),
-                            charset: $(id + "chs").val()
+                            length: $(id + "_len").val(),
+                            charset: $(id + "_chs").val()
                         }));
                     return false;
                 });
-                $(id + "use").on($.getTapEvent(), function() {
+                $(id + "_use").on($.getTapEvent(), function() {
                     SD.close_dialog($dlg);
                     SD.play_action(
                         { 
                             type: "E",
                             path: ST.get_path($dlg.data("node")),
-                            data: $(id + "idea").text()
+                            data: $(id + "_idea").text()
                         });
                     return true;
                 });
-                $(id + "remember").on($.getTapEvent(), function() {
-                    var constraints = $(id + "len").val() +
+                $(id + "_remember").on($.getTapEvent(), function() {
+                    var constraints = $(id + "_len").val() +
                         TX.tx(" characters from ") +
-                        '[' + $(id + "chs").val() + ']';
+                        '[' + $(id + "_chs").val() + ']';
                     var $ibling = $dlg.data("constraints");
                     if ($ibling) {
                         if (constraints != $ibling.data("value")) {
@@ -317,16 +316,16 @@
                 var m = vre.exec(v);
                 if (m) {
                     $dlg.data("constraints", $ibling);
-                    $(id + "len").val(m[1]);
-                    $(id + "chs").val(m[2]);
+                    $(id + "_len").val(m[1]);
+                    $(id + "_chs").val(m[2]);
                 }
             }
         });
 
         var path = ST.get_path($node);
-        $(id + "path").text(path.join("/"));
-        $(id + "key").text(my_key);
-        $(id + "again").trigger("click");
+        $(id + "_path").text(path.join("/"));
+        $(id + "_key").text(my_key);
+        $(id + "_again").trigger("click");
 
         SD.open_dialog($dlg);
     };
@@ -337,12 +336,12 @@
         SD.init_dialog(
             $dlg,
             function ($dlg, id) {
-                $(id + "ok")
+                $(id + "_ok")
                     .on($.getTapEvent(), function() {
                         SD.close_dialog($dlg);
                         S.search($("#search_string").val());
                     });
-                $(id + "string")
+                $(id + "_string")
                     .on("change", function() {
                         $("#search_ok").trigger($.getTapEvent());
                     });
@@ -359,30 +358,30 @@
         SD.init_dialog($dlg, function($dlg, id) {
  
             $dlg.data("update_next", function() {
-                var numb = $(id + "number").val();
+                var numb = $(id + "_number").val();
                 // Convert to days
-                numb = numb * Utils.TIMEUNITS[$(id + "units").val()].days;
+                numb = numb * Utils.TIMEUNITS[$(id + "_units").val()].days;
                 var last_time = $dlg.data("node").data("last-time");
                 var alarmd = new Date(last_time + numb * Utils.MSPERDAY);
                 $('#alarm_when').text(alarmd.toLocaleDateString());
-                $(id + "next").text(Utils.deltaTimeString(alarmd));
+                $(id + "_next").text(Utils.deltaTimeString(alarmd));
             });
 
-            $(id + "units")
+            $(id + "_units")
                 .on("change", function() {
                     $dlg.data("update_next").call();
                 });
 
-            $(id + "number")
+            $(id + "_number")
                 .on("change", function() {
                     $dlg.data("update_next").call();
                 });
 
-            $(id + "set")
+            $(id + "_set")
                 .on($.getTapEvent(), function() {
                     SD.close_dialog($dlg);
-                    var numb = $(id + "number").val()
-                        * Utils.TIMEUNITS[$(id + "units").val()].days;
+                    var numb = $(id + "_number").val()
+                        * Utils.TIMEUNITS[$(id + "_units").val()].days;
                     SD.play_action(
                         { type: "A",
                           path: ST.get_path($dlg.data("node")),
@@ -391,7 +390,7 @@
                     return false;
                 });
 
-            $(id + "clear")
+            $(id + "_clear")
                 .on($.getTapEvent(), function() {
                     SD.play_action(
                         { type: "C",
@@ -460,18 +459,18 @@
         var $dlg = $("#store_settings");
 
         SD.init_dialog($dlg, function($dlg, id) {
-            $(id + "file")
+            $(id + "_file")
                 .hide()
-                .on($.getTapEvent(), function (e) {
+                .on($.getTapEvent(), function () {
                     SD.ss_change_image();
                 });
 
-            $(id + "image")
+            $(id + "_image")
                 .on($.getTapEvent(), function(e) {
                     $("#store_settings_file").trigger("change", e);
                 });
 
-            $(id + "storepath").on("keyup", function(e) {
+            $(id + "_storepath").on("keyup", function() {
                 if ($("#store_settings_storepath").val() === "") {
                     $("#store_settings_message").text(TX.tx(
                         "Store path may not be empty"));
@@ -492,8 +491,8 @@
                 return true;
             });
 
-            $(id + "ok")
-                .on($.getTapEvent(), function (e) {
+            $(id + "_ok")
+                .on($.getTapEvent(), function () {
                     if ($("#store_settings_storepath").val() === "") {
                         $("#store_settings_message").text(TX.tx(
                             "Store path may not be empty"));
@@ -521,7 +520,7 @@
         var $dlg = $("#chpw");
 
         SD.init_dialog($dlg, function($dlg, id) {
-            $(id + "show")
+            $(id + "_show")
                 .on("change", function() {
                     if ($("#chpw_show").prop("checked")) {
                         $("#chpw_pass").attr("type", "text");
@@ -540,11 +539,11 @@
                 return (p === c);
             });
 
-            $(id + "conf").on("change", function() {
+            $(id + "_conf").on("change", function() {
                 $dlg.data("validate").call();
             });
 
-            $(id + "set")
+            $(id + "_set")
                 .on($.getTapEvent(), function () {
                     if (!$dlg.data("validate").call())
                         return false;
@@ -569,12 +568,12 @@
         var $dlg = $("#json");
 
         SD.init_dialog($dlg, function($dlg, id) {
-            $(id + "text")
+            $(id + "_text")
                 .on("input", function () {
                     $("#json_ok").prop("disabled", false);
                 });
 
-            $(id + "ok")
+            $(id + "_ok")
                 .on($.getTapEvent(), function () {
                     SD.close_dialog($dlg);
                     var datum;
@@ -608,7 +607,7 @@
         var $dlg = $("#theme");
 
         SD.init_dialog($dlg, function($dlg, id) {
-            $(id + "select")
+            $(id + "_select")
                 .on("change", function () {
                     var theme = $(this).val();
                     $("link").filter(function() {
@@ -630,33 +629,33 @@
         var $dlg = $("#extras");
 
         SD.init_dialog($dlg, function($dlg, id) {
-            $(id + "autosave")
-                .on("change", function(e) {
+            $(id + "_autosave")
+                .on("change", function() {
                     S.client.hoard.options.autosave =
                         ($("#extras_autosave").val() === "on");
                     Utils.sometime("update_save");
                 });
 
-            $(id + "chpw").on($.getTapEvent(), function() {
+            $(id + "_chpw").on($.getTapEvent(), function() {
                 SD.close_dialog($dlg);
                 SD.chpw();
             });
 
-            $(id + "chss").on($.getTapEvent(), function() {
+            $(id + "_chss").on($.getTapEvent(), function() {
                 SD.close_dialog($dlg);
                 SD.store_settings();
             });
-            $(id + "theme").on($.getTapEvent(), function() {
+            $(id + "_theme").on($.getTapEvent(), function() {
                 SD.close_dialog($dlg);
                 SD.theme();
             });
 
-            $(id + "json").on($.getTapEvent(), function() {
+            $(id + "_json").on($.getTapEvent(), function() {
                 SD.close_dialog($dlg);
                 SD.json();
             });
 
-            $(id + "about").on($.getTapEvent(), function() {
+            $(id + "_about").on($.getTapEvent(), function() {
                 SD.close_dialog($dlg);
                 SD.about();
             });
@@ -674,78 +673,111 @@
         SD.open_dialog($dlg);
     };
 
+    function validate_unique($node, $input) {
+        // Disable OK if key value exists or is invalid
+        var $ul = $node.find("ul:first");
+        var enabled = true;
+        var val = $input.val();
+
+        if (!/\S/.test(val)) // empty?
+            enabled = false;
+        else {
+            $ul.children(".tree-node").each(function() {
+                if (ST.compare($(this).data("key"), val) == 0) {
+                    enabled = false;
+                    return false;
+                }
+            });
+        }
+            
+        if (enabled) {
+            $(id + "_ok").button("enable");
+            $(id + "_key")
+                .removeClass("dlg-disabled")
+                .attr("title", TX.tx("Enter new name"));
+        } else {
+            $(id + "_ok").button("disable");
+            $(id + "_key")
+                .addClass("dlg-disabled")
+                .attr("title", TX.tx("Name is already in use"));
+        }
+    };
+    
+    SD.insert = function($parent, data) {
+        var id = "#insert";
+        var $dlg = $(id);
+
+        SD.init_dialog($dlg, function($dlg, id) {
+            $(id + "_key")
+                .on("input", function() {
+                    validate_unique($dlg.data("parent"), $(this));
+                });
+            $(id + "_ok")
+                .button()
+                .on($.getTapEvent(), function() {
+                    $dlg.dialog("close");
+                    S.add_child_node($dlg.data("parent"), $(id + "_key").val(), data.data);
+                });
+        });
+
+        if (DEBUG) console.debug("Pasting");
+        $dlg.data("parent", $parent);
+        var base = TX.tx("A copy");
+        var name = new RegExp("^" + base + " ?(\\d*)$");
+        var i = -1;
+        $parent.find("ul:first").children(".tree-node").each(function() {
+            var m = name.exec($(this).data("key"));
+            if (m)
+                i = Math.max(i, m[1] ? parseInt(m[1]) : 0);
+        });
+        $(id + "_key").val(base + (i >= 0 ? (" " + (i + 1)) : ""));
+        
+        SD.open_dialog($dlg);
+    };
+    
     SD.add = function($parent, is_value) {
         var id = "#add"
         var $dlg = $(id);
-        id += "_";
+
         $dlg.data("parent", $parent);
         $dlg.data("adding_value", is_value);
         var $ul = $parent.find("ul:first");
 
-        // Disable OK if key value exists or is invalid
-        function validate($input) {
-            var enabled = true;
-            var val = $input.val();
-
-            if (!/\S/.test(val)) // empty?
-                enabled = false;
-            else {
-                $ul.children(".tree-node").each(function() {
-                    if (ST.compare($(this).data("key"), val) == 0) {
-                        enabled = false;
-                        return false;
-                    }
-                });
-            }
-            
-            if (enabled) {
-                $(id + "ok").button("enable");
-                $(id + "key")
-                    .removeClass("dlg-disabled")
-                    .attr("title", TX.tx("Enter new name"));
-            } else {
-                $(id + "ok").button("disable");
-                $(id + "key")
-                    .addClass("dlg-disabled")
-                    .attr("title", TX.tx("Name is already in use"));
-            }
-        }
-
         SD.init_dialog($dlg, function($dlg, id) {
-            $(id + "key")
-                .on("input", function() { validate($(this)); })
+            $(id + "_key")
+                .on("input", function() { validate_unique($parent, $(this)); })
                 .autocomplete({ source: [
                     TX.tx("User"), TX.tx("Pass") ]});
 
-            $(id + "ok")
+            $(id + "_ok")
                 .button()
                 .on($.getTapEvent(), function() {
                     $dlg.dialog("close");
                     var $parent = $dlg.data("parent");
                     S.add_child_node(
-                        $parent, $(id + "key").val(),
+                        $parent, $(id + "_key").val(),
                         $dlg.data("adding_value") ?
-                            $(id + "value").val() : undefined);
+                            $(id + "_value").val() : undefined);
                     return false;
                 });
         });
 
-        $(id + "path").text(ST.get_path($parent).join(" > ") + " > ");
+        $(id + "_path").text(ST.get_path($parent).join(" > ") + " > ");
         if (is_value) {
             $dlg.attr("title", TX.tx("Add value"));
-            $(id + "help").text(TX.tx(
+            $(id + "_help").text(TX.tx(
                 "Enter the name and value for the new entry"));
-            $(id + "value_parts").show();
-            $(id + "key").autocomplete("enable");
+            $(id + "_value_parts").show();
+            $(id + "_key").autocomplete("enable");
         } else {
             $dlg.attr("title", TX.tx("Add folder"));
-            $(id + "help").text(TX.tx(
+            $(id + "_help").text(TX.tx(
                 "Enter the name for the new folder"));
-            $(id + "value_parts").hide();
-            $(id + "key").autocomplete("disable");
+            $(id + "_value_parts").hide();
+            $(id + "_key").autocomplete("disable");
         }
 
-        validate($(id + "key"));
+        validate_unique($parent, $(id + "_key"));
 
         SD.open_dialog($dlg);
     };
@@ -754,8 +786,8 @@
         if ($dlg.hasClass("dlg-initialised"))
             return;
         $dlg.addClass("dlg-initialised");
-        var id = "#" + $dlg.attr("id") + "_";
-        $(id + "cancel")
+        var id = "#" + $dlg.attr("id");
+        $(id + "_cancel")
             .button()
             .on($.getTapEvent(), function() {
                 $dlg.dialog("close");
@@ -777,7 +809,7 @@
                 at: "left top",
                 of: $("body")
             }
-        };
+        }
         if (opts)
             $.extend(options, opts);
         
@@ -805,9 +837,9 @@
 
         var called_back = false;
         SD.init_dialog($dlg, function($dlg, id) {
-            $(id + "close")
+            $(id + "_close")
                 .button()
-                .on($.getTapEvent(), function(e) {
+                .on($.getTapEvent(), function() {
                     var ac = $dlg.data("after_close");
                     $dlg.removeData("after_close");
                     $dlg.dialog("close");

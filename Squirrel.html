@@ -18,6 +18,9 @@
     <script src="//code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery.ui-contextmenu/1.18.1/jquery.ui-contextmenu.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-touch-events/1.0.9/jquery.mobile-events.min.js"></script>
+
+    <!-- ZeroClipboard doesn't zork when served from CDN -->
+    <script class="compressable" src="libs/ZeroClipboard.js"></script>
     
     <script class="compressable" src="libs/aes.js"></script>
     <script class="compressable" src="js/Utils.js"></script>
@@ -31,12 +34,11 @@
 
     <script class="compressable" src="js/edit_in_place.js"></script>
     <script class="compressable" src="js/scroll_into_view.js"></script>
-    <script class="compressable" src="libs/ZeroClipboard.js",></script>
     <script class="compressable" src="js/Squirrel.js"></script>
     <script class="compressable" src="js/Tree.js",></script>
     <script class="compressable" src="js/Dialogs.js"></script>
 
-    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/redmond/jquery-ui.css">
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
     <link rel="stylesheet" class="compressable" href="css/Icons.css" />
     <link rel="stylesheet" class="compressable" href="css/Tree.css" />
     <link rel="stylesheet" class="compressable" href="css/Dialogs.css" />
@@ -69,7 +71,9 @@
         </div>
       </div>
     </div>
-    
+
+    <!-- Clipboard -->
+    <div id="zc_clipboard"></div>
     <!-- Dialogs -->    
     <div id="extras" class="dlg-dialog TX_title dlg-hidden" title="Extras">
       <div id="extras_logo"></div>
@@ -223,18 +227,35 @@
       </div>
     </div>
     
-    <div id="add" class="dlg-dialog dlg-hidden">
-      <p id ="add_help"></p>
-      <span id="add_path"></span>
-      <input id="add_key" type="text" value="" />
-      <div id="add_value_parts">
-        Value:
-        <input id="add_value" type="text" value="" title="Enter value"/>
-      </div>
+    <div id="insert" class="dlg-dialog dlg-hidden TX_title" title="Insert copy">
+      <p class="TX_text">Insert copy from clipboard</p>
       <p>
-        <button id="add_ok" class="TX_text TX_title" title="Add new entry" >OK</button>
-        <button id="add_cancel" class="TX_text TX_title" title="Cancel add">Cancel</button>
+        <span class="TX_text">New name:</span>
+        <input id="insert_key" type="text" value="" />
       </p>
+      <button id="insert_ok" class="TX_text TX_title" title="Insert copy" >OK</button>
+      <button id="insert_cancel" class="TX_text TX_title" title="Cancel insert">Cancel</button>
+    </div>
+    
+    <div id="add" class="dlg-dialog dlg-hidden TX_title" title="Add">
+      <p id ="add_help"></p>
+      <table>
+        <tbody>
+          <tr>
+            <td id="add_path"></td>
+            <td>
+              <input id="add_key" type="text" value="" />
+            </td>
+          </tr>
+          <tr id="add_value_parts">
+            <th class="TX-text">Value:</th>
+            <td>
+              <input id="add_value" type="text" value="" title="Enter value"/>
+            </td>
+          </tr>
+      </table>
+      <button id="add_ok" class="TX_text TX_title" title="Add new entry" >OK</button>
+      <button id="add_cancel" class="TX_text TX_title" title="Cancel add">Cancel</button>
     </div>
 
     <div id="pick" class="dlg-dialog TX_title dlg-hidden" title="Pick characters">

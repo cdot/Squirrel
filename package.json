@@ -2,6 +2,7 @@
     "name": "Squirrel",
     "version": "0.0.1",
     "eslintConfig": {
+        "extends": "eslint:recommended",
         "parserOptions": {
             "ecmaVersion": 6
         },

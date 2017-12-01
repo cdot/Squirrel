@@ -7,6 +7,7 @@
 
 /**
  * A store using Dropbox
+ * requires //cdnjs.cloudflare.com/ajax/libs/dropbox.js/2.5.12/Dropbox-sdk.min.js or equivalent
  * @implements AbstractStore
  */
 const APP_KEY = "37tzcd7ezkaqovy";

@@ -25,6 +25,10 @@ input {
     margin: 0.3em 0 0 0;
 }
 
+.menu-hover {
+    background-color: blue;
+}
+
 /* Disable text selection
 See
 https://stackoverflow.com/questions/826782/how-to-disable-text-selection-highlighting-using-css
