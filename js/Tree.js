@@ -118,7 +118,7 @@
 
         if (!is_root) {
             var $info = $("<div></div>")
-                .addClass("tree-info")
+                .addClass("tree-info noselect")
                 .appendTo($node);
 
             // Create the key span

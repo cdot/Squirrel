@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <!-- meta name="cache-control" content="public">
     <meta name="expires" content="Wed, 1 Jan 2025 12:00:00 GMT" -->
+    <!-- for ios 7 style, multi-resolution icon of 152x152 -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-barstyle" content="black-translucent">
+    <link rel="apple-touch-icon" href="images/squirrel.svg">
+    <!-- for Chrome on Android, multi-resolution icon of 196x196 -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="shortcut icon" sizes="196x196" href="images/squirrel.svg">
     <title>Squirrel</title>
     <link rel="icon" href="images/favicon.ico" type="image/x-icon" />
 
@@ -58,7 +65,7 @@
       </div>
       <div id="sites-div">
         <div id="sites-node">
-          <h3 class="TX_text">Sites</h3>
+          <h1 class="TX_text noselect tree-info">Sites</h1>
         </div>
       </div>
     </div>
@@ -95,15 +102,15 @@
       <table width="100%">
         <tbody>
           <tr id="login_uReq">
-	    <td class="TX_text">Username:</td>
+	    <td class="TX_text">User:</td>
 	    <td>
-	      <input size="50" id="login_user" value="" class="TX_title" title="Enter username" />
+	      <input size="25" id="login_user" value="" class="TX_title" title="Enter username" />
 	    </td>
           </tr>
           <tr id="login_pReq">
-	    <td class="TX_text">Password:</td>
+	    <td class="TX_text">Pass:</td>
 	    <td>
-	      <input type="password" size="50" id="login_pass" class="TX_title" title="Enter password" value="" />
+	      <input type="password" size="25" id="login_pass" class="TX_title" title="Enter password" value="" />
 	    </td>
           </tr>
         </tbody>

@@ -682,29 +682,38 @@
         $dlg.data("adding_value", is_value);
         var $ul = $parent.find("ul:first");
 
+        // Disable OK if key value exists or is invalid
+        function validate($input) {
+            var enabled = true;
+            var val = $input.val();
+
+            if (!/\S/.test(val)) // empty?
+                enabled = false;
+            else {
+                $ul.children(".tree-node").each(function() {
+                    if (ST.compare($(this).data("key"), val) == 0) {
+                        enabled = false;
+                        return false;
+                    }
+                });
+            }
+            
+            if (enabled) {
+                $(id + "ok").button("enable");
+                $(id + "key")
+                    .removeClass("dlg-disabled")
+                    .attr("title", TX.tx("Enter new name"));
+            } else {
+                $(id + "ok").button("disable");
+                $(id + "key")
+                    .addClass("dlg-disabled")
+                    .attr("title", TX.tx("Name is already in use"));
+            }
+        }
+
         SD.init_dialog($dlg, function($dlg, id) {
             $(id + "key")
-                .on("input", function() {
-                    var enabled = true;
-                    var val = $(this).val();
-                    $ul.children(".tree-node").each(function() {
-                        if (ST.compare($(this).data("key"), val) == 0) {
-                            enabled = false;
-                            return false;
-                        }
-                    });
-                    if (enabled) {
-                        $(id + "ok").button("enable");
-                        $(id + "key")
-                            .removeClass("dlg-disabled")
-                            .attr("title", TX.tx("Enter new name"));
-                    } else {
-                        $(id + "ok").button("disable");
-                        $(id + "key")
-                            .addClass("dlg-disabled")
-                            .attr("title", TX.tx("Name is already in use"));
-                    }
-                })
+                .on("input", function() { validate($(this)); })
                 .autocomplete({ source: [
                     TX.tx("User"), TX.tx("Pass") ]});
 
@@ -735,7 +744,9 @@
             $(id + "value_parts").hide();
             $(id + "key").autocomplete("disable");
         }
-        
+
+        validate($(id + "key"));
+
         SD.open_dialog($dlg);
     };
     
@@ -754,12 +765,23 @@
             extra($dlg, id);
     };
 
-    SD.open_dialog = function($dlg) {
-        $dlg.dialog({
+    SD.open_dialog = function($dlg, opts) {
+        var options = {
             modal: true,
             width: "auto",
             closeOnEscape: false
-        });
+        };
+        if ($.isTouchCapable()) {
+            options.position = {
+                my: "left top",
+                at: "left top",
+                of: $("body")
+            }
+        };
+        if (opts)
+            $.extend(options, opts);
+        
+        $dlg.dialog(options);
     };
 
     SD.close_dialog = function($dlg) {
@@ -782,8 +804,8 @@
         $dlg.data("after_close", p.after_close);
 
         var called_back = false;
-        if ($dlg.hasClass("dlg-hidden")) {
-            $("#squeak_close")
+        SD.init_dialog($dlg, function($dlg, id) {
+            $(id + "close")
                 .button()
                 .on($.getTapEvent(), function(e) {
                     var ac = $dlg.data("after_close");
@@ -793,14 +815,12 @@
                         ac();
                     return false;
                 });
-            $dlg.removeClass("dlg-hidden");
-        }
+        });
 
         $("#squeak_message").empty();
         SD.squeak_more(p);
 
         var options = {
-            modal: true,
             close: function() {
                 if (!called_back) {
                     if (typeof p.after_close === "function")
@@ -810,7 +830,7 @@
         };
         if (p.title)
             options.title = p.title;
-
-        $dlg.dialog(options);
+        
+        SD.open_dialog($dlg, options);
     };
 })(jQuery, Squirrel);

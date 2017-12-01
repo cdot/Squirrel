@@ -158,15 +158,17 @@ Hoard.prototype.record_action = function(e, listener, no_push) {
     };
 
     var parent = locateParent(e.path, this.cache);
-    if (!parent)
-        return c("'" + e.path.join("/") + "' "
-                 + TX.tx("does not exist"));
+    if (!parent) {
+        if (this.cache) {
+            return c("'" + e.path.join("/") + "' "
+                     + TX.tx("parent not found"));
+        } else {
+            parent = this.cache = { data: {} };
+        }
+    }
 
     var name = e.path[e.path.length - 1];
     var node = parent.data[name];
-    
-    if (!parent)
-        parent = this.cache = { data: {} };
 
     switch (e.type) {
     case "N": // New

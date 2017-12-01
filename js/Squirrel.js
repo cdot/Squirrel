@@ -41,6 +41,13 @@ var Squirrel = {
     var SD = S.Dialog;
     var ST = S.Tree;
 
+    if ($.isTouchCapable()) {
+        // Go full screen
+        window.addEventListener("load", function() {
+            window. scrollTo(0, 0);
+        });
+    }
+
     S.init_ui = function() {
         $("#authenticated_save")
             .hide()
@@ -1016,6 +1023,15 @@ var Squirrel = {
                 });
             });
             //$(this).tooltip();
+
+/*
+            if ($.isTouchCapable()) {
+                // mobile device; though shouldn't we determine the size?
+                // window.screen.width, window.screen.height
+                console.log("Device is " + window.screen.width + " X " +
+                            window.screen.height);
+            }
+*/
         });
 
         S.authenticated = function() {
@@ -1101,7 +1117,7 @@ var Squirrel = {
     /**
      * Handler for context menu items
      */
-    var handle_choice = function(e, ui) {
+    var handle_menu_choice = function(e, ui) {
 
         var $node = ui.target.closest(".tree-node");
 
@@ -1170,7 +1186,7 @@ var Squirrel = {
 
     var init_menus = function() {
         var menu = {
-            delegate: ".tree-node",
+            delegate: ".tree-info",
             menu: [
                 {
                     title: TX.tx("Copy value"),
@@ -1228,22 +1244,14 @@ var Squirrel = {
                     uiIcon: "ui-icon-squirrel-delete" 
                 }
             ],
+            preventContextMenuForPopup: true,
+            preventSelect: true,
+            taphold: true,
             beforeOpen: before_open,
-            select: handle_choice
+            select: handle_menu_choice
         };
 
         $("body").contextmenu(menu);
-
-        if ($.isTouchCapable()) {
-            // Touch device
-            $("body").on("taphold", function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                $(document).trigger("contextmenu");
-            });
-        }
-            
-
     };
 
 })(jQuery, Squirrel);

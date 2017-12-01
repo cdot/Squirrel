@@ -5,17 +5,19 @@ JS_SOURCES := $(patsubst %.min.%,,$(wildcard js/*.js libs/*.js))
 JS_TESTS := $(wildcard js/test/*.js test/*.js)
 CSS_SOURCES := $(patsubst %.min.%,,$(wildcard css/*.css))
 HTML_SOURCES := Squirrel.html
-MIN := $(subst %.,%.min,$(JS_SOURCES) $(CSS_SOURCES) $(HTML_SOURCES))
+MIN :=  $(patsubst %.js,%.min.js,$(JS_SOURCES)) \
+	$(patsubst %.css,%.min.css,$(CSS_SOURCES)) \
+	$(patsubst %.html,%.min.html,$(HTML_SOURCES))
 MAP := $(subst .js,.map,$(JS_SOURCES))
 LINT := $(subst .js,.esl,$(JS_SOURCES))
 
 debug:
-	echo $(JS_SOURCES)
-	echo $(CSS_SOURCES)
-	echo $(HTML_SOURCES)
-	echo $(MIN)
-	echo $(MAP)
-	echo $(LINT)
+	echo JS_SOURCES $(JS_SOURCES)
+	echo CSS_SOURCES $(CSS_SOURCES)
+	echo HTML_SOURCES $(HTML_SOURCES)
+	echo MIN $(MIN)
+	echo MAP $(MAP)
+	echo LINT $(LINT)
 
 %.map %.min.js : %.js
 	uglifyjs \
