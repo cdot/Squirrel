@@ -13,10 +13,7 @@
 /* global SQUIRREL_STORE */
 
 /*
- * The Squirrel Application namespace and UI. The code in this module is
- * common to all environments and is expected to be extended by functions
- * in the individual Squireel.uncompressed.js modules specific to the
- * environment e.g. desktop/Squirrel.uncompressed.js
+ * The Squirrel Application namespace and UI.
  */
 
 var Squirrel = {
@@ -200,7 +197,7 @@ var Squirrel = {
                             try {
                                 var a = new RGBA(rule.style.color);
                                 s += "color: " +
-                                    a.inverse().unparse() + ";"
+                                    a.inverse().toString() + ";"
                             } catch (e) {
                             }
                         }
@@ -209,7 +206,7 @@ var Squirrel = {
                                 var a = new RGBA(
                                     rule.style.backgroundColor);
                                 s += "background-color: " +
-                                    a.inverse().unparse() + ";"
+                                    a.inverse().toString() + ";"
                             } catch (e) {
                             }
                         }
@@ -992,7 +989,7 @@ var Squirrel = {
             var qs = Utils.query_string();
 
             // Use uncompressed if the current document is uncompressed
-            var unco = document.location.href.match(/\.(min|uncompressed)\.html/)[1] === "uncompressed";
+            var unco = !/\.min\.html/.test(document.location.href);
 
             if (qs.debug)
                 DEBUG = true;
@@ -1236,6 +1233,17 @@ var Squirrel = {
         };
 
         $("body").contextmenu(menu);
+
+        if ($.isTouchCapable()) {
+            // Touch device
+            $("body").on("taphold", function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                $(document).trigger("contextmenu");
+            });
+        }
+            
+
     };
 
 })(jQuery, Squirrel);

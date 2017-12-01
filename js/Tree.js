@@ -120,7 +120,7 @@
             var $info = $("<div></div>")
                 .addClass("tree-info")
                 .appendTo($node);
-            
+
             // Create the key span
             $("<span></span>")
                 .appendTo($info)
