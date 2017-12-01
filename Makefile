@@ -1,9 +1,9 @@
 # Copyright (C) 2015 Crawford Currie http://c-dot.co.uk / MIT
 FIND := find . -name 'jquery*' -prune -o -name
 
-JS_SOURCES := $(patsubst %.min.%,,$(wildcard js/*.js libs/*.js))
+JS_SOURCES := $(patsubst %.min.js,,$(wildcard js/*.js libs/*.js))
 JS_TESTS := $(wildcard js/test/*.js test/*.js)
-CSS_SOURCES := $(patsubst %.min.%,,$(wildcard css/*.css))
+CSS_SOURCES := $(patsubst %.min.css,,$(wildcard css/*.css))
 HTML_SOURCES := Squirrel.html
 MIN :=  $(patsubst %.js,%.min.js,$(JS_SOURCES)) \
 	$(patsubst %.css,%.min.css,$(CSS_SOURCES)) \
