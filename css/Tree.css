@@ -1,13 +1,26 @@
+/* All nodes in a tree */
 .tree-node {}
-.tree-root {}
-.tree-collection {}
-.tree-open {}
 
+/* Just the root node */
+.tree-root {}
+
+/* On a tree-node, if it's a folder */
+.tree-collection {}
+
+/* On a tree-node, if it's a value */
+.tree-leaf {}
+
+/* Wrapper around the tree-open-close and tree-info */
+.tree-title {}
+
+/* The UL that contains all the child nodes under a collection */
 .tree-subnodes {
     list-style-type: none;
     -webkit-padding-start: 0;
+    -webkit-margin-before: 0;
 }
 
+/* One entry in that list */
 .tree-subnodes li {
     padding-left: 1em;
 }
@@ -16,6 +29,8 @@
     margin-left: 4em;
     float: right;
 }
+
+.tree-open {}
 
 .tree-hover {}
 
@@ -41,9 +56,6 @@ button .tree-alarm {
 
 .tree-info {
     display: inline-block;
-}
-
-.tree-leaf {
 }
 
 .tree-open-close {

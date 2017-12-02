@@ -136,13 +136,14 @@
      * Confirm deletion of a node
      */
     SD.delete_node = function($node) {
-        var $dlg = $("#delete_node");
+        var id = "#delete_node";
+        var $dlg = $(id);
         $dlg.data("node", $node);
 
         SD.init_dialog(
             $dlg,
             function($dlg, id) {
-                $(id + "ok").on($.getTapEvent(), function() {
+                $(id + "_ok").on($.getTapEvent(), function() {
                     SD.close_dialog($dlg);
                     var res = S.client.hoard.record_action(
                         {
@@ -166,15 +167,15 @@
                     }
                     return true;
                 });
-                $("#delete_node_cancel").on($.getTapEvent(), function() {
+                $(id + "_cancel").on($.getTapEvent(), function() {
                     SD.close_dialog($dlg);
                     return false;
                 });
             });
 
-        $("#delete_node_path").text(
+        $(id + "_path").text(
             ST.get_path($node).join("/"));
-        $("#delete_node_coll").toggle(!$node.hasClass("tree-leaf"));
+        $(id + "_coll").toggle(!$node.hasClass("tree-leaf"));
         
         SD.open_dialog($dlg);
     };
@@ -701,7 +702,7 @@
                 .addClass("dlg-disabled")
                 .attr("title", TX.tx("Name is already in use"));
         }
-    };
+    }
     
     SD.insert = function($parent, data) {
         var id = "#insert";
@@ -741,7 +742,6 @@
 
         $dlg.data("parent", $parent);
         $dlg.data("adding_value", is_value);
-        var $ul = $parent.find("ul:first");
 
         SD.init_dialog($dlg, function($dlg, id) {
             $(id + "_key")

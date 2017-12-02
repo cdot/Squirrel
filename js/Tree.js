@@ -86,40 +86,45 @@
 
         if (is_root) {
             ST.cache[""] = $node;
-            $node.addClass("tree-root");
+            $node.addClass("tree-root tree-title");
             $node.data("path", "");
         }
-        else if (typeof options.value !== "undefined"
-                 && options.value !== null) {
-
-            $node
-                .data("value", options.value)
-                .data("is_leaf", true)
-                .addClass("tree-leaf");
-            is_leaf = true;
-        }
-        else { 
-            // Add open/close button on running nodes, except the root
-            // which is always open
-            var $control = $("<button></button>")
-                .addClass("tree-open-close");
-            $node
-                .prepend($control)
-                .addClass("tree-open");
-            ST.icon_button($node,
-                           "create",
-                           $control,
-                           "folder-closed",
-                           function() {
-                               ST.toggle($node);
-                               return false;
-                           });
-        }
-
-        if (!is_root) {
-            var $info = $("<div></div>")
-                .addClass("tree-info noselect")
+        else {
+            var $title = $("<div></div>")
+                .addClass("tree-title")
                 .appendTo($node);
+            $title.on("paste", function(e) {
+                debugger;
+            });
+            
+            if (typeof options.value !== "undefined"
+                && options.value !== null) {
+
+                $node
+                    .data("value", options.value)
+                    .data("is_leaf", true)
+                    .addClass("tree-leaf");
+                is_leaf = true;
+            }
+            else { 
+                // Add open/close button on running nodes, except the root
+                // which is always open
+                var $control = $("<button></button>")
+                    .addClass("tree-open-close");
+                $title.prepend($control);
+                $node.addClass("tree-open");
+                ST.icon_button("create",
+                               $control,
+                               "folder-closed",
+                               function() {
+                                   ST.toggle($node);
+                                   return false;
+                               });
+            }
+
+            var $info = $("<div></div>")
+                .addClass("tree-info")
+                .appendTo($title);
 
             // Create the key span
             $("<span></span>")
@@ -214,10 +219,7 @@
      * @param on_click may be a function to handle click events,
      * and is only used when action is "create".
      */
-    ST.icon_button = function($node, action, selector, icon, on_click) {
-        var $control = (typeof selector === "string") ?
-            $node.find(selector) : selector;
-
+    ST.icon_button = function(action, $control, icon, on_click) {
         switch (action) {
         case "create":
             var $button = $control.button({
@@ -242,7 +244,6 @@
             $control.remove();
             break;
         }
-        return $node;
     };
     
     /**
@@ -290,8 +291,7 @@
                 .first()
                 .before($button);
 
-            ST.icon_button($node,
-                           "create",
+            ST.icon_button("create",
                            $button,
                            "alarm",
                            function() {
@@ -319,7 +319,7 @@
                 $(this).removeClass("tree-has-alarms");
         });
 
-        ST.icon_button($node, "destroy", ".tree-alarm:first");
+        ST.icon_button("destroy", $node.find(".tree-alarm").first());
         
         return $node.removeData("alarm");
     };
@@ -496,8 +496,8 @@
     ST.open = function($node) {
         if ($node.hasClass("tree-open"))
             return $node;
-        ST.icon_button($node, "change",
-                       ".tree-open-close:first", "folder-open");
+        ST.icon_button(
+            "change", $node.find(".tree-open-close").first(), "folder-open");
         return $node
             .addClass("tree-open")
             .children(".tree-subnodes")
@@ -508,8 +508,8 @@
     ST.close = function($node) {
         if (!$node.hasClass("tree-open"))
             return $node;
-        ST.icon_button($node, "change",
-                       ".tree-open-close:first", "folder-closed");
+        ST.icon_button(
+            "change", $node.find(".tree-open-close").first(), "folder-closed");
         return $node
             .removeClass("tree-open")
             .children(".tree-subnodes")

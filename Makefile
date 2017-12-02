@@ -9,7 +9,7 @@ MIN :=  $(patsubst %.js,%.min.js,$(JS_SOURCES)) \
 	$(patsubst %.css,%.min.css,$(CSS_SOURCES)) \
 	$(patsubst %.html,%.min.html,$(HTML_SOURCES))
 MAP := $(subst .js,.map,$(JS_SOURCES))
-LINT := $(subst .js,.esl,$(JS_SOURCES))
+LINT := $(subst .js,.esl,$(patsubst %.min.js,,$(wildcard js/*.js)))
 
 debug:
 	echo JS_SOURCES $(JS_SOURCES)

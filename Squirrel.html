@@ -10,6 +10,8 @@
     <link rel="apple-touch-icon" href="images/squirrel.svg">
     <!-- for Chrome on Android, multi-resolution icon of 196x196 -->
     <meta name="mobile-web-app-capable" content="yes">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <link rel="shortcut icon" sizes="196x196" href="images/squirrel.svg">
     <title>Squirrel</title>
     <link rel="icon" href="images/favicon.ico" type="image/x-icon" />
@@ -19,9 +21,11 @@
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery.ui-contextmenu/1.18.1/jquery.ui-contextmenu.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-touch-events/1.0.9/jquery.mobile-events.min.js"></script>
 
-    <!-- ZeroClipboard doesn't zork when served from CDN -->
+    <!-- ZeroClipboard doesn't work when served from CDN
     <script class="compressable" src="libs/ZeroClipboard.js"></script>
-    
+    <script class="compressable" src="js/ZeroClipboardShim.js"></script-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.7.1/clipboard.min.js"></script>
+
     <script class="compressable" src="libs/aes.js"></script>
     <script class="compressable" src="js/Utils.js"></script>
     <script class="compressable" src="js/RGBA.js"></script>
@@ -58,7 +62,7 @@
 
       <span id="search_hits"></span>
       <div id="signed_in">
-        <span class="TX_text">Signed in as: </span><span id="whoami"></span>
+        <span id="whoami"></span>
       </div>
       <button id="authenticated_extras" class="TX_title TX_text" title="Tools/Options" data-icon="ui-icon-squirrel-gear"></button>
       <div id="toolbar">
@@ -67,13 +71,13 @@
       </div>
       <div id="sites-div">
         <div id="sites-node">
-          <h1 class="TX_text noselect tree-info">Sites</h1>
+          <h1 class="TX_text noselect tree-info">Squirrel</h1>
         </div>
       </div>
     </div>
 
-    <!-- Clipboard -->
-    <div id="zc_clipboard"></div>
+    <!--textarea id="pasteboard"></textarea-->
+
     <!-- Dialogs -->    
     <div id="extras" class="dlg-dialog TX_title dlg-hidden" title="Extras">
       <div id="extras_logo"></div>

@@ -26,6 +26,32 @@ Additional features include:
    - Export to, or import from, JSON
    - Implemented entirely in industry-standard HTML5 Javascript and jQuery
 
+## Getting started
+
+Getting started with Squirrel is as simple as visiting the web address of the
+site where the code is stored. We use the 'rawgit' site that shows the code currently checked into the git repository:
+
+https://cdn.rawgit.com/cdot/Squirrel/Squirrel.html?store=GoogleDriveStore
+
+but you are encouraged to make your own copy and host it on your own
+trusted server.
+
+You must select one of the store implementations - in the example above
+Google Drive is being used. You must be logged in to Google for this to work.
+Squirrel will prompt for the path to your store - this is simply the name of
+a file where encrypted data will be stored in the cloud.
+
+A Squirrel store is a hierarchical database, which contains *folders* and *values*. A folder can contain other folders and values. A value is simply a string value. Values are used to record important information such as usernames and passwords, which foolders are provided to help you organise all this information.
+
+When you first open a new store you will just see a search bar and the word "Squirrel". You add new folders by right-clicking (long press on mobile devices) on the "Squirrel" and selecting "Add new folder" from the pop-up menu. Enter a name for the folder, OK, and then click on the spot icon to the left of the name of the new folder to open it.
+
+Now right-click (or long press) on the name of the folder. You will see a pop-up menu. Select "Add new value" and enter the name and value.
+
+Double-click (or double-tap) on a name or a value to edit it. You can copy the
+value from inside the editor.
+
+And that's about it - you can find out the rest by experimenting.
+
 ## Security risks
 
 In the past browsers have often been highlighted as the source of security problems. As a result, modern browsers are under constant scrutiny and are very well designed. If used properly, they offer a very secure environment in which to run software.

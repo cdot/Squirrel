@@ -5,6 +5,10 @@
  * here if a dark background is detected.
  */
 
+html, body {
+    font-size: 20px;
+}
+
 input {
     font-family: "Courier New", Courier, monospace;
 }
