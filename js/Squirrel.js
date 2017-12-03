@@ -18,6 +18,7 @@
  * The Squirrel Application namespace and UI.
  */
 
+// Exports
 var Squirrel = {
     PATHSEP: String.fromCharCode(1), // separator used in Path->node mapping
 
@@ -26,28 +27,53 @@ var Squirrel = {
     NEW_SETTINGS: "has new settings",
     // TX.tx("is loaded")
     IS_LOADED: "is loaded",
-    // TX.tx("needs to be saved")
-    IS_PENDING_SAVE: "needs to be saved",
     // TX.tx("is corrupt")
     IS_CORRUPT: "is corrupt",
     // TX.tx("is empty")
-    IS_EMPTY: "is empty",
-
-    USE_STEGANOGRAPHY: false,
-    Dialog: {},
-    Tree: {},
-    // Internal clipboard
-    clipboard: undefined
+    IS_EMPTY: "is empty"
 };
 
 (function($, S) {
     "use strict";
-    var ST = S.Tree;
 
     // Functions that are private to this module are declared as
     // function name(). Exported functions are declared as
     // S.name = function()
     
+    // Internal clipboard
+    var clipboard;
+
+    // flag
+    var useSteganography = false;
+
+    // undo stack
+    var undos = [];
+
+    // Pointer to tree widget at root of DOM tree
+    var DOMtree;
+
+    // status may be one of IS_EMPTY, IS_CORRUPT, IS_LOADED or
+    // NEW_SETTINGS. If the status is anything but IS_LOADED
+    // then it is a candidate for saving.
+    var client = {
+        store: null,                 // The store used actively
+        hoard: null,                 // The hoard in that store
+        status: S.IS_EMPTY
+    };
+
+    var cloud = {
+        store: null,                 // Temporary memory used during load
+        status: S.IS_EMPTY
+    };
+    
+    // Special keys in sort ordering
+    var sort_prio = [
+        TX.tx("A new folder"),
+        TX.tx("A new value"),
+        TX.tx("User"),
+        TX.tx("Pass")
+    ];   
+
     function reset_styling() {
         // Copy subset of ui-widget styling into base by instantiating
         // a widget element then creating a new <style> with the required
@@ -139,12 +165,29 @@ var Squirrel = {
             Cookies.set('ui_theme', theme);
         }
     };
+    
+    /**
+     * Custom key comparison, such that these keys always bubble
+     * to the top of the keys
+     */
+    function compareKeys(a, b) {
+        if (a == b)
+            return 0;
+        for (var i = 0; i < sort_prio.length; i++) {
+            if (a == sort_prio[i])
+                return -1;
+            if (b == sort_prio[i])
+                return 1;
+        }
+        return (a < b) ? -1 : 1;
+    };
+
 
     // Event handler for check_alarms
     function check_alarms(/* event */) {
-        S.client.hoard.check_alarms(
+        client.hoard.check_alarms(
             function(path, expired, next) {
-                var $node = ST.getNodeFromPath(path);
+                var $node = DOMtree.getNodeFromPath(path);
                 $node.tree("ringAlarm");
                 $("#squeak").squirrelDialog("open",
                     {
@@ -163,9 +206,9 @@ var Squirrel = {
         // This will get triggered whenever both hoards are
         // successfully loaded.
         if (DEBUG) console.debug("Merging from cloud hoard");
-        S.client.hoard.merge_from_cloud(
+        client.hoard.merge_from_cloud(
             cloard,
-            ST.action,
+            DOMtree.action,
             function(conflicts) {
                 if (conflicts.length > 0) {
                     $("#squeak").squirrelDialog("open", {
@@ -182,7 +225,7 @@ var Squirrel = {
                                 + ": " + c.message });
                     });
                 }
-                S.cloud.status = S.IS_LOADED;
+                cloud.status = S.IS_LOADED;
                 // Finished with the cloud hoard (for now)
                 chain();
             });
@@ -208,17 +251,17 @@ var Squirrel = {
             message.push(TX.tx("... and $1 more change$?($1!=1,s,)", l - 5));
         }
 
-        if (S.cloud.status !== S.IS_LOADED) {
+        if (cloud.status !== S.IS_LOADED) {
             message.unshift(TX.tx("The $1 hoard $2",
-                                  S.cloud.store
-                                  ? S.cloud.store.options().identifier
+                                  cloud.store
+                                  ? cloud.store.options().identifier
                                   : TX.tx("Cloud"),
-                                  TX.tx(S.cloud.status)));
+                                  TX.tx(cloud.status)));
         }
-        if (S.client.status !== S.IS_LOADED) {
+        if (client.status !== S.IS_LOADED) {
             message.unshift(TX.tx("The $1 hoard $2",
-                                  S.client.store.options().identifier,
-                                  TX.tx(S.client.status)));
+                                  client.store.options().identifier,
+                                  TX.tx(client.status)));
         }
 
         if (message.length === 0)
@@ -239,8 +282,8 @@ var Squirrel = {
             if (DEBUG) console.debug("...save finished");
             Utils.sometime("update_save");
             if (client_ok && cloud_ok) {
-                if (S.client.hoard.options.autosave)
-                    $("#squeak").dialog("close");
+                if (client.hoard.options.autosave)
+                    $("#squeak").squirrelDialog("close");
                 else
                     // Otherwise leave it open
                     $("#squeak").squirrelDialog("squeakAdd", TX.tx("Save complete"));
@@ -250,18 +293,18 @@ var Squirrel = {
                 $("#squeak").squirrelDialog("squeakAdd", {
                     severity: "error",
                     message: TX.tx("Save encountered errors")});
-                S.client.hoard.options.autosave = false;
+                client.hoard.options.autosave = false;
             }
         }
 
         function write_client_store() {
-            S.client.store.writes(
-                "S." + S.client.store.user(),
-                JSON.stringify(S.client.hoard),
+            client.store.writes(
+                "S." + client.store.user(),
+                JSON.stringify(client.hoard),
                 function() {
                     if (DEBUG) console.debug("...client save OK");
                     $(".tree-modified").removeClass("tree-modified");
-                    S.client.status = S.IS_LOADED;
+                    client.status = S.IS_LOADED;
                     $("#squeak").squirrelDialog("squeakAdd", 
                         TX.tx("Saved in $1", this.options().identifier));
                     finished();
@@ -281,33 +324,33 @@ var Squirrel = {
         function save_client() {
             if (DEBUG) console.debug("...save to client");
 
-            if (S.client.status === S.IS_LOADED
+            if (client.status === S.IS_LOADED
                 && $(".tree-modified").length === 0) {
                 finished();
                 return;
             }
 
-            S.client.status = S.PENDING_SAVE;
+            client.status = S.PENDING_SAVE;
 
             $("#squeak").squirrelDialog("squeakAdd", {
                 severity: "while",
                 message: TX.tx("Saving in $1",
-                               S.client.store.options().identifier)});
+                               client.store.options().identifier)});
 
             Utils.soon(write_client_store);
         }
 
         function write_cloud_store(cloard) {
-            S.cloud.store.writes(
-                S.client.hoard.options.store_path,
+            cloud.store.writes(
+                client.hoard.options.store_path,
                 JSON.stringify(cloard),
                 function() {
                     if (DEBUG) console.debug("...cloud save OK");
-                    S.client.hoard.actions = [];
-                    S.client.hoard.last_sync = Date.now();
+                    client.hoard.actions = [];
+                    client.hoard.last_sync = Date.now();
                     $("#squeak").squirrelDialog("squeakAdd", 
                         TX.tx("Saved in $1", this.options().identifier));
-                    S.cloud.status = S.IS_LOADED;
+                    cloud.status = S.IS_LOADED;
                     save_client();
                 },
                 function(e) {
@@ -323,16 +366,16 @@ var Squirrel = {
 
         // Save the given hoard into the cloud.
         function update_cloud_store(cloard) {
-            cloard.actions = cloard.actions.concat(S.client.hoard.actions);
-            if (S.cloud.store) {
+            cloard.actions = cloard.actions.concat(client.hoard.actions);
+            if (cloud.store) {
                 if (DEBUG) console.debug("...save to cloud");
 
                 $("#squeak").squirrelDialog("squeakAdd", {
                     severity: "while",
                     message: TX.tx("Saving in $1",
-                                   S.cloud.store.options().identifier)});
+                                   cloud.store.options().identifier)});
 
-                S.cloud.status = S.PENDING_SAVE;
+                cloud.status = S.PENDING_SAVE;
 
                 Utils.soon(function() { write_cloud_store(cloard); });
             } else {
@@ -347,7 +390,7 @@ var Squirrel = {
         function construct_new_cloud() {
             if (DEBUG) console.debug("...construct cloud ");
             var cloard = new Hoard();
-            S.client.hoard.reconstruct_actions(
+            client.hoard.reconstruct_actions(
                 function(a, next) {
                     cloard.actions.push({
                         type: a.type,
@@ -369,7 +412,7 @@ var Squirrel = {
             if (DEBUG) console.debug("...cloud read OK ");
             try {
                 cloard = new Hoard(JSON.parse(data));
-                S.cloud.status = S.IS_LOADED;
+                cloud.status = S.IS_LOADED;
             } catch (e) {
                 // We'll get here if decryption failed....
                 if (DEBUG) console.debug("Cloud hoard JSON parse failed: " + e);
@@ -377,20 +420,20 @@ var Squirrel = {
                     severity: "error",
                     message: TX.tx("$1 hoard can't be read for update",
                                    this.options().identifier)});
-                S.cloud.status = S.IS_CORRUPT;
+                cloud.status = S.IS_CORRUPT;
                 cloud_ok = false;
                 construct_new_cloud();
                 return;
             }
             
-            if (S.cloud.status === S.IS_LOADED) {
+            if (cloud.status === S.IS_LOADED) {
                 if (DEBUG) console.debug("...merge cloud ");
-                S.client.hoard.merge_from_cloud(
-                    cloard, ST.action);
+                client.hoard.merge_from_cloud(
+                    cloard, DOMtree.action);
             }
             
-            if ( S.cloud.status !== S.IS_LOADED
-                 || S.client.hoard.actions.length !== 0) {
+            if ( cloud.status !== S.IS_LOADED
+                 || client.hoard.actions.length !== 0) {
                 // Only save if there actually some changes
                 if (DEBUG) console.debug("...update from cloud ");
                 update_cloud_store(cloard);
@@ -403,7 +446,7 @@ var Squirrel = {
             if (DEBUG) console.debug("...cloud read failed " + e);
             if (e === AbstractStore.NODATA) {
                 if (DEBUG) console.debug(this.options().identifier + " contains NODATA");
-                S.cloud.status = S.IS_EMPTY;
+                cloud.status = S.IS_EMPTY;
                 construct_new_cloud();
             } else {
                 $("#squeak").squirrelDialog("squeakAdd", {
@@ -415,10 +458,10 @@ var Squirrel = {
             }
         }
 
-        if (DEBUG) console.debug("Saving; client " + S.client.status
-                                 + "; cloud " + S.cloud.status);
-        if (S.cloud.status === S.NEW_SETTINGS
-            || S.cloud.status === S.IS_EMPTY) {
+        if (DEBUG) console.debug("Saving; client " + client.status
+                                 + "; cloud " + cloud.status);
+        if (cloud.status === S.NEW_SETTINGS
+            || cloud.status === S.IS_EMPTY) {
             // Don't attempt to resync out before saving, simply
             // overwrite the cloud.
             if (DEBUG) console.debug("...constructing new cloud because settings");
@@ -426,22 +469,22 @@ var Squirrel = {
         } else {
             // Reload and save the cloud hoard
             if (DEBUG) console.debug("...reloading cloud");
-            S.cloud.store.reads(
-                S.client.hoard.options.store_path,
+            cloud.store.reads(
+                client.hoard.options.store_path,
                 cloud_store_read_ok,
                 cloud_store_read_failed);
         }
     }
 
     function update_save(/*event*/) {
-        $("#authenticated_undo").toggle(ST.can_undo());
+        $("#authenticated_undo").toggle(S.can_undo());
         $("#extras").squirrelDialog("get", "autosave").val(
-            S.client.hoard.options.autosave ? "on" : "off");
+            client.hoard.options.autosave ? "on" : "off");
         var us = unsaved_changes(3);
         var $sb = $("#authenticated_save");
 
         if (us !== null) {
-            if (S.client.hoard.options.autosave) {
+            if (client.hoard.options.autosave) {
                 save_hoards();
             } else {
                 $sb.attr(
@@ -456,7 +499,7 @@ var Squirrel = {
 
     // Final step before allowing interaction
     function step_8_authenticated() {
-        $("#whoami").text(S.client.store.user());
+        $("#whoami").text(client.store.user());
         $("#unauthenticated").hide();
         $("#authenticated").show();
 
@@ -488,11 +531,11 @@ var Squirrel = {
      *  Try and synch it from the cloud.
      */
     function step_6_load_cloud_hoard() {
-        if (S.cloud.store) {
+        if (cloud.store) {
             if (DEBUG) console.debug(
-                "Reading cloud " + S.cloud.store.options().identifier);
-            S.cloud.store.reads(
-                S.client.hoard.options.store_path,
+                "Reading cloud " + cloud.store.options().identifier);
+            cloud.store.reads(
+                client.hoard.options.store_path,
                 function(data) {
                     var hoard;
                     if (DEBUG) console.debug(this.options().identifier + " is ready");
@@ -509,7 +552,7 @@ var Squirrel = {
                                 + " "
                                 + TX.tx("Check that you have the correct password.")
                         });
-                        S.cloud.status = S.IS_CORRUPT;
+                        cloud.status = S.IS_CORRUPT;
                         Utils.soon(step_7_hoards_loaded);
                         return;
                     }
@@ -520,7 +563,7 @@ var Squirrel = {
                     if (e === AbstractStore.NODATA) {
                         if (DEBUG) console.debug(
                             this.options().identifier + " contains NODATA");
-                        S.cloud.status = S.IS_EMPTY;
+                        cloud.status = S.IS_EMPTY;
                     } else {
                         if (DEBUG) console.debug(
                             this.options().identifier + " has NODATA: " + e);
@@ -546,10 +589,10 @@ var Squirrel = {
      */
     function step_5_init_client_hoard() {
         if (DEBUG) console.debug("Setting up client hoard");
-        S.client.hoard = new Hoard();
-        S.client.status = S.IS_EMPTY;
+        client.hoard = new Hoard();
+        client.status = S.IS_EMPTY;
 
-        if (S.cloud.store && S.cloud.store.options().needs_path) {
+        if (cloud.store && cloud.store.options().needs_path) {
             $("#store_settings").squirrelDialog("open", step_6_load_cloud_hoard);
         } else {
             step_6_load_cloud_hoard();
@@ -565,9 +608,9 @@ var Squirrel = {
     function step_4_load_client_hoard() {
         function rebuild_hoard() {
             if (DEBUG) console.debug("Reconstructing UI tree from cache");
-            S.client.hoard.reconstruct_actions(
+            client.hoard.reconstruct_actions(
                 function(a, next) {
-                    ST.action(a, false, next);
+                    DOMtree.action(a, false, next);
                 },
                 function() { // on complete
                     // Reset the UI modification list; we just loaded the
@@ -576,11 +619,11 @@ var Squirrel = {
                     // Mark all the nodes in the pending actions list as
                     // modified. If a node isn't found, back up the tree
                     // until we find a parent that does exist and mark it.
-                    var as = S.client.hoard.actions, i, p, $node;
+                    var as = client.hoard.actions, i, p, $node;
                     for (i = 0; i < as.length; i++) {
                         p = as[i].path.slice();
                         while (p.length > 0) {
-                            $node = ST.getNodeFromPath(p);
+                            $node = DOMtree.getNodeFromPath(p);
                             if ($node) {
                                 $node.addClass("tree-modified");
                                 break;
@@ -594,12 +637,12 @@ var Squirrel = {
 
         if (DEBUG) console.debug("Load client store");
 
-        S.client.store.reads(
-            "S." + S.client.store.user(),
+        client.store.reads(
+            "S." + client.store.user(),
             function(data) {
                 try {
-                    S.client.hoard = new Hoard(JSON.parse(data));
-                    S.client.status = S.IS_LOADED;
+                    client.hoard = new Hoard(JSON.parse(data));
+                    client.status = S.IS_LOADED;
                 } catch (e) {
                     if (DEBUG) console.debug("Caught " + e);
                     $("#squeak").squirrelDialog("open", {
@@ -618,11 +661,11 @@ var Squirrel = {
                     return;
                 }
                 // Make sure we have a store path
-                if ((S.client.store
-                     && S.client.store.options().needs_path
-                     || S.cloud.store
-                     && S.cloud.store.options().needs_path)
-                    && !S.client.hoard.options.store_path) {
+                if ((client.store
+                     && client.store.options().needs_path
+                     || cloud.store
+                     && cloud.store.options().needs_path)
+                    && !client.hoard.options.store_path) {
                     $("#store_settings").squirrelDialog("open", rebuild_hoard);
                 } else {
                     rebuild_hoard();
@@ -657,48 +700,48 @@ var Squirrel = {
 
         // Spread user information determined during store initialisation
         // around.
-        if (S.cloud.store
-            && typeof S.cloud.store.user() !== "undefined") {
+        if (cloud.store
+            && typeof cloud.store.user() !== "undefined") {
             // Force the cloud user onto the client store
-            if (DEBUG) console.debug("Cloud user is preferred: " + S.cloud.store.user());
-            S.client.store.user(S.cloud.store.user());
+            if (DEBUG) console.debug("Cloud user is preferred: " + cloud.store.user());
+            client.store.user(cloud.store.user());
             uReq = false;
-        } else if (S.client.store
-                   && typeof S.client.store.user() !== "undefined") {
+        } else if (client.store
+                   && typeof client.store.user() !== "undefined") {
             // Force the client user onto the cloud store
-            if (DEBUG) console.debug("Client user is available: " + S.client.store.user());
-            if (S.cloud.store)
-                S.cloud.store.user(S.client.store.user());
+            if (DEBUG) console.debug("Client user is available: " + client.store.user());
+            if (cloud.store)
+                cloud.store.user(client.store.user());
             uReq = false;
         }
 
-        if (S.cloud.store
-            && typeof S.cloud.store.pass() !== "undefined") {
+        if (cloud.store
+            && typeof cloud.store.pass() !== "undefined") {
             // Force the cloud pass onto the client store
             if (DEBUG) console.debug("Cloud pass is preferred");
-            if (S.client.store)
-                S.client.store.pass(S.cloud.store.pass());
+            if (client.store)
+                client.store.pass(cloud.store.pass());
             pReq = false;
-        } else if (S.client.store
-                   && typeof S.client.store.pass() !== "undefined") {
+        } else if (client.store
+                   && typeof client.store.pass() !== "undefined") {
             // Force the client pass onto the cloud store
             if (DEBUG) console.debug("Client pass is available");
-            if (S.cloud.store)
-                S.cloud.store.pass(S.client.store.pass());
+            if (cloud.store)
+                cloud.store.pass(client.store.pass());
             pReq = false;
         }
 
         // If we still need user or password, prompt
         if (uReq || pReq) {
             $("#login").squirrelDialog("open", {
-                store: S.client.store,
+                store: client.store,
                 on_signin: function(user, pass) {
                     if (DEBUG) console.debug("Login prompt said user was " + user);
-                    S.client.store.user(user);
-                    S.client.store.pass(pass);
-                    if (S.cloud.store) {
-                        S.cloud.store.user(user);
-                        S.cloud.store.pass(pass);
+                    client.store.user(user);
+                    client.store.pass(pass);
+                    if (cloud.store) {
+                        cloud.store.user(user);
+                        cloud.store.pass(pass);
                     }
                     step_4_load_client_hoard();
                 },
@@ -722,7 +765,7 @@ var Squirrel = {
             ok: function() {
                 if (DEBUG) console.debug(this.options().identifier
                                          + " store is ready");
-                S.client.store = this;
+                client.store = this;
                 $("#authmessage").text(TX.tx("Loading..."));
                 // Chain the login prompt
                 Utils.soon(step_3_identify_user);
@@ -744,7 +787,7 @@ var Squirrel = {
     function step_1_init_cloud_store() {
         var p = {
             ok: function() {
-                S.cloud.store = this;
+                cloud.store = this;
                 // Chain the client store startup
                 Utils.soon(step_2_init_client_store);
             },
@@ -767,7 +810,7 @@ var Squirrel = {
         p.understore = function(pp) {
             // SQUIRREL_STORE is a constant set by the low-level
             // store module selected by dynamic load
-            if (S.USE_STEGANOGRAPHY) {
+            if (useSteganography) {
                 pp.understore = function(ppp) {
                     return new SQUIRREL_STORE(ppp);
                 };
@@ -804,7 +847,7 @@ var Squirrel = {
             .contextmenu("showEntry", "delete", !is_root)
             .contextmenu("showEntry", "edit", is_leaf)
             .contextmenu("showEntry", "insert_copy",
-                         !is_leaf && (typeof S.clipboard !== "undefined"))
+                         !is_leaf && (typeof clipboard !== "undefined"))
             .contextmenu("showEntry", "make_copy",
                          !is_root && !is_leaf)
             .contextmenu("showEntry", "pick_from", is_leaf)
@@ -827,13 +870,13 @@ var Squirrel = {
 
         switch (ui.cmd) {
         case "copy_value":
-            S.clipboard = $node.find(".tree-value:first").text();
+            clipboard = $node.find(".tree-value:first").text();
             break;
 
         case "make_copy":
             var p = $node.tree("get_path");
-            var n = S.client.hoard.get_node(p);
-            S.clipboard = JSON.stringify(n);
+            var n = client.hoard.get_node(p);
+            clipboard = JSON.stringify(n);
             break;
 
         /* Can't get it to work like this - would need an intermediate
@@ -852,9 +895,9 @@ var   systemPasteContent =
         /**/
 
         case "insert_copy":
-            if (S.clipboard) {
+            if (clipboard) {
                 try {
-                    var data = JSON.parse(S.clipboard);
+                    var data = JSON.parse(clipboard);
                     $("#insert").squirrelDialog("open", {$node: $node, data: data } );
                 } catch (e) {
                     if (DEBUG) debugger;
@@ -996,7 +1039,7 @@ var   systemPasteContent =
                 if (DEBUG) console.debug("clip json from: " +
                                          $node.data("key"));
                 var p = $node.tree("getPath");
-                var n = S.client.hoard.get_node(p);
+                var n = client.hoard.get_node(p);
                 return JSON.stringify(n);
             }
         });
@@ -1020,7 +1063,7 @@ var   systemPasteContent =
                 if (DEBUG) console.debug("clip json from: " +
                                          $node.data("key"));
                 var p = $node.tree("getPath");
-                var n = S.client.hoard.get_node(p);
+                var n = client.hoard.get_node(p);
                 return {
                     data: JSON.stringify(n),
                     contentType: "text/json"
@@ -1034,20 +1077,6 @@ var   systemPasteContent =
      * Initialise application data (new Squirrel(), effectively)
      */
     function init_application() {
-        // status may be one of IS_EMPTY, IS_CORRUPT, IS_LOADED or
-        // NEW_SETTINGS. If the status is anything but IS_LOADED
-        // then it is a candidate for saving.
-        S.client = {
-            store: null,                 // The store used actively
-            hoard: null,                 // The hoard in that store
-            status: S.IS_EMPTY
-        };
-
-        S.cloud = {
-            store: null,                 // Temporary memory used during load
-            status: S.IS_EMPTY
-        };
-
         // Kick off by initialising the cloud store.
         step_1_init_cloud_store();
     }
@@ -1064,7 +1093,7 @@ var   systemPasteContent =
         $("#authenticated_undo")
             .hide()
             .on($.getTapEvent(), function(/*evt*/) {
-                ST.undo(function(mess) {
+                DOMtree.undo(function(mess) {
                     $("#squeak").squirrelDialog("open", {
                         title: "Undo",
                         message: mess
@@ -1146,9 +1175,6 @@ var   systemPasteContent =
             $this.button(opts);
         });
 
-        $("#sites-node").tree({
-            is_root: true
-        });
         init_menus();
 
         // Set up event handlers for sometime scheduler
@@ -1169,14 +1195,14 @@ var   systemPasteContent =
         var p = $node.tree("getPath");
         p.push(title);
 
-        var res = S.client.hoard.record_action(
+        var res = client.hoard.record_action(
             {
                 type: "N",
                 path: p,
                 data: (typeof value === "string") ? value : undefined
             },
             function(e) {
-                ST.action(
+                DOMtree.action(
                     e, true,
                     function($newnode) {
                         if (DEBUG && !$newnode) debugger;
@@ -1239,14 +1265,14 @@ var   systemPasteContent =
     S.insert_data = function(path, data) {
         $("#squeak").squirrelDialog("open", { title: "Loading" });
 
-        S.client.hoard.actions_from_hierarchy(
+        client.hoard.actions_from_hierarchy(
             { data: data },
             function(act, next) { // listener
                 //if (DEBUG) console.debug(Hoard.stringify_action(act));
                 act.path = path.slice().concat(act.path);
-                var res = S.client.hoard.record_action(
+                var res = client.hoard.record_action(
                     act, function (sact) {
-                        ST.action(sact, false, next);
+                        DOMtree.action(sact, false, next);
                     });
                 if (res !== null)
                     $("#squeak").squirrelDialog("squeakAdd", res.message);
@@ -1258,6 +1284,81 @@ var   systemPasteContent =
                 $("#squeak").squirrelDialog(
                     "squeakAdd",
                     TX.tx("JSON has been loaded"));
+            });
+    };
+
+    S.getClient = function() {
+        return client;
+    };
+    
+    S.getCloud = function() {
+        return cloud;
+    };
+    
+    S.playAction = function(action, more) {
+        var self = this;
+        var res = client.hoard.record_action(
+            action,
+            function(e) {
+                DOMtree.action(
+                    e,
+                    true,
+                    function($node) {
+                        if (more)
+                            more($node);
+                        Utils.sometime("update_save");
+                    });
+            });
+        if (res !== null)
+            $("#squeak").squirrelDialog("open", {
+                title: TX.error(),
+                severity: "error",
+                message: res.message
+            });
+    };
+
+    /**
+     * Push an undo
+     */
+    S.pushUndo = function(action) {
+        undos.push(action);
+    };
+    
+    /**
+     * Return true if there is at least one undoable operation
+     */
+    S.can_undo = function() {
+        return undos.length !== 0;
+    };
+
+    /**
+     * Undo the most recent action
+     */
+    S.undo = function() {
+        if (DEBUG && ST.undos.length === 0) debugger;
+
+        var a = undos.pop();
+        a.time = Date.now();
+        if (DEBUG) console.debug("Undo " + Hoard.stringify_action(a));
+        var res = client.hoard.record_action(
+            a,
+            function(e) {
+                ST.action(
+                    e, false,
+                    function() {
+                        // If there are no undos, there can be no modifications.
+                        // The hoard status will not be changed, though, so a
+                        // save may still be required.
+                        if (ST.length === 0)
+                            $(".tree-modified").removeClass("tree-modified");
+                        Utils.sometime("update_save");
+                    });
+            });
+        if (res !== null)
+            $("#squeak").squirrelDialog("open", {
+                title: TX.error(),
+                severity: "error",
+                message: res.message
             });
     };
 
@@ -1293,14 +1394,23 @@ var   systemPasteContent =
 
         var store = qs.store || "TestStore";
         if (typeof qs.steg !== "undefined")
-            S.USE_STEGANOGRAPHY = true;
+            useSteganography = true;
 
         var store_bits = [ "js/" + store + ".min.js" ];
-        if (S.USE_STEGANOGRAPHY) {
+        if (useSteganography) {
             store_bits.push("js/Steganographer.min.js");
             store_bits.push("js/StegaStore.min.js");
         } else
             $(".using_steganography").remove();
+        
+        $("#sites-node").tree({
+            is_root: true,
+            compare: compareKeys
+        });
+
+        DOMtree = $("#sites-node").data("squirrelTree");
+        if (DEBUG) console.debug("DOM tree rooted " + DOMtree);
+        
         Utils.load(store_bits, unco, function () {
             // Initialise translation module,
             // and chain the application init
@@ -1310,8 +1420,8 @@ var   systemPasteContent =
                 init_application();
             });
         });
-        $(".dlg-dialog").squirrelDialog({autoOpen: false});
-        
+        $(".dlg-dialog").squirrelDialog({ autoOpen: false });
+
         //$(this).tooltip(); // visually messy
         // mobile device; though shouldn't we determine the size?
         // window.screen.width, window.screen.height

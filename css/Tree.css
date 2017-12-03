@@ -60,7 +60,7 @@ button .tree-alarm {
 }
 
 .tree-info {
-    display: inline-block;
+    display: inline-block !important;
 }
 
 .tree-open-close {

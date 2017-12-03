@@ -14,43 +14,9 @@
 
 (function($, S) {
     "use strict";
-    var SD = S.Dialog;
-    var ST = S.Tree;
-
-    // The code below requires the environment to define the following
-    // extra methods in the namespace:
-    //
-    // SD.squeak(p) where p is a string or a structure:
-    //    title
-    //    severity (error, warning, notice, while)
-    //    message (string or $object or element)
-    //    after_close
-    // SD.init_open($dlg)
-    // SD.open_open($dlg)
 
     var widget = {};
     
-    function play_action(action, more) {
-        var res = S.client.hoard.record_action(
-            action,
-            function(e) {
-                ST.action(
-                    e,
-                    true,
-                    function($node) {
-                        if (more)
-                            more($node);
-                        Utils.sometime("update_save");
-                    });
-            });
-        if (res !== null)
-            SD.squeak({
-                title: TX.error(),
-                severity: "error",
-                message: res.message
-            });
-    }
-
     /* Helper for add, check wrapping node for same key value  */
     widget._validateUniqueKey = function() {
         // Disable OK if key value exists or is invalid
@@ -63,7 +29,7 @@
         else {
             var $ul =  this.element.data("parent").find("ul:first");
             $ul.children(".tree-node").each(function() {
-                if (ST.compare($(this).data("key"), val) == 0) {
+                if (S.Tree.compare($(this).data("key"), val) == 0) {
                     enabled = false;
                     return false;
                 }
@@ -93,11 +59,13 @@
         var fn;
 
         if (!$dlg.hasClass("dlg-initialised")) {
+            //var title = this.option("title");
+            //$dlg.find(".ui-dialog-title").text(title);
             $dlg.addClass("dlg-initialised");
             this.get("cancel")
                 .button()
                 .on($.getTapEvent(), function() {
-                    $dlg.dialog("close");
+                    $dlg.squirrelDialog("close");
                     return false;
                 });
             fn = this["_init_" + id];
@@ -109,24 +77,26 @@
         if (typeof fn !== "undefined")
             fn.call(this, $dlg, options);
 
-        if (!options)
-            options = {};
-        
-        $.extend(options, {
+        var dopt = {
+            // Get the title from the hack in _create
+            title: this.element.data("title"),
             modal: true,
             width: "auto",
             closeOnEscape: false
-        });
+        };
         
-        if ($.isTouchCapable()) {
-            $.extend(options, {
+        if ($.isTouchCapable() && !this.options.position) {
+            this.options.position = {
                 my: "left top",
                 at: "left top",
                 of: $("body")
-            });
+            };
         }
-        
-        $dlg.dialog(options);
+        this.options.modal = true;
+        this.options.width = "auto";
+        this.options.closeOnEscape = false;
+
+        return this._super();
     };
     
     /**
@@ -146,7 +116,7 @@
         var $signin = this.get("signin");
 
         var sign_in = function() {
-            $dlg.dialog("close");
+            $dlg.squirrelDialog("close");
             $signin.off($.getTapEvent());
             $user.off("change");
             $pass.off("change");
@@ -198,32 +168,17 @@
      * Confirm deletion of a node
      */
     widget._init_delete = function($dlg) {
+        var self = this;
         this.get("ok").on($.getTapEvent(), function() {
-            $dlg.dialog("close");
-            var res = S.client.hoard.record_action(
-                {
-                    type: "D",
-                    path: $dlg.data("node").tree("getPath")
-                },
-                function(e) {
-                    ST.action(
-                        e, true,
-                        function() {
-                            Utils.sometime("update_save");
-                        });
-                });
-            if (res !== null) {
-                SD.squeak({
-                    title: TX.error(),
-                    severity: "error",
-                    message: res.message
-                });
-                return false;
-            }
+            $dlg.squirrelDialog("close");
+            S.playAction({
+                type: "D",
+                path: $dlg.data("node").tree("getPath")
+            });
             return true;
         });
         this.get("cancel").on($.getTapEvent(), function() {
-            $dlg.dialog("close");
+            $dlg.squirrelDialog("close");
             return false;
         });
     };
@@ -300,8 +255,8 @@
             return false;
         });
         this.get("use").on($.getTapEvent(), function() {
-            $dlg.dialog("close");
-            play_action(
+            $dlg.squirrelDialog("close");
+            S.playAction(
                 { 
                     type: "E",
                     path: $dlg.data("node").tree("getPath"),
@@ -316,7 +271,7 @@
             var $ibling = $dlg.data("constraints");
             if ($ibling) {
                 if (constraints != $ibling.data("value")) {
-                    play_action(
+                    S.playAction(
                         { 
                             type: "E",
                             path: $ibling.tree("getPath"),
@@ -330,7 +285,7 @@
                 var p = $node.tree("getPath");
                 var k = TX.tx("$1 constraints", p.pop());
                 p.push(k); 
-                play_action(
+                S.playAction(
                     { 
                         type: "N",
                         path: p,
@@ -379,7 +334,7 @@
         var self = this;
         this.get("ok")
             .on($.getTapEvent(), function() {
-                $dlg.dialog("close");
+                $dlg.squirrelDialog("close");
                 S.search(self.get("string").val());
             });
         this.get("string")
@@ -414,15 +369,15 @@
 
         self.get("number")
             .on("change", function() {
-                self._updateNext().call();
+                self._updateNext();
             });
 
         self.get("set")
             .on($.getTapEvent(), function() {
-                $dlg.dialog("close");
-                var numb = self.get("number").val()
-                    * Utils.TIMEUNITS[self.get("units").val()].days;
-                play_action(
+                $dlg.squirrelDialog("close");
+                var numb = self.get("number").val() *
+                    Utils.TIMEUNITS[self.get("units").val()].days;
+                S.playAction(
                     { type: "A",
                       path: $dlg.data("node").tree("getPath"),
                       data: numb
@@ -432,11 +387,11 @@
 
         self.get("clear")
             .on($.getTapEvent(), function() {
-                play_action(
+                S.playAction(
                     { type: "C",
                       path: $dlg.data("node").tree("getPath")
                     });
-                $dlg.dialog("close");
+                $dlg.squirrelDialog("close");
                 return false;
             });
 
@@ -478,16 +433,16 @@
                                 fail(e);
                                 return;
                             }
-                            self.get("ok").attr("disabled", false);
+                            self.get("ok").button("enable");
                             var h = this.naturalHeight;
                             var w = this.naturalWidth;
                             this.height = 100;
                             self.get("message")
                                 .html("<br>" + w + " x " + h);
-                            if (S.client.status === S.IS_LOADED)
-                                S.client.status = S.NEW_SETTINGS;
-                            if (S.cloud.status === S.IS_LOADED)
-                                S.cloud.status = S.NEW_SETTINGS;
+                            if (S.getClient().status === S.IS_LOADED)
+                                S.getClient().status = S.NEW_SETTINGS;
+                            if (S.getCloud().status === S.IS_LOADED)
+                                S.getCloud().status = S.NEW_SETTINGS;
                             Utils.sometime("update_save");
                         });
                 }
@@ -515,16 +470,16 @@
                     "Store path may not be empty"));
                 return false;
             }
-            if (S.client.hoard.options.store_path !==
+            if (S.getClient().hoard.options.store_path !==
                 self.get("storepath").val()) {
-                S.client.hoard.options.store_path =
+                S.getClient().hoard.options.store_path =
                     self.get("storepath").val();
-                if (S.client.status === S.IS_LOADED)
-                    S.client.status = S.NEW_SETTINGS;
+                if (S.getClient().status === S.IS_LOADED)
+                    S.getClient().status = S.NEW_SETTINGS;
                 // No - the cloud isn't affected by the store path,
                 // so don't mark it as changed
-                // if (S.cloud.status === S.IS_LOADED)
-                //     S.cloud.status = S.NEW_SETTINGS;
+                // if (S.getCloud().status === S.IS_LOADED)
+                //     S.getCloud().status = S.NEW_SETTINGS;
                 Utils.sometime("update_save");
             }
             return true;
@@ -537,7 +492,7 @@
                         "Store path may not be empty"));
                     return false;
                 }
-                $dlg.dialog("close");
+                $dlg.squirrelDialog("close");
                 var cb = $dlg.data("callback");
                 if (typeof cb === "function")
                     cb();
@@ -548,7 +503,7 @@
         this.get("message").empty();
         $dlg.data("callback", chain);
         this.get("storepath").val(
-            S.client.hoard.options.store_path);
+            S.getClient().hoard.options.store_path);
     };
 
     /**
@@ -584,12 +539,12 @@
             .on($.getTapEvent(), function () {
                 if (!$dlg.data("validate").call())
                     return false;
-                $dlg.dialog("close");
+                $dlg.squirrelDialog("close");
                 var p = self.get("pass").val();
-                S.client.store.pass(p);
-                S.client.status = S.NEW_SETTINGS;
-                S.cloud.store.pass(p);
-                S.cloud.status = S.NEW_SETTINGS;
+                S.getClient().store.pass(p);
+                S.getClient().status = S.NEW_SETTINGS;
+                S.getCloud().store.pass(p);
+                S.getCloud().status = S.NEW_SETTINGS;
                 Utils.sometime("update_save");
 
                 return true;
@@ -605,24 +560,24 @@
         
         self.get("text")
             .on("input", function () {
-                self.get("ok").prop("disabled", false);
+                self.get("ok").button("enable");
             });
 
         self.get("ok")
             .on($.getTapEvent(), function () {
-                $dlg.dialog("close");
+                $dlg.squirrelDialog("close");
                 var datum;
                 try {
                     datum = JSON.parse(self.get("text").val());
                 } catch (e) {
-                    SD.squeak({
+                    $("#squeak").squirrelDialog("open", {
                         title: TX.tx("JSON could not be parsed"),
                         severity: "error",
                         message: e
                     });
                     return false;
                 }
-                self.get("ok").prop("disabled", true);
+                self.get("ok").button("disable");
                 if (DEBUG) console.debug("Importing...");
                 S.insert_data([], datum);
                 return true;
@@ -630,11 +585,11 @@
     };
 
     widget._open_json = function() {
-        var data = S.client.hoard.JSON();
+        var data = S.getClient().hoard.JSON();
         this.get("text")
             .text(data)
             .select();
-        this.get("ok").prop("disabled", true);
+        this.get("ok").button("disable");
     };
 
     widget._init_theme = function() {
@@ -649,32 +604,32 @@
         var self = this;
         self.get("autosave")
             .on("change", function() {
-                S.client.hoard.options.autosave =
+                S.getClient().hoard.options.autosave =
                     (self.get("autosave").val() === "on");
                 Utils.sometime("update_save");
             });
 
         self.get("chpw").on($.getTapEvent(), function() {
-            $dlg.dialog("close");
+            $dlg.squirrelDialog("close");
             $("#chpw").squirrelDialog("open");
         });
 
         self.get("chss").on($.getTapEvent(), function() {
-            $dlg.dialog("close");
+            $dlg.squirrelDialog("close");
             $("#store_settings").squirrelDialog("open");
         });
         self.get("theme").on($.getTapEvent(), function() {
-            $dlg.dialog("close");
+            $dlg.squirrelDialog("close");
             $("#theme").squirrelDialog("open");
         });
 
         self.get("json").on($.getTapEvent(), function() {
-            $dlg.dialog("close");
+            $dlg.squirrelDialog("close");
             $("#json").squirrelDialog("open");
         });
 
         self.get("about").on($.getTapEvent(), function() {
-            $dlg.dialog("close");
+            $dlg.squirrelDialog("close");
             $("#about").squirrelDialog("open");
         });
     };
@@ -683,13 +638,13 @@
         var self = this;
         
         if (!(S.USE_STEGANOGRAPHY
-              || S.cloud.store
-              && S.cloud.store.options().needs_path)) {
+              || S.getCloud().store
+              && S.getCloud().store.options().needs_path)) {
             self.get("chss").hide();
         }
 
         self.get("autosave").val(
-            S.client.hoard.options.autosave ? "on" : "off");
+            S.getClient().hoard.options.autosave ? "on" : "off");
     };
 
     widget._init_insert = function($dlg) {
@@ -700,7 +655,7 @@
         self.get("ok")
             .button()
             .on($.getTapEvent(), function() {
-                $dlg.dialog("close");
+                $dlg.squirrelDialog("close");
                 S.add_child_node($dlg.data("parent"),
                                  self.get("key").val(),
                                  $dlg.data("data"));
@@ -734,7 +689,7 @@
         self.get("ok")
             .button()
             .on($.getTapEvent(), function() {
-                $dlg.dialog("close");
+                $dlg.squirrelDialog("close");
                 var $parent = $dlg.data("parent");
                 S.add_child_node(
                     $parent, self.get("key").val(),
@@ -782,7 +737,7 @@
             .on($.getTapEvent(), function() {
                 var ac = $dlg.data("after_close");
                 $dlg.removeData("after_close");
-                $dlg.dialog("close");
+                $dlg.squirrelDialog("close");
                 if (typeof ac === "function")
                     ac();
                 return false;
