@@ -1,3 +1,4 @@
+/*@preserve Copyright (C) 2017 Crawford Currie http://c-dot.co.uk license MIT*/
 /**
  * Class to represent an RGBA colour, and convert to/from other
  * representations

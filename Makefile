@@ -1,23 +1,31 @@
-# Copyright (C) 2015 Crawford Currie http://c-dot.co.uk / MIT
+# Copyright (C) 2015-2017 Crawford Currie http://c-dot.co.uk / MIT
 FIND := find . -name 'jquery*' -prune -o -name
 
-JS_SOURCES := $(patsubst %.min.js,,$(wildcard js/*.js libs/*.js))
-JS_TESTS := $(wildcard js/test/*.js test/*.js)
-CSS_SOURCES := $(patsubst %.min.css,,$(wildcard css/*.css))
+JS_SOURCES   := $(shell cat Squirrel.html | \
+		grep '<script class="compressable"' $^ | \
+		sed -e 's/.*src="//;s/".*//g' )
+JS_STORES    := $(wildcard js/*Store.js)
+JS_TESTS     := $(wildcard js/test/*.js test/*.js)
+CSS_SOURCES  := $(shell cat Squirrel.html | \
+		grep '<link class="compressable"' $^ | \
+		sed -e 's/.*href="//;s/".*//g' )
 HTML_SOURCES := Squirrel.html
-MIN :=  $(patsubst %.js,%.min.js,$(JS_SOURCES)) \
-	$(patsubst %.css,%.min.css,$(CSS_SOURCES)) \
-	$(patsubst %.html,%.min.html,$(HTML_SOURCES))
-MAP := $(subst .js,.map,$(JS_SOURCES))
-LINT := $(subst .js,.esl,$(patsubst %.min.js,,$(wildcard js/*.js)))
+MIN          :=  $(patsubst %.js,%.min.js,$(JS_SOURCES)) \
+		$(patsubst %.css,%.min.css,$(CSS_SOURCES)) \
+		$(patsubst %.html,%.min.html,$(HTML_SOURCES))
+MAP          := $(subst .js,.map,$(JS_SOURCES))
+LINT         := $(subst .js,.esl,$(patsubst %.min.js,,$(JS_SOURCES)))
+SUPERMIN_JS  := $(patsubst %.js,%.min.js,$(JS_SOURCES))
+SUPERMIN_CSS := $(patsubst %.css,%.min.css,$(CSS_SOURCES))
 
 debug:
-	echo JS_SOURCES $(JS_SOURCES)
-	echo CSS_SOURCES $(CSS_SOURCES)
-	echo HTML_SOURCES $(HTML_SOURCES)
-	echo MIN $(MIN)
-	echo MAP $(MAP)
-	echo LINT $(LINT)
+	@echo CSS_SOURCES $(CSS_SOURCES)
+	@echo HTML_SOURCES $(HTML_SOURCES)
+	@echo MAP $(MAP)
+
+other:  @echo MIN $(MIN)
+	@echo JS_SOURCES $(JS_SOURCES)
+	@echo LINT $(LINT)
 
 %.map %.min.js : %.js
 	uglifyjs \
@@ -39,17 +47,45 @@ debug:
 	cat $^ | \
 	sed -E -e 's/class="compressable" ([^.]*)\.([a-z]+)"/\1.min.\2/g' > $@
 
-# Making release 
-
 %.map : %.min.js
 
-release: $(MIN) $(MAP)
-	@echo "Done $(MIN) $(MAP)"
+# Making release 
+
+release/Squirrel.min.js : $(JS_SOURCES)
+	uglifyjs \
+		--comments \
+		--compress \
+		--mangle \
+		--defined DEBUG=false \
+		-o $@ \
+		-- $^
+
+release/%Store.js : js/%Store.js
+	uglifyjs \
+		--comments \
+		--compress \
+		--mangle \
+		--defined DEBUG=false \
+		-o $@ \
+		-- $^
+
+release/Squirrel.min.css : $(CSS_SOURCES)
+	cleancss $^ > $@
+
+release/Squirrel.html : Squirrel.html
+	cat Squirrel.html | \
+	sed -E -e 's/.*"js\/Squirrel.js".*/<script src="Squirrel.min.js"><\/script>/' | \
+	sed -E -e 's/.*"css\/Squirrel.css".*/<script src="Squirrel.min.css"><\/script>/' | \
+	sed -E -e '/.*class="compressable".*/d' > $@
+
+release: $(MIN) $(MAP) release/Squirrel.html \
+	release/Squirrel.min.js release/Squirrel.min.css \
+	$(patsubst js/,release/,$(JS_STORES))
+	@echo $@ built
 
 # Other targets
 %.esl : %.js
-	eslint $^
-	touch $@
+	-eslint $^ && touch $@
 
 test:
 	mocha $(JS_TESTS)

@@ -2,7 +2,7 @@
 
 /* eslint-env jquery */
 
-/* global DEBUG */
+/* global DEBUG:true */
 /* global ZeroClipboard */
 
 function ZeroClipboardShim() {

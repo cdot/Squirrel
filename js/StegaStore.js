@@ -1,6 +1,6 @@
 /*@preserve Copyright (C) 2015 Crawford Currie http://c-dot.co.uk license MIT*/
 
-/* global DEBUG */
+/* global DEBUG:true */
 /* global LayeredStore */
 /* global Steganographer */
 /* global Utils */

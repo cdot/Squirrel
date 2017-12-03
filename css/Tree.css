@@ -25,14 +25,19 @@
     padding-left: 1em;
 }
 
+/* text that shows when node was last modified */
 .tree-lastmod {
     margin-left: 4em;
     float: right;
 }
 
+/* Applied when a node is open */
 .tree-open {}
 
-.tree-hover {}
+/* Applied to tree-title when a node is being hovered over */
+.tree-hover {
+    background-color: rgb(170, 170, 170);
+}
 
 .tree-alarm {
     float: left;

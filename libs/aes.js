@@ -1,8 +1,14 @@
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */
-/*  AES implementation in JavaScript                     (c) Chris Veness 2005-2014 / MIT Licence */
+/*@preserve  AES implementation in JavaScript                     (c) Chris Veness 2005-2014 / MIT Licence */
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */
 
-/* jshint node:true *//* global define */
+/* eslint strict: 0 */
+/* eslint no-unused-vars: 0 */
+/* eslint no-redeclare: 0 */
+/* global module */
+
+/* jshint node:true */
+/* global define */
 'use strict';
 
 

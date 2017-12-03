@@ -1,4 +1,4 @@
-/*@preserve Copyright (C) 2015 Crawford Currie http://c-dot.co.uk license MIT*/
+/*@preserve Copyright (C) 2015-2017 Crawford Currie http://c-dot.co.uk license MIT*/
 
 /* global TX */
 /* global ArrayBuffer */
@@ -314,6 +314,8 @@ Utils.q_next = function(q) {
 Utils.load = function(libs, uncompressed, on_loaded) {
     "use strict";
 
+    var expect = {};
+
     // action when a resource is loaded
     var _loaded = function(file) {
         //console.debug("Loaded " + file);
@@ -340,7 +342,7 @@ Utils.load = function(libs, uncompressed, on_loaded) {
                     //console.debug("Loaded script " + file);
                     _loaded(file);
                 })
-                .fail(function(jqXHR, settings, exception) {
+                .fail(function() {
                     debugger;
                 });
         } else if (/\.css$/.test(file)) {
@@ -357,13 +359,12 @@ Utils.load = function(libs, uncompressed, on_loaded) {
                         .appendTo("body");
                     _loaded(file);
                 })
-                .fail(function(jqXHR, settings, exception) {
+                .fail(function() {
                     debugger;
                 });
         }
     };
 
-    var expect = {};
     for (var i = 0; i < libs.length; i++) {
         _add_load(libs[i]);
     }

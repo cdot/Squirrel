@@ -20,10 +20,11 @@
     <script src="//code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery.ui-contextmenu/1.18.1/jquery.ui-contextmenu.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-touch-events/1.0.9/jquery.mobile-events.min.js"></script>
-
-    <!-- ZeroClipboard doesn't work when served from CDN
-    <script class="compressable" src="libs/ZeroClipboard.js"></script>
-    <script class="compressable" src="js/ZeroClipboardShim.js"></script-->
+    <script src="//cdnjs.cloudflare.com/ajax/libs/js-cookie/2.2.0/js.cookie.min.js"></script>
+    
+    <!-- ZeroClipboard doesn't work when served from CDN -->
+    <!--script class="compressable" src="libs/ZeroClipboard.js"></script-->
+    <!--script class="compressable" src="js/ZeroClipboardShim.js"></script-->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.7.1/clipboard.min.js"></script>
 
     <script class="compressable" src="libs/aes.js"></script>
@@ -42,15 +43,15 @@
     <script class="compressable" src="js/Tree.js",></script>
     <script class="compressable" src="js/Dialogs.js"></script>
 
-    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-    <link rel="stylesheet" class="compressable" href="css/Icons.css" />
-    <link rel="stylesheet" class="compressable" href="css/Tree.css" />
-    <link rel="stylesheet" class="compressable" href="css/Dialogs.css" />
-    <link rel="stylesheet" class="compressable" href="css/Squirrel.css" />
+    <link href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" rel="stylesheet">
+    <link class="compressable" href="css/Icons.css" / rel="stylesheet">
+    <link class="compressable" href="css/Tree.css" / rel="stylesheet">
+    <link class="compressable" href="css/Dialogs.css" / rel="stylesheet">
+    <link class="compressable" href="css/Squirrel.css" / rel="stylesheet">
   </head>
   <body>
     <div id="unauthenticated">
-      <h1>Squirrel</h1>
+       <h1>Squirrel</h1>
       <div id="authmessage" class="TX_text">Authenticating...</div>
       <div class="authfailed TX_text">Authentication failed. Refresh the browser to try again.</div>
       <div id="splash"><img id="splash" src="images/squirrel.svg" /></div>
@@ -69,9 +70,12 @@
         <button id="authenticated_undo" class="TX_title TX_text" title="Undo last change" data-icon="ui-icon-squirrel-undo">Undo</button>
         <button id="authenticated_save" class="TX_text" data-icon="ui-icon-squirrel-save">Save</button>
       </div>
-      <div id="sites-div">
-        <div id="sites-node">
-          <h1 class="TX_text noselect tree-info">Squirrel</h1>
+      <div id="sites-node">
+        <div class="tree-title noselect">
+          <button class="tree-open-close tree-open" data-icon="ui-icon-squirrel-folder-open"></button>
+          <div class="tree-info">
+            <span class="tree-key">Squirrel</span>
+          </div>
         </div>
       </div>
     </div>
@@ -80,86 +84,86 @@
 
     <!-- Dialogs -->    
     <div id="extras" class="dlg-dialog TX_title dlg-hidden" title="Extras">
-      <div id="extras_logo"></div>
+      <div data-id="logo"></div>
       <p>
         <span class="TX_text">Autosave</span>
-        <select id="extras_autosave">
+        <select data-id="autosave">
           <option value="off" class="TX_text">Off</option>
 	  <option value="on" class="TX_text">On</option>
         </select>
       </p>
       <p>
-        <button id="extras_theme" class="TX_text">Change colour theme</button>
+        <button data-id="theme" class="TX_text">Change colour theme</button>
       </p>
       <p>
-        <button id="extras_chss" class="TX_text">Change cloud store settings</button>
+        <button data-id="chss" class="TX_text">Change cloud store settings</button>
       </p>
       <p>
-        <button id="extras_chpw" class="TX_text">Change master password</button>
+        <button data-id="chpw" class="TX_text">Change master password</button>
       </p>
       <p>
-        <button id="extras_json" class="TX_text">View/Edit JSON</button>
+        <button data-id="json" class="TX_text">View/Edit JSON</button>
       </p>
       <p>
-        <button id="extras_about" class="TX_text">About Squirrel</button>
+        <button data-id="about" class="TX_text">About Squirrel</button>
       </p>
     </div>
 
     <div id="login" class="dlg-dialog TX_title dlg-hidden" title="Enter the password for your safe">
-      <p id="login_foruser"></p>
+      <p data-id="foruser"></p>
       <table width="100%">
         <tbody>
-          <tr id="login_uReq">
+          <tr data-id="uReq">
 	    <td class="TX_text">User:</td>
 	    <td>
-	      <input size="25" id="login_user" value="" class="TX_title" title="Enter username" />
+	      <input size="25" data-id="user" value="" class="TX_title" title="Enter username" />
 	    </td>
           </tr>
-          <tr id="login_pReq">
+          <tr data-id="pReq">
 	    <td class="TX_text">Pass:</td>
 	    <td>
-	      <input type="password" size="25" id="login_pass" class="TX_title" title="Enter password" value="" />
+	      <input type="password" size="25" data-id="pass" class="TX_title" title="Enter password" value="" />
 	    </td>
           </tr>
         </tbody>
       </table>
       <p>
-        <button id="login_signin" class="TX_text">Sign In</button>
+        <button data-id="signin" class="TX_text">Sign In</button>
       </p>
     </div>
     
     <div id="squeak" class="dlg-dialog TX_title dlg-hidden" title="Alert">
-      <p id="squeak_message"></p>
-      <button id="squeak_close" class="TX_text">OK</button>
+      <p class="messages"></p>
+      <button data-id="close" class="TX_text">OK</button>
     </div>
     
     <div id="randomise" class="dlg-dialog TX_title dlg-hidden" title="Generate random value">
       <span class="TX_text">Suggested value for</span>
-      '<span id="randomise_key"></span>': '<span id="randomise_idea" class="dlg-value"></span>'
+      '<span data-id="key"></span>': '<span data-id="idea" class="dlg-value"></span>'
       <p>
         <span class="TX_text">Length:</span>
-        <input size="20" value="24" id="randomise_len" class="TX_title" title="Enter password length" />
+        <input size="20" value="24" data-id="len" class="TX_title" title="Enter password length" />
       </p>
       <p>
         <span class="TX_text">Character range:</span>
-        <input size="20" value="A-Za-z0-9" id="randomise_chs" class="TX_title" title="Enter the characters that are legal in passwords for this site. You can use character ranges like A-Z or 0-9" />
+        <input size="20" value="A-Za-z0-9" data-id="chs" class="TX_title" title="Enter the characters that are legal in passwords for this site. You can use character ranges like A-Z or 0-9" />
       </p>
       <div>
-        <button id="randomise_use" class="TX_text">Use this</button>
-        <button id="randomise_again" class="TX_text">Try again</button>
-        <button id="randomise_remember" class="TX_text">Remember constraints</button>
-        <button id="randomise_cancel" class="TX_text">Cancel</button>
+        <button data-id="use" class="TX_text">Use this</button>
+        <button data-id="again" class="TX_text">Try again</button>
+        <button data-id="remember" class="TX_text">Remember constraints</button>
+        <button data-id="cancel" class="TX_text">Cancel</button>
       </div>
     </div>
     
-    <div id="delete_node" class="dlg-dialog TX_title dlg-hidden" title="Delete entry">
+    <div id="delete" class="dlg-dialog TX_title dlg-hidden" title="Delete entry">
       <p>
-        <span class="TX_text">Are you sure you want to delete</span> '<span id="delete_node_path"></span>'
-        <span id="delete_node_coll" class="TX_text"> and everything under it?</span>
+        <span class="TX_text">Are you sure you want to delete</span> '<span data-id="path"></span>'
+        <span data-id="coll" class="TX_text"> and everything under it?</span>
       </p>
       <div>
-        <button id="delete_node_cancel" class="TX_text">Cancel</button>
-        <button id="delete_node_ok" class="TX_text">Delete</button>
+        <button data-id="cancel" class="TX_text">Cancel</button>
+        <button data-id="ok" class="TX_text">Delete</button>
       </div>
     </div>
     
@@ -177,7 +181,7 @@
             <label for="chpw_pass" class="TX_text">New password</label>
           </td>
           <td>
-            <input type="password" size="50" id="chpw_pass" class="TX_title" title="Enter new password" value="" />
+            <input type="password" size="50" data-id="pass" class="TX_title" title="Enter new password" value="" />
           </td>
         </tr>
         <tr>
@@ -187,47 +191,47 @@
             </label>
           </td>
           <td>
-            <input type="password" size="50" id="chpw_conf" class="TX_title" title="Re-enter new password" value="" />
+            <input type="password" size="50" data-id="conf" class="TX_title" title="Re-enter new password" value="" />
           </td>
         </tr>
       </table>
       <p>
-        <input type="checkbox" id="chpw_show">
+        <input type="checkbox" data-id="show">
         <label for="chpw_show" class="TX_text">
           Show password
         </label>
       </p>
       <div>
-        <button id="chpw_set" class="TX_title TX_text" title="Set new master password">Set new password</button>
+        <button data-id="set" class="TX_title TX_text" title="Set new master password">Set new password</button>
       </div>
     </div>
     
     <div id="alarm" class="dlg-dialog TX_title dlg-hidden" title="Reminder">
       <p>
         <span class="TX_text">Select when you want to be reminded about</span>
-        <span id="alarm_path"></span>
+        <span data-id="path"></span>
       </p>
       <p class="TX_text">
         The reminder will be reset whenever the entry is modified.
       </p>
       <p>
         <label for="alarm_number" class="TX_text">Remind after</label>
-        <input id="alarm_number" size="3" value="6" />
-        <select id="alarm_units">
+        <input data-id="number" size="3" value="6" />
+        <select data-id="units">
           <option value="d" class="TX_text">days</option>
           <option value="m" selected="selected" class="TX_text">months</option>
           <option value="y" class="TX_text">years</option>
         </select>
       </p>
       <p>
-        <span class="TX_text">Next reminder is due in</span>
-        <span id="alarm_next"></span>
+        <span class="TX_text">Reminder will be due in</span>
+        <span data-id="next"></span>
         <span class="TX_text"> on </span>
-        <span id="alarm_when"></span>
+        <span data-id="when"></span>
       </p>
       <div>
-        <button id="alarm_set" class="TX_title TX_text" title="Set (or reset) reminder">Set reminder</button>
-        <button id="alarm_clear" class="TX_title TX_text" title="Cancel reminder">Cancel reminder</button>
+        <button data-id="set" class="TX_title TX_text" title="Set (or reset) reminder">Set reminder</button>
+        <button data-id="clear" class="TX_title TX_text" title="Cancel reminder">Cancel reminder</button>
       </div>
     </div>
     
@@ -235,10 +239,10 @@
       <p class="TX_text">Insert copy from clipboard</p>
       <p>
         <span class="TX_text">New name:</span>
-        <input id="insert_key" type="text" value="" />
+        <input data-id="key" type="text" value="" />
       </p>
-      <button id="insert_ok" class="TX_text TX_title" title="Insert copy" >OK</button>
-      <button id="insert_cancel" class="TX_text TX_title" title="Cancel insert">Cancel</button>
+      <button data-id="ok" class="TX_text TX_title" title="Insert copy" >OK</button>
+      <button data-id="cancel" class="TX_text TX_title" title="Cancel insert">Cancel</button>
     </div>
     
     <div id="add" class="dlg-dialog dlg-hidden TX_title" title="Add">
@@ -246,20 +250,20 @@
       <table>
         <tbody>
           <tr>
-            <td id="add_path"></td>
+            <td data-id="path"></td>
             <td>
-              <input id="add_key" type="text" value="" />
+              <input data-id="key" type="text" value="" />
             </td>
           </tr>
-          <tr id="add_value_parts">
+          <tr data-id="value_parts">
             <th class="TX-text">Value:</th>
             <td>
-              <input id="add_value" type="text" value="" title="Enter value"/>
+              <input data-id="value" type="text" value="" title="Enter value"/>
             </td>
           </tr>
       </table>
-      <button id="add_ok" class="TX_text TX_title" title="Add new entry" >OK</button>
-      <button id="add_cancel" class="TX_text TX_title" title="Cancel add">Cancel</button>
+      <button data-id="ok" class="TX_text TX_title" title="Add new entry" >OK</button>
+      <button data-id="cancel" class="TX_text TX_title" title="Cancel add">Cancel</button>
     </div>
 
     <div id="pick" class="dlg-dialog TX_title dlg-hidden" title="Pick characters">
@@ -268,17 +272,21 @@
       </p>
       <table>
         <tbody>
-          <tr id="pick_which"></tr>
-          <tr id="pick_from"></tr>
+          <tr data-id="which"></tr>
+          <tr data-id="from"></tr>
         </tbody>
       </table>
       <p>
-        <button id="pick_clear" class="TX_text">Clear</button>
+        <button data-id="clear" class="TX_text">Clear</button>
       </p>
     </div>
 
     <div id="theme" class="dlg-dialog TX_title dlg-hidden" title="Theme">
-      <select id="theme_select">
+      <p class="TX_text">
+        Select your preferred colour theme. The theme will be remembered
+        in cookies in this browser.
+      </p>
+      <select data-id="select">
         <option value="base">Base</option>
         <option value="ui-lightness">UI Lightness</option>
         <option value="ui-darkness">UI Darkness</option>
@@ -308,18 +316,18 @@
     </div>
     
     <div id="store_settings" class="dlg-dialog TX_title dlg-hidden" title="Store settings">
-      <p id="store_settings_message"></p>
+      <p data-id="message"></p>
       <div class="using_steganography">
         <p class="TX_text help">Choose a local image that will be copied
           and used to hide your data in the cloud. This should be a complex
           colour image of at least 1024x768 pixels, preferably with variable
           transparency. Note that very large images may take a long time to
           load and save.</p>
-        <input type="file" id="store_settings_file" class="dlg-hidden" />
-        <button id="store_settings_choose_image" class="TX_title TX_text" title="Choose an image file">
+        <input type="file" data-id="file" class="dlg-hidden" />
+        <button data-id="choose_image" class="TX_title TX_text" title="Choose an image file">
           Choose Image File
         </button>
-        <p><img id="stegamage" src="images/GCHQ.png" /></p>
+        <p><img id="stegamage" data-id="steg_image" src="images/GCHQ.png" /></p>
       </div>
       <p class="TX_text help">
         Set the pathname of the image on your cloud store. For example
@@ -328,10 +336,10 @@
       </p>
       <p>
         <label for="store_settings_storepath" class="TX_text">Store path: </label>
-        <input id="store_settings_storepath" type="text" value="" class="TX_title" title="Pathname of the image in your cloud store"/>
+        <input data-id="storepath" type="text" value="" class="TX_title" title="Pathname of the image in your cloud store"/>
       </p>
       <p>
-        <button id="store_settings_ok" class="TX_text">OK</button>
+        <button data-id="ok" class="TX_text">OK</button>
       </p>
     </div>
     
@@ -347,10 +355,10 @@
     </div>
     
     <div id="json" class="dlg-dialog TX_title dlg-hidden" title="Database JSON">
-      <textarea id="json_text">
+      <textarea data-id="text">
       </textarea>
       <div>
-        <button id="json_ok" class="TX_text">Reload this JSON</button>
+        <button data-id="ok" class="TX_text">Reload this JSON</button>
       </div>
     </div>
   </body>

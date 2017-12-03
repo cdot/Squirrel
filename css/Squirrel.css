@@ -5,15 +5,11 @@
  * here if a dark background is detected.
  */
 
-html, body {
-    font-size: 20px;
-}
-
 input {
     font-family: "Courier New", Courier, monospace;
 }
 
-.ui-button-text-only .ui-button-text {
+.ui-button-text-only > .ui-button-text {
     padding: 0.3em;
 }
 
@@ -21,19 +17,11 @@ input {
     z-index: 1000;
 }
 
-.menu {
-  display: none;
-}
-
-#sites-node > h1.tree-info {
+.tree-root > .tree-info {
     margin: 0.3em 0 0 0;
 }
 
-.menu-hover {
-    background-color: blue;
-}
-
-/* Disable text selection
+/* Disable text selection, used on the root node
 See
 https://stackoverflow.com/questions/826782/how-to-disable-text-selection-highlighting-using-css
 */
@@ -51,6 +39,10 @@ https://stackoverflow.com/questions/826782/how-to-disable-text-selection-highlig
     background: transparent url("../images/progress_bar.gif") no-repeat 13em center;
 }
 
+#search_label,#search {
+    vertical-align: middle;
+}
+
 #splash {
     width: 50%;
 }
@@ -58,7 +50,7 @@ https://stackoverflow.com/questions/826782/how-to-disable-text-selection-highlig
     width: 50%;
 }
 
-#extras_logo {
+#extras > ._logo {
     width: 64px;
     height: 64px;
     background: url("../images/squirrel.svg") no-repeat;
@@ -93,35 +85,11 @@ https://stackoverflow.com/questions/826782/how-to-disable-text-selection-highlig
 
 #toolbar {
     clear: both;
-    margin-left: 2em;
+    margin-bottom: 1em;
 }
 
-#dlg_alarm_number {
-    width: 3em;
-}
-
-#dlg_alarm_units {
-    width: 7em;
-}
-
-#dlg_alarm_units-button {
-    top: 0.65em;
-}
-
-#dlg_alarm_units-button > span.ui-selectmenu-text {
-    padding: 0.2em 2.1em 0.2em .25em;
-}
-
-#dlg_ss > input {
-    width: 100%;
-}
-
-#stegamage {
+#stegimage {
     height: 100px;
-}
-
-#home {
-    margin-left: 1em;
 }
 
 .json_text: {

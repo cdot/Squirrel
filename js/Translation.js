@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2015 Crawford Currie http://c-dot.co.uk license MIT*/
 
 /* eslint no-eval: 1 */
-/* global DEBUG */
+/* global DEBUG:true */
 
 /**
  * Translations module. Determines the language to use from the browser.
