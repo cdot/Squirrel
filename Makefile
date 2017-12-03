@@ -93,6 +93,7 @@ release: release/Squirrel.min.html \
 	release/js/Squirrel.min.js release/css/Squirrel.min.css \
 	$(patsubst %.js,%.min.js,$(patsubst js/%,release/js/%,$(JS_STORES))) \
 	$(patsubst images/%,release/images/%,$(wildcard images/*))
+	@rm release/js/*.map
 	echo $^ built
 
 # Other targets
