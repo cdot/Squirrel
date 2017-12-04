@@ -34,3 +34,12 @@
     background-color: red;
     color: white;
 }
+
+.twisted-button {
+    margin-right: 0.5em;
+    padding: 0;
+}
+
+.twisted {
+    background-color: #F0F0F0;
+}

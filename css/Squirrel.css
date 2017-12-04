@@ -50,9 +50,9 @@ https://stackoverflow.com/questions/826782/how-to-disable-text-selection-highlig
     width: 50%;
 }
 
-#extras > ._logo {
-    width: 64px;
-    height: 64px;
+.logo {
+    width: 4em;
+    height: 4em;
     background: url("../images/squirrel.svg") no-repeat;
     background-size: 100% 100%;
     display: inline-block;
@@ -67,32 +67,40 @@ https://stackoverflow.com/questions/826782/how-to-disable-text-selection-highlig
     display: none;
 }
 
-.info-button {
-    float: left;
-    margin-right: 0.5em;
-}
-
-.help {
-}
-
-.help-close {
-    float:right;
-}
-
-#signed_in {
-    float: right;
-}
-
 #toolbar {
     clear: both;
     margin-bottom: 1em;
 }
 
+#help {
+    display: none;
+}
+
 #stegimage {
-    height: 100px;
+    height: 8em;
 }
 
 .json_text: {
-    width:98%;
+    width: 98%;
     height: 15em;
+}
+
+/* Only apply on small devices (such as mobiles)
+my mobile is 192dpi, window.screen.width reports 360
+actually 147dpi (measured, based on 360px wide reported by window.screen.width
+window.devicePixelRatio is 2, so 2 x 360 = 720
+
+
+desktop is 96dpi, 1920 x 1080 = 20 x 11.25 = 508 x 286mm
+On the desktop, font size of 16px is fine
+Mobile needs 25px
+
+@media	only screen and (-webkit-min-device-pixel-ratio: 1.3),
+	only screen and (-o-min-device-pixel-ratio: 13/10),
+	only screen and (min-resolution: 120dpi)
+*/
+@media (max-resolution: 300dpi) {
+    input.in_place_editor {
+        font-size: 200%;
+    }
 }

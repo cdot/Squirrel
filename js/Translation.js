@@ -45,16 +45,7 @@ var TX = {
             {
                 success: function(data) {
                     TX.translations = data;
-                    $(".TX_title").each(function() {
-                        $(this)
-                            .attr("title", TX.tx($(this).attr("title")))
-                            .removeClass("TX_title");
-                    });
-                    $(".TX_text").each(function() {
-                        $(this)
-                            .text(TX.tx($(this).text()))
-                            .removeClass("TX_text");
-                    });
+                    TX.translateTags(TX.tx);
                     if (DEBUG) console.debug("Using language '" + TX.lingo + "'");
                     tx_ready();
                 },
@@ -69,6 +60,35 @@ var TX = {
                     TX.init(tx_ready);
                 }
             });
+    },
+
+    translateTags: function(translate) {
+        function translateTextNodes(node, src) {
+            // Messy to do with jQuery, so....
+            if ($(node).hasClass("tree-node"))
+                return;
+            if (node.nodeType == 3) {
+                if (/\S/.test(node.nodeValue))
+                    node.nodeValue = translate(node.nodeValue, src);
+            } else {
+                for (var i = 0, len = node.childNodes.length;
+                     i < len; ++i) {
+                    translateTextNodes(node.childNodes[i], src);
+                }
+            }
+        }
+
+        $(".TX_title").each(function() {
+            var t = $(this).attr("title");
+            if (t) $(this).attr("title", translate(t, "title"));
+        });
+        $(".TX_text").each(function() {
+            translateTextNodes(this, "text");
+        });
+        $(".TX_html").each(function() {
+            translateTextNodes(this, "html");
+        });
+
     },
 
     tx: function(s) {

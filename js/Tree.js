@@ -252,12 +252,13 @@
 
         // Fit width to the container
         var w = $node.closest(".tree-root").width();
+        w -= $span.position().left;
         $span.parents().each(function() {
             w -= $(this).position().left;
         });
 
         $span.edit_in_place({
-            width: w / 2,
+            width: w,
             changed: function(s) {
                 S.playAction({
                     type: action,
@@ -282,7 +283,7 @@
                 $button,
                 "alarm",
                 function() {
-                    $("#alarm").squirrelDialog("open", {$node: $node});
+                    $("#alarm_dlg").squirrelDialog("open", {$node: $node});
                     return false;
                 });
 

@@ -68,7 +68,7 @@ button .tree-alarm {
 }
 
 .tree-has-alarms:not(.tree-open) {
-    border-left: 2px solid magenta;
+    border-left: 1px solid magenta;
 }
 
 .drop-target {

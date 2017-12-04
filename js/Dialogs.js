@@ -15,6 +15,112 @@
 (function($, S) {
     "use strict";
 
+    /**
+     * Supports two simple styles of template expansion.
+     * For simple expansion, a call to .dialogTemplate("expand", ...)
+     * will expand $1..$N in the template's HTML.
+     * For a pick, a container classed "dlg-pick-template"
+     * has one or more children each with dlg-template and each with
+     * a unique data-id. A call of dialogTemplate("pick", id, ...) will
+     * show the child with matching id and return it.
+     */
+    $.widget("squirrel.dialogTemplate", {
+        _create: function() {
+            if (this.element.hasClass("dlg-pick-template")) {
+                // Nothing picked yet
+                this.element.children().hide();
+            } else {
+                // Simple template
+                var message = this.element.html();
+                this.element.data("dlg-template", message);
+            }
+        },
+
+        pick: function() {
+            this.element.children().hide();
+            var id = arguments.shift();
+            var picked = this.element.children("[data-id='" + id + "']");
+            picked.show();
+            return picked;
+        },
+        
+        expand: function() {
+            var tmpl = this.element.data("dlg-template");
+            var args;
+            if (typeof arguments[0] === "object")
+                args = arguments[0];
+            else
+                args = arguments;
+            tmpl = tmpl.replace(/\$(\d+)/g, function(m, p1) {
+                var i = parseInt(p1);
+                return args[i - 1];
+            })
+            this.element.html(tmpl);
+        }
+    });
+
+    /**
+     * Create open-close buttons on a container with help information
+     * Low-rent accordion widget
+     * .twisted - class on contained
+     * .twisted-title - optional element that will be shown even when
+     * the twist is closed
+     * data-open="ui-icon-circle-plus"
+     * data-close="ui-icon-circle-minus"
+     */
+    $.widget("squirrel.twisted", {
+        _create: function() {
+            var self = this;
+            var $container = self.element;
+            
+            var $button = $("<button></button>")
+                .addClass("twisted-button twisted-title")
+                .button({
+                    icon: "ui-icon-info",
+                    showLabel: false
+                })
+                .on($.getTapEvent(), function() {
+                    if ($container.hasClass("twisted-shut"))
+                        self.open();
+                    else
+                        self.close();
+                });
+
+            var $title = $container
+                .children(".twisted-title:first")
+                .detach()
+                .insertBefore($container)
+                .prepend($button);
+            
+            if ($title.length === 0)
+                $button.insertBefore($container);
+            
+            $container.data("twisted-button", $button);
+            
+            self.close();
+        },
+
+        open: function() {
+            var icon = this.element.data("close") ||
+                "ui-icon-circle-minus";
+            this.element
+                .removeClass("twisted-shut")
+                .show()
+                .data("twisted-button")
+                .button("option", "icon", icon)
+        },
+        
+        close: function() {
+            var icon = this.element.data("open") ||
+                "ui-icon-circle-plus";
+            this.element
+                .addClass("twisted-shut")
+                .hide()
+                .data("twisted-button")
+                .button("option", "icon", icon);
+        }
+    });
+
     var widget = {};
     
     /* Helper for add, check wrapping node for same key value  */
@@ -29,7 +135,7 @@
         else {
             var $ul =  this.element.data("parent").find("ul:first");
             $ul.children(".tree-node").each(function() {
-                if (S.Tree.compare($(this).data("key"), val) == 0) {
+                if (S.compare($(this).data("key"), val) == 0) {
                     enabled = false;
                     return false;
                 }
@@ -55,7 +161,7 @@
 
     widget.open = function(options) {
         var $dlg = this.element;
-        var id = $dlg.attr("id");
+        var id = $dlg.attr("id").replace(/_dlg$/, "");
         var fn;
 
         if (!$dlg.hasClass("dlg-initialised")) {
@@ -327,7 +433,7 @@
         var path = $node.tree("getPath");
         this.get("path").text(path.join("/"));
         this.get("key").text(my_key);
-        this.get("again").trigger("click");
+        this.get("again").trigger($.getTapEvent());
     };
 
     widget._init_search = function($dlg) {
@@ -353,10 +459,11 @@
         // Convert to days
         numb = numb * Utils.TIMEUNITS[this.get("units").val()].days;
         var alarmd = new Date(Date.now() + numb * Utils.MSPERDAY);
-        this.get('when').text(alarmd.toLocaleDateString());
-        this.get("next")
-            .text(Utils.deltaTimeString(alarmd))
-            .show();
+        this.get("nextmod")
+            .dialogTemplate(
+                "expand",
+                Utils.deltaTimeString(alarmd),
+                alarmd.toLocaleDateString());
     };
     
     widget._init_alarm = function($dlg) {
@@ -372,7 +479,7 @@
                 self._updateNext();
             });
 
-        self.get("set")
+        self.get("remind")
             .on($.getTapEvent(), function() {
                 $dlg.squirrelDialog("close");
                 var numb = self.get("number").val() *
@@ -387,20 +494,42 @@
 
         self.get("clear")
             .on($.getTapEvent(), function() {
+                $dlg.squirrelDialog("close");
                 S.playAction(
                     { type: "C",
                       path: $dlg.data("node").tree("getPath")
                     });
-                $dlg.squirrelDialog("close");
                 return false;
             });
-
     };
     
     widget._open_alarm = function($dlg, options) {
         var $node = options.$node;
+        
         this.get("path").text($node.tree("getPath").join("/"));
+
         $dlg.data("node", $node);
+        var lastmod = $node.data("last-time-changed");
+        this.get("lastmod")
+            .dialogTemplate(
+                "expand",
+                new Date(lastmod).toLocaleString());
+
+        if (typeof $node.data("alarm") !== "undefined") {
+            var alarm = new Date(
+                lastmod + $node.data("alarm") * Utils.MSPERDAY);
+            this.get("current")
+                .dialogTemplate(
+                    "expand",
+                    Utils.deltaTimeString(alarm),
+                    alarm.toLocaleDateString())
+                .show();
+            this.get("clear").show();
+        } else {
+            this.get("current").hide();
+            this.get("clear").hide();
+        }
+        
         this._updateNext();
     };
 
@@ -409,8 +538,9 @@
         var self = this;
         
         var fail = function(e) {
-            self.get("message").text(TX.tx(
-                "Cannot use this image because of this error: $1", e));
+            self.get("message")
+                .dialogTemplate("pick", "cui")
+                .dialogTemplate("expand", e);
         };
         var file = self.get("file")[0].files[0];
         Utils.read_file(
@@ -438,7 +568,8 @@
                             var w = this.naturalWidth;
                             this.height = 100;
                             self.get("message")
-                                .html("<br>" + w + " x " + h);
+                                .dialogTemplate("pick", "xbyy")
+                                .dialogTemplate("expand", w, h);
                             if (S.getClient().status === S.IS_LOADED)
                                 S.getClient().status = S.NEW_SETTINGS;
                             if (S.getCloud().status === S.IS_LOADED)
@@ -466,8 +597,8 @@
 
         self.get("storepath").on("keyup", function() {
             if (self.get("storepath").val() === "") {
-                self.get("message").text(TX.tx(
-                    "Store path may not be empty"));
+                self.get("message")
+                    .dialogTemplate("pick", "mnbe");
                 return false;
             }
             if (S.getClient().hoard.options.store_path !==
@@ -488,8 +619,8 @@
         self.get("ok")
             .on($.getTapEvent(), function () {
                 if (self.get("storepath").val() === "") {
-                    self.get("message").text(TX.tx(
-                        "Store path may not be empty"));
+                    self.get("message")
+                        .dialogTemplate("pick", "mnbe");
                     return false;
                 }
                 $dlg.squirrelDialog("close");
@@ -500,7 +631,7 @@
     };
 
     widget._open_store_settings = function($dlg, chain) {
-        this.get("message").empty();
+        this.get("message").hide();
         $dlg.data("callback", chain);
         this.get("storepath").val(
             S.getClient().hoard.options.store_path);
@@ -570,7 +701,7 @@
                 try {
                     datum = JSON.parse(self.get("text").val());
                 } catch (e) {
-                    $("#squeak").squirrelDialog("open", {
+                    S.squeak({
                         title: TX.tx("JSON could not be parsed"),
                         severity: "error",
                         message: e
@@ -611,26 +742,35 @@
 
         self.get("chpw").on($.getTapEvent(), function() {
             $dlg.squirrelDialog("close");
-            $("#chpw").squirrelDialog("open");
+            $("#chpw_dlg").squirrelDialog("open");
         });
 
         self.get("chss").on($.getTapEvent(), function() {
             $dlg.squirrelDialog("close");
-            $("#store_settings").squirrelDialog("open");
+            $("#store_settings_dlg").squirrelDialog("open");
         });
+        
         self.get("theme").on($.getTapEvent(), function() {
             $dlg.squirrelDialog("close");
-            $("#theme").squirrelDialog("open");
+            $("#theme_dlg").squirrelDialog("open");
         });
 
         self.get("json").on($.getTapEvent(), function() {
             $dlg.squirrelDialog("close");
-            $("#json").squirrelDialog("open");
+            $("#json_dlg").squirrelDialog("open");
         });
 
+        self.get("bigger").button().on("click",function() {
+            S.zoom(1.25);
+        });
+        
+        self.get("smaller").button().on("click",function() {
+            S.zoom(0.8);
+        });
+        
         self.get("about").on($.getTapEvent(), function() {
             $dlg.squirrelDialog("close");
-            $("#about").squirrelDialog("open");
+            $("#about_dlg").squirrelDialog("open");
         });
     };
 
@@ -707,15 +847,13 @@
 
         this.get("path").text($parent.tree("getPath").join(" > ") + " > ");
         if (is_value) {
-            $dlg.attr("title", TX.tx("Add value"));
-            this.get("help").text(TX.tx(
-                "Enter the name and value for the new entry"));
+            this.get("value_help").show();
+            this.get("folder_help").hide();
             this.get("value_parts").show();
             this.get("key").autocomplete("enable");
         } else {
-            $dlg.attr("title", TX.tx("Add folder"));
-            this.get("help").text(TX.tx(
-                "Enter the name for the new folder"));
+            this.get("value_help").hide();
+            this.get("folder_help").show();
             this.get("value_parts").hide();
             this.get("key").autocomplete("disable");
         }
@@ -750,7 +888,7 @@
 
         $dlg.data("after_close", p.after_close);
 
-        this.get("message").empty();
+        this.element.find(".messages").empty();
         this.squeakAdd(p);
 
         var options = {
