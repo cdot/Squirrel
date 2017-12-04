@@ -183,14 +183,6 @@
         if (typeof fn !== "undefined")
             fn.call(this, $dlg, options);
 
-        var dopt = {
-            // Get the title from the hack in _create
-            title: this.element.data("title"),
-            modal: true,
-            width: "auto",
-            closeOnEscape: false
-        };
-        
         if ($.isTouchCapable() && !this.options.position) {
             this.options.position = {
                 my: "left top",
@@ -274,7 +266,6 @@
      * Confirm deletion of a node
      */
     widget._init_delete = function($dlg) {
-        var self = this;
         this.get("ok").on($.getTapEvent(), function() {
             $dlg.squirrelDialog("close");
             S.playAction({
@@ -298,7 +289,7 @@
     };
 
     widget._init_pick = function($dlg) {
-        $dlg.find(".clear")
+        this.get("clear")
             .on($.getTapEvent(), function() {
                 $dlg.find(".dlg-picked").removeClass("dlg-picked");
             });
@@ -893,10 +884,8 @@
 
         var options = {
             close: function() {
-                if (!called_back) {
-                    if (typeof p.after_close === "function")
-                        p.after_close();
-                }
+                if (typeof p.after_close === "function")
+                    p.after_close();
             }
         };
         if (p.title)

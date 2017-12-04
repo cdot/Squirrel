@@ -1305,7 +1305,6 @@ var   systemPasteContent =
     };
     
     S.playAction = function(action, more) {
-        var self = this;
         var res = client.hoard.record_action(
             action,
             function(e) {
@@ -1344,7 +1343,7 @@ var   systemPasteContent =
      * Undo the most recent action
      */
     S.undo = function() {
-        if (DEBUG && ST.undos.length === 0) debugger;
+        if (DEBUG && undos.length === 0) debugger;
 
         var a = undos.pop();
         a.time = Date.now();
@@ -1352,13 +1351,13 @@ var   systemPasteContent =
         var res = client.hoard.record_action(
             a,
             function(e) {
-                ST.action(
+                DOMtree.action(
                     e, false,
                     function() {
                         // If there are no undos, there can be no modifications.
                         // The hoard status will not be changed, though, so a
                         // save may still be required.
-                        if (ST.length === 0)
+                        if (undos.length === 0)
                             $(".tree-modified").removeClass("tree-modified");
                         Utils.sometime("update_save");
                     });

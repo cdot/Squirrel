@@ -2,8 +2,6 @@
 
 /* global DEBUG:true */
 /* global Utils */
-/* global TX */
-/* global Hoard */
 /* global Squirrel */
 
 /**
@@ -125,7 +123,7 @@
                 .addClass("tree-title")
             // SMELL: only if screen is wide enough!
                 .hover(hoverIn, hoverOut)
-                .on("paste", function(e) {
+                .on("paste", function() {
                     debugger;
                 })
                 .appendTo($node);
@@ -288,7 +286,7 @@
                 });
 
             // Run up the tree, incrementing the alarm count
-            $node.parents(".tree-node").each(function($n) {
+            $node.parents(".tree-node").each(function() {
                 var c = $(this).data("alarm-count") || 0;
                 $(this).data("alarm-count", c + 1);
                 $(this).addClass("tree-has-alarms");
@@ -297,11 +295,11 @@
         $node.data("alarm", data);
     };
     
-    widget.cancelAlarm = function() {
+    widget.cancelalarm = function() {
         var $node = this.element;
         
-        // Run up the tree decrementing the alarm count
-        $node.parents(".tree-node").each(function($n) {
+        // run up the tree decrementing the alarm count
+        $node.parents(".tree-node").each(function() {
             var c = $(this).data("alarm-count") || 0;
             c = c - 1;
             $(this).data("alarm-count", c);
@@ -324,10 +322,9 @@
     };
     
     widget._makeDraggable = function() {
-        var widge = this;
         var $node = this.element;
         
-        function handleDrag(event, ui) {
+        function handleDrag(event) {
             // Need to get from a position to a target element
             var $within = $(".tree-collection")
                 .not(".ui-draggable-dragging")
@@ -354,7 +351,7 @@
             }
         }
 
-        function handleStop(event, ui) {
+        function handleStop(event) {
             var $target = $(".drop-target");
             if ($target.length > 1)
                 debugger;
@@ -470,7 +467,7 @@
             .hide();
     };
     
-    widget.toggle = function($node) {
+    widget.toggle = function() {
         if (this.element.hasClass("tree-open"))
             return this.close();
         return this.open();
