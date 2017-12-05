@@ -688,7 +688,7 @@
 
     widget._init_extras = function($dlg) {
         var self = this;
-        
+
         self.get("theme")
             .on("change", function () {
                 S.theme($(this).val());
@@ -740,7 +740,7 @@
 
     widget._open_extras = function() {
         var self = this;
-        
+
         if (!(S.USE_STEGANOGRAPHY
               || S.getCloud().store
               && S.getCloud().store.options().needs_path)) {

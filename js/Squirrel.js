@@ -1074,27 +1074,31 @@ var   systemPasteContent =
             beforeOpen: before_menu_open,
             select: handle_menu_choice
         };
-
-        S.valueCopyClipboard = new Clipboard(".ui-contextmenu li[data-command='copy_value']", {
-            text: function() {
-                var $node = S.$menuTarget;
-                if (DEBUG) console.debug("clip val from: " +
-                                         $node.data("key"));
-                return $node.data("value");
-            }
-        });
         
-        S.treeCopyClipboard = new Clipboard(".ui-contextmenu li[data-command='make_copy']", {
-            text: function() {
-                var $node = S.$menuTarget;
-                if (DEBUG) console.debug("clip json from: " +
-                                         $node.data("key"));
-                var p = $node.tree("getPath");
-                var n = client.hoard.get_node(p);
-                return JSON.stringify(n);
-            }
-        });
-/* Should zeroClipboard ever prove necessary, here are the bits
+        $("body").contextmenu(menu);
+        
+        S.valueCopyClipboard =
+            new Clipboard(".ui-contextmenu li[data-command='copy_value']", {
+                text: function() {
+                    var $node = S.$menuTarget;
+                    if (DEBUG) console.debug("clip val from: " +
+                                             $node.data("key"));
+                    return $node.data("value");
+                }
+            });
+        
+        S.treeCopyClipboard =
+            new Clipboard(".ui-contextmenu li[data-command='make_copy']", {
+                text: function() {
+                    var $node = S.$menuTarget;
+                    if (DEBUG) console.debug("clip json from: " +
+                                             $node.data("key"));
+                    var p = $node.tree("getPath");
+                    var n = client.hoard.get_node(p);
+                    return JSON.stringify(n);
+                }
+            });
+        /* Should zeroClipboard ever prove necessary, here are the bits
         S.zeroClipboards.addClipboard({
             selector: ".ui-contextmenu li[data-command='copy_value']",
             handler: function() {
@@ -1121,7 +1125,7 @@ var   systemPasteContent =
                 }
             }
         });
-*/
+        */
     }
  
     /**

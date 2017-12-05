@@ -128,7 +128,7 @@ var TX = {
             } else {
                 if (hasClass(node, "TX_text"))
                     translating = true;
-                
+
                 for (var i = 0, len = node.childNodes.length;
                      i < len; ++i) {
                     TX._translateDOM(node.childNodes[i], translate, translating);
