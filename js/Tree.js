@@ -542,6 +542,7 @@
      * Action handler for cancelling an alarm
      */
     widget.action_C = function(action, undoable) {
+        var $node = this.element;
         var alarm = this.element.data("alarm");
         if (!alarm)
             return;
