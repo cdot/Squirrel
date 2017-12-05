@@ -243,8 +243,8 @@
             // Click works a lot better than tap! tap was always being
             // followed by taphold on android, even when it was clearly
             // a single tap.
-             $button.on($.getTapEvent(), on_click);
-            //$button.on("click", on_click);
+            // $button.on($.getTapEvent(), on_click);
+            $button.on("click", on_click);
     };
 
     widget._changeIconButton = function($control, icon) {
@@ -262,9 +262,10 @@
      * Requires edit_in_place. selector may be a jquery selector or
      * an object.
      * @param $span child node to edit
+     * ~para, text text to present in the editor
      * @param action 'R'ename or 'E'dit
      */
-    widget.edit = function($span, action) {
+    widget.edit = function($span, text, action) {
         var $node = this.element;
 
         // Fit width to the container
@@ -277,7 +278,7 @@
         var nodepath = this.getPath();
         $span.edit_in_place({
             width: w,
-            text: $span.text(),
+            text: text,
             changed: function(s) {
                 S.playAction({
                     type: action,
@@ -290,11 +291,15 @@
     };
 
     widget.editKey = function() {
-        this.edit(this.element.find(".tree-key:first"), "R");
+        var $node = this.element;
+        this.edit(
+            $node.find(".tree-key:first"), $node.data("key"), "R");
     };
     
     widget.editValue = function() {
-        this.edit(this.element.find(".tree-value:first"), "E");
+        var $node = this.element;
+        this.edit(
+            $node.find(".tree-value:first"), $node.data("value"), "E");
     };
     
     widget.ringAlarm = function() {

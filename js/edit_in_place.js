@@ -27,7 +27,7 @@
         $input
             .insertBefore($this)
             .addClass("in_place_editor")
-            .val($this.text())
+            .val(text)
             .css("height", h)
             .css("width", w)
 
