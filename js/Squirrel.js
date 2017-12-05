@@ -236,7 +236,7 @@ var Squirrel = {
             function(conflicts) {
                 if (conflicts.length > 0) {
                     S.squeak({
-                        title: TX.warning(),
+                        title: TX.tx("Warning"),
                         severity: "warning",
                         message: 
                         TX.tx("Conflicts were detected while merging actions from the Cloud. Please review these rejected actions before saving.")
@@ -570,7 +570,7 @@ var Squirrel = {
                         if (DEBUG) console.debug(
                             "Client hoard JSON parse failed: " + e);
                         S.squeak({
-                            title: TX.error(),
+                            title: TX.tx("Error"),
                             severity: "error",
                             message:
                             TX.tx("$1 hoard exists, but can't be read.",
@@ -594,7 +594,7 @@ var Squirrel = {
                         if (DEBUG) console.debug(
                             this.options().identifier + " has NODATA: " + e);
                         S.squeak({
-                            title: TX.error(),
+                            title: TX.tx("Error"),
                             severity: "error",
                             message: TX.tx("Could not load cloud hoard.")
                         });
@@ -673,7 +673,7 @@ var Squirrel = {
                 } catch (e) {
                     if (DEBUG) console.debug("Caught " + e);
                     S.squeak({
-                        title: TX.error(),
+                        title: TX.tx("Error"),
                         severity: "error",
                         message:
                         TX.tx("$1 hoard exists, but can't be read.",
@@ -705,7 +705,7 @@ var Squirrel = {
                     Utils.soon(step_5_init_client_hoard);
                 } else {
                     S.squeak({
-                        title: TX.error(),
+                        title: TX.tx("Error"),
                         severity: "error",
                         message: TX.tx("$1 store error: $2",
                                        this.options().identifier, e),
@@ -800,7 +800,7 @@ var Squirrel = {
             fail: function(e) {
                 // We did our best!
                 S.squeak({
-                    title: TX.error(),
+                    title: TX.tx("Error"),
                     severity: "error",
                     message: TX.tx("Encryption error: $1", e)
                 });
@@ -820,7 +820,7 @@ var Squirrel = {
             },
             fail: function(e) {
                 S.squeak({
-                    title: TX.warning(),
+                    title: TX.tx("Warning"),
                     severity: "warning",
                     message: TX.tx("Could not open cloud store: $1", e),
                     after_close: function() {
@@ -1319,7 +1319,7 @@ var   systemPasteContent =
             });
         if (res !== null)
             S.squeak({
-                title: TX.error(),
+                title: TX.tx("Error"),
                 severity: "error",
                 message: res.message
             });
@@ -1364,7 +1364,7 @@ var   systemPasteContent =
             });
         if (res !== null)
             S.squeak({
-                title: TX.error(),
+                title: TX.tx("Error"),
                 severity: "error",
                 message: res.message
             });
@@ -1435,11 +1435,9 @@ var   systemPasteContent =
         $(".twisted").twisted();
         if (DEBUG)
             $("#decanter").button().on($.getTapEvent(), function() {
-                function collect(s, src) {
-                    console.debug(src + ': "' + s + '"');
-                    return s;
-                }
-                TX.translateTags(collect);
+                var tags = TX.findAllStrings($("body")[0]);
+                for (var i in tags)
+                    console.log(i);
             });
         else
             $("#decanter").remove();

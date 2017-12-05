@@ -361,36 +361,21 @@
                 });
             return true;
         });
+        this.get("len").on("input", function() {
+            self.get("remember").show();
+        });
+        this.get("chs").on("input", function() {
+            self.get("remember").show();
+        });
         this.get("remember").on($.getTapEvent(), function() {
             var constraints = self.get("len").val() +
-                TX.tx(" characters from ") +
-                '[' + self.get("chs").val() + ']';
-            var $ibling = $dlg.data("constraints");
-            if ($ibling) {
-                if (constraints != $ibling.data("value")) {
-                    S.playAction(
-                        { 
-                            type: "E",
-                            path: $ibling.tree("getPath"),
-                            data: constraints
-                        }, function() {
-                            $ibling.data("value", constraints);
-                        });
-                }
-            } else {
-                var $node = $dlg.data("node");
-                var p = $node.tree("getPath");
-                var k = TX.tx("$1 constraints", p.pop());
-                p.push(k); 
-                S.playAction(
-                    { 
-                        type: "N",
-                        path: p,
-                        data: constraints
-                    }, function($new) {
-                        $dlg.data("constraints", $new);
-                    });
-            }
+                ';' + self.get("chs").val();
+            S.playAction(
+                { type: "X",
+                  path: $dlg.data("node").tree("getPath"),
+                  data: constraints
+                });
+            $(this).hide();
         });
     };
 
@@ -400,31 +385,18 @@
         var my_key = $node.data("key");
         $dlg.data("node", $node);
 
-        var constraints_key = TX.tx("$1 constraints", $node.data("key"));
-        var vre = new RegExp(
-            "(\\d+)" +
-                TX.tx(" characters from ")
-                .replace(/[-\/\\^$*+?.()|\[\]\{\}]/g, "\\$&")
-                + "\\[(.*)\\]");
-        $dlg.removeData("constraints");
-        $node.parent().children(".tree-leaf").each(function() {
-            var $ibling = $(this);
-            var k = $ibling.data("key");
-            if (k == constraints_key) {
-                var v = $ibling.data("value");
-                var m = vre.exec(v);
-                if (m) {
-                    $dlg.data("constraints", $ibling);
-                    self.get("len").val(m[1]);
-                    self.get("chs").val(m[2]);
-                }
-            }
-        });
+        var c = $node.data("constraints");
+        if (c) {
+            c = c.split(";", 2);
+            self.get("len").val(c[0]);
+            self.get("chs").val(c[1]);
+        }
 
         var path = $node.tree("getPath");
         this.get("path").text(path.join("/"));
         this.get("key").text(my_key);
         this.get("again").trigger($.getTapEvent());
+        this.get("remember").hide();
     };
 
     widget._init_search = function($dlg) {

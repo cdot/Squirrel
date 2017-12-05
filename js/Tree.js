@@ -114,7 +114,7 @@
             $node.data("path", "");
         }
         else {
-            parent = options.path;
+            parent = options.path.slice();
             key = parent.pop();
             $parent = this.getNodeFromPath(parent);
             $node.data("key", key);
@@ -266,51 +266,6 @@
             }
         });
     };
-    
-    widget.setAlarm = function(data) {
-        var $node = this.element;
-        if (typeof $node.data("alarm") === "undefined") {
-            var $button = $("<button></button>")
-                .addClass("tree-alarm");
-            $node
-                .find(".tree-key")
-                .first()
-                .before($button);
-
-            this._createIconButton(
-                $button,
-                "alarm",
-                function() {
-                    $("#alarm_dlg").squirrelDialog("open", {$node: $node});
-                    return false;
-                });
-
-            // Run up the tree, incrementing the alarm count
-            $node.parents(".tree-node").each(function() {
-                var c = $(this).data("alarm-count") || 0;
-                $(this).data("alarm-count", c + 1);
-                $(this).addClass("tree-has-alarms");
-            });
-        }
-        $node.data("alarm", data);
-    };
-    
-    widget.cancelalarm = function() {
-        var $node = this.element;
-        
-        // run up the tree decrementing the alarm count
-        $node.parents(".tree-node").each(function() {
-            var c = $(this).data("alarm-count") || 0;
-            c = c - 1;
-            $(this).data("alarm-count", c);
-            if (c === 0)
-                $(this).removeClass("tree-has-alarms");
-        });
-
-        this._destroyIconButton($node.find(".tree-alarm").first());
-        
-        return $node.removeData("alarm");
-    };
 
     widget.ringAlarm = function() {
         this.element
@@ -351,7 +306,7 @@
             }
         }
 
-        function handleStop(event) {
+        function handleStop() {
             var $target = $(".drop-target");
             if ($target.length > 1)
                 debugger;
@@ -534,27 +489,53 @@
         var $node = this.element;
         // Check there's an alarm already
         var alarm = $node.data("alarm");
-        if (typeof alarm !== "undefined") {
-            if (alarm !== action.data) {
-                if (undoable) {
-                    S.pushUndo({
-                        type: "A",
-                        path: this.getPath(),
-                        data: $node.data("alarm")
-                    });
-                }
-                this.setModified(action.time);
-            }
-        } else {
-            this.setModified(action.time);
-            if (undoable) {
+        if (alarm === action.data)
+            return; // no change
+
+        if (typeof alarm === "undefined") {
+            // No existing alarm, need to create parts
+            var $button = $("<button></button>")
+                .addClass("tree-alarm");
+            $node
+                .find(".tree-key")
+                .first()
+                .before($button);
+
+            this._createIconButton(
+                $button,
+                "alarm",
+                function() {
+                    $("#alarm_dlg").squirrelDialog("open", {$node: $node});
+                    return false;
+                });
+
+            // Run up the tree, incrementing the alarm count
+            $node.parents(".tree-node").each(function() {
+                var c = $(this).data("alarm-count") || 0;
+                $(this).data("alarm-count", c + 1);
+                $(this).addClass("tree-has-alarms");
+            });
+
+            // Undo by cancelling the new alarm
+            if (undoable)
                 S.pushUndo({
                     type: "C",
                     path: this.getPath()
                 });
-            }
+        } else {
+            // Existing alarm, parts already exist.
+            // Undo by rewriting the old alarm.
+            if (undoable)
+                S.pushUndo({
+                    type: "A",
+                    path: this.getPath(),
+                    data: alarm
+                });
         }
-        this.setAlarm(action.data);
+        
+        $node.data("alarm", action.data);
+
+        this.setModified(action.time);
     };
 
     /**
@@ -562,17 +543,49 @@
      */
     widget.action_C = function(action, undoable) {
         var alarm = this.element.data("alarm");
-        if (typeof alarm !== "undefined") {
-            if (undoable) {
-                S.pushUndo({
-                    type: "A",
-                    path: this.getPath(),
-                    data: alarm
-                });
-            }
-            this.cancelAlarm();
-            this.setModified(action.time);
+        if (!alarm)
+            return;
+        
+        if (undoable) {
+            S.pushUndo({
+                type: "A",
+                path: this.getPath(),
+                data: alarm
+            });
         }
+        
+        // run up the tree decrementing the alarm count
+        $node.parents(".tree-node").each(function() {
+            var c = $(this).data("alarm-count") || 0;
+            c = c - 1;
+            $(this).data("alarm-count", c);
+            if (c === 0)
+                $(this).removeClass("tree-has-alarms");
+        });
+
+        this._destroyIconButton($node.find(".tree-alarm").first());
+        
+        $node.removeData("alarm");
+
+        this.setModified(action.time);
+    };
+
+    /**
+     * Action handler for modifying constraints
+     */
+    widget.action_X = function(action, undoable) {
+        var constraints = this.element.data("constraints");
+        if (constraints === action.data)
+            return; // same constraints already
+        if (undoable)
+            S.pushUndo({
+                type: "X",
+                path: this.getPath(),
+                data: constraints
+            });
+
+        this.element.data("constraints", action.data);
+        this.setModified(action.time);
     };
 
     /**

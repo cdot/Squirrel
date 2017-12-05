@@ -1,32 +1,39 @@
 /*@preserve Copyright (C) 2015 Crawford Currie http://c-dot.co.uk license MIT*/
 
+/* eslint-env jquery, browser */
 /* global DEBUG:true */
 /* global TX */
 /* global Utils */
+/* global module */
 
 /**
  * A combined hierarchical data store with change log, designed to be
- * used in a client-cloud topology where a single cloud hoard is synched
- * with multiple client stores, each of which may change asynchronously.
+ * used in a client-cloud topology where a single cloud hoard is
+ * synched with multiple client stores, each of which may change
+ * asynchronously.
  *
- * On the client side, the hoard contains a cache that represents
- * the current data in the hoard. Then it has a list of
- * actions that record the list of actions performed on the cache since the
- * last sync. These changes are already reflected in the cache, but are kept
- * until the hoard is synched with the cloud hoard.
+ * On the client side, the hoard contains a cache that represents the
+ * current data in the hoard. Then it has a list of actions that
+ * record the actions performed on the client since the last
+ * sync. These actions are already reflected in the cache, but are
+ * kept until the hoard is next synched with the cloud hoard.
  * 
- * In the cloud hoard the cache is maintained empty, and the list of actions
- * represents all changes since the hoard was established. These can be
- * replayed in full to regenerate the cache, though this is a time-consuming
- * business. At any time the hoard can be optimised - basically blowing away
- * all the history. This should only be done if you are sure all clients are
- * up-to-date.
+ * On the cloud side the cache is maintained empty, and the list of
+ * actions represents all changes since the hoard was
+ * established. These can be replayed in full to regenerate the cache,
+ * though this is a time-consuming business.
+ *
+ * At any time the hoard can be optimised - basically blowing away all
+ * the history. This should only be done if you are sure all clients
+ * are up-to-date.
  *
  * @typedef Action
  * @type {object}
  * @property {string} type - single character type
  * @property {string[]} path - node path
- * @property {Object} data - optional data object
+ * @property {object} data - optional data object
+ * @property {number} alarm - optional alarm object
+ * @property {string} constraints - optional constraints on values
  *
  * @typedef Conflict
  * @type {object}
@@ -44,6 +51,12 @@
  * @param {Function} chain
  */
 
+/* Version of hoard. No version in the hoard implies it is version 1.0
+ * Only increment this number when older code is no longer able to read
+ * the hoard, as a version incompatibility will throw an error.
+ */
+const VERSION = 2.0;
+
 /**
  * Create a new Hoard
  * @class
@@ -54,11 +67,18 @@
 function Hoard(data) {
     "use strict";
 
+    data.version = data.version || 1.0;
+    
+    if (data.version > VERSION)
+        throw "Hoard error: cannot read a version " + data.version +
+        " hoard with " + VERSION + " code";
+    
     if (data) {
         this.last_sync = data.last_sync;
         this.actions = data.actions;
         this.cache = data.cache;
         this.options = data.options;
+        this.version = data.version;
     } else {
         this.last_sync = null;
         this.clear_actions();
@@ -74,6 +94,11 @@ function Hoard(data) {
 
             // Is autosave turned on?
             autosave: false,
+
+            // Is double encryption turned on? Old code won't be able
+            // to deal with double-encrypted data, but it's OK because
+            // it will simply display the encrypted value.
+            double_encrypt: false,
 
             // What's the server path to the hoard store?
             store_path: null
@@ -110,7 +135,10 @@ Hoard.prototype.clear_actions = function() {
  * <li>'N' with data - create leaf</li>
  * <li>'D' delete node, no data. Will delete the entire node tree.</li>
  * <li>'E' edit node - modify the leaf data in a node</li>
- * <li>'R' rename node, data contains new name</li>
+ * <li>'R' rename node - data contains new name</li>
+ * <li>'A' add alarm to node - data is the alarm time</li>
+ * <li>'C' cancel alarm on node</li>
+ * <li>'X' add/remove value constraints</li>
  * </ul>
  * Returns a conflict object if there was an error. This has two fields,
  * 'action' for the action record and 'message'.
@@ -197,8 +225,7 @@ Hoard.prototype.record_action = function(e, listener, no_push) {
             new_parent = this.cache; // root
         
         if (!new_parent)
-            return c("Cannot move, '" + e.data.join("/") + "' "
-                     + TX.tx("does not exist"));
+            return c("Cannot move, '$1' does not exist", e.data.join("/"));
 
         new_parent.time = parent.time = e.time; // collection is being modified
         delete parent.data[name];
@@ -237,7 +264,10 @@ Hoard.prototype.record_action = function(e, listener, no_push) {
         if (!parent.data[name])
             return c(TX.tx("Cannot set reminder, '$1' does not exist",
                            e.path.join("/")));
-        parent.data[name].alarm = e.data;
+        if (!e.data)
+            delete parent.data[name].alarm;
+        else
+            parent.data[name].alarm = e.data;
         break;
 
     case "C": // Cancel alarm
@@ -247,8 +277,19 @@ Hoard.prototype.record_action = function(e, listener, no_push) {
         delete parent.data[name].alarm;
         break;
 
+    case "X": // Constrain. Introduced in 2.0, however 1.0 code
+        // will simply ignore this action.
+        if (!parent.data[name])
+            return c(TX.tx("Cannot constrain, '$1' does not exist",
+                           e.path.join("/")));
+        if (!e.data)
+            delete parent.data[name].constraints;
+        else
+            parent.data[name].constraints = e.data;
+        break;
+
     default:
-        // Internal error unrecognised action type
+        // Unrecognised action type (may be due to a version incompatibility?)
         if (DEBUG) debugger;
     }
 
@@ -264,6 +305,7 @@ Hoard.prototype.record_action = function(e, listener, no_push) {
  * Designed to be used on the cloud hoard, this will result in an empty
  * cache and simplified action stream. Note that this will destroy the
  * cache.
+ * @param chain optional function to call when complete
  */
 Hoard.prototype.simplify = function(chain) {
     "use strict";
@@ -307,7 +349,7 @@ Hoard.prototype._reconstruct_actions = function(data, path, listener, chain) {
     var queue = [];
 
     // Handle a node
-    var handle_node = function(node, p, ready) {
+    function handle_node(node, p, ready) {
         if (p.length === 0) {
             // No action for the root
             ready();
@@ -325,9 +367,6 @@ Hoard.prototype._reconstruct_actions = function(data, path, listener, chain) {
         else if (DEBUG && typeof node.data === "undefined")
             debugger;
 
-        // slice this time, to avoid re-use of the same object
-        // in alarms
-        var pal = p.slice();
         listener.call(
             self,
             action,
@@ -337,17 +376,29 @@ Hoard.prototype._reconstruct_actions = function(data, path, listener, chain) {
                         self,
                         {
                             type: "A", 
-                            path: pal,
+                            // slice to avoid re-use of the same object
+                            path: p.slice(),
                             time: time,
                             data: node.alarm
                         });
                 }
+                if (node.constraints) {
+                    listener.call(
+                        self,
+                        {
+                            type: "X", 
+                            // slice to avoid re-use of the same object
+                            path: p.slice(),
+                            time: time,
+                            data: node.constraints
+                        });
+                }
                 ready();
             });
-    };
+    }
 
     // Recursively build a list of all nodes, starting at the root
-    var list_nodes = function(q, node, pat) {
+    function list_nodes(q, node, pat) {
         var key, p;
         q.push(function(ready) {
             handle_node(node, pat, ready);
@@ -359,7 +410,7 @@ Hoard.prototype._reconstruct_actions = function(data, path, listener, chain) {
                 list_nodes(q, node.data[key], p);
             }
         }
-    };
+    }
 
     list_nodes(queue, data, path.slice());
     queue.push(chain);
@@ -464,6 +515,7 @@ Hoard.prototype.dump = function() {
 
 /**
  * Return the cache node identified by the path.
+ * @param path array of path elements, root first
  * @return a cache node, or null if not found.
  */
 Hoard.prototype.get_node = function(path) {
@@ -541,3 +593,6 @@ Hoard.prototype.JSON = function() {
         data = JSON.stringify(this.cache.data, null, "\t");
     return data;
 };
+
+if (typeof module !== "undefined")
+    module.exports = Hoard;
