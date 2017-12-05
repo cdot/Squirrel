@@ -95,11 +95,6 @@ function Hoard(data) {
             // Is autosave turned on?
             autosave: false,
 
-            // Is double encryption turned on? Old code won't be able
-            // to deal with double-encrypted data, but it's OK because
-            // it will simply display the encrypted value.
-            double_encrypt: false,
-
             // What's the server path to the hoard store?
             store_path: null
         };
@@ -300,7 +295,8 @@ Hoard.prototype.record_action = function(e, listener, no_push) {
 };
 
 /**
- * Simplify the action stream in the hoard by eliminating all but "N" actions.
+ * Simplify the action stream in the hoard by eliminating all but "N",
+ * "A" and "X" actions.
  * Set node change times according to the most recent change.
  * Designed to be used on the cloud hoard, this will result in an empty
  * cache and simplified action stream. Note that this will destroy the
@@ -418,8 +414,8 @@ Hoard.prototype._reconstruct_actions = function(data, path, listener, chain) {
 };
 
 /**
- * Reconstruct an action stream (which will all be 'N' actions) from
- * a data block. Does not (directly) affect the actions stored in
+ * Reconstruct an action stream (which will all be 'N', 'A' and 'X' actions)
+ * from a data block. Does not (directly) affect the actions stored in
  * the hoard (though the listener might).
  * @param data data structure, a simple hierarchical structure
  * of keys and the data they contain e.g.

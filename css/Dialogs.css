@@ -19,7 +19,7 @@
 }
 
 .dlg-warning {
-    color: mistyrose;
+    color: orangered;
 }
 
 .dlg-notice {
@@ -42,4 +42,5 @@
 
 .twisted {
     background-color: #F0F0F0;
+    color: #0F0F0F;
 }

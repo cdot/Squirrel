@@ -146,7 +146,16 @@
           Search by entering the text you want to search for into the "Search:"
           at the top. Then click the magnifying glass. All currently open
           folders will be closed, and then those containing matching text will
-          be opened. Both keys and values are searched.
+          be opened. Both keys and values are searched, and case doesn't matter.
+        </p>
+      </div>
+
+      <div class="twisted">
+        <h3 class="TX_text twisted-title">Move to another folder</h3>
+        <p class="TX_text">
+          Press and hold the left mouse button over the folder or value you
+          want to move, and drag it to its new home. Each potential new
+          folder will be outlined with a green box as you drag.
         </p>
       </div>
 
@@ -183,26 +192,66 @@
         <tr>
           <td class="TX_text">Autosave</td>
           <td>
-            <select data-id="autosave">
-              <option value="off" class="TX_text">Off</option>
-	      <option value="on" class="TX_text">On</option>
-            </select>
+            <input type="checkbox" data-id="autosave" />
+            <div class="twisted TX_text" data-open="ui-icon-info">
+              Enable to automatically save whenever anything changes
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="TX_text">Hide Values</td>
+          <td>
+            <input type="checkbox" data-id="hidevalues" />
+            <div class="twisted TX_text" data-open="ui-icon-info">
+              Enable to hide values until they hovered over. This preference
+              will be stored in a cookie in this browser
+            </div>
           </td>
         </tr>
         <tr>
           <td class="TX_text">Text size</td>
           <td>
-            <button data-id="bigger" class="TX_text">Bigger</button>
-            <button data-id="smaller" class="TX_text">Smaller</button>
+            <button data-id="bigger" style="font-size:larger" title="Larger" class="TX_text TX_title">Aa</button>
+            <button data-id="smaller" style="font-size:smaller" title="Smaller" class="TX_title TX_text">Aa</button>
             <span class="twisted TX_text" data-open="ui-icon-info">
-              Your chosen text size will be stored in a cookie in this browser.
+              Your chosen text size will be stored in a cookie in this browser
             </span>
           </td>
         </tr>
         <tr>
           <td class="TX_text">Colour scheme</td>
           <td>
-            <button data-id="theme" class="TX_text">Change</button>
+            <select data-id="theme">
+              <option value="base">Base</option>
+              <option value="ui-lightness">UI Lightness</option>
+              <option value="ui-darkness">UI Darkness</option>
+              <option value="smoothness">Smoothness</option>
+              <option value="start">Start</option>
+              <option value="redmond">Redmond</option>
+              <option value="sunny">Sunny</option>
+              <option value="overcast">Overcast</option>
+              <option value="le-frog">Le Frog</option>
+              <option value="flick">Flick</option>
+              <option value="pepper-grinder">Pepper Grinder</option>
+              <option value="eggplant">Eggplant</option>
+              <option value="dark-hive">Dark Hive</option>
+              <option value="cupertino">Cupertino</option>
+              <option value="south-street">South Street</option>
+              <option value="blitzer">Blitzer</option>
+              <option value="humanity">Humanity</option>
+              <option value="hot-sneaks">Hot Sneaks</option>
+              <option value="excite-bike">Excite Bike</option>
+              <option value="vader">Vader</option>
+              <option value="dot-luv">Dot Luv</option>
+              <option value="mint-choc">Mint Choc</option>
+              <option value="black-tie">Black Tie</option>
+              <option value="trontastic">Trontastic</option>
+              <option value="swanky-purse">Swanky Purse</option>
+            </select>
+            <div class="twisted TX_text" data-open="ui-icon-info">
+              Select your preferred colour scheme. It will be remembered
+              in a cookie in this browser
+            </div>
           </td>
         </tr>
         <tr>
@@ -421,40 +470,6 @@
       </p>
     </div>
 
-    <div id="theme_dlg" class="dlg-dialog TX_title" title="Theme">
-      <div class="twisted TX_text" data-open="ui-icon-info">
-        Select your preferred colour theme. The theme will be remembered
-        in a cookie in this browser
-      </div>
-      <select data-id="select">
-        <option value="base">Base</option>
-        <option value="ui-lightness">UI Lightness</option>
-        <option value="ui-darkness">UI Darkness</option>
-        <option value="smoothness">Smoothness</option>
-        <option value="start">Start</option>
-        <option value="redmond">Redmond</option>
-        <option value="sunny">Sunny</option>
-        <option value="overcast">Overcast</option>
-        <option value="le-frog">Le Frog</option>
-        <option value="flick">Flick</option>
-        <option value="pepper-grinder">Pepper Grinder</option>
-        <option value="eggplant">Eggplant</option>
-        <option value="dark-hive">Dark Hive</option>
-        <option value="cupertino">Cupertino</option>
-        <option value="south-street">South Street</option>
-        <option value="blitzer">Blitzer</option>
-        <option value="humanity">Humanity</option>
-        <option value="hot-sneaks">Hot Sneaks</option>
-        <option value="excite-bike">Excite Bike</option>
-        <option value="vader">Vader</option>
-        <option value="dot-luv">Dot Luv</option>
-        <option value="mint-choc">Mint Choc</option>
-        <option value="black-tie">Black Tie</option>
-        <option value="trontastic">Trontastic</option>
-        <option value="swanky-purse">Swanky Purse</option>
-      </select>
-    </div>
-    
     <div id="store_settings_dlg" class="dlg-dialog TX_title" title="Store settings">
       <p data-id="message" class="dlg-template dlg-pick-template">
         <span data-id="cui" class="dlg-template TX_text">
@@ -502,11 +517,11 @@
     </div>
     
     <div id="about_dlg" class="dlg-dialog TX_title" title="About Squirrel">
-      <p class="TX_text">
+      <p class="TX_html">
         Squirrel is Copyright &copy; 2015-2017 Crawford Currie <a href="http://c-dot.co.uk">http://c-dot.co.uk</a>
       </p>
       <div class="twisted" data-open="ui-icon-info">
-        <p class="TX_text">
+        <p class="TX_html">
           Licensed under the MIT License. Reuse within proprietary software is
           permitted provided all copies of the licensed software include a
           copy of the MIT License terms and the copyright notice.
@@ -516,7 +531,7 @@
     
     <div id="json_dlg" class="dlg-dialog TX_title" title="Database JSON">
       <div class="twisted" data-open="ui-icon-info">
-        <p class="TX_text">
+        <p class="TX_html">
           This dialog lets you access the raw
           <a href="https://www.json.org/">JSON</a> of the database. It
           can be used for:

@@ -298,7 +298,7 @@
     widget._open_pick = function($dlg, options) {
         var $node = options.$node;
         
-        var val = $node.find(".tree-value:first").text();
+        var val = $node.data("value");
         var $which = this.get("which");
         var $from = this.get("from");
         var i, $f;
@@ -686,21 +686,22 @@
         this.get("ok").button("disable");
     };
 
-    widget._init_theme = function() {
-        var self = this;
-        self.get("select")
-            .on("change", function () {
-                S.setTheme($(this).val());
-            });
-    };
-
     widget._init_extras = function($dlg) {
         var self = this;
+        
+        self.get("theme")
+            .on("change", function () {
+                S.theme($(this).val());
+            });
+        
         self.get("autosave")
             .on("change", function() {
-                S.getClient().hoard.options.autosave =
-                    (self.get("autosave").val() === "on");
-                Utils.sometime("update_save");
+                S.autosave($(this).prop("checked"));
+            });
+
+        self.get("hidevalues")
+            .on("change", function() {
+                S.hideValues($(this).prop("checked"));
             });
 
         self.get("chpw").on($.getTapEvent(), function() {
@@ -746,8 +747,16 @@
             self.get("chss").hide();
         }
 
-        self.get("autosave").val(
-            S.getClient().hoard.options.autosave ? "on" : "off");
+        self.get("autosave").prop("checked", S.autosave());
+
+        self.get("hidevalues").prop("checked", S.hideValues());
+
+        self.get("theme")
+            .find("option:selected")
+            .prop("selected", false);
+        self.get("theme")
+            .find("option[value='" + S.theme() + "']")
+            .prop("selected", true);
     };
 
     widget._init_insert = function($dlg) {

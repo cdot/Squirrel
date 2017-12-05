@@ -12,13 +12,15 @@
         var w = options.width || $this.width();
         var changed = options.changed ||
             function(/*text*/) {
-                $this.text();
+                return $this.text();
             };
-        var $input = $("<input/>"),
-        blurb = function() {
+        var $input = $("<input/>");
+        var text = options.text || $this.text();
+            
+        function blurb() {
             $input.remove();
             $this.show();
-        };
+        }
 
         $this.hide();
 
@@ -32,8 +34,8 @@
             .on("change", function() {
                 var val = $(this).val();
                 blurb();
-                if (val !== $this.text())
-                    changed.call($this, val);
+                if (val !== text)
+                    text = changed.call($this, val);
             })
 
             .on($.getEndEvent(), function(e) {
@@ -51,7 +53,7 @@
             .on("keydown", function(e) { // Escape means cancel
                 if (e.keyCode === 27
                     || (e.keyCode === 13
-                        && $(this).val() === $this.text())) {
+                        && $(this).val() === text)) {
                     blurb();
                     return false;
                 } else

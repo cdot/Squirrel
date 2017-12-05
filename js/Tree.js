@@ -67,6 +67,13 @@
             if ($(this).find(".in_place_editor").length !== 0)
                 return true;
 
+            if (S.hideValues() && $node.hasClass("tree-leaf")) {
+                $(this).find(".tree-value").each(
+                    function() {
+                        $(this).text($node.data("value"));
+                    });
+            }
+
             $(this).addClass("tree-hover")
 
             /* SMELL: takes too much space on mobile
@@ -94,13 +101,20 @@
         
         // Invoked on tree-title
         function hoverOut(/*evt*/) {
+            if (S.hideValues() && $node.hasClass("tree-leaf")) {
+                $(this).find(".tree-value").each(
+                    function() {
+                        $(this).text(S.mask($node.data("value")));
+                    });
+            }
             $(this)
                 .removeClass("tree-hover")
                 .find(".tree-lastmod")
                 .remove();
         }
 
-        var $node = $(this.element);
+        var self = this;
+        var $node = this.element;
         var options = this.options;
         var is_leaf = false;
         var is_root = !options.path;
@@ -144,12 +158,15 @@
                     .addClass("tree-open-close");
                 $title.prepend($control);
                 $node.addClass("tree-open");
-                this._createIconButton($control,
-                                       "folder-closed",
-                                       function() {
-                                           $node.tree("toggle");
-                                           return false;
-                                       });
+                this._createIconButton(
+                    $control,
+                    "folder-closed",
+                    function(e) {
+//                        e.preventDefault();
+//                        e.stopPropagation();
+                        $node.tree("toggle");
+                        return false;
+                    });
             }
 
             var $info = $("<div></div>")
@@ -163,7 +180,7 @@
                 .text(key)
                 .on($.isTouchCapable() ? "doubletap" : "dblclick", function(e) {
                     e.preventDefault();
-                    $node.tree("edit", ".tree-key", "R");
+                    self.editKey();
                 });
 
             if (is_leaf) {
@@ -173,11 +190,12 @@
                 $("<span></span>")
                     .appendTo($info)
                     .addClass("tree-value")
-                    .text(options.value)
+                    .text(S.hideValues() ?
+                          S.mask(options.value) : options.value)
                     .on($.isTouchCapable() ?
                         "doubletap" : "dblclick", function(e) {
                             e.preventDefault();
-                            $node.tree("edit", ".tree-value", "E");
+                            self.editValue();
                         });
             }
         }
@@ -222,7 +240,11 @@
             text: false
         });
         if (on_click)
-            $button.on($.getTapEvent(), on_click);
+            // Click works a lot better than tap! tap was always being
+            // followed by taphold on android, even when it was clearly
+            // a single tap.
+             $button.on($.getTapEvent(), on_click);
+            //$button.on("click", on_click);
     };
 
     widget._changeIconButton = function($control, icon) {
@@ -239,14 +261,11 @@
     /**
      * Requires edit_in_place. selector may be a jquery selector or
      * an object.
-     * @param selector object of selector string
+     * @param $span child node to edit
      * @param action 'R'ename or 'E'dit
      */
-    widget.edit = function(selector, action) {
-        var nodepath = this.getPath();
+    widget.edit = function($span, action) {
         var $node = this.element;
-        var $span = (typeof selector === "string") ?
-            $node.find(selector).first() : selector;
 
         // Fit width to the container
         var w = $node.closest(".tree-root").width();
@@ -255,18 +274,29 @@
             w -= $(this).position().left;
         });
 
+        var nodepath = this.getPath();
         $span.edit_in_place({
             width: w,
+            text: $span.text(),
             changed: function(s) {
                 S.playAction({
                     type: action,
                     path: nodepath,
                     data: s
                 });
+                return s;
             }
         });
     };
 
+    widget.editKey = function() {
+        this.edit(this.element.find(".tree-key:first"), "R");
+    };
+    
+    widget.editValue = function() {
+        this.edit(this.element.find(".tree-value:first"), "E");
+    };
+    
     widget.ringAlarm = function() {
         this.element
             .find(".tree-alarm")
@@ -275,7 +305,7 @@
             .removeClass("ui-icon-squirrel-alarm")
             .addClass("ui-icon-squirrel-rang");
     };
-    
+
     widget._makeDraggable = function() {
         var $node = this.element;
         
@@ -438,17 +468,14 @@
             S.pushUndo({
                 type: "E",
                 path: this.getPath(),
-                data: $node
-                    .find(".tree-value")
-                    .first()
-                    .text()
+                data: $node.data("value")
             });
         }
 
         $node
-            .find(".tree-value")
-            .first()
-            .text(action.data);
+            .data("value", action.data)
+            .find(".tree-value:first")
+            .text(S.hideValues() ? S.mask(action.data) : action.data);
 
         this.setModified(action.time);
     };
@@ -466,10 +493,7 @@
             S.pushUndo({
                 type: "N",
                 path: this.getPath(),
-                data: $node
-                    .find(".tree-value")
-                    .first()
-                    .text()
+                data: $node.data("value")
             });
         }
 
@@ -543,7 +567,8 @@
      */
     widget.action_C = function(action, undoable) {
         var $node = this.element;
-        var alarm = this.element.data("alarm");
+        
+        var alarm = $node.data("alarm");
         if (!alarm)
             return;
         

@@ -125,10 +125,13 @@ var TX = {
                 t = translate(node.innerHTML);
                 if (typeof t !== "undefined")
                     node.innerHTML = t;
-            } else if (hasClass(node, "TX_text")) {
+            } else {
+                if (hasClass(node, "TX_text"))
+                    translating = true;
+                
                 for (var i = 0, len = node.childNodes.length;
                      i < len; ++i) {
-                    TX._translateDOM(node.childNodes[i], translate, true);
+                    TX._translateDOM(node.childNodes[i], translate, translating);
                 }
             }
         }

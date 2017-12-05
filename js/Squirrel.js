@@ -161,34 +161,68 @@ var Squirrel = {
     S.squeak = function(e) {
         $("#squeak_dlg").squirrelDialog("open", e);
     };
-    
-    S.setTheme = function(theme) {
-        $("link").filter(function() {
-            return this.href && this.href.indexOf('/themes/') > 0;
-        }).each(function() {
-            this.href = this.href.replace(
-                    /\/themes\/[^\/]+/, "/themes/" + theme);
-            $(this).replaceWith($(this));
-            Utils.sometime("reset_styling");
-        });
-        if (theme === "base") {
-            Cookies.remove('ui_theme');
-        } else {
-            Cookies.set('ui_theme', theme);
+
+    S.theme = function(theme) {
+        if (typeof theme !== "undefined") {
+            $("link").filter(function() {
+                return this.href && this.href.indexOf('/themes/') > 0;
+            }).each(function() {
+                this.href = this.href.replace(
+                        /\/themes\/[^\/]+/, "/themes/" + theme);
+                $(this).replaceWith($(this));
+                Utils.sometime("reset_styling");
+            });
+            if (theme === "base") {
+                Cookies.remove('ui_theme');
+            } else {
+                Cookies.set('ui_theme', theme);
+            }
         }
+        return Cookies.get('ui_theme');
     };
 
-    S.setScale = function(scale) {
-        if (scale > 6) { // don't go below 6px
-            $("body").css("font-size", scale + "px");
-            Cookies.set("ui_scale", scale);
+    S.scale = function(scale) {
+        if (typeof scale !== "undefined") {
+            if (scale > 6) { // don't go below 6px
+                $("body").css("font-size", scale + "px");
+                Cookies.set("ui_scale", scale);
+            }
         }
+        return Cookies.get("ui_scale");
     };
     
     S.zoom = function(factor) {
         var now = $("body").css("font-size");
         now = now.replace(/px/,"");
-        S.setScale(Math.round(factor * parseInt(now)));
+        S.scale(Math.round(factor * parseInt(now)));
+    };
+
+    S.autosave = function(on) {
+        if (typeof on !== undefined) {
+            if (client.hoard.options.autosave !== on) {
+                client.hoard.options.autosave = on;
+                Utils.sometime("update_save");
+            }
+        }
+        return client.hoard.options.autosave;
+    };
+
+    S.mask = function(s) {
+        return s.replace(/./g, ".");
+    };
+
+    S.hideValues = function(on) {
+        if (typeof on !== "undefined") {
+            if (on !== (Cookies.get("ui_hidevalues") == "on")) {
+                $("#sites-node").find(".tree-value:not(:hover)").each(
+                    function() {
+                        var s = $(this).closest(".tree-node").data("value");
+                        $(this).text(on ? S.mask(s) : s);
+                    });
+            }
+            Cookies.set("ui_hidevalues", on ? "on" : "off");
+        }
+        return Cookies.get("ui_hidevalues") == "on";
     };
     
     /**
@@ -502,8 +536,6 @@ var Squirrel = {
 
     function update_save(/*event*/) {
         $("#undo_button").toggle(S.can_undo());
-        $("#extras_dlg").squirrelDialog("get", "autosave").val(
-            client.hoard.options.autosave ? "on" : "off");
         var us = unsaved_changes(3);
         var $sb = $("#save_button");
 
@@ -889,7 +921,7 @@ var Squirrel = {
      */
     function handle_menu_choice(e, ui) {
         var $node = S.$menuTarget;
-        
+
         if (!$node) {
             if (DEBUG) console.debug("No node for contextmenu>" + ui.cmd);
             return;
@@ -897,7 +929,7 @@ var Squirrel = {
 
         switch (ui.cmd) {
         case "copy_value":
-            clipboard = $node.find(".tree-value:first").text();
+            clipboard = $node.data("value");
             break;
 
         case "make_copy":
@@ -933,13 +965,11 @@ var   systemPasteContent =
             break;
 
         case "rename":
-            if (DEBUG) console.debug("Renaming");
-            $node.tree("edit", ".tree-key");
+            $node.tree("editKey");
             break;
 
         case "edit":
-            if (DEBUG) console.debug("Editing");
-            $node.tree("edit", ".tree-value");
+            $node.tree("editValue");
             break;
 
         case "add_value":
@@ -951,22 +981,18 @@ var   systemPasteContent =
             break;
 
         case "randomise":
-            if (DEBUG) console.debug("Randomising");
             $("#randomise_dlg").squirrelDialog("open", { $node: $node });
             break;
 
         case "add_alarm":
-            if (DEBUG) console.debug("Adding reminder");
             $("#alarm_dlg").squirrelDialog("open", { $node: $node });
             break;
 
         case "delete":
-            if (DEBUG) console.debug("Deleting");
             $("#delete_dlg").squirrelDialog("open", { $node: $node });
             break;
 
         case "pick_from":
-            if (DEBUG) console.debug("Picking");
             $("#pick_dlg").squirrelDialog("open", {$node: $node});
             break;
 
@@ -1049,14 +1075,12 @@ var   systemPasteContent =
             select: handle_menu_choice
         };
 
-        $("body").contextmenu(menu);
-
         S.valueCopyClipboard = new Clipboard(".ui-contextmenu li[data-command='copy_value']", {
             text: function() {
                 var $node = S.$menuTarget;
                 if (DEBUG) console.debug("clip val from: " +
                                          $node.data("key"));
-                return $node.find(".tree-value:first").text();
+                return $node.data("value");
             }
         });
         
@@ -1078,7 +1102,7 @@ var   systemPasteContent =
                 if (DEBUG) console.debug("clip val from: " +
                                          $node.data("key"));
                 return {
-                    data: $node.find(".tree-value:first").text(),
+                    data: $node.data("value"),
                     contentType: "text/plain"
                 };
             }
@@ -1120,7 +1144,7 @@ var   systemPasteContent =
         $("#undo_button")
             .hide()
             .on($.getTapEvent(), function(/*evt*/) {
-                DOMtree.undo(function(mess) {
+                S.undo(function(mess) {
                     S.squeak({
                         title: "Undo",
                         message: mess
@@ -1143,7 +1167,7 @@ var   systemPasteContent =
         $("#search_button")
             .on($.getTapEvent(), function(/*evt*/) {
                 $("#search_hits").text(TX.tx("Searching..."));
-                S.search($("#search").val());
+                S.search($("#search_input").val());
             });
 
         $("#help_button")
@@ -1242,10 +1266,12 @@ var   systemPasteContent =
                 });
         }
         var hits = [];
-        $(".tree-key,.tree-value").each(function() {
-            if ($(this).text().match(re)) {
-                hits.push(this);
-            }
+        $(".tree-node").not(".tree-root").each(function() {
+            var $node = $(this);
+            if ($node.data("key").match(re) ||
+                ($node.hasClass("tree-leaf") &&
+                 $node.data("value").match(re)))
+                hits.push($node);
         });
 
         $("#search_hits").text(TX.tx("$1 found", hits.length));
@@ -1258,8 +1284,8 @@ var   systemPasteContent =
             $(".tree-open").not(".tree-root").each(function() {
                 $(this).tree("close");
             });
-            $.each(hits, function(n, v) {
-                $(v).parents(".tree-collection").each(function() {
+            $.each(hits, function(n, $v) {
+                $v.parents(".tree-collection").each(function() {
                     $(this).tree("open");
                 });
             });
@@ -1393,11 +1419,11 @@ var   systemPasteContent =
         
         var theme = Cookies.get("ui_theme");
         if (theme && theme !== "base")
-            S.setTheme(theme);
+            S.theme(theme);
 
         var scale = Cookies.get("ui_scale");
         if (scale && scale > 0)
-            S.setScale(scale);
+            S.scale(scale);
 
         // Menu is built; attach ZeroClipboards (if available)
         //S.zeroClipboards = new ZeroClipboardShim();
