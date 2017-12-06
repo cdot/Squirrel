@@ -1,76 +1,77 @@
 #!/usr/bin/perl
-# Extract strings for translation from sources
+# Process strings for translation. Reads the JSON from the input files
+# and builds a dictionary that is used to correct the language file
 # Usage:
-# perl translate.pl <target-file> <input-file> <input_file> ...
-# Target file might be for example locales/fr.json
-#
+# perl translate.pl <lang> <input-file> <input_file> ...
+# <lang> is e.g. "fr", "de"
+# Input files are .strings (JSON) files
+# Resulting JSON is written to STDOUT
+use strict;
 use JSON;
 use LWP;
 use HTTP::Request;
+use open IN => ":utf8", out => ":utf8";
 
-my $Q = qr/["']/;
-my $C = qr/[-:\w ]*/;
+my %strings;
+my $lang = shift @ARGV;
+my $json = new JSON->utf8;
 
-sub sadd {
-    my ($s, $i) = @_;
-    $s =~ s/\s+/ /g;
-    $s =~ s/$Q + $Q/ /g;
-    $s =~ s/\s+/ /g;
-    $s =~ s/^\s+//;
-    $s =~ s/\s+^//;
-    return $i if $strings{$s};
-    $strings{$s} = 1;
-    return $i;
+$/ = undef;
+binmode STDERR, ":utf8";
+binmode STDOUT, ":utf8";
+
+sub add {
+    my $s = shift;
+    $strings{$s} = $s;
 }
 
-my @strings;
-my $lang = shift @ARGV;
-print STDERR "Translating to $lang\n";
-my $outfile = "locale/$lang.json";
-$/ = undef;
-
+# Load the strings
 while (@ARGV) {
     my $f = shift @ARGV;
     open(F, "<", $f) || die "Cannot open $f for read";
     print "Reading $f\n";
-    $f = <F>;
+    $f = $json->decode(<F>);
     close(F);
-
-    $f =~ s/(\/\/ TX (.*))/sadd($2,$1)/gem;
-
-    $f =~ s/(\bTX.tx\(($Q)(.+?)\2)/sadd($3,$1)/ges;
-
-    #       1        2  2                              3  34   4  1
-    $f =~ s/(\bclass=($Q)$C?\bTX_title\b$C\2.*?\btitle=($Q)(.+?)\3)/sadd($4,$1)/ges;
-
-    #       1        2  2                       3   3 1
-    $f =~ s/(\bclass=($Q)$C?\bTX_text\b$C?\2.*?>(.+?)<)/sadd($3,$1)/ges;
-    close(F);
-}
-
-my $json = new JSON;
-my $data = {};
-if (open(F, "<", $outfile)) {
-    $data = $json->utf8->decode(<F>);
-    close(F);
-    my $changed = 0;
-    foreach my $k (keys %$data) {
-        if (!defined $strings{$k}) {
-            print "Deleting $k\n";
-            delete $data->{$k};
-            $changed = 1;
-        }
+    foreach my $s (@$f) {
+        $strings{$s} = "";
     }
 }
+use Data::Dumper;
+print STDERR Data::Dumper->Dump([\%strings]);
+# Load the target file
+my $data = {};
+my $langfile = "locale/$lang.json";
+if (open(F, "<", $langfile)) {
+    $data = $json->decode(<F>);
+    close(F);
+    foreach my $k (keys %$data) {
+        if (!defined $strings{$k}) {
+            print STDERR "Deleting $k\n";
+            delete $data->{$k};
+        }
+    }
+} else {
+    print STDERR "Could not load $langfile\n";
+}
+
+my @protected;
+sub protect {
+    my $s = shift;
+    push(@protected, $s);
+    return "{" . scalar($#protected) . "}";
+}
+
 my $ua = LWP::UserAgent->new;
-foreach my $k (keys %strings) {
-    next if (defined $data->{$k});
-    print "Adding $k\n";
+foreach my $k (sort keys %strings) {
+    next if ($data->{$k});
+    print STDERR "Adding '$k'\n";
     # See if we can get a translation from MyMemory
     my $uk = $k;
-    $uk =~ s{([^0-9a-zA-Z-_.:~!*/])}{sprintf('%%%02x',ord($1))}ge;
+    @protected = ();
+    $uk =~ s/([{$}]|<[^>]+>)/protect($1)/ges;
+    print STDERR "Get translation for '$uk'\n";
+    $uk =~ s{([^0-9a-zA-Z-_.:~!*/"'])}{sprintf('%%%02x',ord($1))}ge;
     my $uri = "http://api.mymemory.translated.net/get?q=$uk\\&langpair=en\\|$lang";
-    #print STDERR "GET $uri\n";
 
     # Pass request to the user agent and get a response back
     my $res = `curl -# $uri`;
@@ -79,21 +80,19 @@ foreach my $k (keys %strings) {
     my $tx;
     #print STDERR "RESPONSE: $res\n";
     eval { $res = JSON::from_json($res); };
-    die $@ if ($@);
-    $tx = $res->{responseData}->{translatedText};
-    die $tx if ($tx =~ /INVALID LANGUAGE PAIR SPECIFIED/);
-    $tx =~ s/\$ (\d+)/\$$1/g;
-    $data->{$k} = $tx;
-    $changed = 1;
+    if ($@) {
+        print STDERR "Bad response $res: $@\n";
+    } else {
+        $tx = $res->{responseData}->{translatedText};
+        if ($tx =~ /INVALID LANGUAGE PAIR SPECIFIED/) {
+            print STDERR "Bad response $tx\n";
+        } else {
+            print STDERR "Translation '$tx'\n";
+            $tx =~ s/\{(\d+)\}/$protected[$1]/ge;
+            $data->{$k} = $tx;
+        }
+    }
 }
 
-if ($changed) {
-    print "Writing changes to $outfile\n";
-    open(F, ">", $outfile);
-    open(FF, ">", "strings.txt");
-    print F $json->pretty(1)->canonical->utf8->encode($data);
-    print FF join("\n", sort keys %$data);
-    close(F);
-} else {
-    print "No changes\n";
-}
+print $json->pretty(1)->canonical->utf8->encode($data);
+

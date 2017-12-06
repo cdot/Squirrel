@@ -21,8 +21,7 @@
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery.ui-contextmenu/1.18.1/jquery.ui-contextmenu.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-touch-events/1.0.9/jquery.mobile-events.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/js-cookie/2.2.0/js.cookie.min.js"></script>
-    
-    <!-- ZeroClipboard doesn't work when served from CDN -->
+    <!-- Note: ZeroClipboard doesn't work when served from CDN -->
     <!--script class="compressable" src="libs/ZeroClipboard.js"></script-->
     <!--script class="compressable" src="js/ZeroClipboardShim.js"></script-->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.7.1/clipboard.min.js"></script>
@@ -31,6 +30,8 @@
     <script class="compressable" src="js/Utils.js"></script>
     <script class="compressable" src="js/RGBA.js"></script>
     <script class="compressable" src="js/Translation.js"></script>
+    <script class="compressable" src="js/Twisted.js"></script>
+    <script class="compressable" src="js/Template.js"></script>
     <script class="compressable" src="js/AbstractStore.js"></script>
     <script class="compressable" src="js/LocalStorageStore.js"></script>
     <script class="compressable" src="js/AES.js"></script>
@@ -42,6 +43,7 @@
     <script class="compressable" src="js/Squirrel.js"></script>
     <script class="compressable" src="js/Tree.js",></script>
     <script class="compressable" src="js/Dialogs.js"></script>
+    <script class="compressable">UNCOMPRESSED = true;</script>
 
     <link href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" rel="stylesheet">
     <link class="compressable" href="css/Icons.css" rel="stylesheet">
@@ -53,21 +55,27 @@
     <div id="unauthenticated">
       <h1>Squirrel</h1>
       <div id="authmessage" class="TX_text">Authenticating...</div>
-      <div class="authfailed TX_text">Authentication failed. Refresh the browser to try again.</div>
+      <div class="authfailed">
+        <span class="TX_text">Authentication failed.</span>
+        <span class="TX_text">Refresh the browser to try again.</span>
+      </div>
       <div id="splash"><img id="splash" src="images/squirrel.svg" /></div>
     </div>
     
     <div id="authenticated">
-      <span id="search_label" class="TX_text">Search:</span>
-      <input id="search_input" value="" class="TX_title" title="Enter search string" />
-      <button id="search_button" class="TX_title TX_text" title="Search" data-icon="ui-icon-squirrel-search">Search</button>
-
-      <span id="search_hits"></span>
-      <button id="extras_button" class="TX_title TX_text" title="Tools/Options" data-icon="ui-icon-squirrel-gear">Tools/Options</button>
+      <div id="topbar">
+        <span id="search_label" class="TX_text">Search:</span>
+        <input id="search_input" value="" class="TX_title" title="Enter search string" />
+        <button id="search_button" class="TX_title TX_text" title="Search" data-icon="ui-icon-squirrel-search">Search</button>
+        <span id="search_hits"></span>
+        <button id="extras_button" class="TX_title TX_text" title="Tools/Options" data-icon="ui-icon-squirrel-gear">Tools/Options</button>
+        <a href="help.html" target="_blank">
+          <button id="help_button" data-icon="ui-icon-info">Help</button>
+        </a>
+      </div>
       <div id="toolbar">
         <button id="undo_button" class="TX_title TX_text" title="Undo last change" data-icon="ui-icon-squirrel-undo">Undo</button>
         <button id="save_button" class="TX_text" data-icon="ui-icon-squirrel-save">Save</button>
-        <button id="help_button" data-icon="ui-icon-info">Help</button>
       </div>
       <div id="sites-node">
         <div class="tree-title noselect">
@@ -77,111 +85,6 @@
           </div>
         </div>
       </div>
-    </div>
-
-    <div id="help">
-      <h2>
-        <div class="logo" style="float:right"></div>
-        <span class="TX_text">Squirrel how-to...</span>
-      </h2>
-      <button id="closehelp_button" class="TX_text">Close</button>
-      
-      <div class="twisted">
-        <h3 class="TX_text twisted-title">Make the text bigger</h3>
-        <p class="TX_html"> Click (or tap) on
-        <button data-icon="ui-icon-squirrel-gear"></button>
-        and use the buttons in the dialog</p>
-      </div>
-      
-      <div class="twisted">
-        <h3 class="TX_text twisted-title">Add a new folder</h3>
-        <p class="TX_html">
-          You add new top-level folders by right-clicking (long press on
-          mobile devices) on the top
-          <button data-icon="ui-icon-squirrel-folder-closed"></button>
-          and selecting
-          <span class="ui-menu-item-wrapper ui-state-active">
-            <span class="ui-icon ui-icon-squirrel-add-folder squirrel-icon">
-            </span>
-            Add new folder
-          </span>
-          &nbsp;
-          from the pop-up menu. Enter a
-          name for the folder, OK, and then click on the
-          <button data-icon="ui-icon-squirrel-folder-closed"></button>
-          to the left of the name of the new folder to open it. When it's
-          open the icon will change to
-          <button data-icon="ui-icon-squirrel-folder-open"></button>
-          You can
-          now use the pop-up menu to add sub-folders and values
-        </p>
-      </div>
-      
-      <div class="twisted">
-        <h3 class="TX_text twisted-title">Edit a name or value</h3>
-        <p class="TX_text">
-          Double-click (or double-tap) on a name or a value to edit it
-        </p>
-      </div>
-      
-      <div class="twisted">
-        <h3 class="TX_text twisted-title">Copy a value</h3>
-        <p class="TX_html">
-          Values can be copied using the pop-up menu
-          <span class="ui-menu-item-wrapper ui-state-active">
-            <span class="ui-icon ui-icon-squirrel-copy squirrel-icon">
-            </span>
-            Copy value
-          </span>
-          &nbsp;
-          on systems that support it. Otherwise you can edit the value
-          by double-clicking (or double-tapping) and use the standard
-          editing controls.
-        </p>
-      </div>
-      
-      <div class="twisted">
-        <h3 class="TX_text twisted-title">Search</h3>
-        <p class="TX_text">
-          Search by entering the text you want to search for into the "Search:"
-          at the top. Then click the magnifying glass. All currently open
-          folders will be closed, and then those containing matching text will
-          be opened. Both keys and values are searched, and case doesn't matter.
-        </p>
-      </div>
-
-      <div class="twisted">
-        <h3 class="TX_text twisted-title">Move to another folder</h3>
-        <p class="TX_text">
-          Press and hold the left mouse button over the folder or value you
-          want to move, and drag it to its new home. Each potential new
-          folder will be outlined with a green box as you drag.
-        </p>
-      </div>
-
-      <div class="twisted">
-        <h3 class="TX_text twisted-title">Export my data</h3>
-        <p class="TX_html">
-          Export a single folder in JSON format by
-          selecting
-          <span class="ui-menu-item-wrapper ui-state-active">
-            <span class="ui-icon ui-icon-squirrel-copy squirrel-icon">
-            </span>
-            Copy value
-          </span>
-          &nbsp;
-          The JSON data will be copied to the clipboard
-          (on systems that support it)
-        </p>
-        <p class="TX_html">
-          Alternatively you can export the entire database
-          using the "Raw JSON" editor in the
-          <button data-icon="ui-icon-squirrel-gear"></button>
-          dialog
-        </p>
-      </div>
-
-      <button id="decanter">Decant</button>
     </div>
     
     <!--textarea id="pasteboard"></textarea ZeroClipboard-->
@@ -202,9 +105,13 @@
           <td class="TX_text">Hide Values</td>
           <td>
             <input type="checkbox" data-id="hidevalues" />
-            <div class="twisted TX_text" data-open="ui-icon-info">
-              Enable to hide values until they hovered over. This preference
-              will be stored in a cookie in this browser
+            <div class="twisted" data-open="ui-icon-info">
+              <span class="TX_text">
+                Enable to hide values until they are hovered over.
+              </span>
+              <span class="TX_text">
+                This preference will be saved in a cookie in this browser
+              </span>
             </div>
           </td>
         </tr>
@@ -214,7 +121,12 @@
             <button data-id="bigger" style="font-size:larger" title="Larger" class="TX_text TX_title">Aa</button>
             <button data-id="smaller" style="font-size:smaller" title="Smaller" class="TX_title TX_text">Aa</button>
             <span class="twisted TX_text" data-open="ui-icon-info">
-              Your chosen text size will be stored in a cookie in this browser
+              <span class="TX_text">
+                Increase/decrease text size.
+              </span>
+              <span class="TX_text">
+                This preference will be saved in a cookie in this browser
+              </span>
             </span>
           </td>
         </tr>
@@ -248,9 +160,13 @@
               <option value="trontastic">Trontastic</option>
               <option value="swanky-purse">Swanky Purse</option>
             </select>
-            <div class="twisted TX_text" data-open="ui-icon-info">
-              Select your preferred colour scheme. It will be remembered
-              in a cookie in this browser
+            <div class="twisted" data-open="ui-icon-info">
+              <span class="TX_text">
+                Select your preferred colour scheme.
+              </span>
+              <span class="TX_text">
+                This preference will be saved in a cookie in this browser
+              </span>
             </div>
           </td>
         </tr>
@@ -278,6 +194,23 @@
           </td>
         </tr>
       </table>
+
+      <div class="debug-only">
+        <button id="decanter">Decant</button>
+        <div><textarea id="decanted" style="display:none;width:100%"></textarea></div>
+        <button id="template-tester">Pick test</button>
+        <div id="template-test" class="pick-one">
+          <p data-id="0" class="template">
+            $1 eat nuts
+          </p>
+          <p data-id="1" class="template">
+            $1 climb trees
+          </p>
+          <p data-id="2" class="template">
+            $1 are $2
+          </p>
+        </div>
+      </div>
     </div>
 
     <div id="login_dlg" class="dlg-dialog TX_title" title="Security details">
@@ -345,12 +278,16 @@
     </div>
     
     <div id="chpw_dlg" class="dlg-dialog TX_title" title="Change Password">
-      <p class="dlg-warning TX_text">
-        You must ensure that all clients up to date and you
-        are safely connected to the internet before doing this,
-        or you will lose data. Changing the master password will
-        overwrite all data in the cloud with what you can currently
-        see in the browser.
+      <p class="dlg-warning">
+        <span class="TX_text">
+          You must ensure that all clients up to date and you
+          are safely connected to the internet before doing this,
+          or you will lose data.
+        </span>
+        <span class="TX_text">
+          Changing the master password will overwrite all data in
+          the cloud with what you can currently see in the browser.
+        </span>
       </p>
       <table>
         <tr>
@@ -389,11 +326,13 @@
         '<span data-id="path"></span>'
       </p>
       <p>
-        <span data-id="lastmod" class="TX_text dlg-template">
-          It was last modified on $1. The reminder will be reset whenever the
-          entry is modified.
+        <span data-id="lastmod" class="TX_text template">
+          It was last modified on $1.
         </span>
-        <span data-id="current" class="dlg-template TX_text">
+        <span class="TX_text">
+          The reminder will be reset whenever the entry is modified.
+        </span>
+        <span data-id="current" class="template TX_text">
           The current reminder is due in $1 on $2
         </span>
         <button data-id="clear" class="TX_title TX_text" title="Cancel current reminder">Cancel current reminder</button>
@@ -408,12 +347,12 @@
         </select>
       </p>
       <p>
-        <span data-id="nextmod" class="dlg-template TX_text">
+        <span data-id="nextmod" class="template TX_text">
           New reminder will be due in $1 on $2
         </span>
       </p>
       <div>
-        <button id="wtf" data-id="remind" class="TX_title TX_text" title="Set (or reset) reminder">Set reminder</button>
+        <button id="wtf" data-id="remind" class="TX_title TX_text" title="Set (or reset) reminder">Set new reminder</button>
       </div>
     </div>
     
@@ -457,7 +396,7 @@
 
     <div id="pick_dlg" class="dlg-dialog TX_title" title="Pick characters">
       <p class="TX_text">
-        Click on the Nth character position to see what character it is
+        Click on a character position to see what character it is
       </p>
       <table>
         <tbody>
@@ -471,25 +410,32 @@
     </div>
 
     <div id="store_settings_dlg" class="dlg-dialog TX_title" title="Store settings">
-      <p data-id="message" class="dlg-template dlg-pick-template">
-        <span data-id="cui" class="dlg-template TX_text">
+      <p data-id="message" class="template pick-one">
+        <span data-id="cui" class="template TX_text">
           Cannot use this image because of this error: $1
         </span>
-        <span data-id="mnbe" class="dlg-template TX_text">
+        <span data-id="mnbe" class="template TX_text">
           Store path may not be empty
         </span>
-        <span data-id="xbyy" class="dlg-template">
+        <span data-id="xbyy" class="template">
           $1 x $2
         </span>
       </p>
       <div class="using_steganography">
         <div class="twisted" data-open="ui-icon-info">
-          <p class="TX_text twisted-body">
-            Choose a local image that will be copied and used to hide
-            your data in the cloud. This should be a complex colour
-            image of at least 1024x768 pixels, preferably with
-            variable transparency. Note that very large images may
-            take a long time to load and save.
+          <p class="twisted-body">
+            <span class="TX_text">
+              Choose a local image that will be copied and used to hide
+              your data in the cloud.
+            </span>
+            <span class="TX_text">
+              This should be a complex colour image of at least
+              1024x768 pixels, preferably with variable transparency.
+            </span>
+            <span class="TX_text">
+              Note that very large images may take a long time to load
+              and save.
+            </span>
           </p>
         </div>
         <input type="file" data-id="file" class="dlg-hidden" />
@@ -499,10 +445,15 @@
         <p><img id="stegamage" data-id="steg_image" src="images/GCHQ.png" /></p>
       </div>
       <div class="twisted" data-open="ui-icon-info">
-        <p class="TX_text twisted-body">
-          Set the pathname of the image on your cloud store. For example
-          if you choose 'photos/stills/grandma.png' it will use the file
-          'grandma.png' in the directory 'photos/stills'.
+        <p class="twisted-body">
+          <span class="TX_text">
+            Set the pathname of the image on your cloud store.
+          </span>
+          <span class="TX_text">
+            For example
+            if you choose 'photos/stills/grandma.png' it will use the file
+            'grandma.png' in the directory 'photos/stills'.
+          </span>
         </p>
       </div>
       <p>
@@ -515,8 +466,7 @@
         <button data-id="ok" class="TX_text">OK</button>
       </p>
     </div>
-    
-    <div id="about_dlg" class="dlg-dialog TX_title" title="About Squirrel">
+        <div id="about_dlg" class="dlg-dialog TX_title" title="About Squirrel">
       <p class="TX_html">
         Squirrel is Copyright &copy; 2015-2017 Crawford Currie <a href="http://c-dot.co.uk">http://c-dot.co.uk</a>
       </p>
@@ -547,7 +497,7 @@
           carefully to prevent loss of sensitive data.
         </p>
         <p class="TX_text">
-          Note that the loading the JSON will only load folders that are
+          Note that loading the JSON will only load folders that are
           not already in the database.
         </p>
       </div>

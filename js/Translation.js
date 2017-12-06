@@ -47,6 +47,14 @@ var TX = {
 
     translations: null,
 
+    /* Simplify a string for lookup in the translations table */
+    _clean: function(s) {
+        return s
+            .replace(/\s+/g, " ")
+            .replace(/^ /, "")
+            .replace(/ $/, "");
+    },
+
     /**
      * Initialise the translations module for the language in TX.lingo.
      * Requires jQuery
@@ -69,7 +77,8 @@ var TX = {
                     $("body").each(function() {
                         TX._translateDOM(this, TX.tx, false);
                     });
-                    if (DEBUG) console.debug("Using language '" + TX.lingo + "'");
+                    if (DEBUG) console.debug(
+                        "Using language '" + TX.lingo + "'");
                     tx_ready();
                 },
                 error: function(a, b, c) {
@@ -147,16 +156,20 @@ var TX = {
 
         var tx, i;
 
+        // Look up the translation
         if (TX.translations !== null) {
-            tx = TX.translations[s];
+            tx = TX.translations[TX._clean(s)];
             if (typeof tx !== "undefined" && tx.length > 0)
                 s = tx;
+            // else use English
         }
 
+        // Simple expansion
         for (i = arguments.length - 1; i > 0; i--) {
             s = s.replace(new RegExp("\\$" + i, "g"), arguments[i]);
         }
 
+        // Conditional expansion
         s = s.replace(
                 /\$\?\((.*?),(.*?),(.*?)\)/g,
             function(m, test, pass, fail) {
@@ -164,6 +177,7 @@ var TX = {
                 eval("result=(" + test + ")");
                 return result ? pass : fail;
             });
+        
         return s;
     },
 
@@ -174,13 +188,17 @@ var TX = {
      */
     findAllStrings: function(el) {
         "use strict";
-        var strings = {}; // use a map to uniquify
+        var strings = [], seen = {}; // use a map to uniquify
         function collect(s) {
-            strings[s] = true;
+            s = TX._clean(s);
+            if (!seen[s]) {
+                strings.push(s);
+                seen[s] = true;
+            }
             return undefined;
         }
         TX._translateDOM(el, collect, false);
-        return strings;
+        return strings.sort();
     }
 };
 

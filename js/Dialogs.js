@@ -15,112 +15,6 @@
 (function($, S) {
     "use strict";
 
-    /**
-     * Supports two simple styles of template expansion.
-     * For simple expansion, a call to .dialogTemplate("expand", ...)
-     * will expand $1..$N in the template's HTML.
-     * For a pick, a container classed "dlg-pick-template"
-     * has one or more children each with dlg-template and each with
-     * a unique data-id. A call of dialogTemplate("pick", id, ...) will
-     * show the child with matching id and return it.
-     */
-    $.widget("squirrel.dialogTemplate", {
-        _create: function() {
-            if (this.element.hasClass("dlg-pick-template")) {
-                // Nothing picked yet
-                this.element.children().hide();
-            } else {
-                // Simple template
-                var message = this.element.html();
-                this.element.data("dlg-template", message);
-            }
-        },
-
-        pick: function() {
-            this.element.children().hide();
-            var id = arguments.shift();
-            var picked = this.element.children("[data-id='" + id + "']");
-            picked.show();
-            return picked;
-        },
-        
-        expand: function() {
-            var tmpl = this.element.data("dlg-template");
-            var args;
-            if (typeof arguments[0] === "object")
-                args = arguments[0];
-            else
-                args = arguments;
-            tmpl = tmpl.replace(/\$(\d+)/g, function(m, p1) {
-                var i = parseInt(p1);
-                return args[i - 1];
-            })
-            this.element.html(tmpl);
-        }
-    });
-
-    /**
-     * Create open-close buttons on a container with help information
-     * Low-rent accordion widget
-     * .twisted - class on contained
-     * .twisted-title - optional element that will be shown even when
-     * the twist is closed
-     * data-open="ui-icon-circle-plus"
-     * data-close="ui-icon-circle-minus"
-     */
-    $.widget("squirrel.twisted", {
-        _create: function() {
-            var self = this;
-            var $container = self.element;
-            
-            var $button = $("<button></button>")
-                .addClass("twisted-button twisted-title")
-                .button({
-                    icon: "ui-icon-info",
-                    showLabel: false
-                })
-                .on($.getTapEvent(), function() {
-                    if ($container.hasClass("twisted-shut"))
-                        self.open();
-                    else
-                        self.close();
-                });
-
-            var $title = $container
-                .children(".twisted-title:first")
-                .detach()
-                .insertBefore($container)
-                .prepend($button);
-            
-            if ($title.length === 0)
-                $button.insertBefore($container);
-            
-            $container.data("twisted-button", $button);
-            
-            self.close();
-        },
-
-        open: function() {
-            var icon = this.element.data("close") ||
-                "ui-icon-circle-minus";
-            this.element
-                .removeClass("twisted-shut")
-                .show()
-                .data("twisted-button")
-                .button("option", "icon", icon)
-        },
-        
-        close: function() {
-            var icon = this.element.data("open") ||
-                "ui-icon-circle-plus";
-            this.element
-                .addClass("twisted-shut")
-                .hide()
-                .data("twisted-button")
-                .button("option", "icon", icon);
-        }
-    });
-
     var widget = {};
     
     /* Helper for add, check wrapping node for same key value  */
@@ -423,7 +317,7 @@
         numb = numb * Utils.TIMEUNITS[this.get("units").val()].days;
         var alarmd = new Date(Date.now() + numb * Utils.MSPERDAY);
         this.get("nextmod")
-            .dialogTemplate(
+            .template(
                 "expand",
                 Utils.deltaTimeString(alarmd),
                 alarmd.toLocaleDateString());
@@ -474,7 +368,7 @@
         $dlg.data("node", $node);
         var lastmod = $node.data("last-time-changed");
         this.get("lastmod")
-            .dialogTemplate(
+            .template(
                 "expand",
                 new Date(lastmod).toLocaleString());
 
@@ -482,7 +376,7 @@
             var alarm = new Date(
                 lastmod + $node.data("alarm") * Utils.MSPERDAY);
             this.get("current")
-                .dialogTemplate(
+                .template(
                     "expand",
                     Utils.deltaTimeString(alarm),
                     alarm.toLocaleDateString())
@@ -502,8 +396,8 @@
         
         var fail = function(e) {
             self.get("message")
-                .dialogTemplate("pick", "cui")
-                .dialogTemplate("expand", e);
+                .template("pick", "cui")
+                .template("expand", e);
         };
         var file = self.get("file")[0].files[0];
         Utils.read_file(
@@ -531,8 +425,8 @@
                             var w = this.naturalWidth;
                             this.height = 100;
                             self.get("message")
-                                .dialogTemplate("pick", "xbyy")
-                                .dialogTemplate("expand", w, h);
+                                .template("pick", "xbyy")
+                                .template("expand", w, h);
                             if (S.getClient().status === S.IS_LOADED)
                                 S.getClient().status = S.NEW_SETTINGS;
                             if (S.getCloud().status === S.IS_LOADED)
@@ -561,7 +455,7 @@
         self.get("storepath").on("keyup", function() {
             if (self.get("storepath").val() === "") {
                 self.get("message")
-                    .dialogTemplate("pick", "mnbe");
+                    .template("pick", "mnbe");
                 return false;
             }
             if (S.getClient().hoard.options.store_path !==
@@ -583,7 +477,7 @@
             .on($.getTapEvent(), function () {
                 if (self.get("storepath").val() === "") {
                     self.get("message")
-                        .dialogTemplate("pick", "mnbe");
+                        .template("pick", "mnbe");
                     return false;
                 }
                 $dlg.squirrelDialog("close");

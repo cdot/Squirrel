@@ -242,7 +242,7 @@
         if (on_click)
             // Click works a lot better than tap! tap was always being
             // followed by taphold on android, even when it was clearly
-            // a single tap.
+            // a single tap. And you get click events there anyway.
             // $button.on($.getTapEvent(), on_click);
             $button.on("click", on_click);
     };
@@ -275,6 +275,8 @@
             w -= $(this).position().left;
         });
 
+        S.enableContextMenu(false);
+        
         var nodepath = this.getPath();
         $span.edit_in_place({
             width: w,
@@ -286,6 +288,9 @@
                     data: s
                 });
                 return s;
+            },
+            closed: function() {
+                S.enableContextMenu(true);
             }
         });
     };

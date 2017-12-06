@@ -52,6 +52,14 @@ var Squirrel = {
     // Pointer to tree widget at root of DOM tree
     var DOMtree;
 
+    // Node that is the target of a context menu operation
+    var $menuTarget;
+
+    // For unknown reasons, we get a taphold event on mobile devices
+    // even when a taphold hasn't happened. So we have to selectively
+    // disable the context menu :-(
+    var contextMenuDisables = 0;
+    
     // status may be one of IS_EMPTY, IS_CORRUPT, IS_LOADED or
     // NEW_SETTINGS. If the status is anything but IS_LOADED
     // then it is a candidate for saving.
@@ -882,7 +890,18 @@ var Squirrel = {
         return new EncryptedStore(p);
     }
 
+    S.enableContextMenu = function(enable) {
+        if (enable) {
+            if (contextMenuDisables > 0)
+                contextMenuDisables--;
+        } else
+            contextMenuDisables++;
+    };
+
     function before_menu_open(e, ui) {
+        if (contextMenuDisables > 0)
+            return false;
+        
         var $node = (ui.target.is(".tree-node"))
             ? ui.target
             : ui.target.closest(".tree-node");
@@ -913,14 +932,14 @@ var Squirrel = {
             .contextmenu("showEntry", "randomise", is_leaf)
             .contextmenu("showEntry", "rename", !is_root);
 
-        S.$menuTarget = $node;
+        $menuTarget = $node;
     }
 
     /**
      * Handler for context menu items
      */
     function handle_menu_choice(e, ui) {
-        var $node = S.$menuTarget;
+        var $node = $menuTarget;
 
         if (!$node) {
             if (DEBUG) console.debug("No node for contextmenu>" + ui.cmd);
@@ -1080,7 +1099,7 @@ var   systemPasteContent =
         S.valueCopyClipboard =
             new Clipboard(".ui-contextmenu li[data-command='copy_value']", {
                 text: function() {
-                    var $node = S.$menuTarget;
+                    var $node = $menuTarget;
                     if (DEBUG) console.debug("clip val from: " +
                                              $node.data("key"));
                     return $node.data("value");
@@ -1090,7 +1109,7 @@ var   systemPasteContent =
         S.treeCopyClipboard =
             new Clipboard(".ui-contextmenu li[data-command='make_copy']", {
                 text: function() {
-                    var $node = S.$menuTarget;
+                    var $node = $menuTarget;
                     if (DEBUG) console.debug("clip json from: " +
                                              $node.data("key"));
                     var p = $node.tree("getPath");
@@ -1102,7 +1121,7 @@ var   systemPasteContent =
         S.zeroClipboards.addClipboard({
             selector: ".ui-contextmenu li[data-command='copy_value']",
             handler: function() {
-                var $node = S.$menuTarget;
+                var $node = $menuTarget;
                 if (DEBUG) console.debug("clip val from: " +
                                          $node.data("key"));
                 return {
@@ -1114,7 +1133,7 @@ var   systemPasteContent =
         S.zeroClipboards.addClipboard({
             selector: ".ui-contextmenu li[data-command='make_copy']",
             handler: function() {
-                var $node = S.$menuTarget;
+                var $node = $menuTarget;
                 if (DEBUG) console.debug("clip json from: " +
                                          $node.data("key"));
                 var p = $node.tree("getPath");
@@ -1174,18 +1193,6 @@ var   systemPasteContent =
                 S.search($("#search_input").val());
             });
 
-        $("#help_button")
-            .on($.getTapEvent(), function(/*evt*/) {
-                $("#authenticated").hide();
-                $("#help").show();
-            });
-        
-        $("#closehelp_button")
-            .on($.getTapEvent(), function(/*evt*/) {
-                $("#help").hide();
-                $("#authenticated").show();
-            });
-        
         $("button").each(function() {
             var $this = $(this);
             var opts;
@@ -1409,9 +1416,6 @@ var   systemPasteContent =
         
         var qs = Utils.query_string();
 
-        // Use uncompressed if the current document is uncompressed
-        var unco = !/\.min\.html/.test(document.location.href);
-
         if (qs.debug)
             DEBUG = true;
 
@@ -1442,7 +1446,21 @@ var   systemPasteContent =
             store_bits.push("js/StegaStore.min.js");
         } else
             $(".using_steganography").remove();
-        
+        var unco = (typeof UNCOMPRESSED !== "undefined") && UNCOMPRESSED;
+        console.log("unco " + unco);
+        Utils.load(
+            store_bits,
+            unco,
+            function () {
+                // Initialise translation module,
+                // and chain the application init
+                TX.init(function() {
+                    // Initialise UI components
+                    init_ui();
+                    init_application();
+                });
+            });
+
         $("#sites-node").tree({
             is_root: true,
             compare: S.compare
@@ -1451,26 +1469,26 @@ var   systemPasteContent =
         DOMtree = $("#sites-node").data("squirrelTree");
         if (DEBUG) console.debug("DOM tree rooted " + DOMtree);
         
-        Utils.load(store_bits, unco, function () {
-            // Initialise translation module,
-            // and chain the application init
-            TX.init(function() {
-                // Initialise UI components
-                init_ui();
-                init_application();
-            });
-        });
         $(".dlg-dialog").squirrelDialog({ autoOpen: false });
-        $(".dlg-template").dialogTemplate();
+        $(".template").template();
         $(".twisted").twisted();
-        if (DEBUG)
-            $("#decanter").button().on($.getTapEvent(), function() {
-                var tags = TX.findAllStrings($("body")[0]);
-                for (var i in tags)
-                    console.log(i);
+        
+        if (DEBUG) {
+            $("#decanter").button().on("click", function() {
+                var strings = TX.findAllStrings($("body")[0]);
+                $("#decanted").text(JSON.stringify(strings, null, 1)).show();
             });
-        else
-            $("#decanter").remove();
+            var pick = 1;
+            $("#template-test").template().template("pick", pick)
+                .template("expand", "Cats");
+            $("#template-tester").button().on("click", function() {
+                $("#template-test")
+                    .template("pick", pick)
+                    .template("expand", "Squirrels", "cats");
+                pick = (pick + 1) % 3;
+            });
+        } else
+            $(".debug-only").remove();
     });
 
 })(jQuery, Squirrel);

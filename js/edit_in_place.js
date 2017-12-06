@@ -14,12 +14,15 @@
             function(/*text*/) {
                 return $this.text();
             };
+        var closed = options.closed || function() {};
         var $input = $("<input/>");
         var text = options.text || $this.text();
-            
+
+        // Action on blur
         function blurb() {
             $input.remove();
             $this.show();
+            closed();
         }
 
         $this.hide();
@@ -37,7 +40,7 @@
                 if (val !== text)
                     text = changed.call($this, val);
             })
-
+/*
             .on($.getEndEvent(), function(e) {
                 // Override the parent click handler
                 e.stopPropagation();
@@ -49,7 +52,7 @@
                 e.stopPropagation();
                 // e.preventDefault(); Kills mouse events on desktop input
             })
-
+*/
             .on("keydown", function(e) { // Escape means cancel
                 if (e.keyCode === 27
                     || (e.keyCode === 13
