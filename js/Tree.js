@@ -64,9 +64,13 @@
 
         // Invoked on tree-title
         function hoverIn(/*evt*/) {            
-            if ($(this).find(".in_place_editor").length !== 0)
+            $("body").contextmenu("close");
+            
+            if ($("body").find("input.in_place_editor").length > 0)
                 return true;
-
+            console.log("hoverin");
+            $(".tree-hover").removeClass("tree-hover");
+            
             if (S.hideValues() && $node.hasClass("tree-leaf")) {
                 $(this).find(".tree-value").each(
                     function() {
@@ -76,41 +80,23 @@
 
             $(this).addClass("tree-hover")
 
-            /* SMELL: takes too much space on mobile
-            var $status = $("<div></div>");
-            $status.addClass("tree-lastmod");
-            $(this).append($status);
-            var $node = $(this).closest(".tree-node");
-            var mod = new Date($node.data("last-time-changed"))
-                .toLocaleString();
-            $status.append("<span>" + mod + " </span");
-            if (typeof $node.data("alarm") !== "undefined") {
-                $status.append(
-                    '<div class="inline-icon ui-icon-squirrel-alarm"></div>');
-                $status.append(
-                    '<div class="tree-info">'
-                        + Utils.deltaTimeString(
-                            new Date($node.data("last-time-changed")
-                                     + $node.data("alarm")
-                                     * Utils.MSPERDAY))
-                        + "</div>");
-            }
-            */
             return false;
         }
         
         // Invoked on tree-title
         function hoverOut(/*evt*/) {
+            if ($("body").contextmenu("isOpen") ||
+                $(body).find("input.in_place_editor").length > 0)
+                return true;
+            console.log("hoverout");
+            
             if (S.hideValues() && $node.hasClass("tree-leaf")) {
                 $(this).find(".tree-value").each(
                     function() {
                         $(this).text(S.mask($node.data("value")));
                     });
             }
-            $(this)
-                .removeClass("tree-hover")
-                .find(".tree-lastmod")
-                .remove();
+            $(this).removeClass("tree-hover");
         }
 
         var self = this;

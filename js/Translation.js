@@ -43,7 +43,12 @@
  * syntax is incorrect.
  */
 var TX = {
-    lingo: window.navigator.userLanguage || window.navigator.language || "en",
+    lingo: undefined,
+
+    langFromLocale: function() {
+        TX.lingo = window.navigator.userLanguage ||
+            window.navigator.language || "en";
+    },
 
     translations: null,
 
@@ -62,7 +67,10 @@ var TX = {
      */
     init: function(tx_ready) {
         "use strict";
-
+        
+        if (!TX.lingo)
+            TX.langFromLocale();
+        
         if (/^en(\b|$)/i.test(TX.lingo)) {
             if (DEBUG) console.debug("Using language 'en'");
             tx_ready();
