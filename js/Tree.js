@@ -55,6 +55,9 @@
     
     widget._create = function() {
 
+        var self = this;
+        var $node = this.element;
+
         if (this.options.compare)
             compare = this.options.compare;
         
@@ -98,8 +101,6 @@
             $(this).removeClass("tree-hover");
         }
 
-        var self = this;
-        var $node = this.element;
         var options = this.options;
         var is_leaf = false;
         var is_root = !options.path;
@@ -146,9 +147,7 @@
                 this._createIconButton(
                     $control,
                     "folder-closed",
-                    function(e) {
-//                        e.preventDefault();
-//                        e.stopPropagation();
+                    function() {
                         $node.tree("toggle");
                         return false;
                     });
@@ -327,7 +326,6 @@
             if ($within.length > 0) {
                 $within = $within.last();
                 $within.addClass("drop-target");
-                console.log("drop on " + $within.data("key"));
             }
         }
 

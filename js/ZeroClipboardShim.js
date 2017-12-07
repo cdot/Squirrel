@@ -54,8 +54,7 @@ function ZeroClipboardShim() {
                 self.clipboards[i].destroy();
             if (DEBUG) console.log("ZeroClipboard disabled: " + e.name)
             self.ready = false;
-        } else if (DEBUG)
-            console.log("ZeroClipboard warning: " + e.name)
+        } else if (DEBUG) console.log("ZeroClipboard warning: " + e.name)
     });
 
     // Construct the dummy element to kick off the "ready" event

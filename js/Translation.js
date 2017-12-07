@@ -46,6 +46,8 @@ var TX = {
     lingo: undefined,
 
     langFromLocale: function() {
+        "use strict";
+        
         TX.lingo = window.navigator.userLanguage ||
             window.navigator.language || "en";
     },
@@ -54,6 +56,8 @@ var TX = {
 
     /* Simplify a string for lookup in the translations table */
     clean: function(s) {
+        "use strict";
+        
         return s
             .replace(/\s+/g, " ")
             .replace(/^ /, "")

@@ -207,15 +207,12 @@ Utils.fragmentify = function(fid) {
 Utils.sometime = function(event) {
     "use strict";
 
-    //console.debug("...queue sometime " + event);
     if (Utils.waiting_for_sometime[event]) {
-        //console.debug("......already waiting");
         return;
     }
 
     Utils.waiting_for_sometime[event] = true;
     if (Utils.sometime_timeout === null) {
-        //console.debug("......set timeout");
         Utils.sometime_timeout = window.setTimeout(
             Utils.sometime_is_now, Utils.SOMETIME);
     }
@@ -232,7 +229,6 @@ Utils.sometime_is_now = function() {
     for (var event in Utils.waiting_for_sometime) {
         // Triggering these handlers may take an appreciable amount of
         // time and result in new events joining the sometime schedule.
-        //console.debug("...sometime for " + event + " is now");
         $(document).triggerHandler(event);
         // Only now delete the event to allow it to be requeued
         delete Utils.waiting_for_sometime[event];
@@ -258,11 +254,9 @@ Utils.soon = function(fn) {
     if (Date.now() - Utils.last_yield > Utils.SOON) {
         window.setTimeout(function() {
             Utils.last_yield = Date.now();
-            //console.debug("soon is now");
             fn();
         }, Utils.IMMEDIATE);
     } else {
-        //console.debug("soon is immediate");
         fn();
     }
 };
@@ -318,15 +312,12 @@ Utils.load = function(libs, uncompressed, on_loaded) {
 
     // action when a resource is loaded
     var _loaded = function(file) {
-        //console.debug("Loaded " + file);
         delete expect[file];
         if (Object.keys(expect).length === 0) {
             if (typeof on_loaded === "function") {
-                //console.debug("Calling on_loaded");
                 on_loaded();
             }
         }
-        //else console.debug("Still waiting for " + Object.keys(expect));
     };
 
     // fire off a resource load
@@ -334,12 +325,10 @@ Utils.load = function(libs, uncompressed, on_loaded) {
         if (uncompressed)
             file = file.replace(".min.", ".");
 
-        //console.debug("Loading " + file);
         expect[file] = true;
         if (/\.js$/.test(file)) {
             $.getScript(file)
                 .done(function() {
-                    //console.debug("Loaded script " + file);
                     _loaded(file);
                 })
                 .fail(function() {
@@ -354,7 +343,6 @@ Utils.load = function(libs, uncompressed, on_loaded) {
         } else if (/\.html$/.test(file)) {
             $.get(file)
                 .done(function(data) {
-                    //console.debug("Loaded HTML " + file);
                     $(data)
                         .appendTo("body");
                     _loaded(file);

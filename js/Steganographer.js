@@ -277,7 +277,6 @@ Steganographer.prototype.extract = function() {
         }
     }
     if (mi < ((numChunks * chunkSize) >> 3)) {
-        //console.debug("unwhak " + charCode);
         message[mi++] = charCode & 0xFF;
     }
     if (DEBUG) console.debug(

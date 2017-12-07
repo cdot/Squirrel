@@ -494,10 +494,8 @@ Hoard.prototype.merge_from_cloud = function(cloud, listener, chain) {
                 conflicts.push(c);
             }
         }
-        else if (DEBUG) {
-            console.debug(
-                "Skip " + Hoard.stringify_action(cloud.actions[i]));
-        }
+        else if (DEBUG) console.debug(
+            "Skip old " + Hoard.stringify_action(cloud.actions[i]));
     }
 
     // Restore the saved actions list

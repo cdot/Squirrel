@@ -5,7 +5,6 @@
 /* global AbstractStore */
 /* global Utils */
 /* global gapi */
-/* global SQUIRREL_STORE:true */
 
 /**
  * A store using Google Drive
@@ -48,6 +47,7 @@ function GoogleDriveStore(params) {
 
 GoogleDriveStore.prototype = Object.create(AbstractStore.prototype);
 
+/* global SQUIRREL_STORE:true */
 SQUIRREL_STORE = GoogleDriveStore;
 
 function gapi_on_load() {
@@ -70,7 +70,7 @@ GoogleDriveStore.prototype._analyse_error = function(r, context, fail) {
         mess +=
             TX.tx("Your access token has expired, or you are not logged in.")
             + " " +
-            Tx.tx("Please refresh the page in order to save in Google Drive");
+            TX.tx("Please refresh the page in order to save in Google Drive");
     } else if (r.result) {
         mess += r.result.error.message;
     } else {
@@ -156,7 +156,6 @@ GoogleDriveStore.prototype._getfile = function(url, ok, fail) {
 
     var self = this;
     var oauthToken = gapi.auth.getToken();
-    var converter;
 
     if (DEBUG) console.debug("GoogleDriveStore: GET " + url);
 
@@ -171,7 +170,7 @@ GoogleDriveStore.prototype._getfile = function(url, ok, fail) {
                 "Authorization",
                 "Bearer " + oauthToken.access_token);
         },
-        success: function(data, textStatus, jqXHR) {
+        success: function(data) {
             if (DEBUG) console.debug("GoogleDriveStore: _getfile OK");
             ok.call(self, data);
         },
@@ -199,7 +198,7 @@ GoogleDriveStore.prototype._follow_path = function(
 
     var p = path.slice();
     var pathel = p.shift();
-    var create_folder = function(reason) {
+    var create_folder = function() {
         var metadata = {
             title: pathel,
             mimeType: "application/vnd.google-apps.folder"

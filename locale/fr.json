@@ -407,9 +407,9 @@
   "m": 0.85,
   "s": "Impossible d’actualiser dans $1: $2"
  },
- "Save is required because: ": {
+ "Save is required because": {
   "m": 0.85,
-  "s": "Il faut enregistrer parce que :"
+  "s": "Il faut enregistrer parce que"
  },
  "You have unsaved changes": {
   "m": 1,

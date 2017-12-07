@@ -13,6 +13,7 @@
 /* global Hoard */
 /* global RGBA */
 /* global SQUIRREL_STORE */
+/* global UNCOMPRESSED */
 
 /*
  * The Squirrel Application namespace and UI.
@@ -139,7 +140,7 @@ var Squirrel = {
                                 s += "color: " +
                                     a.inverse().toString() + ";\n"
                             } catch (e) {
-                                console.log(e);
+                                if (DEBUG) console.log(e);
                             }
                         }
                         if (rule.style.backgroundColor) {
@@ -149,7 +150,7 @@ var Squirrel = {
                                 s += "background-color: " +
                                     a.inverse().toString() + ";\n"
                             } catch (e) {
-                                console.log(e + ":" + rule.style.backgroundColor);
+                                if (DEBUG) console.log(e + ":" + rule.style.backgroundColor);
                             }
                         }
                         if (s.length > 0)
@@ -305,7 +306,7 @@ var Squirrel = {
         var message = [];
 
         $(".tree-modified").each(function() {
-            if (DEBUG && !$(this).data("path")
+            if (DEBUG && !$(this).tree("getPath")
                 && !$(this).hasClass("tree-root"))
                 debugger; // Missing data-path
             var path = $(this).data("path") || "node";
@@ -555,7 +556,7 @@ var Squirrel = {
             } else {
                 $sb.attr(
                     "title",
-                    TX.tx("Save is required because: ") + us);
+                    TX.tx("Save is required because") + ": " + us);
                 $sb.show();
             }
         } else {
@@ -598,8 +599,7 @@ var Squirrel = {
      */
     function step_6_load_cloud_hoard() {
         if (cloud.store) {
-            if (DEBUG) console.debug(
-                "Reading cloud " + cloud.store.options().identifier);
+            $("#authmessage").text(TX.tx("Reading from cloud..."));
             cloud.store.reads(
                 client.hoard.options.store_path,
                 function(data) {
@@ -675,7 +675,9 @@ var Squirrel = {
      * the cloud hoard.
      */
     function step_4_load_client_hoard() {
+
         function rebuild_hoard() {
+            $("#authmessage").text(TX.tx("Building UI..."));
             if (DEBUG) console.debug("Reconstructing UI tree from cache");
             client.hoard.reconstruct_actions(
                 function(a, next) {
@@ -704,8 +706,7 @@ var Squirrel = {
                 });
         }
 
-        if (DEBUG) console.debug("Load client store");
-
+        $("#authmessage").text(TX.tx("Reading from client..."));
         client.store.reads(
             "S." + client.store.user(),
             function(data) {
@@ -767,6 +768,8 @@ var Squirrel = {
         var uReq = true;
         var pReq = true;
 
+        $("#authmessage").text(TX.tx("Authentication..."));
+        
         // Spread user information determined during store initialisation
         // around.
         if (cloud.store
@@ -835,7 +838,6 @@ var Squirrel = {
                 if (DEBUG) console.debug(this.options().identifier
                                          + " store is ready");
                 client.store = this;
-                $("#authmessage").text(TX.tx("Loading..."));
                 // Chain the login prompt
                 Utils.soon(step_3_identify_user);
             },
@@ -1154,6 +1156,7 @@ var   systemPasteContent =
      */
     function init_application() {
         // Kick off by initialising the cloud store.
+        $("#authmessage").text(TX.tx("Loading application..."));
         step_1_init_cloud_store();
     }
 
@@ -1437,9 +1440,10 @@ var   systemPasteContent =
     // on ready
     $(function() {
 
-        console.log("Device is " + window.screen.width + " X " +
-                    window.screen.height + " Body is " +
-                    $("body").width() + " X " + $("body").height());
+        if (DEBUG) console.log(
+            "Device is " + window.screen.width + " X " +
+                window.screen.height + " Body is " +
+                $("body").width() + " X " + $("body").height());
         
         var qs = Utils.query_string();
 
@@ -1474,7 +1478,6 @@ var   systemPasteContent =
         } else
             $(".using_steganography").remove();
         var unco = (typeof UNCOMPRESSED !== "undefined") && UNCOMPRESSED;
-        console.log("unco " + unco);
         Utils.load(
             store_bits,
             unco,

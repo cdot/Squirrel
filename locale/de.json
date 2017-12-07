@@ -315,9 +315,9 @@
   "m": 0.5,
   "s": "Sparen Sie Fehler aufgetreten"
  },
- "Save is required because: ": {
+ "Save is required because": {
   "m": 0.5,
-  "s": "Save ist, weil erforderlich:"
+  "s": "Save ist, weil erforderlich"
  },
  "Saved in $1": {
   "m": 0.5,
