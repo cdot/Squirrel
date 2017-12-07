@@ -599,7 +599,7 @@ var Squirrel = {
      */
     function step_6_load_cloud_hoard() {
         if (cloud.store) {
-            $("#authmessage").text(TX.tx("Reading from cloud..."));
+            $("#progress").text(TX.tx("Reading from cloud..."));
             cloud.store.reads(
                 client.hoard.options.store_path,
                 function(data) {
@@ -677,10 +677,11 @@ var Squirrel = {
     function step_4_load_client_hoard() {
 
         function rebuild_hoard() {
-            $("#authmessage").text(TX.tx("Building UI..."));
-            if (DEBUG) console.debug("Reconstructing UI tree from cache");
+            $("#progress").text(TX.tx("Building UI..."));
+            var n = 0;
             client.hoard.reconstruct_actions(
                 function(a, next) {
+                    $("#percent").text(n++);
                     DOMtree.action(a, false, next);
                 },
                 function() { // on complete
@@ -706,7 +707,7 @@ var Squirrel = {
                 });
         }
 
-        $("#authmessage").text(TX.tx("Reading from client..."));
+        $("#progress").text(TX.tx("Reading from client..."));
         client.store.reads(
             "S." + client.store.user(),
             function(data) {
@@ -768,7 +769,7 @@ var Squirrel = {
         var uReq = true;
         var pReq = true;
 
-        $("#authmessage").text(TX.tx("Authentication..."));
+        $("#progress").text(TX.tx("Authentication..."));
         
         // Spread user information determined during store initialisation
         // around.
@@ -1156,7 +1157,7 @@ var   systemPasteContent =
      */
     function init_application() {
         // Kick off by initialising the cloud store.
-        $("#authmessage").text(TX.tx("Loading application..."));
+        $("#progress").text(TX.tx("Loading application..."));
         step_1_init_cloud_store();
     }
 

@@ -35,7 +35,7 @@ https://stackoverflow.com/questions/826782/how-to-disable-text-selection-highlig
                                   supported by Chrome and Opera */
 }
 
-#authmessage {
+#progress {
     background: transparent url("../images/progress_bar.gif") no-repeat 13em center;
 }
 

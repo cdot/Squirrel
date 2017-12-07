@@ -59,7 +59,7 @@ release/js/Squirrel.min.js : $(SQUIRREL_JS)
 		--comments \
 		--compress \
 		--mangle \
-		--defined DEBUG=false \
+		--define DEBUG=false \
 		-o $@ \
 		-- $^
 
