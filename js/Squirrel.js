@@ -281,7 +281,9 @@ var Squirrel = {
                         title: TX.tx("Warning"),
                         severity: "warning",
                         message: 
-                        TX.tx("Conflicts were detected while merging actions from the Cloud. Please review these rejected actions before saving.")
+                        TX.tx("Conflicts were detected while merging actions from the Cloud.") +
+                            " " +
+                            TX.tx("Please review these rejected actions before saving.")
                     });
                     $.each(conflicts, function(i, c) {
                         var e = c.conflict;
@@ -1272,8 +1274,8 @@ var   systemPasteContent =
         } catch (e) {
             S.squeak(
                 {
-                    message: TX.tx("Error in search expression '$1': ", s)
-                        + e
+                    message: TX.tx("Error in search expression") +
+                        " '" + s + "': " + e
                 });
         }
         var hits = [];
@@ -1474,10 +1476,6 @@ var   systemPasteContent =
         $(".twisted").twisted();
         
         if (DEBUG) {
-            $("#decanter").button().on("click", function() {
-                var strings = TX.findAllStrings($("body")[0]);
-                $("#decanted").text(JSON.stringify(strings, null, 1)).show();
-            });
             var pick = 1;
             $("#template-test").template().template("pick", pick)
                 .template("expand", "Cats");

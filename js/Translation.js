@@ -53,7 +53,7 @@ var TX = {
     translations: null,
 
     /* Simplify a string for lookup in the translations table */
-    _clean: function(s) {
+    clean: function(s) {
         return s
             .replace(/\s+/g, " ")
             .replace(/^ /, "")
@@ -83,7 +83,7 @@ var TX = {
                 success: function(data) {
                     TX.translations = data;
                     $("body").each(function() {
-                        TX._translateDOM(this, TX.tx, false);
+                        TX.translateDOM(this, TX.tx, false);
                     });
                     if (DEBUG) console.debug(
                         "Using language '" + TX.lingo + "'");
@@ -103,7 +103,6 @@ var TX = {
     },
 
     /**
-     * @private
      * Find all tagged strings under the given DOM node and translate them
      * in place.
      * @param node root of the DOM tree to process
@@ -113,7 +112,7 @@ var TX = {
      * @param translating boolean that indicates whether to translate text
      * nodes encountered
      */
-    _translateDOM: function(node, translate, translating) {
+    translateDOM: function(node, translate, translating) {
         "use strict";
 
         function hasClass(element, thatClass) {
@@ -148,7 +147,7 @@ var TX = {
 
                 for (var i = 0, len = node.childNodes.length;
                      i < len; ++i) {
-                    TX._translateDOM(node.childNodes[i], translate, translating);
+                    TX.translateDOM(node.childNodes[i], translate, translating);
                 }
             }
         }
@@ -166,9 +165,9 @@ var TX = {
 
         // Look up the translation
         if (TX.translations !== null) {
-            tx = TX.translations[TX._clean(s)];
-            if (typeof tx !== "undefined" && tx.length > 0)
-                s = tx;
+            tx = TX.translations[TX.clean(s)];
+            if (typeof tx !== "undefined")
+                s = tx.translatedText;
             // else use English
         }
 
@@ -187,26 +186,6 @@ var TX = {
             });
         
         return s;
-    },
-
-    /**
-     * Analyse HTML and generate a map of all expandable strings found.
-     * This can be used to seed the translations table.
-     * @param el root element of the DOM tree to analyse
-     */
-    findAllStrings: function(el) {
-        "use strict";
-        var strings = [], seen = {}; // use a map to uniquify
-        function collect(s) {
-            s = TX._clean(s);
-            if (!seen[s]) {
-                strings.push(s);
-                seen[s] = true;
-            }
-            return undefined;
-        }
-        TX._translateDOM(el, collect, false);
-        return strings.sort();
     }
 };
 

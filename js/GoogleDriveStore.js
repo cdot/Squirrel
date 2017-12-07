@@ -67,7 +67,10 @@ GoogleDriveStore.prototype._analyse_error = function(r, context, fail) {
     "use strict";
     var mess = context + TX.tx(" failed: ");
     if (r.status === 401) {
-        mess += TX.tx("Your access token has expired, or you are not logged in. Please refresh the page in order to save in Google Drive");
+        mess +=
+            TX.tx("Your access token has expired, or you are not logged in.")
+            + " " +
+            Tx.tx("Please refresh the page in order to save in Google Drive");
     } else if (r.result) {
         mess += r.result.error.message;
     } else {
@@ -86,7 +89,8 @@ GoogleDriveStore.prototype._init = function(params) {
         window.clearTimeout(tid);
         params.fail.call(
             self,
-            TX.tx("Timeout trying to authorise access to Google Drive. Are popups blocked in your browser?"));
+            TX.tx("Timeout trying to authorise access to Google Drive.") +
+                " " + TX.tx("Are popups blocked in your browser?"));
     }, 20000);
 
     var handleClientLoad = function() {

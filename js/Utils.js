@@ -39,19 +39,19 @@ var Utils = { // Namespace
         y: {
             days: 360,
             ms: 364 * 24 * 60 * 60 * 1000,
-            // TX $1 year$?($1!=1,s,)
+            // TX.tx("$1 year$?($1!=1,s,)")
             format: "$1 year$?($1!=1,s,)"
         },
         m: {
             days: 30,
             ms: 30 * 24 * 60 * 60 * 1000,
-            // TX $1 month$?($1!=1,s,)
+            // TX.tx("$1 month$?($1!=1,s,)")
             format: "$1 month$?($1!=1,s,)"
         },
         d: {
             days: 1,
             ms: 24 * 60 * 60 * 1000,
-            // TX $1 day$?($1!=1,s,)
+            // TX.tx("$1 day$?($1!=1,s,)")
             format: "$1 day$?($1!=1,s,)"
         }
     }

@@ -89,7 +89,7 @@ release/css/Squirrel.min.css : $(SQUIRREL_CSS)
 
 release/css/help.min.css : $(HELP_CSS)
 	@mkdir -p release/css
-	cat $^ | cleancss -o $@
+	cat $^ | cleancss -o $@t
 
 release/images/% : images/%
 	@mkdir -p release/images
@@ -130,19 +130,17 @@ clean:
 lint: $(subst .js,.esl,$(patsubst %.min.js,,$(SQUIRREL_JS) $(STORES_JS)))
 
 # Make a language file
-locale/%.json: $(patsubst %.js,%.strings,$(SQUIRREL_JS) $(STORES_JS)) html.strings
-	perl build_scripts/translate.pl $(patsubst locale/%.json,%,$@) $^ > $@
+%.js.strings: %.js
+	node build/extractTX.js $^
 
-%.strings: %.js
-	perl build_scripts/extractStrings.pl $^ > $@
+%.html.strings: %.html
+	node build/extractTX.js $^
 
-html.strings: Squirrel.html
-	Please run Squirrel?debug=1 and use Decant on the help page to update html.strings
 
-# Upload to FTP
-#	$(wildcard libs/images/icons-png/*.png  libs/images/icons-svg/*.svg) 
-upload: release \
-	$(wildcard images/*.svg images/*.ico) \
-	$(wildcard release/*)
-	perl build_scripts/upload.pl $^
+locale/%.json: $(patsubst %.js,%.js.strings,$(SQUIRREL_JS) $(STORES_JS)) Squirrel.html.strings help.html.strings
+	node build/translate.js -l $@ $^
+
+# debug
+.SECONDARY: $(patsubst %.js,%.js.strings,$(SQUIRREL_JS) $(STORES_JS)) Squirrel.html.strings help.html.strings
+
 
