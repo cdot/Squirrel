@@ -1159,6 +1159,31 @@ var   systemPasteContent =
 
     function init_ui() {
 
+        $("#sites-node").tree({
+            is_root: true,
+            compare: S.compare
+        });
+
+        DOMtree = $("#sites-node").data("squirrelTree");
+        if (DEBUG) console.debug("DOM tree rooted " + DOMtree);
+        
+        $(".dlg-dialog").squirrelDialog({ autoOpen: false });
+        $(".template").template();
+        $(".twisted").twisted();
+        
+        if (DEBUG) {
+            var pick = 1;
+            $("#template-test").template().template("pick", pick)
+                .template("expand", "Cats");
+            $("#template-tester").button().on("click", function() {
+                $("#template-test")
+                    .template("pick", pick)
+                    .template("expand", "Squirrels", "cats");
+                pick = (pick + 1) % 3;
+            });
+        } else
+            $(".debug-only").remove();
+
         $("#save_button")
             .hide()
             .on($.getTapEvent(), function(/*evt*/) {
@@ -1462,31 +1487,6 @@ var   systemPasteContent =
                     init_application();
                 });
             });
-
-        $("#sites-node").tree({
-            is_root: true,
-            compare: S.compare
-        });
-
-        DOMtree = $("#sites-node").data("squirrelTree");
-        if (DEBUG) console.debug("DOM tree rooted " + DOMtree);
-        
-        $(".dlg-dialog").squirrelDialog({ autoOpen: false });
-        $(".template").template();
-        $(".twisted").twisted();
-        
-        if (DEBUG) {
-            var pick = 1;
-            $("#template-test").template().template("pick", pick)
-                .template("expand", "Cats");
-            $("#template-tester").button().on("click", function() {
-                $("#template-test")
-                    .template("pick", pick)
-                    .template("expand", "Squirrels", "cats");
-                pick = (pick + 1) % 3;
-            });
-        } else
-            $(".debug-only").remove();
     });
 
 })(jQuery, Squirrel);

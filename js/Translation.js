@@ -167,7 +167,7 @@ var TX = {
         if (TX.translations !== null) {
             tx = TX.translations[TX.clean(s)];
             if (typeof tx !== "undefined")
-                s = tx.translatedText;
+                s = tx.s;
             // else use English
         }
 

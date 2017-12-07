@@ -68,7 +68,7 @@
             
             if ($("body").find("input.in_place_editor").length > 0)
                 return true;
-            console.log("hoverin");
+
             $(".tree-hover").removeClass("tree-hover");
             
             if (S.hideValues() && $node.hasClass("tree-leaf")) {
@@ -86,9 +86,8 @@
         // Invoked on tree-title
         function hoverOut(/*evt*/) {
             if ($("body").contextmenu("isOpen") ||
-                $(body).find("input.in_place_editor").length > 0)
+                $("body").find("input.in_place_editor").length > 0)
                 return true;
-            console.log("hoverout");
             
             if (S.hideValues() && $node.hasClass("tree-leaf")) {
                 $(this).find(".tree-value").each(
