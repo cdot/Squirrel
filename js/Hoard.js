@@ -67,22 +67,22 @@ const VERSION = 2.0;
 function Hoard(data) {
     "use strict";
 
-    data.version = data.version || 1.0;
-    
-    if (data.version > VERSION)
-        throw "Hoard error: cannot read a version " + data.version +
-        " hoard with " + VERSION + " code";
-    
     if (data) {
         this.last_sync = data.last_sync;
         this.actions = data.actions;
         this.cache = data.cache;
         this.options = data.options;
-        this.version = data.version;
+        this.version = data.version || VERSION;
+    
+        if (this.version > VERSION)
+            throw "Hoard error: cannot read a version " + data.version +
+            " hoard with " + VERSION + " code";
+    
     } else {
         this.last_sync = null;
         this.clear_actions();
         this.cache = null;
+        this.version = VERSION;
     }
     if (typeof this.options === "undefined")
         this.options = {
