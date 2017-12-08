@@ -60,50 +60,49 @@ var Utils = { // Namespace
 /**
  * Needed to be able to read binary files.
  * http://www.henryalgus.com/reading-binary-files-using-jquery-ajax/
-*/
-Utils.setUpAjax = function(options, originalOptions, jqXHR){
+ */
+Utils.setUpAjax = function (options, originalOptions, jqXHR) {
     "use strict";
 
     // check for conditions and support for blob / arraybuffer response type
-    if (window.FormData
-        && ((options.dataType && (options.dataType === "binary"))
-            || (options.data
-                && ((window.ArrayBuffer && options.data instanceof ArrayBuffer)
-                    || (window.Blob && options.data instanceof Blob)))))
-    {
+    if (window.FormData &&
+        ((options.dataType && (options.dataType === "binary")) ||
+            (options.data &&
+                ((window.ArrayBuffer && options.data instanceof ArrayBuffer) ||
+                    (window.Blob && options.data instanceof Blob))))) {
         return {
             // create new XMLHttpRequest
-            send: function(headers, callback){
-		// setup all variables
+            send: function (headers, callback) {
+                // setup all variables
                 var xhr = new XMLHttpRequest(),
-		url = options.url,
-		type = options.type,
-		async = options.async || true,
-		// blob or arraybuffer. Default is blob
-		dataType = options.responseType || "blob",
-		data = options.data || null,
-		username = options.username || null,
-		password = options.password || null;
-					
-                xhr.addEventListener("load", function(){
-			var data2 = {};
-			data2[options.dataType] = xhr.response;
-			// make callback and send data
-			callback(xhr.status, xhr.statusText,
-                                 data2, xhr.getAllResponseHeaders());
+                    url = options.url,
+                    type = options.type,
+                    async = options.async || true,
+                    // blob or arraybuffer. Default is blob
+                    dataType = options.responseType || "blob",
+                    data = options.data || null,
+                    username = options.username || null,
+                    password = options.password || null;
+
+                xhr.addEventListener("load", function () {
+                    var data2 = {};
+                    data2[options.dataType] = xhr.response;
+                    // make callback and send data
+                    callback(xhr.status, xhr.statusText,
+                        data2, xhr.getAllResponseHeaders());
                 });
- 
+
                 xhr.open(type, url, async, username, password);
-				
-		// setup custom headers
-		for (var i in headers ) {
-			xhr.setRequestHeader(i, headers[i] );
-		}
-				
+
+                // setup custom headers
+                for (var i in headers) {
+                    xhr.setRequestHeader(i, headers[i]);
+                }
+
                 xhr.responseType = dataType;
                 xhr.send(data);
             },
-            abort: function(){
+            abort: function () {
                 jqXHR.abort();
             }
         };
@@ -112,14 +111,14 @@ Utils.setUpAjax = function(options, originalOptions, jqXHR){
 
 if (typeof jQuery !== "undefined")
     jQuery.ajaxTransport("+binary", Utils.setUpAjax);
-    
+
 /**
  * Generate a new password subject to constraints:
  * length: length of password
  * charset: characters legal in the password. Ranges can be defined using
  * A-Z syntax.
  */
-Utils.generate_password = function(constraints) {
+Utils.generate_password = function (constraints) {
     "use strict";
 
     var sor, eor;
@@ -167,7 +166,7 @@ Utils.escape_selector = function(s) {
  * Get the URL parameters
  * @return a hash mapping parameter name to decoded value
  */
-Utils.getURLParameters = function() {
+Utils.getURLParameters = function () {
     "use strict";
 
     var params = {};
@@ -185,10 +184,10 @@ Utils.getURLParameters = function() {
 /**
  * Convert an arbitrary string to a legal HTTP fragment name
  */
-Utils.fragmentify = function(fid) {
+Utils.fragmentify = function (fid) {
     "use strict";
 
-    return fid.replace(/[^A-Za-z0-9:]/g, function(m) {
+    return fid.replace(/[^A-Za-z0-9:]/g, function (m) {
         return "_" + m.charCodeAt(0);
     });
 };
@@ -204,7 +203,7 @@ Utils.fragmentify = function(fid) {
  * @param {Object} target optional target for the event. If not set, the
  * event will be sent to $(document)
  */
-Utils.sometime = function(event) {
+Utils.sometime = function (event) {
     "use strict";
 
     if (Utils.waiting_for_sometime[event]) {
@@ -221,7 +220,7 @@ Utils.sometime = function(event) {
 /**
  * Execute the events that have been waiting for 'sometime'
  */
-Utils.sometime_is_now = function() {
+Utils.sometime_is_now = function () {
     "use strict";
 
     Utils.sometime_timeout = null;
@@ -229,7 +228,8 @@ Utils.sometime_is_now = function() {
     for (var event in Utils.waiting_for_sometime) {
         // Triggering these handlers may take an appreciable amount of
         // time and result in new events joining the sometime schedule.
-        $(document).triggerHandler(event);
+        $(document)
+            .triggerHandler(event);
         // Only now delete the event to allow it to be requeued
         delete Utils.waiting_for_sometime[event];
     }
@@ -244,7 +244,7 @@ Utils.sometime_is_now = function() {
  * the stack. Use execute_queue instead, which is non-recursive.
  * @param fn function to call
  */
-Utils.soon = function(fn) {
+Utils.soon = function (fn) {
     "use strict";
 
     // If it's been a decent amount of time since the last time
@@ -252,7 +252,7 @@ Utils.soon = function(fn) {
     // we activate the next function in the chain. This will allow
     // the UI a timeslice.
     if (Date.now() - Utils.last_yield > Utils.SOON) {
-        window.setTimeout(function() {
+        window.setTimeout(function () {
             Utils.last_yield = Date.now();
             fn();
         }, Utils.IMMEDIATE);
@@ -267,20 +267,20 @@ Utils.soon = function(fn) {
  * called ready()". The last function in the queue doesn't need to call
  * ready(), as the queue will then be empty.
  */
-Utils.execute_queue = function(q) {
+Utils.execute_queue = function (q) {
     "use strict";
 
     Utils.q_ready();
     Utils.q_next(q);
 };
 
-Utils.q_ready = function() {
+Utils.q_ready = function () {
     "use strict";
 
     Utils.qready = true;
 };
 
-Utils.q_next = function(q) {
+Utils.q_next = function (q) {
     "use strict";
 
     if (q.length > 0 && Utils.qready) {
@@ -290,7 +290,7 @@ Utils.q_next = function(q) {
     }
 
     // Maintain UI performance
-    window.setTimeout(function() {
+    window.setTimeout(function () {
         Utils.last_yield = Date.now();
         Utils.q_next(q);
     }, Utils.IMMEDIATE);
@@ -305,15 +305,16 @@ Utils.q_next = function(q) {
  * @param uncompressed true to load uncompressed libs, otherwise use min
  * @param on_loaded is called when all libs have been loaded
  */
-Utils.load = function(libs, uncompressed, on_loaded) {
+Utils.load = function (libs, uncompressed, on_loaded) {
     "use strict";
 
     var expect = {};
 
     // action when a resource is loaded
-    var _loaded = function(file) {
+    var _loaded = function (file) {
         delete expect[file];
-        if (Object.keys(expect).length === 0) {
+        if (Object.keys(expect)
+            .length === 0) {
             if (typeof on_loaded === "function") {
                 on_loaded();
             }
@@ -321,33 +322,36 @@ Utils.load = function(libs, uncompressed, on_loaded) {
     };
 
     // fire off a resource load
-    var _add_load = function(file) {
+    var _add_load = function (file) {
         if (uncompressed)
             file = file.replace(".min.", ".");
 
         expect[file] = true;
         if (/\.js$/.test(file)) {
             $.getScript(file)
-                .done(function() {
+                .done(function () {
                     _loaded(file);
                 })
-                .fail(function() {
+                .fail(function () {
                     debugger;
                 });
         } else if (/\.css$/.test(file)) {
             $("link")
                 .appendTo("head")
-                .attr({ type: "text/css", rel: "stylesheet" })
+                .attr({
+                    type: "text/css",
+                    rel: "stylesheet"
+                })
                 .attr("href", file);
             _loaded(file);
         } else if (/\.html$/.test(file)) {
             $.get(file)
-                .done(function(data) {
+                .done(function (data) {
                     $(data)
                         .appendTo("body");
                     _loaded(file);
                 })
-                .fail(function() {
+                .fail(function () {
                     debugger;
                 });
         }
@@ -367,16 +371,16 @@ Utils.load = function(libs, uncompressed, on_loaded) {
  * @param mode optional read mode, one of "arraybuffer", "binarystring",
  * "datauri" or "text". The default is "text".
  */
-Utils.read_file = function(file, ok, fail, mode) {
+Utils.read_file = function (file, ok, fail, mode) {
     "use strict";
 
     //var store = this;
     var reader = new FileReader();
-    reader.onload = function(/*evt*/) {
+    reader.onload = function ( /*evt*/ ) {
         ok(reader.result);
     };
-    reader.onerror = function() {
-	fail(file.name + " read failed");
+    reader.onerror = function () {
+        fail(file.name + " read failed");
     };
     reader.onabort = reader.onerror;
     if (typeof mode === "undefined" || mode === "text")
@@ -397,7 +401,7 @@ Utils.read_file = function(file, ok, fail, mode) {
  * @param data ArrayBuffer which must be an even number of bytes long
  * @return String the string the ArrayBuffer contains
  */
-Utils.ArrayBufferToString = function(ab) {
+Utils.ArrayBufferToString = function (ab) {
     "use strict";
 
     if (DEBUG && ab.byteLength % 2 !== 0)
@@ -415,7 +419,7 @@ Utils.ArrayBufferToString = function(ab) {
  * @param str the String to convert
  * @return an ArrayBuffer (which will be an even number of bytes long)
  */
-Utils.StringToArrayBuffer = function(str) {
+Utils.StringToArrayBuffer = function (str) {
     "use strict";
 
     var a16 = new Uint16Array(str.length);
@@ -430,7 +434,7 @@ Utils.StringToArrayBuffer = function(str) {
  * @param data arbitrary byte data to be packed
  * @return a String containing the packed data
  */
-Utils.ArrayBufferToPackedString = function(ab) {
+Utils.ArrayBufferToPackedString = function (ab) {
     "use strict";
 
     var a8 = new Uint8Array(ab);
@@ -467,7 +471,7 @@ Utils.ArrayBufferToPackedString = function(ab) {
  * Convert a packed string, created using ArrayBufferToPackedString, back
  * into an ArrayBuffer containing an arbitrary number of bytes.
  */
-Utils.PackedStringToArrayBuffer = function(str) {
+Utils.PackedStringToArrayBuffer = function (str) {
     "use strict";
 
     var datalen = 2 * str.length - 1;
@@ -495,7 +499,7 @@ Utils.PackedStringToArrayBuffer = function(str) {
  * @param ab the ArrayBuffer to convert
  * @return a String of Base64 bytes (using MIME encoding)
  */
-Utils.ArrayBufferToBase64 = function(ab) {
+Utils.ArrayBufferToBase64 = function (ab) {
     "use strict";
 
     var a8 = new Uint8Array(ab);
@@ -505,18 +509,17 @@ Utils.ArrayBufferToBase64 = function(ab) {
 
     // Convert a base 64 number to the charcode of the character used to
     // represent it
-    var uint6ToB64 = function(nUInt6) {
+    var uint6ToB64 = function (nUInt6) {
         return nUInt6 < 26 ?
-            nUInt6 + 65
-            : nUInt6 < 52 ?
-            nUInt6 + 71
-            : nUInt6 < 62 ?
-            nUInt6 - 4
-            : nUInt6 === 62 ?
-            43
-            : nUInt6 === 63 ?
-            47
-            :
+            nUInt6 + 65 :
+            nUInt6 < 52 ?
+            nUInt6 + 71 :
+            nUInt6 < 62 ?
+            nUInt6 - 4 :
+            nUInt6 === 62 ?
+            43 :
+            nUInt6 === 63 ?
+            47 :
             65;
     };
 
@@ -534,8 +537,8 @@ Utils.ArrayBufferToBase64 = function(ab) {
         }
     }
 
-    return sB64Enc.substr(0, sB64Enc.length - 2 + nMod3)
-        + (nMod3 === 2 ? "" : nMod3 === 1 ? "=" : "==");
+    return sB64Enc.substr(0, sB64Enc.length - 2 + nMod3) +
+        (nMod3 === 2 ? "" : nMod3 === 1 ? "=" : "==");
 };
 
 /**
@@ -544,7 +547,7 @@ Utils.ArrayBufferToBase64 = function(ab) {
  * @param sB64Enc the String to convert
  * @return an ArrayBuffer
  */
-Utils.Base64ToArrayBuffer = function(sB64) {
+Utils.Base64ToArrayBuffer = function (sB64) {
     "use strict";
 
     var sB64Enc = sB64.replace(/[^A-Za-z0-9\+\/]/g, ""); // == and =
@@ -552,29 +555,27 @@ Utils.Base64ToArrayBuffer = function(sB64) {
     var nOutLen = nInLen * 3 + 1 >> 2;
     var ta8 = new Uint8Array(nOutLen);
     // Convert Base64 char (as char code) to the number represented
-    var b64ToUInt6 = function(nChr) {
+    var b64ToUInt6 = function (nChr) {
         return nChr > 64 && nChr < 91 ?
-            nChr - 65
-            : nChr > 96 && nChr < 123 ?
-            nChr - 71
-            : nChr > 47 && nChr < 58 ?
-            nChr + 4
-            : nChr === 43 ?
-            62
-            : nChr === 47 ?
-            63
-            :
+            nChr - 65 :
+            nChr > 96 && nChr < 123 ?
+            nChr - 71 :
+            nChr > 47 && nChr < 58 ?
+            nChr + 4 :
+            nChr === 43 ?
+            62 :
+            nChr === 47 ?
+            63 :
             0;
     };
 
-    for (var nMod3, nMod4, nUInt24 = 0, nOutIdx = 0, nInIdx = 0;
-         nInIdx < nInLen; nInIdx++) {
+    for (var nMod3, nMod4, nUInt24 = 0, nOutIdx = 0, nInIdx = 0; nInIdx < nInLen; nInIdx++) {
         nMod4 = nInIdx & 3;
-        nUInt24 |= b64ToUInt6(sB64Enc.charCodeAt(nInIdx))
-            << 6 * (3 - nMod4);
+        nUInt24 |= b64ToUInt6(sB64Enc.charCodeAt(nInIdx)) <<
+            6 * (3 - nMod4);
         if (nMod4 === 3 || nInLen - nInIdx === 1) {
-            for (nMod3 = 0; nMod3 < 3
-                 && nOutIdx < nOutLen; nMod3++, nOutIdx++) {
+            for (nMod3 = 0; nMod3 < 3 &&
+                nOutIdx < nOutLen; nMod3++, nOutIdx++) {
                 ta8[nOutIdx] = nUInt24 >>> (16 >>> nMod3 & 24) & 255;
             }
             nUInt24 = 0;
@@ -589,7 +590,8 @@ Utils.Base64ToArrayBuffer = function(sB64) {
 Utils.query_string = function () {
     "use strict";
     var query = {};
-    var vars = window.location.search.substring(1).split(/[&;]+/);
+    var vars = window.location.search.substring(1)
+        .split(/[&;]+/);
     for (var i = 0; i < vars.length; i++) {
         if (vars[i] === "")
             continue;
@@ -599,23 +601,23 @@ Utils.query_string = function () {
             query[ass[0]] = decodeURIComponent(ass[1]);
         } else if (typeof query[ass[0]] === "string") {
             // If second entry with this name, make an array
-            var arr = [ query[ass[0]], decodeURIComponent(ass[1]) ];
+            var arr = [query[ass[0]], decodeURIComponent(ass[1])];
             query[ass[0]] = arr;
         } else {
             // If third or later entry with this name, push it
             query[ass[0]].push(decodeURIComponent(ass[1]));
         }
-    } 
+    }
     return query;
 };
 
-Utils.make_query_string = function(qs) {
+Utils.make_query_string = function (qs) {
     "use strict";
     var params = "";
     var sep = "?";
     for (var k in qs) {
-        params += sep + encodeURIComponent(k)
-            + "=" + encodeURIComponent(qs[k]);
+        params += sep + encodeURIComponent(k) +
+            "=" + encodeURIComponent(qs[k]);
         sep = "&";
     }
     return params;
@@ -630,7 +632,7 @@ Utils.make_query_string = function(qs) {
  * @return array of structures each containing `id` (one of `d`, `w`, `m`, `y`),
  * `number` of those, and `name` translated pluralised name e.g. `months`
  */
-Utils.deltaTimeString = function(date) {
+Utils.deltaTimeString = function (date) {
     "use strict";
 
     date = new Date(date.getTime() - Date.now());
@@ -656,6 +658,42 @@ Utils.deltaTimeString = function(date) {
         s.push(TX.tx(Utils.TIMEUNITS.d.format, delta));
 
     return s.join(" ");
+};
+
+/**
+ * Expand $1..$N in a string to the arguments passed.
+ *
+ * There is limited support for conditional expansion using the
+ * `$?(bexpr,then,else)` macro. If `bexpr1` eval()s to true then the
+ * expression will expand to `then`, otherwise it will expand to `else`.
+ * Both `then` and `else` must be given, though can be empty.
+ *
+ * For example, consider `TX.tx("$1 day$?($1!=1,s,)", ndays)`.
+ * If `$1!=1` succeeds then the macro expands to `s` otherwise
+ * to the empty string. Thus if `ndays` is `1` it will expand to `1 day`
+ * but if it is `11` it will expand to `11 days`
+ *
+ * NOTE: conditions are evaled and could thus be used for cross
+ * scripting. User input must never be passed to the templater. There is
+ * no error checking on the eval, and it will throw an exception if the
+ * syntax is incorrect.
+ */
+Utils.expandTemplate = function () {
+    var tmpl = arguments[0];
+    var args = arguments;
+
+    tmpl = tmpl.replace(/\$(\d+)/g, function (m, p1) {
+        var i = parseInt(p1);
+        return args[i];
+    })
+    tmpl = tmpl.replace(
+        /\$\?\((.*?),(.*?),(.*?)\)/g,
+        function (m, test, pass, fail) {
+            var result = false;
+            eval("result=(" + test + ")");
+            return result ? pass : fail;
+        });
+    return tmpl;
 };
 
 if (typeof module !== "undefined")

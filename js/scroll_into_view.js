@@ -3,17 +3,23 @@
 /**
  * Plugin to scroll the view to this element
  */
-(function($) {
-    
+(function ($) {
+
     "use strict";
 
     $.fn.scroll_into_view = function () {
         return this.each(function () {
-            var offset = $(this).offset().top - $(window).scrollTop();
+            var offset = $(this)
+                .offset()
+                .top - $(window)
+                .scrollTop();
 
-            if (offset > window.innerHeight){
+            if (offset > window.innerHeight) {
                 // Not in view so scroll to it
-                $("html,body").animate({scrollTop: offset - 16}, 500);
+                $("html,body")
+                    .animate({
+                        scrollTop: offset - 16
+                    }, 500);
                 return false;
             }
             return true;

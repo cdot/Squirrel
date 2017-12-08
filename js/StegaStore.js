@@ -23,21 +23,20 @@ function StegaStore(params) {
 
 StegaStore.prototype = Object.create(LayeredStore.prototype);
 
-StegaStore.prototype.options = function() {
+StegaStore.prototype.options = function () {
     "use strict";
     return $.extend(
-        LayeredStore.prototype.options.call(this),
-        {
+        LayeredStore.prototype.options.call(this), {
             needs_image: true
         });
 };
 
-StegaStore.prototype.read = function(path, ok, fail) {
+StegaStore.prototype.read = function (path, ok, fail) {
     "use strict";
 
     if (DEBUG) console.debug("StegaStore: reading " + path);
     var self = this;
-    var extract = function() {
+    var extract = function () {
         var steg = new Steganographer($("#stegamage")[0]);
         var ab2;
         try {
@@ -47,22 +46,24 @@ StegaStore.prototype.read = function(path, ok, fail) {
             fail.call(self, e);
             return;
         }
-                        
+
         ok.call(self, ab2);
     };
 
     this.engine.read(
         path,
-        function(ab) {
+        function (ab) {
             // Make a data-URI
-            var datauri = "data:image/png;base64,"
-                + Utils.ArrayBufferToBase64(ab);
+            var datauri = "data:image/png;base64," +
+                Utils.ArrayBufferToBase64(ab);
             // if the image has changed, wait for it to reload
-            if (datauri !== $("#stegamage").attr("src")) {
+            if (datauri !== $("#stegamage")
+                .attr("src")) {
                 $("#stegamage")
                     .attr("src", datauri)
-                    .on("load", function() {
-                        $(this).off("load");
+                    .on("load", function () {
+                        $(this)
+                            .off("load");
                         extract();
                     });
             } else {
@@ -72,7 +73,7 @@ StegaStore.prototype.read = function(path, ok, fail) {
         fail);
 };
 
-StegaStore.prototype.write = function(path, data, ok, fail) {
+StegaStore.prototype.write = function (path, data, ok, fail) {
     "use strict";
 
     if (DEBUG) console.debug("StegaStore: writing " + path);
@@ -100,7 +101,7 @@ StegaStore.prototype.write = function(path, data, ok, fail) {
     self.engine.write(
         path,
         xdata,
-        function() {
+        function () {
             ok.call(self);
         },
         fail);

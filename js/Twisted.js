@@ -17,12 +17,12 @@
  * data-close="ui-icon-circle-minus"
  */
 
-(function($) {
+(function ($) {
 
     "use strict";
 
     $.widget("squirrel.twisted", {
-        _create: function() {
+        _create: function () {
             var self = this;
             var $container = self.element;
 
@@ -32,7 +32,7 @@
                 else
                     self.close();
             }
-            
+
             var $button = $("<button></button>")
                 .addClass("twisted-button twisted-title")
                 .button({
@@ -46,7 +46,7 @@
                 .insertBefore($container)
                 .prepend($button)
                 .on("click", handleTap);
-            
+
             if ($title.length === 0) {
                 $button
                     .insertBefore($container)
@@ -54,11 +54,11 @@
             }
 
             $container.data("twisted-button", $button);
-            
+
             self.close();
         },
 
-        open: function() {
+        open: function () {
             var icon = this.element.data("close") ||
                 "ui-icon-circle-minus";
             this.element
@@ -67,8 +67,8 @@
                 .data("twisted-button")
                 .button("option", "icon", icon)
         },
-        
-        close: function() {
+
+        close: function () {
             var icon = this.element.data("open") ||
                 "ui-icon-circle-plus";
             this.element

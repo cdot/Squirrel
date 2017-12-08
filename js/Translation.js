@@ -3,6 +3,7 @@
 /* eslint no-eval: 1 */
 /* global DEBUG:true */
 /* global module */
+/* global Utils */
 
 /**
  * Translations module. Determines the language to use from the browser.
@@ -24,30 +25,13 @@
  * so should not be used on anything where handlers might be attached.
  * TX_text and TX_html should never be used together on the same node.
  * 
- * There is limited support for conditional expansion in code using the
- * `$?(bexpr,then,else)` macro.
- *
- * If `bexpr1` eval()s to true then the expression will expand to
- * `then`, otherwise it will expand to `else`.
- *
- * Both `then` and `else` must be given, though can be empty.
- *
- * For example, consider `TX.tx("$1 day$?($1!=1,s,)", ndays)`.
- * If `$1!=1` succeeds then the macro expands to `s` otherwise
- * to the empty string. Thus if `ndays` is `1` it will expand to `1 day`
- * but if it is `11` it will expand to `11 days`
- *
- * NOTE: format strings are evaled and could thus be used for cross
- * scripting. User input must never be passed to the formatter. There is
- * no error checking on the eval, and it will throw an exception if the
- * syntax is incorrect.
  */
 var TX = {
     lingo: undefined,
 
-    langFromLocale: function() {
+    langFromLocale: function () {
         "use strict";
-        
+
         TX.lingo = window.navigator.userLanguage ||
             window.navigator.language || "en";
     },
@@ -55,9 +39,9 @@ var TX = {
     translations: null,
 
     /* Simplify a string for lookup in the translations table */
-    clean: function(s) {
+    clean: function (s) {
         "use strict";
-        
+
         return s
             .replace(/\s+/g, " ")
             .replace(/^ /, "")
@@ -69,12 +53,12 @@ var TX = {
      * Requires jQuery
      * @param tx_ready function to call when it's loaded
      */
-    init: function(tx_ready) {
+    init: function (tx_ready) {
         "use strict";
-        
+
         if (!TX.lingo)
             TX.langFromLocale();
-        
+
         if (/^en(\b|$)/i.test(TX.lingo)) {
             if (DEBUG) console.debug("Using language 'en'");
             tx_ready();
@@ -82,18 +66,18 @@ var TX = {
         }
 
         $.ajax(
-            "locale/" + TX.lingo + ".json",
-            {
-                success: function(data) {
+            "locale/" + TX.lingo + ".json", {
+                success: function (data) {
                     TX.translations = data;
-                    $("body").each(function() {
-                        TX.translateDOM(this, TX.tx, false);
-                    });
+                    $("body")
+                        .each(function () {
+                            TX.translateDOM(this, TX.tx, false);
+                        });
                     if (DEBUG) console.debug(
                         "Using language '" + TX.lingo + "'");
                     tx_ready();
                 },
-                error: function(a, b, c) {
+                error: function (a, b, c) {
                     var m = /^(.+)-.+/.exec(TX.lingo);
                     if (DEBUG) console.debug(
                         "Failed to load " + TX.lingo + ".json: " + c.message);
@@ -116,16 +100,18 @@ var TX = {
      * @param translating boolean that indicates whether to translate text
      * nodes encountered
      */
-    translateDOM: function(node, translate, translating) {
+    translateDOM: function (node, translate, translating) {
         "use strict";
 
         function hasClass(element, thatClass) {
-            return ((" " + element.className + " ").replace(
-                    /\s+/g, " ").indexOf(" " + thatClass + " ") >= 0 );
+            return ((" " + element.className + " ")
+                .replace(
+                    /\s+/g, " ")
+                .indexOf(" " + thatClass + " ") >= 0);
         }
 
         var t;
-        
+
         if (node.nodeType == 3) {
             if (translating && /\S/.test(node.nodeValue)) {
                 t = translate(node.nodeValue)
@@ -149,8 +135,7 @@ var TX = {
                 if (hasClass(node, "TX_text"))
                     translating = true;
 
-                for (var i = 0, len = node.childNodes.length;
-                     i < len; ++i) {
+                for (var i = 0, len = node.childNodes.length; i < len; ++i) {
                     TX.translateDOM(node.childNodes[i], translate, translating);
                 }
             }
@@ -160,36 +145,25 @@ var TX = {
     /**
      * Translate and expand a string (and optional parameters)
      * @param s the string to expand. All other arguments are used
-     * to expand placeholders in the string.
+     * to expand placeholders in the string, per Utils.expandTemplate.
      */
-    tx: function(s) {
+    tx: function () {
         "use strict";
 
         var tx, i;
 
         // Look up the translation
         if (TX.translations !== null) {
-            tx = TX.translations[TX.clean(s)];
+            tx = TX.translations[TX.clean(arguments[0])];
             if (typeof tx !== "undefined")
-                s = tx.s;
+                arguments[0] = tx.s;
             // else use English
         }
 
-        // Simple expansion
-        for (i = arguments.length - 1; i > 0; i--) {
-            s = s.replace(new RegExp("\\$" + i, "g"), arguments[i]);
-        }
-
-        // Conditional expansion
-        s = s.replace(
-                /\$\?\((.*?),(.*?),(.*?)\)/g,
-            function(m, test, pass, fail) {
-                var result = false;
-                eval("result=(" + test + ")");
-                return result ? pass : fail;
-            });
-        
-        return s;
+        if (/\$/.test(arguments[0]))
+            return Utils.expandTemplate.apply(null, arguments);
+        else
+            return arguments[0];
     }
 };
 

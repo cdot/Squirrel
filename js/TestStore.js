@@ -10,11 +10,11 @@
 function TestStore(params) {
     "use strict";
     params.user = "TEST";
-/*
-    params.ok = function() {
-        params.fail.call(this, "Fuck off");
-    };
-*/
+    /*
+        params.ok = function() {
+            params.fail.call(this, "Fuck off");
+        };
+    */
     LocalStorageStore.call(this, params);
 }
 
@@ -22,7 +22,7 @@ SQUIRREL_STORE = TestStore;
 
 TestStore.prototype = Object.create(LocalStorageStore.prototype);
 
-TestStore.prototype.options = function() {
+TestStore.prototype.options = function () {
     "use strict";
 
     return $.extend(LocalStorageStore.prototype.options(), {
@@ -32,7 +32,7 @@ TestStore.prototype.options = function() {
     });
 };
 
-TestStore.prototype.read = function(path, ok, fail) {
+TestStore.prototype.read = function (path, ok, fail) {
     "use strict";
     if (this.pass() !== "x") {
         fail.call(this, "TestStore.read expects password 'x'");
@@ -41,7 +41,7 @@ TestStore.prototype.read = function(path, ok, fail) {
     }
 };
 
-TestStore.prototype.write = function(path, data, ok, fail) {
+TestStore.prototype.write = function (path, data, ok, fail) {
     "use strict";
 
     if (this.pass() !== "x") {

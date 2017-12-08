@@ -3,18 +3,18 @@
 /**
  * Simple in-place editing widget
  */
-(function($) {
+(function ($) {
     "use strict";
-    $.fn.edit_in_place = function(options) {
+    $.fn.edit_in_place = function (options) {
 
         var $this = $(this);
         var h = options.height || $this.height();
         var w = options.width || $this.width();
         var changed = options.changed ||
-            function(/*text*/) {
+            function ( /*text*/ ) {
                 return $this.text();
             };
-        var closed = options.closed || function() {};
+        var closed = options.closed || function () {};
         var $input = $("<input/>");
         var text = options.text || $this.text();
 
@@ -34,29 +34,31 @@
             .css("height", h)
             .css("width", w)
 
-            .on("change", function() {
-                var val = $(this).val();
+            .on("change", function () {
+                var val = $(this)
+                    .val();
                 blurb();
                 if (val !== text)
                     text = changed.call($this, val);
             })
-/*
-            .on($.getEndEvent(), function(e) {
-                // Override the parent click handler
-                e.stopPropagation();
-                // e.preventDefault(); Kills mouse events on desktop input
-            })
+            /*
+                        .on($.getEndEvent(), function(e) {
+                            // Override the parent click handler
+                            e.stopPropagation();
+                            // e.preventDefault(); Kills mouse events on desktop input
+                        })
 
-            .on($.getStartEvent(), function(e) {
-                // Override the parent click handler
-                e.stopPropagation();
-                // e.preventDefault(); Kills mouse events on desktop input
-            })
-*/
-            .on("keydown", function(e) { // Escape means cancel
-                if (e.keyCode === 27
-                    || (e.keyCode === 13
-                        && $(this).val() === text)) {
+                        .on($.getStartEvent(), function(e) {
+                            // Override the parent click handler
+                            e.stopPropagation();
+                            // e.preventDefault(); Kills mouse events on desktop input
+                        })
+            */
+            .on("keydown", function (e) { // Escape means cancel
+                if (e.keyCode === 27 ||
+                    (e.keyCode === 13 &&
+                        $(this)
+                        .val() === text)) {
                     blurb();
                     return false;
                 } else

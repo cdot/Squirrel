@@ -23,30 +23,29 @@ function EncryptedStore(params) {
 
 EncryptedStore.prototype = Object.create(LayeredStore.prototype);
 
-EncryptedStore.prototype.options = function() {
+EncryptedStore.prototype.options = function () {
     "use strict";
     return $.extend(
-        LayeredStore.prototype.options.call(this),
-        {
+        LayeredStore.prototype.options.call(this), {
             needs_pass: true
         });
 };
 
-EncryptedStore.prototype.read = function(path, ok, fail) {
+EncryptedStore.prototype.read = function (path, ok, fail) {
     "use strict";
 
     var self = this;
 
-    if (DEBUG) console.debug("EncryptedStore: reading " + path
-                      + " with password " + self.engine.pass());
+    if (DEBUG) console.debug("EncryptedStore: reading " + path +
+        " with password " + self.engine.pass());
     this.engine.read(
         path,
-        function(ab) {
+        function (ab) {
             var data;
             try {
                 if (DEBUG) console.debug(
-                    "EncryptedStore: decrypting using password "
-                        + self.engine.pass());
+                    "EncryptedStore: decrypting using password " +
+                    self.engine.pass());
                 data = AES.decrypt(ab, self.engine.pass(), 256);
             } catch (e) {
                 if (DEBUG) console.debug("Caught " + e);
@@ -58,13 +57,13 @@ EncryptedStore.prototype.read = function(path, ok, fail) {
         fail);
 };
 
-EncryptedStore.prototype.write = function(path, ab, ok, fail) {
+EncryptedStore.prototype.write = function (path, ab, ok, fail) {
     "use strict";
 
     var self = this;
 
-    if (DEBUG) console.debug("EncryptedStore: writing " + path
-                             + " with password " + self.engine.pass());
+    if (DEBUG) console.debug("EncryptedStore: writing " + path +
+        " with password " + self.engine.pass());
     var xa;
 
     try {
@@ -78,7 +77,7 @@ EncryptedStore.prototype.write = function(path, ab, ok, fail) {
     this.engine.write(
         path,
         xa.buffer,
-        function() {
+        function () {
             ok.call(self);
         },
         fail);

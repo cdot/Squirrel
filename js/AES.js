@@ -24,7 +24,7 @@ var AES = {};
  * 128 / 192 / 256.
  * @returns {Uint8Array} Encrypted data
  */
-AES.encrypt = function(ab, password, nBits) {
+AES.encrypt = function (ab, password, nBits) {
     "use strict";
 
     // block size fixed at 16 bytes / 128 bits (Nb=4) for AES
@@ -35,7 +35,7 @@ AES.encrypt = function(ab, password, nBits) {
     // use AES itself to encrypt password to get cipher key (using
     // plain password as source for key expansion) - gives us well
     // encrypted key (though hashed key might be preferred for prod'n use)
-    var nBytes = nBits / 8;  // no bytes in key (16/24/32)
+    var nBytes = nBits / 8; // no bytes in key (16/24/32)
     var pwBytes = new Array(nBytes);
 
     // use 1st 16/24/32 chars of password for key, zero padded
@@ -92,11 +92,11 @@ AES.encrypt = function(ab, password, nBits) {
             counterBlock[15 - c - 4] = (b / 0x100000000 >>> c * 8);
 
         // encrypt counter block
-        var cipherCntr = Aes.cipher(counterBlock, keySchedule); 
+        var cipherCntr = Aes.cipher(counterBlock, keySchedule);
 
         // block size is reduced on final block
-        var blockLength = b < blockCount - 1
-            ? blockSize : (plaintext.length - 1) % blockSize + 1;
+        var blockLength = b < blockCount - 1 ?
+            blockSize : (plaintext.length - 1) % blockSize + 1;
         var cipherChar = new Uint8Array(blockLength);
         size += blockLength;
 
@@ -129,7 +129,7 @@ AES.encrypt = function(ab, password, nBits) {
  * @returns {ArrayBuffer} Encrypted data
  * @returns {ArrayBuffer} Decrypted data
  */
-AES.decrypt = function(ab, password, nBits) {
+AES.decrypt = function (ab, password, nBits) {
     "use strict";
 
     var blockSize = 16;
@@ -137,7 +137,7 @@ AES.decrypt = function(ab, password, nBits) {
     var ciphertext = new Uint8Array(ab);
 
     // use AES to encrypt password (mirroring encrypt routine)
-    var nBytes = nBits / 8;  // no bytes in key
+    var nBytes = nBits / 8; // no bytes in key
     var pwBytes = new Uint8Array(nBytes);
     for (var i = 0; i < nBytes; i++) {
         if (i < password.length)

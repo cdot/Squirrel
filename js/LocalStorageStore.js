@@ -40,7 +40,7 @@ function LocalStorageStore(params) {
 
 LocalStorageStore.prototype = Object.create(AbstractStore.prototype);
 
-LocalStorageStore.prototype.options = function() {
+LocalStorageStore.prototype.options = function () {
     "use strict";
 
     return $.extend(AbstractStore.prototype.options(), {
@@ -49,7 +49,7 @@ LocalStorageStore.prototype.options = function() {
     });
 };
 
-LocalStorageStore.prototype.read = function(path, ok, fail) {
+LocalStorageStore.prototype.read = function (path, ok, fail) {
     "use strict";
 
     var str;
@@ -71,7 +71,7 @@ LocalStorageStore.prototype.read = function(path, ok, fail) {
 };
 
 // data is a String or a Blob
-LocalStorageStore.prototype.write = function(path, data, ok, fail) {
+LocalStorageStore.prototype.write = function (path, data, ok, fail) {
     "use strict";
 
     if (DEBUG) console.debug("LocalStorageStore: Writing " + path);

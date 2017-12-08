@@ -54,8 +54,11 @@
   <body>
     <div id="unauthenticated">
       <h1>Squirrel</h1>
-      <div id="progress" class="TX_text">Authenticating...</div>
-      <span id="percent"></span>
+      <div>
+        <div id="stage" class="TX_text">Authenticating...</div>
+        <span id="load_progress"></span>
+        <span id="merge_progress"></span>
+      </div>
       <div class="authfailed">
         <span class="TX_text">Authentication failed.</span>
         <span class="TX_text">Refresh the browser to try again.</span>
@@ -187,6 +190,12 @@
           <td class="TX_text">Raw JSON</td>
           <td>
             <button data-id="json" class="TX_text">View/Edit</button>
+          </td>
+        </tr>
+        <tr>
+          <td class="TX_text">Optimise</td>
+          <td>
+            <button data-id="optimise" class="TX_text">Optimise</button>
           </td>
         </tr>
         <tr>
@@ -465,7 +474,8 @@
         <button data-id="ok" class="TX_text">OK</button>
       </p>
     </div>
-        <div id="about_dlg" class="dlg-dialog TX_title" title="About Squirrel">
+
+    <div id="about_dlg" class="dlg-dialog TX_title" title="About Squirrel">
       <p class="TX_html">
         Squirrel is Copyright &copy; 2015-2017 Crawford Currie <a href="http://c-dot.co.uk">http://c-dot.co.uk</a>
       </p>
@@ -478,6 +488,26 @@
       </div>
     </div>
     
+    <div id="optimise_dlg" class="dlg-dialog TX_title" title="Optimise Cloud">
+      <div class="TX_text dlg-warning">
+        You must ensure that all clients up to date and you
+        are safely connected to the internet before doing this,
+        or you will lose data.
+      </div>
+      <div class="TX_text dlg-warning">
+        Optimising your cloud store will lose all the history, which will
+        make it impossible for any client that is not completely up to
+        date to synchronise. You have been warned!
+      </div>
+      <div data-id="existing" class="TX_text template">
+        The cloud currently has $1 action$?($1!=1,s,) in the history.
+      </div>
+      <div data-id="study" class="TX_text template">
+        After optimisation it will have $1 node$?($1!=1,s,) + $2 alarm$?($2!=1,s,) + $3 constraint$?($3!=1,s,) = $4 action$?($4!=1,s,).
+      </div>
+      <button data-id="optimise" class="TX_text">Optimise</button>
+    </div>
+        
     <div id="json_dlg" class="dlg-dialog TX_title" title="Database JSON">
       <div class="twisted" data-open="ui-icon-info">
         <p class="TX_html">

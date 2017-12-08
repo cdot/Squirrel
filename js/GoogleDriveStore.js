@@ -30,18 +30,18 @@ function GoogleDriveStore(params) {
         this._init(params);
     } else {
         var self = this;
-        gapi_loader = function() {
+        gapi_loader = function () {
             if (DEBUG) console.debug("Loading GoogleDriveStore");
             self._init(params);
         };
         $.getScript(
-            "https://apis.google.com/js/client.js?onload=gapi_on_load")
-        .fail(function(jqxhr, settings, exception) {
-            params.fail.call(
-                self,
-                TX.tx("Failed to load Google APIs: $1 $2",
-                      exception, jqxhr.status));
-        });
+                "https://apis.google.com/js/client.js?onload=gapi_on_load")
+            .fail(function (jqxhr, settings, exception) {
+                params.fail.call(
+                    self,
+                    TX.tx("Failed to load Google APIs: $1 $2",
+                        exception, jqxhr.status));
+            });
     }
 }
 
@@ -63,13 +63,13 @@ function gapi_on_load() {
  * @private
  * Analyse an error returned by a promise
  */
-GoogleDriveStore.prototype._analyse_error = function(r, context, fail) {
+GoogleDriveStore.prototype._analyse_error = function (r, context, fail) {
     "use strict";
     var mess = context + TX.tx(" failed: ");
     if (r.status === 401) {
         mess +=
-            TX.tx("Your access token has expired, or you are not logged in.")
-            + " " +
+            TX.tx("Your access token has expired, or you are not logged in.") +
+            " " +
             TX.tx("Please refresh the page in order to save in Google Drive");
     } else if (r.result) {
         mess += r.result.error.message;
@@ -79,25 +79,25 @@ GoogleDriveStore.prototype._analyse_error = function(r, context, fail) {
     fail.call(this, mess);
 };
 
-GoogleDriveStore.prototype._init = function(params) {
+GoogleDriveStore.prototype._init = function (params) {
     "use strict";
 
     var self = this;
 
     // Timeout after 20 seconds of waiting for auth
-    var tid = window.setTimeout(function() {
+    var tid = window.setTimeout(function () {
         window.clearTimeout(tid);
         params.fail.call(
             self,
             TX.tx("Timeout trying to authorise access to Google Drive.") +
-                " " + TX.tx("Are popups blocked in your browser?"));
+            " " + TX.tx("Are popups blocked in your browser?"));
     }, 20000);
 
-    var handleClientLoad = function() {
+    var handleClientLoad = function () {
         if (DEBUG) console.debug("GoogleDriveStore: drive/v2 loaded");
         gapi.client.drive.about.get("name")
             .then(
-                function(result) {
+                function (result) {
                     if (result.status === 200) {
                         self.user(result.result.user.displayName);
                     } else {
@@ -107,7 +107,7 @@ GoogleDriveStore.prototype._init = function(params) {
                     // Finish initialising the store
                     AbstractStore.call(self, params);
                 },
-                function(r) {
+                function (r) {
                     self._analyse_error(
                         r, TX.tx("Google Drive load"), params.fail);
                 });
@@ -132,8 +132,7 @@ GoogleDriveStore.prototype._init = function(params) {
 
     if (DEBUG) console.debug("GoogleDriveStore: authorising");
 
-    gapi.auth.authorize(
-        {
+    gapi.auth.authorize({
             //immediate: true,
             client_id: CLIENT_ID,
             scope: SCOPE
@@ -151,7 +150,7 @@ var RETIMILED = "\r\n--" + BOUNDARY + "--";
  * @param ok callback on ok, passed the data
  * @param fail callback on fail
  */
-GoogleDriveStore.prototype._getfile = function(url, ok, fail) {
+GoogleDriveStore.prototype._getfile = function (url, ok, fail) {
     "use strict";
 
     var self = this;
@@ -165,16 +164,16 @@ GoogleDriveStore.prototype._getfile = function(url, ok, fail) {
         method: "GET",
         dataType: "binary",
         responseType: "arraybuffer",
-        beforeSend: function(jqXHR) {
+        beforeSend: function (jqXHR) {
             jqXHR.setRequestHeader(
                 "Authorization",
                 "Bearer " + oauthToken.access_token);
         },
-        success: function(data) {
+        success: function (data) {
             if (DEBUG) console.debug("GoogleDriveStore: _getfile OK");
             ok.call(self, data);
         },
-        error: function(jqXHR, textStatus, errorThrown) {
+        error: function (jqXHR, textStatus, errorThrown) {
             var reason = textStatus + " " + errorThrown;
             if (DEBUG) console.debug("_getfile failed", reason);
             fail.call(self, reason);
@@ -185,7 +184,7 @@ GoogleDriveStore.prototype._getfile = function(url, ok, fail) {
 // Get the id of the folder at the end of the given path, optionally creating
 // the folders if they don't exist. Call ok passing the id of the
 // leaf folder, or fail otherwise.
-GoogleDriveStore.prototype._follow_path = function(
+GoogleDriveStore.prototype._follow_path = function (
     parentid, path, ok, fail, create) {
     "use strict";
 
@@ -198,38 +197,40 @@ GoogleDriveStore.prototype._follow_path = function(
 
     var p = path.slice();
     var pathel = p.shift();
-    var create_folder = function() {
+    var create_folder = function () {
         var metadata = {
             title: pathel,
             mimeType: "application/vnd.google-apps.folder"
         };
         if (parentid !== "root")
             // Don't think we want this for a root file?
-            metadata.parents = [ { id: parentid } ];
+            metadata.parents = [{
+                id: parentid
+            }];
         if (DEBUG) console.debug("Creating folder " + pathel + " under " + parentid);
         gapi.client.drive.files
             .insert(metadata)
             .then(
-                function(response) {
+                function (response) {
                     var id = response.result.id;
                     self._follow_path(id, p, ok, fail, true);
                 },
-                function(r) {
+                function (r) {
                     // create failed
                     self._analyse_error(r, TX.tx("Create folder"), fail);
                 });
     };
-    var query = "title='" + pathel + "'"
-        + " and '" + parentid + "' in parents"
-        + " and mimeType='application/vnd.google-apps.folder'"
-        + " and trashed=false";
+    var query = "title='" + pathel + "'" +
+        " and '" + parentid + "' in parents" +
+        " and mimeType='application/vnd.google-apps.folder'" +
+        " and trashed=false";
 
     gapi.client.drive.files
         .list({
             q: query
         })
         .then(
-            function(response) {
+            function (response) {
                 var items = response.result.items;
                 if (items.length > 0) {
                     var id = items[0].id;
@@ -244,13 +245,13 @@ GoogleDriveStore.prototype._follow_path = function(
                     }
                 }
             },
-            function(r) {
+            function (r) {
                 self._analyse_error(r, TX.tx("Follow path"), fail);
             });
 };
 
 // id is a (string) id or a { parentid: name: structure }
-GoogleDriveStore.prototype._putfile = function(parentid, name, data, ok, fail, id) {
+GoogleDriveStore.prototype._putfile = function (parentid, name, data, ok, fail, id) {
     "use strict";
 
     var self = this;
@@ -266,7 +267,9 @@ GoogleDriveStore.prototype._putfile = function(parentid, name, data, ok, fail, i
     };
 
     if (typeof parentid !== "undefined") {
-        metadata.parents = [ { id: parentid } ];
+        metadata.parents = [{
+            id: parentid
+        }];
     }
 
     if (typeof id !== "undefined") {
@@ -287,24 +290,25 @@ GoogleDriveStore.prototype._putfile = function(parentid, name, data, ok, fail, i
         RETIMILED;
 
     gapi.client.request({
-        path: url,
-        method: method,
-        params: params,
-        headers: {
-            "Content-Type": "multipart/related; boundary=\"" + BOUNDARY + "\""
-        },
-        body: multipartRequestBody})
+            path: url,
+            method: method,
+            params: params,
+            headers: {
+                "Content-Type": "multipart/related; boundary=\"" + BOUNDARY + "\""
+            },
+            body: multipartRequestBody
+        })
 
         .then(
-            function(response) {
+            function (response) {
                 ok.call(self, response.result);
             },
-            function(r) {
+            function (r) {
                 self._analyse_error(r, TX.tx("Put"), fail);
             });
 };
 
-GoogleDriveStore.prototype.options = function() {
+GoogleDriveStore.prototype.options = function () {
     "use strict";
 
     return $.extend(AbstractStore.prototype.options(), {
@@ -313,7 +317,7 @@ GoogleDriveStore.prototype.options = function() {
     });
 };
 
-GoogleDriveStore.prototype.write = function(path, data, ok, fail) {
+GoogleDriveStore.prototype.write = function (path, data, ok, fail) {
     "use strict";
 
     var self = this;
@@ -321,26 +325,28 @@ GoogleDriveStore.prototype.write = function(path, data, ok, fail) {
     var p = path.split("/");
     var name = p.pop();
 
-    var create_file = function(parentid) {
+    var create_file = function (parentid) {
         // See if the file already exists, if it does then use it's id
-        var query = "title='" + name + "'"
-            + " and '" + parentid + "' in parents"
-            + " and trashed=false";
+        var query = "title='" + name + "'" +
+            " and '" + parentid + "' in parents" +
+            " and trashed=false";
         if (DEBUG) console.debug("GoogleDriveStore: checking existance of " + name);
         gapi.client.drive.files
-            .list({ q: query })
+            .list({
+                q: query
+            })
             .then(
-                function(response) {
+                function (response) {
                     var items = response.result.items;
                     var id;
                     if (items.length > 0) {
                         id = items[0].id;
                         if (DEBUG) console.debug("GoogleDriveStore: updating " + name + " id " + id);
                     } else
-                        if (DEBUG) console.debug("GoogleDriveStore: creating " + name + " in " + parentid);
+                    if (DEBUG) console.debug("GoogleDriveStore: creating " + name + " in " + parentid);
                     self._putfile(parentid, name, data, ok, fail, id);
                 },
-                function(r) {
+                function (r) {
                     self._analyse_error(r, TX.tx("Write"), fail);
                 });
     };
@@ -354,7 +360,7 @@ GoogleDriveStore.prototype.write = function(path, data, ok, fail) {
         true);
 };
 
-GoogleDriveStore.prototype.read = function(path, ok, fail) {
+GoogleDriveStore.prototype.read = function (path, ok, fail) {
     "use strict";
 
     if (DEBUG) console.debug("GoogleDriveStore: read " + path);
@@ -363,15 +369,17 @@ GoogleDriveStore.prototype.read = function(path, ok, fail) {
     var name = p.pop();
     var self = this;
 
-    var get_file = function(parentid) {
-        var query = "title='" + name + "'"
-        + " and '" + parentid + "' in parents"
-        + " and trashed=false";
+    var get_file = function (parentid) {
+        var query = "title='" + name + "'" +
+            " and '" + parentid + "' in parents" +
+            " and trashed=false";
 
         gapi.client.drive.files
-            .list({ q: query })
+            .list({
+                q: query
+            })
             .then(
-                function(response) {
+                function (response) {
                     var items = response.result.items;
                     if (items.length > 0) {
                         var url = items[0].downloadUrl;
@@ -384,7 +392,7 @@ GoogleDriveStore.prototype.read = function(path, ok, fail) {
                         fail.call(self, AbstractStore.NODATA);
                     }
                 },
-                function(r) {
+                function (r) {
                     self._analyse_error(r, TX.tx("Read"), fail);
                 });
     };

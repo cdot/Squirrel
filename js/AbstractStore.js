@@ -38,10 +38,12 @@ AbstractStore.NODATA = "not found";
  * Return a hash of static options. This is never written, entries are
  * constants.
  */
-AbstractStore.prototype.options = function() {
+AbstractStore.prototype.options = function () {
     "use strict";
 
-    return { identifier: "Unknown" };
+    return {
+        identifier: "Unknown"
+    };
 };
 
 /**
@@ -49,7 +51,7 @@ AbstractStore.prototype.options = function() {
  * protected by passwords.
  * @param pass the new password
  */
-AbstractStore.prototype.user = function(user) {
+AbstractStore.prototype.user = function (user) {
     "use strict";
 
     if (typeof user !== "undefined")
@@ -63,7 +65,7 @@ AbstractStore.prototype.user = function(user) {
  * protected by passwords.
  * @param pass the new password
  */
-AbstractStore.prototype.pass = function(pass) {
+AbstractStore.prototype.pass = function (pass) {
     "use strict";
 
     if (arguments.length === 1 && typeof pass !== "undefined")
@@ -79,7 +81,7 @@ AbstractStore.prototype.pass = function(pass) {
  * @param ok called on success with this=self
  * @param fail called on failure with this=self
  */
-AbstractStore.prototype.write = function(path, data, ok, fail) {
+AbstractStore.prototype.write = function (path, data, ok, fail) {
     "use strict";
 
     fail.call(this, "Store has no write method");
@@ -92,7 +94,7 @@ AbstractStore.prototype.write = function(path, data, ok, fail) {
  * @param ok called on success with this=self
  * @param fail called on failure
  */
-AbstractStore.prototype.writes = function(path, str, ok, fail) {
+AbstractStore.prototype.writes = function (path, str, ok, fail) {
     "use strict";
 
     this.write(
@@ -108,7 +110,7 @@ AbstractStore.prototype.writes = function(path, str, ok, fail) {
  * @param ok called on success with this=self, passed ArrayBuffer
  * @param fail called on failure
  */
-AbstractStore.prototype.read = function(path, ok, fail) {
+AbstractStore.prototype.read = function (path, ok, fail) {
     "use strict";
 
     fail.call(this, "Store has no read method");
@@ -120,14 +122,14 @@ AbstractStore.prototype.read = function(path, ok, fail) {
  * @param ok called on success with this=self, passed String
  * @param fail called on failure
  */
-AbstractStore.prototype.reads = function(path, ok, fail) {
+AbstractStore.prototype.reads = function (path, ok, fail) {
     "use strict";
 
     var self = this;
 
     this.read(
         path,
-        function(ab) {
+        function (ab) {
             var data;
             try {
                 data = Utils.ArrayBufferToString(ab);
@@ -154,17 +156,18 @@ AbstractStore.prototype.reads = function(path, ok, fail) {
 function LayeredStore(params) {
     "use strict";
 
-    var self = this, pok = params.ok;
+    var self = this,
+        pok = params.ok;
 
     // Override the OK function
-    params.ok = function() {
+    params.ok = function () {
         // 'this' is the engine.
         // Don't call AbstractStore(), it doesn't do anything useful
         // for us - we don't want to call params.ok for this layer,
         // only in the understore.
         self.engine = this;
         pok.call(self);
-    };    
+    };
 
     // We don't use the return value from the understore factory, instead
     // we set self.engine in the ok function, above.
@@ -173,19 +176,19 @@ function LayeredStore(params) {
 
 LayeredStore.prototype = Object.create(AbstractStore.prototype);
 
-LayeredStore.prototype.options = function() {
+LayeredStore.prototype.options = function () {
     "use strict";
 
     return this.engine.options();
 };
 
-LayeredStore.prototype.user = function(u) {
+LayeredStore.prototype.user = function (u) {
     "use strict";
 
     return this.engine.user(u);
 };
 
-LayeredStore.prototype.pass = function(pw) {
+LayeredStore.prototype.pass = function (pw) {
     "use strict";
 
     return this.engine.pass(pw);

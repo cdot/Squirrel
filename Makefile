@@ -1,6 +1,5 @@
 # Copyright (C) 2015-2017 Crawford Currie http://c-dot.co.uk / MIT
-FIND := find . -name 'jquery*' -prune -o -name
-
+FIND         := find . -name 'jquery*' -prune -o -name
 SQUIRREL_JS  := $(shell cat Squirrel.html | \
 		grep '<script class="compressable" src=' $^ | \
 		sed -e 's/.*src="//;s/".*//g' )
@@ -17,15 +16,9 @@ HELP_CSS     := $(shell cat help.html | \
 		grep '<link class="compressable"' $^ | \
 		sed -e 's/.*href="//;s/".*//g' )
 
-debug:
-	@echo SQUIRREL_CSS $(SQUIRREL_CSS)
-	@echo MAP $(MAP)
+# The min target supports generating a minified test version, halfway to a
+# release
 
-other:  @echo MIN $(MIN)
-	@echo SQUIRREL_JS $(SQUIRREL_JS)
-
-# To strip DEBUG completely, use:
-#		--define DEBUG=false
 %.map %.min.js : %.js
 	uglifyjs \
 		--source-map $(patsubst %.min.js,%.map,$@) \
@@ -45,14 +38,13 @@ other:  @echo MIN $(MIN)
 
 %.map : %.min.js
 
-# The min target supports generating a minified test version, halfway to a
-# release
 min:	$(patsubst %.js,%.min.js,$(SQUIRREL_JS) $(STORES_JS)) \
 	$(patsubst %.js,%.map,$(SQUIRREL_JS) $(STORES_JS)) \
 	$(patsubst %.css,%.min.css,$(SQUIRREL_CSS))
 	@echo "Made min"
 
-# Making release 
+# Release 
+
 release/js/Squirrel.min.js : $(SQUIRREL_JS)
 	@mkdir -p release/js
 	uglifyjs \
@@ -112,12 +104,12 @@ release: release/Squirrel.html release/help.html \
 	@-rm -f release/js/*.map
 	echo $^ built
 
-# Other targets
-%.esl : %.js
-	-eslint $^ && touch $@
+# Tests
 
 test:
 	mocha $(TESTS_JS)
+
+# Clean generated stuff
 
 clean:
 	rm -rf release
@@ -126,6 +118,18 @@ clean:
 	$(FIND) '*.map' -exec rm \{\} \;
 	$(FIND) '*.esl' -exec rm \{\} \;
 	$(FIND) '*.strings' -exec rm \{\} \;
+
+# Formatting
+
+%.js.tidy : %.js
+	js-beautify -j -B --good-stuff -o $^ $^
+
+tidy: $(patsubst %.js,%.js.tidy,$(SQUIRREL_JS) $(STORES_JS))
+
+# eslint
+
+%.esl : %.js
+	-eslint $^ && touch $@
 
 lint: $(subst .js,.esl,$(patsubst %.min.js,,$(SQUIRREL_JS) $(STORES_JS)))
 
@@ -140,7 +144,7 @@ lint: $(subst .js,.esl,$(patsubst %.min.js,,$(SQUIRREL_JS) $(STORES_JS)))
 locale/%.json: $(patsubst %.js,%.js.strings,$(SQUIRREL_JS) $(STORES_JS)) Squirrel.html.strings help.html.strings
 	node build/translate.js -l $@ $^
 
-# debug
+# debug, keep .strings files around
 .SECONDARY: $(patsubst %.js,%.js.strings,$(SQUIRREL_JS) $(STORES_JS)) Squirrel.html.strings help.html.strings
 
 

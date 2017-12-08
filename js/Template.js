@@ -6,11 +6,12 @@
  * Supports two simple styles of template expansion.
  *
  * For simple expansion, a call to $el.template("expand", ...)
- * will expand $1..$N in the template's HTML.
  *
  * For a pick, a container that has class "pick-one" has one or more
  * children each with a unique data-id. A call of $el.template("pick",
  * id) will show the child with matching data-id and return it.
+ *
+ * Expansion of arguments to "expand" is done using Utils.expandTemplate
  *
  * You can chain the calls e.g.
  * ```
@@ -34,39 +35,41 @@
  * raw-template - records the unexpanded template
  */
 
-(function($) {
+(function ($) {
 
     "use strict";
 
     $.widget("squirrel.template", {
-        _create: function() {
+        _create: function () {
             if (this.element.hasClass("pick-one")) {
                 // Nothing picked yet, show the first
-                this.element.children().hide().first().show();
+                this.element.children()
+                    .hide()
+                    .first()
+                    .show();
             }
         },
 
-        pick: function(id) {
-            this.element.children().hide();
+        pick: function (id) {
+            this.element.children()
+                .hide();
             var $picked = this.element.children("[data-id='" + id + "']");
             $picked.show();
             return $picked;
         },
-        
-        expand: function() {
+
+        expand: function () {
             var tmpl = this.element.data("raw-template");
             if (!tmpl)
                 this.element.data(
                     "raw-template", tmpl = this.element.html());
-            var args;
-            if (typeof arguments[0] === "object")
-                args = arguments[0];
-            else
-                args = arguments;
-            tmpl = tmpl.replace(/\$(\d+)/g, function(m, p1) {
-                var i = parseInt(p1);
-                return args[i - 1];
-            })
+
+            var args = [tmpl];
+            // can't use concat() with an Arguments object :-(
+            for (var i = 0; i < arguments.length; i++)
+                args.push(arguments[i]);
+            tmpl = Utils.expandTemplate.apply(null, args);
+
             this.element.html(tmpl);
         }
     });

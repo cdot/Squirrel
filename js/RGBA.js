@@ -165,7 +165,7 @@ const CSSColours = {
  * @param b a number (if r is defined and is a number)
  * @param a a number (if r is defined and is a number)
  */
-function RGBA(r, g, b, a) {   
+function RGBA(r, g, b, a) {
     "use strict";
 
     function parseComponent(value, max) {
@@ -184,8 +184,8 @@ function RGBA(r, g, b, a) {
                 this.b = r[2];
                 this.a = r[3];
             } else if (typeof r.r === "number" &&
-                       typeof r.g === "number" &&
-                       typeof r.b === "number") {
+                typeof r.g === "number" &&
+                typeof r.b === "number") {
                 this.r = r.r;
                 this.g = r.g;
                 this.b = r.b;
@@ -210,14 +210,15 @@ function RGBA(r, g, b, a) {
             r = named;
 
         if (r.charAt(0) == "#") {
-            this.r = parseInt(r.substr(1,2), 16) / 255.0;
-            this.g = parseInt(r.substr(3,2), 16) / 255.0;
-            this.b = parseInt(r.substr(5,2), 16) / 255.0;
+            this.r = parseInt(r.substr(1, 2), 16) / 255.0;
+            this.g = parseInt(r.substr(3, 2), 16) / 255.0;
+            this.b = parseInt(r.substr(5, 2), 16) / 255.0;
             return;
         }
 
         if (/^hsla?\(.*\)$/.test(r)) {
-            a = r.replace(/(hsla?\(|\))/g,"").split(/[,\s]+/);
+            a = r.replace(/(hsla?\(|\))/g, "")
+                .split(/[,\s]+/);
             var n = RGBA.fromHSL(
                 parseComponent(a[0], 360),
                 parseComponent(a[1], 1),
@@ -230,9 +231,10 @@ function RGBA(r, g, b, a) {
             this.a = n.a;
             return;
         }
-            
+
         if (/^rgba?\(.*\)$/.test(r)) {
-            a = r.replace(/(rgba?\(|\))/g,"").split(",");
+            a = r.replace(/(rgba?\(|\))/g, "")
+                .split(",");
             this.r = Math.floor(parseComponent(a[0], 255)) / 255;
             this.g = Math.floor(parseComponent(a[1], 255)) / 255;
             this.b = Math.floor(parseComponent(a[2], 255)) / 255;
@@ -250,7 +252,7 @@ function RGBA(r, g, b, a) {
 /**
  * Crude RGB inversion - simply invert the colour components
  */
-RGBA.prototype.inverse = function() {
+RGBA.prototype.inverse = function () {
     "use strict";
     return new RGBA(1 - this.r, 1 - this.g, 1 - this.b, this.a);
 }
@@ -258,7 +260,7 @@ RGBA.prototype.inverse = function() {
 /**
  * More sophisticated HSV complement
  */
-RGBA.prototype.complement = function() {
+RGBA.prototype.complement = function () {
     "use strict";
     var hsv = this.toHSV();
     return RGBA.fromHSV((hsv[0] + 180) % 360, hsv[1], hsv[2], this.a);
@@ -269,7 +271,7 @@ RGBA.prototype.complement = function() {
  * Anything above 0.65 is closer to white, below that to black
  * @see https://en.wikipedia.org/wiki/HSL_and_HSV
  */
-RGBA.prototype.luma = function() {
+RGBA.prototype.luma = function () {
     "use strict";
     // SMPTE C, Rec. 709 weightings
     return (0.2126 * this.r) + (0.7152 * this.g) + (0.0722 * this.b);
@@ -279,12 +281,12 @@ RGBA.prototype.luma = function() {
  * Generate a CSS string for the colour. CSS colour string is
  * used if there is no A, a css rgba() otherwise.
  */
-RGBA.prototype.toString = function() {
+RGBA.prototype.toString = function () {
     "use strict";
 
-    var tuple = [ Math.round(255 * this.r),
+    var tuple = [Math.round(255 * this.r),
                   Math.round(255 * this.g),
-                  Math.round(255 * this.b) ];
+                  Math.round(255 * this.b)];
 
     if (typeof this.a !== "undefined") {
         tuple.push(this.a);
@@ -305,7 +307,7 @@ RGBA.prototype.toString = function() {
  * @see https://en.wikipedia.org/wiki/HSL_and_HSV
  * @return [ hue (0..360), saturation (0..1), value (0..1) ]
  */
-RGBA.prototype.toHSV = function() {
+RGBA.prototype.toHSV = function () {
     "use strict";
 
     var M = Math.max(this.r, this.g, this.b);
@@ -314,7 +316,7 @@ RGBA.prototype.toHSV = function() {
     var V = M;
     var S = (V == 0) ? 0 : (C / V); // sat (= chroma)
     var H = 0;
-    
+
     if (C != 0) {
         // not achromatic, calculate hue
         if (this.r === M)
@@ -323,13 +325,13 @@ RGBA.prototype.toHSV = function() {
             H = 60 * ((this.b - this.r) / C + 2);
         else
             H = 60 * ((this.r - this.g) / C + 4);
-        
+
         if (H < 0)
             H += 360;
     }
 
-    var hsv = [ H, S, V ];
-    
+    var hsv = [H, S, V];
+
     if (typeof this.a != "undefined")
         hsv.push(this.a);
 
@@ -342,14 +344,14 @@ RGBA.prototype.toHSV = function() {
  * @see https://en.wikipedia.org/wiki/HSL_and_HSV
  * @return [ hue (0..360), saturation (0..1), lightness (0..1) ]
  */
-RGBA.prototype.toHSL = function() {
+RGBA.prototype.toHSL = function () {
     "use strict";
 
     var M = Math.max(this.r, this.g, this.b);
     var m = Math.min(this.r, this.g, this.b);
     var C = M - m; // saturation / chroma
     var H, S, L;
-    
+
     if (C == 0) { // achromatic
         H = S = 0;
         L = M;
@@ -366,13 +368,13 @@ RGBA.prototype.toHSL = function() {
             H = 60 * ((this.b - this.r) / C + 2);
         else
             H = 60 * ((this.r - this.g) / C + 4);
-        
+
         if (H < 0)
             H += 360;
     }
 
-    var hsl = [ H, S, L ];
-    
+    var hsl = [H, S, L];
+
     if (typeof this.a != "undefined")
         hsl.push(this.a);
 
@@ -383,7 +385,7 @@ RGBA.prototype.toHSL = function() {
  * Generate a new Colour from HSV[A]. H, S, V [, A] can be passed directly
  * or H will be assumed to be a tuple if S is undefined.
  */
-RGBA.fromHSV = function(H, S, V, A) {
+RGBA.fromHSV = function (H, S, V, A) {
     "use strict";
 
     var R, G, B;
@@ -394,7 +396,7 @@ RGBA.fromHSV = function(H, S, V, A) {
         S = H[1];
         H = H[0];
     }
-    
+
     if (S == 0) {
         R = G = B = V; // achromatic
 
@@ -406,12 +408,35 @@ RGBA.fromHSV = function(H, S, V, A) {
         var q = V * (1 - S * f);
         var t = V * (1 - S * (1 - f));
         switch (i) {
-        case 0: R = V; G = t; B = p; break;
-        case 1: R = q; G = V; B = p; break;
-        case 2: R = p; G = V; B = t; break;
-        case 3: R = p; G = q; B = V; break;
-        case 4: R = t; G = p; B = V; break;
-        default: R = V; G = p; B = q;
+        case 0:
+            R = V;
+            G = t;
+            B = p;
+            break;
+        case 1:
+            R = q;
+            G = V;
+            B = p;
+            break;
+        case 2:
+            R = p;
+            G = V;
+            B = t;
+            break;
+        case 3:
+            R = p;
+            G = q;
+            B = V;
+            break;
+        case 4:
+            R = t;
+            G = p;
+            B = V;
+            break;
+        default:
+            R = V;
+            G = p;
+            B = q;
         }
     }
 
@@ -422,15 +447,15 @@ RGBA.fromHSV = function(H, S, V, A) {
  * Generate a new Colour from HSL. H, S, L [, A] can be passed directly
  * or H can be a tuple.
  */
-RGBA.fromHSL = function(H, S, L, A) {
+RGBA.fromHSL = function (H, S, L, A) {
     "use strict";
 
-    function hue2RGB(p, q, t){
+    function hue2RGB(p, q, t) {
         if (t < 0) t += 1;
         if (t > 1) t -= 1;
-        if (t < 1/6) return p + (q - p) * 6 * t;
-        if (t < 1/2) return q;
-        if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+        if (t < 1 / 6) return p + (q - p) * 6 * t;
+        if (t < 1 / 2) return q;
+        if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
         return p;
     }
 
@@ -451,9 +476,9 @@ RGBA.fromHSL = function(H, S, L, A) {
         var q = L < 0.5 ? L * (1 + S) :
             L + S - L * S;
         var p = 2 * L - q;
-        R = hue2RGB(p, q, H + 1/3);
+        R = hue2RGB(p, q, H + 1 / 3);
         G = hue2RGB(p, q, H);
-        B = hue2RGB(p, q, H - 1/3);
+        B = hue2RGB(p, q, H - 1 / 3);
 
     }
 
