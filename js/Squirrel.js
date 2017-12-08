@@ -369,237 +369,240 @@ var Squirrel = {
         return message.join("\n");
     }
 
-    function save_hoards() {
-        S.squeak({
-            title: TX.tx("Saving")
-        });
+    var client_ok = true;
+    var cloud_ok = true;
 
-        var client_ok = true;
-        var cloud_ok = true;
+    function finished() {
+        if (DEBUG) console.debug("...save finished");
+        Utils.sometime("update_save");
+        if (client_ok && cloud_ok) {
+            if (client.hoard.options.autosave)
+                $("#squeak_dlg")
+                .squirrelDialog("close");
+            else
+                // Otherwise leave it open
+                $("#squeak_dlg")
+                .squirrelDialog("squeakAdd", TX.tx("Save complete"));
 
-        function finished() {
-            if (DEBUG) console.debug("...save finished");
-            Utils.sometime("update_save");
-            if (client_ok && cloud_ok) {
-                if (client.hoard.options.autosave)
-                    $("#squeak_dlg")
-                    .squirrelDialog("close");
-                else
-                    // Otherwise leave it open
-                    $("#squeak_dlg")
-                    .squirrelDialog("squeakAdd", TX.tx("Save complete"));
+        } else {
+            // Otherwise leave it open, disable auto-save
+            $("#squeak_dlg")
+                .squirrelDialog("squeakAdd", {
+                    severity: "error",
+                    message: TX.tx("Save encountered errors")
+                });
+            client.hoard.options.autosave = false;
+        }
+    }
 
-            } else {
-                // Otherwise leave it open, disable auto-save
+    function write_client_store() {
+        client.store.writes(
+            "S." + client.store.user(),
+            JSON.stringify(client.hoard),
+            function () {
+                if (DEBUG) console.debug("...client save OK");
+                $(".tree-modified")
+                    .removeClass("tree-modified");
+                client.status = S.IS_LOADED;
+                $("#squeak_dlg")
+                    .squirrelDialog("squeakAdd",
+                        TX.tx("Saved in $1", this.options()
+                            .identifier));
+                finished();
+            },
+            function (e) {
+                if (DEBUG) console.debug("...client save failed " + e);
                 $("#squeak_dlg")
                     .squirrelDialog("squeakAdd", {
                         severity: "error",
-                        message: TX.tx("Save encountered errors")
+                        message: TX.tx("Failed to save in $1: $2",
+                            this.options()
+                            .identifier, e)
                     });
-                client.hoard.options.autosave = false;
-            }
-        }
-
-        function write_client_store() {
-            client.store.writes(
-                "S." + client.store.user(),
-                JSON.stringify(client.hoard),
-                function () {
-                    if (DEBUG) console.debug("...client save OK");
-                    $(".tree-modified")
-                        .removeClass("tree-modified");
-                    client.status = S.IS_LOADED;
-                    $("#squeak_dlg")
-                        .squirrelDialog("squeakAdd",
-                            TX.tx("Saved in $1", this.options()
-                                .identifier));
-                    finished();
-                },
-                function (e) {
-                    if (DEBUG) console.debug("...client save failed " + e);
-                    $("#squeak_dlg")
-                        .squirrelDialog("squeakAdd", {
-                            severity: "error",
-                            message: TX.tx("Failed to save in $1: $2",
-                                this.options()
-                                .identifier, e)
-                        });
-                    client_ok = false;
-                    finished();
-                });
-        }
-
-        function save_client() {
-            if (DEBUG) console.debug("...save to client");
-
-            if (client.status === S.IS_LOADED &&
-                $(".tree-modified")
-                .length === 0) {
+                client_ok = false;
                 finished();
-                return;
-            }
+            });
+    }
 
-            client.status = S.PENDING_SAVE;
+    function save_client() {
+        if (DEBUG) console.debug("...save to client");
+
+        if (client.status === S.IS_LOADED &&
+            $(".tree-modified")
+            .length === 0) {
+            finished();
+            return;
+        }
+
+        client.status = S.PENDING_SAVE;
+
+        $("#squeak_dlg")
+            .squirrelDialog("squeakAdd", {
+                severity: "while",
+                message: TX.tx("Saving in $1",
+                    client.store.options()
+                    .identifier)
+            });
+
+        Utils.soon(write_client_store);
+    }
+
+    function write_cloud_store() {
+        // Cloud doesn't need the cache. Could kill it, but it's
+        // small and there's not much advantage to doing so.
+
+        cloud.store.writes(
+            client.hoard.options.store_path,
+            JSON.stringify(cloud.hoard),
+            function () {
+                if (DEBUG) console.debug("...cloud save OK");
+                client.hoard.actions = [];
+                client.hoard.last_sync = Date.now();
+                $("#squeak_dlg")
+                    .squirrelDialog("squeakAdd",
+                        TX.tx("Saved in $1", this.options()
+                            .identifier));
+                cloud.status = S.IS_LOADED;
+                save_client();
+            },
+            function (e) {
+                if (DEBUG) console.debug("...cloud save failed " + e);
+                $("#squeak_dlg")
+                    .squirrelDialog("squeakAdd", {
+                        severity: "error",
+                        message: TX.tx("Failed to save in $1: $2",
+                            this.options()
+                            .identifier, e)
+                    });
+                cloud_ok = false;
+                save_client();
+            });
+    }
+
+    // Save the given hoard into the cloud.
+    function update_cloud_store(ready) {
+        cloud.hoard.actions = cloud.hoard.actions.concat(
+            client.hoard.actions);
+        if (cloud.store) {
+            if (DEBUG) console.debug("...save to cloud");
 
             $("#squeak_dlg")
                 .squirrelDialog("squeakAdd", {
                     severity: "while",
                     message: TX.tx("Saving in $1",
-                        client.store.options()
+                        cloud.store.options()
                         .identifier)
                 });
 
-            Utils.soon(write_client_store);
+            cloud.status = S.PENDING_SAVE;
+
+            Utils.soon(function () {
+                write_cloud_store();
+            });
+        } else {
+            if (DEBUG) console.debug("...no cloud store");
+            if (ready)
+                ready();
+        }
+    }
+
+    // Construct a new cloud hoard from data in the client. This will
+    // happen if the cloud is read and found to be empty or corrupt,
+    // but not if the read failed.
+    S.construct_new_cloud = function (progress, ready) {
+        if (DEBUG) console.debug("...construct cloud ");
+        cloud.hoard = new Hoard();
+        client.hoard.reconstruct_actions(
+            function (a, next) {
+                // this:Hoard, a:Action, next:function
+                cloud.hoard.actions.push({
+                    type: a.type,
+                    time: a.time,
+                    data: a.data,
+                    path: a.path.slice()
+                });
+                if (next)
+                    next();
+            },
+            progress,
+            function () {
+                update_cloud_store(ready);
+            });
+    };
+
+    // Action on the cloud store being read OK
+    function cloud_store_read_ok(data) {
+        if (DEBUG) console.debug("...cloud read OK ");
+        try {
+            cloud.hoard = new Hoard(data);
+            cloud.status = S.IS_LOADED;
+        } catch (e) {
+            // We'll get here if decryption failed....
+            if (DEBUG) console.debug("Cloud hoard JSON parse failed: " + e);
+            $("#squeak_dlg")
+                .squirrelDialog("squeakAdd", {
+                    severity: "error",
+                    message: TX.tx("$1 hoard can't be read for update",
+                        this.options()
+                        .identifier)
+                });
+            cloud.status = S.IS_CORRUPT;
+            cloud_ok = false;
+            S.construct_new_cloud();
+            return;
         }
 
-        function write_cloud_store() {
-            // Cloud doesn't need the cache. Could kill it, but it's
-            // small and there's not much advantage to doing so.
-
-            cloud.store.writes(
-                client.hoard.options.store_path,
-                JSON.stringify(cloud.hoard),
-                function () {
-                    if (DEBUG) console.debug("...cloud save OK");
-                    client.hoard.actions = [];
-                    client.hoard.last_sync = Date.now();
-                    $("#squeak_dlg")
-                        .squirrelDialog("squeakAdd",
-                            TX.tx("Saved in $1", this.options()
-                                .identifier));
-                    cloud.status = S.IS_LOADED;
-                    save_client();
-                },
+        if (cloud.status === S.IS_LOADED) {
+            if (DEBUG) console.debug("...merge cloud ");
+            client.hoard.merge_from_cloud(
+                cloud.hoard,
                 function (e) {
-                    if (DEBUG) console.debug("...cloud save failed " + e);
-                    $("#squeak_dlg")
-                        .squirrelDialog("squeakAdd", {
-                            severity: "error",
-                            message: TX.tx("Failed to save in $1: $2",
-                                this.options()
-                                .identifier, e)
-                        });
-                    cloud_ok = false;
-                    save_client();
-                });
-        }
-
-        // Save the given hoard into the cloud.
-        function update_cloud_store(ready) {
-            cloud.hoard.actions = cloud.hoard.actions.concat(
-                client.hoard.actions);
-            if (cloud.store) {
-                if (DEBUG) console.debug("...save to cloud");
-
-                $("#squeak_dlg")
-                    .squirrelDialog("squeakAdd", {
-                        severity: "while",
-                        message: TX.tx("Saving in $1",
-                            cloud.store.options()
-                            .identifier)
-                    });
-
-                cloud.status = S.PENDING_SAVE;
-
-                Utils.soon(function () {
-                    write_cloud_store();
-                });
-            } else {
-                if (DEBUG) console.debug("...no cloud store");
-                if (ready)
-                    ready();
-            }
-        }
-
-        // Construct a new cloud hoard from data in the client. This will
-        // happen if the cloud is read and found to be empty or corrupt,
-        // but not if the read failed.
-        S.construct_new_cloud = function (progress, ready) {
-            if (DEBUG) console.debug("...construct cloud ");
-            cloud.hoard = new Hoard();
-            client.hoard.reconstruct_actions(
-                function (a, next) {
-                    // this:Hoard, a:Action, next:function
-                    cloud.hoard.actions.push({
-                        type: a.type,
-                        time: a.time,
-                        data: a.data,
-                        path: a.path.slice()
-                    });
-                    if (next)
-                        next();
+                    // this:Hoard, e:Action
+                    DOMtree.action(e, false);
                 },
-                progress,
-                function () {
-                    update_cloud_store(ready);
+                function (percent) {
+                    $("#merge_progress")
+                        .text(percent + "%");
                 });
         }
 
-        // Action on the cloud store being read OK
-        function cloud_store_read_ok(data) {
-            if (DEBUG) console.debug("...cloud read OK ");
-            try {
-                cloud.hoard = new Hoard(data);
-                cloud.status = S.IS_LOADED;
-            } catch (e) {
-                // We'll get here if decryption failed....
-                if (DEBUG) console.debug("Cloud hoard JSON parse failed: " + e);
-                $("#squeak_dlg")
-                    .squirrelDialog("squeakAdd", {
-                        severity: "error",
-                        message: TX.tx("$1 hoard can't be read for update",
-                            this.options()
-                            .identifier)
-                    });
-                cloud.status = S.IS_CORRUPT;
-                cloud_ok = false;
-                S.construct_new_cloud();
-                return;
-            }
+        if (cloud.status !== S.IS_LOADED ||
+            client.hoard.actions.length !== 0) {
+            // Only save if there actually some changes
+            if (DEBUG) console.debug("...update from cloud ");
+            update_cloud_store(save_client);
+        } else
+            Utils.soon(save_client);
+    }
 
-            if (cloud.status === S.IS_LOADED) {
-                if (DEBUG) console.debug("...merge cloud ");
-                client.hoard.merge_from_cloud(
-                    cloud.hoard,
-                    function (e) {
-                        // this:Hoard, e:Action
-                        DOMtree.action(e, false);
-                    },
-                    function (percent) {
-                        $("#merge_progress")
-                            .text(percent + "%");
-                    });
-            }
-
-            if (cloud.status !== S.IS_LOADED ||
-                client.hoard.actions.length !== 0) {
-                // Only save if there actually some changes
-                if (DEBUG) console.debug("...update from cloud ");
-                update_cloud_store(save_client);
-            } else
-                Utils.soon(save_client);
+    // Action on the cloud store read failing
+    function cloud_store_read_failed(e) {
+        if (DEBUG) console.debug("...cloud read failed " + e);
+        if (e === AbstractStore.NODATA) {
+            if (DEBUG) console.debug(this.options()
+                .identifier + " contains NODATA");
+            cloud.status = S.IS_EMPTY;
+            S.construct_new_cloud();
+        } else {
+            $("#squeak_dlg")
+                .squirrelDialog("squeakAdd", {
+                    severity: "error",
+                    message: TX.tx("Failed to refresh from $1: $2",
+                        this.options()
+                        .identifier, e)
+                });
+            cloud_ok = false;
+            Utils.soon(save_client);
         }
+    }
 
-        // Action on the cloud store read failing
-        function cloud_store_read_failed(e) {
-            if (DEBUG) console.debug("...cloud read failed " + e);
-            if (e === AbstractStore.NODATA) {
-                if (DEBUG) console.debug(this.options()
-                    .identifier + " contains NODATA");
-                cloud.status = S.IS_EMPTY;
-                S.construct_new_cloud();
-            } else {
-                $("#squeak_dlg")
-                    .squirrelDialog("squeakAdd", {
-                        severity: "error",
-                        message: TX.tx("Failed to refresh from $1: $2",
-                            this.options()
-                            .identifier, e)
-                    });
-                cloud_ok = false;
-                Utils.soon(save_client);
-            }
-        }
+    function save_hoards() {
+        S.squeak({
+            title: TX.tx("Saving")
+        });
+
+        client_ok = true;
+        cloud_ok = true;
 
         if (DEBUG) console.debug("Saving; client " + client.status +
             "; cloud " + cloud.status);

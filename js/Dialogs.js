@@ -898,6 +898,10 @@
                 "expand",
                 S.getCloud()
                 .hoard.actions.length);
+        self.get("study")
+            .hide()
+        self.get("optimise")
+            .button("disable");
 
         var hoard = S.getClient()
             .hoard;
@@ -916,11 +920,14 @@
             null,
             function () {
                 self.get("study")
+                    .show()
                     .template(
                         "expand",
                         counts.N, counts.A, counts.X,
                         counts.N + counts.A + counts.X);
 
+                self.get("optimise")
+                    .button("enable");
             });
     };
 
