@@ -100,6 +100,11 @@ function Hoard(data) {
         };
 }
 
+/**
+ * Generate a terse string version of an action for reporting
+ * @param action action to report on
+ * @return {string} human readable description of action
+ */
 Hoard.stringify_action = function(action) {
     "use strict";
 
@@ -109,6 +114,22 @@ Hoard.stringify_action = function(action) {
            (" '" + action.data + "'") : "")
         + " @" + new Date(action.time).toLocaleString();
 };
+
+if (DEBUG) {
+    /**
+     * Return a dump of the current state of the hoard for debugging
+     * @return a string with the JSON of the cache, and a list of the actions.
+     */
+    Hoard.prototype.dump = function() {
+        "use strict";
+        
+        var data = this.JSON() + "\n"; // get the cache
+        for (var i = 0; i < this.actions.length; i++) {
+            data = data + Hoard.stringify_action(this.actions[i]) + "\n";
+        }
+        return data;
+    };
+}
 
 /**
  * Clear down the actions in the hoard. The cache is left untouched.
@@ -138,7 +159,8 @@ Hoard.prototype.clear_actions = function() {
  * Returns a conflict object if there was an error. This has two fields,
  * 'action' for the action record and 'message'.
  * @param {Action} e the action record
- * @param {Listener} [listener] called when the action is played
+ * @param {function} listener called when the action is played.
+ * listener.call(this:Hoard, e:Action)
  * @param no_push {boolean} if true, don't push played actions onto the
  * action stream
  * @return {Conflict} conflict object, or null if there was no conflict
@@ -323,7 +345,7 @@ Hoard.prototype.simplify = function(chain) {
     if (this.actions) {
         for (var i = 0; i < this.actions.length; i++) {
             // Play the action with no push and no listener
-            var er = this.record_action(this.actions[i], false, true);
+            var er = this.record_action(this.actions[i], null, true);
             if (DEBUG && er !== null) debugger;
         }
     }
@@ -332,7 +354,9 @@ Hoard.prototype.simplify = function(chain) {
     this.actions = [];
     if (this.cache) {
         this._reconstruct_actions(
-            this.cache.data, [], function(e) {
+            this.cache.data, [],
+            function(e) {
+                // this: Hoard, e: Action [, next:function]
                 this.actions.push({
                     type: e.type,
                     time: e.time,
@@ -347,10 +371,16 @@ Hoard.prototype.simplify = function(chain) {
 };
 
 /**
- * @private method to reconstruct an action stream from a node and it's
- * subtree. Relies on the listener to call the next function.
+ * @private
+ * Method to reconstruct an action stream from a node and its children.
+ * @param data root node of tree to reconstruct from
+ * @param path path array
+ * @param {function} reconstruct
+ * reconstruct.call(this:Hoard, action:Action, follow:Function)
+ * on each reconstructed action.
+ * @param {function} chain chain()
  */
-Hoard.prototype._reconstruct_actions = function(data, path, listener, chain) {
+Hoard.prototype._reconstruct_actions = function(data, path, reconstruct, chain) {
     "use strict";
 
     var self = this;
@@ -375,12 +405,16 @@ Hoard.prototype._reconstruct_actions = function(data, path, listener, chain) {
         else if (DEBUG && typeof node.data === "undefined")
             debugger;
 
-        listener.call(
+        // Execute the 'N'
+        reconstruct.call(
             self,
             action,
             function() {
+                // The 'N' has been completed so the factory has the
+                // node. We can now reconstruct 'A' and 'X' actoins on
+                // it.
                 if (node.alarm) {
-                    listener.call(
+                    reconstruct.call(
                         self,
                         {
                             type: "A", 
@@ -391,7 +425,7 @@ Hoard.prototype._reconstruct_actions = function(data, path, listener, chain) {
                         });
                 }
                 if (node.constraints) {
-                    listener.call(
+                    reconstruct.call(
                         self,
                         {
                             type: "X", 
@@ -420,8 +454,11 @@ Hoard.prototype._reconstruct_actions = function(data, path, listener, chain) {
         }
     }
 
+    // Build a queue of functions to call
     list_nodes(queue, data, path.slice());
+    // Add the chain to the end of the queue
     queue.push(chain);
+    // And execute the queue
     Utils.execute_queue(queue);
 };
 
@@ -433,34 +470,30 @@ Hoard.prototype._reconstruct_actions = function(data, path, listener, chain) {
  * of keys and the data they contain e.g.
  * { "key1" : { data: { subkey1: { data: "string data" } } } }
  * Other fields (such as time) may be present and are used if they are.
- * @param {Listener} [listener] callback that takes an action, and a
- * function that must be called once the action has been applied. Note that
- * the listener can do what it likes with the action it is passed, and
- * the function need not be called immediately.
- * @param chain callback invoked when all actions have been constructed
- * (no parameters, no this)
+ * @param {function} reconstruct function to call on each action as it
+ * is constructed. reconstruct.call(this:Hoard, action:Action, follow:Function)
+ * @param {function} chain callback invoked when all actions have been
+ * constructed. chain()
  */
-Hoard.prototype.actions_from_hierarchy = function(data, listener, chain) {
+Hoard.prototype.actions_from_hierarchy = function(data, reconstruct, chain) {
     "use strict";
 
-    this._reconstruct_actions(data, [], listener, chain);
+    this._reconstruct_actions(data, [], reconstruct, chain);
 };
 
 /**
  * Reconstruct an action stream from the cache in the hoard. This is
  * used to generate the UI tree from a stored cache. 
- * @param {Listener} [listener] callback that takes an action, and a
- * function that must be called once the action has been applied. Note that
- * the listener can do what it likes with the action it is passed, and
- * the function need not be called immediately.
- * @param chain callback invoked when all actions have been constructed
- * (no parameters, no this)
+ * @param {function} reconstruct function to call on each action as it
+ * is constructed. reconstruct.call(this:Hoard, action:Action, follow:Function)
+ * @param {function} chain callback invoked when all actions have been
+ * constructed. chain()
  */
-Hoard.prototype.reconstruct_actions = function(listener, chain) {
+Hoard.prototype.reconstruct_actions = function(reconstruct, chain) {
     "use strict";
 
     if (this.cache) {
-        this.actions_from_hierarchy(this.cache, listener, chain);
+        this.actions_from_hierarchy(this.cache, reconstruct, chain);
     } else {
         chain();
     }
@@ -470,7 +503,8 @@ Hoard.prototype.reconstruct_actions = function(listener, chain) {
  * Merge the cloud actions since the last sync into this hoard.
  * Actions are *not* appended to our local actions stream.
  * @param {Hoard} cloud the cloud hoard
- * @param {Listener} [listener] called whenever an action is played
+ * @param {Listener} listener called whenever an action is played
+ * listener.call(this:Hoard, e:Action)
  * @param {Object[]} conflicts, as returned by record_action, if there are any
  * @param chain function to call once all merged. Passed a list of conflicts.
  */
@@ -503,20 +537,6 @@ Hoard.prototype.merge_from_cloud = function(cloud, listener, chain) {
     this.last_sync = Date.now();
     if (chain)
         chain(conflicts);
-};
-
-/**
- * Return a dump of the current state of the hoard.
- * @return a string with the JSON of the cache, and a list of the actions.
- */
-Hoard.prototype.dump = function() {
-    "use strict";
-
-    var data = this.JSON() + "\n"; // get the cache
-    for (var i = 0; i < this.actions.length; i++) {
-        data = data + Hoard.stringify_action(this.actions[i]) + "\n";
-    }
-    return data;
 };
 
 /**

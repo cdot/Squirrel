@@ -275,7 +275,10 @@ var Squirrel = {
         if (DEBUG) console.debug("Merging from cloud hoard");
         client.hoard.merge_from_cloud(
             cloard,
-            DOMtree.action,
+            function(e) {
+                // this:Hoard, e:Action
+                DOMtree.action(e, false);
+            },
             function(conflicts) {
                 if (conflicts.length > 0) {
                     S.squeak({
@@ -461,6 +464,7 @@ var Squirrel = {
             var cloard = new Hoard();
             client.hoard.reconstruct_actions(
                 function(a, next) {
+                    // this:Hoard, a:Action, next:function
                     cloard.actions.push({
                         type: a.type,
                         time: a.time,
@@ -498,7 +502,11 @@ var Squirrel = {
             if (cloud.status === S.IS_LOADED) {
                 if (DEBUG) console.debug("...merge cloud ");
                 client.hoard.merge_from_cloud(
-                    cloard, DOMtree.action);
+                    cloard,
+                    function(e) {
+                        // this:Hoard, e:Action
+                        DOMtree.action(e, false);
+                    });
             }
             
             if ( cloud.status !== S.IS_LOADED
@@ -681,6 +689,7 @@ var Squirrel = {
             var n = 0;
             client.hoard.reconstruct_actions(
                 function(a, next) {
+                    // this:Hoard, a:Action, next:function
                     $("#percent").text(n++);
                     DOMtree.action(a, false, next);
                 },
@@ -1277,8 +1286,10 @@ var   systemPasteContent =
                 data: (typeof value === "string") ? value : undefined
             },
             function(e) {
+                // this:Hoard, e:Action
                 DOMtree.action(
-                    e, true,
+                    e,
+                    true,
                     function($newnode) {
                         if (DEBUG && !$newnode) debugger;
                         if (typeof value !== "string"
@@ -1344,11 +1355,14 @@ var   systemPasteContent =
 
         client.hoard.actions_from_hierarchy(
             { data: data },
-            function(act, next) { // listener
+            function(act, next) {
+                // this:Hoard, e:Action, next:function
                 //if (DEBUG) console.debug(Hoard.stringify_action(act));
                 act.path = path.slice().concat(act.path);
                 var res = client.hoard.record_action(
-                    act, function (sact) {
+                    act,
+                    function (sact) {
+                        // this:Hoard, e:Action
                         DOMtree.action(sact, false, next);
                     });
                 if (res !== null)
@@ -1376,6 +1390,7 @@ var   systemPasteContent =
         var res = client.hoard.record_action(
             action,
             function(e) {
+                // this:Hoard, e:Action
                 DOMtree.action(
                     e,
                     true,
@@ -1419,6 +1434,7 @@ var   systemPasteContent =
         var res = client.hoard.record_action(
             a,
             function(e) {
+                // this:Hoard, e:Action
                 DOMtree.action(
                     e, false,
                     function() {
