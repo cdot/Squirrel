@@ -2,7 +2,9 @@
 /**
  * Generic UI dialog styling used by Dialogs.uncompressed.js
  */
-.dlg-dialog {}
+.dlg-dialog {
+    display: none;
+}
 
 .dlg-pick-cell {
     font-family: "Courier New", Courier, monospace;
