@@ -134,7 +134,7 @@
             $parent = this.getNodeFromPath(parent);
             $node.data("key", key);
 
-            var $title = $("<div></div>")
+            var $title = $(document.createElement("div"))
                 .addClass("tree-title")
                 // SMELL: only if screen is wide enough!
                 .hover(hoverIn, hoverOut)
@@ -154,7 +154,7 @@
             } else {
                 // Add open/close button on running nodes, except the root
                 // which is always open
-                var $control = $("<button></button>")
+                var $control = $(document.createElement("button"))
                     .addClass("tree-open-close");
                 $title.prepend($control);
                 $node.addClass("tree-open");
@@ -167,12 +167,12 @@
                     });
             }
 
-            var $info = $("<div></div>")
+            var $info = $(document.createElement("div"))
                 .addClass("tree-info")
                 .appendTo($title);
 
             // Create the key span
-            $("<span></span>")
+            $(document.createElement("span"))
                 .appendTo($info)
                 .addClass("tree-key")
                 .text(key)
@@ -182,10 +182,11 @@
                 });
 
             if (is_leaf) {
-                $("<span> : </span>")
+                $(document.createElement("span"))
+                    .text(" : ")
                     .addClass("tree-separator")
                     .appendTo($info);
-                $("<span></span>")
+                $(document.createElement("span"))
                     .appendTo($info)
                     .addClass("tree-value")
                     .text(S.hideValues() ?
@@ -200,9 +201,11 @@
         }
 
         if (!is_leaf) {
+            var $ul = $(document.createElement("ul"))
+                .addClass("sortable tree-subnodes");
             $node
                 .addClass("tree-collection")
-                .append("<ul class='sortable tree-subnodes'></ul>");
+                .append($ul);
         }
 
         // Close to hide the children (or to open the root)
@@ -303,13 +306,15 @@
     widget.editKey = function () {
         var $node = this.element;
         this.edit(
-            $node.find(".tree-key:first"), $node.data("key"), "R");
+            $node.find(".tree-key")
+            .first(), $node.data("key"), "R");
     };
 
     widget.editValue = function () {
         var $node = this.element;
         this.edit(
-            $node.find(".tree-value:first"), $node.data("value"), "E");
+            $node.find(".tree-value")
+            .first(), $node.data("value"), "E");
     };
 
     widget.ringAlarm = function () {
@@ -366,7 +371,7 @@
                 var oldpath = $node.tree("getPath");
                 var newpath = $new_parent.tree("getPath");
                 S.playAction({
-                    type: 'M',
+                    type: "M",
                     path: oldpath,
                     data: newpath
                 });
@@ -423,7 +428,8 @@
         var key = $node.data("key");
         var inserted = false;
 
-        var $ul = $parent.find("ul:first");
+        var $ul = $parent.find("ul")
+            .first();
         $ul.children(".tree-node")
             .each(function () {
                 if (compare(
@@ -497,7 +503,8 @@
 
         $node
             .data("value", action.data)
-            .find(".tree-value:first")
+            .find(".tree-value")
+            .first()
             .text(S.hideValues() ? S.mask(action.data) : action.data);
 
         this.setModified(action.time);
@@ -542,7 +549,7 @@
 
         if (typeof alarm === "undefined") {
             // No existing alarm, need to create parts
-            var $button = $("<button></button>")
+            var $button = $(document.createElement("button"))
                 .addClass("tree-alarm");
             $node
                 .find(".tree-key")
@@ -727,7 +734,7 @@
     widget.action = function (action, undoable, chain) {
         if (action.type === "N") {
             // Create the new node. Automatically adds it to the right parent.
-            $("<li></li>")
+            $(document.createElement("li"))
                 .tree({
                     path: action.path,
                     value: action.data,

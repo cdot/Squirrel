@@ -8,7 +8,7 @@
     const getopt = require("node-getopt");
     const Fs = require("fs");
     const Q = require("q");
-    const axios = require('axios');
+    const axios = require("axios");
 
     const DESCRIPTION =
           "DESCRIPTION\nTranslate strings read from JSON files. If a language file is given, will read current translations and rewrite new translations.\n\nUSAGE\nnode translate [-langfile <lf.json>] <strings1.json> <strings2.json> ...\n\n\nOPTIONS\n";

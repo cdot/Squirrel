@@ -54,10 +54,10 @@
   <body>
     <div id="unauthenticated">
       <h1>Squirrel</h1>
-      <div>
-        <div id="stage" class="TX_text">Authenticating...</div>
-        <span id="load_progress"></span>
-        <span id="merge_progress"></span>
+      <div id="progress">
+        <span id="stage"></span>
+        <div id="load_progress" class="progress_spinner"></div>
+        <div id="merge_progress" class="progress_spinner"></div>
       </div>
       <div class="authfailed">
         <span class="TX_text">Authentication failed.</span>
@@ -478,6 +478,9 @@
     <div id="about_dlg" class="dlg-dialog TX_title" title="About Squirrel">
       <p class="TX_html">
         Squirrel is Copyright &copy; 2015-2017 Crawford Currie <a href="http://c-dot.co.uk">http://c-dot.co.uk</a>
+      </p>
+      <p>
+        <span class="TX_text">This version was released on </span> BUILD_DATE
       </p>
       <div class="twisted" data-open="ui-icon-info">
         <p class="TX_html">

@@ -207,10 +207,6 @@
   "s": "cette valeur",
   "m": 0.55
  },
- "Security details": {
-  "s": "Renseignements concernant la garantie",
-  "m": 1
- },
  "Select your preferred colour scheme.": {
   "s": "Sélection du schéma de couleurs",
   "m": 0.79
@@ -252,7 +248,7 @@
   "m": 1
  },
  "The current reminder is due in $1 on $2": {
-  "s": "La relance actuelle est due à $1 $ 2",
+  "s": "La relance actuelle est due à $1 $2",
   "m": 0.85
  },
  "The reminder will be reset whenever the entry is modified.": {
@@ -439,10 +435,6 @@
   "m": 0.68,
   "s": "%1 Erreur & #160;: %2@title: column"
  },
- "Loading...": {
-  "m": 1,
-  "s": "Chargement..."
- },
  "Encryption error: $1": {
   "m": 0.83,
   "s": "Erreur de chiffrement"
@@ -578,10 +570,6 @@
  "Are you sure you want to delete": {
   "m": 1,
   "s": "Êtes-vous sûr de vouloir supprimer"
- },
- "Authenticating...": {
-  "m": 1,
-  "s": "Authentification en cours..."
  },
  "Autosave": {
   "m": 1,
@@ -762,5 +750,61 @@
  "Are popups blocked in your browser?": {
   "m": 0.85,
   "s": "Fenêtres pop-up est bloquées dans votre navigateur ?"
+ },
+ "Reading from cloud": {
+  "m": 0.85,
+  "s": "Lecture à partir du cloud"
+ },
+ "Building UI": {
+  "m": 0.85,
+  "s": "Interface utilisateur du bâtiment"
+ },
+ "Reading from client": {
+  "m": 0.85,
+  "s": "Lecture du client"
+ },
+ "Authentication": {
+  "m": 1,
+  "s": "Authentification"
+ },
+ "Loading application": {
+  "m": 0.85,
+  "s": "Application de chargement"
+ },
+ "Error in search expression": {
+  "m": 0.85,
+  "s": "Erreur dans l'expression de recherche"
+ },
+ "Please refresh the page in order to save in Google Drive": {
+  "m": 0.85,
+  "s": "Veuillez actualiser la page pour enregistrer dans Google Drive"
+ },
+ "After optimisation it will have $1 node$?($1!=1,s,) + $2 alarm$?($2!=1,s,) + $3 constraint$?($3!=1,s,) = $4 action$?($4!=1,s,).": {
+  "m": 0.85,
+  "s": "Après optimisation, il aura $1 entrée($2!=1,s,) + $2 alarme($3!=1,s,) + $3 contrainte($3!=1,s,) = $4 action$?($4!=1,s,)."
+ },
+ "Optimise": {
+  "m": 1,
+  "s": "Optimiser"
+ },
+ "Optimise Cloud": {
+  "m": 0.85,
+  "s": "Optimiser le cloud"
+ },
+ "Optimising your cloud store will lose all the history, which will make it impossible for any client that is not completely up to date to synchronise. You have been warned!": {
+  "m": 0.85,
+  "s": "L'optimisation de votre boutique en nuage perdra tout l'historique, ce qui empêchera tout client qui n'est pas complètement à jour de se synchroniser. Tu étais prévenu!"
+ },
+ "Security Details": {
+  "m": 0.98,
+  "s": "informations de sécurité"
+ },
+ "The cloud currently has $1 action$?($1!=1,s,) in the history.": {
+  "m": 0.85,
+  "s": "Le cloud a actuellement $1 action$?($1!=1,s,) dans l'historique."
+ },
+ "This version was released on": {
+  "m": 0.85,
+  "s": "Cette version a été publiée le"
  }
 }

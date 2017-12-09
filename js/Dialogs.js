@@ -28,7 +28,8 @@
             enabled = false;
         else {
             var $ul = this.element.data("parent")
-                .find("ul:first");
+                .find("ul")
+                .first();
             $ul.children(".tree-node")
                 .each(function () {
                     if (S.compare($(this)
@@ -227,13 +228,13 @@
         for (i = 0; i < val.length; i++) {
             $f = $from.children("td.i" + i);
             if ($f.length === 0) {
-                $("<td></td>")
+                $(document.createElement("td"))
                     .data("i", i)
                     .addClass("dlg-pick-cell i" + i)
                     .text(i + 1)
                     .on($.getTapEvent(), item_clicked)
                     .appendTo($which);
-                $f = $("<td></td>")
+                $f = $(document.createElement("td"))
                     .data("i", i)
                     .addClass("dlg-pick-cell i" + i)
                     .on($.getTapEvent(), item_clicked)
@@ -804,7 +805,8 @@
         var base = TX.tx("A copy");
         var name = new RegExp("^" + base + " ?(\\d*)$");
         var i = -1;
-        $parent.find("ul:first")
+        $parent.find("ul")
+            .first()
             .children(".tree-node")
             .each(function () {
                 var m = name.exec($(this)

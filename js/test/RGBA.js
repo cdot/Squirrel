@@ -1,4 +1,4 @@
-var assert = require('chai').assert;
+var assert = require("chai").assert;
 var RGBA = require("../RGBA");
 
 // Sample colours, from https://en.wikipedia.org/wiki/HSL_and_HSV

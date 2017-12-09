@@ -1,5 +1,6 @@
 # Copyright (C) 2015-2017 Crawford Currie http://c-dot.co.uk / MIT
 FIND         := find . -name 'jquery*' -prune -o -name
+DATE         := 's/BUILD_DATE/$(shell date)/g'
 SQUIRREL_JS  := $(shell cat Squirrel.html | \
 		grep '<script class="compressable" src=' $^ | \
 		sed -e 's/.*src="//;s/".*//g' )
@@ -90,11 +91,8 @@ release/images/% : images/%
 release/%.html : %.html
 	@mkdir -p release
 	cat $^ | \
-	sed -E -e 's/(<script )class="compressable"(.*")js\/Squirrel.js(".*>)/\1\2js\/Squirrel.min.js\3/' | \
-	sed -E -e 's/(<script )class="compressable"(.*")js\/help.js(".*>)/\1\2js\/help.min.js\3/' | \
-	sed -E -e 's/(<link )class="compressable"(.*")css\/Squirrel\.css(".*>)/\1\2css\/Squirrel.min.css\3/' | \
-	sed -E -e 's/(<link )class="compressable"(.*")css\/help\.css(".*>)/\1\2css\/help.min.css\3/' | \
-	sed -e '/^.*class="compressable".*/d' > $@
+	sed -E -f build/release.sed | \
+	sed -e $(DATE) > $@
 
 release: release/Squirrel.html release/help.html \
 	release/js/help.min.js release/css/Squirrel.min.css \
@@ -139,7 +137,6 @@ lint: $(subst .js,.esl,$(patsubst %.min.js,,$(SQUIRREL_JS) $(STORES_JS)))
 
 %.html.strings: %.html
 	node build/extractTX.js $^
-
 
 locale/%.json: $(patsubst %.js,%.js.strings,$(SQUIRREL_JS) $(STORES_JS)) Squirrel.html.strings help.html.strings
 	node build/translate.js -l $@ $^

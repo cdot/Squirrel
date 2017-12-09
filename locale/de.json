@@ -83,10 +83,6 @@
   "m": 0.5,
   "s": "Sind Sie sicher, dass Sie löschen möchten?"
  },
- "Authenticating...": {
-  "m": 0.5,
-  "s": "Authentifizierung ..."
- },
  "Autosave": {
   "m": 0.5,
   "s": "automatisches Sichern"
@@ -242,10 +238,6 @@
  "JSON has been loaded": {
   "m": 0.5,
   "s": "JSON ist geladen"
- },
- "Loading...": {
-  "m": 0.5,
-  "s": "Lade..."
  },
  "Name is already in use": {
   "m": 0.5,
@@ -695,10 +687,6 @@
   "m": 0.85,
   "s": "Denken Sie daran, Beschränkungen dieser Wert"
  },
- "Security details": {
-  "m": 1,
-  "s": "Sicherheitsdetails"
- },
  "Select your preferred colour scheme.": {
   "m": 0.85,
   "s": "Wählen Sie Ihre bevorzugten Farbgebung."
@@ -766,5 +754,57 @@
  "You must ensure that all clients up to date and you are safely connected to the internet before doing this, or you will lose data.": {
   "m": 0.85,
   "s": "Sie müssen sicherstellen, dass alle Clients auf dem neuesten Stand und Sie sicher mit dem Internet verbunden sind bevor Sie dies tun, gehen Daten verloren."
+ },
+ "Reading from cloud": {
+  "m": 0.85,
+  "s": "Aus der Cloud lesen"
+ },
+ "Building UI": {
+  "m": 0.85,
+  "s": "Gebäude"
+ },
+ "Reading from client": {
+  "m": 0.85,
+  "s": "Lesen vom Kunden"
+ },
+ "Authentication": {
+  "m": 1,
+  "s": "Authentifizierung"
+ },
+ "Loading application": {
+  "m": 0.85,
+  "s": "Anwendung wird geladen"
+ },
+ "Please refresh the page in order to save in Google Drive": {
+  "m": 0.85,
+  "s": "Bitte aktualisieren Sie die Seite, um sie in Google Drive zu speichern"
+ },
+ "After optimisation it will have $1 node$?($1!=1,s,) + $2 alarm$?($2!=1,s,) + $3 constraint$?($3!=1,s,) = $4 action$?($4!=1,s,).": {
+  "m": 0.85,
+  "s": "Nach der Optimierung wird $1 Knoten + $2 Alarm + $3 Einschränkung$?($3!=1,en,) = $4 Aktion$?($4!=1,en,)."
+ },
+ "Optimise": {
+  "m": 0.99,
+  "s": "Optimieren."
+ },
+ "Optimise Cloud": {
+  "m": 0.85,
+  "s": "Cloud optimieren"
+ },
+ "Optimising your cloud store will lose all the history, which will make it impossible for any client that is not completely up to date to synchronise. You have been warned!": {
+  "m": 0.85,
+  "s": "Durch die Optimierung Ihres Cloud-Speichers wird der gesamte Verlauf verloren, wodurch es für jeden Client, der nicht vollständig auf dem neuesten Stand ist, unmöglich wird, sich zu synchronisieren. Du wurdest gewarnt!"
+ },
+ "Security Details": {
+  "m": 0.99,
+  "s": "Sicherheitsdetails"
+ },
+ "The cloud currently has $1 action$?($1!=1,s,) in the history.": {
+  "m": 0.85,
+  "s": "Die Cloud hat derzeit $1 Aktion$?($1!=1,en,) im Verlauf."
+ },
+ "This version was released on": {
+  "m": 0.85,
+  "s": "Diese Version wurde am veröffentlicht"
  }
 }

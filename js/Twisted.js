@@ -33,7 +33,7 @@
                     self.close();
             }
 
-            var $button = $("<button></button>")
+            var $button = $(document.createElement("button"))
                 .addClass("twisted-button twisted-title")
                 .button({
                     icon: "ui-icon-info",
@@ -41,7 +41,8 @@
                 });
 
             var $title = $container
-                .children(".twisted-title:first")
+                .children(".twisted-title")
+                .first()
                 .detach()
                 .insertBefore($container)
                 .prepend($button)

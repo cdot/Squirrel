@@ -290,7 +290,7 @@ RGBA.prototype.toString = function () {
 
     if (typeof this.a !== "undefined") {
         tuple.push(this.a);
-        return "rgba(" + tuple.join(',') + ")";
+        return "rgba(" + tuple.join(",") + ")";
     } else {
         var s = "#";
         for (var i = 0; i < 3; i++) {

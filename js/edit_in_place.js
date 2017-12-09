@@ -15,7 +15,7 @@
                 return $this.text();
             };
         var closed = options.closed || function () {};
-        var $input = $("<input/>");
+        var $input = $(document.createElement("input"));
         var text = options.text || $this.text();
 
         // Action on blur

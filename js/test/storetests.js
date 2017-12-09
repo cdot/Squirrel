@@ -1,6 +1,6 @@
 function report(s) {
     console.debug(s);
-    $('body').append("<p>" + s + "</p>");
+    $("body").append("<p>" + s + "</p>");
 }
 
 const TESTR = "1234567";

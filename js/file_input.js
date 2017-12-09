@@ -10,12 +10,12 @@
         _create: function() {
 
             var $self = $(this.element)
-                .wrap($("<div></div>")
+                .wrap($(document.createElement("div"))
                       /*.css("position", "relative")
                         .css("display", "inline-block")*/);
             $self.hide();
             $self.parent().append(
-                $("<button></button>")
+                $(document.createElement("button"))
                     .button({
                         label: $self.attr("title")
                     })

@@ -90,7 +90,7 @@ var Squirrel = {
         // a widget element then creating a new <style> with the required
         // attributes applied to body{}
         var $body = $("body");
-        var $el = $("<div></div>")
+        var $el = $(document.createElement("div"))
             .addClass("ui-widget")
             .addClass("ui-widget-content")
             .hide();
@@ -168,8 +168,10 @@ var Squirrel = {
 
         $("#computed-styles")
             .remove();
-        style = "<style id='computed-styles'>" + style + "</style>";
-        $body.append(style);
+        var $style = $(document.createElement("style"))
+            .attr("id", "computed-styles")
+            .text(style);
+        $body.append($style);
         //if (DEBUG) console.log(style);
     }
 
@@ -182,7 +184,7 @@ var Squirrel = {
         if (typeof theme !== "undefined") {
             $("link")
                 .filter(function () {
-                    return this.href && this.href.indexOf('/themes/') > 0;
+                    return this.href && this.href.indexOf("/themes/") > 0;
                 })
                 .each(function () {
                     this.href = this.href.replace(
@@ -192,12 +194,12 @@ var Squirrel = {
                     Utils.sometime("reset_styling");
                 });
             if (theme === "base") {
-                Cookies.remove('ui_theme');
+                Cookies.remove("ui_theme");
             } else {
-                Cookies.set('ui_theme', theme);
+                Cookies.set("ui_theme", theme);
             }
         }
-        return Cookies.get('ui_theme');
+        return Cookies.get("ui_theme");
     };
 
     S.scale = function (scale) {
@@ -682,7 +684,7 @@ var Squirrel = {
     function step_6_load_cloud_hoard() {
         if (cloud.store) {
             $("#stage")
-                .text(TX.tx("Reading from cloud..."));
+                .text(TX.tx("Reading from cloud"));
             cloud.store.reads(
                 client.hoard.options.store_path,
                 function (data) {
@@ -766,7 +768,7 @@ var Squirrel = {
 
         function rebuild_hoard() {
             $("#stage")
-                .text(TX.tx("Building UI..."));
+                .text(TX.tx("Building UI"));
             client.hoard.reconstruct_actions(
                 function (a, next) {
                     // this:Hoard, a:Action, next:function
@@ -802,7 +804,7 @@ var Squirrel = {
         }
 
         $("#stage")
-            .text(TX.tx("Reading from client..."));
+            .text(TX.tx("Reading from client"));
         client.store.reads(
             "S." + client.store.user(),
             function (data) {
@@ -871,7 +873,7 @@ var Squirrel = {
         var pReq = true;
 
         $("#stage")
-            .text(TX.tx("Authentication..."));
+            .text(TX.tx("Authentication"));
 
         // Spread user information determined during store initialisation
         // around.
@@ -1071,7 +1073,7 @@ var Squirrel = {
             document.designMode = "on";
             $(window).on("paste", function(e) {
 var   systemPasteContent = 
-    e.clipboardData.getData('text/plain');
+    e.clipboardData.getData("text/plain");
                 debugger;
             });
             $("#pasteboard").focus();
@@ -1286,7 +1288,7 @@ var   systemPasteContent =
     function init_application() {
         // Kick off by initialising the cloud store.
         $("#stage")
-            .text(TX.tx("Loading application..."));
+            .text(TX.tx("Loading application"));
         step_1_init_cloud_store();
     }
 

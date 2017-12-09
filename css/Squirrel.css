@@ -39,6 +39,10 @@ https://stackoverflow.com/questions/826782/how-to-disable-text-selection-highlig
     background: transparent url("../images/progress_bar.gif") no-repeat 13em center;
 }
 
+.progress_spinner {
+    float: right;
+}
+
 #search_label,#search {
     vertical-align: middle;
 }
