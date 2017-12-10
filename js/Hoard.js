@@ -112,7 +112,7 @@ Hoard.stringify_action = function (action) {
     "use strict";
 
     return action.type + ":" +
-        action.path.join("/") +
+        action.path.join("↘") +
         (typeof action.data !== "undefined" ?
             (" '" + action.data + "'") : "") +
         " @" + new Date(action.time)
@@ -220,11 +220,11 @@ Hoard.prototype.record_action = function (e, listener, no_push) {
     case "N": // New
         if (!parent)
             return c(TX.tx("Cannot create") +
-                " '" + e.path.join("/") + "': " +
+                " '" + e.path.join("↘") + "': " +
                 TX.tx("Folder not found"));
         if (node)
             return c(TX.tx("Cannot create") +
-                " '" + e.path.join("/") + "': " +
+                " '" + e.path.join("↘") + "': " +
                 TX.tx("It already exists"));
         parent.time = e.time; // collection is being modified
         parent.data[name] = {
@@ -237,7 +237,7 @@ Hoard.prototype.record_action = function (e, listener, no_push) {
     case "M": // Move
         if (!node)
             return c(TX.tx("Cannot move") +
-                " '" + e.path.join("/") + "': " +
+                " '" + e.path.join("↘") + "': " +
                 TX.tx("It does not exist"));
 
         // e.data is the path of the new parent
@@ -251,7 +251,7 @@ Hoard.prototype.record_action = function (e, listener, no_push) {
 
         if (!new_parent)
             return c(TX.tx("Cannot move") +
-                " '" + e.data.join("/") + "': " +
+                " '" + e.data.join("↘") + "': " +
                 TX.tx("New folder does not exist"));
 
         new_parent.time = parent.time = e.time; // collection is being modified
@@ -262,11 +262,11 @@ Hoard.prototype.record_action = function (e, listener, no_push) {
     case "D": // Delete
         if (!node)
             return c(TX.tx("Cannot delete") +
-                " '" + e.path.join("/") + "': " +
+                " '" + e.path.join("↘") + "': " +
                 TX.tx("It does not exist"));
         if (!parent)
             return c(TX.tx("Cannot delete") +
-                " '" + e.path.join("/") + "': " +
+                " '" + e.path.join("↘") + "': " +
                 TX.tx("Folder not found"));
         delete parent.data[name];
         parent.time = e.time; // collection is being modified
@@ -275,11 +275,11 @@ Hoard.prototype.record_action = function (e, listener, no_push) {
     case "R": // Rename
         if (!parent.data[name])
             return c(TX.tx("Cannot rename") +
-                " '" + e.path.join("/") + "' " +
+                " '" + e.path.join("↘") + "' " +
                 TX.tx("It does not exist"));
         if (parent.data[e.data])
             return c(TX.tx("Cannot rename") +
-                " '" + e.path.join("/") + "' -> '" + e.data + "': " +
+                " '" + e.path.join("↘") + "' -> '" + e.data + "': " +
                 TX.tx("It already exists"));
         parent.data[e.data] = parent.data[name];
         delete parent.data[name];
@@ -289,7 +289,7 @@ Hoard.prototype.record_action = function (e, listener, no_push) {
     case "E": // Edit
         if (!parent.data[name])
             return c(TX.tx("Cannot change value of") +
-                " '" + e.path.join("/") + "': " +
+                " '" + e.path.join("↘") + "': " +
                 TX.tx("It does not exist"));
         parent.data[name].data = e.data;
         parent.data[name].time = e.time;
@@ -298,7 +298,7 @@ Hoard.prototype.record_action = function (e, listener, no_push) {
     case "A": // Alarm
         if (!parent.data[name])
             return c(TX.tx("Cannot set reminder on") +
-                " '" + e.path.join("/") + "': " +
+                " '" + e.path.join("↘") + "': " +
                 TX.tx("It does not exist"));
         if (!e.data)
             delete parent.data[name].alarm;
@@ -310,7 +310,7 @@ Hoard.prototype.record_action = function (e, listener, no_push) {
     case "C": // Cancel alarm
         if (!parent.data[name])
             return c(TX.tx("Cannot cancel reminder on") +
-                " '" + e.path.join("/") + "': " +
+                " '" + e.path.join("↘") + "': " +
                 TX.tx("It does not exist"));
         delete parent.data[name].alarm;
         parent.data[name].time = e.time;
@@ -320,7 +320,7 @@ Hoard.prototype.record_action = function (e, listener, no_push) {
         // will simply ignore this action.
         if (!parent.data[name])
             return c(TX.tx("Cannot constrain") +
-                " '" + e.path.join("/") + "': " +
+                " '" + e.path.join("↘") + "': " +
                 TX.tx("It does not exist"));
         if (!e.data)
             delete parent.data[name].constraints;

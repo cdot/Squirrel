@@ -20,11 +20,12 @@ HELP_CSS     := $(shell cat help.html | \
 # The min target supports generating a minified test version, halfway to a
 # release
 
+#		--source-map $(patsubst %.min.js,%.map,$@) \
+#		--source-map-url $(subst js/,,$(patsubst %.min.js,%.map,$@)) \
+#		--source-map-include-sources \
+
 %.map %.min.js : %.js
 	uglifyjs \
-		--source-map $(patsubst %.min.js,%.map,$@) \
-		--source-map-url $(subst js/,,$(patsubst %.min.js,%.map,$@)) \
-		--source-map-include-sources \
 		--comments \
 		--compress \
 		-o $@ \
@@ -62,7 +63,7 @@ release/js/help.min.js : $(HELP_JS)
 		--comments \
 		--compress \
 		--mangle \
-		--defined DEBUG=false \
+		--define DEBUG=false \
 		-o $@ \
 		-- $^
 
@@ -72,7 +73,7 @@ release/js/%Store.js : js/%Store.js
 		--comments \
 		--compress \
 		--mangle \
-		--defined DEBUG=false \
+		--define DEBUG=false \
 		-o $@ \
 		-- $^
 
@@ -110,7 +111,6 @@ test:
 # Clean generated stuff
 
 clean:
-	rm -rf release
 	$(FIND) '*~' -exec rm \{\} \;
 	$(FIND)  '*.min.*' -exec rm \{\} \;
 	$(FIND) '*.map' -exec rm \{\} \;

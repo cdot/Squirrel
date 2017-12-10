@@ -193,7 +193,7 @@
         this.get("path")
             .text(
                 $node.tree("getPath")
-                .join("/"));
+                .join("↘"));
         this.get("coll")
             .toggle(!$node.hasClass("tree-leaf"));
     };
@@ -327,7 +327,7 @@
 
         var path = $node.tree("getPath");
         this.get("path")
-            .text(path.join("/"));
+            .text(path.join("↘"));
         this.get("key")
             .text(my_key);
         this.get("again")
@@ -416,7 +416,7 @@
 
         this.get("path")
             .text($node.tree("getPath")
-                .join("/"));
+                .join("↘"));
 
         $dlg.data("node", $node);
         var lastmod = $node.data("last-time-changed");
@@ -852,7 +852,7 @@
 
         this.get("path")
             .text($parent.tree("getPath")
-                .join(" > ") + " > ");
+                .join("↘") + "↘");
         if (is_value) {
             this.get("value_help")
                 .show();

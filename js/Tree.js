@@ -47,7 +47,7 @@
     "use strict";
 
     var cache = {}; // Path->node mapping
-
+    const PATHSEP = String.fromCharCode(1); // separator used in Path->node mapping index
     var compare; // compare function
 
     // Built the UI widget
@@ -127,7 +127,7 @@
         if (is_root) {
             cache[""] = $node;
             $node.addClass("tree-root"); // should be there in HTML?
-            $node.data("path", "");
+            $node.data("path", []);
         } else {
             parent = options.path.slice();
             key = parent.pop();
@@ -408,9 +408,9 @@
             this._addToCaches();
             ps = $node.data("path");
             if (!ps)
-                ps = "";
+                ps = [];
         }
-        return ps.split(S.PATHSEP);
+        return ps;
     }
 
     /**
@@ -442,6 +442,8 @@
             });
         if (!inserted)
             $ul.append($node);
+
+	this._addToCaches();
     };
 
     /**
@@ -669,8 +671,6 @@
         // Relocate the node in the DOM
         this._insertInto($new_parent);
 
-        // refresh data-path and update fragment ID
-        this.getPath(); // get new path
         $node.scroll_into_view();
 
         this.setModified(action.time);
@@ -708,13 +708,10 @@
 
         $node.scroll_into_view();
 
-        // refresh data-path and update fragment ID
-        var p = $node.tree("getPath"); // get new path
-
         if (undoable) {
             S.pushUndo({
                 type: "R",
-                path: p, // no need to slice, not re-used
+                path: $node.tree("getPath"), // no need to slice, not re-used
                 data: key
             });
         }
@@ -768,25 +765,47 @@
      * Node paths are calculated from the DOM tree and are cached in
      * two ways; in a path->node lookup table called cache[], and in
      * a path->node lookup using a data("path") field on the
-     * node, which maps to the S.PATHSEP separated path string.
-     * @param $node either DOM node or jQuery node
+     * node, which maps to the PATHSEP separated path string.
+     * @param $node jQuery node
+     * @param parent optional path to the parent of this node
      */
-    widget._addToCaches = function (path) {
+    widget._addToCaches = function () {
+
+	// Recursively cache node and descendants
+	function recache($n, pa) {
+            var path = pa.concat($n.data("key"));
+
+	    if (DEBUG) {
+		if (!pa)
+		    throw "recache outside tree";
+		if (cache[path.join(PATHSEP)])
+		    throw "Remapping path -> node";
+		if ($n.data("path"))
+		    throw "Remapping node -> path";
+	    }
+
+            // node->path mapping
+            $n.data("path", path);
+
+	    // path->node mapping
+	    cache[path.join(PATHSEP)] = $node;
+
+	    // Repeat for subnodes
+	    $node
+		.find(".tree-node")
+		.each(function() {
+		    decache($(this), path);
+		});
+	}
+
         var $node = this.element;
-        if (!path)
-            path = $node.parent()
+
+	// Find the path to the parent of this node
+        var parent = $node.parent()
             .closest(".tree-node")
             .tree("getPath");
 
-        path.push($node.data("key"));
-
-        var ps = path.join(S.PATHSEP);
-
-        // node->path shortcut
-        $node.data("path", ps);
-
-        // path->node mapping
-        cache[ps] = $node;
+	recache($node, parent);
     };
 
     /**
@@ -799,15 +818,17 @@
         if (!$node.hasClass("tree-node"))
             $node = $node.closest(".tree-node");
 
-        delete cache[$node.data("path")];
+        if ($node.data("path"))
+            delete cache[$node.data("path").join(PATHSEP)];
+
         $node
             .removeData("path")
             // Reset the path of all subnodes
             .find(".tree-node")
             .each(function () {
                 var $s = $(this);
-                delete cache[$s.data("path")];
-                $s.data("path", null);
+                delete cache[$s.data("path").join(PATHSEP)];
+                $s.removeData("path");
             });
     };
 
@@ -817,7 +838,7 @@
      * @return a JQuery element
      */
     widget.getNodeFromPath = function (path) {
-        var $node = cache[path.join(S.PATHSEP)];
+        var $node = cache[path.join(PATHSEP)];
         if (DEBUG && $node && $node.length === 0)
             // Not in the cache, was something not been through get_path?
             debugger;

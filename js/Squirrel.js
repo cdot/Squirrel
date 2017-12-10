@@ -21,8 +21,6 @@
 
 // Exports
 var Squirrel = {
-    PATHSEP: String.fromCharCode(1), // separator used in Path->node mapping
-
     // Store statii
     // TX.tx("has new settings")
     NEW_SETTINGS: "has new settings",
@@ -280,7 +278,7 @@ var Squirrel = {
                     severity: "warning",
                     message: "<div class='ui-icon ui-icon-squirrel-rang'></div>" +
                         TX.tx("Reminder on '$1' was due on $2",
-                            path.join("/"),
+                            path.join("↘"),
                             expired.toLocaleDateString()),
                     after_close: next
                 });
@@ -339,9 +337,9 @@ var Squirrel = {
                     .hasClass("tree-root"))
                     debugger; // Missing data-path
                 var path = $(this)
-                    .data("path") || "node";
+                    .data("path") || [];
                 message.push(TX.tx("$1 has changed",
-                    path.replace(S.PATHSEP, "/")));
+                    path.join("↘")));
             });
 
         if (message.length > max_changes) {

@@ -13,10 +13,9 @@
         "ecmaFeatures": {
             "blockBindings": true
         },
-        "globals": {
-        },
+        "globals": {},
         "rules": {
-            "strict": [ "error", "global" ],
+            "strict": 1,
             "no-underscore-dangle": 0,
             "curly": 0,
             "camelcase": 0,
@@ -24,15 +23,21 @@
             "no-console": 0,
             "no-debugger": 0,
             "no-alert": 1,
-            "no-new" : 0,
-            "new-cap" : 0,
-            "dot-notation" : 1,
-            "no-trailing-spaces" : 0,
-            "strict" : 1,
+            "no-new": 0,
+            "new-cap": 0,
+            "dot-notation": 1,
+            "no-trailing-spaces": 0,
             "no-use-before-define": 1,
             "no-loop-func": 1,
             "no-eval": 2,
             "quotes": 0
         }
+    },
+    "dependencies": {
+        "clean-css": ">=4.1.9",
+        "clean-css-cli": ">=4.1.10",
+        "eslint": ">=4.13.0",
+        "npm-check": "^5.5.2",
+        "uglify-es": ">=3.2.1"
     }
 }
