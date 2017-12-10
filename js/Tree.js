@@ -794,7 +794,7 @@
 	    $node
 		.find(".tree-node")
 		.each(function() {
-		    decache($(this), path);
+		    recache($(this), path);
 		});
 	}
 
