@@ -42,8 +42,9 @@ var Squirrel = {
     // Internal clipboard
     var clipboard;
 
-    // flag
+    // flags
     var useSteganography = false;
+    var dump = false;
 
     // undo stack
     var undos = [];
@@ -691,6 +692,8 @@ var Squirrel = {
                         .identifier + " is ready");
                     try {
                         cloud.hoard = new Hoard(data);
+			if (DEBUG && dump)
+			    console.debug(JSON.stringify(cloud.hoard));
                     } catch (e) {
                         if (DEBUG) console.debug(
                             "Cloud hoard JSON parse failed: " + e);
@@ -1623,6 +1626,9 @@ var   systemPasteContent =
 
         if (qs.debug)
             DEBUG = true;
+
+	if (DEBUG && qs.dump)
+	    dump = true;
 
         // By default, jQuery timestamps datatype 'script' and 'jsonp'
         // requests to avoid them being cached by the browser.
