@@ -442,7 +442,6 @@
             });
         if (!inserted)
             $ul.append($node);
-
         this._addToCaches();
     };
 
@@ -792,7 +791,9 @@
 
             // Repeat for subnodes
             $node
-                .find(".tree-node")
+                .find("ul")
+                .first()
+                .children(".tree-node")
                 .each(function () {
                     recache($(this), path);
                 });
