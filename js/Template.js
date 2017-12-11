@@ -1,6 +1,7 @@
 /*@preserve Copyright (C) 2017 Crawford Currie http://c-dot.co.uk license MIT*/
 
 /* eslint-env jquery */
+/* global Utils:true */
 
 /**
  * Supports two simple styles of template expansion.
@@ -34,6 +35,9 @@
  * data- used:
  * raw-template - records the unexpanded template
  */
+
+if (typeof module !== "undefined")
+    Utils = require("./Utils");
 
 (function ($) {
 

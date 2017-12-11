@@ -1,9 +1,10 @@
 /*@preserve Copyright (C) 2015 Crawford Currie http://c-dot.co.uk license MIT*/
 
-/* eslint-env browser */
-
-/* global Aes */
+/* global Aes: true */
 /* global Uint8Array */
+
+if (typeof module !== "undefined")
+    Aes = require("../libs/aes");
 
 /**
  * AES Counter-mode implementation in JavaScript
@@ -122,7 +123,7 @@ AES.encrypt = function (ab, password, nBits) {
 /**
  * Decrypt an ArrayBuffer using AES in counter mode
  *
- * @param   {ArrayBuffer} ab Source to be dencrypted.
+ * @param   {ArrayBuffer} ab Source to be decrypted.
  * @param   {String} password The password to use to generate a key.
  * @param   {number} nBits Number of bits to be used in the key;
  * 128 / 192 / 256.
@@ -202,5 +203,8 @@ AES.decrypt = function (ab, password, nBits) {
         offset += plaintxt[b].length;
     }
 
-    return pt;
+    return pt.buffer;
 };
+
+if (typeof module !== "undefined")
+    module.exports = AES;

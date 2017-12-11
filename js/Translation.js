@@ -150,7 +150,7 @@ var TX = {
     tx: function () {
         "use strict";
 
-        var tx, i;
+        var tx;
 
         // Look up the translation
         if (TX.translations !== null) {

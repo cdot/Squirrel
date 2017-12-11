@@ -892,7 +892,7 @@
             });
     };
 
-    widget._open_optimise = function ($dlg) {
+    widget._open_optimise = function () {
         var self = this;
 
         self.get("existing")

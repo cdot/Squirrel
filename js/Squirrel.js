@@ -692,8 +692,8 @@ var Squirrel = {
                         .identifier + " is ready");
                     try {
                         cloud.hoard = new Hoard(data);
-			if (DEBUG && dump)
-			    console.debug(JSON.stringify(cloud.hoard));
+                        if (DEBUG && dump)
+                            console.debug(JSON.stringify(cloud.hoard));
                     } catch (e) {
                         if (DEBUG) console.debug(
                             "Cloud hoard JSON parse failed: " + e);
@@ -1073,7 +1073,7 @@ var Squirrel = {
         case "paste":
             document.designMode = "on";
             $(window).on("paste", function(e) {
-var   systemPasteContent = 
+	    var   systemPasteContent =
     e.clipboardData.getData("text/plain");
                 debugger;
             });
@@ -1627,8 +1627,8 @@ var   systemPasteContent =
         if (qs.debug)
             DEBUG = true;
 
-	if (DEBUG && qs.dump)
-	    dump = true;
+        if (DEBUG && qs.dump)
+            dump = true;
 
         // By default, jQuery timestamps datatype 'script' and 'jsonp'
         // requests to avoid them being cached by the browser.

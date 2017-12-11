@@ -10,10 +10,10 @@
             "browser": true,
             "jquery": true
         },
-        "ecmaFeatures": {
-            "blockBindings": true
-        },
-        "globals": {},
+        "globals": {
+	    "require": false,
+	    "module": false
+	},
         "rules": {
             "strict": 1,
             "no-underscore-dangle": 0,
@@ -26,14 +26,17 @@
             "no-new": 0,
             "new-cap": 0,
             "dot-notation": 1,
-            "no-trailing-spaces": 0,
+            "no-trailing-spaces": 1,
+            "no-useless-escape": 1,
             "no-use-before-define": 1,
             "no-loop-func": 1,
-            "no-eval": 2,
+            "no-eval": 1,
             "quotes": 0
         }
     },
     "dependencies": {
+        "beautifyjs": "0.0.1",
+        "chai": "^4.1.2",
         "clean-css": ">=4.1.9",
         "clean-css-cli": ">=4.1.10",
         "eslint": ">=4.13.0",

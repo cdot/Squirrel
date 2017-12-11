@@ -443,7 +443,7 @@
         if (!inserted)
             $ul.append($node);
 
-	this._addToCaches();
+        this._addToCaches();
     };
 
     /**
@@ -771,41 +771,41 @@
      */
     widget._addToCaches = function () {
 
-	// Recursively cache node and descendants
-	function recache($n, pa) {
-            var path = pa.concat($n.data("key"));
+        // Recursively cache node and descendants
+        function recache($node, pa) {
+            var path = pa.concat($node.data("key"));
 
-	    if (DEBUG) {
-		if (!pa)
-		    throw "recache outside tree";
-		if (cache[path.join(PATHSEP)])
-		    throw "Remapping path -> node";
-		if ($n.data("path"))
-		    throw "Remapping node -> path";
-	    }
+            if (DEBUG) {
+                if (!pa)
+                    throw "recache outside tree";
+                if (cache[path.join(PATHSEP)])
+                    throw "Remapping path -> node";
+                if ($node.data("path"))
+                    throw "Remapping node -> path";
+            }
 
             // node->path mapping
-            $n.data("path", path);
+            $node.data("path", path);
 
-	    // path->node mapping
-	    cache[path.join(PATHSEP)] = $node;
+            // path->node mapping
+            cache[path.join(PATHSEP)] = $node;
 
-	    // Repeat for subnodes
-	    $node
-		.find(".tree-node")
-		.each(function() {
-		    recache($(this), path);
-		});
-	}
+            // Repeat for subnodes
+            $node
+                .find(".tree-node")
+                .each(function () {
+                    recache($(this), path);
+                });
+        }
 
-        var $node = this.element;
+        var $el = this.element;
 
-	// Find the path to the parent of this node
-        var parent = $node.parent()
+        // Find the path to the parent of this node
+        var parent = $el.parent()
             .closest(".tree-node")
             .tree("getPath");
 
-	recache($node, parent);
+        recache($el, parent);
     };
 
     /**
@@ -819,7 +819,8 @@
             $node = $node.closest(".tree-node");
 
         if ($node.data("path"))
-            delete cache[$node.data("path").join(PATHSEP)];
+            delete cache[$node.data("path")
+                .join(PATHSEP)];
 
         $node
             .removeData("path")
@@ -827,7 +828,8 @@
             .find(".tree-node")
             .each(function () {
                 var $s = $(this);
-                delete cache[$s.data("path").join(PATHSEP)];
+                delete cache[$s.data("path")
+                    .join(PATHSEP)];
                 $s.removeData("path");
             });
     };

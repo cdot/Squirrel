@@ -550,7 +550,7 @@ Utils.ArrayBufferToBase64 = function (ab) {
 Utils.Base64ToArrayBuffer = function (sB64) {
     "use strict";
 
-    var sB64Enc = sB64.replace(/[^A-Za-z0-9\+\/]/g, ""); // == and =
+    var sB64Enc = sB64.replace(/[^A-Za-z0-9+/]/g, ""); // == and =
     var nInLen = sB64Enc.length;
     var nOutLen = nInLen * 3 + 1 >> 2;
     var ta8 = new Uint8Array(nOutLen);

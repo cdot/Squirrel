@@ -1,10 +1,8 @@
 /*@preserve Copyright (C) 2015 Crawford Currie http://c-dot.co.uk license MIT*/
 
-/* eslint-env jquery, browser */
 /* global DEBUG:true */
-/* global TX */
-/* global Utils */
-/* global module */
+/* global TX:true */
+/* global Utils:true */
 
 /**
  * A combined hierarchical data store with change log, designed to be
@@ -17,7 +15,7 @@
  * record the actions performed on the client since the last sync with
  * the cloud. These actions are already reflected in the tree, but
  * are kept so they can be played into the cloud on the next synch.
- * 
+ *
  * On the cloud side the tree is ignored, and the list of actions
  * represents all changes since the hoard was established. These can
  * be replayed in full to regenerate the tree, though this is a
@@ -56,6 +54,11 @@
  * the hoard, as a version incompatibility will throw an error.
  */
 const VERSION = 2.0;
+
+var DEBUG = true;
+
+if (typeof module !== "undefined")
+    TX = require("./Translation");
 
 /**
  * Create a new Hoard.
@@ -509,14 +512,14 @@ Hoard.prototype.merge_from_cloud = function (cloud, listener, progress, chain) {
         var count = cloud.actions.length;
         for (i = 0; i < count; i++) {
             if (cloud.actions[i].time > this.last_sync) {
-                if (DEBUG) console.debug(
+                if (DEBUG) console.log(
                     "Merge " + Hoard.stringify_action(cloud.actions[i]));
                 c = this.record_action(cloud.actions[i], listener, true);
                 if (c !== null) {
-                    if (DEBUG) console.debug("Conflict: " + c.message);
+                    if (DEBUG) console.log("Conflict: " + c.message);
                     conflicts.push(c);
                 }
-            } else if (DEBUG) console.debug(
+            } else if (DEBUG) console.log(
                 "Skip old " + Hoard.stringify_action(cloud.actions[i]));
             if (progress)
                 progress(Math.floor(100 * i / count));

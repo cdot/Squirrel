@@ -52,7 +52,7 @@ EncryptedStore.prototype.read = function (path, ok, fail) {
                 fail.call(self, e);
                 return;
             }
-            ok.call(self, data.buffer);
+            ok.call(self, data);
         },
         fail);
 };
