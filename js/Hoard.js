@@ -72,7 +72,8 @@ function Hoard(data) {
     "use strict";
 
     if (data) {
-        data = JSON.parse(data);
+        if (typeof data !== "object")
+	    data = JSON.parse(data);
 
         this.last_sync = data.last_sync;
         this.actions = data.actions;
@@ -92,7 +93,7 @@ function Hoard(data) {
     }
     if (typeof this.options === "undefined")
         this.options = {
-            // options exist in both the client and cloud stores, but
+            // options exist in both the client and cloud hoards, but
             // are only read from the client - they are never read
             // from the cloud. This is so that (for example) a tablet
             // doesn't get the autosave option when it spends most of
@@ -150,9 +151,34 @@ Hoard.prototype.clear_actions = function () {
 };
 
 /**
- * Play a single action into the hoard. The cache is updated, and
- * the action added to the action stream ready for the next synch.
- * Apply the given action type:
+ * Push a new action on to the end of the action stream. No checking
+ * is done on the action, though it will default the time to 'now'.
+ * @param e the action to push. The action will be deep-copied.
+ */
+Hoard.prototype.push_action = function(e) {
+    this.actions.push({
+        type: e.type,
+        path: e.path.slice(),
+        time: e.time ? e.time : Date.now(),
+        data: e.data
+    });
+};
+
+/**
+ * Pop the most recently pushed action off the actions stream and
+ * return it.
+ * @return the action popped
+ */
+Hoard.prototype.pop_action = function() {
+    if (DEBUG && this.actions.length === 0)
+	throw "Cannot pop from empty actions stream";
+    return this.actions.pop();
+};
+
+/**
+ * Play a single action into the hoard. The cache is updated, but
+ * the action is <em>not</em> added to the action stream.
+ * Action types:
  * <ul>
  * <li>'N' with no data - create collection</li>
  * <li>'N' with data - create leaf</li>
@@ -168,23 +194,13 @@ Hoard.prototype.clear_actions = function () {
  * @param {Action} e the action record
  * @param {function} listener called when the action is played.
  * listener.call(this:Hoard, e:Action)
- * @param no_push {boolean} if true, don't push played actions onto the
- * action stream
  * @return {Conflict} conflict object, or null if there was no conflict
  */
-Hoard.prototype.record_action = function (e, listener, no_push) {
+Hoard.prototype.play_action = function (e, listener) {
     "use strict";
 
     if (typeof e.time === "undefined" || e.time === null)
         e.time = Date.now();
-
-    if (!no_push)
-        this.actions.push({
-            type: e.type,
-            path: e.path.slice(),
-            time: e.time,
-            data: e.data
-        });
 
     function locateParent(path, node) {
         // Locate the parent in the cache
@@ -489,45 +505,41 @@ Hoard.prototype.reconstruct_actions = function (reconstruct, progress, chain) {
 };
 
 /**
- * Merge the cloud actions since the last sync into this hoard.
- * Actions are *not* appended to our local actions stream.
+ * Add the actions that are timestamped since the last sync into this hoard.
+ * Actions are *not* appended to our local actions stream, they are simply
+ * played into the cache.
  * @param {Hoard} cloud the cloud hoard
  * @param {function} listener called whenever an action is played
  * listener.call(this:Hoard, e:Action)
  * @param {function} progress optional listener called with a percentage
  * completion
- * @param optinal chain function to call once all merged. Passed a list of conflicts.
+ * @param {function} chain optional function to call once all merged. Passed a list of conflicts.
  */
-Hoard.prototype.merge_from_cloud = function (cloud, listener, progress, chain) {
+Hoard.prototype.play_actions = function (
+    new_actions, listener, progress, chain) {
     "use strict";
 
-    if (cloud.actions.length > 0) {
-        var i, c,
-            // Save the local action stream
-            local_actions = this.actions,
-            conflicts = [];
+    var conflicts = [];
 
-        // Play in all cloud actions since the last sync
-        this.actions = [];
-        var count = cloud.actions.length;
-        for (i = 0; i < count; i++) {
-            if (cloud.actions[i].time > this.last_sync) {
-                if (DEBUG) console.log(
-                    "Merge " + Hoard.stringify_action(cloud.actions[i]));
-                c = this.record_action(cloud.actions[i], listener, true);
-                if (c !== null) {
-                    if (DEBUG) console.log("Conflict: " + c.message);
-                    conflicts.push(c);
-                }
-            } else if (DEBUG) console.log(
-                "Skip old " + Hoard.stringify_action(cloud.actions[i]));
-            if (progress)
-                progress(Math.floor(100 * i / count));
-        }
+    var i, c;
+
+    // Play in all actions since the last sync
+    this.actions = [];
+    var count = new_actions.length;
+    for (i = 0; i < count; i++) {
+        if (new_actions[i].time > this.last_sync) {
+            if (DEBUG) console.log(
+                "Play " + Hoard.stringify_action(new_actions[i]));
+            c = this.play_action(new_actions[i], listener);
+            if (c !== null) {
+                if (DEBUG) console.log("Conflict: " + c.message);
+                conflicts.push(c);
+            }
+        } else if (DEBUG) console.log(
+            "Skip old " + Hoard.stringify_action(new_actions[i]));
+        if (progress)
+            progress(Math.floor(100 * i / count));
     }
-
-    // Restore the saved actions list
-    this.actions = local_actions;
 
     this.last_sync = Date.now();
     if (chain)

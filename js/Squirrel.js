@@ -290,8 +290,8 @@ var Squirrel = {
         // This will get triggered whenever both hoards are
         // successfully loaded.
         if (DEBUG) console.debug("Merging from cloud hoard");
-        client.hoard.merge_from_cloud(
-            cloud.hoard,
+        client.hoard.play_actions(
+            cloud.hoard.actions,
             function (e) {
                 // this:Hoard, e:Action
                 DOMtree.action(e, false);
@@ -555,8 +555,8 @@ var Squirrel = {
 
         if (cloud.status === S.IS_LOADED) {
             if (DEBUG) console.debug("...merge cloud ");
-            client.hoard.merge_from_cloud(
-                cloud.hoard,
+            client.hoard.play_actions(
+                cloud.hoard.actions,
                 function (e) {
                     // this:Hoard, e:Action
                     DOMtree.action(e, false);
@@ -1419,12 +1419,13 @@ var Squirrel = {
     S.add_child_node = function ($node, title, value) {
         var p = $node.tree("getPath");
         p.push(title);
-
-        var res = client.hoard.record_action({
-                type: "N",
-                path: p,
-                data: (typeof value === "string") ? value : undefined
-            },
+	var e = {
+            type: "N",
+            path: p,
+            data: (typeof value === "string") ? value : undefined
+        };
+	client.hoard.push_action(e);
+        var res = client.hoard.play_action(e,
             function (e) {
                 // this:Hoard, e:Action
                 DOMtree.action(
@@ -1506,14 +1507,15 @@ var Squirrel = {
         });
 
         client.hoard.actions_from_hierarchy({
-                data: data
-            },
+            data: data
+        },
             function (act, next) {
                 // this:Hoard, e:Action, next:function
                 //if (DEBUG) console.debug(Hoard.stringify_action(act));
                 act.path = path.slice()
                     .concat(act.path);
-                var res = client.hoard.record_action(
+		this.push_action(act);
+                var res = this.play_action(
                     act,
                     function (sact) {
                         // this:Hoard, e:Action
@@ -1544,7 +1546,8 @@ var Squirrel = {
     };
 
     S.playAction = function (action, more) {
-        var res = client.hoard.record_action(
+	client.hoard.push_action(action);
+        var res = client.hoard.play_action(
             action,
             function (e) {
                 // this:Hoard, e:Action
@@ -1588,7 +1591,10 @@ var Squirrel = {
         var a = undos.pop();
         a.time = Date.now();
         if (DEBUG) console.debug("Undo " + Hoard.stringify_action(a));
-        var res = client.hoard.record_action(
+	// Discard the most recent action in the action stream
+	client.hoard.pop_action();
+	// Replay the reverse of the action
+        var res = client.hoard.play_action(
             a,
             function (e) {
                 // this:Hoard, e:Action
