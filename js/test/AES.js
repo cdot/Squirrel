@@ -1,5 +1,4 @@
 /*eslint-env node, mocha */
-var Fs = require("fs");
 var assert = require('chai').assert;
 var AES = require("../AES");
 var Utils = require("../Utils");
@@ -19,16 +18,6 @@ describe('AES', function() {
 	var cipher = AES.encrypt(ab, "Secret", 256);
 	var decipher = AES.decrypt(cipher, "Secret", 256);
 	var s = Utils.ArrayBufferToString(decipher);
-	assert.equal(s, plain);
-    });
-
-    it('should encrypt / decrypt file', function() {
-	var ab = Utils.StringToArrayBuffer(plain);
-	var cipher = AES.encrypt(ab, "Secret", 256);
-	Fs.writeFileSync("bleh", cipher);
-	var ab = Fs.readFileSync('bleh');
-	var dec = AES.decrypt(ab, "Secret", 256);
-	var s = Utils.ArrayBufferToString(dec);
 	assert.equal(s, plain);
     });
 });

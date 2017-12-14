@@ -189,8 +189,8 @@ describe('Utils', function() {
 
             var comp = rgb.complement();
             var inv = rgb.inverse();
-            console.log(rgb.toString() + "~" + comp.toString()
-                        + "~" +inv.toString());
+            //console.log(rgb.toString() + "~" + comp.toString()
+            //            + "~" +inv.toString());
             assert.equal(tm.complement, comp.toString());
             assert.equal(tm.inverse, inv.toString());
 
@@ -231,7 +231,7 @@ describe('Utils', function() {
     it("should parse hsla", function() {
         var hsl = "hsla(155, 10%, 0.5, 0.3)";
         var rgb = new RGBA(hsl);
-        console.log(rgb.toString());
+        //console.log(rgb.toString());
         assert.equal("rgba(115,140,130,0.3)", rgb.toString());
     });
 });

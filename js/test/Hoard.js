@@ -224,7 +224,7 @@ describe('Hoard', function() {
                 stage += 50;
                 listened++;
             });
-	assert.equal(cs.length, 0);
+	assert.equal(c.length, 0);
 	assert.equal(listened, 4);
         var kfc = {
 	    type: "R",
@@ -240,6 +240,6 @@ describe('Hoard', function() {
 	    });
         assert.equal(listened, 1);
         assert(!c, "conflicts");
-        console.log(h.dump());
+        //console.log(h.dump());
     });
 });
