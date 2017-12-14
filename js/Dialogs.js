@@ -3,7 +3,7 @@
 /* eslint-env jquery */
 /* global Utils */
 /* global TX */
-/* global DEBUG:true */
+/* global global */
 /* global Steganographer */
 /* global Squirrel */
 
@@ -475,7 +475,7 @@
                             try {
                                 steg.inject("tada");
                             } catch (e) {
-                                if (DEBUG) console.debug("Caught " + e);
+                                if (global.DEBUG) console.debug("Caught " + e);
                                 fail(e);
                                 return;
                             }
@@ -663,7 +663,7 @@
                 }
                 self.get("ok")
                     .button("disable");
-                if (DEBUG) console.debug("Importing...");
+                if (global.DEBUG) console.debug("Importing...");
                 S.insert_data([], datum);
                 return true;
             });
@@ -798,7 +798,7 @@
     };
 
     widget._open_insert = function ($dlg, options) {
-        if (DEBUG) console.debug("Pasting");
+        if (global.DEBUG) console.debug("Pasting");
         var $parent = options.$node;
         $dlg.data("parent", $parent);
         $dlg.data("data", options.data);

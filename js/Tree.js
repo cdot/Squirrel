@@ -1,6 +1,6 @@
 /*@preserve Copyright (C) 2015-2017 Crawford Currie http://c-dot.co.uk license MIT*/
 
-/* global DEBUG:true */
+/* global global:true */
 /* global Utils */
 /* global Squirrel */
 
@@ -67,8 +67,7 @@
 
         // Invoked on tree-title
         function hoverIn( /*evt*/ ) {
-            $("body")
-                .contextmenu("close");
+            S.contextMenu("close");
 
             if ($("body")
                 .find("input.in_place_editor")
@@ -96,8 +95,7 @@
 
         // Invoked on tree-title
         function hoverOut( /*evt*/ ) {
-            if ($("body")
-                .contextmenu("isOpen") ||
+            if (S.contextMenu("isOpen") ||
                 $("body")
                 .find("input.in_place_editor")
                 .length > 0)
@@ -176,10 +174,12 @@
                 .appendTo($info)
                 .addClass("tree-key")
                 .text(key)
-                .on($.isTouchCapable() ? "doubletap" : "dblclick", function (e) {
-                    e.preventDefault();
-                    self.editKey();
-                });
+                .on($.isTouchCapable && $.isTouchCapable() ?
+                    "doubletap" : "dblclick",
+                    function (e) {
+                        e.preventDefault();
+                        self.editKey();
+                    });
 
             if (is_leaf) {
                 $(document.createElement("span"))
@@ -191,7 +191,7 @@
                     .addClass("tree-value")
                     .text(S.hideValues() ?
                         S.mask(options.value) : options.value)
-                    .on($.isTouchCapable() ?
+                    .on($.isTouchCapable && $.isTouchCapable() ?
                         "doubletap" : "dblclick",
                         function (e) {
                             e.preventDefault();
@@ -283,7 +283,7 @@
                     .left;
             });
 
-        S.enableContextMenu(false);
+        S.contextMenu("disable");
 
         var nodepath = this.getPath();
         $span.edit_in_place({
@@ -298,7 +298,7 @@
                 return s;
             },
             closed: function () {
-                S.enableContextMenu(true);
+                S.contextMenu("enable");
             }
         });
     };
@@ -495,9 +495,10 @@
     widget.action_E = function (action, undoable) {
         var $node = this.element;
         if (undoable) {
-            S.pushUndo({
+            undoable({
                 type: "E",
                 path: this.getPath(),
+                time: action.time,
                 data: $node.data("value")
             });
         }
@@ -521,9 +522,10 @@
         if (undoable) {
             // Not enough - all the subtree would need to be
             // regenerated
-            S.pushUndo({
+            undoable({
                 type: "N",
                 path: this.getPath(),
+                time: action.time,
                 data: $node.data("value")
             });
         }
@@ -581,18 +583,20 @@
 
             // Undo by cancelling the new alarm
             if (undoable)
-                S.pushUndo({
+                undoable({
                     type: "C",
-                    path: this.getPath()
+                    path: this.getPath(),
+                    time: action.time
                 });
         } else {
             // Existing alarm, parts already exist.
             // Undo by rewriting the old alarm.
             if (undoable)
-                S.pushUndo({
+                undoable({
                     type: "A",
                     path: this.getPath(),
-                    data: alarm
+                    data: alarm,
+                    time: action.time
                 });
         }
 
@@ -612,10 +616,11 @@
             return;
 
         if (undoable) {
-            S.pushUndo({
+            undoable({
                 type: "A",
                 path: this.getPath(),
-                data: alarm
+                data: alarm,
+                time: action.time
             });
         }
 
@@ -648,10 +653,11 @@
         if (constraints === action.data)
             return; // same constraints already
         if (undoable)
-            S.pushUndo({
+            undoable({
                 type: "X",
                 path: this.getPath(),
-                data: constraints
+                data: constraints,
+                time: action.time
             });
 
         this.element.data("constraints", action.data);
@@ -677,10 +683,11 @@
         newpath.push(oldpath.pop());
 
         if (undoable) {
-            S.pushUndo({
+            undoable({
                 type: "M",
                 path: newpath,
-                data: oldpath
+                data: oldpath,
+                time: action.time
             });
         }
     };
@@ -708,22 +715,20 @@
         $node.scroll_into_view();
 
         if (undoable) {
-            S.pushUndo({
+            undoable({
                 type: "R",
                 path: $node.tree("getPath"), // no need to slice, not re-used
-                data: key
+                data: key,
+                time: action.time
             });
         }
-
-        Utils.sometime("update_save");
     };
 
     /**
      * Callback for use when managing hoards; plays an action that is being
      * played into the hoard into the DOM as well.
      * @param e action to play
-     * @param undoable set true if the inverse of this action is to be
-     * added to the undo chain.
+     * @param {function} undoable passed the inverse of this action
      * @param chain function to call once the action has been
      * played. Passed the modified node.
      */
@@ -740,9 +745,10 @@
                         // new node
                         var path = this.tree("getPath");
                         if (undoable) {
-                            S.pushUndo({
+                            undoable({
                                 type: "D",
-                                path: path
+                                path: path,
+                                time: action.time
                             });
                         }
                         if (typeof chain !== "undefined")
@@ -774,7 +780,7 @@
         function recache($node, pa) {
             var path = pa.concat($node.data("key"));
 
-            if (DEBUG) {
+            if (global.DEBUG) {
                 if (!pa)
                     throw "recache outside tree";
                 if (cache[path.join(PATHSEP)])
@@ -802,9 +808,14 @@
         var $el = this.element;
 
         // Find the path to the parent of this node
-        var parent = $el.parent()
+        var $parent = $el.parent();
+        if (!$parent || $parent.length == 0)
+            debugger;
+        $parent = $parent
             .closest(".tree-node")
-            .tree("getPath");
+        if (!$parent || $parent.length == 0)
+            debugger;
+        var parent = $parent.tree("getPath");
 
         recache($el, parent);
     };
@@ -842,7 +853,7 @@
      */
     widget.getNodeFromPath = function (path) {
         var $node = cache[path.join(PATHSEP)];
-        if (DEBUG && $node && $node.length === 0)
+        if (global.DEBUG && $node && $node.length === 0)
             // Not in the cache, was something not been through get_path?
             debugger;
         return $node;

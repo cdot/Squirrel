@@ -4,6 +4,9 @@
 /* Just the root node */
 .tree-root {}
 
+.tree-root > .tree-info {
+    margin: 0.3em 0 0 0;
+}
 /* On a tree-node, if it's a folder */
 .tree-collection {}
 

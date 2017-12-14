@@ -1,8 +1,11 @@
 /*@preserve Copyright (C) 2015 Crawford Currie http://c-dot.co.uk license MIT*/
 
-/* global DEBUG:true */
+/* global global:true */
 /* global AbstractStore */
 /* global Utils */
+
+if (typeof module !== "undefined")
+    var AbstractStore = require("./AbstractStore");
 
 /**
  * A store engine using HTML5 localStorage.
@@ -30,7 +33,7 @@ function LocalStorageStore(params) {
             i++;
         }
         if (poss_user) {
-            if (DEBUG) console.debug("LocalStorageStore: Identified possible user " + poss_user);
+            if (global.DEBUG) console.debug("LocalStorageStore: Identified possible user " + poss_user);
             this.user(poss_user);
         }
     }
@@ -54,11 +57,11 @@ LocalStorageStore.prototype.read = function (path, ok, fail) {
 
     var str;
 
-    if (DEBUG) console.debug("LocalStorageStore: Reading " + path);
+    if (global.DEBUG) console.debug("LocalStorageStore: Reading " + path);
     try {
         str = localStorage.getItem(path);
     } catch (e) {
-        if (DEBUG) console.debug("Caught " + e);
+        if (global.DEBUG) console.debug("Caught " + e);
         fail.call(this, e);
         return;
     }
@@ -74,14 +77,17 @@ LocalStorageStore.prototype.read = function (path, ok, fail) {
 LocalStorageStore.prototype.write = function (path, data, ok, fail) {
     "use strict";
 
-    if (DEBUG) console.debug("LocalStorageStore: Writing " + path);
+    if (global.DEBUG) console.debug("LocalStorageStore: Writing " + path);
     try {
         var str = Utils.ArrayBufferToPackedString(data);
         localStorage.setItem(path, str);
     } catch (e) {
-        if (DEBUG) console.debug("Caught " + e);
+        if (global.DEBUG) console.debug("Caught " + e);
         fail.call(this, e);
         return;
     }
     ok.call(this);
 };
+
+if (typeof module !== "undefined")
+    module.exports = LocalStorageStore;

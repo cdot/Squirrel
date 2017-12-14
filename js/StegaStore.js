@@ -1,6 +1,6 @@
 /*@preserve Copyright (C) 2015 Crawford Currie http://c-dot.co.uk license MIT*/
 
-/* global DEBUG:true */
+/* global global:true */
 /* global LayeredStore */
 /* global Steganographer */
 /* global Utils */
@@ -34,7 +34,7 @@ StegaStore.prototype.options = function () {
 StegaStore.prototype.read = function (path, ok, fail) {
     "use strict";
 
-    if (DEBUG) console.debug("StegaStore: reading " + path);
+    if (global.DEBUG) console.debug("StegaStore: reading " + path);
     var self = this;
     var extract = function () {
         var steg = new Steganographer($("#stegamage")[0]);
@@ -42,7 +42,7 @@ StegaStore.prototype.read = function (path, ok, fail) {
         try {
             ab2 = steg.extract();
         } catch (e) {
-            if (DEBUG) console.debug("Caught " + e);
+            if (global.DEBUG) console.debug("Caught " + e);
             fail.call(self, e);
             return;
         }
@@ -76,7 +76,7 @@ StegaStore.prototype.read = function (path, ok, fail) {
 StegaStore.prototype.write = function (path, data, ok, fail) {
     "use strict";
 
-    if (DEBUG) console.debug("StegaStore: writing " + path);
+    if (global.DEBUG) console.debug("StegaStore: writing " + path);
 
     var self = this;
     var image = document.getElementById("stegamage");
@@ -93,7 +93,7 @@ StegaStore.prototype.write = function (path, data, ok, fail) {
         var b64 = datauri.split(",", 2)[1];
         xdata = Utils.Base64ToArrayBuffer(b64);
     } catch (e) {
-        if (DEBUG) console.debug("Caught " + e);
+        if (global.DEBUG) console.debug("Caught " + e);
         fail.call(this, e);
         return;
     }

@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2015 Crawford Currie http://c-dot.co.uk license MIT*/
 
 /* eslint no-eval: 1 */
-/* global DEBUG:true */
+/* global global:true */
 /* global module */
 /* global Utils */
 
@@ -60,7 +60,7 @@ var TX = {
             TX.langFromLocale();
 
         if (/^en(\b|$)/i.test(TX.lingo)) {
-            if (DEBUG) console.debug("Using language 'en'");
+            if (global.DEBUG) console.debug("Using language 'en'");
             tx_ready();
             return;
         }
@@ -73,13 +73,13 @@ var TX = {
                         .each(function () {
                             TX.translateDOM(this, TX.tx, false);
                         });
-                    if (DEBUG) console.debug(
+                    if (global.DEBUG) console.debug(
                         "Using language '" + TX.lingo + "'");
                     tx_ready();
                 },
                 error: function (a, b, c) {
                     var m = /^(.+)-.+/.exec(TX.lingo);
-                    if (DEBUG) console.debug(
+                    if (global.DEBUG) console.debug(
                         "Failed to load " + TX.lingo + ".json: " + c.message);
                     if (m)
                         TX.lingo = m[1];

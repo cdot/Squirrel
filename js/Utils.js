@@ -1,15 +1,22 @@
 /*@preserve Copyright (C) 2015-2017 Crawford Currie http://c-dot.co.uk license MIT*/
+/* eslint-env node, jquery */
+
+"use strict";
 
 /* global TX */
 /* global ArrayBuffer */
 /* global Uint8Array */
 /* global Uint16Array */
+/* global global:true */
 /* global module */
 
 /**
  * Utilities and plugins used by Squirrel
  */
-var DEBUG = false; // Override in URI params
+if (typeof global === "undefined")
+    var global = {};
+
+global.DEBUG = false;
 
 var Utils = { // Namespace
     // Hash of events that are waiting to be triggered by the 'sometime'
@@ -62,8 +69,6 @@ var Utils = { // Namespace
  * http://www.henryalgus.com/reading-binary-files-using-jquery-ajax/
  */
 Utils.setUpAjax = function (options, originalOptions, jqXHR) {
-    "use strict";
-
     // check for conditions and support for blob / arraybuffer response type
     if (window.FormData &&
         ((options.dataType && (options.dataType === "binary")) ||
@@ -119,8 +124,6 @@ if (typeof jQuery !== "undefined")
  * A-Z syntax.
  */
 Utils.generate_password = function (constraints) {
-    "use strict";
-
     var sor, eor;
 
     if (typeof constraints.length === "undefined")
@@ -156,8 +159,6 @@ Utils.generate_password = function (constraints) {
 /**
  * Escape meta-characters for use in CSS selectors
 Utils.escape_selector = function(s) {
-    "use strict";
-
     return s.replace(/([\][!"#$%&'()*+,.\/:;<=>?@\\^`{|}~])/g, "\\$1");
 };
 */
@@ -167,8 +168,6 @@ Utils.escape_selector = function(s) {
  * @return a hash mapping parameter name to decoded value
  */
 Utils.getURLParameters = function () {
-    "use strict";
-
     var params = {};
     var bits = location.search.split("?", 2);
     if (bits.length < 2)
@@ -185,8 +184,6 @@ Utils.getURLParameters = function () {
  * Convert an arbitrary string to a legal HTTP fragment name
  */
 Utils.fragmentify = function (fid) {
-    "use strict";
-
     return fid.replace(/[^A-Za-z0-9:]/g, function (m) {
         return "_" + m.charCodeAt(0);
     });
@@ -204,8 +201,6 @@ Utils.fragmentify = function (fid) {
  * event will be sent to $(document)
  */
 Utils.sometime = function (event) {
-    "use strict";
-
     if (Utils.waiting_for_sometime[event]) {
         return;
     }
@@ -221,8 +216,6 @@ Utils.sometime = function (event) {
  * Execute the events that have been waiting for 'sometime'
  */
 Utils.sometime_is_now = function () {
-    "use strict";
-
     Utils.sometime_timeout = null;
     Utils.last_yield = Date.now();
     for (var event in Utils.waiting_for_sometime) {
@@ -245,8 +238,6 @@ Utils.sometime_is_now = function () {
  * @param fn function to call
  */
 Utils.soon = function (fn) {
-    "use strict";
-
     // If it's been a decent amount of time since the last time
     // we yielded to the UI, then set an asynchronous timeout before
     // we activate the next function in the chain. This will allow
@@ -268,32 +259,30 @@ Utils.soon = function (fn) {
  * ready(), as the queue will then be empty.
  */
 Utils.execute_queue = function (q) {
-    "use strict";
-
     Utils.q_ready();
     Utils.q_next(q);
 };
 
 Utils.q_ready = function () {
-    "use strict";
-
     Utils.qready = true;
 };
 
 Utils.q_next = function (q) {
-    "use strict";
-
     if (q.length > 0 && Utils.qready) {
         var fn = q.shift();
         Utils.qready = false;
         fn(Utils.q_ready);
     }
 
-    // Maintain UI performance
-    window.setTimeout(function () {
-        Utils.last_yield = Date.now();
+    // Maintain UI performance by timeout in browser
+    if (typeof window !== "undefined") {
+        window.setTimeout(function () {
+            Utils.last_yield = Date.now();
+            Utils.q_next(q);
+        }, Utils.IMMEDIATE);
+    } else {
         Utils.q_next(q);
-    }, Utils.IMMEDIATE);
+    }
 };
 
 /**
@@ -306,8 +295,6 @@ Utils.q_next = function (q) {
  * @param on_loaded is called when all libs have been loaded
  */
 Utils.load = function (libs, uncompressed, on_loaded) {
-    "use strict";
-
     var expect = {};
 
     // action when a resource is loaded
@@ -372,8 +359,6 @@ Utils.load = function (libs, uncompressed, on_loaded) {
  * "datauri" or "text". The default is "text".
  */
 Utils.read_file = function (file, ok, fail, mode) {
-    "use strict";
-
     //var store = this;
     var reader = new FileReader();
     reader.onload = function ( /*evt*/ ) {
@@ -402,14 +387,12 @@ Utils.read_file = function (file, ok, fail, mode) {
  * @return String the string the ArrayBuffer contains
  */
 Utils.ArrayBufferToString = function (ab) {
-    "use strict";
-
-    if (DEBUG && ab.byteLength % 2 !== 0)
-        debugger;
-    var a16 = new Uint16Array(ab);
+    if (global.DEBUG && ab.byteLength % 2 !== 0)
+        throw "Internal error";
+    var a8 = new Uint8Array(ab);
     var str = "";
-    for (var i = 0; i < a16.length; i++)
-        str += String.fromCharCode(a16[i]);
+    for (var i = 0; i < a8.length; i += 2)
+        str += String.fromCharCode((a8[i + 1] << 8) || a8[i]);
     return str;
 };
 
@@ -420,8 +403,6 @@ Utils.ArrayBufferToString = function (ab) {
  * @return an ArrayBuffer (which will be an even number of bytes long)
  */
 Utils.StringToArrayBuffer = function (str) {
-    "use strict";
-
     var a16 = new Uint16Array(str.length);
     for (var i = 0, strLen = str.length; i < strLen; i++)
         a16[i] = str.charCodeAt(i);
@@ -435,8 +416,6 @@ Utils.StringToArrayBuffer = function (str) {
  * @return a String containing the packed data
  */
 Utils.ArrayBufferToPackedString = function (ab) {
-    "use strict";
-
     var a8 = new Uint8Array(ab);
     // Pack 8-bit data into strings using the high and low bytes for
     // successive data. The usb of the first character is reserved
@@ -472,8 +451,6 @@ Utils.ArrayBufferToPackedString = function (ab) {
  * into an ArrayBuffer containing an arbitrary number of bytes.
  */
 Utils.PackedStringToArrayBuffer = function (str) {
-    "use strict";
-
     var datalen = 2 * str.length - 1;
     if ((str.charCodeAt(0) & 0x100) === 0)
         datalen--;
@@ -500,8 +477,6 @@ Utils.PackedStringToArrayBuffer = function (str) {
  * @return a String of Base64 bytes (using MIME encoding)
  */
 Utils.ArrayBufferToBase64 = function (ab) {
-    "use strict";
-
     var a8 = new Uint8Array(ab);
     var nMod3 = 2;
     var sB64Enc = "";
@@ -548,8 +523,6 @@ Utils.ArrayBufferToBase64 = function (ab) {
  * @return an ArrayBuffer
  */
 Utils.Base64ToArrayBuffer = function (sB64) {
-    "use strict";
-
     var sB64Enc = sB64.replace(/[^A-Za-z0-9+/]/g, ""); // == and =
     var nInLen = sB64Enc.length;
     var nOutLen = nInLen * 3 + 1 >> 2;
@@ -587,11 +560,11 @@ Utils.Base64ToArrayBuffer = function (sB64) {
 /**
  * Parse the query string, and return a map of key=>value
  */
-Utils.query_string = function () {
-    "use strict";
-    var query = {};
+Utils.parse_query_params = function () {
+
     var vars = window.location.search.substring(1)
         .split(/[&;]+/);
+    var query = {};
     for (var i = 0; i < vars.length; i++) {
         if (vars[i] === "")
             continue;
@@ -611,18 +584,6 @@ Utils.query_string = function () {
     return query;
 };
 
-Utils.make_query_string = function (qs) {
-    "use strict";
-    var params = "";
-    var sep = "?";
-    for (var k in qs) {
-        params += sep + encodeURIComponent(k) +
-            "=" + encodeURIComponent(qs[k]);
-        sep = "&";
-    }
-    return params;
-};
-
 /**
  * Given a time value, return a breakdown of the period between now
  * and that time. For example, "1 years 6 months 4 days". Resolution is
@@ -633,8 +594,6 @@ Utils.make_query_string = function (qs) {
  * `number` of those, and `name` translated pluralised name e.g. `months`
  */
 Utils.deltaTimeString = function (date) {
-    "use strict";
-
     date = new Date(date.getTime() - Date.now());
 
     var s = [];

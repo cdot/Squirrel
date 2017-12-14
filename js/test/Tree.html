@@ -1,0 +1,27 @@
+<html>
+  <!-- Test Tree.js - requires jQuery -->
+  <head>
+    <meta charset="utf-8">
+    <title>Mocha Tests</title>
+    <link href="../../css/Icons.css" rel="stylesheet" />
+    <link href="../../css/Tree.css" rel="stylesheet" />
+    <link href="//cdnjs.cloudflare.com/ajax/libs/mocha/4.0.1/mocha.css" rel="stylesheet" />
+  </head>
+  <body>
+    <div id="mocha"></div>
+    <div id="sites-node">
+    </div>
+    <script src="//code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script src="//code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/mocha/4.0.1/mocha.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/chai/4.1.2/chai.js"></script>
+    <script src="../scroll_into_view.js"></script>
+    <script src="../Hoard.js"></script>
+    <script src="../Translation.js"></script>
+    <script>Squirrel = {}</script>
+    <script src="../Tree.js"></script>
+    <script>mocha.setup("bdd");mocha.globals(['jQuery','Squirrel']);</script>
+    <script src="Tree.js"></script>
+    <script>mocha.run();</script>
+  </body>
+</html>

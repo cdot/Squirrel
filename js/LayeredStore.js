@@ -3,7 +3,7 @@
 /* global AbstractStore: true */
 
 if (typeof module !== "undefined")
-    AbstractStore = require('AbstractStore');
+    var AbstractStore = require("./AbstractStore");
 
 /**
  * @class

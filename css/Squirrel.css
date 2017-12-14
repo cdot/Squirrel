@@ -9,16 +9,8 @@ input {
     font-family: "Courier New", Courier, monospace;
 }
 
-.ui-button-text-only > .ui-button-text {
-    padding: 0.3em;
-}
-
 .ui-menu {
     z-index: 1000;
-}
-
-.tree-root > .tree-info {
-    margin: 0.3em 0 0 0;
 }
 
 /* Disable text selection, used on the root node

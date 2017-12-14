@@ -1,7 +1,13 @@
 /*@preserve Copyright (C) 2015 Crawford Currie http://c-dot.co.uk license MIT*/
 
+/* global global:true */
 /* global LocalStorageStore */
-/* global SQUIRREL_STORE:true */
+
+/**
+ * Test ''cloud' store using LocalStorage in the browser
+ */
+if (typeof module !== "undefined")
+    var LocalStorageStore = require("./LocalStorageStore");
 
 /**
  * A test store engine
@@ -9,16 +15,11 @@
  */
 function TestStore(params) {
     "use strict";
-    params.user = "TEST";
-    /*
-        params.ok = function() {
-            params.fail.call(this, "Fuck off");
-        };
-    */
+    params.user = "TestStore";
     LocalStorageStore.call(this, params);
 }
 
-SQUIRREL_STORE = TestStore;
+global.CLOUD_STORE = TestStore;
 
 TestStore.prototype = Object.create(LocalStorageStore.prototype);
 
@@ -37,7 +38,7 @@ TestStore.prototype.read = function (path, ok, fail) {
     if (this.pass() !== "x") {
         fail.call(this, "TestStore.read expects password 'x'");
     } else {
-        LocalStorageStore.prototype.read.call(this, "TEST" + path, ok, fail);
+        LocalStorageStore.prototype.read.call(this, "TestStore" + path, ok, fail);
     }
 };
 
@@ -47,6 +48,9 @@ TestStore.prototype.write = function (path, data, ok, fail) {
     if (this.pass() !== "x") {
         fail.call(this, "TestStore.write expects password 'x'");
     } else {
-        LocalStorageStore.prototype.write.call(this, "TEST" + path, data, ok, fail);
+        LocalStorageStore.prototype.write.call(this, "TestStore" + path, data, ok, fail);
     }
 };
+
+if (typeof module !== "undefined")
+    module.exports = TestStore;

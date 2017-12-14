@@ -1,8 +1,11 @@
 /*@preserve Copyright (C) 2015 Crawford Currie http://c-dot.co.uk license MIT*/
 
-/* global DEBUG:true */
+/* global global:true */
 /* global LayeredStore */
 /* global AES */
+
+if (typeof module !== "undefined")
+    var LayeredStore = require("./LayeredStore");
 
 /**
  * @class
@@ -36,19 +39,19 @@ EncryptedStore.prototype.read = function (path, ok, fail) {
 
     var self = this;
 
-    if (DEBUG) console.debug("EncryptedStore: reading " + path +
+    if (global.DEBUG) console.debug("EncryptedStore: reading " + path +
         " with password " + self.engine.pass());
     this.engine.read(
         path,
         function (ab) {
             var data;
             try {
-                if (DEBUG) console.debug(
+                if (global.DEBUG) console.debug(
                     "EncryptedStore: decrypting using password " +
                     self.engine.pass());
                 data = AES.decrypt(ab, self.engine.pass(), 256);
             } catch (e) {
-                if (DEBUG) console.debug("Caught " + e);
+                if (global.DEBUG) console.debug("Caught " + e);
                 fail.call(self, e);
                 return;
             }
@@ -62,14 +65,14 @@ EncryptedStore.prototype.write = function (path, ab, ok, fail) {
 
     var self = this;
 
-    if (DEBUG) console.debug("EncryptedStore: writing " + path +
+    if (global.DEBUG) console.debug("EncryptedStore: writing " + path +
         " with password " + self.engine.pass());
     var xa;
 
     try {
         xa = AES.encrypt(ab, this.engine.pass(), 256);
     } catch (e) {
-        if (DEBUG) console.debug("Caught " + e);
+        if (global.DEBUG) console.debug("Caught " + e);
         fail.call(this, e);
         return;
     }
@@ -82,3 +85,6 @@ EncryptedStore.prototype.write = function (path, ab, ok, fail) {
         },
         fail);
 };
+
+if (typeof module !== "undefined")
+    module.exports = EncryptedStore;

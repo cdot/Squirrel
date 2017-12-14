@@ -1,9 +1,8 @@
 /*@preserve Copyright (C) 2015 Crawford Currie http://c-dot.co.uk license MIT*/
 
-/* global DEBUG:true */
+/* global global:true */
 /* global AbstractStore */
 /* global Dropbox */
-/* global SQUIRREL_STORE:true */
 
 /**
  * A store using Dropbox
@@ -21,10 +20,10 @@ function DropboxStore(params) {
         })
         .authenticate(function (error, client) {
             if (error) {
-                if (DEBUG) console.debug("Dropbox auth failed: " + error);
+                if (global.DEBUG) console.debug("Dropbox auth failed: " + error);
                 params.fail(self, error.responseText);
             } else {
-                if (DEBUG) console.debug("Dropbox auth OK");
+                if (global.DEBUG) console.debug("Dropbox auth OK");
 
                 client.getAccountInfo(
                     null,
@@ -32,11 +31,11 @@ function DropboxStore(params) {
                         if (erm) {
                             var err = erm.responseText ||
                                 "Status: " + error.status;
-                            if (DEBUG) console.debug(
+                            if (global.DEBUG) console.debug(
                                 "Dropbox getAccountInfo failed " + err);
                             params.fail.call(self, err);
                         } else {
-                            if (DEBUG) console.debug(
+                            if (global.DEBUG) console.debug(
                                 "Dropbox username " + accountInfo.name);
                             self.db_client = client;
                             self.user(accountInfo.name);
@@ -47,7 +46,7 @@ function DropboxStore(params) {
         });
 }
 
-SQUIRREL_STORE = DropboxStore;
+global.CLOUD_STORE = DropboxStore;
 
 DropboxStore.prototype = Object.create(AbstractStore.prototype);
 
@@ -69,7 +68,7 @@ DropboxStore.prototype.write = function (path, data, ok, fail) {
         data,
         function (error /*, stat*/ ) {
             if (error) {
-                if (DEBUG) console.debug(
+                if (global.DEBUG) console.debug(
                     "Dropbox write failed " + error.responseText);
                 fail.call(self, error.responseText || error.status);
             } else {
@@ -89,7 +88,7 @@ DropboxStore.prototype.read = function (path, ok, fail) {
         },
         function (error, data) {
             if (error) {
-                if (DEBUG) console.debug(
+                if (global.DEBUG) console.debug(
                     "Dropbox read failed " +
                     error.responseText);
                 if (error.status === Dropbox.ApiError.NOT_FOUND)

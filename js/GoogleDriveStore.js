@@ -1,6 +1,6 @@
 /*@preserve Copyright (C) 2015 Crawford Currie http://c-dot.co.uk license MIT*/
 
-/* global DEBUG:true */
+/* global global:true */
 /* global TX */
 /* global AbstractStore */
 /* global Utils */
@@ -26,12 +26,12 @@ function GoogleDriveStore(params) {
     "use strict";
 
     if (gapi_is_loaded) {
-        if (DEBUG) console.debug("gapi is already loaded");
+        if (global.DEBUG) console.debug("gapi is already loaded");
         this._init(params);
     } else {
         var self = this;
         gapi_loader = function () {
-            if (DEBUG) console.debug("Loading GoogleDriveStore");
+            if (global.DEBUG) console.debug("Loading GoogleDriveStore");
             self._init(params);
         };
         $.getScript(
@@ -47,13 +47,12 @@ function GoogleDriveStore(params) {
 
 GoogleDriveStore.prototype = Object.create(AbstractStore.prototype);
 
-/* global SQUIRREL_STORE:true */
-SQUIRREL_STORE = GoogleDriveStore;
+global.CLOUD_STORE = GoogleDriveStore;
 
 function gapi_on_load() {
     "use strict";
 
-    if (DEBUG) console.debug("gapi is loaded");
+    if (global.DEBUG) console.debug("gapi is loaded");
     gapi_is_loaded = true;
     if (gapi_loader)
         gapi_loader();
@@ -94,7 +93,7 @@ GoogleDriveStore.prototype._init = function (params) {
     }, 20000);
 
     var handleClientLoad = function () {
-        if (DEBUG) console.debug("GoogleDriveStore: drive/v2 loaded");
+        if (global.DEBUG) console.debug("GoogleDriveStore: drive/v2 loaded");
         gapi.client.drive.about.get("name")
             .then(
                 function (result) {
@@ -119,7 +118,7 @@ GoogleDriveStore.prototype._init = function (params) {
         if (authResult && !authResult.fail) {
             // Access token has been retrieved, requests
             // can be sent to the API.
-            if (DEBUG) console.debug("GoogleDriveStore: auth OK");
+            if (global.DEBUG) console.debug("GoogleDriveStore: auth OK");
             gapi.client.load("drive", "v2", handleClientLoad);
         } else {
             if (authResult === null)
@@ -130,7 +129,7 @@ GoogleDriveStore.prototype._init = function (params) {
         }
     };
 
-    if (DEBUG) console.debug("GoogleDriveStore: authorising");
+    if (global.DEBUG) console.debug("GoogleDriveStore: authorising");
 
     gapi.auth.authorize({
             //immediate: true,
@@ -156,7 +155,7 @@ GoogleDriveStore.prototype._getfile = function (url, ok, fail) {
     var self = this;
     var oauthToken = gapi.auth.getToken();
 
-    if (DEBUG) console.debug("GoogleDriveStore: GET " + url);
+    if (global.DEBUG) console.debug("GoogleDriveStore: GET " + url);
 
     // SMELL: no client API to get file content from Drive
     $.ajax({
@@ -170,12 +169,12 @@ GoogleDriveStore.prototype._getfile = function (url, ok, fail) {
                 "Bearer " + oauthToken.access_token);
         },
         success: function (data) {
-            if (DEBUG) console.debug("GoogleDriveStore: _getfile OK");
+            if (global.DEBUG) console.debug("GoogleDriveStore: _getfile OK");
             ok.call(self, data);
         },
         error: function (jqXHR, textStatus, errorThrown) {
             var reason = textStatus + " " + errorThrown;
-            if (DEBUG) console.debug("_getfile failed", reason);
+            if (global.DEBUG) console.debug("_getfile failed", reason);
             fail.call(self, reason);
         }
     });
@@ -207,7 +206,7 @@ GoogleDriveStore.prototype._follow_path = function (
             metadata.parents = [{
                 id: parentid
             }];
-        if (DEBUG) console.debug("Creating folder " + pathel + " under " + parentid);
+        if (global.DEBUG) console.debug("Creating folder " + pathel + " under " + parentid);
         gapi.client.drive.files
             .insert(metadata)
             .then(
@@ -234,10 +233,10 @@ GoogleDriveStore.prototype._follow_path = function (
                 var items = response.result.items;
                 if (items.length > 0) {
                     var id = items[0].id;
-                    if (DEBUG) console.debug("GoogleDriveStore: found " + query + " at " + id);
+                    if (global.DEBUG) console.debug("GoogleDriveStore: found " + query + " at " + id);
                     self._follow_path(id, p, ok, fail, create);
                 } else {
-                    if (DEBUG) console.debug("GoogleDriveStore: could not find " + query);
+                    if (global.DEBUG) console.debug("GoogleDriveStore: could not find " + query);
                     if (create) {
                         create_folder();
                     } else {
@@ -330,7 +329,7 @@ GoogleDriveStore.prototype.write = function (path, data, ok, fail) {
         var query = "title='" + name + "'" +
             " and '" + parentid + "' in parents" +
             " and trashed=false";
-        if (DEBUG) console.debug("GoogleDriveStore: checking existance of " + name);
+        if (global.DEBUG) console.debug("GoogleDriveStore: checking existance of " + name);
         gapi.client.drive.files
             .list({
                 q: query
@@ -341,9 +340,9 @@ GoogleDriveStore.prototype.write = function (path, data, ok, fail) {
                     var id;
                     if (items.length > 0) {
                         id = items[0].id;
-                        if (DEBUG) console.debug("GoogleDriveStore: updating " + name + " id " + id);
+                        if (global.DEBUG) console.debug("GoogleDriveStore: updating " + name + " id " + id);
                     } else
-                    if (DEBUG) console.debug("GoogleDriveStore: creating " + name + " in " + parentid);
+                    if (global.DEBUG) console.debug("GoogleDriveStore: creating " + name + " in " + parentid);
                     self._putfile(parentid, name, data, ok, fail, id);
                 },
                 function (r) {
@@ -351,7 +350,7 @@ GoogleDriveStore.prototype.write = function (path, data, ok, fail) {
                 });
     };
 
-    if (DEBUG) console.debug("GoogleDriveStore: following " + path);
+    if (global.DEBUG) console.debug("GoogleDriveStore: following " + path);
     this._follow_path(
         "root",
         p,
@@ -363,7 +362,7 @@ GoogleDriveStore.prototype.write = function (path, data, ok, fail) {
 GoogleDriveStore.prototype.read = function (path, ok, fail) {
     "use strict";
 
-    if (DEBUG) console.debug("GoogleDriveStore: read " + path);
+    if (global.DEBUG) console.debug("GoogleDriveStore: read " + path);
 
     var p = path.split("/");
     var name = p.pop();
@@ -383,11 +382,11 @@ GoogleDriveStore.prototype.read = function (path, ok, fail) {
                     var items = response.result.items;
                     if (items.length > 0) {
                         var url = items[0].downloadUrl;
-                        if (DEBUG) console.debug(
+                        if (global.DEBUG) console.debug(
                             "GoogleDriveStore: download found " + name + " at " + url);
                         self._getfile(url, ok, fail);
                     } else {
-                        if (DEBUG) console.debug(
+                        if (global.DEBUG) console.debug(
                             "GoogleDriveStore: could not find " + name);
                         fail.call(self, AbstractStore.NODATA);
                     }
@@ -404,3 +403,6 @@ GoogleDriveStore.prototype.read = function (path, ok, fail) {
         fail,
         false);
 };
+
+if (typeof module !== "undefined")
+    module.exports = GoogleDriveStore;

@@ -2,7 +2,6 @@
 
 /* eslint-env jquery */
 
-/* global DEBUG:true */
 /* global ZeroClipboard */
 
 function ZeroClipboardShim() {
@@ -15,19 +14,19 @@ function ZeroClipboardShim() {
     
     if (typeof ZeroClipboard === "undefined" ||
         ZeroClipboard.isFlashUnusable()) {
-        if (DEBUG) console.debug("ZeroClipboard is unusable");
+        if (global.DEBUG) console.debug("ZeroClipboard is unusable");
         this.ready = false;
         return;
     }
 
-    if (DEBUG) console.debug("Initialising ZeroClipboard");
+    if (global.DEBUG) console.debug("Initialising ZeroClipboard");
 
     // Create dummy element to force initialisation of ZeroClipboard
     this.$zc_dummy = $("<div></div>");
     $("body").append(this.$zc_dummy);
 
     ZeroClipboard.config({
-        debug: DEBUG
+        debug: global.DEBUG
     });
 
     // We won't get a "ready" event until at leat one ZeroClipboard
@@ -52,9 +51,9 @@ function ZeroClipboardShim() {
             e.name === "browser-unsupported") {
             for (var i = 0; i < self.clipboards.length; i++)
                 self.clipboards[i].destroy();
-            if (DEBUG) console.log("ZeroClipboard disabled: " + e.name)
+            if (global.DEBUG) console.log("ZeroClipboard disabled: " + e.name)
             self.ready = false;
-        } else if (DEBUG) console.log("ZeroClipboard warning: " + e.name)
+        } else if (global.DEBUG) console.log("ZeroClipboard warning: " + e.name)
     });
 
     // Construct the dummy element to kick off the "ready" event
@@ -83,7 +82,7 @@ ZeroClipboardShim.prototype.addClipboard = function(opts) {
 
         this.clipboards.push(zc); // remember in case we need to destroy
 
-        if (DEBUG) console.debug("Attached ZC handler to " + opts.selector);
+        if (global.DEBUG) console.debug("Attached ZC handler to " + opts.selector);
     } else {
         this.queue.push(opts);
     }

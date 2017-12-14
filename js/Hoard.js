@@ -1,6 +1,6 @@
 /*@preserve Copyright (C) 2015 Crawford Currie http://c-dot.co.uk license MIT*/
 
-/* global DEBUG:true */
+/* global global:true */
 /* global TX:true */
 /* global Utils:true */
 
@@ -55,8 +55,6 @@
  */
 const VERSION = 2.0;
 
-var DEBUG = true;
-
 if (typeof module !== "undefined")
     TX = require("./Translation");
 
@@ -73,7 +71,7 @@ function Hoard(data) {
 
     if (data) {
         if (typeof data !== "object")
-	    data = JSON.parse(data);
+            data = JSON.parse(data);
 
         this.last_sync = data.last_sync;
         this.actions = data.actions;
@@ -123,7 +121,7 @@ Hoard.stringify_action = function (action) {
         .toLocaleString();
 };
 
-if (DEBUG) {
+if (global.DEBUG) {
     /**
      * Return a dump of the current state of the hoard for debugging
      * @return a string with the JSON of the cache, and a list of the actions.
@@ -155,7 +153,7 @@ Hoard.prototype.clear_actions = function () {
  * is done on the action, though it will default the time to 'now'.
  * @param e the action to push. The action will be deep-copied.
  */
-Hoard.prototype.push_action = function(e) {
+Hoard.prototype.push_action = function (e) {
     this.actions.push({
         type: e.type,
         path: e.path.slice(),
@@ -169,14 +167,38 @@ Hoard.prototype.push_action = function(e) {
  * return it.
  * @return the action popped
  */
-Hoard.prototype.pop_action = function() {
-    if (DEBUG && this.actions.length === 0)
-	throw "Cannot pop from empty actions stream";
+Hoard.prototype.pop_action = function () {
+    if (global.DEBUG && this.actions.length === 0)
+        throw "Cannot pop from empty actions stream";
     return this.actions.pop();
 };
 
 /**
- * Play a single action into the hoard. The cache is updated, but
+ * @private
+ * Locate the node referenced by the given path
+ * @param path array of path elements
+ * @param offset optional offset from the leaf e.g. 1 will find the parent
+ * of the node identified by the path
+ */
+Hoard.prototype.locate_node = function (path, offset) {
+    var node = this.cache;
+    offset = offset || 0;
+
+    for (var i = 0; i < path.length - offset; i++) {
+        var name = path[i];
+        if (node && typeof node.data === "string") {
+            throw "Cannot recurse into leaf node";
+        } else if (node && node.data[name]) {
+            node = node.data[name];
+        } else {
+            return undefined;
+        }
+    }
+    return node;
+};
+
+/**
+ * Play a single action into the cache. The cache is updated, but
  * the action is <em>not</em> added to the action stream.
  * Action types:
  * <ul>
@@ -192,7 +214,8 @@ Hoard.prototype.pop_action = function() {
  * Returns a conflict object if there was an error. This has two fields,
  * 'action' for the action record and 'message'.
  * @param {Action} e the action record
- * @param {function} listener called when the action is played.
+ * @param {function} listener called when the action is played. Not called if
+ * there is a conflict.
  * listener.call(this:Hoard, e:Action)
  * @return {Conflict} conflict object, or null if there was no conflict
  */
@@ -202,155 +225,119 @@ Hoard.prototype.play_action = function (e, listener) {
     if (typeof e.time === "undefined" || e.time === null)
         e.time = Date.now();
 
-    function locateParent(path, node) {
-        // Locate the parent in the cache
-        for (var i = 0; i < path.length - 1; i++) {
-            var name = path[i];
-            if (node && typeof node.data === "string") {
-                // "Cannot " + e.type + " over leaf node";
-                if (DEBUG) debugger;
-            } else if (node && node.data[name]) {
-                node = node.data[name];
-            } else {
-                return undefined;
-            }
-        }
-        // Should now be positioned one above the end of the path
-        return node;
-    }
-
-    function c(mess) {
+    function conflict(e, mess) {
+        var s = TX.tx("Cannot ") + {
+            A: TX.tx("add reminder to"),
+            C: TX.tx("cancel reminder"),
+            D: TX.tx("delete"),
+            E: TX.tx("change value of"),
+            M: TX.tx("move"),
+            N: TX.tx("create"),
+            R: TX.tx("rename"),
+            X: TX.tx("constrain")
+        }[e.type];
         return {
             conflict: e,
-            message: mess
-        };
+            message: s + " '" + e.path.join("↘") + "': " + mess
+        }
     }
 
-    var parent = locateParent(e.path, this.cache);
-    if (!parent && !this.cache)
-        parent = this.cache = {
+    if (e.path.length === 0)
+        return conflict(e, "Zero length path");
+
+    if (!this.cache) {
+        this.cache = {
             data: {}
-        };
+        }
+    }
+
+    var parent = this.locate_node(e.path, 1);
+    // Path must always point to a valid parent pre-existing in the cache
+    // parent will never be null
+    if (!parent)
+        return conflict(e, TX.tx("Parent folder not found"));
 
     var name = e.path[e.path.length - 1];
+    // Node may be undefined e.g. if we are creating
     var node = parent.data[name];
 
-    switch (e.type) {
-    case "N": // New
-        if (!parent)
-            return c(TX.tx("Cannot create") +
-                " '" + e.path.join("↘") + "': " +
-                TX.tx("Folder not found"));
+    if (e.type === "N") { // New
         if (node)
-            return c(TX.tx("Cannot create") +
-                " '" + e.path.join("↘") + "': " +
-                TX.tx("It already exists"));
+            return conflict(e, TX.tx("It already exists"));
         parent.time = e.time; // collection is being modified
         parent.data[name] = {
             time: e.time,
             data: (typeof e.data === "string") ?
                 e.data : {}
         };
-        break;
+    } else {
 
-    case "M": // Move
+        // other actions require a node
         if (!node)
-            return c(TX.tx("Cannot move") +
-                " '" + e.path.join("↘") + "': " +
-                TX.tx("It does not exist"));
+            return conflict(e, TX.tx("It does not exist"));
 
-        // e.data is the path of the new parent
-        if (e.data.length > 0) {
-            var npp = locateParent(e.data, this.cache),
-                new_parent;
-            if (npp)
-                new_parent = npp.data[e.data[e.data.length - 1]];
-        } else
-            new_parent = this.cache; // root
+        switch (e.type) {
+        case "M": // Move to another parent
+            // e.data is the path of the new parent
+            var new_parent = this.locate_node(e.data);
+            if (!new_parent)
+                return conflict(TX.tx("New folder '$1' does not exist",
+                    e.data.join("↘")));
 
-        if (!new_parent)
-            return c(TX.tx("Cannot move") +
-                " '" + e.data.join("↘") + "': " +
-                TX.tx("New folder does not exist"));
+            new_parent.time = parent.time = e.time; // collection is being modified
+            delete parent.data[name];
+            new_parent.data[name] = node;
+            break;
 
-        new_parent.time = parent.time = e.time; // collection is being modified
-        delete parent.data[name];
-        new_parent.data[name] = node;
-        break;
+        case "D": // Delete
+            delete parent.data[name];
+            parent.time = e.time; // collection is being modified
+            break;
 
-    case "D": // Delete
-        if (!node)
-            return c(TX.tx("Cannot delete") +
-                " '" + e.path.join("↘") + "': " +
-                TX.tx("It does not exist"));
-        if (!parent)
-            return c(TX.tx("Cannot delete") +
-                " '" + e.path.join("↘") + "': " +
-                TX.tx("Folder not found"));
-        delete parent.data[name];
-        parent.time = e.time; // collection is being modified
-        break;
+        case "R": // Rename
+            if (parent.data[e.data])
+                return conflict(e, " '" + e.data + "': " +
+                    TX.tx("It already exists"));
+            parent.data[e.data] = node;
+            delete parent.data[name];
+            parent.time = e.time; // collection is being modified, node is not
+            break;
 
-    case "R": // Rename
-        if (!parent.data[name])
-            return c(TX.tx("Cannot rename") +
-                " '" + e.path.join("↘") + "' " +
-                TX.tx("It does not exist"));
-        if (parent.data[e.data])
-            return c(TX.tx("Cannot rename") +
-                " '" + e.path.join("↘") + "' -> '" + e.data + "': " +
-                TX.tx("It already exists"));
-        parent.data[e.data] = parent.data[name];
-        delete parent.data[name];
-        parent.time = e.time; // collection is being modified
-        break;
+        case "E": // Edit
+            node.data = e.data;
+            node.time = e.time;
+            break;
 
-    case "E": // Edit
-        if (!parent.data[name])
-            return c(TX.tx("Cannot change value of") +
-                " '" + e.path.join("↘") + "': " +
-                TX.tx("It does not exist"));
-        parent.data[name].data = e.data;
-        parent.data[name].time = e.time;
-        break;
+        case "A": // Alarm
+            if (!e.data)
+                delete node.alarm;
+            else
+                node.alarm = e.data;
+            node.time = e.time;
+            break;
 
-    case "A": // Alarm
-        if (!parent.data[name])
-            return c(TX.tx("Cannot set reminder on") +
-                " '" + e.path.join("↘") + "': " +
-                TX.tx("It does not exist"));
-        if (!e.data)
-            delete parent.data[name].alarm;
-        else
-            parent.data[name].alarm = e.data;
-        parent.data[name].time = e.time;
-        break;
+        case "C": // Cancel alarm
+            if (!node)
+                return conflict(e, TX.tx("It does not exist"));
+            delete node.alarm;
+            node.time = e.time;
+            break;
 
-    case "C": // Cancel alarm
-        if (!parent.data[name])
-            return c(TX.tx("Cannot cancel reminder on") +
-                " '" + e.path.join("↘") + "': " +
-                TX.tx("It does not exist"));
-        delete parent.data[name].alarm;
-        parent.data[name].time = e.time;
-        break;
+        case "X": // Constrain. Introduced in 2.0, however 1.0 code
+            // will simply ignore this action.
+            if (!node)
+                return conflict(e, TX.tx("It does not exist"));
+            if (!e.data)
+                delete node.constraints;
+            else
+                node.constraints = e.data;
+            node.time = e.time;
+            break;
 
-    case "X": // Constrain. Introduced in 2.0, however 1.0 code
-        // will simply ignore this action.
-        if (!parent.data[name])
-            return c(TX.tx("Cannot constrain") +
-                " '" + e.path.join("↘") + "': " +
-                TX.tx("It does not exist"));
-        if (!e.data)
-            delete parent.data[name].constraints;
-        else
-            parent.data[name].constraints = e.data;
-        parent.data[name].time = e.time;
-        break;
-
-    default:
-        // Unrecognised action type (may be due to a version incompatibility?)
-        if (DEBUG) debugger;
+        default:
+            // Unrecognised action type (may be due to a version incompatibility?)
+            if (global.DEBUG) debugger;
+        }
     }
 
     if (listener)
@@ -392,7 +379,7 @@ Hoard.prototype._reconstruct_actions = function (data, path, reconstruct, progre
 
         if (typeof node.data === "string")
             action.data = node.data;
-        else if (DEBUG && typeof node.data === "undefined")
+        else if (global.DEBUG && typeof node.data === "undefined")
             debugger;
 
         // Execute the 'N'
@@ -505,7 +492,8 @@ Hoard.prototype.reconstruct_actions = function (reconstruct, progress, chain) {
 };
 
 /**
- * Add the actions that are timestamped since the last sync into this hoard.
+ * Promise to add the actions that are timestamped since the last sync into
+ * this hoard. Updates the sync time to now.
  * Actions are *not* appended to our local actions stream, they are simply
  * played into the cache.
  * @param {Hoard} cloud the cloud hoard
@@ -513,10 +501,9 @@ Hoard.prototype.reconstruct_actions = function (reconstruct, progress, chain) {
  * listener.call(this:Hoard, e:Action)
  * @param {function} progress optional listener called with a percentage
  * completion
- * @param {function} chain optional function to call once all merged. Passed a list of conflicts.
+ * @return a list of conflicts.
  */
-Hoard.prototype.play_actions = function (
-    new_actions, listener, progress, chain) {
+Hoard.prototype.play_actions = function (new_actions, listener, progress) {
     "use strict";
 
     var conflicts = [];
@@ -524,26 +511,25 @@ Hoard.prototype.play_actions = function (
     var i, c;
 
     // Play in all actions since the last sync
-    this.actions = [];
     var count = new_actions.length;
     for (i = 0; i < count; i++) {
         if (new_actions[i].time > this.last_sync) {
-            if (DEBUG) console.log(
+            if (global.DEBUG) console.log(
                 "Play " + Hoard.stringify_action(new_actions[i]));
             c = this.play_action(new_actions[i], listener);
-            if (c !== null) {
-                if (DEBUG) console.log("Conflict: " + c.message);
+            if (c) {
+                if (global.DEBUG) console.log("Conflict: " + c.message);
                 conflicts.push(c);
             }
-        } else if (DEBUG) console.log(
+        } else if (global.DEBUG) console.log(
             "Skip old " + Hoard.stringify_action(new_actions[i]));
         if (progress)
             progress(Math.floor(100 * i / count));
     }
 
     this.last_sync = Date.now();
-    if (chain)
-        chain(conflicts);
+
+    return conflicts;
 };
 
 /**

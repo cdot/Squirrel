@@ -1,10 +1,10 @@
 /*@preserve Copyright (C) 2015 Crawford Currie http://c-dot.co.uk license MIT*/
 
-/* global DEBUG:true */
+/* global global:true */
 /* global Utils:true */
 
 if (typeof module !== "undefined")
-    Utils = require('Utils');
+    var Utils = require("./Utils");
 
 /**
  * Pure virtual base class of store providers.
@@ -137,7 +137,7 @@ AbstractStore.prototype.reads = function (path, ok, fail) {
             try {
                 data = Utils.ArrayBufferToString(ab);
             } catch (e) {
-                if (DEBUG) console.debug("Caught " + e);
+                if (global.DEBUG) console.debug("Caught " + e);
                 fail.call(self, e);
                 return;
             }
