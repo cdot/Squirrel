@@ -1619,7 +1619,8 @@ var Squirrel = {
                         // If there are no undos, there can be no modifications.
                         // The hoard status will not be changed, though, so a
                         // save may still be required.
-                        if (undos.length === 0)
+                        if (undos.length === 0 &&
+                            client.status === S.IS_LOADED)
                             $(".tree-modified")
                             .removeClass("tree-modified");
                         Utils.sometime("update_save");

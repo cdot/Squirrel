@@ -544,6 +544,9 @@
                     Utils.sometime("update_save");
                 }
                 return true;
+            })
+            .on("change", function() {
+                self.get("ok").trigger($.getTapEvent());
             });
 
         self.get("ok")
