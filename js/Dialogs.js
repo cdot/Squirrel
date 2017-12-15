@@ -566,6 +566,7 @@
             .hide();
         $dlg.data("callback", chain);
         this.get("storepath")
+            .focus()
             .val(
                 S.getClient()
                 .hoard.options.store_path);

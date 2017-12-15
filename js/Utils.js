@@ -157,39 +157,6 @@ Utils.generate_password = function (constraints) {
 };
 
 /**
- * Escape meta-characters for use in CSS selectors
-Utils.escape_selector = function(s) {
-    return s.replace(/([\][!"#$%&'()*+,.\/:;<=>?@\\^`{|}~])/g, "\\$1");
-};
-*/
-
-/**
- * Get the URL parameters
- * @return a hash mapping parameter name to decoded value
- */
-Utils.getURLParameters = function () {
-    var params = {};
-    var bits = location.search.split("?", 2);
-    if (bits.length < 2)
-        return params;
-    var pairs = bits[1].split(/[&;]/);
-    for (var i = 0; i < pairs.length; i++) {
-        var pair = decodeURIComponent(pairs[i].replace(/\+/g, "%20"));
-        var kv = pair.split("=", 2);
-        params[kv[0]] = (kv[1] || null);
-    }
-};
-
-/**
- * Convert an arbitrary string to a legal HTTP fragment name
- */
-Utils.fragmentify = function (fid) {
-    return fid.replace(/[^A-Za-z0-9:]/g, function (m) {
-        return "_" + m.charCodeAt(0);
-    });
-};
-
-/**
  * Simple asynchronous event mechanism to prevent duplicate events.
  * This intended for events that will update the UI, but don't want
  * to be called every time due to the load they impose. Events are always
@@ -254,35 +221,39 @@ Utils.soon = function (fn) {
 
 /**
  * Execute each function in the queue, and continue until empty.
- * Execution will not continue until the function being executed has
- * called ready()". The last function in the queue doesn't need to call
- * ready(), as the queue will then be empty.
+ * Functions must have the signature fn({function}ready)
+ * Execution of the next function in the queue will not start until
+ * the function being executed has called ready(). The last function
+ * in the queue doesn't need to call ready(), as the queue will then
+ * be empty. Functions should return as soon as possible to avoid blocking
+ * the UI (ready() can be called on an event, for example)
  */
 Utils.execute_queue = function (q) {
-    Utils.q_ready();
-    Utils.q_next(q);
-};
+    var qready = true;
+    
+    function q_ready() {
+        qready = true;
+    };
+    
+    function q_next(q) {
+        if (q.length > 0 && qready) {
+            var fn = q.shift();
+            qready = false;
+            fn(q_ready);
+        }
 
-Utils.q_ready = function () {
-    Utils.qready = true;
-};
+        // Maintain UI performance by timeout in browser
+        if (window) {
+            window.setTimeout(function () {
+                Utils.last_yield = Date.now();
+                q_next(q);
+            }, Utils.IMMEDIATE);
+        } else {
+            q_next(q);
+        }
+    };
 
-Utils.q_next = function (q) {
-    if (q.length > 0 && Utils.qready) {
-        var fn = q.shift();
-        Utils.qready = false;
-        fn(Utils.q_ready);
-    }
-
-    // Maintain UI performance by timeout in browser
-    if (typeof window !== "undefined") {
-        window.setTimeout(function () {
-            Utils.last_yield = Date.now();
-            Utils.q_next(q);
-        }, Utils.IMMEDIATE);
-    } else {
-        Utils.q_next(q);
-    }
+    q_next(q);
 };
 
 /**
@@ -655,5 +626,34 @@ Utils.expandTemplate = function () {
     return tmpl;
 };
 
+/**
+ * Throttle multiple events
+ */
+/*
+Utils.debounce = function(handler, threshold, scope) {
+    threshhold || (threshhold = 250);
+
+    var last,
+        deferTimer;
+
+    return function () {
+        var context = scope || this;
+
+        var now = Date.now(),
+            args = arguments;
+        if (last && now < last + threshhold) {
+            // hold on to it
+            clearTimeout(deferTimer);
+            deferTimer = setTimeout(function () {
+                last = now;
+                handler.apply(context, args);
+            }, threshhold);
+        } else {
+            last = now;
+            handler.apply(context, args);
+        }
+    };
+}
+*/
 if (typeof module !== "undefined")
     module.exports = Utils;

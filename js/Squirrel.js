@@ -1308,7 +1308,7 @@ var Squirrel = {
     }
 
     function init_ui() {
-
+      
         $("#sites-node")
             .tree({
                 is_root: true,
