@@ -15,12 +15,12 @@
 <link rel="icon" href="images/favicon.ico" type="image/x-icon" />
 <script src="//code.jquery.com/jquery-3.2.1.min.js"></script>
 <script src="//code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+<link href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" rel="stylesheet">
 <script src="//cdnjs.cloudflare.com/ajax/libs/jquery.ui-contextmenu/1.18.1/jquery.ui-contextmenu.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-touch-events/1.0.9/jquery.mobile-events.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/js-cookie/2.2.0/js.cookie.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.7.1/clipboard.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.7.1/clipboard.min.js"></script>
 <script  src="js/Squirrel.min.js"></script>
-<link href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" rel="stylesheet">
 <link  href="css/Squirrel.min.css" rel="stylesheet">
 </head>
 <body>
@@ -38,23 +38,21 @@
 <div id="splash"><img id="splash" src="images/squirrel.svg" /></div>
 </div>
 <div id="authenticated">
-<div id="topbar">
+<div class="topbar">
+<button id="undo_button" class="TX_title TX_text" title="Undo last change" data-icon="squirrel-icon-undo">Undo</button>
+<button id="save_button" class="TX_text" data-icon="squirrel-icon-save">Save</button>
 <span id="search_label" class="TX_text">Search</span>
 <input id="search_input" value="" class="TX_title" title="Enter search string" />
-<button id="search_button" class="TX_title TX_text" title="Search" data-icon="ui-icon-squirrel-search">Search</button>
+<button id="search_button" class="TX_title TX_text" title="Search" data-icon="squirrel-icon-search">Search</button>
 <span id="search_hits"></span>
-<button id="extras_button" class="TX_title TX_text" title="Tools/Options" data-icon="ui-icon-squirrel-gear">Tools/Options</button>
+<button id="extras_button" class="TX_title TX_text" title="Tools/Options" data-icon="squirrel-icon-gear">Tools/Options</button>
 <a href="help.html" target="_blank">
 <button id="help_button" data-icon="ui-icon-info">Help</button>
 </a>
 </div>
-<div id="toolbar">
-<button id="undo_button" class="TX_title TX_text" title="Undo last change" data-icon="ui-icon-squirrel-undo">Undo</button>
-<button id="save_button" class="TX_text" data-icon="ui-icon-squirrel-save">Save</button>
-</div>
 <div id="sites-node">
 <div class="tree-title noselect">
-<button class="tree-open-close" data-icon="ui-icon-squirrel-folder-open"></button>
+<button class="tree-open-close" data-icon="squirrel-icon-folder-open"></button>
 <div class="tree-info">
 <span id="whoami" class="tree-key"></span>
 </div>
@@ -424,7 +422,7 @@ if you choose 'photos/stills/grandma.png' it will use the file
 <label for="store_settings_storepath" class="TX_text">
 Store path:
 </label>
-<input data-id="storepath" type="text" value="" class="TX_title" title="Pathname of the image in your cloud store"/>
+<input data-id="storepath" type="text" value="" class="TX_title" title="Pathname of the image in your cloud store" autofocus/>
 </p>
 <p>
 <button data-id="ok" class="TX_text">OK</button>
@@ -435,7 +433,7 @@ Store path:
 Squirrel is Copyright &copy; 2015-2017 Crawford Currie <a href="http://c-dot.co.uk">http://c-dot.co.uk</a>
 </p>
 <p>
-<span class="TX_text">This version was released on </span> Thu 14 Dec 13:10:42 GMT 2017
+<span class="TX_text">This version was released on </span> Fri 15 Dec 14:41:25 GMT 2017
 </p>
 <div class="twisted" data-open="ui-icon-info">
 <p class="TX_html">
