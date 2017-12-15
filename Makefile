@@ -120,7 +120,7 @@ clean:
 # Formatting
 
 %.js.tidy : %.js
-	js-beautify -j -B --good-stuff -o $^ $^
+	js-beautify -j --good-stuff -o $^ $^
 
 tidy: $(patsubst %.js,%.js.tidy,$(SQUIRREL_JS) $(STORES_JS))
 

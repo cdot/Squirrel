@@ -9,7 +9,7 @@
  */
 (function ($) {
     $.widget("squirrel.iconbutton", $.ui.button, {
-        _create: function() {
+        _create: function () {
             this.options.icon = this.options.icon || this.element.data("icon");
             if (this.options.icon && !/^ui-icon-/.test(this.options.icon)) {
                 this.options.icons = {
@@ -24,7 +24,7 @@
             this._super();
         },
 
-        _setOption: function(option, value) {
+        _setOption: function (option, value) {
             if (option === "icon" && !/^ui-icon-/.test(value)) {
                 option = "icons";
                 value = {

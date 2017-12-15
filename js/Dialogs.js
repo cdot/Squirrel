@@ -545,8 +545,9 @@
                 }
                 return true;
             })
-            .on("change", function() {
-                self.get("ok").trigger($.getTapEvent());
+            .on("change", function () {
+                self.get("ok")
+                    .trigger($.getTapEvent());
             });
 
         self.get("ok")
@@ -700,7 +701,9 @@
 
         self.get("hidevalues")
             .on("change", function () {
-                $("#sites-node").tree("hide_values", $(this).prop("checked"));
+                $("#sites-node")
+                    .tree("hide_values", $(this)
+                        .prop("checked"));
             });
 
         self.get("chpw")
@@ -773,7 +776,8 @@
             .prop("checked", S.autosave());
 
         self.get("hidevalues")
-            .prop("checked", $("#sites-node").tree("hide_values"));
+            .prop("checked", $("#sites-node")
+                .tree("hide_values"));
 
         self.get("theme")
             .find("option:selected")

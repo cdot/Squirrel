@@ -1250,7 +1250,9 @@ var Squirrel = {
             .on("init_application", init_application)
             .on("check_alarms", check_alarms)
             .on("update_save", update_save)
-            .on("reset_styling", function() { $.reset_styling() });
+            .on("reset_styling", function () {
+                $.reset_styling()
+            });
 
         $.reset_styling();
 
@@ -1296,10 +1298,11 @@ var Squirrel = {
      */
     var last_search = "";
     var picked_hit = 0;
-    
+
     S.search = function (s) {
         var hits;
-        $(".picked-hit").removeClass("picked-hit");
+        $(".picked-hit")
+            .removeClass("picked-hit");
         if (s !== last_search) {
             $("#search_hits")
                 .text(TX.tx("Searching..."));
@@ -1314,10 +1317,11 @@ var Squirrel = {
                 });
                 return;
             }
-        
+
             last_search = s;
-            
-            $(".search-hit").removeClass("search-hit");
+
+            $(".search-hit")
+                .removeClass("search-hit");
 
             $(".tree-node")
                 .not(".tree-root")
@@ -1326,8 +1330,8 @@ var Squirrel = {
                     if ($node.data("key")
                         .match(re) ||
                         ($node.hasClass("tree-leaf") &&
-                         $node.data("value")
-                         .match(re)))
+                            $node.data("value")
+                            .match(re)))
                         $node.addClass("search-hit");
                 });
 
@@ -1337,10 +1341,10 @@ var Squirrel = {
                     .text(TX.tx("Not found"));
                 return;
             }
-            
+
             picked_hit = 0;
         }
-        
+
         hits = hits || $(".search-hit");
         if (picked_hit < hits.length) {
             $("#search_hits")
@@ -1353,8 +1357,8 @@ var Squirrel = {
                         .tree("open");
                 });
             $(hits[picked_hit])
-                 .scroll_into_view()
-           picked_hit = (picked_hit + 1) % hits.length;
+                .scroll_into_view()
+            picked_hit = (picked_hit + 1) % hits.length;
         }
     };
 

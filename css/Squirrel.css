@@ -84,11 +84,11 @@ body {
 }
 
 .search-hit {
-    border: solid red 1px;
+    background-color: rgba(150,0,0,0.5);
 }
 
 .picked-hit {
-    border-color: green;
+    background-color: rgba(0,150,0,0.5);
 }
 
 .topbar {

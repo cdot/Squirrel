@@ -15,7 +15,7 @@
             var $win = $(window);
             var curtop = $win.scrollTop();
             var winht = $win.innerHeight();
-            
+
             if (offset < curtop || offset + thisht > curtop + winht) {
                 // Not in the view. Scroll it to the centre.
                 var newtop = offset - winht / 2;

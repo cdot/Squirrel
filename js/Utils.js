@@ -230,11 +230,11 @@ Utils.soon = function (fn) {
  */
 Utils.execute_queue = function (q) {
     var qready = true;
-    
+
     function q_ready() {
         qready = true;
     }
-    
+
     function q_next(q) {
         if (q.length > 0 && qready) {
             var fn = q.shift();

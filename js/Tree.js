@@ -72,7 +72,8 @@
                             var s = $(this)
                                 .closest(".tree-node")
                                 .data("value");
-                            $(this).text(obscure_value(s));
+                            $(this)
+                                .text(obscure_value(s));
                         });
             }
         }
@@ -122,7 +123,7 @@
                 .find(".tree-draghandle")
                 .first()
                 .show();
-            
+
             return false;
         }
 
@@ -192,7 +193,9 @@
                     .addClass("tree-open-close");
                 $title.prepend($control);
                 $node.addClass("tree-open");
-                $control.iconbutton({ icon: "squirrel-icon-folder-closed" })
+                $control.iconbutton({
+                        icon: "squirrel-icon-folder-closed"
+                    })
                     .on($.getTapEvent(),
                         function () {
                             $node.tree("toggle");
@@ -379,7 +382,9 @@
         // Drag handle
         var $button = $(document.createElement("div"))
             .addClass("tree-draghandle")
-            .iconbutton({ icon: "ui-icon-arrow-2-n-s" })
+            .iconbutton({
+                icon: "ui-icon-arrow-2-n-s"
+            })
             .hide();
         $node
             .children(".tree-title")
@@ -470,8 +475,7 @@
         if (!$node.hasClass("tree-root"))
             $node.find(".tree-open-close")
             .first()
-            .removeClass("squirrel-icon-folder-closed")
-            .addClass("squirrel-icon-folder-open");
+            .iconbutton("option", "icon", "squirrel-icon-folder-open");
         return $node
             .addClass("tree-open")
             .children(".tree-subnodes")
@@ -484,8 +488,7 @@
             return $node;
         $node.find(".tree-open-close")
             .first()
-            .removeClass("squirre-icon-folder-open")
-            .addClass("squirrel-icon-folder-closed");
+            .iconbutton("option", "icon", "squirrel-icon-folder-closed");
         return $node
             .removeClass("tree-open")
             .children(".tree-subnodes")
@@ -569,7 +572,9 @@
                 .first()
                 .before($button);
 
-            $button.iconbutton({ icon: "squirrel-icon-alarm" })
+            $button.iconbutton({
+                    icon: "squirrel-icon-alarm"
+                })
                 .on("click", function () {
                     $("#alarm_dlg")
                         .squirrelDialog("open", {
@@ -646,7 +651,8 @@
             });
 
         $(".tree-alarm")
-             .first().remove();
+            .first()
+            .remove();
 
         $node.removeData("alarm");
 
