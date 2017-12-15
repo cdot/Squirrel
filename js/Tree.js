@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2015-2017 Crawford Currie http://c-dot.co.uk license MIT*/
 
 /* global global:true */
-/* global Utils */
+/* global Cookies */
 /* global Squirrel */
 
 /**
@@ -43,6 +43,12 @@
  * names to DOM nodes.
  */
 
+/*
+ * @param $ jQuery
+ * @param S an object that supports:
+ * .contextMenu(isOpen|close|enable|disable)
+ * .playAction(action)
+ */
 (function ($, S) {
     "use strict";
 
@@ -50,10 +56,34 @@
     const PATHSEP = String.fromCharCode(1); // separator used in Path->node mapping index
     var compare; // compare function
 
-    // Built the UI widget
-    var widget = {};
+    function obscure_value(s) {
+        return (Cookies.get("ui_hidevalues") == "on") ?
+            s.replace(/./g, "※") : s;
+    }
 
-    widget._create = function () {
+    function hide_values(on) {
+        if (typeof on !== "undefined") {
+            var is_on = (Cookies.get("ui_hidevalues") == "on");
+            Cookies.set("ui_hidevalues", on ? "on" : "off");
+            if (on !== is_on) {
+                $(".tree-value:not(:hover)")
+                    .each(
+                        function () {
+                            var s = $(this)
+                                .closest(".tree-node")
+                                .data("value");
+                            $(this).text(obscure_value(s));
+                        });
+            }
+        }
+        return Cookies.get("ui_hidevalues") == "on";
+    }
+
+    var tree_widget = {};
+
+    tree_widget.hide_values = hide_values;
+
+    tree_widget._create = function () {
 
         var self = this;
         var $node = this.element;
@@ -77,7 +107,7 @@
             $(".tree-hover")
                 .removeClass("tree-hover");
 
-            if (S.hideValues() && $node.hasClass("tree-leaf")) {
+            if (hide_values() && $node.hasClass("tree-leaf")) {
                 $(this)
                     .find(".tree-value")
                     .each(
@@ -89,7 +119,10 @@
 
             $(this)
                 .addClass("tree-hover")
-
+                .find(".tree-draghandle")
+                .first()
+                .show();
+            
             return false;
         }
 
@@ -101,17 +134,20 @@
                 .length > 0)
                 return true;
 
-            if (S.hideValues() && $node.hasClass("tree-leaf")) {
+            if (hide_values() && $node.hasClass("tree-leaf")) {
                 $(this)
                     .find(".tree-value")
                     .each(
                         function () {
                             $(this)
-                                .text(S.mask($node.data("value")));
+                                .text(obscure_value($node.data("value")));
                         });
             }
             $(this)
-                .removeClass("tree-hover");
+                .removeClass("tree-hover")
+                .find(".tree-draghandle")
+                .first()
+                .hide();
         }
 
         var options = this.options;
@@ -156,13 +192,12 @@
                     .addClass("tree-open-close");
                 $title.prepend($control);
                 $node.addClass("tree-open");
-                this._createIconButton(
-                    $control,
-                    "folder-closed",
-                    function () {
-                        $node.tree("toggle");
-                        return false;
-                    });
+                $control.iconbutton({ icon: "squirrel-icon-folder-closed" })
+                    .on($.getTapEvent(),
+                        function () {
+                            $node.tree("toggle");
+                            return false;
+                        });
             }
 
             var $info = $(document.createElement("div"))
@@ -189,8 +224,7 @@
                 $(document.createElement("span"))
                     .appendTo($info)
                     .addClass("tree-value")
-                    .text(S.hideValues() ?
-                        S.mask(options.value) : options.value)
+                    .text(obscure_value(options.value))
                     .on($.isTouchCapable && $.isTouchCapable() ?
                         "doubletap" : "dblclick",
                         function (e) {
@@ -226,49 +260,13 @@
     };
 
     /**
-     * @param $control jQuery object,
-     * @param icon is the abstract name of the icon to use, one
-     * of "open", "closed" or "alarm".
-     * @param on_click may be a function to handle click events
-     */
-    widget._createIconButton = function ($control, icon, on_click) {
-        var $button = $control.button({
-            icons: {
-                primary: "ui-icon-squirrel-" + icon
-            },
-            classes: {
-                "ui-button-icon": "squirrel-icon"
-            },
-            text: false
-        });
-        if (on_click)
-            // Click works a lot better than tap! tap was always being
-            // followed by taphold on android, even when it was clearly
-            // a single tap. And you get click events there anyway.
-            // $button.on($.getTapEvent(), on_click);
-            $button.on("click", on_click);
-    };
-
-    widget._changeIconButton = function ($control, icon) {
-        if ($control.length > 0)
-            $control.button(
-                "option", "icons", {
-                    primary: "ui-icon-squirrel-" + icon
-                });
-    };
-
-    widget._destroyIconButton = function ($control) {
-        $control.remove();
-    };
-
-    /**
      * Requires edit_in_place. selector may be a jquery selector or
      * an object.
      * @param $span child node to edit
      * ~para, text text to present in the editor
      * @param action 'R'ename or 'E'dit
      */
-    widget.edit = function ($span, text, action) {
+    tree_widget.edit = function ($span, text, action) {
         var $node = this.element;
 
         // Fit width to the container
@@ -303,30 +301,30 @@
         });
     };
 
-    widget.editKey = function () {
+    tree_widget.editKey = function () {
         var $node = this.element;
         this.edit(
             $node.find(".tree-key")
             .first(), $node.data("key"), "R");
     };
 
-    widget.editValue = function () {
+    tree_widget.editValue = function () {
         var $node = this.element;
         this.edit(
             $node.find(".tree-value")
             .first(), $node.data("value"), "E");
     };
 
-    widget.ringAlarm = function () {
+    tree_widget.ringAlarm = function () {
         this.element
             .find(".tree-alarm")
             .addClass("tree-expired")
-            .find(".ui-icon-squirrel-alarm")
-            .removeClass("ui-icon-squirrel-alarm")
-            .addClass("ui-icon-squirrel-rang");
+            .find(".squirrel-icon-alarm")
+            .removeClass("squirrel-icon-alarm")
+            .addClass("squirrel-icon-rang");
     };
 
-    widget._makeDraggable = function () {
+    tree_widget._makeDraggable = function () {
         var $node = this.element;
 
         function handleDrag(event) {
@@ -378,7 +376,18 @@
             });
         }
 
+        // Drag handle
+        var $button = $(document.createElement("div"))
+            .addClass("tree-draghandle")
+            .iconbutton({ icon: "ui-icon-arrow-2-n-s" })
+            .hide();
+        $node
+            .children(".tree-title")
+            .append($button);
+
+        // Make the node draggable by using the drag handle
         $node.draggable({
+            handle: ".tree-draghandle",
             axis: "y",
             containment: ".tree-collection",
             cursor: "pointer",
@@ -393,7 +402,7 @@
      * Find the path for a DOM node or jQuery node.
      * @return an array containing the path to the node, one string per key
      */
-    widget.getPath = function () {
+    tree_widget.getPath = function () {
         var $node = this.element;
         if ($node.hasClass("tree-root"))
             return [];
@@ -417,7 +426,7 @@
      * @private
      * Insert-sort the given node as a child of the given parent node
      */
-    widget._insertInto = function ($parent) {
+    tree_widget._insertInto = function ($parent) {
         var $node = this.element;
 
         // First decouple from the old parent
@@ -448,41 +457,42 @@
     /**
      * @param time optional time in ms, if missing will use now
      */
-    widget.setModified = function (time) {
+    tree_widget.setModified = function (time) {
         return this.element
             .addClass("tree-modified")
             .data("last-time-changed", time);
     };
 
-    widget.open = function () {
+    tree_widget.open = function () {
         var $node = this.element;
         if ($node.hasClass("tree-open"))
             return $node;
         if (!$node.hasClass("tree-root"))
-            this._changeIconButton(
-                $node.find(".tree-open-close")
-                .first(), "folder-open");
+            $node.find(".tree-open-close")
+            .first()
+            .removeClass("squirrel-icon-folder-closed")
+            .addClass("squirrel-icon-folder-open");
         return $node
             .addClass("tree-open")
             .children(".tree-subnodes")
-            .scroll_into_view()
             .show();
     };
 
-    widget.close = function () {
+    tree_widget.close = function () {
         var $node = this.element;
         if (!$node.hasClass("tree-open"))
             return $node;
-        this._changeIconButton(
-            $node.find(".tree-open-close")
-            .first(), "folder-closed");
+        $node.find(".tree-open-close")
+            .first()
+            .removeClass("squirre-icon-folder-open")
+            .addClass("squirrel-icon-folder-closed");
         return $node
             .removeClass("tree-open")
             .children(".tree-subnodes")
             .hide();
     };
 
-    widget.toggle = function () {
+    tree_widget.toggle = function () {
         if (this.element.hasClass("tree-open"))
             return this.close();
         return this.open();
@@ -492,7 +502,7 @@
      * @private
      * Action handler for node edit
      */
-    widget.action_E = function (action, undoable) {
+    tree_widget.action_E = function (action, undoable) {
         var $node = this.element;
         if (undoable) {
             undoable({
@@ -507,7 +517,7 @@
             .data("value", action.data)
             .find(".tree-value")
             .first()
-            .text(S.hideValues() ? S.mask(action.data) : action.data);
+            .text(obscure_value(action.data));
 
         this.setModified(action.time);
     };
@@ -516,7 +526,7 @@
      * @private
      * Action handler for node delete
      */
-    widget.action_D = function (action, undoable) {
+    tree_widget.action_D = function (action, undoable) {
         var $node = this.element;
 
         if (undoable) {
@@ -543,7 +553,7 @@
      * @private
      * Action handler for alarm add
      */
-    widget.action_A = function (action, undoable) {
+    tree_widget.action_A = function (action, undoable) {
         var $node = this.element;
         // Check there's an alarm already
         var alarm = $node.data("alarm");
@@ -559,10 +569,8 @@
                 .first()
                 .before($button);
 
-            this._createIconButton(
-                $button,
-                "alarm",
-                function () {
+            $button.iconbutton({ icon: "squirrel-icon-alarm" })
+                .on("click", function () {
                     $("#alarm_dlg")
                         .squirrelDialog("open", {
                             $node: $node
@@ -608,7 +616,7 @@
     /**
      * Action handler for cancelling an alarm
      */
-    widget.action_C = function (action, undoable) {
+    tree_widget.action_C = function (action, undoable) {
         var $node = this.element;
 
         var alarm = $node.data("alarm");
@@ -637,8 +645,8 @@
                     .removeClass("tree-has-alarms");
             });
 
-        this._destroyIconButton($node.find(".tree-alarm")
-            .first());
+        $(".tree-alarm")
+             .first().remove();
 
         $node.removeData("alarm");
 
@@ -648,7 +656,7 @@
     /**
      * Action handler for modifying constraints
      */
-    widget.action_X = function (action, undoable) {
+    tree_widget.action_X = function (action, undoable) {
         var constraints = this.element.data("constraints");
         if (constraints === action.data)
             return; // same constraints already
@@ -667,7 +675,7 @@
     /**
      * Action handler for moving a node
      */
-    widget.action_M = function (action, undoable) {
+    tree_widget.action_M = function (action, undoable) {
         var $node = this.element;
         var oldpath = this.getPath();
         var newpath = action.data.slice();
@@ -695,7 +703,7 @@
     /**
      * Action handler for node rename
      */
-    widget.action_R = function (action, undoable) {
+    tree_widget.action_R = function (action, undoable) {
         // Detach the li from the DOM
         var $node = this.element;
         var key = action.path[action.path.length - 1]; // record old node name
@@ -732,7 +740,7 @@
      * @param chain function to call once the action has been
      * played. Passed the modified node.
      */
-    widget.action = function (action, undoable, chain) {
+    tree_widget.action = function (action, undoable, chain) {
         if (action.type === "N") {
             // Create the new node. Automatically adds it to the right parent.
             $(document.createElement("li"))
@@ -774,7 +782,7 @@
      * @param $node jQuery node
      * @param parent optional path to the parent of this node
      */
-    widget._addToCaches = function () {
+    tree_widget._addToCaches = function () {
 
         // Recursively cache node and descendants
         function recache($node, pa) {
@@ -825,7 +833,7 @@
      * Remove the node (and all subnodes) from the node->path->node mappings
      * @param $node node to remove
      */
-    widget._removeFromCaches = function () {
+    tree_widget._removeFromCaches = function () {
         var $node = this.element;
         if (!$node.hasClass("tree-node"))
             $node = $node.closest(".tree-node");
@@ -851,7 +859,7 @@
      * @param path array of keys representing the path
      * @return a JQuery element
      */
-    widget.getNodeFromPath = function (path) {
+    tree_widget.getNodeFromPath = function (path) {
         var $node = cache[path.join(PATHSEP)];
         if (global.DEBUG && $node && $node.length === 0)
             // Not in the cache, was something not been through get_path?
@@ -859,6 +867,6 @@
         return $node;
     };
 
-    $.widget("squirrel.tree", widget);
+    $.widget("squirrel.tree", tree_widget);
 
 })(jQuery, Squirrel);

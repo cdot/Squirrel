@@ -700,8 +700,7 @@
 
         self.get("hidevalues")
             .on("change", function () {
-                S.hideValues($(this)
-                    .prop("checked"));
+                $("#sites-node").tree("hide_values", $(this).prop("checked"));
             });
 
         self.get("chpw")
@@ -774,7 +773,7 @@
             .prop("checked", S.autosave());
 
         self.get("hidevalues")
-            .prop("checked", S.hideValues());
+            .prop("checked", $("#sites-node").tree("hide_values"));
 
         self.get("theme")
             .find("option:selected")

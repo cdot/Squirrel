@@ -16,6 +16,11 @@
 /* Wrapper around the tree-open-close and tree-info */
 .tree-title {}
 
+/* Icon handle for dragging */
+.tree-draghandle {
+    float: right;
+}
+
 /* The UL that contains all the child nodes under a collection */
 .tree-subnodes {
     list-style-type: none;

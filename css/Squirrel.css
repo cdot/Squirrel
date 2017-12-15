@@ -83,11 +83,19 @@ body {
     background-color: rgb(255, 255, 255);
 }
 
-#topbar {
+.search-hit {
+    border: solid red 1px;
+}
+
+.picked-hit {
+    border-color: green;
+}
+
+.topbar {
     position: fixed;
     top: 0px;
     z-index: 3;
-    background-color: rgb(255, 255, 255);
+    background-color: inherit;
 }
 
 #sites-node {

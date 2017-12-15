@@ -233,7 +233,7 @@ Utils.execute_queue = function (q) {
     
     function q_ready() {
         qready = true;
-    };
+    }
     
     function q_next(q) {
         if (q.length > 0 && qready) {
@@ -251,7 +251,7 @@ Utils.execute_queue = function (q) {
         } else {
             q_next(q);
         }
-    };
+    }
 
     q_next(q);
 };

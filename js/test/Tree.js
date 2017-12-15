@@ -64,10 +64,6 @@ if (typeof module === "undefined") {
         return (a < b) ? -1 : 1;
     }
 
-    Squirrel.hideValues = function() {
-        return false;
-    };
-
     Squirrel.contextMenu = function(f) {
         return false;
     };

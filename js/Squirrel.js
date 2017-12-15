@@ -11,7 +11,6 @@
 /* global LocalStorageStore */
 /* global StegaStore */
 /* global Hoard */
-/* global RGBA */
 /* global UNCOMPRESSED */
 
 /*
@@ -83,97 +82,6 @@ var Squirrel = {
         TX.tx("Pass")
     ];
 
-    function reset_styling() {
-
-        // Copy subset of ui-widget styling into base by instantiating
-        // a widget element then creating a new <style> with the required
-        // attributes applied to body{}
-        var $body = $("body");
-        var $el = $(document.createElement("div"))
-            .addClass("ui-widget")
-            .addClass("ui-widget-content")
-            .hide();
-        $body.append($el);
-        var bgcol = $el.css("background-color");
-        var style = "body {";
-        for (var attr in {
-                "font": 0,
-                //            "font-size" : 0,
-                //            "font-family" : 0,
-                //            "font-style" : 0,
-                //            "font-variant" : 0,
-                //            "font-weight" : 0,
-                //            "font-stretch" : 0,
-                //            "line-height" : 0,
-                "color": 0,
-                "background-color": 0
-            }) {
-            var av = $el.css(attr);
-            style += attr + ": " + av + ";\n";
-        }
-        style += "}";
-        $el.remove();
-
-        // Do we need bright highlights in user classes?
-        var want_bright = (bgcol && bgcol != "transparent" &&
-            new RGBA(bgcol)
-            .luma() < 0.65);
-
-        if (S.bright && !want_bright || !S.bright && want_bright) {
-            // Invert colours. Takes account of the fact that only
-            // local stylesheets can be found this way. Stylesheets
-            // loading from other domains (i.e. CDNs) are not local.
-            for (var i = 0; i < document.styleSheets.length; i++) {
-                var sheet = document.styleSheets[i];
-                if (!sheet)
-                    continue;
-                var rules = sheet.rules || sheet.cssRules;
-                if (!rules)
-                    continue;
-                for (var j = 0; j < rules.length; j++) {
-                    var rule = rules[j];
-                    if (/\.[-:a-z0-9]*$/i.test(rule.selectorText)) {
-                        // Class definition
-                        var s = "",
-                            a;
-                        if (rule.style.color) {
-                            try {
-                                a = new RGBA(rule.style.color);
-                                s += "color: " +
-                                    a.inverse()
-                                    .toString() + ";\n"
-                            } catch (e) {
-                                if (global.DEBUG) console.log(e);
-                            }
-                        }
-                        if (rule.style.backgroundColor) {
-                            try {
-                                a = new RGBA(
-                                    rule.style.backgroundColor);
-                                s += "background-color: " +
-                                    a.inverse()
-                                    .toString() + ";\n"
-                            } catch (e) {
-                                if (global.DEBUG) console.log(e + ":" + rule.style.backgroundColor);
-                            }
-                        }
-                        if (s.length > 0)
-                            style += rule.selectorText + "{" + s + "}\n";
-                    }
-                }
-            }
-            S.bright = want_bright;
-        }
-
-        $("#computed-styles")
-            .remove();
-        var $style = $(document.createElement("style"))
-            .attr("id", "computed-styles")
-            .text(style);
-        $body.append($style);
-        //if (global.DEBUG) console.log(style);
-    }
-
     S.squeak = function (e) {
         $("#squeak_dlg")
             .squirrelDialog("open", e);
@@ -229,29 +137,6 @@ var Squirrel = {
         return client.hoard.options.autosave;
     };
 
-    S.mask = function (s) {
-        return s.replace(/./g, ".");
-    };
-
-    S.hideValues = function (on) {
-        if (typeof on !== "undefined") {
-            if (on !== (Cookies.get("ui_hidevalues") == "on")) {
-                $("#sites-node")
-                    .find(".tree-value:not(:hover)")
-                    .each(
-                        function () {
-                            var s = $(this)
-                                .closest(".tree-node")
-                                .data("value");
-                            $(this)
-                                .text(on ? S.mask(s) : s);
-                        });
-            }
-            Cookies.set("ui_hidevalues", on ? "on" : "off");
-        }
-        return Cookies.get("ui_hidevalues") == "on";
-    };
-
     /**
      * Custom key comparison, such that these keys always bubble
      * to the top of the keys
@@ -277,7 +162,7 @@ var Squirrel = {
                 $node.tree("ringAlarm");
                 S.squeak({
                     severity: "warning",
-                    message: "<div class='ui-icon ui-icon-squirrel-rang'></div>" +
+                    message: "<div class='ui-icon squirrel-icon-rang'></div>" +
                         TX.tx("Reminder on '$1' was due on $2",
                             path.join("↘"),
                             expired.toLocaleDateString()),
@@ -1176,64 +1061,64 @@ var Squirrel = {
                 {
                     title: TX.tx("Copy value"),
                     cmd: "copy_value",
-                    uiIcon: "ui-icon-squirrel-copy squirrel-icon"
+                    uiIcon: "squirrel-icon-copy squirrel-icon"
                 },
                 /* Can't get it to work
                 {
                     title: TX.tx("Paste"),
                     cmd: "paste",
-                    uiIcon: "ui-icon-squirrel-paste squirrel-icon"
+                    uiIcon: "squirrel-icon-paste squirrel-icon"
                 },
                 /**/
                 {
                     title: TX.tx("Pick characters"),
                     cmd: "pick_from",
-                    uiIcon: "ui-icon-squirrel-pick squirrel-icon"
+                    uiIcon: "squirrel-icon-pick squirrel-icon"
                 },
                 {
                     title: TX.tx("Rename"),
                     cmd: "rename",
-                    uiIcon: "ui-icon-squirrel-edit squirrel-icon"
+                    uiIcon: "squirrel-icon-edit squirrel-icon"
                 },
                 {
                     title: TX.tx("Edit value"),
                     cmd: "edit",
-                    uiIcon: "ui-icon-squirrel-edit squirrel-icon"
+                    uiIcon: "squirrel-icon-edit squirrel-icon"
                 },
                 {
                     title: TX.tx("Add reminder"),
                     cmd: "add_alarm",
-                    uiIcon: "ui-icon-squirrel-alarm squirrel-icon"
+                    uiIcon: "squirrel-icon-alarm squirrel-icon"
                 },
                 {
                     title: TX.tx("Generate new random value"),
                     cmd: "randomise",
-                    uiIcon: "ui-icon-squirrel-key squirrel-icon"
+                    uiIcon: "squirrel-icon-key squirrel-icon"
                 },
                 {
                     title: TX.tx("Add new value"),
                     cmd: "add_value",
-                    uiIcon: "ui-icon-squirrel-add-value squirrel-icon"
+                    uiIcon: "squirrel-icon-add-value squirrel-icon"
                 },
                 {
                     title: TX.tx("Add new folder"),
                     cmd: "add_subtree",
-                    uiIcon: "ui-icon-squirrel-add-folder squirrel-icon"
+                    uiIcon: "squirrel-icon-add-folder squirrel-icon"
                 },
                 {
                     title: TX.tx("Copy folder"),
                     cmd: "make_copy",
-                    uiIcon: "ui-icon-squirrel-copy squirrel-icon"
+                    uiIcon: "squirrel-icon-copy squirrel-icon"
                 },
                 {
                     title: TX.tx("Insert copy of folder"),
                     cmd: "insert_copy",
-                    uiIcon: "ui-icon-squirrel-paste squirrel-icon"
+                    uiIcon: "squirrel-icon-paste squirrel-icon"
                 },
                 {
                     title: TX.tx("Delete"),
                     cmd: "delete",
-                    uiIcon: "ui-icon-squirrel-delete squirrel-icon"
+                    uiIcon: "squirrel-icon-delete squirrel-icon"
                 }
             ],
             preventContextMenuForPopup: true,
@@ -1267,34 +1152,6 @@ var Squirrel = {
                     return JSON.stringify(n);
                 }
             });
-        /* Should zeroClipboard ever prove necessary, here are the bits
-        S.zeroClipboards.addClipboard({
-            selector: ".ui-contextmenu li[data-command='copy_value']",
-            handler: function() {
-                var $node = $menuTarget;
-                if (global.DEBUG) console.debug("clip val from: " +
-                                         $node.data("key"));
-                return {
-                    data: $node.data("value"),
-                    contentType: "text/plain"
-                };
-            }
-        });
-        S.zeroClipboards.addClipboard({
-            selector: ".ui-contextmenu li[data-command='make_copy']",
-            handler: function() {
-                var $node = $menuTarget;
-                if (global.DEBUG) console.debug("clip json from: " +
-                                         $node.data("key"));
-                var p = $node.tree("getPath");
-                var n = client.hoard.get_node(p);
-                return {
-                    data: JSON.stringify(n),
-                    contentType: "text/json"
-                }
-            }
-        });
-        */
     }
 
     /**
@@ -1308,7 +1165,7 @@ var Squirrel = {
     }
 
     function init_ui() {
-      
+
         $("#sites-node")
             .tree({
                 is_root: true,
@@ -1373,46 +1230,18 @@ var Squirrel = {
 
         $("#search_input")
             .on("change", function ( /*evt*/ ) {
-                $("#search_hits")
-                    .text(TX.tx("Searching..."));
                 S.search($(this)
                     .val());
             });
 
         $("#search_button")
             .on($.getTapEvent(), function ( /*evt*/ ) {
-                $("#search_hits")
-                    .text(TX.tx("Searching..."));
                 S.search($("#search_input")
                     .val());
             });
 
         $("button")
-            .each(function () {
-                var $this = $(this);
-                var opts;
-
-                if (typeof $this.data("icon") !== "undefined") {
-                    var name = $this.data("icon");
-                    if (/squirrel/.test(name)) {
-                        opts = {
-                            icons: {
-                                primary: name
-                            },
-                            classes: {
-                                "ui-button-icon": "squirrel-icon"
-                            },
-                            text: false
-                        };
-                    } else {
-                        opts = {
-                            icon: name,
-                            text: false
-                        }
-                    }
-                }
-                $this.button(opts);
-            });
+            .iconbutton();
 
         init_menus();
 
@@ -1421,8 +1250,9 @@ var Squirrel = {
             .on("init_application", init_application)
             .on("check_alarms", check_alarms)
             .on("update_save", update_save)
-            .on("reset_styling", reset_styling);
-        reset_styling();
+            .on("reset_styling", function() { $.reset_styling() });
+
+        $.reset_styling();
 
         Utils.sometime_is_now();
     }
@@ -1462,51 +1292,69 @@ var Squirrel = {
     };
 
     /**
-     * Perform a text search
+     * Perform a text search for a new search expression
      */
+    var last_search = "";
+    var picked_hit = 0;
+    
     S.search = function (s) {
-        var re;
-        try {
-            re = new RegExp(s, "i");
-        } catch (e) {
-            S.squeak({
-                message: TX.tx("Error in search expression") +
-                    " '" + s + "': " + e
-            });
-        }
-        var hits = [];
-        $(".tree-node")
-            .not(".tree-root")
-            .each(function () {
-                var $node = $(this);
-                if ($node.data("key")
-                    .match(re) ||
-                    ($node.hasClass("tree-leaf") &&
-                        $node.data("value")
-                        .match(re)))
-                    hits.push($node);
-            });
+        var hits;
+        $(".picked-hit").removeClass("picked-hit");
+        if (s !== last_search) {
+            $("#search_hits")
+                .text(TX.tx("Searching..."));
 
-        $("#search_hits")
-            .text(TX.tx("$1 found", hits.length));
-        if (hits.length === 0) {
-            S.squeak({
-                message: TX.tx("'$1' not found", s)
-            });
-        } else {
-            $(".tree-open")
+            var re;
+            try {
+                re = new RegExp(s, "i");
+            } catch (e) {
+                S.squeak({
+                    message: TX.tx("Error in search expression") +
+                        " '" + s + "': " + e
+                });
+                return;
+            }
+        
+            last_search = s;
+            
+            $(".search-hit").removeClass("search-hit");
+
+            $(".tree-node")
                 .not(".tree-root")
                 .each(function () {
-                    $(this)
-                        .tree("close");
+                    var $node = $(this);
+                    if ($node.data("key")
+                        .match(re) ||
+                        ($node.hasClass("tree-leaf") &&
+                         $node.data("value")
+                         .match(re)))
+                        $node.addClass("search-hit");
                 });
-            $.each(hits, function (n, $v) {
-                $v.parents(".tree-collection")
-                    .each(function () {
-                        $(this)
-                            .tree("open");
-                    });
-            });
+
+            hits = $(".search-hit");
+            if (hits.length === 0) {
+                $("#search_hits")
+                    .text(TX.tx("Not found"));
+                return;
+            }
+            
+            picked_hit = 0;
+        }
+        
+        hits = hits || $(".search-hit");
+        if (picked_hit < hits.length) {
+            $("#search_hits")
+                .text(TX.tx("$1 of $2 found", picked_hit + 1, hits.length));
+            $(hits[picked_hit])
+                .addClass("picked-hit")
+                .parents(".tree-collection")
+                .each(function () {
+                    $(this)
+                        .tree("open");
+                });
+            $(hits[picked_hit])
+                 .scroll_into_view()
+           picked_hit = (picked_hit + 1) % hits.length;
         }
     };
 

@@ -16,19 +16,27 @@
     <title>Squirrel</title>
     <link rel="icon" href="images/favicon.ico" type="image/x-icon" />
 
+    <!-- jQuery UI basics -->
     <script src="//code.jquery.com/jquery-3.2.1.min.js"></script>
     <script src="//code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <link href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" rel="stylesheet">
+
+    <!-- Third-party jQuery widgets and extensions -->
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery.ui-contextmenu/1.18.1/jquery.ui-contextmenu.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-touch-events/1.0.9/jquery.mobile-events.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/js-cookie/2.2.0/js.cookie.min.js"></script>
-    <!-- Note: ZeroClipboard doesn't work when served from CDN -->
-    <!--script class="compressable" src="libs/ZeroClipboard.js"></script-->
-    <!--script class="compressable" src="js/ZeroClipboardShim.js"></script-->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.7.1/clipboard.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.7.1/clipboard.min.js"></script>
 
+    <!-- Custom jQuery UI extensions -->
+    <script class="compressable" src="js/edit_in_place.js"></script>
+    <script class="compressable" src="js/scroll_into_view.js"></script>
+    <script class="compressable" src="js/icon_button.js"></script>
+    <script class="compressable" src="js/RGBA.js"></script>
+    <script class="compressable" src="js/reset_styling.js"></script>
+
+    <!-- Database handling -->
     <script class="compressable" src="libs/aes.js"></script>
     <script class="compressable" src="js/Utils.js"></script>
-    <script class="compressable" src="js/RGBA.js"></script>
     <script class="compressable" src="js/Translation.js"></script>
     <script class="compressable" src="js/Twisted.js"></script>
     <script class="compressable" src="js/Template.js"></script>
@@ -39,19 +47,19 @@
     <script class="compressable" src="js/EncryptedStore.js"></script>
     <script class="compressable" src="js/Hoard.js"></script>
 
-    <script class="compressable" src="js/edit_in_place.js"></script>
-    <script class="compressable" src="js/scroll_into_view.js"></script>
+    <!-- UI -->
     <script class="compressable" src="js/Squirrel.js"></script>
     <script class="compressable" src="js/Tree.js",></script>
     <script class="compressable" src="js/Dialogs.js"></script>
-    <script class="compressable">UNCOMPRESSED = true;</script>
-
-    <link href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" rel="stylesheet">
     <link class="compressable" href="css/Icons.css" rel="stylesheet">
     <link class="compressable" href="css/Tree.css" rel="stylesheet">
     <link class="compressable" href="css/Dialogs.css" rel="stylesheet">
     <link class="compressable" href="css/Squirrel.css" rel="stylesheet">
+    
+    <!-- Flag to tell code whether we are compressed or not -->
+    <script class="compressable">UNCOMPRESSED = true;</script>
   </head>
+
   <body>
     <div id="unauthenticated">
       <h1>Squirrel</h1>
@@ -68,21 +76,22 @@
     </div>
     
     <div id="authenticated">
-      <div id="topbar">
-        <button id="undo_button" class="TX_title TX_text" title="Undo last change" data-icon="ui-icon-squirrel-undo">Undo</button>
-        <button id="save_button" class="TX_text" data-icon="ui-icon-squirrel-save">Save</button>
+      <div class="topbar">
+        <button id="undo_button" class="TX_title TX_text" title="Undo last change" data-icon="squirrel-icon-undo">Undo</button>
+        <button id="save_button" class="TX_text" data-icon="squirrel-icon-save">Save</button>
         <span id="search_label" class="TX_text">Search</span>
         <input id="search_input" value="" class="TX_title" title="Enter search string" />
-        <button id="search_button" class="TX_title TX_text" title="Search" data-icon="ui-icon-squirrel-search">Search</button>
+        <button id="search_button" class="TX_title TX_text" title="Search" data-icon="squirrel-icon-search">Search</button>
         <span id="search_hits"></span>
-        <button id="extras_button" class="TX_title TX_text" title="Tools/Options" data-icon="ui-icon-squirrel-gear">Tools/Options</button>
+        <button id="extras_button" class="TX_title TX_text" title="Tools/Options" data-icon="squirrel-icon-gear">Tools/Options</button>
         <a href="help.html" target="_blank">
           <button id="help_button" data-icon="ui-icon-info">Help</button>
         </a>
       </div>
+
       <div id="sites-node">
         <div class="tree-title noselect">
-          <button class="tree-open-close" data-icon="ui-icon-squirrel-folder-open"></button>
+          <button class="tree-open-close" data-icon="squirrel-icon-folder-open"></button>
           <div class="tree-info">
             <span id="whoami" class="tree-key"></span>
           </div>
@@ -90,8 +99,6 @@
       </div>
     </div>
     
-    <!--textarea id="pasteboard"></textarea ZeroClipboard-->
-
     <!-- Dialogs -->    
     <div id="extras_dlg" class="dlg-dialog TX_title" title="Extras">
       <table>

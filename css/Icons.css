@@ -1,37 +1,37 @@
 /* Squirrel icons */
-.ui-icon-squirrel-add-folder {
+.squirrel-icon-add-folder {
     background-image: url('../images/add-folder.svg')!important; }
-.ui-icon-squirrel-copy {
+.squirrel-icon-copy {
     background-image: url('../images/copy.svg')!important; }
-.ui-icon-squirrel-gear {
+.squirrel-icon-gear {
     background-image: url('../images/gear.svg')!important; }
-.ui-icon-squirrel-add-value {
+.squirrel-icon-add-value {
     background-image: url('../images/add-value.svg')!important; }
-.ui-icon-squirrel-undo {
+.squirrel-icon-undo {
     background-image: url('../images/undo.svg')!important; }
-.ui-icon-squirrel-save {
+.squirrel-icon-save {
     background-image: url('../images/save.svg')!important; }
-.ui-icon-squirrel-copy {
+.squirrel-icon-copy {
     background-image: url('../images/copy.svg')!important; }
-.ui-icon-squirrel-alarm {
+.squirrel-icon-alarm {
     background-image: url('../images/alarm.svg')!important; }
-.ui-icon-squirrel-rang {
+.squirrel-icon-rang {
     background-image: url('../images/rang.svg')!important; }
-.ui-icon-squirrel-delete {
+.squirrel-icon-delete {
     background-image: url('../images/delete.svg')!important; }
-.ui-icon-squirrel-paste {
+.squirrel-icon-paste {
     background-image: url('../images/paste.svg')!important; }
-.ui-icon-squirrel-edit {
+.squirrel-icon-edit {
     background-image: url('../images/edit.svg')!important; }
-.ui-icon-squirrel-pick {
+.squirrel-icon-pick {
     background-image: url('../images/pick.svg')!important; }
-.ui-icon-squirrel-search {
+.squirrel-icon-search {
     background-image: url('../images/search.svg')!important; }
-.ui-icon-squirrel-key {
+.squirrel-icon-key {
     background-image: url('../images/key.svg')!important; }
-.ui-icon-squirrel-folder-open {
+.squirrel-icon-folder-open {
     background-image: url('../images/folder-open.svg')!important; }
-.ui-icon-squirrel-folder-closed {
+.squirrel-icon-folder-closed {
     background-image: url('../images/folder-closed.svg')!important; }
 
 .inline-icon {
