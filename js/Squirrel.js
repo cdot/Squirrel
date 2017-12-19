@@ -1192,7 +1192,7 @@ var Squirrel = {
                 .template("pick", pick)
                 .template("expand", "Cats");
             $("#template-tester")
-                .button()
+                .iconbutton()
                 .on("click", function () {
                     $("#template-test")
                         .template("pick", pick)

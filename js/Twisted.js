@@ -35,7 +35,7 @@
 
             var $button = $(document.createElement("button"))
                 .addClass("twisted-button twisted-title")
-                .button({
+                .iconbutton({
                     icon: "ui-icon-info",
                     showLabel: false
                 });
@@ -66,7 +66,7 @@
                 .removeClass("twisted-shut")
                 .show()
                 .data("twisted-button")
-                .button("option", "icon", icon)
+                .iconbutton("option", "icon", icon)
         },
 
         close: function () {
@@ -76,7 +76,7 @@
                 .addClass("twisted-shut")
                 .hide()
                 .data("twisted-button")
-                .button("option", "icon", icon);
+                .iconbutton("option", "icon", icon);
         }
     });
 })(jQuery);

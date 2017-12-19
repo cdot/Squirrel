@@ -16,7 +16,7 @@
             $self.hide();
             $self.parent().append(
                 $(document.createElement("button"))
-                    .button({
+                    .iconbutton({
                         label: $self.attr("title")
                     })
                     .on($.getTapEvent(), function(evt) {

@@ -42,13 +42,13 @@
 
         if (enabled) {
             this.get("ok")
-                .button("enable");
+                .iconbutton("enable");
             $input
                 .removeClass("dlg-disabled")
                 .attr("title", TX.tx("Enter new name"));
         } else {
             this.get("ok")
-                .button("disable");
+                .iconbutton("disable");
             $input
                 .addClass("dlg-disabled")
                 .attr("title", TX.tx("Name is already in use"));
@@ -480,7 +480,7 @@
                                 return;
                             }
                             self.get("ok")
-                                .button("enable");
+                                .iconbutton("enable");
                             var h = this.naturalHeight;
                             var w = this.naturalWidth;
                             this.height = 100;
@@ -648,7 +648,7 @@
         self.get("text")
             .on("input", function () {
                 self.get("ok")
-                    .button("enable");
+                    .iconbutton("enable");
             });
 
         self.get("ok")
@@ -667,7 +667,7 @@
                     return false;
                 }
                 self.get("ok")
-                    .button("disable");
+                    .iconbutton("disable");
                 if (global.DEBUG) console.debug("Importing...");
                 S.insert_data([], datum);
                 return true;
@@ -681,7 +681,7 @@
             .text(data)
             .select();
         this.get("ok")
-            .button("disable");
+            .iconbutton("disable");
     };
 
     widget._init_extras = function ($dlg) {
@@ -910,7 +910,7 @@
         self.get("study")
             .hide()
         self.get("optimise")
-            .button("disable");
+            .iconbutton("disable");
 
         var hoard = S.getClient()
             .hoard;
@@ -936,7 +936,7 @@
                         counts.N + counts.A + counts.X);
 
                 self.get("optimise")
-                    .button("enable");
+                    .iconbutton("enable");
             });
     };
 
