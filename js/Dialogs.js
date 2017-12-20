@@ -757,6 +757,15 @@
                 $("#about_dlg")
                     .squirrelDialog("open");
             });
+
+        self.get("change_language")
+            .on($.getTapEvent(), function () {
+                var fresh = self.get("language").val();
+                var stale = TX.language(fresh);
+                if (fresh !== stale)
+                    // Re-translate for new language
+                    TX.init();
+            });
     };
 
     widget._open_extras = function () {
@@ -785,6 +794,10 @@
         self.get("theme")
             .find("option[value='" + S.theme() + "']")
             .prop("selected", true);
+
+        self.get("language")
+            .val(TX.language());
+
     };
 
     widget._init_insert = function ($dlg) {

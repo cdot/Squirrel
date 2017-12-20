@@ -103,7 +103,9 @@ var Squirrel = {
             if (theme === "base") {
                 Cookies.remove("ui_theme");
             } else {
-                Cookies.set("ui_theme", theme);
+                Cookies.set("ui_theme", theme, {
+                    expires: 365
+                });
             }
         }
         return Cookies.get("ui_theme");
@@ -114,7 +116,9 @@ var Squirrel = {
             if (scale > 6) { // don't go below 6px
                 $("body")
                     .css("font-size", scale + "px");
-                Cookies.set("ui_scale", scale);
+                Cookies.set("ui_scale", scale, {
+                    expires: 365
+                });
             }
         }
         return Cookies.get("ui_scale");
@@ -129,12 +133,15 @@ var Squirrel = {
 
     S.autosave = function (on) {
         if (typeof on !== undefined) {
-            if (client.hoard.options.autosave !== on) {
-                client.hoard.options.autosave = on;
+            var ons = (on ? "on" : "off");
+            if (Cookies.get("ui_autosave") !== ons) {
+                Cookies.set("ui_autosave", ons, {
+                    expires: 365
+                });
                 Utils.sometime("update_save");
             }
         }
-        return client.hoard.options.autosave;
+        return Cookies.get("ui_autosave");
     };
 
     /**
@@ -260,7 +267,7 @@ var Squirrel = {
         if (global.DEBUG) console.debug("...save finished");
         Utils.sometime("update_save");
         if (client_ok && cloud_ok) {
-            if (client.hoard.options.autosave)
+            if (Cookies.get("ui_autosave") === "on")
                 $("#squeak_dlg")
                 .squirrelDialog("close");
             else
@@ -275,7 +282,9 @@ var Squirrel = {
                     severity: "error",
                     message: TX.tx("Save encountered errors")
                 });
-            client.hoard.options.autosave = false;
+            Cookies.set("ui_autosave", "off", {
+                expires: 365
+            });
         }
     }
 
@@ -514,7 +523,7 @@ var Squirrel = {
         var $sb = $("#save_button");
 
         if (us !== null) {
-            if (client.hoard.options.autosave) {
+            if (Cookies.get("ui_autosave") === "on") {
                 save_hoards();
             } else {
                 $sb.attr(
@@ -610,7 +619,7 @@ var Squirrel = {
                         S.squeak({
                             title: TX.tx("Error"),
                             severity: "error",
-                            message: TX.tx("Could not load cloud hoard.")
+                            message: TX.tx("Could not load cloud store")
                         });
                         $("#squeak_dlg")
                             .squirrelDialog("squeakAdd",

@@ -3,21 +3,17 @@
   "m": 0.5,
   "s": "$1 Tag$?($1!=1,e,)"
  },
- "$1 found": {
-  "m": 0.5,
-  "s": "$1 gefunden"
- },
  "$1 has changed": {
   "m": 0.5,
   "s": "$1 wurde geändert"
  },
  "$1 hoard can't be read for update": {
   "m": 0.5,
-  "s": "$1 horten kann nicht für die Aktualisierung zu lesen"
+  "s": "$1 Speicher kann nicht für die Aktualisierung zu lesen"
  },
  "$1 hoard exists, but can't be read.": {
   "m": 0.5,
-  "s": "$1 Hort vorhanden ist, aber nicht gelesen werden kann."
+  "s": "$1 Speicher vorhanden ist, aber nicht gelesen werden kann."
  },
  "$1 month$?($1!=1,s,)": {
   "m": 0.5,
@@ -25,15 +21,11 @@
  },
  "$1 store error: $2": {
   "m": 0.5,
-  "s": "$1 Shop Fehler: $2"
+  "s": "$1 Speicher Fehler: $2"
  },
  "$1 year$?($1!=1,s,)": {
   "m": 0.5,
   "s": "$1 Jahr$?($1!=1,e,)"
- },
- "'$1' not found": {
-  "m": 0.5,
-  "s": "\"$1\" nicht gefunden"
  },
  "... and $1 more change$?($1!=1,s,)": {
   "m": 0.5,
@@ -127,10 +119,6 @@
   "m": 0.5,
   "s": "Zugriff auf Google-Laufwerk konnte nicht genehmigen,"
  },
- "Could not load cloud hoard.": {
-  "m": 0.5,
-  "s": "Wolke Hort konnte nicht geladen werden."
- },
  "Could not open cloud store: $1": {
   "m": 0.5,
   "s": "Konnte nicht geöffnet Cloud Speicher: 1 €"
@@ -190,10 +178,6 @@
  "Error": {
   "m": 0.5,
   "s": "Fehler"
- },
- "Extras": {
-  "m": 0.5,
-  "s": "Extras:"
  },
  "Failed to load Google APIs: $1 $2": {
   "m": 0.5,
@@ -258,10 +242,6 @@
  "Pass:": {
   "m": 0.5,
   "s": "Weitergeben"
- },
- "Pathname of the image in your cloud store": {
-  "m": 0.5,
-  "s": "Pfadname des Bildes in Ihrer Cloud-Speicher"
  },
  "Pick characters": {
   "m": 0.5,
@@ -435,53 +415,13 @@
   "m": 0.5,
   "s": "Jahren"
  },
- "Cannot create": {
-  "m": 0.89,
-  "s": "Benutzer kann nicht erstellen"
- },
- "Folder not found": {
-  "m": 0.99,
-  "s": "Ordner nicht gefunden."
- },
  "It already exists": {
   "m": 0.89,
   "s": "besteht bereits"
  },
- "Cannot move": {
-  "m": 0.86,
-  "s": "Reifen kann nicht bewegt werden"
- },
  "It does not exist": {
   "m": 0.99,
   "s": "Er existiert nicht."
- },
- "New folder does not exist": {
-  "m": 0.92,
-  "s": "Der Ordner existiert nicht"
- },
- "Cannot delete": {
-  "m": 0.98,
-  "s": "Kann nicht gelöscht werden"
- },
- "Cannot rename": {
-  "m": 0.85,
-  "s": "Kann nicht umbenannt werden"
- },
- "Cannot change value of": {
-  "m": 0.85,
-  "s": "Wert kann nicht geändert werden."
- },
- "Cannot set reminder on": {
-  "m": 0.85,
-  "s": "Erinnerung kann nicht an festgelegt werden."
- },
- "Cannot cancel reminder on": {
-  "m": 0.85,
-  "s": "Erinnerung kann nicht an abgebrochen werden."
- },
- "Cannot constrain": {
-  "m": 0.85,
-  "s": "Kann nicht einschränken"
  },
  "Conflicts were detected while merging actions from the Cloud.": {
   "m": 0.85,
@@ -545,7 +485,7 @@
  },
  "Cannot use this image because of this error: $1": {
   "m": 0.85,
-  "s": "Verwenden Sie dieses Bild kann nicht aufgrund dieses Fehlers: undefined"
+  "s": "Verwenden Sie dieses Bild kann nicht aufgrund dieses Fehlers: $1"
  },
  "Change": {
   "m": 1,
@@ -563,10 +503,6 @@
   "m": 0.99,
   "s": "Abbilddatei auswählen"
  },
- "Choose a local image that will be copied and used to hide your data in the cloud.": {
-  "m": 0.85,
-  "s": "Wählen Sie ein lokales Bild, das kopiert und verwendet, um Ihre Daten in der Cloud zu verstecken."
- },
  "Click on a character position to see what character it is": {
   "m": 0.85,
   "s": "Klicken Sie auf eine Zeichenposition zu sehen, was es Charakter ist"
@@ -582,14 +518,6 @@
  "Confirm new password": {
   "m": 1,
   "s": "Neues Passwort bestätigen"
- },
- "Enable to automatically save whenever anything changes": {
-  "m": 0.36,
-  "s": "Updates automatisch checken, sobald diese Site aufgerufen wird."
- },
- "Enable to hide values until they are hovered over.": {
-  "m": 0.85,
-  "s": "Aktivieren Sie, um Werte zu verstecken, bis sie schwebte."
  },
  "Enter the name and value for the new entry": {
   "m": 0.85,
@@ -611,17 +539,13 @@
   "m": 0.85,
   "s": "Werte zu verstecken"
  },
- "Increase/decrease text size.": {
-  "m": 0.85,
-  "s": "Erhöhen/verringern der Textgröße."
- },
  "Insert copy from clipboard": {
   "m": 0.91,
   "s": "Einfügen per Zwischenablage"
  },
  "It was last modified on $1.": {
   "m": 0.85,
-  "s": "Es wurde zuletzt geändert am undefined."
+  "s": "Es wurde zuletzt geändert am $1."
  },
  "Larger": {
   "m": 1,
@@ -657,7 +581,7 @@
  },
  "New reminder will be due in $1 on $2": {
   "m": 0.85,
-  "s": "Neue Erinnerung wird in $2 auf undefined fällig"
+  "s": "Neue Erinnerung wird in $1 auf $2 fällig"
  },
  "Note that loading the JSON will only load folders that are not already in the database.": {
   "m": 0.85,
@@ -713,7 +637,7 @@
  },
  "Squirrel is Copyright © 2015-2017 Crawford Currie <a href=\"http://c-dot.co.uk\">http://c-dot.co.uk</a>": {
   "m": 0.85,
-  "s": "Eichhörnchen ist Copyright © 2015-2017 Crawford Currie </a> http://c-dot.co.uk undefined"
+  "s": "Squirrel ist Copyright © 2015-2017 Crawford Currie  <a href=\"http://c-dot.co.uk\">http://c-dot.co.uk</a>"
  },
  "Store path may not be empty": {
   "m": 0.85,
@@ -737,7 +661,7 @@
  },
  "This dialog lets you access the raw <a href=\"https://www.json.org/\">JSON</a> of the database. It can be used for:": {
   "m": 0.85,
-  "s": "In diesem Dialogfeld können Sie die rohen </a> JSON zugreifen undefined der Datenbank. Es kann für verwendet werden:"
+  "s": "In diesem Dialogfeld können Sie die rohen <a href=\"https://www.json.org/\">JSON</a> zugreifen undefined der Datenbank. Es kann für verwendet werden:"
  },
  "This preference will be saved in a cookie in this browser": {
   "m": 0.85,
@@ -806,5 +730,105 @@
  "This version was released on": {
   "m": 0.85,
   "s": "Diese Version wurde am veröffentlicht"
+ },
+ "Cannot ": {
+  "m": 1,
+  "s": "Kann nicht"
+ },
+ "add reminder to": {
+  "m": 0.86,
+  "s": "Erinnerung hinzufügen"
+ },
+ "cancel reminder": {
+  "m": 0.98,
+  "s": "Erinnerung abbrechen"
+ },
+ "delete": {
+  "m": 1,
+  "s": "löschen"
+ },
+ "change value of": {
+  "m": 0.89,
+  "s": "ändere den Wert von"
+ },
+ "move": {
+  "m": 1,
+  "s": "bewegen"
+ },
+ "create": {
+  "m": 1,
+  "s": "erstellen"
+ },
+ "rename": {
+  "m": 1,
+  "s": "Benutzer umbenennen"
+ },
+ "constrain": {
+  "m": 1,
+  "s": "einschränken"
+ },
+ "Parent folder not found": {
+  "m": 1,
+  "s": "Übergeordneter Ordner wurde nicht gefunden"
+ },
+ "New folder '$1' does not exist": {
+  "m": 0.85,
+  "s": "Neue Ordner '$1' ist nicht vorhanden"
+ },
+ "Could not load cloud store": {
+  "m": 0.85,
+  "s": "Cloud-Speicher konnte nicht geladen werden."
+ },
+ "Not found": {
+  "m": 1,
+  "s": "Nicht gefunden"
+ },
+ "$1 of $2 found": {
+  "m": 0.85,
+  "s": "$2 undefined gefunden"
+ },
+ "Automatically save whenever anything changes": {
+  "m": 0.85,
+  "s": "Automatisch gespeichert, wenn sich nichts ändert"
+ },
+ "Change language": {
+  "m": 1,
+  "s": "Sprache ändern"
+ },
+ "Choose a local image that will be copied and used to hide your cloud store.": {
+  "m": 0.85,
+  "s": "Wählen Sie ein lokales Bild, das kopiert und verwendet, um Ihre Cloud-Speicher zu verstecken."
+ },
+ "Database": {
+  "m": 1,
+  "s": "Datenbank"
+ },
+ "Enter the language code for a supported language": {
+  "m": 0.85,
+  "s": "Geben Sie den Sprachcode für eine unterstützte Sprache"
+ },
+ "Hide values until they are hovered over. Use if someone might be looking over your shoulder": {
+  "m": 0.85,
+  "s": "Werte zu verstecken, bis sie schwebte. Verwenden Sie, wenn jemand über die Schulter schauen könnte"
+ },
+ "Increase/decrease text size": {
+  "m": 0.85,
+  "s": "Erhöhen/verringern der Textgröße"
+ },
+ "Language": {
+  "m": 1,
+  "s": "Sprache"
+ },
+ "Path to the image in your cloud store": {
+  "m": 0.85,
+  "s": "Pfad zum Bild in Ihrem Cloud-Speicher"
+ },
+ "These preferences will be saved in cookies in your browser": {
+  "m": 0.85,
+  "s": "Diese Einstellungen werden in Cookies in Ihrem Browser gespeichert werden"
+ },
+ "User interface": {
+  "m": 1,
+  "s": "Benutzeroberfläche"
  }
 }

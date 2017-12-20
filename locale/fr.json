@@ -1,12 +1,4 @@
 {
- "Cannot create": {
-  "m": 0.97,
-  "s": "Création impossible !"
- },
- "Folder not found": {
-  "m": 1,
-  "s": "Dossier non trouvé"
- },
  "User": {
   "s": "Utilisateur",
   "m": 1
@@ -88,7 +80,7 @@
   "m": 0.85
  },
  "Cloud Store": {
-  "s": "Magasin de nuage",
+  "s": "Mémoire de nuage",
   "m": 0.85
  },
  "Colour scheme": {
@@ -98,14 +90,6 @@
  "Confirm new password": {
   "s": "Confirmer le nouveau mot de passe",
   "m": 1
- },
- "Enable to automatically save whenever anything changes": {
-  "s": "Permettent de sauvegarder automatiquement chaque fois que quelque chose change",
-  "m": 0.85
- },
- "Enable to hide values until they are hovered over.": {
-  "s": "Permettent de masquer les valeurs jusqu'à ce qu’ils sont survolés.",
-  "m": 0.85
  },
  "Enter the name and value for the new entry": {
   "s": "Entrez le nom et la valeur de la nouvelle entrée",
@@ -126,10 +110,6 @@
  "Hide Values": {
   "s": "Masquer les valeurs",
   "m": 0.85
- },
- "Increase/decrease text size.": {
-  "s": "(diminution) par",
-  "m": 0.79
  },
  "Insert copy from clipboard": {
   "s": "Collage depuis le presse-papiers",
@@ -216,7 +196,7 @@
   "m": 0.86
  },
  "Set the pathname of the image on your cloud store.": {
-  "s": "Définir le chemin d’accès de l’image sur votre banque de nuage.",
+  "s": "Définir le chemin d’accès de l’image dans votre mémoire de nuage.",
   "m": 0.85
  },
  "Settings": {
@@ -235,12 +215,12 @@
   "s": "L’écureuil est Copyright © 2015-2017 Crawford Currie <a href=\"http://c-dot.co.uk\">http://c-dot.co.uk</a>",
   "m": 0.85
  },
- "Store path may not be empty": {
-  "s": "Chemin d’accès du magasin ne peut pas être vide",
+ "Cloud store path may not be empty": {
+  "s": "Chemin d’accès du mémoire de nuage ne peut pas être vide",
   "m": 0.85
  },
- "Store path:": {
-  "s": "MAGASIN:",
+ "Cloud store path:": {
+  "s": "Chemin d’accès du mémoire de nuage:",
   "m": 0.85
  },
  "Text size": {
@@ -343,37 +323,9 @@
   "m": 0.99,
   "s": "Cela existe déjà."
  },
- "Cannot move": {
-  "m": 0.85,
-  "s": "Ne peut pas bouger"
- },
- "Cannot delete": {
-  "m": 1,
-  "s": "Suppression impossible"
- },
- "Cannot rename": {
-  "m": 0.85,
-  "s": "Impossible de renommer"
- },
  "It does not exist": {
   "m": 0.99,
   "s": "Il n'existe pas"
- },
- "Cannot change value of": {
-  "m": 0.74,
-  "s": "Impossible de changer la valeur de la propriété de carnet « %s »"
- },
- "Cannot set reminder on": {
-  "m": 0.67,
-  "s": "Définir un rappel"
- },
- "Cannot cancel reminder on": {
-  "m": 0.72,
-  "s": "Annulation impossible"
- },
- "Cannot constrain": {
-  "m": 0.85,
-  "s": "Ne peut pas contraindre"
  },
  "Save complete": {
   "m": 0.98,
@@ -427,9 +379,9 @@
   "m": 0.75,
   "s": "Vérifiez que vous avez saisi les bons nom d&apos;utilisateur et mot de passe."
  },
- "Could not load cloud hoard.": {
+ "Could not load cloud store": {
   "m": 0.62,
-  "s": "Impossible d&apos;ouvrir le trésor de nuage."
+  "s": "Impossible d'charger la mémoire de nuage"
  },
  "$1 store error: $2": {
   "m": 0.68,
@@ -441,7 +393,7 @@
  },
  "Could not open cloud store: $1": {
   "m": 0.85,
-  "s": "Pas pu ouvrir le magasin de nuage: $1"
+  "s": "Pas pu ouvrir la mémoire de nuage: $1"
  },
  "If you continue, only the client store will be available": {
   "m": 0.75,
@@ -491,14 +443,6 @@
   "m": 1,
   "s": "Recherche…"
  },
- "$1 found": {
-  "m": 0.94,
-  "s": "1 trouvé"
- },
- "'$1' not found": {
-  "m": 0.94,
-  "s": "%1 non trouvé"
- },
  "JSON has been loaded": {
   "m": 0.85,
   "s": "JSON a été chargé"
@@ -510,10 +454,6 @@
  "A copy": {
   "m": 1,
   "s": "Une copie"
- },
- "New folder does not exist": {
-  "m": 0.92,
-  "s": "Le dossier n'existe pas"
  },
  "Conflicts were detected while merging actions from the Cloud.": {
   "m": 0.85,
@@ -583,13 +523,9 @@
   "m": 1,
   "s": "Changer votre mot de passe"
  },
- "Choose a local image that will be copied and used to hide your data in the cloud.": {
-  "m": 0.85,
-  "s": "Choisissez une image locale qui sera copiée et utilisée pour cacher vos données dans le nuage."
- },
  "Choose an image file": {
   "m": 0.91,
-  "s": "Choisissez Une Image"
+  "s": "Choisissez un fichier image"
  },
  "Clear": {
   "m": 1,
@@ -597,7 +533,7 @@
  },
  "Database JSON": {
   "m": 0.85,
-  "s": "Base de données"
+  "s": "Base de données JSON"
  },
  "Delete entry": {
   "m": 1,
@@ -627,17 +563,13 @@
   "m": 1,
   "s": "Entrez votre nom d'utilisateur"
  },
- "Extras": {
-  "m": 1,
-  "s": "Extras"
- },
  "Generate random value": {
   "m": 0.8,
   "s": "Générer aléatoirement"
  },
  "Insert copy": {
   "m": 0.86,
-  "s": "Insérer une copie de"
+  "s": "Insérer une copie"
  },
  "New password": {
   "m": 1,
@@ -647,9 +579,9 @@
   "m": 1,
   "s": "OK"
  },
- "Pathname of the image in your cloud store": {
+ "Path to the image in your cloud store": {
   "m": 0.5,
-  "s": "de l'image"
+  "s": "Chemin vers l'image dans votre mémoire de nuage"
  },
  "Re-enter new password": {
   "m": 1,
@@ -673,11 +605,11 @@
  },
  "Select when you want to be reminded about": {
   "m": 0.85,
-  "s": "Sélectionnez si vous voulez être rappelé sur"
+  "s": "Sélectionnez quand vous voulez être rappelé à propos de"
  },
  "Set (or reset) reminder": {
   "m": 0.63,
-  "s": "ou de remise à zéro"
+  "s": "Définir (ou réinitialiser) le rappel"
  },
  "Set new master password": {
   "m": 0.91,
@@ -697,7 +629,7 @@
  },
  "Suggested value for": {
   "m": 0.67,
-  "s": "2550 ms) (valeur suggérée :"
+  "s": "Valeur suggérée pour"
  },
  "Tools/Options": {
   "m": 0.85,
@@ -725,7 +657,7 @@
  },
  "and everything under it?": {
   "m": 0.61,
-  "s": "-- Par-dessous ?"
+  "s": "et tout en dessous?"
  },
  "days": {
   "m": 1,
@@ -749,19 +681,19 @@
  },
  "Are popups blocked in your browser?": {
   "m": 0.85,
-  "s": "Fenêtres pop-up est bloquées dans votre navigateur ?"
+  "s": "Fenêtres pop-ups sont-elles bloquées dans votre navigateur?"
  },
  "Reading from cloud": {
   "m": 0.85,
-  "s": "Lecture à partir du cloud"
+  "s": "Lire cloud"
  },
  "Building UI": {
   "m": 0.85,
-  "s": "Interface utilisateur du bâtiment"
+  "s": "Construis l'interface utilisateur"
  },
  "Reading from client": {
   "m": 0.85,
-  "s": "Lecture du client"
+  "s": "Lire du client"
  },
  "Authentication": {
   "m": 1,
@@ -769,7 +701,7 @@
  },
  "Loading application": {
   "m": 0.85,
-  "s": "Application de chargement"
+  "s": "Charge l'application"
  },
  "Error in search expression": {
   "m": 0.85,
@@ -781,7 +713,7 @@
  },
  "After optimisation it will have $1 node$?($1!=1,s,) + $2 alarm$?($2!=1,s,) + $3 constraint$?($3!=1,s,) = $4 action$?($4!=1,s,).": {
   "m": 0.85,
-  "s": "Après optimisation, il aura $1 entrée($2!=1,s,) + $2 alarme($3!=1,s,) + $3 contrainte($3!=1,s,) = $4 action$?($4!=1,s,)."
+  "s": "Après optimisation, il aura $1 entrée$?($1!=1,s,) + $2 alarme$?($2!=1,s,) + $3 contrainte$?($3!=1,s,) = $4 action$?($4!=1,s,)."
  },
  "Optimise": {
   "m": 1,
@@ -793,7 +725,7 @@
  },
  "Optimising your cloud store will lose all the history, which will make it impossible for any client that is not completely up to date to synchronise. You have been warned!": {
   "m": 0.85,
-  "s": "L'optimisation de votre boutique en nuage perdra tout l'historique, ce qui empêchera tout client qui n'est pas complètement à jour de se synchroniser. Tu étais prévenu!"
+  "s": "L'optimisation de votre mémoire de nuage perdra tout l'histoire, ce qui empêchera tout client qui n'est pas complètement à jour de se synchroniser. Tu étais prévenu!"
  },
  "Security Details": {
   "m": 0.98,
@@ -801,10 +733,102 @@
  },
  "The cloud currently has $1 action$?($1!=1,s,) in the history.": {
   "m": 0.85,
-  "s": "Le cloud a actuellement $1 action$?($1!=1,s,) dans l'historique."
+  "s": "Le cloud a actuellement $1 action$?($1!=1,s,) dans l'histoire."
  },
  "This version was released on": {
   "m": 0.85,
   "s": "Cette version a été publiée le"
+ },
+ "Cannot ": {
+  "m": 1,
+  "s": "Ne peux pas"
+ },
+ "add reminder to": {
+  "m": 0.86,
+  "s": "Ajouter un rappel a"
+ },
+ "cancel reminder": {
+  "m": 0.85,
+  "s": "annuler le rappel"
+ },
+ "delete": {
+  "m": 1,
+  "s": "supprimer"
+ },
+ "change value of": {
+  "m": 0.89,
+  "s": "Changer la valeur de"
+ },
+ "move": {
+  "m": 1,
+  "s": "déplacer"
+ },
+ "create": {
+  "m": 1,
+  "s": "créer"
+ },
+ "rename": {
+  "m": 1,
+  "s": "renommer"
+ },
+ "constrain": {
+  "m": 1,
+  "s": "gêner"
+ },
+ "Parent folder not found": {
+  "m": 0.85,
+  "s": "Dossier parent introuvable"
+ },
+ "New folder '$1' does not exist": {
+  "m": 0.85,
+  "s": "Le nouveau dossier 'undefined' n'existe pas"
+ },
+ "Not found": {
+  "m": 1,
+  "s": "Introuvable"
+ },
+ "$1 of $2 found": {
+  "m": 0.85,
+  "s": "$1 de $2 trouvé"
+ },
+ "Language": {
+  "m": 1,
+  "s": "Langue"
+ },
+ "Automatically save whenever anything changes": {
+  "m": 0.85,
+  "s": "Enregistrer automatiquement chaque fois que quelque chose change"
+ },
+ "Change language": {
+  "m": 1,
+  "s": "Changer la langue"
+ },
+ "Database": {
+  "m": 1,
+  "s": "Base de données"
+ },
+ "Enter the language code for a supported language": {
+  "m": 0.85,
+  "s": "Entrez le code de langue pour un langage pris en charge"
+ },
+ "Hide values until they are hovered over. Use if someone might be looking over your shoulder": {
+  "m": 0.85,
+  "s": "Masquer les valeurs jusqu'à ce qu’ils sont survolés. Utiliser si quelqu'un pourrait être regardant par-dessus votre épaule"
+ },
+ "Increase/decrease text size": {
+  "m": 0.85,
+  "s": "Augmenter/diminuer la taille du texte"
+ },
+ "These preferences will be saved in cookies in your browser": {
+  "m": 0.85,
+  "s": "Ces préférences seront enregistrées dans les cookies dans votre navigateur"
+ },
+ "User interface": {
+  "m": 1,
+  "s": "Interface utilisateur"
+ },
+ "Choose a local image that will be copied and used to hide your cloud store.": {
+  "m": 0.85,
+  "s": "Choisissez une image locale qui sera copiée et utilisée pour masquer votre magasin nuage."
  }
 }

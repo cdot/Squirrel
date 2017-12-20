@@ -97,9 +97,6 @@ function Hoard(data) {
             // doesn't get the autosave option when it spends most of
             // its time disconnected.
 
-            // Is autosave turned on?
-            autosave: false,
-
             // What's the server path to the hoard store?
             store_path: null
         };

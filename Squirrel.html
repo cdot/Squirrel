@@ -2,8 +2,8 @@
 <html>
   <head>
     <meta charset="UTF-8">
-    <!-- meta name="cache-control" content="public">
-    <meta name="expires" content="Wed, 1 Jan 2025 12:00:00 GMT" -->
+    <meta name="cache-control" content="public">
+    <meta name="expires" content="Wed, 1 Jan 2025 12:00:00 GMT">
     <!-- for ios 7 style, multi-resolution icon of 152x152 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-barstyle" content="black-translucent">
@@ -100,14 +100,25 @@
     </div>
     
     <!-- Dialogs -->    
-    <div id="extras_dlg" class="dlg-dialog TX_title" title="Extras">
+    <div id="extras_dlg" class="dlg-dialog TX_title" title="Settings">
       <table>
+        <tr>
+          <th colspan="2">
+            <span class="TX_text">User interface</span>
+            <div class="TX_text twisted" data-open="ui-icon-info">
+              These preferences will be saved in cookies in your browser
+            </div>
+          </th>
+        </tr>
         <tr>
           <td class="TX_text">Autosave</td>
           <td>
             <input type="checkbox" data-id="autosave" />
-            <div class="twisted TX_text" data-open="ui-icon-info">
-              Enable to automatically save whenever anything changes
+            <div class="twisted" data-open="ui-icon-info">
+              <span class="TX_text">
+                Automatically save whenever anything changes
+              </span>
+              
             </div>
           </td>
         </tr>
@@ -117,10 +128,20 @@
             <input type="checkbox" data-id="hidevalues" />
             <div class="twisted" data-open="ui-icon-info">
               <span class="TX_text">
-                Enable to hide values until they are hovered over.
+                Hide values until they are hovered over. Use if someone
+                might be looking over your shoulder
               </span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="TX_text">Language</td>
+          <td>
+            <input type="text" data-id="language" />
+            <button data-id="change_language" data-icon="ui-icon-shuffle" title="Change language" class="TX_text TX_title"></button>
+            <div class="twisted TX_text" data-open="ui-icon-info">
               <span class="TX_text">
-                This preference will be saved in a cookie in this browser
+                Enter the language code for a supported language
               </span>
             </div>
           </td>
@@ -132,10 +153,7 @@
             <button data-id="smaller" style="font-size:smaller" title="Smaller" class="TX_title TX_text">Aa</button>
             <span class="twisted TX_text" data-open="ui-icon-info">
               <span class="TX_text">
-                Increase/decrease text size.
-              </span>
-              <span class="TX_text">
-                This preference will be saved in a cookie in this browser
+                Increase/decrease text size
               </span>
             </span>
           </td>
@@ -180,6 +198,7 @@
             </div>
           </td>
         </tr>
+        <tr><th class="TX_text" colspan="2">Database</th></tr>
         <tr>
           <td class="TX_text">Cloud Store</td>
           <td>
@@ -193,21 +212,21 @@
           </td>
         </tr>
         <tr>
-          <td class="TX_text">Raw JSON</td>
-          <td>
-            <button data-id="json" class="TX_text">View/Edit</button>
-          </td>
-        </tr>
-        <tr>
           <td class="TX_text">Optimise</td>
           <td>
             <button data-id="optimise" class="TX_text">Optimise</button>
           </td>
         </tr>
         <tr>
-          <td colspan="2">
-            <button data-id="about" class="TX_text">About Squirrel</button>
+          <td class="TX_text">Raw JSON</td>
+          <td>
+            <button data-id="json" class="TX_text">View/Edit</button>
           </td>
+        </tr>
+        <tr>
+          <th colspan="2">
+            <button data-id="about" class="TX_text">About Squirrel</button>
+          </th>
         </tr>
       </table>
 
@@ -440,7 +459,7 @@
           <p class="twisted-body">
             <span class="TX_text">
               Choose a local image that will be copied and used to hide
-              your data in the cloud.
+              your cloud store.
             </span>
             <span class="TX_text">
               This should be a complex colour image of at least
@@ -474,7 +493,7 @@
         <label for="store_settings_storepath" class="TX_text">
           Store path:
         </label>
-        <input data-id="storepath" type="text" value="" class="TX_title" title="Pathname of the image in your cloud store" autofocus/>
+        <input data-id="storepath" type="text" value="" class="TX_title" title="Path to the image in your cloud store" autofocus/>
       </p>
       <p>
         <button data-id="ok" class="TX_text">OK</button>

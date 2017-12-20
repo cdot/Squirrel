@@ -64,7 +64,9 @@
     function hide_values(on) {
         if (typeof on !== "undefined") {
             var is_on = (Cookies.get("ui_hidevalues") == "on");
-            Cookies.set("ui_hidevalues", on ? "on" : "off");
+            Cookies.set("ui_hidevalues", on ? "on" : "off", {
+                expires: 365
+            });
             if (on !== is_on) {
                 $(".tree-value:not(:hover)")
                     .each(

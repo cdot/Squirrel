@@ -35,11 +35,13 @@
         }
     },
     "dependencies": {
+        "axios": ">=0.17.1",
         "beautifyjs": "0.0.1",
         "chai": "^4.1.2",
         "clean-css": ">=4.1.9",
         "clean-css-cli": ">=4.1.10",
-        "eslint": ">=4.13.0",
+        "eslint": ">=4.13.1",
+        "jsdom": ">=11.5.1",
         "npm-check": "^5.5.2",
         "uglify-es": ">=3.2.1"
     },

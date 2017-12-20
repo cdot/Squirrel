@@ -1,12 +1,15 @@
-/*@preserve Copyright (C) 2015 Crawford Currie http://c-dot.co.uk license MIT*/
+/*@preserve Copyright (C) 2015-2017 Crawford Currie http://c-dot.co.uk license MIT*/
 
+/* eslint-env jquery */
 /* eslint no-eval: 1 */
 /* global global:true */
 /* global module */
 /* global Utils */
+/* global Cookies */
 
 /**
- * Translations module. Determines the language to use from the browser.
+ * Translations module. Guesses the language to use from cookies, or
+ * from the browser locale.
  *
  * Translatable strings are declared in code using `TX.tx(string)`.
  * These are format strings that may be populated with expandable arguments
@@ -14,26 +17,48 @@
  *
  * Strings can also be reaped from HTML using classes:
  * `<... class="TX_title" title="string">` or
+ * TX_title will translate the title= tag in that node.
  * `<... class="TX_text">content</...>` 
+ * TX_text will translate all text nodes and title attributes in the
+ * HTML under the tagged node, recursively.  Individual text nodes are
+ * translated individually, so "x<b>y</b>z" will require tranlations
+ * of 3 strings, !x", "y" and "z".
  * `<... class="TX_html">content</...>` 
- * TX_title will translate the title= tag in that node. TX_text will
- * translate all text nodes and title attributes in the HTML under the
- * tagged node, recursively.  Individual text nodes are translated
- * individually, so "x<b>y</b>z" will require tranlations of 3
- * strings, !x", "y" and "z". TX_html will translate the entire HTML
- * subtree under the tagged node in one big block with embedded tags,
- * so should not be used on anything where handlers might be attached.
+ * TX_html will translate the entire HTML subtree under the tagged
+ * node in one big block with embedded tags, so should not be used on
+ * anything where handlers might be attached.
  * TX_text and TX_html should never be used together on the same node.
- * 
+ * HTML reaping is done by the build/extractTX.js node.js script.
  */
 var TX = {
     lingo: undefined,
 
-    langFromLocale: function () {
+    // Map from DOM node to cache of original English strings. Each
+    // entry for a node has three possible fields; title, text and html,
+    // that represent the context of the node for each case.
+    originals: new WeakMap(),
+
+    /**
+     * Getter/setter for the current language. Just sets the language,
+     * does not re-translate the DOM. Setter returns old language.
+     */
+    language: function (code) {
         "use strict";
 
-        TX.lingo = window.navigator.userLanguage ||
-            window.navigator.language || "en";
+        var old = TX.lingo;
+
+        if (typeof code !== "undefined") {
+            // Won't apply until we clear caches and restart
+            TX.lingo = code;
+            Cookies.set("ui_lang", code, {
+                expires: 365
+            });
+        } else if (!old) {
+            TX.lingo = Cookies.get("ui_lang") ||
+                window.navigator.userLanguage ||
+                window.navigator.language || "en";
+        }
+        return old;
     },
 
     translations: null,
@@ -53,15 +78,16 @@ var TX = {
      * Requires jQuery
      * @param tx_ready function to call when it's loaded
      */
-    init: function (tx_ready) {
+    init: function (tx_ready, tx_fail) {
         "use strict";
 
         if (!TX.lingo)
-            TX.langFromLocale();
+            TX.language();
 
         if (/^en(\b|$)/i.test(TX.lingo)) {
             if (global.DEBUG) console.debug("Using language 'en'");
-            tx_ready();
+            if (tx_ready)
+                tx_ready();
             return;
         }
 
@@ -71,16 +97,26 @@ var TX = {
                     TX.translations = data;
                     $("body")
                         .each(function () {
-                            TX.translateDOM(this, TX.tx, false);
+                            TX.translateDOM(this, function (s) {
+                                var tx = TX.translations[TX.clean(s)];
+                                if (typeof tx !== "undefined")
+                                    return tx.s;
+                                return s;
+                            });
                         });
-                    if (global.DEBUG) console.debug(
-                        "Using language '" + TX.lingo + "'");
-                    tx_ready();
+                    if (global.DEBUG)
+                        console.debug("Using language '" + TX.lingo + "'");
+                    if (tx_ready)
+                        tx_ready();
                 },
                 error: function (a, b, c) {
                     var m = /^(.+)-.+/.exec(TX.lingo);
-                    if (global.DEBUG) console.debug(
-                        "Failed to load " + TX.lingo + ".json: " + c.message);
+                    if (global.DEBUG)
+                        console.debug("Failed to load locale/" +
+                            TX.lingo + ".json: " + c.message);
+                    if (tx_fail)
+                        tx_fail("Failed to load locale/" + TX.lingo +
+                            ".json: " + c.message);
                     if (m)
                         TX.lingo = m[1];
                     else
@@ -92,7 +128,8 @@ var TX = {
 
     /**
      * Find all tagged strings under the given DOM node and translate them
-     * in place.
+     * in place. The original string is held in dataset so that dynamic changes
+     * of language are possible (requires HTML5 dataset)
      * @param node root of the DOM tree to process
      * @param translate function to call on each string to perform the
      * translation. if this function returns undefined, the string will
@@ -110,17 +147,30 @@ var TX = {
                 .indexOf(" " + thatClass + " ") >= 0);
         }
 
-        var t;
+        var t, attrs;
+
+        if (!TX.originals.has(node))
+            TX.originals.set(node, attrs = {});
+        else
+            attrs = TX.originals.get(node);
 
         if (node.nodeType == 3) {
+            // text node
             if (translating && /\S/.test(node.nodeValue)) {
-                t = translate(node.nodeValue)
-                if (typeof t !== "undefined")
-                    node.nodeValue = t;
+                t = attrs.text;
+                if (typeof t === "undefined")
+                    attrs.text = t = node.nodeValue;
+                if (t) {
+                    t = translate(t);
+                    if (t)
+                        node.nodeValue = t;
+                }
             }
         } else {
             if (translating || hasClass(node, "TX_title")) {
-                t = node.title;
+                t = attrs.title;
+                if (typeof t === "undefined")
+                    attrs.title = t = node.title;
                 if (t) {
                     t = translate(t);
                     if (typeof t !== "undefined")
@@ -128,9 +178,14 @@ var TX = {
                 }
             }
             if (hasClass(node, "TX_html")) {
-                t = translate(node.innerHTML);
-                if (typeof t !== "undefined")
-                    node.innerHTML = t;
+                t = attrs.html;
+                if (typeof t === "undefined")
+                    attrs.html = t = node.innerHTML;
+                if (t) {
+                    t = translate(t);
+                    if (t)
+                        node.innerHTML = t;
+                }
             } else {
                 if (hasClass(node, "TX_text"))
                     translating = true;
@@ -145,7 +200,9 @@ var TX = {
     /**
      * Translate and expand a string (and optional parameters)
      * @param s the string to expand. All other arguments are used
-     * to expand placeholders in the string, per Utils.expandTemplate.
+     * to expand placeholders in the string, per Utils.expandTemplate
+     * (unless noexpand)
+     * @param noexpand don't expand template strings
      */
     tx: function () {
         "use strict";
