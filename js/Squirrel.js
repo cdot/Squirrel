@@ -1273,7 +1273,7 @@ var Squirrel = {
      */
     S.add_child_node = function ($node, title, value) {
         var p = $node.tree("getPath");
-        p.push(title);
+        p = p.concat(title);
         var e = {
             type: "N",
             path: p,
