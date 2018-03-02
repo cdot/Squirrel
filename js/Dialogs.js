@@ -881,7 +881,10 @@
             this.get("value_parts")
                 .show();
             this.get("key")
-                .autocomplete("enable");
+                .autocomplete("enable")
+                .select();
+            this.get("value")
+                .val("");
         } else {
             this.get("value_help")
                 .hide();
@@ -890,7 +893,8 @@
             this.get("value_parts")
                 .hide();
             this.get("key")
-                .autocomplete("disable");
+                .autocomplete("disable")
+                .select();
         }
 
         this._validateUniqueKey();
