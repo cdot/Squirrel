@@ -70,3 +70,16 @@ You can test using `test/dropbox.html`
 
 When you are ready, `make dropbox.html`.
 
+## Debugging on Android
+
+https://developers.google.com/web/tools/chrome-devtools/remote-debugging/
+
+`http://192.168.1.11/Squirrel/Squirrel.html?debug=1&plaintext=1`
+
+### URL parameters
+
+`debug=1` for console messages
+
+`plaintext=1` for unencrypted store
+
+`dumpcloud=1` to dump the cloud

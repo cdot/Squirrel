@@ -909,9 +909,16 @@ var Squirrel = {
         case "enable":
             if (contextMenuDisables > 0)
                 contextMenuDisables--;
+            if (global.DEBUG) console.log("Context menu disables " +
+                                          contextMenuDisables);
+            if (contextMenuDisables <= 0)
+                $("body").contextmenu("option", "autoTrigger", true);
             break;
         case "disable":
             contextMenuDisables++;
+            if (global.DEBUG) console.log("Context menu disables " +
+                                          contextMenuDisables);
+            $("body").contextmenu("option", "autoTrigger", false);
             break;
         default:
             return $("body")
@@ -934,8 +941,9 @@ var Squirrel = {
         var is_open = $node.hasClass("tree-open");
         var $root = $("body");
 
-        if (global.DEBUG) console.debug("contextmenu on " + $node.data("key") +
+        if (global.DEBUG) console.debug("beforeOpen contextmenu on " + $node.data("key") +
             " " + is_leaf);
+
         $root
             .contextmenu("showEntry", "add_alarm", !has_alarm && !is_root)
             .contextmenu("showEntry", "add_subtree",
@@ -1132,7 +1140,7 @@ var Squirrel = {
             ],
             preventContextMenuForPopup: true,
             preventSelect: true,
-            taphold: true,
+            //taphold: true,
             beforeOpen: before_menu_open,
             select: handle_menu_choice
         };
@@ -1498,18 +1506,22 @@ var Squirrel = {
     // on ready
     $(function () {
 
+        var qs = Utils.parse_query_params();
+
+        if (qs.debug) {
+            global.DEBUG = true;
+            console.log("Debug enabled");
+            if ($.isTouchCapable && $.isTouchCapable()) {
+                console.log("Device is touch-capable");
+            }
+        }
+
         if (global.DEBUG) console.log(
             "Device is " + window.screen.width + " X " +
             window.screen.height + " Body is " +
             $("body")
             .width() + " X " + $("body")
             .height());
-
-        var qs = Utils.parse_query_params();
-
-        if (qs.debug) {
-            global.DEBUG = true;
-        }
 
         if (qs.plaintext)
             plaintext_store = true;

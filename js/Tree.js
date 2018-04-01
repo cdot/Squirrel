@@ -217,6 +217,7 @@
                 .on($.isTouchCapable && $.isTouchCapable() ?
                     "doubletap" : "dblclick",
                     function (e) {
+                        if (global.DEBUG) console.debug("Double-click 1");
                         e.preventDefault();
                         self.editKey();
                     });
@@ -233,6 +234,7 @@
                     .on($.isTouchCapable && $.isTouchCapable() ?
                         "doubletap" : "dblclick",
                         function (e) {
+                            if (global.DEBUG) console.debug("Double-click 2");
                             e.preventDefault();
                             self.editValue();
                         });
