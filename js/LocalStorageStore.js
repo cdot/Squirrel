@@ -41,6 +41,8 @@ function LocalStorageStore(params) {
     AbstractStore.call(this, params);
 }
 
+global.CLOUD_STORE = LocalStorageStore;
+
 LocalStorageStore.prototype = Object.create(AbstractStore.prototype);
 
 LocalStorageStore.prototype.options = function () {

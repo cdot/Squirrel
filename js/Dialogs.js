@@ -128,7 +128,7 @@
 
         $signin
             .off($.getTapEvent())
-            .on($.getTapEvent(), "p", sign_in);
+            .on($.getTapEvent(), sign_in);
 
         $user.off("change")
             .val(options.store.user());
