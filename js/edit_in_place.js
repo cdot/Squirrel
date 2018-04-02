@@ -8,8 +8,8 @@
     $.fn.edit_in_place = function (options) {
 
         var $this = $(this);
-        var h = options.height || $this.height();
-        var w = options.width || $this.width();
+        var h = options.height || $this.height() || "1em";
+        var w = options.width || $this.width() || "1em";
         var changed = options.changed ||
             function ( /*text*/ ) {
                 return $this.text();

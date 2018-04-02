@@ -3,19 +3,19 @@ FIND         := find . -name 'jquery*' -prune -o -name
 DATE         := 's/BUILD_DATE/$(shell date)/g'
 SQUIRREL_JS  := $(shell cat Squirrel.html | \
 		grep '<script class="compressable" src=' $^ | \
-		sed -e 's/.*src="//;s/".*//g' )
+		sed -e 's/.*src="//;s/[?"].*//g' )
 STORES_JS    := $(wildcard js/*Store.js)
 TESTS_JS     := $(wildcard js/test/*.js test/*.js)
 SQUIRREL_CSS := $(shell cat Squirrel.html | \
 		grep '<link class="compressable"' $^ | \
-		sed -e 's/.*href="//;s/".*//g' )
+		sed -e 's/.*href="//;s/[?"].*//g' )
 
 HELP_JS      := $(shell cat help.html | \
 		grep '<script class="compressable" src=' $^ | \
-		sed -e 's/.*src="//;s/".*//g' )
+		sed -e 's/.*src="//;s/[?"].*//g' )
 HELP_CSS     := $(shell cat help.html | \
 		grep '<link class="compressable"' $^ | \
-		sed -e 's/.*href="//;s/".*//g' )
+		sed -e 's/.*href="//;s/["?].*//g' )
 
 # The min target supports generating a minified test version, halfway to a
 # release
@@ -44,6 +44,9 @@ min:	$(patsubst %.js,%.min.js,$(SQUIRREL_JS) $(STORES_JS)) \
 	$(patsubst %.js,%.map,$(SQUIRREL_JS) $(STORES_JS)) \
 	$(patsubst %.css,%.min.css,$(SQUIRREL_CSS))
 	@echo "Made min"
+
+Squirrel.html : $(SQUIRREL_JS)
+	perl build/reversion.pl $@
 
 # Release 
 
@@ -101,7 +104,7 @@ release: release/Squirrel.html release/help.html \
 	$(patsubst %.js,%.min.js,$(patsubst js/%,release/js/%,$(STORES_JS))) \
 	$(patsubst images/%,release/images/%,$(wildcard images/*))
 	@-rm -f release/js/*.map
-	echo $^ built
+	@echo $^ built
 
 # Tests
 

@@ -5,7 +5,7 @@
 /* global TX */
 /* global Utils */
 /* global Cookies */
-/* global Clipboard */
+/* global ClipboardJS */
 /* global AbstractStore */
 /* global EncryptedStore */
 /* global LocalStorageStore */
@@ -1149,7 +1149,7 @@ var Squirrel = {
             .contextmenu(menu);
 
         S.valueCopyClipboard =
-            new Clipboard(".ui-contextmenu li[data-command='copy_value']", {
+            new ClipboardJS(".ui-contextmenu li[data-command='copy_value']", {
                 text: function () {
                     var $node = $menuTarget;
                     if (global.DEBUG) console.debug("clip val from: " +
@@ -1159,7 +1159,7 @@ var Squirrel = {
             });
 
         S.treeCopyClipboard =
-            new Clipboard(".ui-contextmenu li[data-command='make_copy']", {
+            new ClipboardJS(".ui-contextmenu li[data-command='make_copy']", {
                 text: function () {
                     var $node = $menuTarget;
                     if (global.DEBUG) console.debug("clip json from: " +
