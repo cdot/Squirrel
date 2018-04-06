@@ -1,6 +1,6 @@
 # Copyright (C) 2015-2017 Crawford Currie http://c-dot.co.uk / MIT
 FIND         := find . -name 'jquery*' -prune -o -name
-DATE         := 's/BUILD_DATE/$(shell date)/g'
+DATE_SED     := sed -e 's/BUILD_DATE/$(shell date)/g'
 SQUIRREL_JS  := $(shell cat Squirrel.html | \
 		grep '<script class="compressable" src=' $^ | \
 		sed -e 's/.*src="//;s/[?"].*//g' )
@@ -92,11 +92,12 @@ release/images/% : images/%
 	@mkdir -p release/images
 	cp $^ $@
 
-release/%.html : %.html
+release/%.html : %.html build/release.sed Makefile
 	@mkdir -p release
-	cat $^ | \
-	sed -E -f build/release.sed | \
-	sed -e $(DATE) > $@
+	cat Squirrel.html \
+	| $(DATE_SED) \
+	| sed -E -f build/release.sed \
+	> $@
 
 release: release/Squirrel.html release/help.html \
 	release/js/help.min.js release/css/Squirrel.min.css \

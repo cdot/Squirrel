@@ -75,6 +75,7 @@ When you are ready, `make dropbox.html`.
 https://developers.google.com/web/tools/chrome-devtools/remote-debugging/
 
 `http://192.168.1.11/Squirrel/Squirrel.html?debug=1&plaintext=1`
+`http://192.168.1.11/Squirrel/Squirrel.html?debug=1&store=GoogleDriveStore`
 
 ### URL parameters
 
