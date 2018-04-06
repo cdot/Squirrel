@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 Crawford Currie http://c-dot.co.uk / MIT
+# Copyright (C) 2015-2018 Crawford Currie http://c-dot.co.uk / MIT
 FIND         := find . -name 'jquery*' -prune -o -name
 DATE_SED     := sed -e 's/BUILD_DATE/$(shell date)/g'
 SQUIRREL_JS  := $(shell cat Squirrel.html | \
@@ -49,7 +49,10 @@ Squirrel.html : $(SQUIRREL_JS)
 	perl build/reversion.pl $@
 
 # Release 
-
+# The release is built by:
+# 1. Combining all the non-store js into a single file and minifying it
+# 2. Combining all the css into a single file and minifying it
+# 3. Compressing all the store .js to .min.js
 release/js/Squirrel.min.js : $(SQUIRREL_JS)
 	@mkdir -p release/js
 	uglifyjs \
