@@ -262,36 +262,43 @@ Utils.execute_queue = function (q) {
  * executes, CSS gets loaded using <link>, HTML gets loaded and appended
  * to the document body.
  * @param libs list of resources
- * @param uncompressed true to load uncompressed libs, otherwise use min
- * @param on_loaded is called when all libs have been loaded
+ * @param onload is called for each file loaded
+ * @param onfail is called for each load that failed
  */
-Utils.load = function (libs, uncompressed, on_loaded) {
+Utils.load = function (libs, onload, onfail) {
     var expect = {};
+    var failed = {};
 
     // action when a resource is loaded
-    var _loaded = function (file) {
+    function _done(file) {
         delete expect[file];
         if (Object.keys(expect)
             .length === 0) {
-            if (typeof on_loaded === "function") {
-                on_loaded();
+            if (Object.keys(failed).length > 0) {
+                if (typeof onfail === "function") {
+                    onfail(failed);
+                }
+            } else if (typeof onload === "function") {
+                onload();
             }
         }
     };
 
+    function _failed(file, mess) {
+        failed[file] = mess;
+        _done(file);
+    }
+
     // fire off a resource load
     var _add_load = function (file) {
-        if (uncompressed)
-            file = file.replace(".min.", ".");
-
         expect[file] = true;
         if (/\.js$/.test(file)) {
             $.getScript(file)
                 .done(function () {
-                    _loaded(file);
+                    _done(file);
                 })
-                .fail(function () {
-                    debugger;
+                .fail(function (jqxhr, settings, exception) {
+                    _failed(file, exception);
                 });
         } else if (/\.css$/.test(file)) {
             $("link")
@@ -301,16 +308,16 @@ Utils.load = function (libs, uncompressed, on_loaded) {
                     rel: "stylesheet"
                 })
                 .attr("href", file);
-            _loaded(file);
+            _done(file); // SMELL: no error checking
         } else if (/\.html$/.test(file)) {
             $.get(file)
                 .done(function (data) {
                     $(data)
                         .appendTo("body");
-                    _loaded(file);
+                    _done(file);
                 })
-                .fail(function () {
-                    debugger;
+                .fail(function (jqXHR, textStatus, errorThrown) {
+                    _failed(file, errorThrown);
                 });
         }
     };

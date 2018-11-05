@@ -175,8 +175,10 @@ describe('Hoard', function() {
 	    function(e) {
 		assert(false, 'Should not be called');
 	    });
-	assert.equal(c.message,
-                     "Cannot create 'Fine-dining': It already exists");
+	assert.equal(
+            c.message,
+            "Cannot create 'Fine-dining': It already exists @"
+            + new Date("1 Jan 2000"));
         assert.deepEqual(c.conflict, cloud_data.actions[0]);
     });
     

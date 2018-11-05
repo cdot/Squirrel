@@ -11,7 +11,7 @@
 /* global LocalStorageStore */
 /* global StegaStore */
 /* global Hoard */
-/* global UNCOMPRESSED */
+/* global UNMINIFIED */
 
 /*
  * The Squirrel Application namespace and UI.
@@ -43,7 +43,6 @@ var Squirrel = {
     // flags
     var useSteganography = false;
     var dump_cloud = false;
-    var plaintext_store = false;
 
     // undo stack
     var undos = [];
@@ -571,7 +570,7 @@ var Squirrel = {
 
     /**
      * STEP 6: Called when we have a (possibly empty) client hoard.
-     *  Try and synch it from the cloud.
+     * Try and synch it from the cloud.
      */
     function step_6_load_cloud_hoard() {
         if (cloud.store) {
@@ -760,7 +759,7 @@ var Squirrel = {
 
     /**
      * STEP 3: Login, fill in details the stores didn't provide, prompt
-     * is needed.
+     * if needed.
      */
     function step_3_identify_user() {
         var uReq = true;
@@ -825,7 +824,8 @@ var Squirrel = {
     }
 
     /**
-     * STEP 2: Once the cloud store is loaded, we can move on to the client store.
+     * STEP 2: Initialise the client store. This sets up the store but
+     * doesn't read anything yet.
      */
     function step_2_init_client_store() {
         // new LocalStorageStore({
@@ -852,22 +852,26 @@ var Squirrel = {
             }
         };
 
-        if (global.DEBUG && plaintext_store)
+        if (typeof global.URLPARAMS.plaintext !== "undefined")
             p.understore(p);
         else
             new EncryptedStore(p);
     }
 
     /**
-     * STEP 1: Establish contact with the cloud, and get user details.
+     * STEP 1: Initialise the cloud store, and prompt for user details.
+     * This step will establish initial contact with OAuth2 stores, but
+     * it won't modify anything in the store or download any data.
      */
     function step_1_init_cloud_store() {
+        // Build parameter block passed to the store constructors.
         var p = {
             ok: function () {
                 cloud.store = this;
                 // Chain the client store startup
                 Utils.soon(step_2_init_client_store);
             },
+
             fail: function (e) {
                 S.squeak({
                     title: TX.tx("Warning"),
@@ -882,23 +886,25 @@ var Squirrel = {
                         severity: "warning",
                         message: TX.tx("If you continue, only the client store will be available")
                     });
+            },
+
+            // 'understore' is used by layered stores to initialise the
+            // store that underlies them.
+            understore: function (pp) {
+                // global.CLOUD_STORE is a constant set by the low-level
+                // store module selected by dynamic Utils.load
+                if (useSteganography) {
+                    pp.understore = function (ppp) {
+                        return new global.CLOUD_STORE(ppp);
+                    };
+                    return new StegaStore(pp);
+                } else {
+                    return new global.CLOUD_STORE(pp);
+                }
             }
         };
 
-        p.understore = function (pp) {
-            // global.CLOUD_STORE is a constant set by the low-level
-            // store module selected by dynamic load
-            if (useSteganography) {
-                pp.understore = function (ppp) {
-                    return new global.CLOUD_STORE(ppp);
-                };
-                return new StegaStore(pp);
-            } else {
-                return new global.CLOUD_STORE(pp);
-            }
-        };
-
-        if (global.DEBUG && plaintext_store)
+        if (typeof global.URLPARAMS.plaintext !== "undefined")
             return p.understore(p);
         else
             return new EncryptedStore(p);
@@ -910,14 +916,14 @@ var Squirrel = {
             if (contextMenuDisables > 0)
                 contextMenuDisables--;
             if (global.DEBUG) console.log("Context menu disables " +
-                                          contextMenuDisables);
+                contextMenuDisables);
             if (contextMenuDisables <= 0)
                 $("body").contextmenu("option", "autoTrigger", true);
             break;
         case "disable":
             contextMenuDisables++;
             if (global.DEBUG) console.log("Context menu disables " +
-                                          contextMenuDisables);
+                contextMenuDisables);
             $("body").contextmenu("option", "autoTrigger", false);
             break;
         default:
@@ -1172,7 +1178,7 @@ var Squirrel = {
     }
 
     /**
-     * Initialise application data (new Squirrel(), effectively)
+     * Initialise application (new Squirrel(), effectively)
      */
     function init_application() {
         // Kick off by initialising the cloud store.
@@ -1506,7 +1512,10 @@ var Squirrel = {
     // on ready
     $(function () {
 
+        // Parse URL parameters
         var qs = Utils.parse_query_params();
+
+        global.URLPARAMS = qs;
 
         if (qs.debug) {
             global.DEBUG = true;
@@ -1522,9 +1531,6 @@ var Squirrel = {
             $("body")
             .width() + " X " + $("body")
             .height());
-
-        if (qs.plaintext)
-            plaintext_store = true;
 
         if (global.DEBUG && qs.dumpcloud)
             dump_cloud = true;
@@ -1545,24 +1551,24 @@ var Squirrel = {
         if (scale && scale > 0)
             S.scale(scale);
 
-        // Menu is built; attach ZeroClipboards (if available)
-        //S.zeroClipboards = new ZeroClipboardShim();
+        // Global MINIFIED is set in Squirrel.html
+        var extension = ((typeof UNMINIFIED !== "undefined") && UNMINIFIED) ?
+            ".js" : ".min.js";
 
+        // Load the store by loading the appropriate module from js/
         var store = qs.store || "TestStore";
+        var store_modules = ["js/" + store + extension];
+
         if (typeof qs.steg !== "undefined")
             useSteganography = true;
-
-        var store_bits = ["js/" + store + ".min.js"];
         if (useSteganography) {
-            store_bits.push("js/Steganographer.min.js");
-            store_bits.push("js/StegaStore.min.js");
+            store_modules.push("js/Steganographer" + extension);
+            store_modules.push("js/StegaStore" + extension);
         } else
-            $(".using_steganography")
-            .remove();
-        var unco = (typeof UNCOMPRESSED !== "undefined") && UNCOMPRESSED;
+            $(".using_steganography").remove();
+
         Utils.load(
-            store_bits,
-            unco,
+            store_modules,
             function () {
                 // Initialise translation module,
                 // and chain the application init
@@ -1571,6 +1577,13 @@ var Squirrel = {
                     init_ui();
                     init_application();
                 });
+            },
+            function (fails) {
+                var e = TX.tx("Javascript module load failed");
+                for (var f in fails)
+                    e = e + "<div>" + f + ": " + fails[f] + "</div>";
+                $("#init_error").html(e)
+                    .show();
             });
     });
 

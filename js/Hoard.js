@@ -260,8 +260,8 @@ Hoard.prototype.play_action = function (e, listener) {
 
     if (e.type === "N") { // New
         if (node)
-            return conflict(e, TX.tx("It already exists") + " @"
-                            + new Date(node.time));
+            return conflict(e, TX.tx("It already exists") + " @" +
+                new Date(node.time));
         parent.time = e.time; // collection is being modified
         parent.data[name] = {
             time: e.time,

@@ -35,10 +35,6 @@
   "s": "Ajouter une nouvelle entrée",
   "m": 1
  },
- "Authentication failed.": {
-  "s": "Échec lors de l'authentification.",
-  "m": 1
- },
  "Bulk adding new top-level folders and values": {
   "s": "Ajout de valeurs et nouveaux dossiers de niveau supérieur de vrac",
   "m": 0.85
@@ -175,10 +171,6 @@
   "s": "JSON brut",
   "m": 0.85
  },
- "Refresh the browser to try again.": {
-  "s": "Actualisez le navigateur pour essayer à nouveau.",
-  "m": 0.85
- },
  "Remember": {
   "s": "Se rappeler",
   "m": 1
@@ -213,14 +205,6 @@
  },
  "Squirrel is Copyright © 2015-2017 Crawford Currie <a href=\"http://c-dot.co.uk\">http://c-dot.co.uk</a>": {
   "s": "L’écureuil est Copyright © 2015-2017 Crawford Currie <a href=\"http://c-dot.co.uk\">http://c-dot.co.uk</a>",
-  "m": 0.85
- },
- "Cloud store path may not be empty": {
-  "s": "Chemin d’accès du mémoire de nuage ne peut pas être vide",
-  "m": 0.85
- },
- "Cloud store path:": {
-  "s": "Chemin d’accès du mémoire de nuage:",
   "m": 0.85
  },
  "Text size": {
@@ -625,7 +609,7 @@
  },
  "Store settings": {
   "m": 1,
-  "s": "Réglages de boutique"
+  "s": "Réglages de memoire"
  },
  "Suggested value for": {
   "m": 0.67,
@@ -829,6 +813,22 @@
  },
  "Choose a local image that will be copied and used to hide your cloud store.": {
   "m": 0.85,
-  "s": "Choisissez une image locale qui sera copiée et utilisée pour masquer votre magasin nuage."
+  "s": "Choisissez une image locale qui sera copiée et utilisée pour masquer votre memoire du nuage."
+ },
+ "Javascript module load failed": {
+  "m": 0.85,
+  "s": "Chargement du module JavaScript n’a pas"
+ },
+ "Show Password": {
+  "m": 1,
+  "s": "Afficher le mot de passe"
+ },
+ "Store path may not be empty": {
+  "m": 0.85,
+  "s": "Chemin d’accès du magasin ne peut pas être vide"
+ },
+ "Store path:": {
+  "m": 0.85,
+  "s": "Boutique:"
  }
 }

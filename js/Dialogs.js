@@ -113,16 +113,20 @@
 
         var $user = this.get("user");
         var $pass = this.get("pass");
+        var skip_pass_change = 0;
         var $signin = this.get("signin");
+        var pass_hidden = true,
+            hidden_pass = '';
 
         var sign_in = function () {
             $dlg.squirrelDialog("close");
             $signin.off($.getTapEvent());
             $user.off("change");
             $pass.off("change");
-            options.on_signin.call(options.store,
+            options.on_signin.call(
+                options.store,
                 $user.val(),
-                $pass.val());
+                pass_hidden ? hidden_pass : $pass.val());
             return true;
         };
 
@@ -150,10 +154,46 @@
             }
             $user.focus();
         }
+
         if (options.pass_required) {
+            this.get("showpass")
+                .on("click", function () {
+                    if (pass_hidden) {
+                        skip_pass_change++;
+                        $pass.val(hidden_pass);
+                        pass_hidden = false;
+                    } else {
+                        var v = $pass.val();
+                        hidden_pass = $pass.val();
+                        skip_pass_change++;
+                        $pass.val(hidden_pass.replace(/./g, "•"));
+                        pass_hidden = true;
+                    }
+                })
+                .prop("checked", false);
+
+            // <input type="password"> doesn't work for me on firefox;
+            // simulate it
+            $pass.on("input", function (e) {
+                if (pass_hidden) {
+                    var v = $pass.val();
+                    if (v.length > hidden_pass.length) {
+                        var c = v.substring(v.length - 1);
+                        hidden_pass = hidden_pass + c;
+                        skip_pass_change++;
+                        $pass.val(v.substring(0, v.length - 1) + "•");
+                    } else {
+                        hidden_pass = hidden_pass.substring(
+                            0, hidden_pass.length - 1)
+                    }
+                }
+                return false;
+            });
+
             this.get("foruser")
                 .toggle(options.store.user() !== null)
                 .text(options.store.user() || "");
+
             $pass.attr("autofocus", "autofocus");
             if (options.user_required) {
                 $pass.on("change", function () {
@@ -161,7 +201,15 @@
                 });
             } else {
                 $pass.focus();
-                $pass.on("change", sign_in);
+                $pass.on("change", function () {
+                    if (skip_pass_change > 0) {
+                        skip_pass_change--;
+                        return false;
+                    }
+                    if ($pass.data("invisible-pass"))
+                        $pass.val($pass.data("invisible-pass"));
+                    return sign_in();
+                });
             }
         }
     };

@@ -60,12 +60,6 @@ https://cdn.rawgit.com/cdot/Squirrel/release/Squirrel.html?store=GoogleDriveStor
 but you are welcome to make your own copy and host it on your own
 trusted server.
 
-You must select one of the store implementations - in the example
-above Google Drive is being used. You must be logged in to Google for
-this to work.  Squirrel will prompt for the path to your store - this
-is simply the name of a file where encrypted data will be stored in
-the cloud.
-
 A Squirrel store is rather like a traditional computer file system,
 which contains *folders* and *values*. A folder can contain other
 folders and values. A value is simply a string of test. Values are
@@ -86,6 +80,50 @@ Double-click (or double-tap) on a name or a value to edit it. You can
 copy the value from inside the editor.
 
 And that's about it - you can find out the rest by experimenting.
+
+## Choosing a Store
+
+Squirrel supports a number of store implementations. It's up to you which
+one you use.
+
+### GoogleDriveStore
+You must be logged in to Google in the browser for
+this to work. The first time you open Squirrel with GoogleDriveStore, it
+will prompt for the path to your store. This is simply the name of a file
+where encrypted data will be stored in the cloud.
+
+Squirrel will prompt for a password every time you open it. This is
+the password for your store, and will not usually be the same as your
+Google password.
+
+### DropboxStore
+
+You will be prompted for authentication details for Dropbox.
+Squirrel will prompt for a password every time you open it. This is
+the password for your store, and will not usually be the same as your
+Dropbox password.
+
+### HttpServerStore
+
+This store will work with any web server that supports `GET' and `POST'.
+A suitable server is provided as part of the Squirrel release package.
+See DEVELOPING.md for more information on setting up your own server.
+
+To use a HttpServerStore you need to tell Squirrel where to look for the
+store, and how to get into it. The following URL parameters are used:
+
+`url' - this is the full URL to a directory on the server where Squirrel may GET and POST files.
+
+`user' - BasicAuth username
+
+`pass' - BasicAuth password
+
+`realm' - BasicAuth realm
+
+### LocalStorageStore
+
+You may not want to use a Cloud store, but store your passwords locally in
+the machine where the browser is running. This store lets you do that.
 
 ## Security risks
 
