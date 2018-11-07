@@ -177,9 +177,9 @@ var Squirrel = {
             });
     }
 
-    function get_updates_from_cloud(chain) {
-        // This will get triggered whenever both hoards are
-        // successfully loaded.
+    // Optional initialisation step, executed when both hoards are
+    // known to have loaded successfully.
+    function step_6a_merge_from_cloud(chain) {
         if (global.DEBUG) console.debug("Merging from cloud hoard");
         var conflicts = client.hoard.play_actions(
             cloud.hoard.actions,
@@ -371,10 +371,9 @@ var Squirrel = {
             });
     }
 
-    // Save the given hoard into the cloud.
+    // Save into the cloud.
     function update_cloud_store(ready) {
-        cloud.hoard.actions = cloud.hoard.actions.concat(
-            client.hoard.actions);
+        cloud.hoard.merge_actions(client.hoard.actions);
         if (cloud.store) {
             if (global.DEBUG) console.debug("...save to cloud");
 
@@ -403,16 +402,11 @@ var Squirrel = {
     // but not if the read failed.
     S.construct_new_cloud = function (progress, ready) {
         if (global.DEBUG) console.debug("...construct cloud ");
-        cloud.hoard = new Hoard();
+        cloud.hoard = new Hoard("new Cloud");
         client.hoard.reconstruct_actions(
             function (a, next) {
                 // this:Hoard, a:Action, next:function
-                cloud.hoard.actions.push({
-                    type: a.type,
-                    time: a.time,
-                    data: a.data,
-                    path: a.path.slice()
-                });
+                cloud.hoard.push_action(a);
                 if (next)
                     next();
             },
@@ -422,11 +416,16 @@ var Squirrel = {
             });
     };
 
-    // Action on the cloud store being read OK
-    function cloud_store_read_ok(data) {
+    // Action on the cloud store being reloaded prior to a save action.
+    // The actions read from the cloud have to be merged into the client
+    // before the save is completed. SMELL: There's a risk of a race
+    // condition here if the cloud is updated while we are still updating
+    // the client. Some sort of locking could be done, but strikes me
+    // as overkill.
+    function cloud_store_reloaded_ok(data) {
         if (global.DEBUG) console.debug("...cloud read OK ");
         try {
-            cloud.hoard = new Hoard(data);
+            cloud.hoard = new Hoard("reloaded Cloud", data);
             cloud.status = S.IS_LOADED;
         } catch (e) {
             // We'll get here if decryption failed....
@@ -459,9 +458,9 @@ var Squirrel = {
                 });
         }
 
+        // Only save if there area actually some changes
         if (cloud.status !== S.IS_LOADED ||
             client.hoard.actions.length !== 0) {
-            // Only save if there actually some changes
             if (global.DEBUG) console.debug("...update from cloud: " + cloud.status);
             update_cloud_store(save_client);
         } else
@@ -510,7 +509,7 @@ var Squirrel = {
             if (global.DEBUG) console.debug("...reloading cloud");
             cloud.store.reads(
                 client.hoard.options.store_path,
-                cloud_store_read_ok,
+                cloud_store_reloaded_ok,
                 cloud_store_read_failed);
         }
     }
@@ -583,7 +582,7 @@ var Squirrel = {
                         this.options()
                         .identifier + " is ready");
                     try {
-                        cloud.hoard = new Hoard(data);
+                        cloud.hoard = new Hoard("Cloud", data);
                         if (global.DEBUG && dump_cloud)
                             console.debug(JSON.stringify(cloud.hoard));
                     } catch (e) {
@@ -602,8 +601,9 @@ var Squirrel = {
                         Utils.soon(step_7_hoards_loaded);
                         return;
                     }
+                    // Both hoards have loaded successfully.
                     //if (global.DEBUG) console.debug("Cloud hoard " + data);
-                    get_updates_from_cloud(step_7_hoards_loaded);
+                    step_6a_merge_from_cloud(step_7_hoards_loaded);
                 },
                 function (e) {
                     if (e === AbstractStore.NODATA) {
@@ -622,7 +622,7 @@ var Squirrel = {
                         });
                         $("#squeak_dlg")
                             .squirrelDialog("squeakAdd",
-                                TX.tx("Check that you have the correct password."));
+                                TX.tx("Check that the cloud store exists and you have the correct password."));
                         // Could not contact cloud; continue all the same
                     }
                     Utils.soon(step_7_hoards_loaded);
@@ -638,7 +638,7 @@ var Squirrel = {
      */
     function step_5_init_client_hoard() {
         if (global.DEBUG) console.debug("Setting up client hoard");
-        client.hoard = new Hoard();
+        client.hoard = new Hoard("Client");
         client.status = S.IS_EMPTY;
 
         if (cloud.store && cloud.store.options()
@@ -702,7 +702,7 @@ var Squirrel = {
             "S." + client.store.user(),
             function (data) {
                 try {
-                    client.hoard = new Hoard(data);
+                    client.hoard = new Hoard("Client", data);
                     client.status = S.IS_LOADED;
                 } catch (e) {
                     if (global.DEBUG) console.debug("Caught " + e);
@@ -1288,12 +1288,9 @@ var Squirrel = {
     S.add_child_node = function ($node, title, value) {
         var p = $node.tree("getPath");
         p = p.concat(title);
-        var e = {
-            type: "N",
-            path: p,
-            data: (typeof value === "string") ? value : undefined
-        };
-        client.hoard.push_action(e);
+        var e = client.hoard.push_action(
+            "N", p, Date.now(),
+            (typeof value === "string") ? value : undefined);
         var res = client.hoard.play_action(e,
             function (e) {
                 // this:Hoard, e:Action
@@ -1403,7 +1400,7 @@ var Squirrel = {
                 //if (global.DEBUG) console.debug(Hoard.stringify_action(act));
                 act.path = path.slice()
                     .concat(act.path);
-                this.push_action(act);
+                act = this.push_action(act);
                 var res = this.play_action(
                     act,
                     function (sact) {
@@ -1435,7 +1432,7 @@ var Squirrel = {
     };
 
     S.playAction = function (action, more) {
-        client.hoard.push_action(action);
+        action = client.hoard.push_action(action);
         var res = client.hoard.play_action(
             action,
             function (e) {

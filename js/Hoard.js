@@ -61,14 +61,17 @@ if (typeof module !== "undefined")
 /**
  * Create a new Hoard.
  * @class
+ * @param name identifying name for the hoard. The name is transitory and
+ * only used for debugging; it is not saved with the hoard.
  * @param data an optional JSON string containing a serialised Hoard
  * @member {object} cache root of tree
  * @member {Action[]} actions actions played since the last sync
  * @member {number} last_sync integer date since the last sync, or null
  */
-function Hoard(data) {
+function Hoard(name, data) {
     "use strict";
 
+    this.name = name;
     if (data) {
         if (typeof data !== "object")
             data = JSON.parse(data);
@@ -80,7 +83,7 @@ function Hoard(data) {
         this.version = data.version || VERSION;
 
         if (this.version > VERSION)
-            throw "Hoard error: cannot read a version " + data.version +
+            throw name + " hoard error: cannot read a version " + data.version +
                 " hoard with " + VERSION + " code";
 
     } else {
@@ -146,17 +149,46 @@ Hoard.prototype.clear_actions = function () {
 };
 
 /**
+ * Construct a new action object.
+ * @param e This can be in the form of an existing
+ * action structure to clone, or arguments (type, path, time, data)
+ */
+Hoard.new_action = function () {
+    var type, path, data, time;
+    if (typeof arguments[0] === "string") {
+        type = arguments[0];
+        path = arguments[1];
+        time = arguments[2];
+        data = arguments[3];
+    } else {
+        var e = arguments[0];
+        type = e.type;
+        path = e.path;
+        time = e.time;
+        data = e.data;
+    }
+    var n = {
+        type: type,
+        path: path.slice(),
+        time: time ? time : Date.now()
+    };
+    if (typeof data !== "undefined")
+        n.data = data;
+    return n;
+}
+
+/**
  * Push a new action on to the end of the action stream. No checking
  * is done on the action, though it will default the time to 'now'.
- * @param e the action to push. The action will be deep-copied.
+ * @param the action to push. This can be in the form of an existing
+ * action structure, or ordered arguments (type, path, time, data)
+ * @return a reference to the action object pushed (this may have
+ * defaulted fields)
  */
-Hoard.prototype.push_action = function (e) {
-    this.actions.push({
-        type: e.type,
-        path: e.path.slice(),
-        time: e.time ? e.time : Date.now(),
-        data: e.data
-    });
+Hoard.prototype.push_action = function () {
+    var copy = Hoard.new_action.apply(this, arguments);
+    this.actions.push(copy);
+    return copy;
 };
 
 /**
@@ -166,13 +198,13 @@ Hoard.prototype.push_action = function (e) {
  */
 Hoard.prototype.pop_action = function () {
     if (global.DEBUG && this.actions.length === 0)
-        throw "Cannot pop from empty actions stream";
+        throw this.name + " hoard error: Cannot pop from empty actions stream";
     return this.actions.pop();
 };
 
 /**
  * @private
- * Locate the node referenced by the given path
+ * Locate the node referenced by the given path in the tree
  * @param path array of path elements
  * @param offset optional offset from the leaf e.g. 1 will find the parent
  * of the node identified by the path
@@ -184,7 +216,7 @@ Hoard.prototype.locate_node = function (path, offset) {
     for (var i = 0; i < path.length - offset; i++) {
         var name = path[i];
         if (node && typeof node.data === "string") {
-            throw "Cannot recurse into leaf node";
+            throw this.name + " hoard error: Cannot recurse into leaf node";
         } else if (node && node.data[name]) {
             node = node.data[name];
         } else {
@@ -219,7 +251,7 @@ Hoard.prototype.locate_node = function (path, offset) {
 Hoard.prototype.play_action = function (e, listener) {
     "use strict";
 
-    if (typeof e.time === "undefined" || e.time === null)
+    if (!e.time)
         e.time = Date.now();
 
     function conflict(e, mess) {
@@ -345,6 +377,45 @@ Hoard.prototype.play_action = function (e, listener) {
 };
 
 /**
+ * Merge an action stream into the hoard. Duplicate actions are ignored, and
+ * the merged stream is sorted into time order.
+ * @param actions the actions to merge. This must be in time order.
+ * @return the number of actions added
+ */
+Hoard.prototype.merge_actions = function (actions) {
+    var etop = 0;
+    var added = 0;
+
+    for (var ntop = 0; ntop < actions.length; ntop++) {
+        var na = actions[ntop];
+        if (ntop > 0 && na.time < actions[ntop - 1].time)
+            throw this.name + " hoard; merged action stream is out of order";
+        while (etop < this.actions.length &&
+            this.actions[etop].time < na.time) {
+            etop++;
+        }
+        if (etop < this.actions.length) {
+            var ea = this.actions[etop];
+            //console.log("cmp " + Hoard.stringify_action(na) + " and " +
+            //            Hoard.stringify_action(ea));
+            if (na.time == ea.time &&
+                na.type == ea.type &&
+                na.path.join('/') == ea.path.join('/') &&
+                na.data == ea.data) {
+                // Duplicate
+                //console.log("already there");
+                continue;
+            }
+        }
+        //console.log("Add " + Hoard.stringify_action(na));
+
+        this.actions.splice(etop, 0, Hoard.new_action(na));
+        added++;
+    }
+    return added;
+};
+
+/**
  * @private
  * Method to reconstruct an action stream from a node and its children.
  * @param data root node of tree to reconstruct from
@@ -369,11 +440,7 @@ Hoard.prototype._reconstruct_actions = function (data, path, reconstruct, progre
             return;
         }
         var time = (typeof node.time !== "undefined" ? node.time : Date.now());
-        var action = {
-            type: "N",
-            path: p,
-            time: time
-        };
+        var action = Hoard.new_action("N", p, time);
 
         if (typeof node.data === "string")
             action.data = node.data;
@@ -390,23 +457,13 @@ Hoard.prototype._reconstruct_actions = function (data, path, reconstruct, progre
                 // it.
                 if (node.alarm) {
                     reconstruct.call(
-                        self, {
-                            type: "A",
-                            // slice to avoid re-use of the same object
-                            path: p.slice(),
-                            time: time,
-                            data: node.alarm
-                        });
+                        self, Hoard.new_action(
+                            "A", p, time, node.alarm));
                 }
                 if (node.constraints) {
                     reconstruct.call(
-                        self, {
-                            type: "X",
-                            // slice to avoid re-use of the same object
-                            path: p.slice(),
-                            time: time,
-                            data: node.constraints
-                        });
+                        self, Hoard.new_action(
+                            "X", p, time, node.constraints));
                 }
                 ready();
             });
@@ -510,6 +567,8 @@ Hoard.prototype.play_actions = function (new_actions, listener, progress) {
 
     // Play in all actions since the last sync
     var count = new_actions.length;
+    if (global.DEBUG) console.log(
+        "Playing new actions since " + new Date(this.last_sync).toLocaleString());
     for (i = 0; i < count; i++) {
         if (new_actions[i].time > this.last_sync) {
             if (global.DEBUG) console.log(

@@ -221,11 +221,8 @@
         this.get("ok")
             .on($.getTapEvent(), function () {
                 $dlg.squirrelDialog("close");
-                S.playAction({
-                    type: "D",
-                    path: $dlg.data("node")
-                        .tree("getPath")
-                });
+                S.playAction(Hoard.new_action(
+                    "D", $dlg.data("node").tree("getPath"), Date.now()));
                 return true;
             });
         this.get("cancel")
@@ -322,13 +319,9 @@
         this.get("use")
             .on($.getTapEvent(), function () {
                 $dlg.squirrelDialog("close");
-                S.playAction({
-                    type: "E",
-                    path: $dlg.data("node")
-                        .tree("getPath"),
-                    data: self.get("idea")
-                        .text()
-                });
+                S.playAction(Hoard.new_action(
+                    "E", $dlg.data("node").tree("getPath"), Date.now(),
+                    self.get("idea").text()));
                 return true;
             });
         this.get("len")
@@ -347,12 +340,9 @@
                     .val() +
                     ';' + self.get("chs")
                     .val();
-                S.playAction({
-                    type: "X",
-                    path: $dlg.data("node")
-                        .tree("getPath"),
-                    data: constraints
-                });
+                S.playAction(Hoard.new_action(
+                    "X", $dlg.data("node").tree("getPath"), Date.now(),
+                    constraints));
                 $(this)
                     .hide();
             });
@@ -438,23 +428,17 @@
                     .val() *
                     Utils.TIMEUNITS[self.get("units")
                         .val()].days;
-                S.playAction({
-                    type: "A",
-                    path: $dlg.data("node")
-                        .tree("getPath"),
-                    data: numb
-                });
+                S.playAction(Hoard.new_action(
+                    "A", $dlg.data("node").tree("getPath"), Date.now(),
+                    numb));
                 return false;
             });
 
         self.get("clear")
             .on($.getTapEvent(), function () {
                 $dlg.squirrelDialog("close");
-                S.playAction({
-                    type: "C",
-                    path: $dlg.data("node")
-                        .tree("getPath")
-                });
+                S.playAction(Hoard.new_action(
+                    "C", $dlg.data("node").tree("getPath"), Date.now()));
                 return false;
             });
     };

@@ -87,7 +87,7 @@ if (typeof module === "undefined") {
         
         it("should play_actions into empty hoard", function() {
 	    // Reconstruct a cache from an actions list in an empty hoard
-            var h = new Hoard();
+            var h = new Hoard("Test1");
             var undi = 0;
 	    h.play_actions(
                 actions,

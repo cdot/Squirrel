@@ -8,7 +8,7 @@ var Utils = require("../Utils");
 var cloud_data = {
     last_sync: null,
     actions: [
-	// Action already reflected in the client
+	// Action already in the client
 	{
 	    type: "N",
 	    time: new Date("1 Jan 2000").getTime(),
@@ -32,18 +32,14 @@ var cloud_data = {
 var client_data = {
     last_sync: new Date("1 Jan 2001").getTime(),
     actions: [
-	{
-	    // Duplicate an action that is already in the cloud
-            // Should give us a conflict
-	    type: "N",
-	    time: new Date("1 Jan 2000").getTime(),
-	    path: ["Fine-dining"]
-	},
+	// Duplicate an action that is already in the cloud
+	cloud_data.actions[0],
 	{
 	    // Add an action that isn't in the cloud yet
 	    type: "N",
 	    time: new Date("1 Jan 2003").getTime(),
-	    path: ["Fine-dining", "Truffles" ]
+	    path: ["Fine-dining", "Truffles" ],
+            data: "Fungi"
 	}],
     cache: {
 	data: {
@@ -65,17 +61,22 @@ var client_data = {
     version: 1
 };
 
+var client_size = client_data.actions.length;
+var cloud_size = cloud_data.actions.length;
+
 describe('Hoard', function() {
     it('should make with data and string', function() {
-        var h = new Hoard(cloud_data);
+        var h = new Hoard("Test1", cloud_data);
 	assert.equal(h.actions[0].path[0], cloud_data.actions[0].path[0]);
-	h = new Hoard(JSON.stringify(cloud_data));
+	h = new Hoard("Test2", JSON.stringify(cloud_data));
 	assert.equal(h.actions[0].path[0], cloud_data.actions[0].path[0]);
+        assert.equal(client_data.actions.length, client_size);
+        assert.equal(cloud_data.actions.length, cloud_size);
     });
 
     it("should play_actions into empty hoard", function() {
 	// Reconstruct a cache from an actions list in an empty hoard
-        var h = new Hoard();
+        var h = new Hoard("Test1");
 	var c = h.play_actions(cloud_data.actions);
 	assert.deepEqual(h.cache, {
 	    data:{
@@ -93,11 +94,13 @@ describe('Hoard', function() {
 	});
 	assert.equal(c.length, 0);
 	assert.equal(h.actions.length, 0);
+        assert.equal(client_data.actions.length, client_size);
+        assert.equal(cloud_data.actions.length, cloud_size);
     });
 
     it("should play_actions into populated hoard", function() {
 	// Play the cloud action set into a populated client hoard
-	var h = new Hoard(client_data);
+	var h = new Hoard("Test1", client_data);
 	assert(h.cache.data["Fine-dining"].data.Truffles);
 	var cs = h.play_actions(cloud_data.actions);
 	assert.equal(cs.length, 0);
@@ -119,10 +122,12 @@ describe('Hoard', function() {
 	    },
 	    time: h.cache.time
 	});
+        assert.equal(client_data.actions.length, client_size);
+        assert.equal(cloud_data.actions.length, cloud_size);
     });
 
     it('should detect zero path', function() {
-        var h = new Hoard();
+        var h = new Hoard("Test1");
         var kfc = {
 	    type: "N",
 	    time: new Date("1 Jan 2004").getTime(),
@@ -135,10 +140,12 @@ describe('Hoard', function() {
 	    });
 	assert.equal(c.message,
                      "Cannot create '': Zero length path");
+        assert.equal(client_data.actions.length, client_size);
+        assert.equal(cloud_data.actions.length, cloud_size);
     });
        
     it('should detect no parent', function() {
-        var h = new Hoard();
+        var h = new Hoard("Test1");
 	var cs = h.play_actions(cloud_data.actions);
 	assert.equal(cs.length, 0);
         var kfc = {
@@ -154,10 +161,12 @@ describe('Hoard', function() {
 	assert.equal(c.message,
                      "Cannot create 'Junk↘Burger': Parent folder not found");
         assert.equal(c.conflict, kfc);
+        assert.equal(client_data.actions.length, client_size);
+        assert.equal(cloud_data.actions.length, cloud_size);
     });
 
     it('should detect already existing', function() {
-        var h = new Hoard();
+        var h = new Hoard("Test1");
         
 	var listened = false;
 	// No cache, so listener will be called
@@ -180,10 +189,12 @@ describe('Hoard', function() {
             "Cannot create 'Fine-dining': It already exists @"
             + new Date("1 Jan 2000"));
         assert.deepEqual(c.conflict, cloud_data.actions[0]);
+        assert.equal(client_data.actions.length, client_size);
+        assert.equal(cloud_data.actions.length, cloud_size);
     });
     
     it('should detect no such node', function() {
-        var h = new Hoard();
+        var h = new Hoard("Test1");
 	var listened = false;
 	// No cache, so listener will be called
 	var c = h.play_action(
@@ -208,10 +219,12 @@ describe('Hoard', function() {
 	assert.equal(c.message,
                      "Cannot change value of 'Fine-dining↘Doner': It does not exist");
         assert.equal(c.conflict, kfc);
+        assert.equal(client_data.actions.length, client_size);
+        assert.equal(cloud_data.actions.length, cloud_size);
     });
 
     it('should allow rename', function() {
-        var h = new Hoard();
+        var h = new Hoard("Test1");
 	var listened = 0;
         var stage = 0;
 	var c = h.play_actions(
@@ -241,5 +254,41 @@ describe('Hoard', function() {
         assert.equal(listened, 1);
         assert(!c, "conflicts");
         //console.log(h.dump());
+        assert.equal(client_data.actions.length, client_size);
+        assert.equal(cloud_data.actions.length, cloud_size);
+    });
+    
+    it('should merge action streams', function() {
+        var cloud = new Hoard("Cloud");
+        // Initial action stream is empty
+        assert.equal(cloud.merge_actions(cloud_data.actions), 2);
+        assert.deepEqual(cloud.actions, cloud_data.actions);
+
+        // Merging should skip duplicates
+        assert.equal(cloud.merge_actions(cloud_data.actions), 0);
+        assert.deepEqual(cloud.actions, cloud_data.actions);
+        
+        assert.equal(cloud.merge_actions(client_data.actions), 1);
+
+        assert.deepEqual(
+            cloud.actions,
+            [
+                cloud_data.actions[0],
+                cloud_data.actions[1],
+                client_data.actions[1],
+            ]);
+
+        // A merge the other way should work the same
+        var client = new Hoard("Client");
+        assert.equal(client.merge_actions(client_data.actions), 2);
+        
+        assert.equal(client.merge_actions(cloud_data.actions), 1);
+        assert.deepEqual(
+            cloud.actions,
+            [
+                cloud_data.actions[0],
+                cloud_data.actions[1],
+                client_data.actions[1],
+            ]);
     });
 });
