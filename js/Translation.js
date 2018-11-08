@@ -6,6 +6,7 @@
 /* global module */
 /* global Utils */
 /* global Cookies */
+/* global WeakMap */
 
 /**
  * Translations module. Guesses the language to use from cookies, or
@@ -18,12 +19,12 @@
  * Strings can also be reaped from HTML using classes:
  * `<... class="TX_title" title="string">` or
  * TX_title will translate the title= tag in that node.
- * `<... class="TX_text">content</...>` 
+ * `<... class="TX_text">content</...>`
  * TX_text will translate all text nodes and title attributes in the
  * HTML under the tagged node, recursively.  Individual text nodes are
  * translated individually, so "x<b>y</b>z" will require tranlations
  * of 3 strings, !x", "y" and "z".
- * `<... class="TX_html">content</...>` 
+ * `<... class="TX_html">content</...>`
  * TX_html will translate the entire HTML subtree under the tagged
  * node in one big block with embedded tags, so should not be used on
  * anything where handlers might be attached.
@@ -162,6 +163,9 @@ var TX = {
         }
 
         var t, attrs;
+
+        if (!TX.originals)
+            TX.originals = new WeakMap();
 
         if (!TX.originals.has(node))
             TX.originals.set(node, attrs = {});

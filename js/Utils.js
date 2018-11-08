@@ -282,7 +282,7 @@ Utils.load = function (libs, onload, onfail) {
                 onload();
             }
         }
-    };
+    }
 
     function _failed(file, mess) {
         failed[file] = mess;

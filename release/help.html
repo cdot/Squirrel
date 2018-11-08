@@ -20,7 +20,7 @@
 <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-touch-events/1.0.9/jquery.mobile-events.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/js-cookie/2.2.0/js.cookie.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script>
-<script  src="js/Squirrel.min.js?version=abaace4e6438806e242b3faad676a8da3295868b"></script>
+<script  src="js/Squirrel.min.js?version=1541703593"></script>
 <link  href="css/Squirrel.min.css?version=abaace4e6438806e242b3faad676a8da3295868b" rel="stylesheet">
 <!-- Flag to tell code whether we are minified or not. This will
 be stripped by build/release.sed for the final release -->
@@ -96,7 +96,6 @@ might be looking over your shoulder
 <td class="TX_text">Language</td>
 <td>
 <input type="text" data-id="language" />
-<button data-id="change_language" data-icon="ui-icon-shuffle" title="Change language" class="TX_text TX_title"></button>
 <div class="twisted TX_text" data-open="ui-icon-info">
 <span class="TX_text">
 Enter the language code for a supported language
@@ -164,21 +163,52 @@ This preference will be saved in a cookie in this browser
 </td>
 </tr>
 <tr>
-<td class="TX_text">Master password</td>
+<td class="TX_title">Encryption password</td>
 <td>
 <button data-id="chpw" class="TX_text">Change</button>
+<div class="twisted" data-open="ui-icon-info">
+<span class="TX_text">
+Change the encryption password for the store.
+</span>
+<span class="TX_text">
+This may be different to the password you use to log in to
+your cloud data store.
+</span>
+</div>
 </td>
 </tr>
 <tr>
 <td class="TX_text">Optimise</td>
 <td>
 <button data-id="optimise" class="TX_text">Optimise</button>
+<div class="twisted" data-open="ui-icon-info">
+<span class="TX_text">
+Optimise the store by removing old actions.
+</span>
+<span class="TX_text">
+The cloud store keeps a history of all changes from all clients,
+so that every client has a chance to see every change, however
+long it ihas been since it last updated. This history can get
+quite long, so you may want to optimise it by removing this
+history. You should only do this if you are 100% certain that
+no client has local changes that may need to be saved to the
+cloud.
+</span>
+</div>
 </td>
 </tr>
 <tr>
 <td class="TX_text">Raw JSON</td>
 <td>
 <button data-id="json" class="TX_text">View/Edit</button>
+<div class="twisted" data-open="ui-icon-info">
+<span class="TX_text">
+View/Edit raw JSON for the entire store
+</span>
+<span class="TX_text">
+Be very careful!
+</span>
+</div>
 </td>
 </tr>
 <tr>
@@ -202,7 +232,7 @@ $1 are $2
 </div>
 </div>
 </div>
-<div id="login_dlg" class="dlg-dialog TX_title" title="Security Details">
+<div id="login_dlg" class="dlg-dialog TX_title" title="Encryption Details">
 <p data-id="foruser"></p>
 <table width="100%">
 <tbody>
@@ -241,12 +271,17 @@ $1 are $2
 <td>
 <input data-id="len" size="4" value="20" class="TX_title" title="Enter password length" />
 </td>
+<td>
+<button data-id="remember" class="TX_text TX_title" title="Remember constraints on this value">Remember</button>
+</td>
 </tr>
 <tr>
 <td class="TX_text">Characters</td>
 <td>
 <input data-id="chs" size="30" value="A-Za-z0-9!%^&*_$+-=;:@#~,./?" class="TX_title" title="Enter the characters that are legal in passwords for this site. You can use character ranges like A-Z or 0-9" />
-<button data-id="remember" class="TX_text TX_title" title="Remember constraints on this value">Remember</button>
+</td>
+<td>
+<button data-id="reset" class="TX_text TX_title" title="Reset default constraints">Reset</button>
 </td>
 </tr>
 </table>
@@ -452,10 +487,10 @@ Store path:
 </div>
 <div id="about_dlg" class="dlg-dialog TX_title" title="About Squirrel">
 <p class="TX_html">
-Squirrel is Copyright &copy; 2015-2017 Crawford Currie <a href="http://c-dot.co.uk">http://c-dot.co.uk</a>
+Squirrel is Copyright &copy; 2015-2018 Crawford Currie <a href="http://c-dot.co.uk">http://c-dot.co.uk</a>
 </p>
 <p>
-<span class="TX_text">This version was released on </span> Mon 5 Nov 20:10:30 GMT 2018
+<span class="TX_text">This version was released on </span> Thu 8 Nov 19:23:50 GMT 2018
 </p>
 <div class="twisted" data-open="ui-icon-info">
 <p class="TX_html">
@@ -476,11 +511,17 @@ Optimising your cloud store will lose all the history, which will
 make it impossible for any client that is not completely up to
 date to synchronise. You have been warned!
 </div>
+<div data-id="calculating" class="TX_text">
+Calculating if optimisation is worthwhile
+</div>
 <div data-id="existing" class="TX_text template">
 The cloud currently has $1 action$?($1!=1,s,) in the history.
 </div>
 <div data-id="study" class="TX_text template">
 After optimisation it will have $1 node$?($1!=1,s,) + $2 alarm$?($2!=1,s,) + $3 constraint$?($3!=1,s,) = $4 action$?($4!=1,s,).
+</div>
+<div data-id="pointless" class="TX_text">
+There is no point in optimisation, it will not improve performance
 </div>
 <button data-id="optimise" class="TX_text">Optimise</button>
 </div>

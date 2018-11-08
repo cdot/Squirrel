@@ -1,15 +1,22 @@
 # Copyright (C) 2015-2018 Crawford Currie http://c-dot.co.uk / MIT
+# Main targets are:
+#
+# make test    - run unit tests
+# make release - build all derived objects
+# make tidy    - beautify code
+# make clean   - remove intermediates and derived objects
+# make lint    - run eslint
+# make langs   - update all translations
+
+# Macros using shell commands
 FIND         := find . -name 'jquery*' -prune -o -name
 DATE_SED     := sed -e 's/BUILD_DATE/$(shell date)/g'
 SQUIRREL_JS  := $(shell cat Squirrel.html | \
 		grep '<script class="compressable" src=' $^ | \
 		sed -e 's/.*src="//;s/[?"].*//g' )
-STORES_JS    := $(wildcard js/*Store.js)
-TESTS_JS     := $(wildcard js/test/*.js test/*.js)
 SQUIRREL_CSS := $(shell cat Squirrel.html | \
 		grep '<link class="compressable"' $^ | \
 		sed -e 's/.*href="//;s/[?"].*//g' )
-
 HELP_JS      := $(shell cat help.html | \
 		grep '<script class="compressable" src=' $^ | \
 		sed -e 's/.*src="//;s/[?"].*//g' )
@@ -17,12 +24,9 @@ HELP_CSS     := $(shell cat help.html | \
 		grep '<link class="compressable"' $^ | \
 		sed -e 's/.*href="//;s/["?].*//g' )
 
-# The min target supports generating a minified test version, halfway to a
-# release
-
-#		--source-map $(patsubst %.min.js,%.map,$@) \
-#		--source-map-url $(subst js/,,$(patsubst %.min.js,%.map,$@)) \
-#		--source-map-include-sources \
+STORES_JS    := $(wildcard js/*Store.js)
+TESTS_JS     := $(wildcard js/test/*.js test/*.js)
+LANGS        := $(wildcard locale/*.json)
 
 %.map %.min.js : %.js
 	uglifyjs \
@@ -109,6 +113,10 @@ release: release/Squirrel.html release/help.html \
 	$(patsubst images/%,release/images/%,$(wildcard images/*))
 	@-rm -f release/js/*.map
 	@echo $^ built
+
+# Languages
+
+langs : $(LANGS)
 
 # Tests
 

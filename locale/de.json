@@ -567,10 +567,6 @@
   "m": 0.85,
   "s": "Die spezielle Bearbeitungen"
  },
- "Master password": {
-  "m": 1,
-  "s": "Hauptkennwort"
- },
  "New name:": {
   "m": 1,
   "s": "Neuer Name:"
@@ -626,10 +622,6 @@
  "Smaller": {
   "m": 1,
   "s": "Kleiner"
- },
- "Squirrel is Copyright © 2015-2017 Crawford Currie <a href=\"http://c-dot.co.uk\">http://c-dot.co.uk</a>": {
-  "m": 0.85,
-  "s": "Squirrel ist Copyright © 2015-2017 Crawford Currie  <a href=\"http://c-dot.co.uk\">http://c-dot.co.uk</a>"
  },
  "Store path may not be empty": {
   "m": 0.85,
@@ -711,10 +703,6 @@
   "m": 0.85,
   "s": "Durch die Optimierung Ihres Cloud-Speichers wird der gesamte Verlauf verloren, wodurch es für jeden Client, der nicht vollständig auf dem neuesten Stand ist, unmöglich wird, sich zu synchronisieren. Du wurdest gewarnt!"
  },
- "Security Details": {
-  "m": 0.99,
-  "s": "Sicherheitsdetails"
- },
  "The cloud currently has $1 action$?($1!=1,s,) in the history.": {
   "m": 0.85,
   "s": "Die Cloud hat derzeit $1 Aktion$?($1!=1,en,) im Verlauf."
@@ -783,10 +771,6 @@
   "m": 0.85,
   "s": "Automatisch gespeichert, wenn sich nichts ändert"
  },
- "Change language": {
-  "m": 1,
-  "s": "Sprache ändern"
- },
  "Choose a local image that will be copied and used to hide your cloud store.": {
   "m": 0.85,
   "s": "Wählen Sie ein lokales Bild, das kopiert und verwendet, um Ihre Cloud-Speicher zu verstecken."
@@ -830,5 +814,57 @@
  "Javascript module load failed": {
   "m": 0.85,
   "s": "Das Laden des Javascript-Moduls ist fehlgeschlagen"
+ },
+ "Check that the cloud store exists and you have the correct password.": {
+  "m": 0.85,
+  "s": "Überprüfen Sie, dass die Cloud-Speicher vorhanden ist und Sie das richtige Passwort."
+ },
+ "Be very careful!": {
+  "m": 0.97,
+  "s": "Sehr vorsichtig sein."
+ },
+ "Calculating if optimisation is worthwhile": {
+  "m": 0.85,
+  "s": "Berechnung, wenn Optimierung lohnt"
+ },
+ "Change the encryption password for the store.": {
+  "m": 0.85,
+  "s": "Ändern Sie das Verschlüsselungspasswort für den Store."
+ },
+ "Encryption Details": {
+  "m": 0.85,
+  "s": "Verschlüsselungsdetails"
+ },
+ "Optimise the store by removing old actions.": {
+  "m": 0.85,
+  "s": "Optimieren Sie den Store, indem Sie alte Aktionen entfernen."
+ },
+ "Reset": {
+  "m": 1,
+  "s": "Zurücksetzen"
+ },
+ "Reset default constraints": {
+  "m": 0.85,
+  "s": "Setzen Sie die Standardeinschränkungen zurück"
+ },
+ "Squirrel is Copyright © 2015-2018 Crawford Currie <a href=\"http://c-dot.co.uk\">http://c-dot.co.uk</a>": {
+  "m": 0.85,
+  "s": "Eichhörnchen ist Copyright © 2015-2018 Crawford Currie </a> http://c-dot.co.uk undefined"
+ },
+ "The cloud store keeps a history of all changes from all clients, so that every client has a chance to see every change, however long it ihas been since it last updated. This history can get quite long, so you may want to optimise it by removing this history. You should only do this if you are 100% certain that no client has local changes that may need to be saved to the cloud.": {
+  "m": 0.85,
+  "s": "Der Cloud-Store speichert alle Änderungen aller Clients, so dass jeder Client die Möglichkeit hat, jede Änderung zu sehen, unabhängig davon, wie lange sie seit der letzten Aktualisierung war. Diese Historie kann sehr lang werden, daher können Sie sie durch Entfernen dieser Historie optimieren. Sie sollten dies nur tun, wenn Sie zu 100% sicher sind, dass kein Client über lokale Änderungen verfügt, die möglicherweise in der Cloud gespeichert werden müssen."
+ },
+ "There is no point in optimisation, it will not improve performance": {
+  "m": 0.85,
+  "s": "Es gibt keinen Sinn bei der Optimierung, es wird die Leistung nicht verbessern"
+ },
+ "This may be different to the password you use to log in to your cloud data store.": {
+  "m": 0.85,
+  "s": "Dies kann sich von dem Kennwort unterscheiden, das Sie zum Anmelden bei Ihrem Cloud-Datenspeicher verwenden."
+ },
+ "View/Edit raw JSON for the entire store": {
+  "m": 0.85,
+  "s": "Anzeigen / Bearbeiten von rohem JSON für den gesamten Store"
  }
 }

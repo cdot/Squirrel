@@ -76,7 +76,7 @@
   "m": 0.85
  },
  "Cloud Store": {
-  "s": "Mémoire de nuage",
+  "s": "Entrepôt nuage",
   "m": 0.85
  },
  "Colour scheme": {
@@ -139,10 +139,6 @@
   "s": "Apporter des modifications spécifiques",
   "m": 0.85
  },
- "Master password": {
-  "s": "Mot de passe principal",
-  "m": 1
- },
  "New name:": {
   "s": "Nouveau nom:",
   "m": 1
@@ -188,7 +184,7 @@
   "m": 0.86
  },
  "Set the pathname of the image on your cloud store.": {
-  "s": "Définir le chemin d’accès de l’image dans votre mémoire de nuage.",
+  "s": "Définir le chemin d’accès de l’image dans votre entrepôt nuage.",
   "m": 0.85
  },
  "Settings": {
@@ -202,10 +198,6 @@
  "Smaller": {
   "s": "Le nombre est plus petit que le minimum autorisé.",
   "m": 1
- },
- "Squirrel is Copyright © 2015-2017 Crawford Currie <a href=\"http://c-dot.co.uk\">http://c-dot.co.uk</a>": {
-  "s": "L’écureuil est Copyright © 2015-2017 Crawford Currie <a href=\"http://c-dot.co.uk\">http://c-dot.co.uk</a>",
-  "m": 0.85
  },
  "Text size": {
   "s": "Taille du texte",
@@ -365,7 +357,7 @@
  },
  "Could not load cloud store": {
   "m": 0.62,
-  "s": "Impossible d'charger la mémoire de nuage"
+  "s": "Impossible d'charger l'entrepôt nuage"
  },
  "$1 store error: $2": {
   "m": 0.68,
@@ -377,7 +369,7 @@
  },
  "Could not open cloud store: $1": {
   "m": 0.85,
-  "s": "Pas pu ouvrir la mémoire de nuage: $1"
+  "s": "Pas pu ouvrir l'entrepôt nuage: $1"
  },
  "If you continue, only the client store will be available": {
   "m": 0.75,
@@ -565,7 +557,7 @@
  },
  "Path to the image in your cloud store": {
   "m": 0.5,
-  "s": "Chemin vers l'image dans votre mémoire de nuage"
+  "s": "Chemin vers l'image dans votre entrepôt nuage"
  },
  "Re-enter new password": {
   "m": 1,
@@ -609,7 +601,7 @@
  },
  "Store settings": {
   "m": 1,
-  "s": "Réglages de memoire"
+  "s": "Réglages d'entrepôt"
  },
  "Suggested value for": {
   "m": 0.67,
@@ -709,11 +701,7 @@
  },
  "Optimising your cloud store will lose all the history, which will make it impossible for any client that is not completely up to date to synchronise. You have been warned!": {
   "m": 0.85,
-  "s": "L'optimisation de votre mémoire de nuage perdra tout l'histoire, ce qui empêchera tout client qui n'est pas complètement à jour de se synchroniser. Tu étais prévenu!"
- },
- "Security Details": {
-  "m": 0.98,
-  "s": "informations de sécurité"
+  "s": "L'optimisation de votre entrepôt nuage perdra tout l'histoire, ce qui empêchera tout client qui n'est pas complètement à jour de se synchroniser. Tu étais prévenu!"
  },
  "The cloud currently has $1 action$?($1!=1,s,) in the history.": {
   "m": 0.85,
@@ -783,10 +771,6 @@
   "m": 0.85,
   "s": "Enregistrer automatiquement chaque fois que quelque chose change"
  },
- "Change language": {
-  "m": 1,
-  "s": "Changer la langue"
- },
  "Database": {
   "m": 1,
   "s": "Base de données"
@@ -813,7 +797,7 @@
  },
  "Choose a local image that will be copied and used to hide your cloud store.": {
   "m": 0.85,
-  "s": "Choisissez une image locale qui sera copiée et utilisée pour masquer votre memoire du nuage."
+  "s": "Choisissez une image locale qui sera copiée et utilisée pour masquer votre entrepôt nuage."
  },
  "Javascript module load failed": {
   "m": 0.85,
@@ -825,10 +809,62 @@
  },
  "Store path may not be empty": {
   "m": 0.85,
-  "s": "Chemin d’accès du magasin ne peut pas être vide"
+  "s": "Chemin d’accès de l'entrepôt ne peut pas être vide"
  },
  "Store path:": {
   "m": 0.85,
   "s": "Boutique:"
+ },
+ "Check that the cloud store exists and you have the correct password.": {
+  "m": 0.85,
+  "s": "Vérifiez que l'entrepôt nuage existe et vous avez le mot de passe."
+ },
+ "Be very careful!": {
+  "m": 0.97,
+  "s": "Il faut faire très attention ."
+ },
+ "Calculating if optimisation is worthwhile": {
+  "m": 0.85,
+  "s": "Calcul si l’optimisation est intéressante"
+ },
+ "Change the encryption password for the store.": {
+  "m": 0.85,
+  "s": "Changer le mot de passe de cryptage pour l'entrepôt."
+ },
+ "Encryption Details": {
+  "m": 0.85,
+  "s": "Détails de chiffrement"
+ },
+ "Optimise the store by removing old actions.": {
+  "m": 0.85,
+  "s": "Optimiser l'entrepôt en supprimant les anciennes actions."
+ },
+ "Reset": {
+  "m": 1,
+  "s": "reset"
+ },
+ "Reset default constraints": {
+  "m": 0.85,
+  "s": "Réinitialiser les contraintes par défaut"
+ },
+ "Squirrel is Copyright © 2015-2018 Crawford Currie <a href=\"http://c-dot.co.uk\">http://c-dot.co.uk</a>": {
+  "m": 0.85,
+  "s": "L’écureuil est Copyright © 2015-2018 Crawford Currie </a> http://c-dot.co.uk undefined"
+ },
+ "The cloud store keeps a history of all changes from all clients, so that every client has a chance to see every change, however long it ihas been since it last updated. This history can get quite long, so you may want to optimise it by removing this history. You should only do this if you are 100% certain that no client has local changes that may need to be saved to the cloud.": {
+  "m": 0.85,
+  "s": "Le maintient de l'entrepôt nuage une histoire de tous les changements de tous les clients, afin que chaque client a une chance de voir chaque changement, cependant longtemps il ihas depuis il mis à jour. Cette histoire peut obtenir assez longue, donc vous pouvez optimiser en supprimant cette histoire. Vous devriez seulement faire cela si vous êtes certain qu’aucun client n’a des modifications locales qui devront être enregistrées dans le nuage à 100 %."
+ },
+ "There is no point in optimisation, it will not improve performance": {
+  "m": 0.85,
+  "s": "Il n’y a aucun point en optimisation, il améliorera pas les performances"
+ },
+ "This may be different to the password you use to log in to your cloud data store.": {
+  "m": 0.85,
+  "s": "Cela peut être différent du mot de passe que vous permet de vous connecter à votre entrepôt nuage."
+ },
+ "View/Edit raw JSON for the entire store": {
+  "m": 0.85,
+  "s": "Afficher/modifier JSON brut pour tout l’entrepôt"
  }
 }

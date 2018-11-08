@@ -94,7 +94,7 @@ var Squirrel = {
                 })
                 .each(function () {
                     this.href = this.href.replace(
-                        /\/themes\/[^\/]+/, "/themes/" + theme);
+                        /\/themes\/[^/]+/, "/themes/" + theme);
                     $(this)
                         .replaceWith($(this));
                     Utils.sometime("reset_styling");

@@ -1,11 +1,12 @@
 /*@preserve Copyright (C) 2018 Crawford Currie http://c-dot.co.uk license MIT*/
 
 /* global global:true */
+/* global AbstractStore */
 /* global HttpServerStore */
 
 /**
  * 'cloud' store using ajax to communicate with a remote file server e.g.
- * 
+ *
  * npm i -g simple-server
  * simple-server directory_to_server 3000
  *
@@ -13,8 +14,6 @@
  *
  * python -m SimpleHTTPServer 3000
  */
-
-global.CLOUD_STORE = HttpServerStore;
 
 /*
   SMELL: currently the same pass is used for basic auth and for encryption.
@@ -33,6 +32,8 @@ function HttpServerStore(params) {
     if (!self.url)
         throw "No http_url defined, cannot start HttpServerStore";
 }
+
+global.CLOUD_STORE = HttpServerStore;
 
 HttpServerStore.prototype = Object.create(AbstractStore.prototype);
 

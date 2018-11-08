@@ -154,6 +154,8 @@ Hoard.prototype.clear_actions = function () {
  * action structure to clone, or arguments (type, path, time, data)
  */
 Hoard.new_action = function () {
+    "use strict";
+
     var type, path, data, time;
     if (typeof arguments[0] === "string") {
         type = arguments[0];
@@ -186,6 +188,8 @@ Hoard.new_action = function () {
  * defaulted fields)
  */
 Hoard.prototype.push_action = function () {
+    "use strict";
+
     var copy = Hoard.new_action.apply(this, arguments);
     this.actions.push(copy);
     return copy;
@@ -197,6 +201,8 @@ Hoard.prototype.push_action = function () {
  * @return the action popped
  */
 Hoard.prototype.pop_action = function () {
+    "use strict";
+
     if (global.DEBUG && this.actions.length === 0)
         throw this.name + " hoard error: Cannot pop from empty actions stream";
     return this.actions.pop();
@@ -210,6 +216,8 @@ Hoard.prototype.pop_action = function () {
  * of the node identified by the path
  */
 Hoard.prototype.locate_node = function (path, offset) {
+    "use strict";
+
     var node = this.cache;
     offset = offset || 0;
 
@@ -383,6 +391,8 @@ Hoard.prototype.play_action = function (e, listener) {
  * @return the number of actions added
  */
 Hoard.prototype.merge_actions = function (actions) {
+    "use strict";
+
     var etop = 0;
     var added = 0;
 

@@ -13,7 +13,7 @@
  * classes:
  *   tree-node (always)
  *   tree-leaf - if this is a leaf node
- *   tree-collection - if this is an intermediate node   
+ *   tree-collection - if this is an intermediate node
  *   tree-modified (if UI modified)
  *   tree-root - only on the root of the tree (which need not be an LI)
  * data:
@@ -93,7 +93,6 @@
      */
     tree_widget._create = function () {
 
-        var self = this;
         var $node = this.element;
 
         if (this.options.compare)
@@ -293,7 +292,7 @@
             drag: handleDrag,
             stop: handleStop
         });
-    };
+    }
 
     /**
      * Find the path for a DOM node or jQuery node.
@@ -359,6 +358,33 @@
             .addClass("tree-modified")
             .data("last-time-changed", time);
     };
+
+    // Add UI components for handling any alarm that may be on
+    // the node
+    function decorate_with_alarm($node) {
+        var alarm = $node.data("alarm");
+        if (!alarm)
+            return; // no alarm
+        $node
+            .find(".tree-key")
+            .first()
+            .before(function () {
+                var $button = $(document.createElement("button"))
+                    .addClass("tree-alarm");
+
+                $button.iconbutton({
+                        icon: "squirrel-icon-alarm"
+                    })
+                    .on("click", function () {
+                        $("#alarm_dlg")
+                            .squirrelDialog("open", {
+                                $node: $node
+                            });
+                        return false;
+                    });
+                return $button;
+            });
+    }
 
     /*
      * The first time the node is opened, it is expanded. This involves
@@ -490,7 +516,7 @@
         $node.children(".tree-subnodes").children().each(function () {
             expand_child($(this));
         });
-    };
+    }
 
     tree_widget.open = function () {
         var $node = this.element;
@@ -538,14 +564,9 @@
      */
     tree_widget.action_E = function (action, undoable) {
         var $node = this.element;
-        if (undoable) {
-            undoable({
-                type: "E",
-                path: this.getPath(),
-                time: action.time,
-                data: $node.data("value")
-            });
-        }
+        if (undoable)
+            undoable("E", this.getPath(),
+                action.time, $node.data("value"));
 
         $node
             .data("value", action.data)
@@ -566,10 +587,10 @@
         if (undoable) {
             // Not enough - all the subtree would need to be
             // regenerated
-            undoable(Hoard.new_action("N",
+            undoable("N",
                 this.getPath(),
                 action.time,
-                $node.data("value")));
+                $node.data("value"));
         }
 
         this._removeFromCaches();
@@ -580,33 +601,6 @@
 
         $node.remove();
     };
-
-    // Add UI components for handling any alarm that may be on
-    // the node
-    function decorate_with_alarm($node) {
-        var alarm = $node.data("alarm");
-        if (!alarm)
-            return; // no alarm
-        $node
-            .find(".tree-key")
-            .first()
-            .before(function () {
-                var $button = $(document.createElement("button"))
-                    .addClass("tree-alarm");
-
-                $button.iconbutton({
-                        icon: "squirrel-icon-alarm"
-                    })
-                    .on("click", function () {
-                        $("#alarm_dlg")
-                            .squirrelDialog("open", {
-                                $node: $node
-                            });
-                        return false;
-                    });
-                return $button;
-            });
-    }
 
     /**
      * @private
@@ -638,21 +632,12 @@
 
             // Undo by cancelling the new alarm
             if (undoable)
-                undoable({
-                    type: "C",
-                    path: this.getPath(),
-                    time: action.time
-                });
+                undoable("C", this.getPath(), action.time);
         } else {
             // Existing alarm, parts already exist.
             // Undo by rewriting the old alarm.
             if (undoable)
-                undoable({
-                    type: "A",
-                    path: this.getPath(),
-                    data: alarm,
-                    time: action.time
-                });
+                undoable("A", this.getPath(), action.time, alarm);
         }
 
         this.setModified(action.time);
@@ -668,14 +653,8 @@
         if (!alarm)
             return;
 
-        if (undoable) {
-            undoable({
-                type: "A",
-                path: this.getPath(),
-                data: alarm,
-                time: action.time
-            });
-        }
+        if (undoable)
+            undoable("A", this.getPath(), action.time, alarm);
 
         // run up the tree decrementing the alarm count
         $node.parents(".tree-node")
@@ -707,12 +686,7 @@
         if (constraints === action.data)
             return; // same constraints already
         if (undoable)
-            undoable({
-                type: "X",
-                path: this.getPath(),
-                data: constraints,
-                time: action.time
-            });
+            undoable("X", this.getPath(), action.time, constraints);
 
         this.element.data("constraints", action.data);
         this.setModified(action.time);
@@ -736,14 +710,8 @@
 
         newpath.push(oldpath.pop());
 
-        if (undoable) {
-            undoable({
-                type: "M",
-                path: newpath,
-                data: oldpath,
-                time: action.time
-            });
-        }
+        if (undoable)
+            undoable("M", newpath, action.time, oldpath);
     };
 
     /**
@@ -769,12 +737,7 @@
         $node.scroll_into_view();
 
         if (undoable) {
-            undoable({
-                type: "R",
-                path: $node.tree("getPath"), // no need to slice, not re-used
-                data: key,
-                time: action.time
-            });
+            undoable("R", $node.tree("getPath"), action.time, key);
         }
     };
 
@@ -797,14 +760,8 @@
                     on_create: function () {
                         // get_path will update the caches on the fly with the
                         // new node
-                        var path = this.tree("getPath");
-                        if (undoable) {
-                            undoable({
-                                type: "D",
-                                path: path,
-                                time: action.time
-                            });
-                        }
+                        if (undoable)
+                            undoable("D", this.tree("getPath"), action.time);
                         if (typeof chain !== "undefined")
                             chain(this);
                     }

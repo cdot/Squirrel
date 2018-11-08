@@ -6,7 +6,7 @@
  * jQuery widget for twisting
  * Create open-close buttons on a container
  *
- * Classes used: 
+ * Classes used:
  * .twisted-title - optional element that will be shown even when
  * the twist is closed and will also be sensitive to open/close clicks
  * .twisted-button - applied to the open/close button

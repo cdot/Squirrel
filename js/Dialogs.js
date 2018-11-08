@@ -6,6 +6,7 @@
 /* global global */
 /* global Steganographer */
 /* global Squirrel */
+/* global Hoard */
 
 /**
  * Common code for dialogs. This is enhanced by mixins in the mobile
@@ -184,7 +185,7 @@
 
             // <input type="password"> doesn't work for me on firefox;
             // simulate it
-            $pass.on("input", function (e) {
+            $pass.on("input", function () {
                 if (pass_hidden) {
                     var v = $pass.val();
                     if (v.length > hidden_pass.length) {
@@ -243,7 +244,7 @@
             });
     };
 
-    widget._open_delete = function (options) {
+    widget._open_delete = function () {
         var $dlg = this.element;
         this.control("path")
             .text(
@@ -262,7 +263,7 @@
             });
     };
 
-    widget._open_pick = function (options) {
+    widget._open_pick = function () {
         var $dlg = this.element;
 
         var $node = $dlg.data("node");
@@ -390,7 +391,7 @@
             });
     };
 
-    widget._open_randomise = function (options) {
+    widget._open_randomise = function () {
         var widgt = this;
         var $dlg = this.element;
         var $node = $dlg.data("node");
@@ -450,7 +451,7 @@
                 "expand",
                 Utils.deltaTimeString(alarmd),
                 alarmd.toLocaleDateString());
-    };
+    }
 
     widget._init_alarm = function () {
         var widgt = this;
@@ -488,7 +489,7 @@
             });
     };
 
-    widget._open_alarm = function (options) {
+    widget._open_alarm = function () {
         var $dlg = this.element;
         var $node = $dlg.data("node");
 
