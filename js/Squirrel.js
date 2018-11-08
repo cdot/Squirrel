@@ -177,43 +177,6 @@ var Squirrel = {
             });
     }
 
-    // Optional initialisation step, executed when both hoards are
-    // known to have loaded successfully.
-    function step_6a_merge_from_cloud(chain) {
-        if (global.DEBUG) console.debug("Merging from cloud hoard");
-        var conflicts = client.hoard.play_actions(
-            cloud.hoard.actions,
-            function (e) {
-                // this:Hoard, e:Action
-                DOMtree.action(e);
-            },
-            function (percent) {
-                $("#merge_progress")
-                    .text(percent + "%");
-            });
-        if (conflicts.length > 0) {
-            S.squeak({
-                title: TX.tx("Warning"),
-                severity: "warning",
-                message: TX.tx("Conflicts were detected while merging actions from the Cloud.") +
-                    " " +
-                    TX.tx("Please review these rejected actions before saving.")
-            });
-            $.each(conflicts, function (i, c) {
-                var e = c.conflict;
-                $("#squeak_dlg")
-                    .squirrelDialog("squeakAdd", {
-                        severity: "warning",
-                        message: Hoard.stringify_action(e) +
-                            ": " + c.message
-                    });
-            });
-        }
-        cloud.status = S.IS_LOADED;
-        // Finished with the cloud hoard (for now)
-        chain();
-    }
-
     // Determine if there are unsaved changes, and generate a warning
     // message for the caller to use.
     function unsaved_changes(max_changes) {
@@ -543,6 +506,9 @@ var Squirrel = {
         $("#authenticated")
             .show();
 
+        // Open the root node
+        $("#sites-node").tree("open");
+
         // Flush the sometimes, and allow new sometimes to be set
         Utils.sometime_is_now();
     }
@@ -565,6 +531,43 @@ var Squirrel = {
 
         // We are ready for interaction
         step_8_authenticated();
+    }
+
+    // Optional initialisation step, executed when both hoards are
+    // known to have loaded successfully.
+    function step_6a_merge_from_cloud(chain) {
+        if (global.DEBUG) console.debug("Merging from cloud hoard");
+        var conflicts = client.hoard.play_actions(
+            cloud.hoard.actions,
+            function (e) {
+                // this:Hoard, e:Action
+                DOMtree.action(e);
+            },
+            function (percent) {
+                $("#merge_progress")
+                    .text(percent + "%");
+            });
+        if (conflicts.length > 0) {
+            S.squeak({
+                title: TX.tx("Warning"),
+                severity: "warning",
+                message: TX.tx("Conflicts were detected while merging actions from the Cloud.") +
+                    " " +
+                    TX.tx("Please review these rejected actions before saving.")
+            });
+            $.each(conflicts, function (i, c) {
+                var e = c.conflict;
+                $("#squeak_dlg")
+                    .squirrelDialog("squeakAdd", {
+                        severity: "warning",
+                        message: Hoard.stringify_action(e) +
+                            ": " + c.message
+                    });
+            });
+        }
+        cloud.status = S.IS_LOADED;
+        // Finished with the cloud hoard (for now)
+        chain();
     }
 
     /**
@@ -944,7 +947,7 @@ var Squirrel = {
         var is_leaf = $node.hasClass("tree-leaf");
         var is_root = ui.target.closest(".tree-node")
             .hasClass("tree-root");
-        var is_open = $node.hasClass("tree-open");
+        var is_open = $node.hasClass("tree-node-is-open");
         var $root = $("body");
 
         if (global.DEBUG) console.debug("beforeOpen contextmenu on " + $node.data("key") +
@@ -1431,6 +1434,7 @@ var Squirrel = {
         return cloud;
     };
 
+    // Interface to action playing for interactive functions
     S.playAction = function (action, more) {
         action = client.hoard.push_action(action);
         var res = client.hoard.play_action(
@@ -1457,8 +1461,8 @@ var Squirrel = {
     /**
      * Push an undo
      */
-    S.pushUndo = function (action) {
-        undos.push(action);
+    S.pushUndo = function () {
+        undos.push(Hoard.new_action.apply(null, arguments));
     };
 
     /**

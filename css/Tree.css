@@ -40,7 +40,7 @@
 }
 
 /* Applied when a node is open */
-.tree-open {}
+.tree-node-is-open {}
 
 /* Applied to tree-title when a node is being hovered over */
 .tree-hover {

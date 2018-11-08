@@ -28,13 +28,41 @@ Making a translation will also generate a file called `strings.txt`
 which is convenient for pasting into Google Translate as a crude starting
 point.
 
-# Tests
+# Testing
 
-There is a directory of tests in `js/test'. These tests are written using the `Mocha' framework.
+## Unit tests
 
-Most of the tests are run with `node.js' using `make test'.
+There is a directory of unit tests in `js/test'. These tests are written using the `Mocha' framework.
+
+`make test'.
 
 Browser tests - including those for the remote stores - are invoked in the browser via HTML files. Load the files into the browser (note that Dropbox and Google Drive tests require valid redirects to be set up in the application.)
+
+## Browser testing
+
+The easiest way to test Squirrel in the browser is to use a local server
+with `HttpServerStore'. See README.md for more on running `node.js.server.js',
+which was designed with this specific purpose in mind.
+
+# Debugging
+
+The easiest way to debug is to use a local server with a plain text
+(unencrypted) store:
+
+`http://192.168.1.11/Squirrel/Squirrel.html?debug=1&plaintext=1`
+
+To debug using a plaintext HttpServerStore:
+
+`http://192.168.1.11/Squirrel/Squirrel.html?debug=1&plaintext=1&store=HttpServerStore&store_url=http://192.168.1.11:3000/remote_data`
+
+## Debug URL parameters
+- `debug=1` sets `global.DEBUG' to enable detailed console messages
+- `plaintext=1` for an unencrypted store
+- `dumpcloud=1` to dump the cloud. This can be useful when you have a problem with an encrypted store.
+
+## Debugging on Android
+
+Use remote debugging on your Android device. This is described in https://developers.google.com/web/tools/chrome-devtools/remote-debugging/
 
 # Hosting Squirrel on other sites
 
@@ -61,52 +89,6 @@ App key. Copy this and replace the APP_KEY constant in
 You will also have to configure appropriate an Oauth2 redirect URL (which
 must be hosted on an `https:` server.)
 
-# Debugging
-
-URL parameters that support debugging are as follows:
-
-`debug' will enable noisy console messages
-
-`plaintext' will suppress encryption
-
-## Debugging on Android
-
-Use remote debugging on your Android device. This is described in https://developers.google.com/web/tools/chrome-devtools/remote-debugging/
-
-For example, to debug using a plain text (unencrypted) store,
-
-`http://192.168.1.11/Squirrel/Squirrel.html?debug=1&plaintext=1`
-
-To debug using a plaintext HttpServerStore:
-
-`http://192.168.1.11/Squirrel/Squirrel.html?debug=1&plaintext=1&store=HttpServerStore&store_url=http://192.168.1.11:3000`
-
-### URL parameters
-
-`debug=1` sets `global.DEBUG' to enable detailed console messages
-
-`plaintext=1` for an unencrypted store
-
-`dumpcloud=1` to dump the cloud
-
-`steg=1' to enable steganography
-
-`store=<store name>' to set the store to use (default is `TestStore')
-
-Specific stores may use additional URL parameters. For example, the HttpServerStore requires a root URL, e.g.:
-
-`?store=HttpServerStore&url=http://192.168.1.11:3000'
-
-### HttpServerStore and the Standalone Server
-
-HttpServerStore can be used with any HTTP server that supports `GET' and `POST' with Basic Auth e.g. `express'.
-
-Squirrel includes a lightweight HTTP(S) server implemented using `node.js'. This is a simple file server that can be run stand-alone and supports GET and POST requests and basic auth, which is sufficient for use with `HttpServerStore'. You can run the server at the root of the distribution from the command-line using:
-
-`node node.js.server.js'
-
-This will start a server on port 3000 using the current directory as a data stor. Call with `--help' for more information.
-
 # Cookies
 
 Squirrel uses a number of client-side cookies as follows:
@@ -114,3 +96,5 @@ Squirrel uses a number of client-side cookies as follows:
 `ui_theme' contains the name of the select jQuery UI theme
 `ui_scale' contains the UI scale set by the user to increase/decrease font size
 `ui_autosave' contains the user's preference for automatic saves
+
+These cookies are not passed to the server.

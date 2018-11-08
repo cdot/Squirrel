@@ -60,6 +60,13 @@ https://cdn.rawgit.com/cdot/Squirrel/release/Squirrel.html?store=GoogleDriveStor
 but you are welcome to make your own copy and host it on your own
 trusted server.
 
+The following standard URL parameters are used:
+- `steg=1' to enable steganography
+- `store=<store name>' to set the store to use (default is `TestStore')
+
+Specific stores may use additional URL parameters. For example, the `HttpServerStore requires a URL', e.g.:
+- `?store=HttpServerStore&url=http://192.168.1.11:3000'
+
 A Squirrel store is rather like a traditional computer file system,
 which contains *folders* and *values*. A folder can contain other
 folders and values. A value is simply a string of test. Values are
@@ -105,25 +112,43 @@ Dropbox password.
 
 ### HttpServerStore
 
-This store will work with any web server that supports `GET' and `POST'.
-A suitable server is provided as part of the Squirrel release package.
-See DEVELOPING.md for more information on setting up your own server.
+This store will work with any HTTP server that supports `GET' and `POST'
+requests and BasicAuth, and permits writing files on the server.
 
-To use a HttpServerStore you need to tell Squirrel where to look for the
-store, and how to get into it. The following URL parameters are used:
+You need to tell Squirrel where to look for the server. The following URL
+parameters are used:
 
-`url' - this is the full URL to a directory on the server where Squirrel may GET and POST files.
+`url' - full URL pointing to the server location where Squirrel
+may save files.
 
-`user' - BasicAuth username
+For example, if the server is running on `https://myserver/my/files'
+you would use:
 
-`pass' - BasicAuth password
+`?store=HttpServerStore&url=https://myserver/my/files'
 
-`realm' - BasicAuth realm
+Note that the store uses Basic Authentication and should only ever be used with
+an https server.
+
+#### node.js.server.js
+
+A suitable super-lightweight server is provided as part of the Squirrel
+release package.
+
+To run the lightweight server, cd to the root of the distribution package and:
+
+`node node node.js.server.js --port 3000 --user User --pass Pass --cert cert.pem --key key.pem'
+
+This will start a HTTPS server on port 3000 using the current directory as the root of the file store. `node node node.js.server.js --help' will give help on parameters.
+
+The same server can even serve the Squirrel application. Start the server as described above, then use a URL like this:
+
+`https://myhost:3000/Squirrel.html?store=HttpServerStore&url=https://myhost:3000/remote_data'
 
 ### LocalStorageStore
 
-You may not want to use a Cloud store, but store your passwords locally in
-the machine where the browser is running. This store lets you do that.
+You may not want to use a Cloud store, but store your password safe locally in
+the machine where the browser is running. This store lets you do that, however
+you will not be able to share the safe with other machines.
 
 ## Security risks
 

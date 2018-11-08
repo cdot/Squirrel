@@ -86,6 +86,11 @@
 
     tree_widget.hide_values = hide_values;
 
+    /**
+     * Construct a new UI element for a tree node. The created element
+     * is a placeholder only until the parent is opened, at which time the
+     * element is populated with controls.
+     */
     tree_widget._create = function () {
 
         var self = this;
@@ -98,61 +103,6 @@
         // This will be a div for the root, and an li for any other node
         // this.options is the options passed
 
-        // Invoked on tree-title
-        function hoverIn( /*evt*/ ) {
-            S.contextMenu("close");
-
-            if ($("body")
-                .find("input.in_place_editor")
-                .length > 0)
-                return true;
-
-            $(".tree-hover")
-                .removeClass("tree-hover");
-
-            if (hide_values() && $node.hasClass("tree-leaf")) {
-                $(this)
-                    .find(".tree-value")
-                    .each(
-                        function () {
-                            $(this)
-                                .text($node.data("value"));
-                        });
-            }
-
-            $(this)
-                .addClass("tree-hover")
-                .find(".tree-draghandle")
-                .first()
-                .show();
-
-            return false;
-        }
-
-        // Invoked on tree-title
-        function hoverOut( /*evt*/ ) {
-            if (S.contextMenu("isOpen") ||
-                $("body")
-                .find("input.in_place_editor")
-                .length > 0)
-                return true;
-
-            if (hide_values() && $node.hasClass("tree-leaf")) {
-                $(this)
-                    .find(".tree-value")
-                    .each(
-                        function () {
-                            $(this)
-                                .text(obscure_value($node.data("value")));
-                        });
-            }
-            $(this)
-                .removeClass("tree-hover")
-                .find(".tree-draghandle")
-                .first()
-                .hide();
-        }
-
         var options = this.options;
         var is_leaf = false;
         var is_root = !options.path;
@@ -160,6 +110,9 @@
             $parent;
 
         $node.addClass("tree-node");
+        // Flag that it hasn't been opened yet, so its child nodes
+        // will have no controls.
+        $node.addClass("tree-never-opened");
 
         if (is_root) {
             cache[""] = $node;
@@ -171,15 +124,6 @@
             $parent = this.getNodeFromPath(parent);
             $node.data("key", key);
 
-            var $title = $(document.createElement("div"))
-                .addClass("tree-title")
-                // SMELL: only if screen is wide enough!
-                .hover(hoverIn, hoverOut)
-                .on("paste", function () {
-                    debugger;
-                })
-                .appendTo($node);
-
             if (typeof options.value !== "undefined" &&
                 options.value !== null) {
 
@@ -188,72 +132,17 @@
                     .data("is_leaf", true)
                     .addClass("tree-leaf");
                 is_leaf = true;
-            } else {
-                // Add open/close button on running nodes, except the root
-                // which is always open
-                var $control = $(document.createElement("button"))
-                    .addClass("tree-open-close");
-                $title.prepend($control);
-                $node.addClass("tree-open");
-                $control.iconbutton({
-                        icon: "squirrel-icon-folder-closed"
-                    })
-                    .on($.getTapEvent(),
-                        function () {
-                            $node.tree("toggle");
-                            return false;
-                        });
-            }
-
-            var $info = $(document.createElement("div"))
-                .addClass("tree-info")
-                .appendTo($title);
-
-            // Create the key span
-            $(document.createElement("span"))
-                .appendTo($info)
-                .addClass("tree-key")
-                .text(key)
-                .on($.isTouchCapable && $.isTouchCapable() ?
-                    "doubletap" : "dblclick",
-                    function (e) {
-                        if (global.DEBUG) console.debug("Double-click 1");
-                        e.preventDefault();
-                        self.editKey();
-                    });
-
-            if (is_leaf) {
-                $(document.createElement("span"))
-                    .text(" : ")
-                    .addClass("tree-separator")
-                    .appendTo($info);
-                $(document.createElement("span"))
-                    .appendTo($info)
-                    .addClass("tree-value")
-                    .text(obscure_value(options.value))
-                    .on($.isTouchCapable && $.isTouchCapable() ?
-                        "doubletap" : "dblclick",
-                        function (e) {
-                            if (global.DEBUG) console.debug("Double-click 2");
-                            e.preventDefault();
-                            self.editValue();
-                        });
             }
         }
 
         if (!is_leaf) {
             var $ul = $(document.createElement("ul"))
-                .addClass("sortable tree-subnodes");
+                .addClass("sortable tree-subnodes")
+                .hide();
             $node
                 .addClass("tree-collection")
                 .append($ul);
         }
-
-        // Close to hide the children (or to open the root)
-        this.toggle();
-
-        if (!is_root)
-            this._makeDraggable();
 
         if ($parent)
             // Insert-sort into the $parent
@@ -331,8 +220,7 @@
             .addClass("squirrel-icon-rang");
     };
 
-    tree_widget._makeDraggable = function () {
-        var $node = this.element;
+    function _makeDraggable($node) {
 
         function handleDrag(event) {
             // Need to get from a position to a target element
@@ -472,35 +360,174 @@
             .data("last-time-changed", time);
     };
 
+    /*
+     * The first time the node is opened, it is expanded. This involves
+     * decorating the node with title and open buttons
+     */
+    function _on_first_open($node) {
+
+        // Invoked on tree-title
+        function hoverIn( /*evt*/ ) {
+            S.contextMenu("close");
+
+            if ($("body")
+                .find("input.in_place_editor")
+                .length > 0)
+                return true;
+
+            $(".tree-hover")
+                .removeClass("tree-hover");
+
+            if (hide_values() && $node.hasClass("tree-leaf")) {
+                $(this)
+                    .find(".tree-value")
+                    .each(
+                        function () {
+                            $(this)
+                                .text($node.data("value"));
+                        });
+            }
+
+            $(this)
+                .addClass("tree-hover")
+                .find(".tree-draghandle")
+                .first()
+                .show();
+
+            return false;
+        }
+
+        // Invoked on tree-title
+        function hoverOut( /*evt*/ ) {
+            if (S.contextMenu("isOpen") ||
+                $("body")
+                .find("input.in_place_editor")
+                .length > 0)
+                return true;
+
+            if (hide_values() && $node.hasClass("tree-leaf")) {
+                $(this)
+                    .find(".tree-value")
+                    .each(
+                        function () {
+                            $(this)
+                                .text(obscure_value($node.data("value")));
+                        });
+            }
+            $(this)
+                .removeClass("tree-hover")
+                .find(".tree-draghandle")
+                .first()
+                .hide();
+        }
+
+        function expand_child($child) {
+            // <title>
+            var $title = $(document.createElement("div"))
+                .addClass("tree-title")
+                // SMELL: only if screen is wide enough!
+                .hover(hoverIn, hoverOut)
+                .on("paste", function () {
+                    debugger;
+                })
+                .prependTo($child);
+
+            if (!$child.hasClass("tree-leaf")) {
+                // Add open/close button on child none-leaf nodes
+                var $control = $(document.createElement("button"))
+                    .addClass("tree-node-is-open-close");
+                $control.appendTo($title);
+                $control.iconbutton({
+                        icon: "squirrel-icon-folder-closed"
+                    })
+                    .on($.getTapEvent(),
+                        function () {
+                            $child.tree("toggle");
+                            return false;
+                        });
+            }
+
+            // <info>
+            var $info = $(document.createElement("div"))
+                .addClass("tree-info")
+                .appendTo($title);
+
+            // Create the key span
+            $(document.createElement("span"))
+                .appendTo($info)
+                .addClass("tree-key")
+                .text($child.data("key"))
+                .on($.isTouchCapable && $.isTouchCapable() ?
+                    "doubletap" : "dblclick",
+                    function (e) {
+                        if (global.DEBUG) console.debug("Double-click 1");
+                        e.preventDefault();
+                        $(e.target).closest(".tree-node").tree("editKey");
+                    });
+
+            if ($child.hasClass("tree-leaf")) {
+                $(document.createElement("span"))
+                    .text(" : ")
+                    .addClass("tree-separator")
+                    .appendTo($info);
+                $(document.createElement("span"))
+                    .appendTo($info)
+                    .addClass("tree-value")
+                    .text(obscure_value($child.data("value")))
+                    .on($.isTouchCapable && $.isTouchCapable() ?
+                        "doubletap" : "dblclick",
+                        function (e) {
+                            if (global.DEBUG) console.debug("Double-click 2");
+                            e.preventDefault();
+                            $(e.target).closest(".tree-node").tree("editValue");
+                        });
+            }
+            _makeDraggable($child);
+            decorate_with_alarm($child);
+        }
+
+        $node.removeClass("tree-never-opened");
+        $node.children(".tree-subnodes").children().each(function () {
+            expand_child($(this));
+        });
+    };
+
     tree_widget.open = function () {
         var $node = this.element;
-        if ($node.hasClass("tree-open"))
+        if ($node.hasClass("tree-node-is-open"))
             return $node;
-        if (!$node.hasClass("tree-root"))
-            $node.find(".tree-open-close")
-            .first()
-            .iconbutton("option", "icon", "squirrel-icon-folder-open");
+
+        if ($node.hasClass("tree-never-opened"))
+            // Expand children for display, if this is the
+            // first time this node has been opened
+            _on_first_open($node);
+
+        if (!$node.hasClass("tree-root")) {
+            $node.find(".tree-node-is-open-close")
+                .first()
+                .iconbutton("option", "icon", "squirrel-icon-folder-open");
+        }
         return $node
-            .addClass("tree-open")
+            .addClass("tree-node-is-open")
             .children(".tree-subnodes")
             .show();
     };
 
     tree_widget.close = function () {
         var $node = this.element;
-        if (!$node.hasClass("tree-open"))
+        if (!$node.hasClass("tree-node-is-open"))
             return $node;
-        $node.find(".tree-open-close")
+        $node.find(".tree-node-is-open-close")
             .first()
             .iconbutton("option", "icon", "squirrel-icon-folder-closed");
         return $node
-            .removeClass("tree-open")
+            .removeClass("tree-node-is-open")
             .children(".tree-subnodes")
             .hide();
     };
 
     tree_widget.toggle = function () {
-        if (this.element.hasClass("tree-open"))
+        if (this.element.hasClass("tree-node-is-open"))
             return this.close();
         return this.open();
     };
@@ -539,12 +566,10 @@
         if (undoable) {
             // Not enough - all the subtree would need to be
             // regenerated
-            undoable({
-                type: "N",
-                path: this.getPath(),
-                time: action.time,
-                data: $node.data("value")
-            });
+            undoable(Hoard.new_action("N",
+                this.getPath(),
+                action.time,
+                $node.data("value")));
         }
 
         this._removeFromCaches();
@@ -555,6 +580,33 @@
 
         $node.remove();
     };
+
+    // Add UI components for handling any alarm that may be on
+    // the node
+    function decorate_with_alarm($node) {
+        var alarm = $node.data("alarm");
+        if (!alarm)
+            return; // no alarm
+        $node
+            .find(".tree-key")
+            .first()
+            .before(function () {
+                var $button = $(document.createElement("button"))
+                    .addClass("tree-alarm");
+
+                $button.iconbutton({
+                        icon: "squirrel-icon-alarm"
+                    })
+                    .on("click", function () {
+                        $("#alarm_dlg")
+                            .squirrelDialog("open", {
+                                $node: $node
+                            });
+                        return false;
+                    });
+                return $button;
+            });
+    }
 
     /**
      * @private
@@ -569,23 +621,7 @@
 
         if (typeof alarm === "undefined") {
             // No existing alarm, need to create parts
-            var $button = $(document.createElement("button"))
-                .addClass("tree-alarm");
-            $node
-                .find(".tree-key")
-                .first()
-                .before($button);
-
-            $button.iconbutton({
-                    icon: "squirrel-icon-alarm"
-                })
-                .on("click", function () {
-                    $("#alarm_dlg")
-                        .squirrelDialog("open", {
-                            $node: $node
-                        });
-                    return false;
-                });
+            decorate_with_alarm($node);
 
             // Run up the tree, incrementing the alarm count
             $node.parents(".tree-node")
