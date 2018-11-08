@@ -16,18 +16,21 @@
     "use strict";
 
     var widget = {};
+    const DEFAULT_RANDOM_LEN = 30;
+    const DEFAULT_RANDOM_CHS = "A-Za-z0-9!%^&*_$+-=;:@#~,./?";
 
     /* Helper for add, check wrapping node for same key value  */
     widget._validateUniqueKey = function () {
         // Disable OK if key value exists or is invalid
-        var $input = this.get("key");
+        var w = this;
+        var $input = w.control("key");
         var val = $input.val();
         var enabled = true;
 
         if (!/\S/.test(val)) // empty?
             enabled = false;
         else {
-            var $ul = this.element.data("parent")
+            var $ul = w.data("parent")
                 .find("ul")
                 .first();
             $ul.children(".tree-node")
@@ -41,13 +44,13 @@
         }
 
         if (enabled) {
-            this.get("ok")
+            this.control("ok")
                 .iconbutton("enable");
             $input
                 .removeClass("dlg-disabled")
                 .attr("title", TX.tx("Enter new name"));
         } else {
-            this.get("ok")
+            this.control("ok")
                 .iconbutton("disable");
             $input
                 .addClass("dlg-disabled")
@@ -55,8 +58,12 @@
         }
     }
 
-    widget.get = function (name) {
+    widget.control = function (name) {
         return this.element.find("[data-id='" + name + "']");
+    };
+
+    widget.data = function (name, val) {
+        return this.element.data(name, val);
     };
 
     widget.open = function (options) {
@@ -69,19 +76,23 @@
             //var title = this.option("title");
             //$dlg.find(".ui-dialog-title").text(title);
             $dlg.addClass("dlg-initialised");
-            this.get("cancel")
+            this.control("cancel")
                 .on($.getTapEvent(), function () {
                     $dlg.squirrelDialog("close");
                     return false;
                 });
             fn = this["_init_" + id];
             if (typeof fn !== "undefined")
-                fn.call(this, $dlg)
+                fn.call(this)
         }
 
         fn = this["_open_" + id];
-        if (typeof fn !== "undefined")
-            fn.call(this, $dlg, options);
+        if (typeof fn !== "undefined") {
+            var $node = options.$node;
+            if ($node)
+                $dlg.data("node", $node);
+            fn.call(this, options);
+        }
 
         if ($.isTouchCapable() && !this.options.position) {
             this.options.position = {
@@ -105,16 +116,17 @@
      * pass_required - set true if the store requires a password
      * store - store we are logging in to
      */
-    widget._open_login = function ($dlg, options) {
-        this.get("uReq")
+    widget._open_login = function (options) {
+        var $dlg = this.element;
+        this.control("uReq")
             .toggle(options.user_required);
-        this.get("pReq")
+        this.control("pReq")
             .toggle(options.pass_required);
 
-        var $user = this.get("user");
-        var $pass = this.get("pass");
+        var $user = this.control("user");
+        var $pass = this.control("pass");
         var skip_pass_change = 0;
-        var $signin = this.get("signin");
+        var $signin = this.control("signin");
         var pass_hidden = true,
             hidden_pass = '';
 
@@ -156,14 +168,13 @@
         }
 
         if (options.pass_required) {
-            this.get("showpass")
+            this.control("showpass")
                 .on("click", function () {
                     if (pass_hidden) {
                         skip_pass_change++;
                         $pass.val(hidden_pass);
                         pass_hidden = false;
                     } else {
-                        var v = $pass.val();
                         hidden_pass = $pass.val();
                         skip_pass_change++;
                         $pass.val(hidden_pass.replace(/./g, "•"));
@@ -190,7 +201,7 @@
                 return false;
             });
 
-            this.get("foruser")
+            this.control("foruser")
                 .toggle(options.store.user() !== null)
                 .text(options.store.user() || "");
 
@@ -217,46 +228,48 @@
     /**
      * Confirm deletion of a node
      */
-    widget._init_delete = function ($dlg) {
-        this.get("ok")
+    widget._init_delete = function () {
+        var $dlg = this.element;
+        this.control("ok")
             .on($.getTapEvent(), function () {
                 $dlg.squirrelDialog("close");
                 S.playAction(Hoard.new_action(
                     "D", $dlg.data("node").tree("getPath"), Date.now()));
                 return true;
             });
-        this.get("cancel")
+        this.control("cancel")
             .on($.getTapEvent(), function () {
                 $dlg.squirrelDialog("close");
                 return false;
             });
     };
 
-    widget._open_delete = function ($dlg, options) {
-        var $node = options.$node;
-        $dlg.data("node", $node);
-        this.get("path")
+    widget._open_delete = function (options) {
+        var $dlg = this.element;
+        this.control("path")
             .text(
-                $node.tree("getPath")
+                $dlg.data("node").tree("getPath")
                 .join("↘"));
-        this.get("coll")
+        this.control("coll")
             .toggle(!$node.hasClass("tree-leaf"));
     };
 
-    widget._init_pick = function ($dlg) {
-        this.get("clear")
+    widget._init_pick = function () {
+        var $dlg = this.element;
+        this.control("clear")
             .on($.getTapEvent(), function () {
                 $dlg.find(".dlg-picked")
                     .removeClass("dlg-picked");
             });
     };
 
-    widget._open_pick = function ($dlg, options) {
-        var $node = options.$node;
+    widget._open_pick = function (options) {
+        var $dlg = this.element;
 
+        var $node = $dlg.data("node");
         var val = $node.data("value");
-        var $which = this.get("which");
-        var $from = this.get("from");
+        var $which = this.control("which");
+        var $from = this.control("from");
         var i, $f;
 
         $dlg.find(".dlg-pick-cell")
@@ -303,88 +316,120 @@
     /**
      * Password generation for the given leaf node
      */
-    widget._init_randomise = function ($dlg) {
-        var self = this;
-        this.get("again")
+    function constraints_changed(widgt) {
+        var $node = widgt.element.data("node");
+        var nc = $node.data("constraints");
+        if (typeof nc !== "undefined")
+            nc = nc.split(/;/, 2);
+        else
+            nc = [DEFAULT_RANDOM_LEN, DEFAULT_RANDOM_CHS];
+        var dlg_l = widgt.control("len").val();
+        var dlg_c = widgt.control("chs").val();
+
+        if (dlg_l != nc[0] || dlg_c != nc[1])
+            widgt.control("remember").show();
+        else
+            widgt.control("remember").hide();
+
+        if (dlg_l !== DEFAULT_RANDOM_LEN || dlg_c !== DEFAULT_RANDOM_CHS)
+            widgt.control("reset").show();
+        else
+            widgt.control("reset").hide();
+
+        widgt.control("again")
+            .trigger($.getTapEvent());
+    }
+
+    function reset_constraints(widgt) {
+        widgt.control("len").val(DEFAULT_RANDOM_LEN);
+        widgt.control("chs").val(DEFAULT_RANDOM_CHS);
+        constraints_changed(widgt);
+    }
+
+    widget._init_randomise = function () {
+        var widgt = this;
+        var $dlg = widgt.element;
+
+        this.control("again")
             .on($.getTapEvent(), function () {
-                self.get("idea")
+                widgt.control("idea")
                     .text(Utils.generate_password({
-                        length: self.get("len")
+                        length: widgt.control("len")
                             .val(),
-                        charset: self.get("chs")
+                        charset: widgt.control("chs")
                             .val()
                     }));
                 return false;
             });
-        this.get("use")
+        this.control("use")
             .on($.getTapEvent(), function () {
                 $dlg.squirrelDialog("close");
                 S.playAction(Hoard.new_action(
                     "E", $dlg.data("node").tree("getPath"), Date.now(),
-                    self.get("idea").text()));
+                    widgt.control("idea").text()));
                 return true;
             });
-        this.get("len")
-            .on("input", function () {
-                self.get("remember")
-                    .show();
+        this.control("len")
+            .on("change", function () {
+                constraints_changed(widgt);
             });
-        this.get("chs")
-            .on("input", function () {
-                self.get("remember")
-                    .show();
+        this.control("chs")
+            .on("change", function () {
+                constraints_changed(widgt);
             });
-        this.get("remember")
+        this.control("remember")
             .on($.getTapEvent(), function () {
-                var constraints = self.get("len")
-                    .val() +
-                    ';' + self.get("chs")
-                    .val();
                 S.playAction(Hoard.new_action(
                     "X", $dlg.data("node").tree("getPath"), Date.now(),
-                    constraints));
-                $(this)
-                    .hide();
+                    widgt.control("len").val() + ";" +
+                    widgt.control("chs").val()));
+                constraints_changed(widgt);
+            });
+        this.control("reset")
+            .on($.getTapEvent(), function () {
+                reset_constraints(widgt);
             });
     };
 
-    widget._open_randomise = function ($dlg, options) {
-        var self = this;
-        var $node = options.$node;
+    widget._open_randomise = function (options) {
+        var widgt = this;
+        var $dlg = this.element;
+        var $node = $dlg.data("node");
         var my_key = $node.data("key");
-        $dlg.data("node", $node);
-
         var c = $node.data("constraints");
+
         if (c) {
             c = c.split(";", 2);
-            self.get("len")
-                .val(c[0]);
-            self.get("chs")
-                .val(c[1]);
+            widgt.control("len").val(c[0]);
+            widgt.control("chs").val(c[1]);
         }
 
         var path = $node.tree("getPath");
-        this.get("path")
+        this.control("path")
             .text(path.join("↘"));
-        this.get("key")
+        this.control("key")
             .text(my_key);
-        this.get("again")
+        this.control("again")
             .trigger($.getTapEvent());
-        this.get("remember")
+
+        this.control("remember")
             .hide();
+
+        constraints_changed(this);
     };
 
-    widget._init_search = function ($dlg) {
-        var self = this;
-        this.get("ok")
+    widget._init_search = function () {
+        var widgt = this;
+        var $dlg = this.element;
+        this.control("ok")
             .on($.getTapEvent(), function () {
                 $dlg.squirrelDialog("close");
-                S.search(self.get("string")
+                S.search(widgt.control("string")
                     .val());
             });
-        this.get("string")
+        this.control("string")
             .on("change", function () {
-                self.get("ok")
+                widgt.control("ok")
                     .trigger($.getTapEvent());
             });
     };
@@ -395,38 +440,39 @@
 
     /* Helper */
     widget._updateNext = function () {
-        var numb = this.get("number")
+        var numb = this.control("number")
             .val();
         // Convert to days
-        numb = numb * Utils.TIMEUNITS[this.get("units")
+        numb = numb * Utils.TIMEUNITS[this.control("units")
             .val()].days;
         var alarmd = new Date(Date.now() + numb * Utils.MSPERDAY);
-        this.get("nextmod")
+        this.control("nextmod")
             .template(
                 "expand",
                 Utils.deltaTimeString(alarmd),
                 alarmd.toLocaleDateString());
     };
 
-    widget._init_alarm = function ($dlg) {
-        var self = this;
+    widget._init_alarm = function () {
+        var widgt = this;
+        var $dlg = this.element;
 
-        self.get("units")
+        widgt.control("units")
             .on("change", function () {
-                self._updateNext();
+                widgt._updateNext();
             });
 
-        self.get("number")
+        widgt.control("number")
             .on("change", function () {
-                self._updateNext();
+                widgt._updateNext();
             });
 
-        self.get("remind")
+        widgt.control("remind")
             .on($.getTapEvent(), function () {
                 $dlg.squirrelDialog("close");
-                var numb = self.get("number")
+                var numb = widgt.control("number")
                     .val() *
-                    Utils.TIMEUNITS[self.get("units")
+                    Utils.TIMEUNITS[widgt.control("units")
                         .val()].days;
                 S.playAction(Hoard.new_action(
                     "A", $dlg.data("node").tree("getPath"), Date.now(),
@@ -434,7 +480,7 @@
                 return false;
             });
 
-        self.get("clear")
+        widgt.control("clear")
             .on($.getTapEvent(), function () {
                 $dlg.squirrelDialog("close");
                 S.playAction(Hoard.new_action(
@@ -443,16 +489,17 @@
             });
     };
 
-    widget._open_alarm = function ($dlg, options) {
-        var $node = options.$node;
+    widget._open_alarm = function (options) {
+        var $dlg = this.element;
+        var $node = $dlg.data("node");
 
-        this.get("path")
+        this.control("path")
             .text($node.tree("getPath")
                 .join("↘"));
 
         $dlg.data("node", $node);
         var lastmod = $node.data("last-time-changed");
-        this.get("lastmod")
+        this.control("lastmod")
             .template(
                 "expand",
                 new Date(lastmod)
@@ -461,18 +508,18 @@
         if (typeof $node.data("alarm") !== "undefined") {
             var alarm = new Date(
                 lastmod + $node.data("alarm") * Utils.MSPERDAY);
-            this.get("current")
+            this.control("current")
                 .template(
                     "expand",
                     Utils.deltaTimeString(alarm),
                     alarm.toLocaleDateString())
                 .show();
-            this.get("clear")
+            this.control("clear")
                 .show();
         } else {
-            this.get("current")
+            this.control("current")
                 .hide();
-            this.get("clear")
+            this.control("clear")
                 .hide();
         }
 
@@ -481,22 +528,22 @@
 
     /* Helper */
     widget._change_image = function () {
-        var self = this;
+        var widgt = this;
 
         var fail = function (e) {
-            self.get("message")
+            widgt.control("message")
                 .template("pick", "cui")
                 .template("expand", e);
         };
-        var file = self.get("file")[0].files[0];
+        var file = widgt.control("file")[0].files[0];
         Utils.read_file(
             file,
             function (data) {
                 data = "data:" + file.type + ";base64," +
                     Utils.ArrayBufferToBase64(data);
-                if (data !== self.get("steg_image")
+                if (data !== widgt.control("steg_image")
                     .attr("src", data)) {
-                    self.get("steg_image")
+                    widgt.control("steg_image")
                         .attr("src", data)
                         .off("load")
                         .on("load", function () {
@@ -511,12 +558,12 @@
                                 fail(e);
                                 return;
                             }
-                            self.get("ok")
+                            widgt.control("ok")
                                 .iconbutton("enable");
                             var h = this.naturalHeight;
                             var w = this.naturalWidth;
                             this.height = 100;
-                            self.get("message")
+                            widgt.control("message")
                                 .template("pick", "xbyy")
                                 .template("expand", w, h);
                             if (S.getClient()
@@ -535,35 +582,37 @@
             "arraybuffer");
     };
 
-    widget._init_store_settings = function ($dlg) {
-        var self = this;
-        self.get("file")
+    widget._init_store_settings = function () {
+        var widgt = this;
+        var $dlg = this.element;
+
+        widgt.control("file")
             .hide()
             .on($.getTapEvent(), function () {
-                self._change_image();
+                widgt._change_image();
             });
 
-        self.get("image")
+        widgt.control("image")
             .on($.getTapEvent(), function (e) {
-                self.get("file")
+                widgt.control("file")
                     .trigger("change", e);
             });
 
-        self.get("storepath")
+        widgt.control("storepath")
             .on("keyup", function () {
-                if (self.get("storepath")
+                if (widgt.control("storepath")
                     .val() === "") {
-                    self.get("message")
+                    widgt.control("message")
                         .template("pick", "mnbe");
                     return false;
                 }
                 if (S.getClient()
                     .hoard.options.store_path !==
-                    self.get("storepath")
+                    widgt.control("storepath")
                     .val()) {
                     S.getClient()
                         .hoard.options.store_path =
-                        self.get("storepath")
+                        widgt.control("storepath")
                         .val();
                     if (S.getClient()
                         .status === S.IS_LOADED)
@@ -578,15 +627,15 @@
                 return true;
             })
             .on("change", function () {
-                self.get("ok")
+                widgt.control("ok")
                     .trigger($.getTapEvent());
             });
 
-        self.get("ok")
+        widgt.control("ok")
             .on($.getTapEvent(), function () {
-                if (self.get("storepath")
+                if (widgt.control("storepath")
                     .val() === "") {
-                    self.get("message")
+                    widgt.control("message")
                         .template("pick", "mnbe");
                     return false;
                 }
@@ -597,11 +646,12 @@
             });
     };
 
-    widget._open_store_settings = function ($dlg, chain) {
-        this.get("message")
+    widget._open_store_settings = function (chain) {
+        var $dlg = this.element;
+        this.control("message")
             .hide();
         $dlg.data("callback", chain);
-        this.get("storepath")
+        this.control("storepath")
             .focus()
             .val(
                 S.getClient()
@@ -611,49 +661,50 @@
     /**
      * Master password change dialog
      */
-    widget._init_chpw = function ($dlg) {
-        var self = this;
+    widget._init_chpw = function () {
+        var widgt = this;
+        var $dlg = this.element;
 
-        self.get("show")
+        widgt.control("show")
             .on("change", function () {
-                if (self.get("show")
+                if (widgt.control("show")
                     .prop("checked")) {
-                    self.get("pass")
+                    widgt.control("pass")
                         .attr("type", "text");
-                    self.get("conf")
+                    widgt.control("conf")
                         .attr("type", "text");
                 } else {
-                    self.get("pass")
+                    widgt.control("pass")
                         .attr("type", "password");
-                    self.get("conf")
+                    widgt.control("conf")
                         .attr("type", "password");
                 }
             });
 
         $dlg.data("validate", function () {
-            var p = self.get("pass")
+            var p = widgt.control("pass")
                 .val(),
-                c = self.get("conf")
+                c = widgt.control("conf")
                 .val();
 
-            self.get("nomatch")
+            widgt.control("nomatch")
                 .toggle(p !== c);
             return (p === c);
         });
 
-        self.get("conf")
+        widgt.control("conf")
             .on("change", function () {
                 $dlg.data("validate")
                     .call();
             });
 
-        self.get("set")
+        widgt.control("set")
             .on($.getTapEvent(), function () {
                 if (!$dlg.data("validate")
                     .call())
                     return false;
                 $dlg.squirrelDialog("close");
-                var p = self.get("pass")
+                var p = widgt.control("pass")
                     .val();
                 S.getClient()
                     .store.pass(p);
@@ -669,26 +720,28 @@
             });
     };
 
-    widget._open_chpw = function ($dlg) {
+    widget._open_chpw = function () {
+        var $dlg = this.element;
         $dlg.data("validate")
             .call();
     };
 
-    widget._init_json = function ($dlg) {
-        var self = this;
+    widget._init_json = function () {
+        var widgt = this;
+        var $dlg = this.element;
 
-        self.get("text")
+        widgt.control("text")
             .on("input", function () {
-                self.get("ok")
+                widgt.control("ok")
                     .iconbutton("enable");
             });
 
-        self.get("ok")
+        widgt.control("ok")
             .on($.getTapEvent(), function () {
                 $dlg.squirrelDialog("close");
                 var datum;
                 try {
-                    datum = JSON.parse(self.get("text")
+                    datum = JSON.parse(widgt.control("text")
                         .val());
                 } catch (e) {
                     S.squeak({
@@ -698,7 +751,7 @@
                     });
                     return false;
                 }
-                self.get("ok")
+                widgt.control("ok")
                     .iconbutton("disable");
                 if (global.DEBUG) console.debug("Importing...");
                 S.insert_data([], datum);
@@ -709,90 +762,91 @@
     widget._open_json = function () {
         var data = S.getClient()
             .hoard.JSON();
-        this.get("text")
+        this.control("text")
             .text(data)
             .select();
-        this.get("ok")
+        this.control("ok")
             .iconbutton("disable");
     };
 
-    widget._init_extras = function ($dlg) {
-        var self = this;
+    widget._init_extras = function () {
+        var widgt = this;
+        var $dlg = this.element;
 
-        self.get("theme")
+        widgt.control("theme")
             .on("change", function () {
                 S.theme($(this)
                     .val());
             });
 
-        self.get("autosave")
+        widgt.control("autosave")
             .on("change", function () {
                 S.autosave($(this)
                     .prop("checked"));
             });
 
-        self.get("hidevalues")
+        widgt.control("hidevalues")
             .on("change", function () {
                 $("#sites-node")
                     .tree("hide_values", $(this)
                         .prop("checked"));
             });
 
-        self.get("chpw")
+        widgt.control("chpw")
             .on($.getTapEvent(), function () {
                 $dlg.squirrelDialog("close");
                 $("#chpw_dlg")
                     .squirrelDialog("open");
             });
 
-        self.get("chss")
+        widgt.control("chss")
             .on($.getTapEvent(), function () {
                 $dlg.squirrelDialog("close");
                 $("#store_settings_dlg")
                     .squirrelDialog("open");
             });
 
-        self.get("theme")
+        widgt.control("theme")
             .on($.getTapEvent(), function () {
                 $dlg.squirrelDialog("close");
                 $("#theme_dlg")
                     .squirrelDialog("open");
             });
 
-        self.get("json")
+        widgt.control("json")
             .on($.getTapEvent(), function () {
                 $dlg.squirrelDialog("close");
                 $("#json_dlg")
                     .squirrelDialog("open");
             });
 
-        self.get("optimise")
+        widgt.control("optimise")
             .on($.getTapEvent(), function () {
                 $dlg.squirrelDialog("close");
                 $("#optimise_dlg")
                     .squirrelDialog("open");
             });
 
-        self.get("bigger")
+        widgt.control("bigger")
             .on("click", function () {
                 S.zoom(1.25);
             });
 
-        self.get("smaller")
+        widgt.control("smaller")
             .on("click", function () {
                 S.zoom(0.8);
             });
 
-        self.get("about")
+        widgt.control("about")
             .on($.getTapEvent(), function () {
                 $dlg.squirrelDialog("close");
                 $("#about_dlg")
                     .squirrelDialog("open");
             });
 
-        self.get("change_language")
+        widgt.control("change_language")
             .on($.getTapEvent(), function () {
-                var fresh = self.get("language").val();
+                var fresh = widgt.control("language").val();
                 var stale = TX.language(fresh);
                 if (fresh !== stale)
                     // Re-translate for new language
@@ -801,7 +855,7 @@
     };
 
     widget._open_extras = function () {
-        var self = this;
+        var widgt = this;
 
         if (!(S.USE_STEGANOGRAPHY ||
                 S.getCloud()
@@ -809,47 +863,49 @@
                 S.getCloud()
                 .store.options()
                 .needs_path)) {
-            self.get("chss")
+            widgt.control("chss")
                 .hide();
         }
 
-        self.get("autosave")
+        widgt.control("autosave")
             .prop("checked", S.autosave());
 
-        self.get("hidevalues")
+        widgt.control("hidevalues")
             .prop("checked", $("#sites-node")
                 .tree("hide_values"));
 
-        self.get("theme")
+        widgt.control("theme")
             .find("option:selected")
             .prop("selected", false);
-        self.get("theme")
+        widgt.control("theme")
             .find("option[value='" + S.theme() + "']")
             .prop("selected", true);
 
-        self.get("language")
+        widgt.control("language")
             .val(TX.language());
 
     };
 
-    widget._init_insert = function ($dlg) {
-        var self = this;
+    widget._init_insert = function () {
+        var widgt = this;
+        var $dlg = this.element;
 
-        self.get("key")
+        widgt.control("key")
             .on("input", function () {
-                self._validateUniqueKey();
+                widgt._validateUniqueKey();
             });
-        self.get("ok")
+        widgt.control("ok")
             .on($.getTapEvent(), function () {
                 $dlg.squirrelDialog("close");
                 S.add_child_node($dlg.data("parent"),
-                    self.get("key")
+                    widgt.control("key")
                     .val(),
                     $dlg.data("data"));
             });
     };
 
-    widget._open_insert = function ($dlg, options) {
+    widget._open_insert = function (options) {
+        var $dlg = this.element;
         if (global.DEBUG) console.debug("Pasting");
         var $parent = options.$node;
         $dlg.data("parent", $parent);
@@ -866,65 +922,67 @@
                 if (m)
                     i = Math.max(i, m[1] ? parseInt(m[1]) : 0);
             });
-        this.get("key")
+        this.control("key")
             .val(base + (i >= 0 ? (" " + (i + 1)) : ""));
     };
 
-    widget._init_add = function ($dlg) {
-        var self = this;
+    widget._init_add = function () {
+        var widgt = this;
+        var $dlg = this.element;
 
-        self.get("key")
+        widgt.control("key")
             .on("input", function () {
-                self._validateUniqueKey();
+                widgt._validateUniqueKey();
             })
             .autocomplete({
                 source: [
                 TX.tx("User"), TX.tx("Pass")]
             });
 
-        self.get("ok")
+        widgt.control("ok")
             .on($.getTapEvent(), function () {
                 $dlg.squirrelDialog("close");
                 var $parent = $dlg.data("parent");
                 S.add_child_node(
-                    $parent, self.get("key")
+                    $parent, widgt.control("key")
                     .val(),
                     $dlg.data("adding_value") ?
-                    self.get("value")
+                    widgt.control("value")
                     .val() : undefined);
                 return false;
             });
     };
 
-    widget._open_add = function ($dlg, options) {
+    widget._open_add = function (options) {
+        var $dlg = this.element;
         var $parent = options.$node;
         var is_value = options.is_value;
         $dlg.data("parent", $parent);
         $dlg.data("adding_value", is_value);
 
-        this.get("path")
+        this.control("path")
             .text($parent.tree("getPath")
                 .join("↘") + "↘");
         if (is_value) {
-            this.get("value_help")
+            this.control("value_help")
                 .show();
-            this.get("folder_help")
+            this.control("folder_help")
                 .hide();
-            this.get("value_parts")
+            this.control("value_parts")
                 .show();
-            this.get("key")
+            this.control("key")
                 .autocomplete("enable")
                 .select();
-            this.get("value")
+            this.control("value")
                 .val("");
         } else {
-            this.get("value_help")
+            this.control("value_help")
                 .hide();
-            this.get("folder_help")
+            this.control("folder_help")
                 .show();
-            this.get("value_parts")
+            this.control("value_parts")
                 .hide();
-            this.get("key")
+            this.control("key")
                 .autocomplete("disable")
                 .select();
         }
@@ -932,10 +990,11 @@
         this._validateUniqueKey();
     };
 
-    widget._init_optimise = function ($dlg) {
-        var self = this;
+    widget._init_optimise = function () {
+        var widgt = this;
+        var $dlg = this.element;
 
-        self.get("optimise")
+        widgt.control("optimise")
             .on($.getTapEvent(), function () {
                 S.getClient()
                     .hoard.clear_actions();
@@ -949,16 +1008,16 @@
     };
 
     widget._open_optimise = function () {
-        var self = this;
+        var widgt = this;
 
-        self.get("existing")
+        widgt.control("existing")
             .template(
                 "expand",
                 S.getCloud()
                 .hoard.actions.length);
-        self.get("study")
+        widgt.control("study")
             .hide()
-        self.get("optimise")
+        widgt.control("optimise")
             .iconbutton("disable");
 
         var hoard = S.getClient()
@@ -977,14 +1036,14 @@
             },
             null,
             function () {
-                self.get("study")
+                widgt.control("study")
                     .show()
                     .template(
                         "expand",
                         counts.N, counts.A, counts.X,
                         counts.N + counts.A + counts.X);
 
-                self.get("optimise")
+                widgt.control("optimise")
                     .iconbutton("enable");
             });
     };
@@ -997,8 +1056,9 @@
      *  severity - may be one of notice (default), warning, error
      *  after_close - callback on dialog closed
      */
-    widget._init_squeak = function ($dlg) {
-        this.get("close")
+    widget._init_squeak = function () {
+        var $dlg = this.element;
+        this.control("close")
             .on($.getTapEvent(), function () {
                 var ac = $dlg.data("after_close");
                 $dlg.removeData("after_close");
@@ -1009,7 +1069,7 @@
             });
     };
 
-    widget._open_squeak = function ($dlg, p) {
+    widget._open_squeak = function (p) {
         if (typeof p === "string")
             p = {
                 message: p,

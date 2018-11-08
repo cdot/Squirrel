@@ -48,11 +48,11 @@
     <script class="compressable" src="js/Hoard.js?version=627bbdbe425fd70d15a536b907d84cfeaa1ab051"></script>
 
     <!-- UI -->
-    <script class="compressable" src="js/Squirrel.js?version=1541687611"></script>
+    <script class="compressable" src="js/Squirrel.js?version=9185add17351c8a38a3fecfefce74e6237f33264"></script>
     <script class="compressable" src="js/Tree.js",></script>
-    <script class="compressable" src="js/Dialogs.js?version=627bbdbe425fd70d15a536b907d84cfeaa1ab051"></script>
+    <script class="compressable" src="js/Dialogs.js?version=1541692249"></script>
     <link class="compressable" href="css/Icons.css?version=791a9b1f05454f705b3fa9d7aa2f222f9a1b7cee" rel="stylesheet">
-    <link class="compressable" href="css/Tree.css?version=1541677573" rel="stylesheet">
+    <link class="compressable" href="css/Tree.css?version=9185add17351c8a38a3fecfefce74e6237f33264" rel="stylesheet">
     <link class="compressable" href="css/Dialogs.css?version=e0b45fd76eea3fcb1686288350c0d23eada752d8" rel="stylesheet">
     <link class="compressable" href="css/Squirrel.css?version=abaace4e6438806e242b3faad676a8da3295868b" rel="stylesheet">
     
@@ -286,12 +286,17 @@
           <td>
             <input data-id="len" size="4" value="20" class="TX_title" title="Enter password length" />
           </td>
+          <td>
+            <button data-id="remember" class="TX_text TX_title" title="Remember constraints on this value">Remember</button>
+          </td>
         </tr>
         <tr>
           <td class="TX_text">Characters</td>
           <td>    
             <input data-id="chs" size="30" value="A-Za-z0-9!%^&*_$+-=;:@#~,./?" class="TX_title" title="Enter the characters that are legal in passwords for this site. You can use character ranges like A-Z or 0-9" />
-        <button data-id="remember" class="TX_text TX_title" title="Remember constraints on this value">Remember</button>
+          </td>
+          <td>
+            <button data-id="reset" class="TX_text TX_title" title="Reset default constraints">Reset</button>
           </td>
         </tr>
       </table>
