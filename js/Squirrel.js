@@ -988,7 +988,7 @@ var Squirrel = {
             break;
 
         case "make_copy":
-            var p = $node.tree("get_path");
+            var p = $node.tree("getPath");
             var n = client.hoard.get_node(p);
             clipboard = JSON.stringify(n);
             break;

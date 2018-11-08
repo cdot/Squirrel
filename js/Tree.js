@@ -619,6 +619,8 @@
         if (alarm === action.data)
             return; // no change
 
+        $node.data("alarm", action.data);
+
         if (typeof alarm === "undefined") {
             // No existing alarm, need to create parts
             decorate_with_alarm($node);
@@ -652,8 +654,6 @@
                     time: action.time
                 });
         }
-
-        $node.data("alarm", action.data);
 
         this.setModified(action.time);
     };

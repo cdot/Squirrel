@@ -32,8 +32,6 @@ function HttpServerStore(params) {
     self.url = global.URLPARAMS.url;
     if (!self.url)
         throw "No http_url defined, cannot start HttpServerStore";
-    // Params for Basic Auth (user and pass will be prompted for)
-    self.realm = global.URLPARAMS.realm;
 }
 
 HttpServerStore.prototype = Object.create(AbstractStore.prototype);
@@ -56,11 +54,13 @@ HttpServerStore.prototype.read = function (path, ok, fail) {
             url: self.url + "/" + path + "?t=" + Date.now(),
             cache: false,
             processData: false,
-            beforeSend: function (xhr) {
-                xhr.setRequestHeader(
-                    "Authorization",
-                    "Basic " + btoa(self.user() + ":" + self.pass()));
-            },
+            /*
+                        beforeSend: function (xhr) {
+                            xhr.setRequestHeader(
+                                "Authorization",
+                                "Basic " + btoa(self.user() + ":" + self.pass()));
+                        },
+            */
             success: function (response, status, xhr) {
                 var type = xhr.getResponseHeader('Content-Type');
                 var blob = new Blob([response], {
@@ -87,12 +87,14 @@ HttpServerStore.prototype.write = function (path, data, ok, fail) {
             url: self.url + "/" + path,
             data: data,
             processData: false,
-            type: "POST",
-            beforeSend: function (xhr) {
-                xhr.setRequestHeader(
-                    "Authorization",
-                    "Basic " + btoa(self.user() + ":" + self.pass()));
-            }
+            /*
+                        beforeSend: function (xhr) {
+                            xhr.setRequestHeader(
+                                "Authorization",
+                                "Basic " + btoa(self.user() + ":" + self.pass()));
+                        },
+            */
+            type: "POST"
         })
         .done(function (d) {
             ok.call(self, d);

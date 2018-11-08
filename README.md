@@ -140,7 +140,7 @@ To run the lightweight server, cd to the root of the distribution package and:
 
 This will start a HTTPS server on port 3000 using the current directory as the root of the file store. `node node node.js.server.js --help' will give help on parameters.
 
-The same server can even serve the Squirrel application. Start the server as described above, then use a URL like this:
+The same server can serve the Squirrel application from a git checkout. Start the server as described above at the root of the checkout, then use a URL like this:
 
 `https://myhost:3000/Squirrel.html?store=HttpServerStore&url=https://myhost:3000/remote_data'
 

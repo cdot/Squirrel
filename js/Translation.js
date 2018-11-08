@@ -36,7 +36,7 @@ var TX = {
     // Map from DOM node to cache of original English strings. Each
     // entry for a node has three possible fields; title, text and html,
     // that represent the context of the node for each case.
-    originals: new WeakMap(),
+    originals: undefined,
 
     /**
      * Getter/setter for the current language. Just sets the language,
@@ -86,11 +86,25 @@ var TX = {
 
         if (/^en(\b|$)/i.test(TX.lingo)) {
             if (global.DEBUG) console.debug("Using language 'en'");
+            if (TX.originals) {
+                // if originals exists, then apply the original for each
+                // entry. WeakMaps are not enumerable, so have to drive this
+                // backwards.
+                $("body")
+                    .each(function () {
+                        TX.translateDOM(this, function (s) {
+                            return s;
+                        });
+                    });
+                TX.originals = undefined;
+            }
+
             if (tx_ready)
                 tx_ready();
             return;
         }
 
+        TX.originals = new WeakMap();
         $.ajax(
             "locale/" + TX.lingo + ".json", {
                 success: function (data) {

@@ -88,9 +88,8 @@
 
         fn = this["_open_" + id];
         if (typeof fn !== "undefined") {
-            var $node = options.$node;
-            if ($node)
-                $dlg.data("node", $node);
+            if (options && options.$node)
+                $dlg.data("node", options.$node);
             fn.call(this, options);
         }
 
@@ -251,7 +250,7 @@
                 $dlg.data("node").tree("getPath")
                 .join("↘"));
         this.control("coll")
-            .toggle(!$node.hasClass("tree-leaf"));
+            .toggle(!$dlg.data("node").hasClass("tree-leaf"));
     };
 
     widget._init_pick = function () {
@@ -439,14 +438,14 @@
      */
 
     /* Helper */
-    widget._updateNext = function () {
-        var numb = this.control("number")
+    function _updateNext(widgt) {
+        var numb = widgt.control("number")
             .val();
         // Convert to days
-        numb = numb * Utils.TIMEUNITS[this.control("units")
+        numb = numb * Utils.TIMEUNITS[widgt.control("units")
             .val()].days;
         var alarmd = new Date(Date.now() + numb * Utils.MSPERDAY);
-        this.control("nextmod")
+        widgt.control("nextmod")
             .template(
                 "expand",
                 Utils.deltaTimeString(alarmd),
@@ -459,12 +458,12 @@
 
         widgt.control("units")
             .on("change", function () {
-                widgt._updateNext();
+                _updateNext(widgt);
             });
 
         widgt.control("number")
             .on("change", function () {
-                widgt._updateNext();
+                _updateNext(widgt);
             });
 
         widgt.control("remind")
@@ -523,7 +522,7 @@
                 .hide();
         }
 
-        this._updateNext();
+        _updateNext(this);
     };
 
     /* Helper */
@@ -844,8 +843,8 @@
                     .squirrelDialog("open");
             });
 
-        widgt.control("change_language")
-            .on($.getTapEvent(), function () {
+        widgt.control("language")
+            .on("change", function () {
                 var fresh = widgt.control("language").val();
                 var stale = TX.language(fresh);
                 if (fresh !== stale)
@@ -1015,10 +1014,13 @@
                 "expand",
                 S.getCloud()
                 .hoard.actions.length);
-        widgt.control("study")
-            .hide()
+        widgt.control("study").hide();
+        widgt.control("pointless").hide();
         widgt.control("optimise")
             .iconbutton("disable");
+        widgt.control("calculating")
+            .show()
+            .toggle("pulsate", 101);
 
         var hoard = S.getClient()
             .hoard;
@@ -1036,15 +1038,18 @@
             },
             null,
             function () {
+                widgt.control("calculating").hide();
                 widgt.control("study")
-                    .show()
                     .template(
                         "expand",
                         counts.N, counts.A, counts.X,
-                        counts.N + counts.A + counts.X);
-
-                widgt.control("optimise")
-                    .iconbutton("enable");
+                        counts.N + counts.A + counts.X)
+                    .show();
+                if (counts.N + counts.A + counts.X <
+                    S.getCloud().hoard.actions.length)
+                    widgt.control("optimise").iconbutton("enable");
+                else
+                    widgt.control("pointless").show()
             });
     };
 
@@ -1070,6 +1075,7 @@
     };
 
     widget._open_squeak = function (p) {
+        var $dlg = this.element;
         if (typeof p === "string")
             p = {
                 message: p,
