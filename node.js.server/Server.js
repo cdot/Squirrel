@@ -5,25 +5,18 @@
 // Yes, I could have used express, but I wrote this before I knew about
 // it, and it "just works". Only handles binary files, but knows about CORS.
 
-const getopt = require("node-getopt");
+"use strict";
+
 const Q = require("q");
 const Url = require("url");
 const extend = require('extend');
 const Fs = require("fs");
-const { parse } = require('querystring');
+
 //require("https") done dynamically
 //require("http") done dynamically
 //require("basicauth") done dynamically
 
-const DESCRIPTION = [
-    "A super-lightweight HTTP(S) server supporting GET and POST.",
-    "Designed for the sole purpose of simple read/write of binary files.\n",
-    "Usage: node node.js.server.js --writable remote_data --port 3000 --user User --pass Pass --cert cert.pem --key key.pem\n",
-    "This will start a HTTPS server on port 3000 using the remote_data directory to store files.\n",
-    ""].join("\n",);
-
-var debug = false;
-var log_requests = false;
+// Promise interface to file read/write
 var readFile = Q.denodeify(Fs.readFile);
 var writeFile = Q.denodeify(Fs.writeFile);
 
@@ -34,7 +27,11 @@ var writeFile = Q.denodeify(Fs.writeFile);
  * requests.
  * @param proto Parameter hash. Legal params are:
  *    port: Port to run the server on, defaults to 3000
- *    writable: path to writable documents, defaults to current directory
+ *    docroot: absolute path to the document root. Defaults to the
+ *             current directory when the server is run.
+ *    writable: path to subdirectory of the document root that is writable.
+ *              If this is set, only the writable directory can be POSTed to.
+ *              if it is not set, anywhere under the docroot can be written to.
  *    ssl: SSL configuration
  *        cert: SSL certificate (filename or text, required for SSL)
  *        key: SSL key (filename or text, required for SSL)
@@ -42,44 +39,59 @@ var writeFile = Q.denodeify(Fs.writeFile);
  *        user: Username (required for Basic Auth)
  *        pass: Password (required for Basic Auth)
  *        realm: Authentication realm (required for Basic Auth)
+ *    debug: enable verbose debugging to the console
+ *    log_requests: enable request reporting
  * @class
  */
 function Server(proto) {
-    "use strict";
 
     extend(this, proto);
 
     var self = this;
 
     self.ready = false;
+    if (typeof self.docroot === "string")
+        self.docroot = Fs.realpathSync(self.docroot);
+    else
+        self.docroot = process.cwd();
+
+    if (typeof self.writable === "string") {
+        if (self.writable.indexOf("/") !== 0)
+            self.writable = self.docroot + "/" + self.writable;
+        self.writable = Fs.realpathSync(self.writable);
+    }
+
     if (typeof this.auth !== "undefined") {
         self.authenticate = function (request, response) {
             var BasicAuth = require("basic-auth");
             var credentials = BasicAuth(request);
-            if (typeof credentials === "undefined"
-                || credentials.name !== self.auth.user
-                || credentials.pass !== self.auth.pass) {
-                if (debug) {
+            if (typeof credentials === "undefined" ||
+                credentials.name !== self.auth.user ||
+                credentials.pass !== self.auth.pass) {
+                if (self.debug) {
                     if (credentials)
                         console.log("User ", credentials.name,
-                                    " is trying to log in with password '"
-                                    + credentials.pass + "'");
-                } else
+                            " is trying to log in with password '" +
+                            credentials.pass + "'");
+                } else if (self.log_requests)
                     console.log("No credentials in request");
-                console.error("Authentication failed ", request.url);
+                if (self.log_requests)
+                    console.log("Authentication failed ", request.url);
                 response.statusCode = 401;
                 response.setHeader('WWW-Authenticate', 'Basic realm="' +
                     self.auth.realm + '"');
                 response.end('Access denied');
                 return false;
             }
-            if (debug)
-                console.log("User '" + credentials.name
-                              + "' is authenticated");
+            if (self.debug)
+                console.log("User '" + credentials.name +
+                    "' is authenticated");
             return true;
         };
     } else
-        self.authenticate = function() { return true; }
+        self.authenticate = function () {
+            return true;
+        }
 }
 module.exports = Server;
 
@@ -100,11 +112,18 @@ Server.prototype.start = function () {
         }
     };
 
+    if (this.debug) {
+        console.log("Starting server on port", self.port);
+        console.log(" docroot '" + self.docroot + "'");
+        console.log(" writable '" + self.writable + "'");
+        console.log(" auth", self.auth);
+    }
+
     if (typeof self.port === "undefined")
         self.port = 3000;
 
-    if (typeof self.auth !== "undefined" && debug)
-        console.log("Server requires authentication");
+    if (typeof self.auth !== "undefined" && self.debug)
+        console.log("- requires authentication");
 
     var promise = Q();
 
@@ -119,7 +138,7 @@ Server.prototype.start = function () {
 
             .then(function (k) {
                 options.key = k;
-                if (debug) console.log("SSL key loaded");
+                if (self.debug) console.log("SSL key loaded");
             })
 
             .then(function () {
@@ -128,15 +147,15 @@ Server.prototype.start = function () {
 
             .then(function (c) {
                 options.cert = c;
-                if (debug) console.log("SSL certificate loaded");
-                console.log("HTTPS starting on port ", self.port);
+                if (self.debug) console.log("SSL certificate loaded");
+                console.log("HTTPS starting on port", self.port);
             })
 
             .then(function () {
                 return require("https").createServer(options, handler);
             });
     } else {
-        console.log("HTTP starting on port ", self.port);
+        console.log("HTTP starting on port", self.port);
         promise = promise
             .then(function () {
                 return require("http").createServer(handler);
@@ -153,6 +172,7 @@ Server.prototype.start = function () {
 };
 
 Server.prototype.stop = function () {
+    if (this.debug) console.log("Stopping server on port", this.port);
     this.http.close();
 };
 
@@ -161,9 +181,9 @@ Server.prototype.stop = function () {
  * @private
  */
 Server.prototype.handle = function (request, response, promise, data) {
-    "use strict";
+    var self = this;
 
-    if (log_requests)
+    if (this.log_requests)
         console.log(request.method, " ", request.url);
 
     if (!this.authenticate(request, response))
@@ -179,85 +199,79 @@ Server.prototype.handle = function (request, response, promise, data) {
 
     var req = Url.parse("" + request.url, true);
 
-    // Get path relative to server root
+    // Get file path
     var spath = req.pathname;
     if (spath.indexOf("/") !== 0 || spath.length === 0) {
-        response.write("Bad path");
+        console.log("ROOT or relative path GET");
         response.statusCode = 400;
-        response.end(e);
+        response.end();
         return;
     }
-    spath = spath.substring(1);
-
-    var path = spath.split(/\/+/);
-    if (path.length < 1) {
-        response.write("Bad path");
-        response.statusCode = 400;
-        response.end(e);
-        return;
-    }
-    
-    // Handle file lookup
-    var filepath = path.join("/");
+    spath = this.docroot + spath;
 
     var contentType = "text/plain";
     if (request.method === "GET") {
         var m = /\.([A-Z0-9]+)$/i.exec(spath);
         if (m) {
             var Mime = require("mime-types");
-            contentType = Mime.lookup(m[1]);
+            contentType = Mime.lookup(m[1]) || "application/octet-stream";
         } else {
             contentType = "application/octet-stream";
         }
     } else if (request.method === "POST") {
-        if (this.writable && filepath.indexOf(writable) !== 0) {
-            if (debug)
-                console.log("Trying to write '" + filepath
-                            + "' in read-only area. Expected /^"
-                            + this.writable + "/");
-            response.write("Forbidden");
+        if (this.writable && spath.indexOf(this.writable) !== 0) {
+            if (self.debug)
+                console.log("Trying to write '" + spath +
+                    "' in read-only area. Expected /^" +
+                    this.writable + "/");
             response.statusCode = 403;
-            response.end(e);
+            response.end();
             return;
         }
     }
 
     try {
-        promise(filepath, data)
+        promise(spath, data)
             .then(function (responseBody) {
-                // Allow cross-domain posting. Do we need this? It's already
-                // done in the OPTIONS pre-flight
-                response.setHeader("Access-Control-Allow-Origin", "*");
-                response.setHeader("Access-Control-Allow-Methods", "POST,GET");
+                    // Allow cross-domain posting. Do we need this? It's already
+                    // done in the OPTIONS pre-flight
+                    response.setHeader("Access-Control-Allow-Origin", "*");
+                    response.setHeader("Access-Control-Allow-Methods", "POST,GET");
 
-                if (debug) {
-                    response.setHeader("Cache-Control", "no-cache");
-                    response.setHeader("Cache-Control", "no-store");
-                }
-                
-                if (responseBody) {
-                    response.setHeader("Content-Type", contentType);
-                    response.setHeader("Content-Length",
-                                       Buffer.byteLength(responseBody));
-                    response.write(responseBody);
-                }
-                response.statusCode = 200;
-                response.end();
-            },
-            function (error) {
-                // Send the error message in the payload
-                if (error.code === "ENOENT") {
-                    if (debug) console.log(error);
-                    response.statusCode = 404;
-                } else {
-                    console.error("ERROR " + error);
-                    console.error(error.stack);
-                    response.statusCode = 500;
-                }
-                var e = error.toString();
-                response.write(e);
-                response.end(e);
-            });
+                    if (self.debug) {
+                        response.setHeader("Cache-Control", "no-cache");
+                        response.setHeader("Cache-Control", "no-store");
+                    }
+
+                    if (responseBody) {
+                        response.setHeader("Content-Type", contentType);
+                        response.setHeader("Content-Length",
+                            Buffer.byteLength(responseBody));
+                        if (self.debug) console.log(
+                            "Responding with",
+                            Buffer.byteLength(responseBody), "bytes");
+                        response.write(responseBody);
+                    }
+                    response.statusCode = 200;
+                    if (self.debug) console.log("Response code 200");
+                    response.end();
+                },
+                function (error) {
+                    // Send the error message in the payload
+                    if (error.code === "ENOENT") {
+                        if (self.debug) console.log(error);
+                        response.statusCode = 404;
+                    } else {
+                        if (self.log_requests)
+                            console.log(error);
+                        if (self.debug)
+                            console.error(error.stack);
+                        response.statusCode = 500;
+                    }
+                    var e = error.toString();
+                    response.write(e);
+                    response.end(e);
+                });
     } catch (e) {
         console.error(e, " in ", request.url, "\n",
             typeof e.stack !== "undefined" ? e.stack : e);
@@ -272,10 +286,8 @@ Server.prototype.handle = function (request, response, promise, data) {
  * @private
  */
 Server.prototype.OPTIONS = function (request, response) {
-    "use strict";
+    if (this.log_requests) console.log("OPTIONS", request.headers);
 
-    console.log("OPTIONS",request.headers);
-    
     // We only support these methods
     response.setHeader("Allow", "OPTIONS,POST,GET");
 
@@ -299,12 +311,10 @@ Server.prototype.OPTIONS = function (request, response) {
  * @private
  */
 Server.prototype.GET = function (request, response) {
-    "use strict";
-
     this.handle(request, response,
-                function(path) {
-                    return readFile(path);
-                });
+        function (path) {
+            return readFile(path);
+        });
 };
 
 /**
@@ -312,70 +322,18 @@ Server.prototype.GET = function (request, response) {
  * @private
  */
 Server.prototype.POST = function (request, response) {
-    "use strict";
-
     var self = this;
 
     var chunks = [];
-    if (debug)
+    if (self.debug)
         console.log(request.headers);
     request.on("data", function (chunk) {
         chunks.push(chunk);
     }).on("end", function () {
         var body = Buffer.concat(chunks);
         self.handle(request, response,
-                    function(path, data) {
-                        return writeFile(path, data);
-                    }, body);
+            function (path, data) {
+                return writeFile(path, data);
+            }, body);
     });
 };
-
-var cliopt = getopt.create([
-    [ "", "writable=ARG", "relative path to writable files. If this option is given, then only files below this subdirectory will be writable; all other files will not" ],
-    [ "", "port=ARG", "Port to run the server on" ],
-    [ "", "log", "Log requests to the console" ],
-    
-    [ "", "cert=ARG", "SSL certificate (filename or text) required to run https. Certificates can be obtained for free from https://letsencrypt.org/" ],
-    [ "", "key=ARG", "SSL key (filename or text)" ],
-
-    [ "", "user=ARG", "BasicAuth username" ],
-    [ "", "pass=ARG", "BasicAuth password" ],
-    [ "", "realm=ARG", "BasicAuth realm" ],
-    
-    [ "d", "debug", "Extra debug info to console" ],
-    [ "h", "help", "Show this help" ]
-])
-    .bindHelp()
-    .setHelp(DESCRIPTION + "[[OPTIONS]]")
-    .parseSystem()
-    .options;
-var params = {
-    port: cliopt.port || 3000
-};
-
-if (cliopt.log)
-    log_requests = true;
-
-if (cliopt.debug)
-    debug = true;
-
-if (cliopt.cert) {
-    if (!cliopt.key)
-        throw "No SSL key";
-    params.ssl = {
-        cert: cliopt.cert,
-        key: cliopt.key
-    };
-} else if (cliopt.key)
-    throw "No SSL cert";
-
-if (cliopt.user) {
-    params.auth = {
-        user: cliopt.user || "",
-        pass: cliopt.pass || "",
-        realm: cliopt.realm || ""
-    }
-};
-
-var server = new Server(params);
-server.start();

@@ -168,39 +168,6 @@
         }
 
         if (options.pass_required) {
-            this.control("showpass")
-                .on("click", function () {
-                    if (pass_hidden) {
-                        skip_pass_change++;
-                        $pass.val(hidden_pass);
-                        pass_hidden = false;
-                    } else {
-                        hidden_pass = $pass.val();
-                        skip_pass_change++;
-                        $pass.val(hidden_pass.replace(/./g, "•"));
-                        pass_hidden = true;
-                    }
-                })
-                .prop("checked", false);
-
-            // <input type="password"> doesn't work for me on firefox;
-            // simulate it
-            $pass.on("input", function () {
-                if (pass_hidden) {
-                    var v = $pass.val();
-                    if (v.length > hidden_pass.length) {
-                        var c = v.substring(v.length - 1);
-                        hidden_pass = hidden_pass + c;
-                        skip_pass_change++;
-                        $pass.val(v.substring(0, v.length - 1) + "•");
-                    } else {
-                        hidden_pass = hidden_pass.substring(
-                            0, hidden_pass.length - 1)
-                    }
-                }
-                return false;
-            });
-
             this.control("foruser")
                 .toggle(options.store.user() !== null)
                 .text(options.store.user() || "");
@@ -213,12 +180,6 @@
             } else {
                 $pass.focus();
                 $pass.on("change", function () {
-                    if (skip_pass_change > 0) {
-                        skip_pass_change--;
-                        return false;
-                    }
-                    if ($pass.data("invisible-pass"))
-                        $pass.val($pass.data("invisible-pass"));
                     return sign_in();
                 });
             }
@@ -1052,6 +1013,24 @@
                 else
                     widgt.control("pointless").show()
             });
+    };
+
+    /**
+     * Get login details for remote HTTP server
+     */
+    widget._init_http_login = function() {
+        var $dlg = this.element;
+        var self = this;
+        this.control("signin")
+            .on($.getTapEvent(), function() {
+                var fn = $dlg.data("on_signin");
+                fn(self.control("user").val(),
+                   self.control("pass").val());
+            });
+    };
+
+    widget._open_http_login = function(options) {
+        this.element.data("on_signin", options.on_signin);
     };
 
     /**

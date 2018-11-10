@@ -396,6 +396,11 @@ Hoard.prototype.merge_actions = function (actions) {
     var etop = 0;
     var added = 0;
 
+    actions.sort(function (a, b) {
+        return a.time < b.time ? -1 :
+            a.time > b.time ? 1 : 0;
+    });
+
     for (var ntop = 0; ntop < actions.length; ntop++) {
         var na = actions[ntop];
         if (ntop > 0 && na.time < actions[ntop - 1].time)

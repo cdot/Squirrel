@@ -1211,6 +1211,8 @@ var Squirrel = {
         $(".twisted")
             .twisted();
 
+        $('input[type="password"]').simulated_password();
+        
         if (global.DEBUG) {
             var pick = 1;
             $("#template-test")

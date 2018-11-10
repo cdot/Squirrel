@@ -29,6 +29,7 @@
 
     <!-- Custom jQuery UI extensions -->
     <script class="compressable" src="js/edit_in_place.js?version=abaace4e6438806e242b3faad676a8da3295868b"></script>
+    <script class="compressable" src="js/simulated_password.js?version=abaace4e6438806e242b3faad676a8da3295868b"></script>
     <script class="compressable" src="js/scroll_into_view.js?version=65b38ed92d52a0f680e9502a8412574638665dd0"></script>
     <script class="compressable" src="js/icon_button.js?version=65b38ed92d52a0f680e9502a8412574638665dd0"></script>
     <script class="compressable" src="js/RGBA.js?version=71ef5edc4000f8a923a7d3469a4f8119ed6a1b55"></script>
@@ -36,21 +37,21 @@
 
     <!-- Database handling -->
     <script class="compressable" src="libs/aes.js?version=a4f0ed3b411f4fa836137294e1aaa4f535b6141c"></script>
-    <script class="compressable" src="js/Utils.js?version=1541703590"></script>
-    <script class="compressable" src="js/Translation.js?version=1541704978"></script>
-    <script class="compressable" src="js/Twisted.js?version=1541703590"></script>
+    <script class="compressable" src="js/Utils.js?version=0b376f99248f70f964e784a0876cc5876a33698a"></script>
+    <script class="compressable" src="js/Translation.js?version=0b376f99248f70f964e784a0876cc5876a33698a"></script>
+    <script class="compressable" src="js/Twisted.js?version=0b376f99248f70f964e784a0876cc5876a33698a"></script>
     <script class="compressable" src="js/Template.js?version=06c52b58fa1f5b8ba8b7878dcc42a30889676a7b"></script>
     <script class="compressable" src="js/AbstractStore.js?version=39e729dd87b7175b413b95fe6d0a54075ed7b850"></script>
     <script class="compressable" src="js/LayeredStore.js?version=39e729dd87b7175b413b95fe6d0a54075ed7b850"></script>
     <script class="compressable" src="js/LocalStorageStore.js?version=abaace4e6438806e242b3faad676a8da3295868b"></script>
     <script class="compressable" src="js/AES.js?version=06c52b58fa1f5b8ba8b7878dcc42a30889676a7b"></script>
     <script class="compressable" src="js/EncryptedStore.js?version=39e729dd87b7175b413b95fe6d0a54075ed7b850"></script>
-    <script class="compressable" src="js/Hoard.js?version=1541703592"></script>
+    <script class="compressable" src="js/Hoard.js?version=1541705599"></script>
 
     <!-- UI -->
-    <script class="compressable" src="js/Squirrel.js?version=1541703593"></script>
+    <script class="compressable" src="js/Squirrel.js?version=0b376f99248f70f964e784a0876cc5876a33698a"></script>
     <script class="compressable" src="js/Tree.js",></script>
-    <script class="compressable" src="js/Dialogs.js?version=1541703594"></script>
+    <script class="compressable" src="js/Dialogs.js?version=0b376f99248f70f964e784a0876cc5876a33698a"></script>
     <link class="compressable" href="css/Icons.css?version=791a9b1f05454f705b3fa9d7aa2f222f9a1b7cee" rel="stylesheet">
     <link class="compressable" href="css/Tree.css?version=9185add17351c8a38a3fecfefce74e6237f33264" rel="stylesheet">
     <link class="compressable" href="css/Dialogs.css?version=e0b45fd76eea3fcb1686288350c0d23eada752d8" rel="stylesheet">
@@ -290,9 +291,34 @@
               <label for="pass" class="TX_text">Pass:</label>
               </td>
 	    <td>
-	      <input type="text" name="pass" size="25" data-id="pass" class="TX_title" title="Enter password" value="" /><br />
-              <input type="checkbox" data-id="showpass" name="showpass" />
-              <label for="showpass" class="TX_text">Show Password</label>
+	      <input type="password" name="pass" size="25" data-id="pass" class="TX_title" title="Enter password" value="" /><br />
+	    </td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        <button data-id="signin" class="TX_text">Sign In</button>
+      </p>
+    </div>
+    
+    <div id="http_login_dlg" class="dlg-dialog TX_title" title="Log in to server">
+      <div class="TX_text">
+        Enter login details for your HTTP server
+      </div>
+      <table width="100%">
+        <tbody>
+          <tr data-id="uReq">
+	    <td><label for="user" class="TX_text">User:</label></td>
+	    <td>
+	      <input size="25" name="http_user" data-id="user" value="" class="TX_title" title="Enter username" />
+	    </td>
+          </tr>
+          <tr data-id="pReq">
+	    <td>
+              <label for="pass" class="TX_text">Pass:</label>
+              </td>
+	    <td>
+	      <input type="password" name="http_pass" size="25" data-id="pass" class="TX_title" title="Enter password" value="" /><br />
 	    </td>
           </tr>
         </tbody>
@@ -579,7 +605,7 @@
       </div>
       <button data-id="optimise" class="TX_text">Optimise</button>
     </div>
-        
+
     <div id="json_dlg" class="dlg-dialog TX_title" title="Database JSON">
       <div class="twisted" data-open="ui-icon-info">
         <p class="TX_html">

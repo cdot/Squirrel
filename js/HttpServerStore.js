@@ -31,6 +31,14 @@ function HttpServerStore(params) {
     self.url = global.URLPARAMS.url;
     if (!self.url)
         throw "No http_url defined, cannot start HttpServerStore";
+
+    // This is blocking on other dialogs
+    $("#http_login_dlg")
+        .squirrelDialog("open", {
+            on_signin: function(user, pass) {
+                self.basic_auth = btoa(user + ":" + pass);
+            }
+        });   
 }
 
 global.CLOUD_STORE = HttpServerStore;
@@ -46,22 +54,37 @@ HttpServerStore.prototype.options = function () {
     });
 };
 
+HttpServerStore.prototype.authenticate = function(ok, fail) {
+    if (self.basic_auth)
+        ok.call(self);
+    else {
+        $("#http_login_dlg")
+            .squirrelDialog("open", {
+                on_signin: function(user, pass) {
+                    self.basic_auth = btoa(user + ":" + pass);
+                    ok.call(self);
+                }
+            });
+    }
+};
+
 HttpServerStore.prototype.read = function (path, ok, fail) {
     "use strict";
 
     var self = this;
 
-    $.ajax({
+    self.authenticate(function() {
+        $.ajax({
             url: self.url + "/" + path + "?t=" + Date.now(),
             cache: false,
             processData: false,
-            /*
-                        beforeSend: function (xhr) {
-                            xhr.setRequestHeader(
-                                "Authorization",
-                                "Basic " + btoa(self.user() + ":" + self.pass()));
-                        },
-            */
+
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader(
+                    "Authorization",
+                    "Basic " + self.basic_auth);
+            },
+
             success: function (response, status, xhr) {
                 var type = xhr.getResponseHeader('Content-Type');
                 var blob = new Blob([response], {
@@ -77,6 +100,7 @@ HttpServerStore.prototype.read = function (path, ok, fail) {
         .fail(function (e) {
             fail.call(self, e);
         });
+    }, fail);
 };
 
 HttpServerStore.prototype.write = function (path, data, ok, fail) {
@@ -84,17 +108,18 @@ HttpServerStore.prototype.write = function (path, data, ok, fail) {
 
     var self = this;
 
-    $.ajax({
+    self.authenticate(function() {
+        $.ajax({
             url: self.url + "/" + path,
             data: data,
             processData: false,
-            /*
-                        beforeSend: function (xhr) {
-                            xhr.setRequestHeader(
-                                "Authorization",
-                                "Basic " + btoa(self.user() + ":" + self.pass()));
-                        },
-            */
+
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader(
+                    "Authorization",
+                    "Basic " + self.basic_auth);
+            },
+
             type: "POST"
         })
         .done(function (d) {
@@ -103,6 +128,7 @@ HttpServerStore.prototype.write = function (path, data, ok, fail) {
         .fail(function (e) {
             fail.call(self, e);
         });
+    }, fail);
 };
 
 if (typeof module !== "undefined")

@@ -35,6 +35,10 @@
         }
     },
     "dependencies": {
+    },
+    "devDependencies": {
+        "mocha": "*",
+        "chai-http": "*",
         "axios": ">=0.17.1",
         "beautifyjs": "0.0.1",
         "chai": "^4.1.2",
@@ -44,9 +48,5 @@
         "jsdom": ">=11.5.1",
         "npm-check": "^5.5.2",
         "uglify-es": ">=3.2.1"
-    },
-    "devDependencies": {
-        "chai": "*",
-        "mocha": "*"
     }
 }

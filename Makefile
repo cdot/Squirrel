@@ -25,7 +25,8 @@ HELP_CSS     := $(shell cat help.html | \
 		sed -e 's/.*href="//;s/["?].*//g' )
 
 STORES_JS    := $(wildcard js/*Store.js)
-TESTS_JS     := $(wildcard js/test/*.js test/*.js)
+TESTS_JS     := $(wildcard js/test/*.js test/*.js node.js.server/test/*.js)
+SERVER_JS    := $(wildcard node.js.server/*.js)
 LANGS        := $(wildcard locale/*.json)
 
 %.map %.min.js : %.js
@@ -137,14 +138,14 @@ clean:
 %.js.tidy : %.js
 	js-beautify -j --good-stuff -o $^ $^
 
-tidy: $(patsubst %.js,%.js.tidy,$(SQUIRREL_JS) $(STORES_JS))
+tidy: $(patsubst %.js,%.js.tidy,$(SQUIRREL_JS) $(STORES_JS) $(SERVER_JS))
 
 # eslint
 
 %.esl : %.js
 	-eslint $^ && touch $@
 
-lint: $(subst .js,.esl,$(patsubst %.min.js,,$(SQUIRREL_JS) $(STORES_JS)))
+lint: $(patsubst %.js,%.esl,$(patsubst %.min.js,,$(SQUIRREL_JS) $(STORES_JS) $(SERVER_JS)))
 
 # Make a language file
 %.js.strings: %.js
