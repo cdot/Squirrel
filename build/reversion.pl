@@ -6,15 +6,15 @@ sub revise {
     my $version = "$f?version=";
     my $changed = `git diff --name-only $f`;
     if ($changed) {
-        #print "$f: changed";
+        print "$f: changed";
         $version .= (stat($f))[9];
     } else {
-        #print "$f: unchanged\n";
+        print "$f: unchanged\n";
         my $commit = `git log -n 1 $f`;
         if ($commit =~ /^commit\s+(\w+).*$/s) {
             $version .= $1;
         } else {
-            die "No commit $commit";
+            die "No commit for $f: $commit";
         }
     }
     #print "$version\n";

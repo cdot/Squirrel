@@ -10,8 +10,8 @@ const Server = require("./Server.js");
 const DESCRIPTION = [
     "A super-lightweight HTTP(S) server supporting GET and POST.",
     "Designed for the sole purpose of simple read/write of binary files.\n",
-    "Usage: node node.js.server.js --writable remote_data --port 3000 --user User --pass Pass --cert cert.pem --key key.pem\n",
-    "This will start a HTTPS server on port 3000 using the current directory to server files, and the remote_data subdirectory for a writable area.\n",
+    "Usage: node node.js.server.js --docroot /var/www/html --writable data --port 3000 --user User --pass Pass --cert cert.pem --key key.pem\n",
+    "This will start a HTTPS server on port 3000 to serve files in /var/www/html, and allowing new files to be POSTed to the data subdirectory.\n",
     ""].join("\n");
 
 var cliopt = getopt.create([

@@ -134,11 +134,9 @@ an https server.
 A suitable super-lightweight server is provided as part of the Squirrel
 release package.
 
-To run the lightweight server, cd to the root of the distribution package and:
+For information on how to run the lightweight server, cd to the root of the distribution package and:
 
-`node node node.js.server.js --port 3000 --user User --pass Pass --cert cert.pem --key key.pem'
-
-This will start a HTTPS server on port 3000 using the current directory as the root of the file store. `node node node.js.server.js --help' will give help on parameters.
+`node node node.js.server.js --help'
 
 The same server can serve the Squirrel application from a git checkout. Start the server as described above at the root of the checkout, then use a URL like this:
 
