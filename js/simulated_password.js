@@ -6,9 +6,9 @@
  */
 (function ($) {
     "use strict";
-    
-    $.fn.simulated_password = function (options) {
-        $(this).each(function() {
+
+    $.fn.simulated_password = function ( /*options*/ ) {
+        $(this).each(function () {
             var $this = $(this);
 
             this.type = "text";
@@ -17,12 +17,12 @@
             $this.data("skip_pass_change", 0);
             $this.data("pass_hidden", true);
             $this.data("hidden_pass", "");
-            
+
             function skip_next_change($this) {
                 $this.data("skip_pass_change",
-                           $this.data("skip_pass_change") + 1);
+                    $this.data("skip_pass_change") + 1);
             }
-            
+
             $showpass
                 .on("click", function () {
                     if ($this.data("pass_hidden")) {
@@ -37,10 +37,10 @@
                     }
                 })
                 .prop("checked", false);
-            
-            $this.on("input", function() {
+
+            $this.on("input", function () {
+                var v = $this.val();
                 if ($this.data("pass_hidden")) {
-                    var v = $this.val();
                     var hp = $this.data("hidden_pass");
                     if (v.length > hp.length) {
                         var c = v.substring(v.length - 1);
@@ -53,13 +53,15 @@
                             hp.substring(0, hp.length - (hp.length - v.length)));
                     }
                     return false;
-                };
+                } else {
+                    $this.data("hidden_pass", v);
+                }
             });
 
-            $this.on("change", function() {
+            $this.on("change", function () {
                 if ($this.data("skip_pass_change") > 0) {
                     $this.data("skip_pass_change",
-                               $this.data("skip_pass_change") - 1);
+                        $this.data("skip_pass_change") - 1);
                     return false;
                 }
                 $this.val($this.data("hidden_pass"));

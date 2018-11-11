@@ -20,7 +20,7 @@
 <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-touch-events/1.0.9/jquery.mobile-events.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/js-cookie/2.2.0/js.cookie.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script>
-<script  src="js/Squirrel.min.js?version=0b376f99248f70f964e784a0876cc5876a33698a"></script>
+<script  src="js/Squirrel.min.js?version=1541924428"></script>
 <link  href="css/Squirrel.min.css?version=abaace4e6438806e242b3faad676a8da3295868b" rel="stylesheet">
 <!-- Flag to tell code whether we are minified or not. This will
 be stripped by build/release.sed for the final release -->
@@ -247,9 +247,7 @@ $1 are $2
 <label for="pass" class="TX_text">Pass:</label>
 </td>
 <td>
-<input type="text" name="pass" size="25" data-id="pass" class="TX_title" title="Enter password" value="" /><br />
-<input type="checkbox" data-id="showpass" name="showpass" />
-<label for="showpass" class="TX_text">Show Password</label>
+<input type="password" name="pass" size="25" data-id="pass" class="TX_title" title="Enter password" value="" /><br />
 </td>
 </tr>
 </tbody>
@@ -258,9 +256,35 @@ $1 are $2
 <button data-id="signin" class="TX_text">Sign In</button>
 </p>
 </div>
-<div id="squeak_dlg" class="dlg-dialog TX_title" title="Alert">
+<div id="http_login_dlg" class="dlg-dialog TX_title" title="Log in to HTTP server">
+<div class="TX_text">
+Enter login details for your server
+</div>
+<table width="100%">
+<tbody>
+<tr data-id="uReq">
+<td><label for="user" class="TX_text">User:</label></td>
+<td>
+<input size="25" name="http_user" data-id="user" value="" class="TX_title" title="Enter username" />
+</td>
+</tr>
+<tr data-id="pReq">
+<td>
+<label for="pass" class="TX_text">Pass:</label>
+</td>
+<td>
+<input type="password" name="http_pass" size="25" data-id="pass" class="TX_title" title="Enter password" value="" /><br />
+</td>
+</tr>
+</tbody>
+</table>
+<p>
+<button data-id="signin" class="TX_text">Sign In</button>
+</p>
+</div>
+<div id="alerts" class="TX_title" title="Alert">
 <p class="messages"></p>
-<button data-id="close" class="TX_text">OK</button>
+<button class="close" class="TX_text">OK</button>
 </div>
 <div id="randomise_dlg" class="dlg-dialog TX_title" title="Generate random value">
 <span class="TX_text">Suggested value for</span>
@@ -490,7 +514,7 @@ Store path:
 Squirrel is Copyright &copy; 2015-2018 Crawford Currie <a href="http://c-dot.co.uk">http://c-dot.co.uk</a>
 </p>
 <p>
-<span class="TX_text">This version was released on </span> Thu 8 Nov 20:17:25 GMT 2018
+<span class="TX_text">This version was released on </span> Sun 11 Nov 08:23:04 GMT 2018
 </p>
 <div class="twisted" data-open="ui-icon-info">
 <p class="TX_html">

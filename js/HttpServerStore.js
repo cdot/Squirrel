@@ -15,30 +15,43 @@
  * python -m SimpleHTTPServer 3000
  */
 
-/*
-  SMELL: currently the same pass is used for basic auth and for encryption.
-  This is bad, because BasicAuth is wide open and the pass could be
-  intercepted, leaving the encrypted store exposed. Similarly we don't
-  want to put the BasicAuth pass into the URL that starts Squirrel. So we
-  should prompt for an "basicauth password". Can do that, it's just a bit
-  more work.
-*/
 function HttpServerStore(params) {
     "use strict";
 
     var self = this;
-    AbstractStore.call(self, params);
     self.url = global.URLPARAMS.url;
     if (!self.url)
         throw "No http_url defined, cannot start HttpServerStore";
 
-    // This is blocking on other dialogs
-    $("#http_login_dlg")
-        .squirrelDialog("open", {
-            on_signin: function(user, pass) {
-                self.basic_auth = btoa(user + ":" + pass);
-            }
-        });   
+    /** Cannot use the store pass because any layered encryption store
+     * will use the same pass, so have to prompt for BasicAuth separately.
+     * Do that as early as possible. */
+    $('#http_login_dlg')
+        .on('dlg-open', function (e, options) {
+            var $dlg = $(this);
+            var $user = $dlg.squirrelDialog("control", "user");
+            var $pass = $dlg.squirrelDialog("control", "pass");
+            var $signin = $dlg.squirrelDialog("control", "signin");
+            $user
+                .attr("autofocus", "autofocus")
+                .off("change")
+                .on("change", function () {
+                    $pass.focus();
+                })
+            $pass
+                .off("change")
+                .on("change", function () {
+                    $signin.focus();
+                })
+            $signin
+                .off($.getTapEvent())
+                .on($.getTapEvent(), function () {
+                    $dlg.squirrelDialog("close");
+                    self.basic_auth = btoa($user.val() + ":" + $pass.data("hidden_pass"));
+                    AbstractStore.call(self, params);
+                });
+        })
+        .squirrelDialog("open");
 }
 
 global.CLOUD_STORE = HttpServerStore;
@@ -54,27 +67,12 @@ HttpServerStore.prototype.options = function () {
     });
 };
 
-HttpServerStore.prototype.authenticate = function(ok, fail) {
-    if (self.basic_auth)
-        ok.call(self);
-    else {
-        $("#http_login_dlg")
-            .squirrelDialog("open", {
-                on_signin: function(user, pass) {
-                    self.basic_auth = btoa(user + ":" + pass);
-                    ok.call(self);
-                }
-            });
-    }
-};
-
 HttpServerStore.prototype.read = function (path, ok, fail) {
     "use strict";
 
     var self = this;
 
-    self.authenticate(function() {
-        $.ajax({
+    $.ajax({
             url: self.url + "/" + path + "?t=" + Date.now(),
             cache: false,
             processData: false,
@@ -100,7 +98,6 @@ HttpServerStore.prototype.read = function (path, ok, fail) {
         .fail(function (e) {
             fail.call(self, e);
         });
-    }, fail);
 };
 
 HttpServerStore.prototype.write = function (path, data, ok, fail) {
@@ -108,8 +105,7 @@ HttpServerStore.prototype.write = function (path, data, ok, fail) {
 
     var self = this;
 
-    self.authenticate(function() {
-        $.ajax({
+    $.ajax({
             url: self.url + "/" + path,
             data: data,
             processData: false,
@@ -128,7 +124,6 @@ HttpServerStore.prototype.write = function (path, data, ok, fail) {
         .fail(function (e) {
             fail.call(self, e);
         });
-    }, fail);
 };
 
 if (typeof module !== "undefined")
