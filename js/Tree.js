@@ -361,7 +361,7 @@
 
     // Add UI components for handling any alarm that may be on
     // the node
-    function decorate_with_alarm($node) {
+    function _decorate_with_alarm($node) {
         var alarm = $node.data("alarm");
         if (!alarm)
             return; // no alarm
@@ -386,12 +386,7 @@
             });
     }
 
-    /*
-     * The first time the node is opened, it is expanded. This involves
-     * decorating the node with title and open buttons
-     */
-    function _on_first_open($node) {
-
+    function decorate_node($child) {
         // Invoked on tree-title
         function hoverIn( /*evt*/ ) {
             S.contextMenu("close");
@@ -447,86 +442,87 @@
                 .hide();
         }
 
-        function expand_child($child) {
-            // <title>
-            var $title = $(document.createElement("div"))
-                .addClass("tree-title")
-                // SMELL: only if screen is wide enough!
-                .hover(hoverIn, hoverOut)
-                .on("paste", function () {
-                    debugger;
+        // <title>
+        var $title = $(document.createElement("div"))
+            .addClass("tree-title")
+            // SMELL: only if screen is wide enough!
+            .hover(hoverIn, hoverOut)
+            .on("paste", function () {
+                debugger;
+            })
+            .prependTo($child);
+
+        if (!$child.hasClass("tree-leaf")) {
+            // Add open/close button on child none-leaf nodes
+            var $control = $(document.createElement("button"))
+                .addClass("tree-node-is-open-close");
+            $control.appendTo($title);
+            $control.iconbutton({
+                    icon: "squirrel-icon-folder-closed"
                 })
-                .prependTo($child);
+                .on($.getTapEvent(),
+                    function () {
+                        $child.tree("toggle");
+                        return false;
+                    });
+        }
 
-            if (!$child.hasClass("tree-leaf")) {
-                // Add open/close button on child none-leaf nodes
-                var $control = $(document.createElement("button"))
-                    .addClass("tree-node-is-open-close");
-                $control.appendTo($title);
-                $control.iconbutton({
-                        icon: "squirrel-icon-folder-closed"
-                    })
-                    .on($.getTapEvent(),
-                        function () {
-                            $child.tree("toggle");
-                            return false;
-                        });
-            }
+        // <info>
+        var $info = $(document.createElement("div"))
+            .addClass("tree-info")
+            .appendTo($title);
 
-            // <info>
-            var $info = $(document.createElement("div"))
-                .addClass("tree-info")
-                .appendTo($title);
+        // Create the key span
+        $(document.createElement("span"))
+            .appendTo($info)
+            .addClass("tree-key")
+            .text($child.data("key"))
+            .on($.isTouchCapable && $.isTouchCapable() ?
+                "doubletap" : "dblclick",
+                function (e) {
+                    if (global.DEBUG) console.debug("Double-click 1");
+                    e.preventDefault();
+                    $(e.target).closest(".tree-node").tree("editKey");
+                });
 
-            // Create the key span
+        if ($child.hasClass("tree-leaf")) {
+            $(document.createElement("span"))
+                .text(" : ")
+                .addClass("tree-separator")
+                .appendTo($info);
             $(document.createElement("span"))
                 .appendTo($info)
-                .addClass("tree-key")
-                .text($child.data("key"))
+                .addClass("tree-value")
+                .text(obscure_value($child.data("value")))
                 .on($.isTouchCapable && $.isTouchCapable() ?
                     "doubletap" : "dblclick",
                     function (e) {
-                        if (global.DEBUG) console.debug("Double-click 1");
+                        if (global.DEBUG) console.debug("Double-click 2");
                         e.preventDefault();
-                        $(e.target).closest(".tree-node").tree("editKey");
+                        $(e.target).closest(".tree-node").tree("editValue");
                     });
-
-            if ($child.hasClass("tree-leaf")) {
-                $(document.createElement("span"))
-                    .text(" : ")
-                    .addClass("tree-separator")
-                    .appendTo($info);
-                $(document.createElement("span"))
-                    .appendTo($info)
-                    .addClass("tree-value")
-                    .text(obscure_value($child.data("value")))
-                    .on($.isTouchCapable && $.isTouchCapable() ?
-                        "doubletap" : "dblclick",
-                        function (e) {
-                            if (global.DEBUG) console.debug("Double-click 2");
-                            e.preventDefault();
-                            $(e.target).closest(".tree-node").tree("editValue");
-                        });
-            }
-            _makeDraggable($child);
-            decorate_with_alarm($child);
         }
-
-        $node.removeClass("tree-never-opened");
-        $node.children(".tree-subnodes").children().each(function () {
-            expand_child($(this));
-        });
+        _makeDraggable($child);
+        _decorate_with_alarm($child);
     }
 
-    tree_widget.open = function () {
+    tree_widget.open = function (options) {
         var $node = this.element;
+
+        if (options && options.decorate)
+            decorate_node($node);
+
         if ($node.hasClass("tree-node-is-open"))
             return $node;
 
-        if ($node.hasClass("tree-never-opened"))
+        if ($node.hasClass("tree-never-opened")) {
             // Expand children for display, if this is the
             // first time this node has been opened
-            _on_first_open($node);
+            $node.removeClass("tree-never-opened");
+            $node.children(".tree-subnodes").children().each(function () {
+                decorate_node($(this));
+            });
+        }
 
         if (!$node.hasClass("tree-root")) {
             $node.find(".tree-node-is-open-close")
@@ -617,7 +613,7 @@
 
         if (typeof alarm === "undefined") {
             // No existing alarm, need to create parts
-            decorate_with_alarm($node);
+            _decorate_with_alarm($node);
 
             // Run up the tree, incrementing the alarm count
             $node.parents(".tree-node")

@@ -14,7 +14,11 @@
 /* global UNMINIFIED */
 
 /*
- * The Squirrel Application namespace and UI.
+ * The application startup process proceeds from "init_application" though
+ * a sequence of chained functions called 'step_*'. These functions are
+ * mostly run asynchronously. Once the final step is reached, control is
+ * handed off to the Tree module, which governs most interaction.
+ * reached 
  */
 
 // Exports
@@ -90,20 +94,21 @@ var Squirrel = {
     S.alert = function (p) {
         var $dlg = $("#alerts");
 
+        if (!$dlg.hasClass("dlg-initialised")) {
+            $dlg.find(".close").on("click", function () {
+                $dlg.dialog("close");
+            });
+            $dlg.addClass("dlg-initialised");
+        }
+
         if (typeof p === "undefined") {
             if ($dlg.dialog("isOpen"))
                 $dlg.dialog("close");
             return;
         } else if (!$dlg.dialog("isOpen")) {
             $dlg.find(".messages").empty();
-            $dlg.dialog("open", p);
-        }
-
-        if (!$dlg.hasClass("dlg-initialised")) {
-            $dlg.find(".close").on("click", function () {
-                $dlg.dialog("close");
-            });
-            $dlg.addClass("dlg-initialised");
+            $dlg.dialog("option", "title", p.title || TX.tx("Alert"));
+            $dlg.dialog("open");
         }
 
         // Transitory messages only stay until closed or the next alert
@@ -1362,7 +1367,9 @@ var Squirrel = {
                             typeof value !== "undefined") {
                             S.insert_data($newnode.tree("getPath"), value);
                         }
-                        $newnode.tree("open");
+                        $newnode.tree("open", {
+                            decorate: true
+                        });
                         Utils.sometime("update_save");
                     });
             });

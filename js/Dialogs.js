@@ -822,27 +822,30 @@
         $('#add_dlg').on('dlg-initialise', function () {
             var $dlg = $(this);
 
+            function ok_dialog() {
+                $dlg.squirrelDialog("close");
+                var $parent = $dlg.data("parent");
+                Squirrel.add_child_node(
+                    $parent, $dlg.squirrelDialog("control", "key")
+                    .val(),
+                    $dlg.data("adding_value") ?
+                    $dlg.squirrelDialog("control", "value")
+                    .val() : undefined);
+                return false;
+            }
+
             $dlg.squirrelDialog("control", "key")
                 .on("input", function () {
                     _validateUniqueKey($dlg);
                 })
+                .on("change", ok_dialog)
                 .autocomplete({
                     source: [
                         TX.tx("User"), TX.tx("Pass")]
                 });
 
             $dlg.squirrelDialog("control", "ok")
-                .on($.getTapEvent(), function () {
-                    $dlg.squirrelDialog("close");
-                    var $parent = $dlg.data("parent");
-                    Squirrel.add_child_node(
-                        $parent, $dlg.squirrelDialog("control", "key")
-                        .val(),
-                        $dlg.data("adding_value") ?
-                        $dlg.squirrelDialog("control", "value")
-                        .val() : undefined);
-                    return false;
-                });
+                .on($.getTapEvent(), ok_dialog);
         });
 
         $('#add_dlg').on('dlg-open', function (e, options) {
