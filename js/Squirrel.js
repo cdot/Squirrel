@@ -270,7 +270,7 @@ var Squirrel = {
     var client_ok = true;
     var cloud_ok = true;
 
-    function finished() {
+    function finished_save() {
         if (global.DEBUG) console.debug("...save finished");
         Utils.sometime("update_save");
         if (client_ok && cloud_ok) {
@@ -309,7 +309,7 @@ var Squirrel = {
                     message: TX.tx("Saved in $1", this.options()
                         .identifier)
                 });
-                finished();
+                finished_save();
             },
             function (e) {
                 if (global.DEBUG) console.debug("...client save failed " + e);
@@ -320,7 +320,7 @@ var Squirrel = {
                         .identifier, e)
                 });
                 client_ok = false;
-                finished();
+                finished_save();
             });
     }
 
@@ -330,7 +330,7 @@ var Squirrel = {
         if (client.status === S.IS_LOADED &&
             $(".tree-modified")
             .length === 0) {
-            finished();
+            finished_save();
             return;
         }
 
@@ -358,6 +358,8 @@ var Squirrel = {
                 if (global.DEBUG) console.debug("...cloud save OK");
                 client.hoard.actions = [];
                 client.hoard.last_sync = Date.now();
+                // Can  no longer undo
+                undos = [];
                 S.alert({
                     severity: "notice",
                     message: TX.tx("Saved in $1", this.options()
