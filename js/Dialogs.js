@@ -630,10 +630,11 @@
             var $dlg = $(this);
 
             $dlg.squirrelDialog("control", "theme")
-                .on("change", function () {
+                .on("selectmenuchange", function () {
                     Squirrel.theme($(this)
                         .val());
-                });
+                })
+                .selectmenu();
 
             $dlg.squirrelDialog("control", "autosave")
                 .on("change", function () {

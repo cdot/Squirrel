@@ -54,10 +54,11 @@ Squirrel.html : $(SQUIRREL_JS)
 	perl build/reversion.pl $@
 
 # Release 
-# The release is built by:
-# 1. Combining all the non-store js into a single file and minifying it
-# 2. Combining all the css into a single file and minifying it
-# 3. Compressing all the store .js to .min.js
+# 1. Combining all the non-store js in the order it is included in the HTML
+#    into a single minified file
+# 2. Combining all the css (in the order it is included in the HTML) into a
+#    single minified file
+# Note that the stores are minified but not concatenated
 release/js/Squirrel.min.js : $(SQUIRREL_JS)
 	@mkdir -p release/js
 	uglifyjs \
@@ -158,6 +159,6 @@ locale/%.json: $(patsubst %.js,%.js.strings,$(SQUIRREL_JS) $(STORES_JS)) Squirre
 	node build/translate.js -l $@ $^
 
 # debug, keep .strings files around
-.SECONDARY: $(patsubst %.js,%.js.strings,$(SQUIRREL_JS) $(STORES_JS)) Squirrel.html.strings help.html.strings
+#.SECONDARY: $(patsubst %.js,%.js.strings,$(SQUIRREL_JS) $(STORES_JS)) Squirrel.html.strings help.html.strings
 
 

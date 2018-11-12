@@ -435,10 +435,6 @@
   "m": 0.85,
   "s": "Tout en fusionnant les actions de la nuée, les conflits ont été détectés."
  },
- "Please review these rejected actions before saving.": {
-  "m": 0.53,
-  "s": "Il serait utile d’avoir une version imprimée pour compléter les différentes sections de l’outil d’évaluation."
- },
  "Failed to load Google APIs: $1 $2": {
   "m": 0.85,
   "s": "Impossible de charger les APIs Google: $1 $2"
@@ -803,10 +799,6 @@
   "m": 0.85,
   "s": "Chargement du module JavaScript n’a pas"
  },
- "Show Password": {
-  "m": 1,
-  "s": "Afficher le mot de passe"
- },
  "Store path may not be empty": {
   "m": 0.85,
   "s": "Chemin d’accès de l'entrepôt ne peut pas être vide"
@@ -866,5 +858,17 @@
  "View/Edit raw JSON for the entire store": {
   "m": 0.85,
   "s": "Afficher/modifier JSON brut pour tout l’entrepôt"
+ },
+ "Please review these rejected actions, and make sure the data displayed is correct before saving.": {
+  "m": 0.85,
+  "s": "Veuillez vérifier ces actions rejetées et vous assurer que les données affichées sont correctes avant de les enregistrer."
+ },
+ "Enter login details for your server": {
+  "m": 0.85,
+  "s": "Entrez les informations de connexion pour votre serveur"
+ },
+ "Log in to HTTP server": {
+  "m": 0.85,
+  "s": "Se connecter au serveur HTTP"
  }
 }

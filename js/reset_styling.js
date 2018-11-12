@@ -64,14 +64,21 @@
                 .luma() < 0.65);
 
         if (is_light && !need_light || !is_light && need_light) {
-            // Invert colours. Takes account of the fact that only
-            // local stylesheets can be found this way. Stylesheets
-            // loading from other domains (i.e. CDNs) are not local.
+            // Invert colours. In theory only local stylesheets can be
+            // found this way. Stylesheets loading from other domains
+            // (i.e. CDNs) are not local. However that's not always
+            // the case....
             for (var i = 0; i < document.styleSheets.length; i++) {
                 var sheet = document.styleSheets[i];
                 if (!sheet)
                     continue;
-                var rules = sheet.rules || sheet.cssRules;
+                var rules;
+                try {
+                    rules = sheet.rules || sheet.cssRules;
+                } catch (e) {
+                    // Probably a SecurityException on a CDN stylesheet.
+                    // Ignore it and continue
+                }
                 if (!rules)
                     continue;
                 for (var j = 0; j < rules.length; j++) {

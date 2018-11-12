@@ -22,27 +22,21 @@ electronic document is a really, really, bad idea. A physical book is
 as secure as anything else in your house or office, so can't easily be
 hacked, but you depend on having physical access to the book. What you
 really want is a password safe - somewhere where passwords can be
-stored together, but that is accessible from anywhere, but is totally
+stored together, that is accessible from anywhere, but is totally
 secure.
 
-An excellent free tool that solves this problem is the passwdsafe
-family. This toolset supports most of the features we might require,
-but falls down in a couple of key areas:
-   - It requires software to be installed to your computer
-   - That software has to be maintained and upgraded each time your operating system changes
-   - It's obvious to an attacker when it is being used, allowing them to tailor their approach
-
-Squirrel, on the other hand:
-   - runs entirely in the web browser, so nothing needs to be installed
-   - works on anything that has a reasonably modern browser (including those on mobile phones)
-   - doesn't require an internet connection to run
-   - encrypts *everything* that it stores, sends or receives
-   - doesn't require a special website to store stuff (it can use a number of different online cloud services as a store, and you can even add more)
-   - uses 256 bit AES (Rijndael), one of the toughest ciphers to crack
-   - can use image steganography to mask its use
-   - is entirely open source, allowing you to inspect, and if you want, propose modifications to the code
-   - doesn't have any way for users - or even developers - to access the data without your unique password
-   - is simple to use
+There are excellent free tools that solve this problem already. So why
+use Squirrel?
+   - it runs entirely in the web browser, so nothing needs to be installed
+   - it works on anything that has a reasonably modern browser (including those on mobile phones)
+   - it doesn't require an internet connection to run
+   - it encrypts *everything* that it stores, sends or receives
+   - it doesn't require a special website to store stuff (it can use a number of different online cloud services as a store, and you can even add more)
+   - it uses 256 bit AES (Rijndael), one of the toughest ciphers to crack
+   - it can use image steganography to mask its use
+   - it's entirely open source, allowing you to inspect, and if you want, propose modifications to the code
+   - it doesn't have any way for users - or even developers - to access the data without your unique password
+   - it's simple to use
 
 Additional features include:
    - Reminders for when you think passwords need to be changed
@@ -52,8 +46,10 @@ Additional features include:
 
 ## Getting started
 
-Getting started with Squirrel is as simple as visiting the web address of the
-site where the code is stored. We use the 'rawgit' CDN (content delivery network) that shows the code currently checked into the git repository:
+Getting started with Squirrel is as simple as visiting the web address
+of the site where the code is stored. We use the 'rawgit' CDN (content
+delivery network) that shows the code currently checked into the git
+repository:
 
 https://cdn.rawgit.com/cdot/Squirrel/release/Squirrel.html?store=GoogleDriveStore
 
@@ -64,7 +60,8 @@ The following standard URL parameters are used:
 - `steg=1' to enable steganography
 - `store=<store name>' to set the store to use (default is `TestStore')
 
-Specific stores may use additional URL parameters. For example, the `HttpServerStore requires a URL', e.g.:
+Specific stores may use additional URL parameters. For example, the
+`HttpServerStore requires a URL', e.g.:
 - `?store=HttpServerStore&url=http://192.168.1.11:3000'
 
 A Squirrel store is rather like a traditional computer file system,
@@ -90,14 +87,14 @@ And that's about it - you can find out the rest by experimenting.
 
 ## Choosing a Store
 
-Squirrel supports a number of store implementations. It's up to you which
-one you use.
+Squirrel supports a number of store implementations. It's up to you
+which one you use.
 
 ### GoogleDriveStore
-You must be logged in to Google in the browser for
-this to work. The first time you open Squirrel with GoogleDriveStore, it
-will prompt for the path to your store. This is simply the name of a file
-where encrypted data will be stored in the cloud.
+You must be logged in to Google in the browser for this to work. The
+first time you open Squirrel with GoogleDriveStore, it will prompt for
+the path to your store. This is simply the name of a file where
+encrypted data will be stored in the cloud.
 
 Squirrel will prompt for a password every time you open it. This is
 the password for your store, and will not usually be the same as your

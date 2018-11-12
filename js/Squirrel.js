@@ -128,12 +128,10 @@ var Squirrel = {
             .append($mess);
     };
 
+    // Change jQuery UI theme
     S.theme = function (theme) {
         if (typeof theme !== "undefined") {
-            $("link")
-                .filter(function () {
-                    return this.href && this.href.indexOf("/themes/") > 0;
-                })
+            $("#jQueryTheme")
                 .each(function () {
                     this.href = this.href.replace(
                         /\/themes\/[^/]+/, "/themes/" + theme);
