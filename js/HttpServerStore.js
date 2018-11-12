@@ -6,13 +6,13 @@
 
 /**
  * 'cloud' store using ajax to communicate with a remote file server e.g.
- *
- * npm i -g simple-server
- * simple-server directory_to_server 3000
- *
- * or
- *
+ * the node.js.server store included in the Squirrel distribution. Or
+ * node simple-server
  * python -m SimpleHTTPServer 3000
+ * lighttpd
+ * nginx
+ * apache server
+ * etc.
  */
 
 function HttpServerStore(params) {
@@ -20,38 +20,43 @@ function HttpServerStore(params) {
 
     var self = this;
     self.url = global.URLPARAMS.url;
+
     if (!self.url)
         throw "No http_url defined, cannot start HttpServerStore";
 
-    /** Cannot use the store pass because any layered encryption store
-     * will use the same pass, so have to prompt for BasicAuth separately.
-     * Do that as early as possible. */
-    $('#http_login_dlg')
-        .on('dlg-open', function (e, options) {
-            var $dlg = $(this);
-            var $user = $dlg.squirrelDialog("control", "user");
-            var $pass = $dlg.squirrelDialog("control", "pass");
-            var $signin = $dlg.squirrelDialog("control", "signin");
-            $user
-                .attr("autofocus", "autofocus")
-                .off("change")
-                .on("change", function () {
-                    $pass.focus();
-                })
-            $pass
-                .off("change")
-                .on("change", function () {
-                    $signin.focus();
-                })
-            $signin
-                .off($.getTapEvent())
-                .on($.getTapEvent(), function () {
-                    $dlg.squirrelDialog("close");
-                    self.basic_auth = btoa($user.val() + ":" + $pass.data("hidden_pass"));
-                    AbstractStore.call(self, params);
-                });
-        })
-        .squirrelDialog("open");
+    /* NOT NEEDED, browser authentication cache deals with it
+        // Cannot use the store pass because any layered encryption store
+        // will use the same pass, so have to prompt for BasicAuth separately.
+        // Do that as early as possible.
+        $('#http_login_dlg')
+            .on('dlg-open', function (e, options) {
+                var $dlg = $(this);
+                var $user = $dlg.squirrelDialog("control", "user");
+                var $pass = $dlg.squirrelDialog("control", "pass");
+                var $signin = $dlg.squirrelDialog("control", "signin");
+                $user
+                    .attr("autofocus", "autofocus")
+                    .off("change")
+                    .on("change", function () {
+                        $pass.focus();
+                    })
+                $pass
+                    .off("change")
+                    .on("change", function () {
+                        $signin.focus();
+                    })
+                $signin
+                    .off($.getTapEvent())
+                    .on($.getTapEvent(), function () {
+                        $dlg.squirrelDialog("close");
+                        self.basic_auth = btoa($user.val() + ":" + $pass.data("hidden_pass"));
+    */
+    AbstractStore.call(self, params);
+    /*
+                    });
+            })
+            .squirrelDialog("open");
+    */
 }
 
 global.CLOUD_STORE = HttpServerStore;
@@ -77,11 +82,13 @@ HttpServerStore.prototype.read = function (path, ok, fail) {
             cache: false,
             processData: false,
 
-            beforeSend: function (xhr) {
-                xhr.setRequestHeader(
-                    "Authorization",
-                    "Basic " + self.basic_auth);
-            },
+            /* NOT NEEDED, browser authentication cache deals with it
+                        beforeSend: function (xhr) {
+                            xhr.setRequestHeader(
+                                "Authorization",
+                                "Basic " + self.basic_auth);
+                        },
+            */
 
             success: function (response, status, xhr) {
                 var type = xhr.getResponseHeader('Content-Type');
@@ -110,11 +117,13 @@ HttpServerStore.prototype.write = function (path, data, ok, fail) {
             data: data,
             processData: false,
 
-            beforeSend: function (xhr) {
-                xhr.setRequestHeader(
-                    "Authorization",
-                    "Basic " + self.basic_auth);
-            },
+            /* NOT NEEDED, browser authentication cache deals with it
+                        beforeSend: function (xhr) {
+                            xhr.setRequestHeader(
+                                "Authorization",
+                                "Basic " + self.basic_auth);
+                        },
+            */
 
             type: "POST"
         })

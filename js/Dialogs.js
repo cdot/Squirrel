@@ -8,8 +8,8 @@
 /* global Squirrel */
 /* global Hoard */
 
-// Handlers for Squirrel dialogs
-(function ($, Squirrel) {
+// Handlers for Squirrel dialogs.
+(function ($) {
     "use strict";
 
     $(function () {
@@ -948,4 +948,4 @@
                 });
         });
     });
-})(jQuery, Squirrel);
+})(jQuery);

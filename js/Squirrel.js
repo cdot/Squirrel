@@ -18,7 +18,7 @@
  * a sequence of chained functions called 'step_*'. These functions are
  * mostly run asynchronously. Once the final step is reached, control is
  * handed off to the Tree module, which governs most interaction.
- * reached 
+ * reached
  */
 
 // Exports
@@ -600,7 +600,7 @@ var Squirrel = {
                 severity: "warning",
                 message: TX.tx("Conflicts were detected while merging actions from the Cloud.") +
                     " " +
-                    TX.tx("Please review these rejected actions before saving.")
+                    TX.tx("Please review these rejected actions, and make sure the data displayed is correct before saving.")
             });
             $.each(conflicts, function (i, c) {
                 var e = c.conflict;
@@ -1578,7 +1578,9 @@ var Squirrel = {
     };
 
     // on ready
+    console.debug("Loading Squirrel.js");
     $(function () {
+        console.debug("Squirrel.js .ready");
 
         // Parse URL parameters
         var qs = Utils.parse_query_params();

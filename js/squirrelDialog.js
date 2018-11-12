@@ -46,8 +46,6 @@
          */
         open: function (options) {
             var $dlg = this.element;
-            var id = $dlg.attr("id");
-            var fn;
 
             if (!$dlg.hasClass("dlg-initialised")) {
                 $dlg.addClass("dlg-initialised");

@@ -49,7 +49,7 @@
  * .contextMenu(isOpen|close|enable|disable)
  * .playAction(action)
  */
-(function ($, S) {
+(function ($) {
     "use strict";
 
     var cache = {}; // Path->node mapping
@@ -176,14 +176,14 @@
                     .left;
             });
 
-        S.contextMenu("disable");
+        Squirrel.contextMenu("disable");
 
         var nodepath = this.getPath();
         $span.edit_in_place({
             width: w,
             text: text,
             changed: function (s) {
-                S.playAction({
+                Squirrel.playAction({
                     type: action,
                     path: nodepath,
                     data: s
@@ -191,7 +191,7 @@
                 return s;
             },
             closed: function () {
-                S.contextMenu("enable");
+                Squirrel.contextMenu("enable");
             }
         });
     };
@@ -262,7 +262,7 @@
                 $new_parent.removeClass("drop-target");
                 var oldpath = $node.tree("getPath");
                 var newpath = $new_parent.tree("getPath");
-                S.playAction({
+                Squirrel.playAction({
                     type: "M",
                     path: oldpath,
                     data: newpath
@@ -386,10 +386,10 @@
             });
     }
 
-    function decorate_node($child) {
+    function decorate_node($node) {
         // Invoked on tree-title
         function hoverIn( /*evt*/ ) {
-            S.contextMenu("close");
+            Squirrel.contextMenu("close");
 
             if ($("body")
                 .find("input.in_place_editor")
@@ -420,7 +420,7 @@
 
         // Invoked on tree-title
         function hoverOut( /*evt*/ ) {
-            if (S.contextMenu("isOpen") ||
+            if (Squirrel.contextMenu("isOpen") ||
                 $("body")
                 .find("input.in_place_editor")
                 .length > 0)
@@ -450,9 +450,9 @@
             .on("paste", function () {
                 debugger;
             })
-            .prependTo($child);
+            .prependTo($node);
 
-        if (!$child.hasClass("tree-leaf")) {
+        if (!$node.hasClass("tree-leaf")) {
             // Add open/close button on child none-leaf nodes
             var $control = $(document.createElement("button"))
                 .addClass("tree-node-is-open-close");
@@ -462,7 +462,7 @@
                 })
                 .on($.getTapEvent(),
                     function () {
-                        $child.tree("toggle");
+                        $node.tree("toggle");
                         return false;
                     });
         }
@@ -476,7 +476,7 @@
         $(document.createElement("span"))
             .appendTo($info)
             .addClass("tree-key")
-            .text($child.data("key"))
+            .text($node.data("key"))
             .on($.isTouchCapable && $.isTouchCapable() ?
                 "doubletap" : "dblclick",
                 function (e) {
@@ -485,7 +485,7 @@
                     $(e.target).closest(".tree-node").tree("editKey");
                 });
 
-        if ($child.hasClass("tree-leaf")) {
+        if ($node.hasClass("tree-leaf")) {
             $(document.createElement("span"))
                 .text(" : ")
                 .addClass("tree-separator")
@@ -493,7 +493,7 @@
             $(document.createElement("span"))
                 .appendTo($info)
                 .addClass("tree-value")
-                .text(obscure_value($child.data("value")))
+                .text(obscure_value($node.data("value")))
                 .on($.isTouchCapable && $.isTouchCapable() ?
                     "doubletap" : "dblclick",
                     function (e) {
@@ -502,8 +502,8 @@
                         $(e.target).closest(".tree-node").tree("editValue");
                     });
         }
-        _makeDraggable($child);
-        _decorate_with_alarm($child);
+        _makeDraggable($node);
+        _decorate_with_alarm($node);
     }
 
     tree_widget.open = function (options) {
@@ -868,4 +868,4 @@
 
     $.widget("squirrel.tree", tree_widget);
 
-})(jQuery, Squirrel);
+})(jQuery);

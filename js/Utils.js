@@ -269,6 +269,11 @@ Utils.load = function (libs, onload, onfail) {
     var expect = {};
     var failed = {};
 
+    if (libs.length === 0) {
+        onload();
+        return;
+    }
+
     // action when a resource is loaded
     function _done(file) {
         delete expect[file];
