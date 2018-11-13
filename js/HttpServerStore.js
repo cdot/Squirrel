@@ -92,14 +92,22 @@ HttpServerStore.prototype.read = function (path, ok, fail) {
 
             success: function (response, status, xhr) {
                 var type = xhr.getResponseHeader('Content-Type');
-                var blob = new Blob([response], {
-                    type: type
-                });
-                var fileReader = new FileReader();
-                fileReader.onload = function (event) {
-                    ok.call(self, event.target.result);
-                };
-                fileReader.readAsArrayBuffer(blob);
+                if (type === "application/octet-stream") {
+                    var blob = new Blob([response], {
+                        type: type
+                    });
+                    var fileReader = new FileReader();
+                    fileReader.onload = function (event) {
+                        ok.call(self, event.target.result);
+                    };
+                    fileReader.readAsArrayBuffer(blob);
+                } else if (type === "application/json") {
+                    ok.call(
+                        self,
+                        Utils.StringToArrayBuffer(JSON.stringify(response)));
+                } else {
+                    fail.call(self, "Unsupported content type " + type);
+                }
             }
         })
         .fail(function (e) {

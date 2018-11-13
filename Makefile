@@ -116,6 +116,42 @@ release: release/Squirrel.html release/help.html \
 	@-rm -f release/js/*.map
 	@echo $^ built
 
+# Minified - halfway to release
+minified/%.html : %.html Makefile
+	@mkdir -p minified
+	cp Squirrel.html $@
+
+minified/js/%.js : js/%.js
+	@mkdir -p minified/js
+	uglifyjs \
+		--comments \
+		--compress \
+		--mangle \
+		--define DEBUG=false \
+		-o $@ \
+		-- $^
+
+minified/libs/%.js : libs/%.js
+	@mkdir -p minified/libs
+	cp $^ $@
+
+minified/css/%.css : css/%.css
+	@mkdir -p minified/css
+	cat $^ | cleancss -o $@
+
+minified/images/% : images/%
+	@mkdir -p minified/images
+	cp $^ $@
+
+minified: minified/Squirrel.html minified/help.html \
+	$(patsubst js/%.js,minified/js/%.js,$(SQUIRREL_JS)) \
+	$(patsubst libs/%.js,minified/libs/%.js,$(SQUIRREL_JS)) \
+	$(patsubst js/%.js,minified/js/%.js,$(HELP_JS)) \
+	$(patsubst js/%.js,minified/js/%.js,$(STORES_JS)) \
+	$(patsubst css/%.css,minified/css/%.css,$(SQUIRREL_CSS)) \
+	$(patsubst css/%.css,minified/css/%.css,$(HELP_CSS)) \
+	$(patsubst images/%,minified/images/%,$(wildcard images/*))
+
 # Languages
 
 langs : $(LANGS)

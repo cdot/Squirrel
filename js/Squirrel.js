@@ -541,8 +541,8 @@ var Squirrel = {
     }
 
     // Final step before allowing interaction
-    function step_8_authenticated() {
-        if (global.DEBUG) console.debug('step_8_authenticated');
+    function step_7_interact() {
+        if (global.DEBUG) console.debug('step_7_interact');
         $("#whoami")
             .text(client.store.user());
         $("#unauthenticated")
@@ -558,8 +558,8 @@ var Squirrel = {
     }
 
     // Last in the initial hoard load sequence
-    function step_7_hoards_loaded() {
-        if (global.DEBUG) console.debug('step_7_hoards_loaded');
+    function step_6_hoards_loaded() {
+        if (global.DEBUG) console.debug('step_6_hoards_loaded');
         $(window)
             .on("beforeunload", function () {
                 var us = unsaved_changes(10);
@@ -575,13 +575,13 @@ var Squirrel = {
         Utils.sometime("check_alarms");
 
         // We are ready for interaction
-        step_8_authenticated();
+        step_7_interact();
     }
 
     // Optional initialisation step, executed when both hoards are
     // known to have loaded successfully.
-    function step_6a_merge_from_cloud(chain) {
-        if (global.DEBUG) console.debug('step_6a_merge_from_cloud');
+    function step_5a_merge_from_cloud(chain) {
+        if (global.DEBUG) console.debug('step_5a_merge_from_cloud');
         var conflicts = client.hoard.play_actions(
             cloud.hoard.actions,
             function (e) {
@@ -618,8 +618,8 @@ var Squirrel = {
      * STEP 6: Called when we have a (possibly empty) client hoard.
      * Try and synch it from the cloud.
      */
-    function step_6_load_cloud_hoard() {
-        if (global.DEBUG) console.debug('step_6_load_cloud_hoard');
+    function step_5_load_cloud_hoard() {
+        if (global.DEBUG) console.debug('step_5_load_cloud_hoard');
         if (cloud.store) {
             $("#stage")
                 .text(TX.tx("Reading from cloud"));
@@ -635,7 +635,7 @@ var Squirrel = {
                             console.debug(JSON.stringify(cloud.hoard));
                     } catch (e) {
                         if (global.DEBUG) console.debug(
-                            "Cloud hoard JSON parse failed: " + e);
+                            "Cloud hoard JSON parse failed: " + e + data);
                         S.alert({
                             title: TX.tx("Error"),
                             severity: "error",
@@ -646,12 +646,12 @@ var Squirrel = {
                                 TX.tx("Check that you have the correct password.")
                         });
                         cloud.status = S.IS_CORRUPT;
-                        Utils.soon(step_7_hoards_loaded);
+                        Utils.soon(step_6_hoards_loaded);
                         return;
                     }
                     // Both hoards have loaded successfully.
                     //if (global.DEBUG) console.debug("Cloud hoard " + data);
-                    step_6a_merge_from_cloud(step_7_hoards_loaded);
+                    step_5a_merge_from_cloud(step_6_hoards_loaded);
                 },
                 function (e) {
                     if (e === AbstractStore.NODATA) {
@@ -674,10 +674,10 @@ var Squirrel = {
                         });
                         // Could not contact cloud; continue all the same
                     }
-                    Utils.soon(step_7_hoards_loaded);
+                    Utils.soon(step_6_hoards_loaded);
                 });
         } else {
-            step_7_hoards_loaded();
+            step_6_hoards_loaded();
         }
     }
 
@@ -685,19 +685,19 @@ var Squirrel = {
      * STEP 5: Called when there is no existing client hoard, to initialise
      * a new one.
      */
-    function step_5_init_client_hoard() {
-        if (global.DEBUG) console.debug('step_5_init_client_hoard');
+    function step_4_init_client_hoard() {
+        if (global.DEBUG) console.debug('step_4_init_client_hoard');
         client.hoard = new Hoard("Client");
         client.status = S.IS_EMPTY;
         if (cloud.store && cloud.store.options()
             .needs_path) {
             $("#store_settings_dlg")
                 .squirrelDialog("option", "close", function () {
-                    step_6_load_cloud_hoard();
+                    step_5_load_cloud_hoard();
                 })
                 .squirrelDialog("open");
         } else {
-            step_6_load_cloud_hoard();
+            step_5_load_cloud_hoard();
         }
     }
 
@@ -707,8 +707,8 @@ var Squirrel = {
      * location of the cloud hoard, so we can then chain loading and merging
      * the cloud hoard.
      */
-    function step_4_load_client_hoard() {
-        if (global.DEBUG) console.debug('step_4_load_client_hoard');
+    function step_3_load_client_hoard() {
+        if (global.DEBUG) console.debug('step_3_load_client_hoard');
 
         function rebuild_hoard() {
             $("#stage")
@@ -743,7 +743,7 @@ var Squirrel = {
                             p.pop();
                         }
                     }
-                    Utils.soon(step_6_load_cloud_hoard);
+                    Utils.soon(step_5_load_cloud_hoard);
                 });
         }
 
@@ -793,7 +793,7 @@ var Squirrel = {
                     if (global.DEBUG) console.debug(this.options()
                         .identifier + " contains NODATA");
                     // Construct a new client hoard
-                    Utils.soon(step_5_init_client_hoard);
+                    Utils.soon(step_4_init_client_hoard);
                 } else {
                     S.alert({
                         title: TX.tx("Error"),
@@ -813,11 +813,11 @@ var Squirrel = {
      * STEP 3: Login, fill in details the stores didn't provide, prompt
      * if needed.
      */
-    function step_3_identify_user() {
+    function step_2a_identify_user() {
         var uReq = true;
         var pReq = true;
 
-        if (global.DEBUG) console.debug('step_3_identify_user');
+        if (global.DEBUG) console.debug('step_2a_identify_user');
 
         $("#stage")
             .text(TX.tx("Authentication"));
@@ -868,13 +868,13 @@ var Squirrel = {
                             cloud.store.user(user);
                             cloud.store.pass(pass);
                         }
-                        step_4_load_client_hoard();
+                        step_3_load_client_hoard();
                     },
                     user_required: uReq,
                     pass_required: pReq
                 });
         } else
-            step_4_load_client_hoard();
+            step_3_load_client_hoard();
     }
 
     /**
@@ -895,8 +895,11 @@ var Squirrel = {
                     .identifier +
                     " store is ready");
                 client.store = this;
-                // Chain the login prompt
-                Utils.soon(step_3_identify_user);
+                if (typeof global.URLPARAMS.plaintext !== "undefined")
+                    Utils.soon(step_3_load_client_hoard);
+                else
+                    // Chain the login prompt
+                    Utils.soon(step_2a_identify_user);
             },
             fail: function (e) {
                 // We did our best!
@@ -1576,10 +1579,7 @@ var Squirrel = {
     };
 
     // on ready
-    console.debug("Loading Squirrel.js");
     $(function () {
-        console.debug("Squirrel.js .ready");
-
         // Parse URL parameters
         var qs = Utils.parse_query_params();
 

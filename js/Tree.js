@@ -790,8 +790,10 @@
             if (global.DEBUG) {
                 if (!pa)
                     throw "recache outside tree";
-                if (cache[path.join(PATHSEP)])
+                if (cache[path.join(PATHSEP)]) {
+                    debugger;
                     throw "Remapping path -> node";
+                }
                 if ($node.data("path"))
                     throw "Remapping node -> path";
             }
