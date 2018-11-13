@@ -12,6 +12,9 @@ if (typeof module !== "undefined") {
 } else
     assert = chai.assert;
 
+if (typeof global === "undefined")
+    global = {};
+
 function test_writeArrayBuffer(store) {
     return new Promise(function(resolve, reject) {
         // Deliberately make it an odd length to throw off 16-bit-assuming
@@ -165,7 +168,7 @@ function test_store(/*store classes...*/) {
 
 if (typeof module !== "undefined") {
     // Test FileStore and EncryptedStore, and by implication AbstractStore
-    // and LayeredSTore as well.
+    // and LayeredStore as well.
     describe("node.js Stores", function() {
         it("FileStore", function() {
             return test_store(require("../FileStore"));
@@ -179,15 +182,16 @@ if (typeof module !== "undefined") {
 } else {
     // Test LocalStorageStore, and whatever has declared itself as
     // "CLOUD_STORE" by being included in the HTML
+    global.URLPARAMS = Utils.parse_query_params();
 
     describe("browser Stores", function() {
         it("LocalStorageStore", function() {
             return test_store(LocalStorageStore);
         });
-        it("CloudStore", function() {
+        it(global.CLOUD_STORE.name, function() {
             return test_store(global.CLOUD_STORE);
         });
-        it("CloudStore with Steganography", function() {
+        it(global.CLOUD_STORE.name + " with Steganography", function() {
             return test_store(StegaStore, global.CLOUD_STORE);
         });
     });

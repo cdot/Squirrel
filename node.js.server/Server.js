@@ -22,15 +22,15 @@ var writeFile = Q.denodeify(Fs.writeFile);
 
 /**
  * Lightweight HTTP(S) server object (singleton) with very few
- * dependencies. Only supports POST and GET and Basic auth
- * The server sits on the selected port and processes GET and POST
+ * dependencies. Only supports PUT and GET and Basic auth
+ * The server sits on the selected port and processes GET and PUT
  * requests.
  * @param proto Parameter hash. Legal params are:
  *    port: Port to run the server on, defaults to 3000
  *    docroot: absolute path to the document root. Defaults to the
  *             current directory when the server is run.
  *    writable: path to subdirectory of the document root that is writable.
- *              If this is set, only the writable directory can be POSTed to.
+ *              If this is set, only the writable directory can be PUT to.
  *              if it is not set, anywhere under the docroot can be written to.
  *    ssl: SSL configuration
  *        cert: SSL certificate (filename or text, required for SSL)
@@ -103,6 +103,10 @@ Server.prototype.start = function () {
     var self = this;
 
     var handler = function (request, response) {
+        if (self.log_requests)
+            console.log(request.method, " ", request.url,
+                "from", request.headers);
+
         if (self[request.method]) {
             self[request.method].call(self, request, response);
         } else {
@@ -176,15 +180,63 @@ Server.prototype.stop = function () {
     this.http.close();
 };
 
+Server.prototype._addCORSHeaders = function (request, response) {
+    response.setHeader("Allow", "OPTIONS,PUT,GET");
+    if (request.headers.origin)
+        response.setHeader("Access-Control-Allow-Origin",
+            request.headers.origin);
+    else
+        response.setHeader("Access-Control-Allow-Origin", "*");
+    response.setHeader("Access-Control-Allow-Methods", "PUT,GET");
+    response.setHeader("Access-Control-Allow-Credentials", "true");
+    response.setHeader("Access-Control-Allow-Headers", "Authorization");
+};
+
 /**
- * Common handling for POST or GET
+ * Common handling for PUT or GET
  * @private
  */
 Server.prototype.handle = function (request, response, promise, data) {
     var self = this;
+    var contentType = "text/plain";
 
-    if (this.log_requests)
-        console.log(request.method, " ", request.url);
+    function handleResponse(responseBody) {
+        if (self.debug) {
+            // Don't cache when debugging.
+            response.setHeader("Cache-Control", "no-cache");
+            response.setHeader("Cache-Control", "no-store");
+        }
+
+        if (responseBody) {
+            response.setHeader("Content-Type", contentType);
+            response.setHeader("Content-Length",
+                Buffer.byteLength(responseBody));
+            if (self.debug) console.log(
+                "Responding with",
+                Buffer.byteLength(responseBody), "bytes");
+            response.write(responseBody);
+        }
+        response.statusCode = 200;
+        if (self.debug) console.log("Response code 200 ", response.getHeaders());
+        response.end();
+    }
+
+    function handleError(error) {
+        // Send the error message in the payload
+        if (error.code === "ENOENT") {
+            if (self.debug) console.log(error);
+            response.statusCode = 404;
+        } else {
+            if (self.log_requests)
+                console.log(error);
+            if (self.debug)
+                console.error(error.stack);
+            response.statusCode = 500;
+        }
+        var e = error.toString();
+        response.write(e);
+        response.end(e);
+    }
 
     if (!this.authenticate(request, response))
         return;
@@ -209,7 +261,6 @@ Server.prototype.handle = function (request, response, promise, data) {
     }
     spath = this.docroot + spath;
 
-    var contentType = "text/plain";
     if (request.method === "GET") {
         var m = /\.([A-Z0-9]+)$/i.exec(spath);
         if (m) {
@@ -218,7 +269,7 @@ Server.prototype.handle = function (request, response, promise, data) {
         } else {
             contentType = "application/octet-stream";
         }
-    } else if (request.method === "POST") {
+    } else if (request.method === "PUT") {
         if (this.writable && spath.indexOf(this.writable) !== 0) {
             if (self.debug)
                 console.log("Trying to write '" + spath +
@@ -230,48 +281,11 @@ Server.prototype.handle = function (request, response, promise, data) {
         }
     }
 
+    self._addCORSHeaders(request, response);
+
     try {
         promise(spath, data)
-            .then(function (responseBody) {
-                    // Allow cross-domain posting. Do we need this? It's already
-                    // done in the OPTIONS pre-flight
-                    response.setHeader("Access-Control-Allow-Origin", "*");
-                    response.setHeader("Access-Control-Allow-Methods", "POST,GET");
-
-                    if (self.debug) {
-                        response.setHeader("Cache-Control", "no-cache");
-                        response.setHeader("Cache-Control", "no-store");
-                    }
-
-                    if (responseBody) {
-                        response.setHeader("Content-Type", contentType);
-                        response.setHeader("Content-Length",
-                            Buffer.byteLength(responseBody));
-                        if (self.debug) console.log(
-                            "Responding with",
-                            Buffer.byteLength(responseBody), "bytes");
-                        response.write(responseBody);
-                    }
-                    response.statusCode = 200;
-                    if (self.debug) console.log("Response code 200");
-                    response.end();
-                },
-                function (error) {
-                    // Send the error message in the payload
-                    if (error.code === "ENOENT") {
-                        if (self.debug) console.log(error);
-                        response.statusCode = 404;
-                    } else {
-                        if (self.log_requests)
-                            console.log(error);
-                        if (self.debug)
-                            console.error(error.stack);
-                        response.statusCode = 500;
-                    }
-                    var e = error.toString();
-                    response.write(e);
-                    response.end(e);
-                });
+            .then(handleResponse, handleError);
     } catch (e) {
         console.error(e, " in ", request.url, "\n",
             typeof e.stack !== "undefined" ? e.stack : e);
@@ -286,23 +300,7 @@ Server.prototype.handle = function (request, response, promise, data) {
  * @private
  */
 Server.prototype.OPTIONS = function (request, response) {
-    if (this.log_requests) console.log("OPTIONS", request.headers);
-
-    // We only support these methods
-    response.setHeader("Allow", "OPTIONS,POST,GET");
-
-    // Allow cross-domain posting
-    response.setHeader("Access-Control-Allow-Origin", request.headers.origin);
-
-    // Access control on these methods
-    response.setHeader("Access-Control-Allow-Methods", "POST,GET");
-
-    // Accept BasicAuth
-    response.setHeader("Access-Control-Allow-Headers", "Authorization");
-
-    // OK to include cookies on the request
-    //response.setHeader("Access-Control-Allow-Credentials", true);
-
+    this._addCORSHeaders(request, response);
     response.end();
 };
 
@@ -318,10 +316,10 @@ Server.prototype.GET = function (request, response) {
 };
 
 /**
- * Handler for incoming POST request
+ * Handler for incoming PUT request
  * @private
  */
-Server.prototype.POST = function (request, response) {
+Server.prototype.PUT = function (request, response) {
     var self = this;
 
     var chunks = [];

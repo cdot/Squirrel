@@ -81,7 +81,7 @@ AbstractStore.prototype.pass = function (pass) {
  * Write data. Pure virtual.
  * @param path pathname to store the data under, a / separated path string
  * @param data an ArrayBuffer (or ArrayBufferView, so it can be a TypedArray)
- * @param ok called on success with this=self
+ * @param ok called on success with this=self, no parameters
  * @param fail called on failure with this=self
  */
 AbstractStore.prototype.write = function (path, data, ok, fail) {

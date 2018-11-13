@@ -29,7 +29,7 @@ var server_config = {
     port: 13198,
     docroot: __dirname,
     writable: workingLocation,
-    debug: true, log_requests: true,
+    //debug: true, log_requests: true,
     auth: {
         user: "test",
         pass: "x",
@@ -83,6 +83,19 @@ describe("server/Server", function() {
         });
     });
 
+    it("doesnt_support_post", function(done) {
+        request.post(serverUrl + '/', {
+            auth: {
+                user: server_config.auth.user,
+                pass: server_config.auth.pass
+            }
+        }, function(err, res, body) {
+            assert.equal(res.statusCode, 405);
+            assert.equal(body, "No support for POST");
+            done();
+        });
+    });
+
     it("text-file-get-8bit", function(done) {
         request.get(serverUrl + '/testData.8', {
             auth: { user: server_config.auth.user,
@@ -117,7 +130,7 @@ describe("server/Server", function() {
             Fs.unlinkSync(ef);
         } catch (e) {};
         
-        request.post(workingUrl + '/transitory8', {
+        request.put(workingUrl + '/transitory8', {
             auth: { user: server_config.auth.user,
                     pass: server_config.auth.pass },
             encoding: null,
@@ -146,7 +159,7 @@ describe("server/Server", function() {
         } catch (e) {}
         var text = "\0S\0o\0m\0e\0 \01\06\0 \0b\0i\0t\0 \0t\0e\0x\0t";
         
-        request.post(workingUrl + '/transitory16', {
+        request.put(workingUrl + '/transitory16', {
             auth: { user: server_config.auth.user,
                     pass: server_config.auth.pass },
             encoding: null,
@@ -169,7 +182,7 @@ describe("server/Server", function() {
     });
 
     it("bad-post", function(done) {
-        request.post(serverUrl + '/banished', {
+        request.put(serverUrl + '/banished', {
             auth: { user: server_config.auth.user,
                     pass: server_config.auth.pass },
             encoding: null,
@@ -191,7 +204,7 @@ describe("server/Server", function() {
         var pass = "password";
         var xa = AES.encrypt(Utils.StringToArrayBuffer(text), pass, 256);
    
-        request.post(workingUrl + '/encrypted', {
+        request.put(workingUrl + '/encrypted', {
             auth: { user: server_config.auth.user,
                     pass: server_config.auth.pass },
             encoding: null,

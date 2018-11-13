@@ -39,7 +39,7 @@ var Utils = { // Namespace
 
     // Timeout intervals, milliseconds
     IMMEDIATE: 1,
-    SOON: 100,
+    SOON: 50,
     SOMETIME: 250,
     MSPERDAY: 24 * 60 * 60 * 1000,
     TIMEUNITS: {

@@ -869,5 +869,4 @@
     };
 
     $.widget("squirrel.tree", tree_widget);
-
 })(jQuery);

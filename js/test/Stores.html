@@ -1,5 +1,5 @@
 <html>
-  <!-- Test Tree.js - requires jQuery -->
+  <!-- Test stores - requires jQuery -->
   <head>
     <meta charset="utf-8">
     <title>Mocha Tests</title>
@@ -7,17 +7,37 @@
   </head>
   <body>
     <div id="mocha"></div>
-    <img id="stegamage" src="../../images/GCHQ.png">
+    <img id="stegamage" src="../../images/GCHQ.png" style="display:none">
     <script src="//code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-touch-events/2.0.0/jquery.mobile-events.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.3/clipboard.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/mocha/4.0.1/mocha.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/chai/4.1.2/chai.js"></script>
+    <!-- Source
     <script src="../Utils.js"></script>
     <script src="../AbstractStore.js"></script>
     <script src="../LayeredStore.js"></script>
     <script src="../LocalStorageStore.js"></script>
     <script src="../StegaStore.js"></script>
-    <!-- Change this to test cloud services -->
-    <script src="../TestStore.js"></script>
+    <script src="../HttpServerStore.js" title="Change this to test different cloud services"></script>
+    <!-- /Source -->
+    <!-- Minified
+    <script src="../../minified/js/Utils.js"></script>
+    <script src="../../minified/js/AbstractStore.js"></script>
+    <script src="../../minified/js/LayeredStore.js"></script>
+    <script src="../../minified/js/LocalStorageStore.js"></script>
+    <script src="../../minified/js/StegaStore.js"></script>
+    <script src="../../minified/js/HttpServerStore.js" title="Change this to test different cloud services"></script>
+    <!-- /Minified -->
+    <!-- Release -->
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/js-cookie/2.2.0/js.cookie.min.js"></script>
+    <script>var global={};</script>
+    <script src="../../release/js/Squirrel.min.js"></script>
+    <script src="../../release/js/StegaStore.min.js"></script>
+    <script src="../../release/js/HttpServerStore.min.js" title="Change this to test different cloud services"></script>
+    <!-- /Release -->
+    
     <script>mocha.setup("bdd");mocha.globals(['jQuery']);</script>
     <script src="Stores.js"></script>
     <script>mocha.run();</script>

@@ -64,7 +64,6 @@ release/js/Squirrel.min.js : $(SQUIRREL_JS)
 	uglifyjs \
 		--comments \
 		--compress \
-		--mangle \
 		--define DEBUG=false \
 		-o $@ \
 		-- $^
@@ -74,7 +73,6 @@ release/js/help.min.js : $(HELP_JS)
 	uglifyjs \
 		--comments \
 		--compress \
-		--mangle \
 		--define DEBUG=false \
 		-o $@ \
 		-- $^
@@ -84,7 +82,6 @@ release/js/%Store.js : js/%Store.js
 	uglifyjs \
 		--comments \
 		--compress \
-		--mangle \
 		--define DEBUG=false \
 		-o $@ \
 		-- $^
@@ -126,7 +123,6 @@ minified/js/%.js : js/%.js
 	uglifyjs \
 		--comments \
 		--compress \
-		--mangle \
 		--define DEBUG=false \
 		-o $@ \
 		-- $^

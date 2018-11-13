@@ -13,18 +13,12 @@
  * nginx
  * apache server
  * etc.
- */
 
-function HttpServerStore(params) {
-    "use strict";
+if the code is served from the same server as the content then the basic
+auth negotiation has already happened by the time the first store request is
+made, and we don't need to prompt for auth. But if it's one a different
+server then we have to be able to handle a 401.
 
-    var self = this;
-    self.url = global.URLPARAMS.url;
-
-    if (!self.url)
-        throw "No http_url defined, cannot start HttpServerStore";
-
-    /* NOT NEEDED, browser authentication cache deals with it
         // Cannot use the store pass because any layered encryption store
         // will use the same pass, so have to prompt for BasicAuth separately.
         // Do that as early as possible.
@@ -50,13 +44,29 @@ function HttpServerStore(params) {
                     .on($.getTapEvent(), function () {
                         $dlg.squirrelDialog("close");
                         self.basic_auth = btoa($user.val() + ":" + $pass.data("hidden_pass"));
-    */
-    AbstractStore.call(self, params);
-    /*
+                        AbstractStore.call(self, params);
                     });
             })
             .squirrelDialog("open");
-    */
+
+In GET and PUT:
+                        beforeSend: function (xhr) {
+                            xhr.setRequestHeader(
+                                "Authorization",
+                                "Basic " + self.basic_auth);
+                        },
+*/
+
+function HttpServerStore(params) {
+    "use strict";
+
+    var self = this;
+    self.url = global.URLPARAMS.url;
+
+    if (!self.url)
+        throw "No http_url defined, cannot start HttpServerStore";
+
+    AbstractStore.call(self, params);
 }
 
 global.CLOUD_STORE = HttpServerStore;
@@ -77,42 +87,29 @@ HttpServerStore.prototype.read = function (path, ok, fail) {
 
     var self = this;
 
-    $.ajax({
-            url: self.url + "/" + path + "?t=" + Date.now(),
-            cache: false,
-            processData: false,
+    // We want to use the features of jQuery.ajax, but by default
+    // it doesn't handle binary files. We could add a jQuery transport,
+    // as described in
+    // https://stackoverflow.com/questions/33902299/using-jquery-ajax-to-download-a-binary-file
+    // but it feels like overkill when we can simply use a XmlHttpRequest.
 
-            /* NOT NEEDED, browser authentication cache deals with it
-                        beforeSend: function (xhr) {
-                            xhr.setRequestHeader(
-                                "Authorization",
-                                "Basic " + self.basic_auth);
-                        },
-            */
+    var xhr = new XMLHttpRequest();
+    xhr.withCredentials = true;
+    xhr.timeout = 5000; // 5 second timeout
+    xhr.responseType = "arraybuffer";
 
-            success: function (response, status, xhr) {
-                var type = xhr.getResponseHeader('Content-Type');
-                if (type === "application/octet-stream") {
-                    var blob = new Blob([response], {
-                        type: type
-                    });
-                    var fileReader = new FileReader();
-                    fileReader.onload = function (event) {
-                        ok.call(self, event.target.result);
-                    };
-                    fileReader.readAsArrayBuffer(blob);
-                } else if (type === "application/json") {
-                    ok.call(
-                        self,
-                        Utils.StringToArrayBuffer(JSON.stringify(response)));
-                } else {
-                    fail.call(self, "Unsupported content type " + type);
-                }
-            }
-        })
-        .fail(function (e) {
+    xhr.open("GET", self.url + "/" + path + "?_=" + Date.now());
+
+    xhr.onreadystatechange = function (e) {
+        if (xhr.readyState === 4 && xhr.status !== 200)
             fail.call(self, e);
-        });
+    };
+
+    xhr.onload = function ( /*e*/ ) {
+        ok.call(self, xhr.response);
+    };
+
+    xhr.send();
 };
 
 HttpServerStore.prototype.write = function (path, data, ok, fail) {
@@ -120,27 +117,26 @@ HttpServerStore.prototype.write = function (path, data, ok, fail) {
 
     var self = this;
 
-    $.ajax({
-            url: self.url + "/" + path,
-            data: data,
-            processData: false,
+    var xhr = new XMLHttpRequest();
+    xhr.withCredentials = true;
+    xhr.timeout = 5000; // 5 second timeout
 
-            /* NOT NEEDED, browser authentication cache deals with it
-                        beforeSend: function (xhr) {
-                            xhr.setRequestHeader(
-                                "Authorization",
-                                "Basic " + self.basic_auth);
-                        },
-            */
+    xhr.open("PUT", self.url + "/" + path + "?_=" + Date.now());
 
-            type: "POST"
-        })
-        .done(function (d) {
-            ok.call(self, d);
-        })
-        .fail(function (e) {
+    xhr.ontimeout = function (e) {
+        fail.call(self, e);
+    };
+
+    xhr.onreadystatechange = function (e) {
+        if (xhr.readyState === 4 && xhr.status !== 200)
             fail.call(self, e);
-        });
+    };
+
+    xhr.onload = function ( /*e*/ ) {
+        ok.call(self);
+    };
+
+    xhr.send(data);
 };
 
 if (typeof module !== "undefined")
