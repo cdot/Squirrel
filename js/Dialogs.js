@@ -35,14 +35,16 @@
             var $signin = $dlg.squirrelDialog("control", "signin");
 
             var sign_in = function () {
-                $dlg.squirrelDialog("close");
-                $signin.off($.getTapEvent());
-                $user.off("change");
-                $pass.off("change");
-                options.on_signin.call(
-                    options.store,
-                    $user.val(),
-                    $pass.data("hidden_pass"));
+                if ($dlg.squirrelDialog("isOpen")) {
+                    $dlg.squirrelDialog("close");
+                    $signin.off($.getTapEvent());
+                    $user.off("change");
+                    $pass.off("change");
+                    options.on_signin.call(
+                        options.store,
+                        $user.val(),
+                        $pass.data("hidden_pass"));
+                }
                 return true;
             };
 

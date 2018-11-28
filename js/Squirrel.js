@@ -26,6 +26,8 @@ var Squirrel = {
     // Store statii
     // TX.tx("has new settings")
     NEW_SETTINGS: "has new settings",
+    // TX.tx("is loading")
+    IS_LOADING: "is loading",
     // TX.tx("is loaded")
     IS_LOADED: "is loaded",
     // TX.tx("is corrupt")
@@ -230,8 +232,10 @@ var Squirrel = {
                 if (global.DEBUG && !$(this)
                     .tree("getPath") &&
                     !$(this)
-                    .hasClass("tree-root"))
-                    debugger; // Missing data-path
+                    .hasClass("tree-root")) {
+                    debugger;
+                    console.log("ERROR: Missing data-path");
+                }
                 var path = $(this)
                     .data("path") || [];
                 message.push(TX.tx("$1 has changed",
@@ -708,6 +712,17 @@ var Squirrel = {
      * the cloud hoard.
      */
     function step_3_load_client_hoard() {
+        if (client.status === S.IS_LOADING) {
+            // If the login dialog sends two "on_signin" events we may get
+            // two calls to this function. They should be filtered in the
+            // dialogs code but if not....
+            if (global.DEBUG) {
+                console.debug('ERROR: Extra step_3_load_client_hoard');
+                debugger;
+            }
+            return;
+        }
+        client.status = S.IS_LOADING;
         if (global.DEBUG) console.debug('step_3_load_client_hoard');
 
         function rebuild_hoard() {
@@ -1365,7 +1380,10 @@ var Squirrel = {
                     e,
                     S.pushUndo,
                     function ($newnode) {
-                        if (global.DEBUG && !$newnode) debugger;
+                        if (global.DEBUG && !$newnode) {
+                            console.log("ERROR: node creation failed");
+                            debugger;
+                        }
                         if (typeof value !== "string" &&
                             typeof value !== "undefined") {
                             S.insert_data($newnode.tree("getPath"), value);
