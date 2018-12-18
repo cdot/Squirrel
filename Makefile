@@ -98,9 +98,9 @@ release/images/% : images/%
 	@mkdir -p release/images
 	cp $^ $@
 
-release/%.html : %.html build/release.sed Makefile
+release/%.html : %.html
 	@mkdir -p release
-	cat Squirrel.html \
+	cat $^ \
 	| $(DATE_SED) \
 	| sed -E -f build/release.sed \
 	> $@

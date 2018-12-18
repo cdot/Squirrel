@@ -145,6 +145,11 @@ You may not want to use a Cloud store, but store your password safe locally in
 the machine where the browser is running. This store lets you do that, however
 you will not be able to share the safe with other machines.
 
+### WebDAVStore
+
+If you have access to a store that supports the WebDAV protocol, you can use
+it with Squirrel.
+
 ## Security risks
 
 Once it's stored in Squirrel, your secret data is as secure as it

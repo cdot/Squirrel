@@ -8,7 +8,6 @@ var test_path = "test.dat";
 
 if (typeof module !== "undefined") {
     var assert = require("chai").assert;
-    var Utils = require("../Utils");
 } else
     assert = chai.assert;
 
@@ -166,34 +165,16 @@ function test_store(/*store classes...*/) {
     return promise;
 }
 
-if (typeof module !== "undefined") {
-    // Test FileStore and EncryptedStore, and by implication AbstractStore
-    // and LayeredStore as well.
-    describe("node.js Stores", function() {
-        it("FileStore", function() {
-            return test_store(require("../FileStore"));
-        });
-        it("EncyryptedStore:FileStore", function() {
-            return test_store(
-                require("../EncryptedStore"),
-                require("../FileStore"));
-        });
+describe("Browser Stores", function() {
+    it("LocalStorageStore", function() {
+        return test_store(LocalStorageStore);
     });
-} else {
-    // Test LocalStorageStore, and whatever has declared itself as
-    // "CLOUD_STORE" by being included in the HTML
-    global.URLPARAMS = Utils.parse_query_params();
+    it("GoogleDriveStore", function() {
+        return test_store(GoogleDriveStore);
+    });
+    it("WebDAVStore", function() {
+        return test_store(LocalStorageStore);
+    });
+});
 
-    describe("browser Stores", function() {
-        it("LocalStorageStore", function() {
-            return test_store(LocalStorageStore);
-        });
-        it(global.CLOUD_STORE.name, function() {
-            return test_store(global.CLOUD_STORE);
-        });
-        it(global.CLOUD_STORE.name + " with Steganography", function() {
-            return test_store(StegaStore, global.CLOUD_STORE);
-        });
-    });
-}
 
