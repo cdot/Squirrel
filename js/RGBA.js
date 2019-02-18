@@ -1,9 +1,9 @@
-/*@preserve Copyright (C) 2017 Crawford Currie http://c-dot.co.uk license MIT*/
+/*@preserve Copyright (C) 2017-2019 Crawford Currie http://c-dot.co.uk license MIT*/
+
 /**
  * Class to represent an RGBA colour, and convert to/from other
  * representations
  */
-/* global module */
 
 /* Table of HTMl colour names and their RGB values */
 const CSSColours = {
@@ -165,325 +165,318 @@ const CSSColours = {
  * @param b a number (if r is defined and is a number)
  * @param a a number (if r is defined and is a number)
  */
-function RGBA(r, g, b, a) {
-    "use strict";
-
-    function parseComponent(value, max) {
-        if (/%\s*$/.test(value)) {
-            var pc = parseFloat(value);
-            return pc * max / 100.0;
+class RGBA {
+    constructor(r, g, b, a) {
+        function parseComponent(value, max) {
+            if (/%\s*$/.test(value)) {
+                let pc = parseFloat(value);
+                return pc * max / 100.0;
+            }
+            return parseFloat(value);
         }
-        return parseFloat(value);
-    }
 
-    if (arguments.length === 1) {
-        if (typeof r !== "string") {
-            if (r.constructor.name === "Array") {
-                this.r = r[0];
-                this.g = r[1];
-                this.b = r[2];
-                this.a = r[3];
-            } else if (typeof r.r === "number" &&
-                typeof r.g === "number" &&
-                typeof r.b === "number") {
-                this.r = r.r;
-                this.g = r.g;
-                this.b = r.b;
-                this.a = r.a;
-            } else
-                throw "Don't know how to make an RGBA from this";
-            return;
-        }
-    } else {
-        this.r = r;
-        this.g = g;
-        this.b = b;
-        this.a = a;
-        return;
-    }
-
-    // String or integer RGB value
-    if (typeof r === "string") {
-
-        var named = CSSColours[r.toLowerCase()];
-        if (typeof named !== "undefined")
-            r = named;
-
-        if (r.charAt(0) == "#") {
-            this.r = parseInt(r.substr(1, 2), 16) / 255.0;
-            this.g = parseInt(r.substr(3, 2), 16) / 255.0;
-            this.b = parseInt(r.substr(5, 2), 16) / 255.0;
+        if (arguments.length === 1) {
+            if (typeof r !== "string") {
+                if (r.constructor.name === "Array") {
+                    this.r = r[0];
+                    this.g = r[1];
+                    this.b = r[2];
+                    this.a = r[3];
+                } else if (typeof r.r === "number" &&
+                           typeof r.g === "number" &&
+                           typeof r.b === "number") {
+                    this.r = r.r;
+                    this.g = r.g;
+                    this.b = r.b;
+                    this.a = r.a;
+                } else
+                    throw "Don't know how to make an RGBA from this";
+                return;
+            }
+        } else {
+            this.r = r;
+            this.g = g;
+            this.b = b;
+            this.a = a;
             return;
         }
 
-        if (/^hsla?\(.*\)$/.test(r)) {
-            a = r.replace(/(hsla?\(|\))/g, "")
-                .split(/[,\s]+/);
-            var n = RGBA.fromHSL(
-                parseComponent(a[0], 360),
-                parseComponent(a[1], 1),
-                parseComponent(a[2], 1),
-                a.length > 3 ? parseComponent(a[3], 1) : undefined
-            );
-            this.r = n.r;
-            this.g = n.g;
-            this.b = n.b;
-            this.a = n.a;
-            return;
+        // String or integer RGB value
+        if (typeof r === "string") {
+            let named = CSSColours[r.toLowerCase()];
+            if (typeof named !== "undefined")
+                r = named;
+
+            if (r.charAt(0) == "#") {
+                this.r = parseInt(r.substr(1, 2), 16) / 255.0;
+                this.g = parseInt(r.substr(3, 2), 16) / 255.0;
+                this.b = parseInt(r.substr(5, 2), 16) / 255.0;
+                return;
+            }
+
+            if (/^hsla?\(.*\)$/.test(r)) {
+                a = r.replace(/(hsla?\(|\))/g, "")
+                    .split(/[,\s]+/);
+                let n = RGBA.fromHSL(
+                    parseComponent(a[0], 360),
+                    parseComponent(a[1], 1),
+                    parseComponent(a[2], 1),
+                    a.length > 3 ? parseComponent(a[3], 1) : undefined
+                );
+                this.r = n.r;
+                this.g = n.g;
+                this.b = n.b;
+                this.a = n.a;
+                return;
+            }
+
+            if (/^rgba?\(.*\)$/.test(r)) {
+                a = r.replace(/(rgba?\(|\))/g, "")
+                    .split(",");
+                this.r = Math.floor(parseComponent(a[0], 255)) / 255;
+                this.g = Math.floor(parseComponent(a[1], 255)) / 255;
+                this.b = Math.floor(parseComponent(a[2], 255)) / 255;
+                if (a.length > 3) this.a = parseComponent(a[3], 1);
+                return;
+            }
         }
 
-        if (/^rgba?\(.*\)$/.test(r)) {
-            a = r.replace(/(rgba?\(|\))/g, "")
-                .split(",");
-            this.r = Math.floor(parseComponent(a[0], 255)) / 255;
-            this.g = Math.floor(parseComponent(a[1], 255)) / 255;
-            this.b = Math.floor(parseComponent(a[2], 255)) / 255;
-            if (a.length > 3) this.a = parseComponent(a[3], 1);
-            return;
+        if (typeof r === "object" && r.constructor.name === "RGBA")
+            jQuery.extend(this, r);
+
+        throw "Cannot construct from " + (typeof r);
+    }
+
+    /**
+     * Crude RGB inversion - simply invert the colour components
+     */
+    inverse() {
+        return new RGBA(1 - this.r, 1 - this.g, 1 - this.b, this.a);
+    }
+
+    /**
+     * More sophisticated HSV complement
+     */
+    complement() {
+        let hsv = this.toHSV();
+        return RGBA.fromHSV((hsv[0] + 180) % 360, hsv[1], hsv[2], this.a);
+    };
+
+    /**
+     * Find the approximate brightness of an RGBA colour in the range 0..1
+     * Anything above 0.65 is closer to white, below that to black
+     * @see https://en.wikipedia.org/wiki/HSL_and_HSV
+     */
+    luma() {
+        "use strict";
+        // SMPTE C, Rec. 709 weightings
+        return (0.2126 * this.r) + (0.7152 * this.g) + (0.0722 * this.b);
+    };
+
+    /**
+     * Generate a CSS string for the colour. CSS colour string is
+     * used if there is no A, a css rgba() otherwise.
+     */
+    toString() {
+        let tuple = [Math.round(255 * this.r),
+                     Math.round(255 * this.g),
+                     Math.round(255 * this.b)];
+
+        if (typeof this.a !== "undefined") {
+            tuple.push(this.a);
+            return "rgba(" + tuple.join(",") + ")";
+        } else {
+            let s = "#";
+            for (let i = 0; i < 3; i++) {
+                let v = tuple[i].toString(16);
+                s += v.length == 1 ? "0" + v : v;
+            }
+            return s.toUpperCase();
         }
-    }
+    };
 
-    if (typeof r === "object" && r.constructor.name === "RGBA")
-        jQuery.extend(this, r);
+    /**
+     * Generate an HSV[A] value as a [ H, S, V, A ]
+     * e.g. let hsv = new RGBA("blue").toHSV()
+     * @see https://en.wikipedia.org/wiki/HSL_and_HSV
+     * @return [ hue (0..360), saturation (0..1), value (0..1) ]
+     */
+    toHSV() {
+        "use strict";
 
-    throw "Cannot construct from " + (typeof r);
-}
+        let M = Math.max(this.r, this.g, this.b);
+        let m = Math.min(this.r, this.g, this.b);
+        let C = M - m; // saturation / chroma
+        let V = M;
+        let S = (V == 0) ? 0 : (C / V); // sat (= chroma)
+        let H = 0;
 
-/**
- * Crude RGB inversion - simply invert the colour components
- */
-RGBA.prototype.inverse = function () {
-    "use strict";
-    return new RGBA(1 - this.r, 1 - this.g, 1 - this.b, this.a);
-}
+        if (C != 0) {
+            // not achromatic, calculate hue
+            if (this.r === M)
+                H = 60 * (((this.g - this.b) / C) % 6);
+            else if (this.g === M)
+                H = 60 * ((this.b - this.r) / C + 2);
+            else
+                H = 60 * ((this.r - this.g) / C + 4);
 
-/**
- * More sophisticated HSV complement
- */
-RGBA.prototype.complement = function () {
-    "use strict";
-    var hsv = this.toHSV();
-    return RGBA.fromHSV((hsv[0] + 180) % 360, hsv[1], hsv[2], this.a);
-};
-
-/**
- * Find the approximate brightness of an RGBA colour in the range 0..1
- * Anything above 0.65 is closer to white, below that to black
- * @see https://en.wikipedia.org/wiki/HSL_and_HSV
- */
-RGBA.prototype.luma = function () {
-    "use strict";
-    // SMPTE C, Rec. 709 weightings
-    return (0.2126 * this.r) + (0.7152 * this.g) + (0.0722 * this.b);
-};
-
-/**
- * Generate a CSS string for the colour. CSS colour string is
- * used if there is no A, a css rgba() otherwise.
- */
-RGBA.prototype.toString = function () {
-    "use strict";
-
-    var tuple = [Math.round(255 * this.r),
-                  Math.round(255 * this.g),
-                  Math.round(255 * this.b)];
-
-    if (typeof this.a !== "undefined") {
-        tuple.push(this.a);
-        return "rgba(" + tuple.join(",") + ")";
-    } else {
-        var s = "#";
-        for (var i = 0; i < 3; i++) {
-            var v = tuple[i].toString(16);
-            s += v.length == 1 ? "0" + v : v;
+            if (H < 0)
+                H += 360;
         }
-        return s.toUpperCase();
-    }
-};
 
-/**
- * Generate an HSV[A] value as a [ H, S, V, A ]
- * e.g. var hsv = new RGBA("blue").toHSV()
- * @see https://en.wikipedia.org/wiki/HSL_and_HSV
- * @return [ hue (0..360), saturation (0..1), value (0..1) ]
- */
-RGBA.prototype.toHSV = function () {
-    "use strict";
+        let hsv = [H, S, V];
 
-    var M = Math.max(this.r, this.g, this.b);
-    var m = Math.min(this.r, this.g, this.b);
-    var C = M - m; // saturation / chroma
-    var V = M;
-    var S = (V == 0) ? 0 : (C / V); // sat (= chroma)
-    var H = 0;
+        if (typeof this.a != "undefined")
+            hsv.push(this.a);
 
-    if (C != 0) {
-        // not achromatic, calculate hue
-        if (this.r === M)
-            H = 60 * (((this.g - this.b) / C) % 6);
-        else if (this.g === M)
-            H = 60 * ((this.b - this.r) / C + 2);
-        else
-            H = 60 * ((this.r - this.g) / C + 4);
-
-        if (H < 0)
-            H += 360;
+        return hsv;
     }
 
-    var hsv = [H, S, V];
+    /**
+     * Generate an HSL[A] value as a [ H, S, L, A ]
+     * e.g. let hsl = new RGBA("blue").toHSL()
+     * @see https://en.wikipedia.org/wiki/HSL_and_HSV
+     * @return [ hue (0..360), saturation (0..1), lightness (0..1) ]
+     */
+    toHSL() {
+        "use strict";
 
-    if (typeof this.a != "undefined")
-        hsv.push(this.a);
+        let M = Math.max(this.r, this.g, this.b);
+        let m = Math.min(this.r, this.g, this.b);
+        let C = M - m; // saturation / chroma
+        let H, S, L;
 
-    return hsv;
-}
-
-/**
- * Generate an HSL[A] value as a [ H, S, L, A ]
- * e.g. var hsl = new RGBA("blue").toHSL()
- * @see https://en.wikipedia.org/wiki/HSL_and_HSV
- * @return [ hue (0..360), saturation (0..1), lightness (0..1) ]
- */
-RGBA.prototype.toHSL = function () {
-    "use strict";
-
-    var M = Math.max(this.r, this.g, this.b);
-    var m = Math.min(this.r, this.g, this.b);
-    var C = M - m; // saturation / chroma
-    var H, S, L;
-
-    if (C == 0) { // achromatic
-        H = S = 0;
-        L = M;
-    } else {
-        L = (M + m) / 2;
-        S = C / (L > 0.5 ? (2 - M - m) : (M + m));
-    }
-
-    if (C != 0) {
-        // not achromatic, calculate hue
-        if (this.r === M)
-            H = 60 * (((this.g - this.b) / C) % 6);
-        else if (this.g === M)
-            H = 60 * ((this.b - this.r) / C + 2);
-        else
-            H = 60 * ((this.r - this.g) / C + 4);
-
-        if (H < 0)
-            H += 360;
-    }
-
-    var hsl = [H, S, L];
-
-    if (typeof this.a != "undefined")
-        hsl.push(this.a);
-
-    return hsl;
-}
-
-/**
- * Generate a new Colour from HSV[A]. H, S, V [, A] can be passed directly
- * or H will be assumed to be a tuple if S is undefined.
- */
-RGBA.fromHSV = function (H, S, V, A) {
-    "use strict";
-
-    var R, G, B;
-
-    if (arguments.length === 1) {
-        A = H[3];
-        V = H[2];
-        S = H[1];
-        H = H[0];
-    }
-
-    if (S == 0) {
-        R = G = B = V; // achromatic
-
-    } else {
-        H /= 60;
-        var i = Math.floor(H);
-        var f = H - i;
-        var p = V * (1 - S);
-        var q = V * (1 - S * f);
-        var t = V * (1 - S * (1 - f));
-        switch (i) {
-        case 0:
-            R = V;
-            G = t;
-            B = p;
-            break;
-        case 1:
-            R = q;
-            G = V;
-            B = p;
-            break;
-        case 2:
-            R = p;
-            G = V;
-            B = t;
-            break;
-        case 3:
-            R = p;
-            G = q;
-            B = V;
-            break;
-        case 4:
-            R = t;
-            G = p;
-            B = V;
-            break;
-        default:
-            R = V;
-            G = p;
-            B = q;
+        if (C == 0) { // achromatic
+            H = S = 0;
+            L = M;
+        } else {
+            L = (M + m) / 2;
+            S = C / (L > 0.5 ? (2 - M - m) : (M + m));
         }
+
+        if (C != 0) {
+            // not achromatic, calculate hue
+            if (this.r === M)
+                H = 60 * (((this.g - this.b) / C) % 6);
+            else if (this.g === M)
+                H = 60 * ((this.b - this.r) / C + 2);
+            else
+                H = 60 * ((this.r - this.g) / C + 4);
+
+            if (H < 0)
+                H += 360;
+        }
+
+        let hsl = [H, S, L];
+
+        if (typeof this.a != "undefined")
+            hsl.push(this.a);
+
+        return hsl;
     }
 
-    return new RGBA(R, G, B, A);
-};
+    /**
+     * Generate a new Colour from HSV[A]. H, S, V [, A] can be passed directly
+     * or H will be assumed to be a tuple if S is undefined.
+     */
+    static fromHSV(H, S, V, A) {
+        let R, G, B;
 
-/**
- * Generate a new Colour from HSL. H, S, L [, A] can be passed directly
- * or H can be a tuple.
- */
-RGBA.fromHSL = function (H, S, L, A) {
-    "use strict";
+        if (arguments.length === 1) {
+            A = H[3];
+            V = H[2];
+            S = H[1];
+            H = H[0];
+        }
 
-    function hue2RGB(p, q, t) {
-        if (t < 0) t += 1;
-        if (t > 1) t -= 1;
-        if (t < 1 / 6) return p + (q - p) * 6 * t;
-        if (t < 1 / 2) return q;
-        if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
-        return p;
+        if (S == 0) {
+            R = G = B = V; // achromatic
+
+        } else {
+            H /= 60;
+            let i = Math.floor(H);
+            let f = H - i;
+            let p = V * (1 - S);
+            let q = V * (1 - S * f);
+            let t = V * (1 - S * (1 - f));
+            switch (i) {
+            case 0:
+                R = V;
+                G = t;
+                B = p;
+                break;
+            case 1:
+                R = q;
+                G = V;
+                B = p;
+                break;
+            case 2:
+                R = p;
+                G = V;
+                B = t;
+                break;
+            case 3:
+                R = p;
+                G = q;
+                B = V;
+                break;
+            case 4:
+                R = t;
+                G = p;
+                B = V;
+                break;
+            default:
+                R = V;
+                G = p;
+                B = q;
+            }
+        }
+
+        return new RGBA(R, G, B, A);
     }
 
-    var R, G, B;
+    /**
+     * Generate a new Colour from HSL. H, S, L [, A] can be passed directly
+     * or H can be a tuple.
+     */
+    static fromHSL(H, S, L, A) {
+        "use strict";
 
-    if (arguments.length === 1) {
-        A = H[3];
-        L = H[2];
-        S = H[1];
-        H = H[0];
+        function hue2RGB(p, q, t) {
+            if (t < 0) t += 1;
+            if (t > 1) t -= 1;
+            if (t < 1 / 6) return p + (q - p) * 6 * t;
+            if (t < 1 / 2) return q;
+            if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+            return p;
+        }
+
+        let R, G, B;
+
+        if (arguments.length === 1) {
+            A = H[3];
+            L = H[2];
+            S = H[1];
+            H = H[0];
+        }
+
+        if (S == 0) {
+            R = G = B = L; // achromatic
+
+        } else {
+            H /= 360;
+            let q = L < 0.5 ? L * (1 + S) :
+                L + S - L * S;
+            let p = 2 * L - q;
+            R = hue2RGB(p, q, H + 1 / 3);
+            G = hue2RGB(p, q, H);
+            B = hue2RGB(p, q, H - 1 / 3);
+
+        }
+
+        return new RGBA(R, G, B, A);
     }
-
-    if (S == 0) {
-        R = G = B = L; // achromatic
-
-    } else {
-        H /= 360;
-        var q = L < 0.5 ? L * (1 + S) :
-            L + S - L * S;
-        var p = 2 * L - q;
-        R = hue2RGB(p, q, H + 1 / 3);
-        G = hue2RGB(p, q, H);
-        B = hue2RGB(p, q, H - 1 / 3);
-
-    }
-
-    return new RGBA(R, G, B, A);
-};
+}
 
 if (typeof module !== "undefined")
     module.exports = RGBA;

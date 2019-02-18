@@ -1,11 +1,11 @@
 /*@preserve Copyright (C) 2015 Crawford Currie http://c-dot.co.uk license MIT*/
 
-/* global global:true */
-/* global LayeredStore */
-/* global AES */
-
-if (typeof module !== "undefined")
-    var LayeredStore = require("./LayeredStore");
+if (typeof Utils === "undefined")
+    Utils = require("./Utils");
+if (typeof LayeredStore === "undefined")
+    LayeredStore = require("./LayeredStore");
+if (typeof AES === "undefined")
+    AES = require("./AES");
 
 /**
  * @class
@@ -18,73 +18,40 @@ if (typeof module !== "undefined")
  * @param params: Standard for LayeredStore
  * @implements LayeredStore
  */
-function EncryptedStore(params) {
-    "use strict";
+class EncryptedStore extends LayeredStore {
 
-    LayeredStore.call(this, params);
-}
-
-EncryptedStore.prototype = Object.create(LayeredStore.prototype);
-
-EncryptedStore.prototype.options = function () {
-    "use strict";
-    return $.extend(
-        LayeredStore.prototype.options.call(this), {
-            needs_pass: true
-        });
-};
-
-EncryptedStore.prototype.read = function (path, ok, fail) {
-    "use strict";
-
-    var self = this;
-
-    if (global.DEBUG) console.debug("EncryptedStore: reading " + path +
-        " with password " + self.engine.pass());
-    this.engine.read(
-        path,
-        function (ab) {
-            var data;
-            try {
-                if (global.DEBUG) console.debug(
-                    "EncryptedStore: decrypting using password " +
-                    self.engine.pass());
-                data = AES.decrypt(ab, self.engine.pass(), 256);
-            } catch (e) {
-                if (global.DEBUG) console.debug("Caught " + e);
-                fail.call(self, e);
-                return;
-            }
-            ok.call(self, data);
-        },
-        fail);
-};
-
-EncryptedStore.prototype.write = function (path, ab, ok, fail) {
-    "use strict";
-
-    var self = this;
-
-    if (global.DEBUG) console.debug("EncryptedStore: writing " + path +
-        " with password " + self.engine.pass());
-    var xa;
-
-    try {
-        xa = AES.encrypt(ab, this.engine.pass(), 256);
-    } catch (e) {
-        if (global.DEBUG) console.debug("Caught " + e);
-        fail.call(this, e);
-        return;
+    constructor(p) {
+        super(p);
+    }
+    
+    option(k, v) {
+        if (k === "needs_pass")
+            return true;
+        return super.option(k, v);
     }
 
-    this.engine.write(
-        path,
-        xa.buffer,
-        function () {
-            ok.call(self);
-        },
-        fail);
-};
+    read(path) {
+        if (this.debug) this.debug("EncryptedStore: reading " + path +
+                                   " with password " + this.option("pass"));
+        return super.read(path)
+            .then((ab) => {
+                var data;
+                if (this.debug) this.debug(
+                    "EncryptedStore: decrypting using password " +
+                        this.option("pass"));
+                return AES.decrypt(ab, this.option("pass"), 256);
+            });
+    }
+
+    write(path, ab) {
+        if (this.debug) this.debug("EncryptedStore: writing " + path +
+                                   " with password " + this.option("pass"));
+
+        return super.write(
+            path,
+            AES.encrypt(ab, this.option("pass"), 256).buffer);
+    }
+}
 
 if (typeof module !== "undefined")
     module.exports = EncryptedStore;

@@ -1,23 +1,36 @@
 /*eslint-env node, mocha */
-var assert = require('chai').assert;
-var AES = require("../AES");
-var Utils = require("../Utils");
+if (typeof assert === "undefined")
+    assert = require('chai').assert;
+if (typeof AES === "undefined")
+    AES = require("../AES");
+if (typeof Utils === "undefined")
+    Utils = require("../Utils");
 
 describe('AES', function() {
-    var plain = "This is test string";
+    let plain = "This is test string";
 
     it('should ab/s', function() {
-	var ab = Utils.StringToArrayBuffer(plain);
+	let ab = Utils.StringToArrayBuffer(plain);
 	// ab is a byte-buffer containing 16-bit chars
-	var s = Utils.ArrayBufferToString(ab);
+	let s = Utils.ArrayBufferToString(ab);
 	assert.equal(s, plain);
     });
 
     it('should encrypt / decrypt strings', function() {
-	var ab = Utils.StringToArrayBuffer(plain);
-	var cipher = AES.encrypt(ab, "Secret", 256);
-	var decipher = AES.decrypt(cipher, "Secret", 256);
-	var s = Utils.ArrayBufferToString(decipher);
+	let ab = Utils.StringToArrayBuffer(plain);
+	let cipher = AES.encrypt(ab, "Secret", 128);
+	let decipher = AES.decrypt(cipher, "Secret", 128);
+	let s = Utils.ArrayBufferToString(decipher);
 	assert.equal(s, plain);
+    });
+    
+    it('should encrypt / decrypt bytes', function() {
+	let ab = new Uint8Array(256);
+        for (let i = 0; i < 256; i++)
+            ab[i] = i;
+	let cipher = AES.encrypt(ab, "$ecret", 256);
+	let decipher = AES.decrypt(cipher, "$ecret", 256);
+        let ba = new Uint8Array(decipher);
+	assert.deepEqual(ba, ab);
     });
 });

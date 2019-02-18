@@ -1,108 +1,75 @@
 /*@preserve Copyright (C) 2015 Crawford Currie http://c-dot.co.uk license MIT*/
 
-/* global global:true */
-/* global LayeredStore */
-/* global Steganographer */
-/* global Utils */
+if (typeof LayeredStore === "undefined")
+    LayeredStore = require('./LayeredStore');
+if (typeof Steganographer === "undefined")
+    Steganographer = require("./Steganographer");
+if (typeof Utils === "undefined")
+    Utils = require("./Utils");
 
 /**
  * @class
  * Store engine for data embedded in the alpha channel of an image. Uses
  * an underlying engine to actually store the image data.
  *
- * Requires JQuery and a DOM IMG with id "stegamage"
+ * Requires a DOM <image> (not <img>!) with id "stegamage"
  *
  * @param params: Standard for LayeredStore
  * @implements LayeredStore
  */
-function StegaStore(params) {
-    "use strict";
+class StegaStore extends LayeredStore {
+    constructor(p) {
+        super(p);
+    }
 
-    LayeredStore.call(this, params);
-}
+    options(k, v) {
+        if (k == "needs_image")
+            return Promise.resolve(true);
+        return super.options(k, v);
+    }
 
-StegaStore.prototype = Object.create(LayeredStore.prototype);
+    read(path) {
+        if (this.debug) this.debug("StegaStore: reading " + path);
 
-StegaStore.prototype.options = function () {
-    "use strict";
-    return $.extend(
-        LayeredStore.prototype.options.call(this), {
-            needs_image: true
-        });
-};
-
-StegaStore.prototype.read = function (path, ok, fail) {
-    "use strict";
-
-    if (global.DEBUG) console.debug("StegaStore: reading " + path);
-    var self = this;
-    var extract = function () {
-        var steg = new Steganographer($("#stegamage")[0]);
-        var ab2;
-        try {
-            ab2 = steg.extract();
-        } catch (e) {
-            if (global.DEBUG) console.debug("Caught " + e);
-            fail.call(self, e);
-            return;
-        }
-
-        ok.call(self, ab2);
-    };
-
-    this.engine.read(
-        path,
-        function (ab) {
-            // Make a data-URI
-            var datauri = "data:image/png;base64," +
-                Utils.ArrayBufferToBase64(ab);
-            // if the image has changed, wait for it to reload
-            if (datauri !== $("#stegamage")
-                .attr("src")) {
-                $("#stegamage")
-                    .attr("src", datauri)
-                    .on("load", function () {
-                        $(this)
-                            .off("load");
-                        extract();
+        return super.read(path)
+            .then((ab) => {
+                // Make a data-URI
+                var datauri = "data:image/png;base64," +
+                    Utils.ArrayBufferToBase64(ab);
+                var el = document.getElementById("stegamage");
+                var steg = new Steganographer(el);
+                if (datauri !== el.src) {
+                    // if the image has changed, wait for it to reload
+                    return new Promise((resolve, reject) => {
+                        el.onload = function () {
+                            el.onload = undefined;
+                            resolve(steg.extract());
+                        };
+                        el.src = datauri;
                     });
-            } else {
-                extract();
-            }
-        },
-        fail);
-};
+                }
+                return steg.extract();
+            });
+    }
 
-StegaStore.prototype.write = function (path, data, ok, fail) {
-    "use strict";
+    write(path, data) {
+        if (this.debug) this.debug("StegaStore: writing " + path);
 
-    if (global.DEBUG) console.debug("StegaStore: writing " + path);
+        var image = document.getElementById("stegamage");
+        if (!image)
+            throw new Error("no #stegamage");
 
-    var self = this;
-    var image = document.getElementById("stegamage");
-    if (!image)
-        throw "no #stegamage";
-    var xdata;
-    var steg = new Steganographer(image);
-
-    try {
-        var canvas = steg.inject(data, true);
+        var steg = new Steganographer({ image: image, debug: this.debug });
+        var canvas = steg.insert(data);
         // Get the bit data as an ArrayBuffer
         // Bit convoluted, but can't see another way to do it
         var datauri = canvas.toDataURL();
         var b64 = datauri.split(",", 2)[1];
-        xdata = Utils.Base64ToArrayBuffer(b64);
-    } catch (e) {
-        if (global.DEBUG) console.debug("Caught " + e);
-        fail.call(this, e);
-        return;
-    }
+        var xdata = Utils.Base64ToArrayBuffer(b64);
 
-    self.engine.write(
-        path,
-        xdata,
-        function () {
-            ok.call(self);
-        },
-        fail);
-};
+        return super.write(path, xdata);
+    }
+}
+
+if (typeof module !== "undefined")
+    module.exports = StegaStore;

@@ -4,6 +4,12 @@
 
 /* global dav */
 if (typeof dav === 'undefined') { dav = {}; };
+if (typeof XMLHttpRequest === "undefined")
+    XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
+if (typeof btoa === "undefined")
+    btoa = require('btoa');
+if (typeof URL === "undefined")
+    URL = require('url-parse');
 
 dav._XML_CHAR_MAP = {
     '<': '&lt;',

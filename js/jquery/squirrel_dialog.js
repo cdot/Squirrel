@@ -4,7 +4,7 @@
 
 /**
  * Common code for dialogs. This is implemented in the form of a jQuery
- * widget called "squirrelDialog".
+ * widget called "squirrel_dialog".
  *
  * Dialog HTML consists of a DIV with a unique id and the class "dlg-dialog".
  * input elements within the dialog are identified using data-id attributes
@@ -30,7 +30,7 @@
 (function ($) {
     "use strict";
 
-    $.widget("squirrel.squirrelDialog", $.ui.dialog, {
+    $.widget("squirrel.squirrel_dialog", $.ui.dialog, {
         /**
          * Get the control in the dialog identified by the data-id="name"
          */
@@ -39,7 +39,7 @@
         },
 
         /**
-         * e.g. $("my_dlg").squirrelDialog("open", { $node: $node });
+         * e.g. $("my_dlg").squirrel_dialog("open", { $node: $node });
          * The $node is automatically placed in the data-node attribute
          * the the dialog. All other options are passed on to the
          * dlg-open handler(s)
@@ -51,7 +51,7 @@
                 $dlg.addClass("dlg-initialised");
                 this.control("cancel")
                     .on($.getTapEvent(), function () {
-                        $dlg.squirrelDialog("close");
+                        $dlg.squirrel_dialog("close");
                         return false;
                     });
                 $dlg.trigger("dlg-initialise");

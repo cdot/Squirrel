@@ -27,10 +27,6 @@
   "s": "echec:",
   "m": 1
  },
- "Aa": {
-  "s": "Aa",
-  "m": 1
- },
  "Add new entry": {
   "s": "Ajouter une nouvelle entrée",
   "m": 1
@@ -115,10 +111,6 @@
   "s": "Dernière modification le",
   "m": 0.7
  },
- "Larger": {
-  "s": "Largeur",
-  "m": 1
- },
  "Length": {
   "s": "Longueur",
   "m": 1
@@ -195,10 +187,6 @@
   "s": "Afficher le mot de passe",
   "m": 1
  },
- "Smaller": {
-  "s": "Le nombre est plus petit que le minimum autorisé.",
-  "m": 1
- },
  "Text size": {
   "s": "Taille du texte",
   "m": 1
@@ -233,15 +221,15 @@
  },
  "$1 year$?($1!=1,s,)": {
   "m": 1,
-  "s": "$1 an$? ($1!=1,s,)"
+  "s": "$1 an$?($1!=1,s,)"
  },
  "$1 month$?($1!=1,s,)": {
   "m": 1,
-  "s": "$1 mois$? ($1!=1,s,)"
+  "s": "$1 mois$?($1!=1,s,)"
  },
  "$1 day$?($1!=1,s,)": {
   "m": 1,
-  "s": "$1 jour$? ($1!=1,s,)"
+  "s": "$1 jour$?($1!=1,s,)"
  },
  "has new settings": {
   "m": 0.86,
@@ -435,10 +423,6 @@
   "m": 0.85,
   "s": "Tout en fusionnant les actions de la nuée, les conflits ont été détectés."
  },
- "Failed to load Google APIs: $1 $2": {
-  "m": 0.85,
-  "s": "Impossible de charger les APIs Google: $1 $2"
- },
  "Google Drive load": {
   "m": 0.89,
   "s": "Google Drive"
@@ -446,18 +430,6 @@
  "Could not authorise access to Google Drive": {
   "m": 0.85,
   "s": "Ne pourrait pas autoriser accès au Google"
- },
- "Create folder": {
-  "m": 1,
-  "s": "Créer un dossier"
- },
- "Follow path": {
-  "m": 0.85,
-  "s": "Suivez le chemin d’accès"
- },
- "Put": {
-  "m": 1,
-  "s": "Placer"
  },
  "Write": {
   "m": 1,
@@ -870,5 +842,9 @@
  "Log in to HTTP server": {
   "m": 0.85,
   "s": "Se connecter au serveur HTTP"
+ },
+ "is loading": {
+  "m": 1,
+  "s": "charge…"
  }
 }

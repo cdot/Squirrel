@@ -6,51 +6,33 @@
 /**
  * Test ''cloud' store using LocalStorage in the browser
  */
-if (typeof module !== "undefined")
-    var LocalStorageStore = require("./LocalStorageStore");
+if (typeof LocalStorageStore === "undefined")
+    LocalStorageStore = require("./LocalStorageStore");
 
 /**
  * A test store engine
  * @extends LocalStorageStore
  */
-function TestStore(params) {
-    "use strict";
-    params.user = "TestStore";
-    LocalStorageStore.call(this, params);
+class TestStore extends LocalStorageStore {
+    constructor(params) {
+        params.user = "TestStore";
+        super(params);
+    }
+
+    options(k, v) {
+        if (typeof this.params[k] !== "undefined")
+            return this.params[k];
+        return super.options(k, v);
+    }
+
+    readfunction(path) {
+        return super.read("TestStore" + path);
+    }
+
+    write(path, data) {
+        return super.write("TestStore" + path, data);
+    }
 }
-
-global.CLOUD_STORE = TestStore;
-
-TestStore.prototype = Object.create(LocalStorageStore.prototype);
-
-TestStore.prototype.options = function () {
-    "use strict";
-
-    return $.extend(LocalStorageStore.prototype.options(), {
-        identifier: "Local Test",
-        needs_path: true, // vary this
-        needs_image: true // vary this
-    });
-};
-
-TestStore.prototype.read = function (path, ok, fail) {
-    "use strict";
-    if (this.pass() !== "x") {
-        fail.call(this, "TestStore.read expects password 'x'");
-    } else {
-        LocalStorageStore.prototype.read.call(this, "TestStore" + path, ok, fail);
-    }
-};
-
-TestStore.prototype.write = function (path, data, ok, fail) {
-    "use strict";
-
-    if (this.pass() !== "x") {
-        fail.call(this, "TestStore.write expects password 'x'");
-    } else {
-        LocalStorageStore.prototype.write.call(this, "TestStore" + path, data, ok, fail);
-    }
-};
 
 if (typeof module !== "undefined")
     module.exports = TestStore;

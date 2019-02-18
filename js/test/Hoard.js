@@ -1,9 +1,18 @@
 /*eslint-env node, mocha */
 
-var Fs = require("fs");
-var assert = require('chai').assert;
-var Hoard = require("../Hoard");
-var Utils = require("../Utils");
+if (typeof fs === "undefined")
+    fs = require("fs");
+if (typeof Hoard === "undefined")
+    Hoard = require("../Hoard");
+if (typeof Utils === "undefined")
+    Utils = require("../Utils");
+if (typeof Translator === "undefined")
+    Translator = require("../Translator");
+
+if (typeof assert === "undefined")
+    var assert = require('chai').assert;
+
+Translator.global(new Translator());
 
 var cloud_data = {
     last_sync: null,
@@ -75,187 +84,175 @@ describe('Hoard', function() {
     });
 
     it("should play_actions into empty hoard", function() {
-	// Reconstruct a cache from an actions list in an empty hoard
-        var h = new Hoard("Test1");
-	var c = h.play_actions(cloud_data.actions);
-	assert.deepEqual(h.cache, {
-	    data:{
-		"Fine-dining":{
-		    time:new Date("1 Jan 2002").getTime(),
-		    data:{
-			Caviar:{
-			    time:new Date("1 Jan 2002").getTime(),
-			    data:{}
-			}
+	// Reconstruct a cache from an actions list in an empty hoard,
+        // Monitoring progress
+        let h = new Hoard("Test1");
+        let percent = 0;
+	return h.play_actions(cloud_data.actions, (r) => {
+            assert(r.event);
+            assert(!r.conflict);
+            assert(r.progress > percent);
+            percent = r.progress;
+        }).then(() => {
+	    assert.deepEqual(h.cache, {
+	        data:{
+		    "Fine-dining":{
+		        time:new Date("1 Jan 2002").getTime(),
+		        data:{
+			    Caviar:{
+			        time:new Date("1 Jan 2002").getTime(),
+			        data:{}
+			    }
+		        }
 		    }
-		}
-	    },
-	    "time": h.cache.time
-	});
-	assert.equal(c.length, 0);
-	assert.equal(h.actions.length, 0);
-        assert.equal(client_data.actions.length, client_size);
-        assert.equal(cloud_data.actions.length, cloud_size);
+	        },
+	        "time": h.cache.time
+	    });
+            assert.equal(percent, 100);
+	    assert.equal(h.actions.length, 0);
+            assert.equal(client_data.actions.length, client_size);
+            assert.equal(cloud_data.actions.length, cloud_size);
+        });
     });
 
     it("should play_actions into populated hoard", function() {
 	// Play the cloud action set into a populated client hoard
 	var h = new Hoard("Test1", client_data);
 	assert(h.cache.data["Fine-dining"].data.Truffles);
-	var cs = h.play_actions(cloud_data.actions);
-	assert.equal(cs.length, 0);
-	assert.deepEqual(h.cache, {
-	    data:{
-		"Fine-dining":{
-		    time:new Date("1 Jan 2002").getTime(),
-		    data:{
-			Caviar:{
-			    time:new Date("1 Jan 2002").getTime(),
-			    data:{}
-			},
-			Truffles: {
-			    time: new Date("1 Jan 2003").getTime(),
-			    data: {}
-			}
+        let percent = 0;
+	return h.play_actions(cloud_data.actions, (r) => {
+            assert(r.event);
+            assert(!r.conflict);
+            assert(r.progress > percent);
+            percent = r.progress;
+        }).then(() => {
+	    assert.deepEqual(h.cache, {
+	        data:{
+		    "Fine-dining":{
+		        time:new Date("1 Jan 2002").getTime(),
+		        data:{
+			    Caviar:{
+			        time:new Date("1 Jan 2002").getTime(),
+			        data:{}
+			    },
+			    Truffles: {
+			        time: new Date("1 Jan 2003").getTime(),
+			        data: {}
+			    }
+		        }
 		    }
-		}
-	    },
-	    time: h.cache.time
-	});
-        assert.equal(client_data.actions.length, client_size);
-        assert.equal(cloud_data.actions.length, cloud_size);
+	        },
+	        time: h.cache.time
+	    });
+            assert.equal(client_data.actions.length, client_size);
+            assert.equal(cloud_data.actions.length, cloud_size);
+        });
     });
 
     it('should detect zero path', function() {
         var h = new Hoard("Test1");
-        var kfc = {
+	return h.play_action({
 	    type: "N",
 	    time: new Date("1 Jan 2004").getTime(),
 	    path: []
-	};
-	var c = h.play_action(
-	    kfc,
-	    function(e) {
-		assert(false, 'Should not be called');
-	    });
-	assert.equal(c.message,
-                     "Cannot create '': Zero length path");
-        assert.equal(client_data.actions.length, client_size);
-        assert.equal(cloud_data.actions.length, cloud_size);
+	}).then((c) => {
+	    assert.equal(c.conflict,
+                         "Cannot create '': Zero length path");
+            assert.equal(client_data.actions.length, client_size);
+            assert.equal(cloud_data.actions.length, cloud_size);
+        });
     });
        
     it('should detect no parent', function() {
         var h = new Hoard("Test1");
-	var cs = h.play_actions(cloud_data.actions);
-	assert.equal(cs.length, 0);
-        var kfc = {
-	    type: "N",
-	    time: new Date("1 Jan 2004").getTime(),
-	    path: ["Junk", "Burger"]
-	};
-	var c = h.play_action(
-	    kfc,
-	    function(e) {
-		assert(false, 'Should not be called');
+        let percent = 0;
+	return h.play_actions(cloud_data.actions, (r) => {
+            assert(r.event);
+            assert(!r.conflict);
+            assert(r.progress > percent);
+            percent = r.progress;
+        }).then(() => {
+	    return h.play_action({
+	        type: "N",
+	        time: new Date("1 Jan 2004").getTime(),
+	        path: ["Junk", "Burger"]
 	    });
-	assert.equal(c.message,
-                     "Cannot create 'Junk↘Burger': Parent folder not found");
-        assert.equal(c.conflict, kfc);
-        assert.equal(client_data.actions.length, client_size);
-        assert.equal(cloud_data.actions.length, cloud_size);
+        }).then((r) => {
+	    assert.equal(r.conflict,
+                         "Cannot create 'Junk↘Burger': Parent folder not found");
+            assert.equal(client_data.actions.length, client_size);
+            assert.equal(cloud_data.actions.length, cloud_size);
+        });
     });
 
     it('should detect already existing', function() {
         var h = new Hoard("Test1");
         
-	var listened = false;
-	// No cache, so listener will be called
-	var c = h.play_action(
-	    cloud_data.actions[0],
-	    function(e) {
+	// No cache, so promise should be resolved will be called
+	return h.play_action(cloud_data.actions[0])
+	    .then((e) => {
 		assert.equal(cloud_data.actions[0], e);
-		listened = true;
-	    });
-	assert(listened);
-
-        // Cache now there, should trip when re-adding
-	var c = h.play_action(
-	    cloud_data.actions[0],
-	    function(e) {
-		assert(false, 'Should not be called');
-	    });
-	assert.equal(
-            c.message,
-            "Cannot create 'Fine-dining': It already exists @"
-            + new Date("1 Jan 2000"));
-        assert.deepEqual(c.conflict, cloud_data.actions[0]);
-        assert.equal(client_data.actions.length, client_size);
-        assert.equal(cloud_data.actions.length, cloud_size);
+	    })
+            .then(() => {
+                // Cache now there, should trip when re-adding
+	        return h.play_action(cloud_data.actions[0]);
+            }).then((c) => {
+                assert.equal(
+                    c.conflict,
+                    "Cannot create 'Fine-dining': It already exists @"
+                        + new Date("1 Jan 2000"));
+                assert.deepEqual(c.event, cloud_data.actions[0]);
+                assert.equal(client_data.actions.length, client_size);
+                assert.equal(cloud_data.actions.length, cloud_size);
+            });
     });
     
     it('should detect no such node', function() {
         var h = new Hoard("Test1");
-	var listened = false;
-	// No cache, so listener will be called
-	var c = h.play_action(
-	    cloud_data.actions[0],
-	    function(e) {
-		assert.equal(cloud_data.actions[0], e);
-		listened = true;
-	    });
-	assert(listened);
+
         var kfc = {
 	    type: "E",
 	    time: new Date("1 Jan 2004").getTime(),
 	    path: ["Fine-dining", "Doner"]
 	        };
         
-	var c = h.play_action(
-	    kfc,
-	    function(e) {
+	return h.play_action(cloud_data.actions[0])
+	    .then((e) => {
+		assert.equal(cloud_data.actions[0], e);
+	        return h.play_action(kfc);
+            }).then((e) => {
 		assert(false);
-	    });
-
-	assert.equal(c.message,
+	    })
+            .catch((c) => {
+	        assert.equal(c.message,
                      "Cannot change value of 'Fine-dining↘Doner': It does not exist");
-        assert.equal(c.conflict, kfc);
-        assert.equal(client_data.actions.length, client_size);
-        assert.equal(cloud_data.actions.length, cloud_size);
+                assert.equal(c.conflict, kfc);
+                assert.equal(client_data.actions.length, client_size);
+                assert.equal(cloud_data.actions.length, cloud_size);
+            });
     });
 
     it('should allow rename', function() {
         var h = new Hoard("Test1");
 	var listened = 0;
-        var stage = 0;
-	var c = h.play_actions(
-	    cloud_data.actions,
-	    function(e) {
-		listened++;
-	    },
-            function(page) {
-                assert.equal(page, stage);
-                stage += 50;
-                listened++;
-            });
-	assert.equal(c.length, 0);
-	assert.equal(listened, 4);
-        var kfc = {
-	    type: "R",
-	    time: new Date("1 Jan 2005").getTime(),
-	    path: ["Fine-dining", "Caviar"],
-            data: "Turbot"
-	};
-        listened = 0;
-	var c = h.play_action(
-	    kfc,
-	    function(e) {
-                listened++;
+        var percent = 0;
+	return h.play_actions(cloud_data.actions, (r) => {
+            assert(r.event);
+            assert(!r.conflict);
+            assert(r.progress > percent);
+            percent = r.progress;
+        }).then(() => {
+	    return h.play_action({
+	        type: "R",
+	        time: new Date("1 Jan 2005").getTime(),
+	        path: ["Fine-dining", "Caviar"],
+                data: "Turbot"
 	    });
-        assert.equal(listened, 1);
-        assert(!c, "conflicts");
-        //console.log(h.dump());
-        assert.equal(client_data.actions.length, client_size);
-        assert.equal(cloud_data.actions.length, cloud_size);
+        }).then((r) => {
+            //console.log(h.dump());
+            assert.equal(client_data.actions.length, client_size);
+            assert.equal(cloud_data.actions.length, cloud_size);
+        });
     });
     
     it('should merge action streams', function() {

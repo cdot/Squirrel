@@ -1,52 +1,103 @@
 {
-    "name": "Squirrel",
-    "version": "0.0.1",
-    "eslintConfig": {
-        "extends": "eslint:recommended",
-        "parserOptions": {
-            "ecmaVersion": 6
-        },
-        "env": {
-            "browser": true,
-            "jquery": true
-        },
-        "globals": {
-	    "require": false,
-	    "module": false
-	},
-        "rules": {
-            "strict": 1,
-            "no-underscore-dangle": 0,
-            "curly": 0,
-            "camelcase": 0,
-            "no-unused-vars": 1,
-            "no-console": 0,
-            "no-debugger": 0,
-            "no-alert": 1,
-            "no-new": 0,
-            "new-cap": 0,
-            "dot-notation": 1,
-            "no-trailing-spaces": 1,
-            "no-useless-escape": 1,
-            "no-use-before-define": 1,
-            "no-loop-func": 1,
-            "no-eval": 1,
-            "quotes": 0
-        }
+  "name": "Squirrel",
+  "version": "0.0.1",
+  "license": "MIT",
+  "homepage": "https://github.com/cdot/Squirrel",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cdot/Squirrel.git"
+  },
+  "eslintConfig": {
+    "extends": "eslint:recommended",
+    "parserOptions": {
+      "ecmaVersion": 6
     },
-    "dependencies": {
+    "env": {
+      "browser": true,
+      "jquery": true
     },
-    "devDependencies": {
-        "mocha": "*",
-        "chai-http": "*",
-        "axios": ">=0.17.1",
-        "beautifyjs": "0.0.1",
-        "chai": "^4.1.2",
-        "clean-css": ">=4.1.9",
-        "clean-css-cli": ">=4.1.10",
-        "eslint": ">=4.13.1",
-        "jsdom": ">=11.5.1",
-        "npm-check": "^5.5.2",
-        "uglify-es": ">=3.2.1"
+    "globals": {
+      "require": false,
+      "module": false
+    },
+    "rules": {
+      "strict": 1,
+      "no-underscore-dangle": 0,
+      "curly": 0,
+      "camelcase": 0,
+      "no-unused-vars": 1,
+      "no-console": 0,
+      "no-debugger": 0,
+      "no-alert": 1,
+      "no-new": 0,
+      "new-cap": 0,
+      "dot-notation": 1,
+      "no-trailing-spaces": 1,
+      "no-useless-escape": 1,
+      "no-use-before-define": 1,
+      "no-loop-func": 1,
+      "no-eval": 1,
+      "quotes": 0
     }
+  },
+  "dependencies": {
+    "utf8": "^3.0.0"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.2.3",
+    "@babel/core": "^7.2.2",
+    "@babel/node": "^7.2.3",
+    "@babel/plugin-syntax-dynamic-import": "^7.2.0",
+    "@babel/preset-env": "^7.2.3",
+    "axios": ">=0.17.1",
+    "babel-preset-minify": "^0.5.0",
+    "babel-runtime-amd": "^1.1.2",
+    "beautifyjs": "0.0.1",
+    "btoa": "^1.2.1",
+    "chai": "^4.1.2",
+    "chai-http": "*",
+    "clean-css": ">=4.1.9",
+    "clean-css-cli": ">=4.1.10",
+    "eslint": ">=4.13.1",
+    "eslint-plugin-promise": "^4.0.1",
+    "fs-extra": "^7.0.1",
+    "jsdom": "13.1.0",
+    "jsdom-global": "3.0.2",
+    "mocha": "*",
+    "npm-check": "^5.5.2",
+    "requirejs": "^2.3.6",
+    "uglify-es": ">=3.2.1",
+    "url-parse": "^1.4.4",
+    "xmlhttprequest": "^1.8.0"
+  },
+  "babel": {
+    "plugins": [
+        "@babel/plugin-syntax-dynamic-import",
+       ["transform-runtime", {
+            "helpers": true,
+            "regenerator": true,
+            "polyfill": false
+       }]
+    ],
+    "moduleRoot": "Squirrel",
+    "presets": [
+      [
+        "minify",
+        {
+          "builtIns": false,
+          "evaluate": false,
+          "mangle": false
+        }
+      ],
+      [
+        "@babel/preset-env",
+        {
+          "debug": false,
+          "modules": "amd",
+          "useBuiltIns": "entry"
+        }
+      ]
+    ]
+  },
+  "browserslist": "> 0.25%, not dead"
 }

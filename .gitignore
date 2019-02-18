@@ -2,3 +2,4 @@ node_modules
 *.esl
 *~
 *.json
+/nbproject/private/

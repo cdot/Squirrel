@@ -460,6 +460,7 @@ var Squirrel = {
             client.hoard.play_actions(
                 cloud.hoard.actions,
                 function (e) {
+                    // asynchronous listener
                     // this:Hoard, e:Action
                     DOMtree.action(e);
                 },
@@ -586,33 +587,36 @@ var Squirrel = {
     // known to have loaded successfully.
     function step_5a_merge_from_cloud(chain) {
         if (global.DEBUG) console.debug('step_5a_merge_from_cloud');
-        var conflicts = client.hoard.play_actions(
+        client.hoard.play_actions(
             cloud.hoard.actions,
-            function (e) {
-                // this:Hoard, e:Action
-                DOMtree.action(e);
-            },
-            function (percent) {
+            function (e, c, p) {
                 $("#merge_progress")
-                    .text(percent + "%");
-            });
-        if (conflicts.length > 0) {
-            S.alert({
-                title: TX.tx("Warning"),
-                severity: "warning",
-                message: TX.tx("Conflicts were detected while merging actions from the Cloud.") +
-                    " " +
-                    TX.tx("Please review these rejected actions, and make sure the data displayed is correct before saving.")
-            });
-            $.each(conflicts, function (i, c) {
-                var e = c.conflict;
+                    .text(p + "%");
+
+                // e:Action [, c: Conflict]
+                if (c) {
+                    S.alert({
+                        severity: "warning",
+                        message: Hoard.stringify_action(e) +
+                            ": " + c.message
+                    });
+                } else
+                    DOMtree.action(e);
+            })
+            .then((conflicts) => {
+                if (!conflicts || conflicts.length == 0)
+                    return;
                 S.alert({
+                    title: TX.tx("Warning"),
                     severity: "warning",
-                    message: Hoard.stringify_action(e) +
-                        ": " + c.message
+                    message: TX.tx("Conflicts were detected while merging actions from the Cloud.")
+                        + " "
+                        + TX.tx("Please review these rejected actions, and make sure the data displayed is correct before saving.")
+                });
+                $.each(conflicts, function (i, c) {
+
                 });
             });
-        }
         cloud.status = S.IS_LOADED;
         // Finished with the cloud hoard (for now)
         chain();
@@ -696,10 +700,10 @@ var Squirrel = {
         if (cloud.store && cloud.store.options()
             .needs_path) {
             $("#store_settings_dlg")
-                .squirrelDialog("option", "close", function () {
+                .squirrel_dialog("option", "close", function () {
                     step_5_load_cloud_hoard();
                 })
-                .squirrelDialog("open");
+                .squirrel_dialog("open");
         } else {
             step_5_load_cloud_hoard();
         }
@@ -798,7 +802,7 @@ var Squirrel = {
                         .needs_path) &&
                     !client.hoard.options.store_path) {
                     $("#store_settings_dlg")
-                        .squirrelDialog("open", rebuild_hoard);
+                        .squirrel_dialog("open", rebuild_hoard);
                 } else {
                     rebuild_hoard();
                 }
@@ -873,7 +877,7 @@ var Squirrel = {
         // If we still need user or password, prompt
         if (uReq || pReq) {
             $("#login_dlg")
-                .squirrelDialog("open", {
+                .squirrel_dialog("open", {
                     store: client.store,
                     on_signin: function (user, pass) {
                         if (global.DEBUG) console.debug("Login prompt said user was " + user);
@@ -1085,7 +1089,7 @@ var Squirrel = {
                 try {
                     var data = JSON.parse(clipboard);
                     $("#insert_dlg")
-                        .squirrelDialog("open", {
+                        .squirrel_dialog("open", {
                             $node: $node,
                             data: data
                         });
@@ -1105,7 +1109,7 @@ var Squirrel = {
 
         case "add_value":
             $("#add_dlg")
-                .squirrelDialog("open", {
+                .squirrel_dialog("open", {
                     $node: $node,
                     is_value: true
                 });
@@ -1113,7 +1117,7 @@ var Squirrel = {
 
         case "add_subtree":
             $("#add_dlg")
-                .squirrelDialog("open", {
+                .squirrel_dialog("open", {
                     $node: $node,
                     is_value: false
                 });
@@ -1121,28 +1125,28 @@ var Squirrel = {
 
         case "randomise":
             $("#randomise_dlg")
-                .squirrelDialog("open", {
+                .squirrel_dialog("open", {
                     $node: $node
                 });
             break;
 
         case "add_alarm":
             $("#alarm_dlg")
-                .squirrelDialog("open", {
+                .squirrel_dialog("open", {
                     $node: $node
                 });
             break;
 
         case "delete":
             $("#delete_dlg")
-                .squirrelDialog("open", {
+                .squirrel_dialog("open", {
                     $node: $node
                 });
             break;
 
         case "pick_from":
             $("#pick_dlg")
-                .squirrelDialog("open", {
+                .squirrel_dialog("open", {
                     $node: $node
                 });
             break;
@@ -1275,7 +1279,7 @@ var Squirrel = {
         if (global.DEBUG) console.debug("DOM tree rooted " + DOMtree);
 
         $(".dlg-dialog")
-            .squirrelDialog({
+            .squirrel_dialog({
                 autoOpen: false
             });
         $("#alerts")
@@ -1297,7 +1301,7 @@ var Squirrel = {
                 .template("pick", pick)
                 .template("expand", "Cats");
             $("#template-tester")
-                .iconbutton()
+                .icon_button()
                 .on("click", function () {
                     $("#template-test")
                         .template("pick", pick)
@@ -1330,7 +1334,7 @@ var Squirrel = {
         $("#extras_button")
             .on($.getTapEvent(), function ( /*evt*/ ) {
                 $("#extras_dlg")
-                    .squirrelDialog("open");
+                    .squirrel_dialog("open");
             });
 
         $("#search_input")
@@ -1346,7 +1350,7 @@ var Squirrel = {
             });
 
         $("button")
-            .iconbutton();
+            .icon_button();
 
         init_menus();
 
@@ -1373,30 +1377,31 @@ var Squirrel = {
         var e = client.hoard.push_action(
             "N", p, Date.now(),
             (typeof value === "string") ? value : undefined);
-        var res = client.hoard.play_action(e,
-            function (e) {
-                // this:Hoard, e:Action
-                DOMtree.action(
-                    e,
-                    S.pushUndo,
-                    function ($newnode) {
-                        if (global.DEBUG && !$newnode) {
-                            console.log("ERROR: node creation failed");
-                            debugger;
-                        }
-                        if (typeof value !== "string" &&
-                            typeof value !== "undefined") {
-                            S.insert_data($newnode.tree("getPath"), value);
-                        }
-                        $newnode.tree("open", {
-                            decorate: true
-                        });
-                        Utils.sometime("update_save");
+        client.hoard.play_action(e)
+            .then((res) => {
+                if (res.conflict)
+                    S.alert({
+                        message: res.conflict
                     });
-            });
-        if (res !== null)
-            S.alert({
-                message: res.message
+                else
+                    // this:Hoard, e:Action
+                    DOMtree.action(
+                        res.event,
+                        S.pushUndo,
+                        function ($newnode) {
+                            if (global.DEBUG && !$newnode) {
+                                console.log("ERROR: node creation failed");
+                                debugger;
+                            }
+                            if (typeof value !== "string" &&
+                                typeof value !== "undefined") {
+                                S.insert_data($newnode.tree("getPath"), value);
+                            }
+                            $newnode.tree("open", {
+                                decorate: true
+                            });
+                            Utils.sometime("update_save");
+                        });
             });
     };
 
@@ -1482,28 +1487,25 @@ var Squirrel = {
         client.hoard.actions_from_hierarchy({
                 data: data
             },
-            function (act, next) {
+            function (action, conflict, progress) {
                 // this:Hoard, e:Action, next:function
                 //if (global.DEBUG) console.debug(Hoard.stringify_action(act));
                 act.path = path.slice()
                     .concat(act.path);
                 act = this.push_action(act);
-                var res = this.play_action(
-                    act,
-                    function (sact) {
-                        // this:Hoard, e:Action
-                        DOMtree.action(sact, null, next);
+                this.play_action(act)
+                    .then((res) => {
+                        if (res.conflict) {
+                            S.alert({
+                                severity: "notice",
+                                message: res.conflict
+                            });
+                        } else
+                            // this:Hoard, e:Action
+                            DOMtree.action(res.event, null);
                     });
-                if (res !== null)
-                    S.alert({
-                        severity: "notice",
-                        message: res.message
-                    });
-                if (next)
-                    next();
-            },
-            null, // progress
-            function () { // chain on complete
+            })
+            .then(() =>{ // chain on complete
                 Utils.sometime("update_save");
                 S.alert({
                     severity: "notice",
@@ -1637,25 +1639,20 @@ var Squirrel = {
         if (scale && scale > 0)
             S.scale(scale);
 
-        // Global MINIFIED is set in Squirrel.html
-        var extension = ((typeof UNMINIFIED !== "undefined") && UNMINIFIED) ?
-            ".js" : ".min.js";
-
         // Load the store by loading the appropriate module from js/
         var store = qs.store || "TestStore";
-        var store_modules = ["js/" + store + extension];
+        var promises = [ import("js/" + store) ];
 
         if (typeof qs.steg !== "undefined")
             useSteganography = true;
         if (useSteganography) {
-            store_modules.push("js/Steganographer" + extension);
-            store_modules.push("js/StegaStore" + extension);
+            store_modules.push(import("js/Steganographer"));
+            store_modules.push(import("js/StegaStore"));
         } else
             $(".using_steganography").remove();
 
-        Utils.load(
-            store_modules,
-            function () {
+        Promise.all(promises)
+            .then(() => {
                 // Initialise translation module,
                 // and chain the application init
                 TX.init(function () {
@@ -1663,11 +1660,10 @@ var Squirrel = {
                     init_ui();
                     init_application();
                 });
-            },
-            function (fails) {
+            })
+            .catch((fail) => {
                 var e = TX.tx("Javascript module load failed");
-                for (var f in fails)
-                    e = e + "<div>" + f + ": " + fails[f] + "</div>";
+                e = e + "<div>" + fail + "</div>";
                 $("#init_error").html(e)
                     .show();
             });

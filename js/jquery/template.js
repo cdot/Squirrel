@@ -36,7 +36,7 @@
  * raw-template - records the unexpanded template
  */
 
-if (typeof module !== "undefined")
+if (typeof Utils === "undefined")
     Utils = require("./Utils");
 
 (function ($) {

@@ -1,5 +1,8 @@
-var assert = require("chai").assert;
-var RGBA = require("../RGBA");
+if (typeof RGBA === "undefined")
+    RGBA = require("../RGBA");
+
+if (typeof assert === "undefined")
+    assert = require("chai").assert;
 
 // Sample colours, from https://en.wikipedia.org/wiki/HSL_and_HSV
 var testMap = [

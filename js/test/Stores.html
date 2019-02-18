@@ -2,24 +2,19 @@
   <head>
     <meta charset="utf-8">
     <title>Mocha Tests</title>
-    <link href="//cdnjs.cloudflare.com/ajax/libs/mocha/4.0.1/mocha.css" rel="stylesheet" />
+    <link href="//cdnjs.cloudflare.com/ajax/libs/mocha/5.2.0/mocha.css" rel="stylesheet" />
   </head>
   <body>
     <div id="mocha"></div>
-    <script src="//code.jquery.com/jquery-3.2.1.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/mocha/4.0.1/mocha.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/chai/4.1.2/chai.js"></script>
-    <script src="../AbstractStore.js"></script>
-    <script src="../LocalStorageStore.js"></script>
-    <script src="../WebDAVStore.js"></script>
-    <script src="../GoogleDriveStore.js"></script>
-    
-    <script src="Stores.js"></script>
-    <script>
-      var global={};
-      mocha.setup("bdd");
-      mocha.globals(['jQuery']);
-      mocha.run();
-    </script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/mocha/5.2.0/mocha.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/chai/4.2.0/chai.js"></script>
+
+    <!-- script src="../../libs/polyfill.min.js"></script -->
+    <script data-main="Stores" src="../../libs/require.js"></script>
+    <script src="../../libs/bundle.js"></script>
+    <!--script src="../../libs/utf8.js"></script>
+    <script src="../Utils.js"></script-->
+    <input type="text" id="webdav_url"/> <button id="webdav_run">WebDAV Run</button>
   </body>
 </html>

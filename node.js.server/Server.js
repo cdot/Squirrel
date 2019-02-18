@@ -5,8 +5,6 @@
 // Yes, I could have used express, but I wrote this before I knew about
 // it, and it "just works". Only handles binary files, but knows about CORS.
 
-"use strict";
-
 const Q = require("q");
 const Url = require("url");
 const extend = require('extend');

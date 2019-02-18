@@ -123,10 +123,6 @@
   "m": 0.5,
   "s": "Konnte nicht geöffnet Cloud Speicher: 1 €"
  },
- "Create folder": {
-  "m": 0.5,
-  "s": "Ordner erstellen"
- },
  "Database JSON": {
   "m": 0.5,
   "s": "Datenbank JSON"
@@ -179,10 +175,6 @@
   "m": 0.5,
   "s": "Fehler"
  },
- "Failed to load Google APIs: $1 $2": {
-  "m": 0.5,
-  "s": "Fehler beim Google APIs laden: $1 $2"
- },
  "Failed to refresh from $1: $2": {
   "m": 0.5,
   "s": "Fehler beim Aktualisieren von $1: $2"
@@ -190,10 +182,6 @@
  "Failed to save in $1: $2": {
   "m": 0.5,
   "s": "Fehler beim Speichern in $1: $2"
- },
- "Follow path": {
-  "m": 0.5,
-  "s": "Weg folgen"
  },
  "Generate new random value": {
   "m": 0.5,
@@ -246,10 +234,6 @@
  "Pick characters": {
   "m": 0.5,
   "s": "Wählen Zeichen"
- },
- "Put": {
-  "m": 0.5,
-  "s": "Put"
  },
  "Re-enter new password": {
   "m": 0.5,
@@ -455,10 +439,6 @@
   "m": 0.85,
   "s": "Werden Popups in Ihrem Browser blockiert?"
  },
- "Aa": {
-  "m": 1,
-  "s": "Aa"
- },
  "Add": {
   "m": 1,
   "s": "Hinzufügen"
@@ -539,10 +519,6 @@
   "m": 0.85,
   "s": "Es wurde zuletzt geändert am $1."
  },
- "Larger": {
-  "m": 1,
-  "s": "Größer"
- },
  "Length": {
   "m": 1,
   "s": "Länge"
@@ -614,10 +590,6 @@
  "Show password": {
   "m": 1,
   "s": "Passwort anzeigen"
- },
- "Smaller": {
-  "m": 1,
-  "s": "Kleiner"
  },
  "Store path may not be empty": {
   "m": 0.85,
@@ -870,5 +842,9 @@
  "Log in to HTTP server": {
   "m": 0.85,
   "s": "Melden Sie sich beim HTTP-Server an"
+ },
+ "is loading": {
+  "m": 0.97,
+  "s": "wird geladen ..."
  }
 }

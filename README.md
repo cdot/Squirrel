@@ -11,8 +11,8 @@ also ask for "memorable information", such as your mother's maiden
 name, or your first pet's name. But it only takes one site to be
 hacked, or a leaky Facebook profile, or a slip of the tongue, and your
 mother's maiden name is public knowledge. So really, you should never
-ever share any personal information that is not already in the public
-domain with a site, unless it has been generated specifically for use
+ever share any personal information with a site. Instead, you should
+prefer fake information that has been generated specifically for use
 with that one site, and never used elsewhere.
 
 All this secret information! How can we be expected to remember it
@@ -21,9 +21,9 @@ physical - where they write down their passwords. An unencrypted
 electronic document is a really, really, bad idea. A physical book is
 as secure as anything else in your house or office, so can't easily be
 hacked, but you depend on having physical access to the book. What you
-really want is a password safe - somewhere where passwords can be
-stored together, that is accessible from anywhere, but is totally
-secure.
+really want is anm online password safe - somewhere where passwords can be
+stored together, that is accessible from all your devices and from anywhere,
+but is totally secure.
 
 There are excellent free tools that solve this problem already. So why
 use Squirrel?
@@ -31,7 +31,7 @@ use Squirrel?
    - it works on anything that has a reasonably modern browser (including those on mobile phones)
    - it doesn't require an internet connection to run
    - it encrypts *everything* that it stores, sends or receives
-   - it doesn't require a special website to store stuff (it can use a number of different online cloud services as a store, and you can even add more)
+   - it doesn't require a special website to store stuff (it can use a number of different online cloud services, and you can even add more)
    - it uses 256 bit AES (Rijndael), one of the toughest ciphers to crack
    - it can use image steganography to mask its use
    - it's entirely open source, allowing you to inspect, and if you want, propose modifications to the code
@@ -42,78 +42,58 @@ Additional features include:
    - Reminders for when you think passwords need to be changed
    - Built-in random password generator
    - Export to, or import from, JSON
-   - Implemented entirely in industry-standard HTML5 Javascript and jQuery
+   - Implemented entirely in industry-standard HTML and Javascript
 
 ## Getting started
 
 Getting started with Squirrel is as simple as visiting the web address
-of the site where the code is stored. We use the 'rawgit' CDN (content
-delivery network) that shows the code currently checked into the git
-repository:
+of the site where the code is stored. We use the project 'github pages'
+CDN (content delivery network) that gets the code currently checked into
+the git repository, https://cdot.github.io/Squirrel, but you are welcome
+to make your own copy and host it on your own trusted server.
 
-https://cdn.rawgit.com/cdot/Squirrel/release/Squirrel.html?store=GoogleDriveStore
+Run it from github pages by loading the following URL into your browser:
 
-but you are welcome to make your own copy and host it on your own
-trusted server.
+https://cdot.github.io/Squirrel/release/Squirrel.html?store=GoogleDriveStore
 
 The following standard URL parameters are used:
 - `steg=1' to enable steganography
-- `store=<store name>' to set the store to use (default is `TestStore')
+- `store=<store name>' to set the file store to use (default is `TestStore', the example above uses `GoogleDriveStore`)
 
-Specific stores may use additional URL parameters. For example, the
-`HttpServerStore requires a URL', e.g.:
-- `?store=HttpServerStore&url=http://192.168.1.11:3000'
+## Choosing a File Store
 
-A Squirrel store is rather like a traditional computer file system,
-which contains *folders* and *values*. A folder can contain other
-folders and values. A value is simply a string of test. Values are
-used to record important information such as usernames and passwords,
-which folders are provided to help you organise all this information.
-
-When you first open a new store you will just see a search bar and the
-word "Squirrel". You add new folders by right-clicking (long press on
-mobile devices) on the "Squirrel" and selecting "Add new folder" from
-the pop-up menu. Enter a name for the folder, OK, and then click on
-the spot icon to the left of the name of the new folder to open it.
-
-Now right-click (or long press) on the name of the folder. You will
-see a pop-up menu. Select "Add new value" and enter the name and
-value.
-
-Double-click (or double-tap) on a name or a value to edit it. You can
-copy the value from inside the editor.
-
-And that's about it - you can find out the rest by experimenting.
-
-## Choosing a Store
-
-Squirrel supports a number of store implementations. It's up to you
-which one you use.
+Squirrel normally stores its database in a single online file in an online
+file store. It's up to you which file store you use. We recommend:
+* If you have your own web server:
+ * If it supports WebDAV, use `WebDAVStore`
+ * If you have support for CGI and `node.js`, you can use `HttpServerStore` with `node.js.server.js` (or another server back end script of your own choosing e.g. PHP)
+* If you don't have your own web server, or simply prefer to use a publicly available service, use `GoogleDriveStore` or `DropboxStore` (not available in China)
+* If you don't want to use an online store, you can use `LocalStorageStore`
 
 ### GoogleDriveStore
 You must be logged in to Google in the browser for this to work. The
 first time you open Squirrel with GoogleDriveStore, it will prompt for
-the path to your store. This is simply the name of a file where
-encrypted data will be stored in the cloud.
+the path to your database file. This is simply the name of a file where
+encrypted data will be stored on Drive.
 
 Squirrel will prompt for a password every time you open it. This is
-the password for your store, and will not usually be the same as your
-Google password.
+the encryption password for your database, and will not usually be the same
+as your Google password.
 
 ### DropboxStore
 
 You will be prompted for authentication details for Dropbox.
 Squirrel will prompt for a password every time you open it. This is
-the password for your store, and will not usually be the same as your
-Dropbox password.
+the encryption password for your database, and will not usually be the same
+as your Dropbox password.
 
 ### HttpServerStore
 
 This store will work with any HTTP server that supports `GET' and `POST'
 requests and BasicAuth, and permits writing files on the server.
 
-You need to tell Squirrel where to look for the server. The following URL
-parameters are used:
+You need to tell Squirrel where to look for the server. The following
+additonal URL parameters are used:
 
 `url' - full URL pointing to the server location where Squirrel
 may save files.
@@ -123,8 +103,8 @@ you would use:
 
 `?store=HttpServerStore&url=https://myserver/my/files'
 
-Note that the store uses Basic Authentication and should only ever be used with
-an https server.
+Note that it uses Basic Authentication and should only ever be used with
+an `HTTPS` server.
 
 #### node.js.server.js
 
@@ -142,17 +122,40 @@ The same server can serve the Squirrel application from a git checkout. Start th
 ### LocalStorageStore
 
 You may not want to use a Cloud store, but store your password safe locally in
-the machine where the browser is running. This store lets you do that, however
-you will not be able to share the safe with other machines.
+the machine where the browser is running. This file store lets you do that, however
+you will not be able to share the database with other machines.
 
 ### WebDAVStore
 
-If you have access to a store that supports the WebDAV protocol, you can use
-it with Squirrel.
+If you have access to a web server that supports the WebDAV protocol, you
+can use it with Squirrel.
+
+### Once you have chosen a store
+
+A Squirrel store is rather like a traditional computer file system,
+which contains *folders* and *values*. A folder can contain other
+folders and values. A value is simply a text string. Values are
+used to record important information such as usernames and passwords,
+while folders are provided to help you organise all this information.
+
+When you first open a new database you will just see a search bar and the
+word "Squirrel". You add new folders by right-clicking (long press on
+mobile devices) on the "Squirrel" and selecting "Add new folder" from
+the pop-up menu. Enter a name for the folder, OK, and then click on
+the spot icon to the left of the name of the new folder to open it.
+
+Now right-click (or long press) on the name of the folder. You will
+see a pop-up menu. Select "Add new value" and enter the name and
+value.
+
+Double-click (or double-tap) on a name or a value to edit it. You can
+copy the value from inside the editor.
+
+And that's about it - you can find out the rest by experimenting.
 
 ## Security risks
 
-Once it's stored in Squirrel, your secret data is as secure as it
+Once it's stored in a Squirrel database, your secret data is as secure as it
 gets. The weak point of any password safe application is the master
 password - if a hacker can guess that, then it's game over. So:
 - make your Squirrel master password hard to guess
@@ -171,8 +174,8 @@ Squirrel is designed to work in a well defined environment:
 
 Squirrel doesn't store your password, nor does it transmit your
 password over the internet. Is it extremely difficult to extract your
-password from your stored data (if you forget your password, no-one
-can help you, so don't forget it). So the major risks you should be
+password from your database (if you forget your password, no-one
+can help you - so don't forget it). The major risks you should be
 aware of are:
 - compromised browser (someone has installed a hacked version of the browser)
 - compromised operating system

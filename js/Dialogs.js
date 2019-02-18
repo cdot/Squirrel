@@ -25,18 +25,18 @@
          */
         $('#login_dlg').on('dlg-open', function (e, options) {
             var $dlg = $(this);
-            $dlg.squirrelDialog("control", "uReq")
+            $dlg.squirrel_dialog("control", "uReq")
                 .toggle(options.user_required);
-            $dlg.squirrelDialog("control", "pReq")
+            $dlg.squirrel_dialog("control", "pReq")
                 .toggle(options.pass_required);
 
-            var $user = $dlg.squirrelDialog("control", "user");
-            var $pass = $dlg.squirrelDialog("control", "pass");
-            var $signin = $dlg.squirrelDialog("control", "signin");
+            var $user = $dlg.squirrel_dialog("control", "user");
+            var $pass = $dlg.squirrel_dialog("control", "pass");
+            var $signin = $dlg.squirrel_dialog("control", "signin");
 
             var sign_in = function () {
-                if ($dlg.squirrelDialog("isOpen")) {
-                    $dlg.squirrelDialog("close");
+                if ($dlg.squirrel_dialog("isOpen")) {
+                    $dlg.squirrel_dialog("close");
                     $signin.off($.getTapEvent());
                     $user.off("change");
                     $pass.off("change");
@@ -74,7 +74,7 @@
             }
 
             if (options.pass_required) {
-                $dlg.squirrelDialog("control", "foruser")
+                $dlg.squirrel_dialog("control", "foruser")
                     .toggle(options.store.user() !== null)
                     .text(options.store.user() || "");
 
@@ -98,33 +98,33 @@
         $('#delete_dlg')
             .on('dlg-initialise', function () {
                 var $dlg = $(this);
-                $dlg.squirrelDialog("control", "ok")
+                $dlg.squirrel_dialog("control", "ok")
                     .on($.getTapEvent(), function () {
-                        $dlg.squirrelDialog("close");
+                        $dlg.squirrel_dialog("close");
                         Squirrel.playAction(Hoard.new_action(
                             "D", $dlg.data("node").tree("getPath"), Date.now()));
                         return true;
                     });
-                $dlg.squirrelDialog("control", "cancel")
+                $dlg.squirrel_dialog("control", "cancel")
                     .on($.getTapEvent(), function () {
-                        $dlg.squirrelDialog("close");
+                        $dlg.squirrel_dialog("close");
                         return false;
                     });
             })
             .on('dlg-open', function () {
                 var $dlg = $(this);
-                $dlg.squirrelDialog("control", "path")
+                $dlg.squirrel_dialog("control", "path")
                     .text(
                         $dlg.data("node").tree("getPath")
                         .join("↘"));
-                $dlg.squirrelDialog("control", "coll")
+                $dlg.squirrel_dialog("control", "coll")
                     .toggle(!$dlg.data("node").hasClass("tree-leaf"));
             });
 
         $('#pick_dlg')
             .on('dlg-initialise', function () {
                 var $dlg = $(this);
-                $dlg.squirrelDialog("control", "clear")
+                $dlg.squirrel_dialog("control", "clear")
                     .on($.getTapEvent(), function () {
                         $dlg.find(".dlg-picked")
                             .removeClass("dlg-picked");
@@ -135,8 +135,8 @@
 
                 var $node = $dlg.data("node");
                 var val = $node.data("value");
-                var $which = $dlg.squirrelDialog("control", "which");
-                var $from = $dlg.squirrelDialog("control", "from");
+                var $which = $dlg.squirrel_dialog("control", "which");
+                var $from = $dlg.squirrel_dialog("control", "from");
                 var i, $f;
 
                 $dlg.find(".dlg-pick-cell")
@@ -193,68 +193,68 @@
                 nc = nc.split(/;/, 2);
             else
                 nc = [DEFAULT_RANDOM_LEN, DEFAULT_RANDOM_CHS];
-            var dlg_l = $dlg.squirrelDialog("control", "len").val();
-            var dlg_c = $dlg.squirrelDialog("control", "chs").val();
+            var dlg_l = $dlg.squirrel_dialog("control", "len").val();
+            var dlg_c = $dlg.squirrel_dialog("control", "chs").val();
 
             if (dlg_l != nc[0] || dlg_c != nc[1])
-                $dlg.squirrelDialog("control", "remember").show();
+                $dlg.squirrel_dialog("control", "remember").show();
             else
-                $dlg.squirrelDialog("control", "remember").hide();
+                $dlg.squirrel_dialog("control", "remember").hide();
 
             if (dlg_l !== DEFAULT_RANDOM_LEN || dlg_c !== DEFAULT_RANDOM_CHS)
-                $dlg.squirrelDialog("control", "reset").show();
+                $dlg.squirrel_dialog("control", "reset").show();
             else
-                $dlg.squirrelDialog("control", "reset").hide();
+                $dlg.squirrel_dialog("control", "reset").hide();
 
-            $dlg.squirrelDialog("control", "again")
+            $dlg.squirrel_dialog("control", "again")
                 .trigger($.getTapEvent());
         }
 
         function reset_constraints($dlg) {
-            $dlg.squirrelDialog("control", "len").val(DEFAULT_RANDOM_LEN);
-            $dlg.squirrelDialog("control", "chs").val(DEFAULT_RANDOM_CHS);
+            $dlg.squirrel_dialog("control", "len").val(DEFAULT_RANDOM_LEN);
+            $dlg.squirrel_dialog("control", "chs").val(DEFAULT_RANDOM_CHS);
             constraints_changed($dlg);
         }
 
         $('#randomise_dlg').on('dlg-initialise', function () {
             var $dlg = $(this);
 
-            $dlg.squirrelDialog("control", "again")
+            $dlg.squirrel_dialog("control", "again")
                 .on($.getTapEvent(), function () {
-                    $dlg.squirrelDialog("control", "idea")
+                    $dlg.squirrel_dialog("control", "idea")
                         .text(Utils.generate_password({
-                            length: $dlg.squirrelDialog("control", "len")
+                            length: $dlg.squirrel_dialog("control", "len")
                                 .val(),
-                            charset: $dlg.squirrelDialog("control", "chs")
+                            charset: $dlg.squirrel_dialog("control", "chs")
                                 .val()
                         }));
                     return false;
                 });
-            $dlg.squirrelDialog("control", "use")
+            $dlg.squirrel_dialog("control", "use")
                 .on($.getTapEvent(), function () {
-                    $dlg.squirrelDialog("close");
+                    $dlg.squirrel_dialog("close");
                     Squirrel.playAction(Hoard.new_action(
                         "E", $dlg.data("node").tree("getPath"), Date.now(),
-                        $dlg.squirrelDialog("control", "idea").text()));
+                        $dlg.squirrel_dialog("control", "idea").text()));
                     return true;
                 });
-            $dlg.squirrelDialog("control", "len")
+            $dlg.squirrel_dialog("control", "len")
                 .on("change", function () {
                     constraints_changed($dlg);
                 });
-            $dlg.squirrelDialog("control", "chs")
+            $dlg.squirrel_dialog("control", "chs")
                 .on("change", function () {
                     constraints_changed($dlg);
                 });
-            $dlg.squirrelDialog("control", "remember")
+            $dlg.squirrel_dialog("control", "remember")
                 .on($.getTapEvent(), function () {
                     Squirrel.playAction(Hoard.new_action(
                         "X", $dlg.data("node").tree("getPath"), Date.now(),
-                        $dlg.squirrelDialog("control", "len").val() + ";" +
-                        $dlg.squirrelDialog("control", "chs").val()));
+                        $dlg.squirrel_dialog("control", "len").val() + ";" +
+                        $dlg.squirrel_dialog("control", "chs").val()));
                     constraints_changed($dlg);
                 });
-            $dlg.squirrelDialog("control", "reset")
+            $dlg.squirrel_dialog("control", "reset")
                 .on($.getTapEvent(), function () {
                     reset_constraints($dlg);
                 });
@@ -268,19 +268,19 @@
 
             if (c) {
                 c = c.split(";", 2);
-                $dlg.squirrelDialog("control", "len").val(c[0]);
-                $dlg.squirrelDialog("control", "chs").val(c[1]);
+                $dlg.squirrel_dialog("control", "len").val(c[0]);
+                $dlg.squirrel_dialog("control", "chs").val(c[1]);
             }
 
             var path = $node.tree("getPath");
-            $dlg.squirrelDialog("control", "path")
+            $dlg.squirrel_dialog("control", "path")
                 .text(path.join("↘"));
-            $dlg.squirrelDialog("control", "key")
+            $dlg.squirrel_dialog("control", "key")
                 .text(my_key);
-            $dlg.squirrelDialog("control", "again")
+            $dlg.squirrel_dialog("control", "again")
                 .trigger($.getTapEvent());
 
-            $dlg.squirrelDialog("control", "remember")
+            $dlg.squirrel_dialog("control", "remember")
                 .hide();
 
             constraints_changed($dlg);
@@ -288,15 +288,15 @@
 
         $('#search_dlg').on('dlg-initialise', function () {
             var $dlg = $(this);
-            $dlg.squirrelDialog("control", "ok")
+            $dlg.squirrel_dialog("control", "ok")
                 .on($.getTapEvent(), function () {
-                    $dlg.squirrelDialog("close");
-                    Squirrel.search($dlg.squirrelDialog("control", "string")
+                    $dlg.squirrel_dialog("close");
+                    Squirrel.search($dlg.squirrel_dialog("control", "string")
                         .val());
                 });
-            $dlg.squirrelDialog("control", "string")
+            $dlg.squirrel_dialog("control", "string")
                 .on("change", function () {
-                    $dlg.squirrelDialog("control", "ok")
+                    $dlg.squirrel_dialog("control", "ok")
                         .trigger($.getTapEvent());
                 });
         });
@@ -307,13 +307,13 @@
 
         /* Helper */
         function _updateNext($dlg) {
-            var numb = $dlg.squirrelDialog("control", "number")
+            var numb = $dlg.squirrel_dialog("control", "number")
                 .val();
             // Convert to days
-            numb = numb * Utils.TIMEUNITS[$dlg.squirrelDialog("control", "units")
+            numb = numb * Utils.TIMEUNITS[$dlg.squirrel_dialog("control", "units")
                 .val()].days;
             var alarmd = new Date(Date.now() + numb * Utils.MSPERDAY);
-            $dlg.squirrelDialog("control", "nextmod")
+            $dlg.squirrel_dialog("control", "nextmod")
                 .template(
                     "expand",
                     Utils.deltaTimeString(alarmd),
@@ -323,22 +323,22 @@
         $('#alarm_dlg').on('dlg-initialise', function () {
             var $dlg = $(this);
 
-            $dlg.squirrelDialog("control", "units")
+            $dlg.squirrel_dialog("control", "units")
                 .on("change", function () {
                     _updateNext($dlg);
                 });
 
-            $dlg.squirrelDialog("control", "number")
+            $dlg.squirrel_dialog("control", "number")
                 .on("change", function () {
                     _updateNext($dlg);
                 });
 
-            $dlg.squirrelDialog("control", "remind")
+            $dlg.squirrel_dialog("control", "remind")
                 .on($.getTapEvent(), function () {
-                    $dlg.squirrelDialog("close");
-                    var numb = $dlg.squirrelDialog("control", "number")
+                    $dlg.squirrel_dialog("close");
+                    var numb = $dlg.squirrel_dialog("control", "number")
                         .val() *
-                        Utils.TIMEUNITS[$dlg.squirrelDialog("control", "units")
+                        Utils.TIMEUNITS[$dlg.squirrel_dialog("control", "units")
                             .val()].days;
                     Squirrel.playAction(Hoard.new_action(
                         "A", $dlg.data("node").tree("getPath"), Date.now(),
@@ -346,9 +346,9 @@
                     return false;
                 });
 
-            $dlg.squirrelDialog("control", "clear")
+            $dlg.squirrel_dialog("control", "clear")
                 .on($.getTapEvent(), function () {
-                    $dlg.squirrelDialog("close");
+                    $dlg.squirrel_dialog("close");
                     Squirrel.playAction(Hoard.new_action(
                         "C", $dlg.data("node").tree("getPath"), Date.now()));
                     return false;
@@ -359,13 +359,13 @@
             var $dlg = $(this);
             var $node = $dlg.data("node");
 
-            $dlg.squirrelDialog("control", "path")
+            $dlg.squirrel_dialog("control", "path")
                 .text($node.tree("getPath")
                     .join("↘"));
 
             $dlg.data("node", $node);
             var lastmod = $node.data("last-time-changed");
-            $dlg.squirrelDialog("control", "lastmod")
+            $dlg.squirrel_dialog("control", "lastmod")
                 .template(
                     "expand",
                     new Date(lastmod)
@@ -374,18 +374,18 @@
             if (typeof $node.data("alarm") !== "undefined") {
                 var alarm = new Date(
                     lastmod + $node.data("alarm") * Utils.MSPERDAY);
-                $dlg.squirrelDialog("control", "current")
+                $dlg.squirrel_dialog("control", "current")
                     .template(
                         "expand",
                         Utils.deltaTimeString(alarm),
                         alarm.toLocaleDateString())
                     .show();
-                $dlg.squirrelDialog("control", "clear")
+                $dlg.squirrel_dialog("control", "clear")
                     .show();
             } else {
-                $dlg.squirrelDialog("control", "current")
+                $dlg.squirrel_dialog("control", "current")
                     .hide();
-                $dlg.squirrelDialog("control", "clear")
+                $dlg.squirrel_dialog("control", "clear")
                     .hide();
             }
 
@@ -394,40 +394,35 @@
 
         /* Helper */
         function _changeImage($dlg) {
-            var fail = function (e) {
-                $dlg.squirrelDialog("control", "message")
-                    .template("pick", "cui")
-                    .template("expand", e);
-            };
-            var file = $dlg.squirrelDialog("control", "file")[0].files[0];
+            var file = $dlg.squirrel_dialog("control", "file")[0].files[0];
             Utils.read_file(
-                file,
-                function (data) {
+                file, "arraybuffer")
+                .then((data) => {
                     data = "data:" + file.type + ";base64," +
                         Utils.ArrayBufferToBase64(data);
-                    if (data !== $dlg.squirrelDialog("control", "steg_image")
+                    if (data !== $dlg.squirrel_dialog("control", "steg_image")
                         .attr("src", data)) {
-                        $dlg.squirrelDialog("control", "steg_image")
+                        $dlg.squirrel_dialog("control", "steg_image")
                             .attr("src", data)
                             .off("load")
                             .on("load", function () {
                                 $(this)
                                     .off("load");
                                 // Check that we can use the image.
-                                var steg = new Steganographer(this);
                                 try {
+                                    let steg = new Steganographer({image:this});
                                     steg.inject("tada");
                                 } catch (e) {
                                     if (global.DEBUG) console.debug("Caught " + e);
                                     fail(e);
                                     return;
                                 }
-                                $dlg.squirrelDialog("control", "ok")
-                                    .iconbutton("enable");
+                                $dlg.squirrel_dialog("control", "ok")
+                                    .icon_button("enable");
                                 var h = this.naturalHeight;
                                 var w = this.naturalWidth;
                                 this.height = 100;
-                                $dlg.squirrelDialog("control", "message")
+                                $dlg.squirrel_dialog("control", "message")
                                     .template("pick", "xbyy")
                                     .template("expand", w, h);
                                 if (Squirrel.getClient()
@@ -441,41 +436,43 @@
                                 Utils.sometime("update_save");
                             });
                     }
-                },
-                fail,
-                "arraybuffer");
+                }).catch((e) => {
+                    $dlg.squirrel_dialog("control", "message")
+                        .template("pick", "cui")
+                        .template("expand", e);
+                });
         }
 
         $('#store_settings_dlg').on('dlg-initialise', function () {
             var $dlg = $(this);
 
-            $dlg.squirrelDialog("control", "file")
+            $dlg.squirrel_dialog("control", "file")
                 .hide()
                 .on($.getTapEvent(), function () {
                     _changeImage($dlg);
                 });
 
-            $dlg.squirrelDialog("control", "image")
+            $dlg.squirrel_dialog("control", "image")
                 .on($.getTapEvent(), function (e) {
-                    $dlg.squirrelDialog("control", "file")
+                    $dlg.squirrel_dialog("control", "file")
                         .trigger("change", e);
                 });
 
-            $dlg.squirrelDialog("control", "storepath")
+            $dlg.squirrel_dialog("control", "storepath")
                 .on("keyup", function () {
-                    if ($dlg.squirrelDialog("control", "storepath")
+                    if ($dlg.squirrel_dialog("control", "storepath")
                         .val() === "") {
-                        $dlg.squirrelDialog("control", "message")
+                        $dlg.squirrel_dialog("control", "message")
                             .template("pick", "mnbe");
                         return false;
                     }
                     if (Squirrel.getClient()
                         .hoard.options.store_path !==
-                        $dlg.squirrelDialog("control", "storepath")
+                        $dlg.squirrel_dialog("control", "storepath")
                         .val()) {
                         Squirrel.getClient()
                             .hoard.options.store_path =
-                            $dlg.squirrelDialog("control", "storepath")
+                            $dlg.squirrel_dialog("control", "storepath")
                             .val();
                         if (Squirrel.getClient()
                             .status === Squirrel.IS_LOADED)
@@ -490,27 +487,27 @@
                     return true;
                 })
                 .on("change", function () {
-                    $dlg.squirrelDialog("control", "ok")
+                    $dlg.squirrel_dialog("control", "ok")
                         .trigger($.getTapEvent());
                 });
 
-            $dlg.squirrelDialog("control", "ok")
+            $dlg.squirrel_dialog("control", "ok")
                 .on($.getTapEvent(), function () {
-                    if ($dlg.squirrelDialog("control", "storepath")
+                    if ($dlg.squirrel_dialog("control", "storepath")
                         .val() === "") {
-                        $dlg.squirrelDialog("control", "message")
+                        $dlg.squirrel_dialog("control", "message")
                             .template("pick", "mnbe");
                         return false;
                     }
-                    $dlg.squirrelDialog("close");
+                    $dlg.squirrel_dialog("close");
                 });
         });
 
         $('#store_settings_dlg').on('dlg-open', function () {
             var $dlg = $(this);
-            $dlg.squirrelDialog("control", "message")
+            $dlg.squirrel_dialog("control", "message")
                 .hide();
-            $dlg.squirrelDialog("control", "storepath")
+            $dlg.squirrel_dialog("control", "storepath")
                 .focus()
                 .val(
                     Squirrel.getClient()
@@ -523,46 +520,46 @@
         $('#chpw_dlg').on('dlg-initialise', function () {
             var $dlg = $(this);
 
-            $dlg.squirrelDialog("control", "show")
+            $dlg.squirrel_dialog("control", "show")
                 .on("change", function () {
-                    if ($dlg.squirrelDialog("control", "show")
+                    if ($dlg.squirrel_dialog("control", "show")
                         .prop("checked")) {
-                        $dlg.squirrelDialog("control", "pass")
+                        $dlg.squirrel_dialog("control", "pass")
                             .attr("type", "text");
-                        $dlg.squirrelDialog("control", "conf")
+                        $dlg.squirrel_dialog("control", "conf")
                             .attr("type", "text");
                     } else {
-                        $dlg.squirrelDialog("control", "pass")
+                        $dlg.squirrel_dialog("control", "pass")
                             .attr("type", "password");
-                        $dlg.squirrelDialog("control", "conf")
+                        $dlg.squirrel_dialog("control", "conf")
                             .attr("type", "password");
                     }
                 });
 
             $dlg.data("validate", function () {
-                var p = $dlg.squirrelDialog("control", "pass")
+                var p = $dlg.squirrel_dialog("control", "pass")
                     .val(),
-                    c = $dlg.squirrelDialog("control", "conf")
+                    c = $dlg.squirrel_dialog("control", "conf")
                     .val();
 
-                $dlg.squirrelDialog("control", "nomatch")
+                $dlg.squirrel_dialog("control", "nomatch")
                     .toggle(p !== c);
                 return (p === c);
             });
 
-            $dlg.squirrelDialog("control", "conf")
+            $dlg.squirrel_dialog("control", "conf")
                 .on("change", function () {
                     $dlg.data("validate")
                         .call();
                 });
 
-            $dlg.squirrelDialog("control", "set")
+            $dlg.squirrel_dialog("control", "set")
                 .on($.getTapEvent(), function () {
                     if (!$dlg.data("validate")
                         .call())
                         return false;
-                    $dlg.squirrelDialog("close");
-                    var p = $dlg.squirrelDialog("control", "pass")
+                    $dlg.squirrel_dialog("close");
+                    var p = $dlg.squirrel_dialog("control", "pass")
                         .val();
                     Squirrel.getClient()
                         .store.pass(p);
@@ -587,18 +584,18 @@
         $('#json_dlg').on('dlg-initialise', function () {
             var $dlg = $(this);
 
-            $dlg.squirrelDialog("control", "text")
+            $dlg.squirrel_dialog("control", "text")
                 .on("input", function () {
-                    $dlg.squirrelDialog("control", "ok")
-                        .iconbutton("enable");
+                    $dlg.squirrel_dialog("control", "ok")
+                        .icon_button("enable");
                 });
 
-            $dlg.squirrelDialog("control", "ok")
+            $dlg.squirrel_dialog("control", "ok")
                 .on($.getTapEvent(), function () {
-                    $dlg.squirrelDialog("close");
+                    $dlg.squirrel_dialog("close");
                     var datum;
                     try {
-                        datum = JSON.parse($dlg.squirrelDialog("control", "text")
+                        datum = JSON.parse($dlg.squirrel_dialog("control", "text")
                             .val());
                     } catch (e) {
                         Squirrel.alert({
@@ -608,8 +605,8 @@
                         });
                         return false;
                     }
-                    $dlg.squirrelDialog("control", "ok")
-                        .iconbutton("disable");
+                    $dlg.squirrel_dialog("control", "ok")
+                        .icon_button("disable");
                     if (global.DEBUG) console.debug("Importing...");
                     Squirrel.insert_data([], datum);
                     return true;
@@ -621,91 +618,91 @@
 
             var data = Squirrel.getClient()
                 .hoard.JSON();
-            $dlg.squirrelDialog("control", "text")
+            $dlg.squirrel_dialog("control", "text")
                 .text(data)
                 .select();
-            $dlg.squirrelDialog("control", "ok")
-                .iconbutton("disable");
+            $dlg.squirrel_dialog("control", "ok")
+                .icon_button("disable");
         });
 
         $('#extras_dlg').on('dlg-initialise', function () {
             var $dlg = $(this);
 
-            $dlg.squirrelDialog("control", "theme")
+            $dlg.squirrel_dialog("control", "theme")
                 .on("selectmenuchange", function () {
                     Squirrel.theme($(this)
                         .val());
                 })
                 .selectmenu();
 
-            $dlg.squirrelDialog("control", "autosave")
+            $dlg.squirrel_dialog("control", "autosave")
                 .on("change", function () {
                     Squirrel.autosave($(this)
                         .prop("checked"));
                 });
 
-            $dlg.squirrelDialog("control", "hidevalues")
+            $dlg.squirrel_dialog("control", "hidevalues")
                 .on("change", function () {
                     $("#sites-node")
                         .tree("hide_values", $(this)
                             .prop("checked"));
                 });
 
-            $dlg.squirrelDialog("control", "chpw")
+            $dlg.squirrel_dialog("control", "chpw")
                 .on($.getTapEvent(), function () {
-                    $dlg.squirrelDialog("close");
+                    $dlg.squirrel_dialog("close");
                     $("#chpw_dlg")
-                        .squirrelDialog("open");
+                        .squirrel_dialog("open");
                 });
 
-            $dlg.squirrelDialog("control", "chss")
+            $dlg.squirrel_dialog("control", "chss")
                 .on($.getTapEvent(), function () {
-                    $dlg.squirrelDialog("close");
+                    $dlg.squirrel_dialog("close");
                     $("#store_settings_dlg")
-                        .squirrelDialog("open");
+                        .squirrel_dialog("open");
                 });
 
-            $dlg.squirrelDialog("control", "theme")
+            $dlg.squirrel_dialog("control", "theme")
                 .on($.getTapEvent(), function () {
-                    $dlg.squirrelDialog("close");
+                    $dlg.squirrel_dialog("close");
                     $("#theme_dlg")
-                        .squirrelDialog("open");
+                        .squirrel_dialog("open");
                 });
 
-            $dlg.squirrelDialog("control", "json")
+            $dlg.squirrel_dialog("control", "json")
                 .on($.getTapEvent(), function () {
-                    $dlg.squirrelDialog("close");
+                    $dlg.squirrel_dialog("close");
                     $("#json_dlg")
-                        .squirrelDialog("open");
+                        .squirrel_dialog("open");
                 });
 
-            $dlg.squirrelDialog("control", "optimise")
+            $dlg.squirrel_dialog("control", "optimise")
                 .on($.getTapEvent(), function () {
-                    $dlg.squirrelDialog("close");
+                    $dlg.squirrel_dialog("close");
                     $("#optimise_dlg")
-                        .squirrelDialog("open");
+                        .squirrel_dialog("open");
                 });
 
-            $dlg.squirrelDialog("control", "bigger")
+            $dlg.squirrel_dialog("control", "bigger")
                 .on("click", function () {
                     Squirrel.zoom(1.25);
                 });
 
-            $dlg.squirrelDialog("control", "smaller")
+            $dlg.squirrel_dialog("control", "smaller")
                 .on("click", function () {
                     Squirrel.zoom(0.8);
                 });
 
-            $dlg.squirrelDialog("control", "about")
+            $dlg.squirrel_dialog("control", "about")
                 .on($.getTapEvent(), function () {
-                    $dlg.squirrelDialog("close");
+                    $dlg.squirrel_dialog("close");
                     $("#about_dlg")
-                        .squirrelDialog("open");
+                        .squirrel_dialog("open");
                 });
 
-            $dlg.squirrelDialog("control", "language")
+            $dlg.squirrel_dialog("control", "language")
                 .on("change", function () {
-                    var fresh = $dlg.squirrelDialog("control", "language").val();
+                    var fresh = $dlg.squirrel_dialog("control", "language").val();
                     var stale = TX.language(fresh);
                     if (fresh !== stale)
                         // Re-translate for new language
@@ -722,25 +719,25 @@
                     Squirrel.getCloud()
                     .store.options()
                     .needs_path)) {
-                $dlg.squirrelDialog("control", "chss")
+                $dlg.squirrel_dialog("control", "chss")
                     .hide();
             }
 
-            $dlg.squirrelDialog("control", "autosave")
+            $dlg.squirrel_dialog("control", "autosave")
                 .prop("checked", Squirrel.autosave());
 
-            $dlg.squirrelDialog("control", "hidevalues")
+            $dlg.squirrel_dialog("control", "hidevalues")
                 .prop("checked", $("#sites-node")
                     .tree("hide_values"));
 
-            $dlg.squirrelDialog("control", "theme")
+            $dlg.squirrel_dialog("control", "theme")
                 .find("option:selected")
                 .prop("selected", false);
-            $dlg.squirrelDialog("control", "theme")
+            $dlg.squirrel_dialog("control", "theme")
                 .find("option[value='" + Squirrel.theme() + "']")
                 .prop("selected", true);
 
-            $dlg.squirrelDialog("control", "language")
+            $dlg.squirrel_dialog("control", "language")
                 .val(TX.language());
 
         });
@@ -748,7 +745,7 @@
         /* Helper for add, check wrapping node for same key value  */
         function _validateUniqueKey($dlg) {
             // Disable OK if key value exists or is invalid
-            var $input = $dlg.squirrelDialog("control", "key");
+            var $input = $dlg.squirrel_dialog("control", "key");
             var val = $input.val();
             var enabled = true;
 
@@ -769,13 +766,13 @@
             }
 
             if (enabled) {
-                $dlg.squirrelDialog("control", "ok")
+                $dlg.squirrel_dialog("control", "ok")
                     .iconbutton("enable");
                 $input
                     .removeClass("dlg-disabled")
                     .attr("title", TX.tx("Enter new name"));
             } else {
-                $dlg.squirrelDialog("control", "ok")
+                $dlg.squirrel_dialog("control", "ok")
                     .iconbutton("disable");
                 $input
                     .addClass("dlg-disabled")
@@ -786,15 +783,15 @@
         $('#insert_dlg').on('dlg-initialise', function () {
             var $dlg = $(this);
 
-            $dlg.squirrelDialog("control", "key")
+            $dlg.squirrel_dialog("control", "key")
                 .on("input", function () {
                     _validateUniqueKey($dlg);
                 });
-            $dlg.squirrelDialog("control", "ok")
+            $dlg.squirrel_dialog("control", "ok")
                 .on($.getTapEvent(), function () {
-                    $dlg.squirrelDialog("close");
+                    $dlg.squirrel_dialog("close");
                     Squirrel.add_child_node($dlg.data("parent"),
-                        $dlg.squirrelDialog("control", "key")
+                        $dlg.squirrel_dialog("control", "key")
                         .val(),
                         $dlg.data("data"));
                 });
@@ -818,7 +815,7 @@
                     if (m)
                         i = Math.max(i, m[1] ? parseInt(m[1]) : 0);
                 });
-            $dlg.squirrelDialog("control", "key")
+            $dlg.squirrel_dialog("control", "key")
                 .val(base + (i >= 0 ? (" " + (i + 1)) : ""));
         });
 
@@ -826,18 +823,18 @@
             var $dlg = $(this);
 
             function ok_dialog() {
-                $dlg.squirrelDialog("close");
+                $dlg.squirrel_dialog("close");
                 var $parent = $dlg.data("parent");
                 Squirrel.add_child_node(
-                    $parent, $dlg.squirrelDialog("control", "key")
+                    $parent, $dlg.squirrel_dialog("control", "key")
                     .val(),
                     $dlg.data("adding_value") ?
-                    $dlg.squirrelDialog("control", "value")
+                    $dlg.squirrel_dialog("control", "value")
                     .val() : undefined);
                 return false;
             }
 
-            $dlg.squirrelDialog("control", "key")
+            $dlg.squirrel_dialog("control", "key")
                 .on("input", function () {
                     _validateUniqueKey($dlg);
                 })
@@ -847,7 +844,7 @@
                         TX.tx("User"), TX.tx("Pass")]
                 });
 
-            $dlg.squirrelDialog("control", "ok")
+            $dlg.squirrel_dialog("control", "ok")
                 .on($.getTapEvent(), ok_dialog);
         });
 
@@ -858,29 +855,29 @@
             $dlg.data("parent", $parent);
             $dlg.data("adding_value", is_value);
 
-            $dlg.squirrelDialog("control", "path")
+            $dlg.squirrel_dialog("control", "path")
                 .text($parent.tree("getPath")
                     .join("↘") + "↘");
             if (is_value) {
-                $dlg.squirrelDialog("control", "value_help")
+                $dlg.squirrel_dialog("control", "value_help")
                     .show();
-                $dlg.squirrelDialog("control", "folder_help")
+                $dlg.squirrel_dialog("control", "folder_help")
                     .hide();
-                $dlg.squirrelDialog("control", "value_parts")
+                $dlg.squirrel_dialog("control", "value_parts")
                     .show();
-                $dlg.squirrelDialog("control", "key")
+                $dlg.squirrel_dialog("control", "key")
                     .autocomplete("enable")
                     .select();
-                $dlg.squirrelDialog("control", "value")
+                $dlg.squirrel_dialog("control", "value")
                     .val("");
             } else {
-                $dlg.squirrelDialog("control", "value_help")
+                $dlg.squirrel_dialog("control", "value_help")
                     .hide();
-                $dlg.squirrelDialog("control", "folder_help")
+                $dlg.squirrel_dialog("control", "folder_help")
                     .show();
-                $dlg.squirrelDialog("control", "value_parts")
+                $dlg.squirrel_dialog("control", "value_parts")
                     .hide();
-                $dlg.squirrelDialog("control", "key")
+                $dlg.squirrel_dialog("control", "key")
                     .autocomplete("disable")
                     .select();
             }
@@ -891,12 +888,12 @@
         $('#optimise_dlg').on('dlg-initialise', function () {
             var $dlg = $(this);
 
-            $dlg.squirrelDialog("control", "optimise")
+            $dlg.squirrel_dialog("control", "optimise")
                 .on($.getTapEvent(), function () {
                     Squirrel.getClient()
                         .hoard.clear_actions();
                     Squirrel.construct_new_cloud(function () {
-                        $dlg.squirrelDialog("close");
+                        $dlg.squirrel_dialog("close");
                     });
                     // Local actions will now be reflected in the cloud,
                     // so we can clear them
@@ -907,16 +904,16 @@
         $('#optimise_dlg').on('dlg-open', function () {
             var $dlg = $(this);
 
-            $dlg.squirrelDialog("control", "existing")
+            $dlg.squirrel_dialog("control", "existing")
                 .template(
                     "expand",
                     Squirrel.getCloud()
                     .hoard.actions.length);
-            $dlg.squirrelDialog("control", "study").hide();
-            $dlg.squirrelDialog("control", "pointless").hide();
-            $dlg.squirrelDialog("control", "optimise")
+            $dlg.squirrel_dialog("control", "study").hide();
+            $dlg.squirrel_dialog("control", "pointless").hide();
+            $dlg.squirrel_dialog("control", "optimise")
                 .iconbutton("disable");
-            $dlg.squirrelDialog("control", "calculating")
+            $dlg.squirrel_dialog("control", "calculating")
                 .show()
                 .toggle("pulsate", 101);
 
@@ -936,8 +933,8 @@
                 },
                 null,
                 function () {
-                    $dlg.squirrelDialog("control", "calculating").hide();
-                    $dlg.squirrelDialog("control", "study")
+                    $dlg.squirrel_dialog("control", "calculating").hide();
+                    $dlg.squirrel_dialog("control", "study")
                         .template(
                             "expand",
                             counts.N, counts.A, counts.X,
@@ -945,9 +942,9 @@
                         .show();
                     if (counts.N + counts.A + counts.X <
                         Squirrel.getCloud().hoard.actions.length)
-                        $dlg.squirrelDialog("control", "optimise").iconbutton("enable");
+                        $dlg.squirrel_dialog("control", "optimise").iconbutton("enable");
                     else
-                        $dlg.squirrelDialog("control", "pointless").show()
+                        $dlg.squirrel_dialog("control", "pointless").show()
                 });
         });
     });

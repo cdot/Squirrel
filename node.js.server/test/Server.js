@@ -5,7 +5,6 @@
 /**
  * Simple test for node.js HTTP server
  */
-const Q = require("q");
 const Server = require("../Server.js");
 const Fs = require("fs");
 
@@ -157,7 +156,7 @@ describe("server/Server", function() {
         try {
             Fs.unlinkSync(ef);
         } catch (e) {}
-        var text = "\0S\0o\0m\0e\0 \01\06\0 \0b\0i\0t\0 \0t\0e\0x\0t";
+        var text = "\0S\0o\0m\0e\0 \0" + "1\0" + "6\0 \0b\0i\0t\0 \0t\0e\0x\0t";
         
         request.put(workingUrl + '/transitory16', {
             auth: { user: server_config.auth.user,

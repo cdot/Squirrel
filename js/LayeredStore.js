@@ -1,9 +1,7 @@
-/*@preserve Copyright (C) 2015 Crawford Currie http://c-dot.co.uk license MIT*/
+/*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 
-/* global AbstractStore: true */
-
-if (typeof module !== "undefined")
-    var AbstractStore = require("./AbstractStore");
+if (typeof AbstractStore === "undefined")
+    AbstractStore = require("./AbstractStore");
 
 /**
  * @class
@@ -15,46 +13,37 @@ if (typeof module !== "undefined")
  * the underlying store to be used as the engine, using parameters passed
  * down.
  */
-function LayeredStore(params) {
-    "use strict";
+class LayeredStore extends AbstractStore {
 
-    var self = this,
-        pok = params.ok;
+    constructor(p) {
+        super(p);
+        this.understore = p.understore;
+    }
+    
+    init() {
+        return this.understore.init();
+    }
 
-    // Override the OK function
-    params.ok = function () {
-        // 'this' is the engine.
-        // Don't call AbstractStore(), it doesn't do anything useful
-        // for us - we don't want to call params.ok for this layer,
-        // only in the understore.
-        self.engine = this;
-        pok.call(self);
-    };
+    option(k, v) {
+        return this.understore.option(k, v);
+    }
 
-    // We don't use the return value from the understore factory, instead
-    // we set self.engine in the ok function, above.
-    params.understore(params);
+    read(path) {
+        return this.understore.read(path);
+    }
+
+    write(path, data) {
+        return this.understore.write(path, data);
+    }
+
+    reads(path) {
+        return this.understore.reads(path);
+    }
+
+    writes(path, data) {
+        return this.understore.writes(path, data);
+    }
 }
-
-LayeredStore.prototype = Object.create(AbstractStore.prototype);
-
-LayeredStore.prototype.options = function () {
-    "use strict";
-
-    return this.engine.options();
-};
-
-LayeredStore.prototype.user = function (u) {
-    "use strict";
-
-    return this.engine.user(u);
-};
-
-LayeredStore.prototype.pass = function (pw) {
-    "use strict";
-
-    return this.engine.pass(pw);
-};
 
 if (typeof module !== "undefined")
     module.exports = LayeredStore;

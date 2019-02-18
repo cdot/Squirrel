@@ -1,60 +1,34 @@
-/*@preserve Copyright (C) 2017 Crawford Currie http://c-dot.co.uk license MIT*/
+/*@preserve Copyright (C) 2017-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 
 /* eslint-env node */
 /* global global:true */
 
-"use strict";
-
-var Fs = require("fs");
-var AbstractStore = require("./AbstractStore");
+if (typeof fs === "undefined")
+    fs = require("fs-extra");
+if (typeof AbstractStore === "undefined")
+    AbstractStore = require("./AbstractStore");
 
 /**
  * A store engine using file store, used with node.js
  * @implements AbstractStore
  */
-function FileStore(params) {
-    if (params.user) {
-        this.user(params.user);
+class FileStore extends AbstractStore {
+
+    option(k, v) {
+        if (k === "needs_path")
+            return true;
+        return super.option(k, v);
     }
 
-    AbstractStore.call(this, params);
+    read(path) {
+        return fs.readFile(path);
+    }
+
+    write(path, data) {
+        // data is an ArrayBuffer so is already bytes
+        return fs.writeFile(path, Buffer.from(data));
+    }
 }
 
-FileStore.prototype = Object.create(AbstractStore.prototype);
-
-FileStore.prototype.options = function () {
-    var opt = {};
-    var abs = AbstractStore.prototype.options();
-    for (var i in abs) {
-        opt[i] = abs[i];
-    }
-    opt.needs_path = true;
-    opt.identifier = "file"
-
-    return opt;
-};
-
-FileStore.prototype.read = function (path, ok, fail) {
-    var self = this;
-    Fs.readFile(path, function (err, data) {
-        if (err)
-            fail.call(self, err);
-        else if (data === null)
-            fail.call(self, AbstractStore.NODATA);
-        else
-            ok.call(self, data);
-    })
-};
-
-FileStore.prototype.write = function (path, data, ok, fail) {
-    var self = this;
-    // data is an ArrayBuffer so is already bytes
-    Fs.writeFile(path, Buffer.from(data), function (err) {
-        if (err)
-            fail.call(self, err);
-        else
-            ok.call(self);
-    });
-};
-
-module.exports = FileStore;
+if (typeof module !== "undefined")
+    module.exports = FileStore;

@@ -377,7 +377,7 @@
                     })
                     .on("click", function () {
                         $("#alarm_dlg")
-                            .squirrelDialog("open", {
+                            .squirrel_dialog("open", {
                                 $node: $node
                             });
                         return false;

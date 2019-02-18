@@ -1,95 +1,82 @@
-/*@preserve Copyright (C) 2015 Crawford Currie http://c-dot.co.uk license MIT*/
+/*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 
-/* global global:true */
-/* global AbstractStore */
-/* global Utils */
-
-if (typeof module !== "undefined")
-    var AbstractStore = require("./AbstractStore");
+if (typeof Utils === "undefined")
+    Utils = require("./Utils");
+if (typeof AbstractStore === "undefined")
+    AbstractStore = require("./AbstractStore");
+if (typeof localStorage === "undefined") {
+    let Storage = require('dom-storage');
+    localStorage = new Storage('./scratch.json');
+}
 
 /**
  * A store engine using HTML5 localStorage.
  * @implements AbstractStore
  */
-function LocalStorageStore(params) {
-    "use strict";
+class LocalStorageStore extends AbstractStore {
 
-    if (params.user) {
-        this.user(params.user);
-    } else {
-        // See if we can spot a possible user. Specific to Squirrel.
-        var i = 0;
-        var key;
-        var poss_user = null;
-        while ((key = localStorage.key(i)) != null) {
-            var m = /^Squirrel\.(.*)$/.exec(key);
-            if (m) {
-                if (poss_user) {
-                    poss_user = null;
-                    break;
-                } else
-                    poss_user = m[1];
+    constructor(p) {
+        super(p);
+    }
+
+    option(k, v) {
+        if (k === "needs_path")
+            return true;
+        return super.option(k, v);
+    }
+    
+    init() {
+        if (typeof this.option("user") === "undefined") {
+            // See if we can spot a possible user, identified by a personal
+            // identifier prepended to our unique path.
+            var i = 0;
+            var key;
+            var poss_user = null;
+            let re = new RegExp("^(.*)\\." + this.option("path") + "\\.");
+            while ((key = localStorage.key(i)) != null) {
+                var m = re.exec(key);
+                if (m) {
+                    if (poss_user) {
+                        poss_user = null;
+                        break;
+                    } else
+                        poss_user = m[1];
+                }
+                i++;
             }
-            i++;
+            if (poss_user !== null) {
+                if (this.debug) this.debug("LocalStorageStore: Identified possible user " + poss_user);
+                this.option("user", poss_user);
+            }
         }
-        if (poss_user) {
-            if (global.DEBUG) console.debug("LocalStorageStore: Identified possible user " + poss_user);
-            this.user(poss_user);
-        }
+
+        return super.init();
     }
 
-    AbstractStore.call(this, params);
-}
-
-global.CLOUD_STORE = LocalStorageStore;
-
-LocalStorageStore.prototype = Object.create(AbstractStore.prototype);
-
-LocalStorageStore.prototype.options = function () {
-    "use strict";
-
-    return $.extend(AbstractStore.prototype.options(), {
-        needs_path: true,
-        identifier: "browser"
-    });
-};
-
-LocalStorageStore.prototype.read = function (path, ok, fail) {
-    "use strict";
-
-    var str;
-
-    if (global.DEBUG) console.debug("LocalStorageStore: Reading " + path);
-    try {
-        str = localStorage.getItem(path);
-    } catch (e) {
-        if (global.DEBUG) console.debug("Caught " + e);
-        fail.call(this, e);
-        return;
+    read(item) {
+        let path = "";
+        if (this.option("user"))
+            path += this.option("user") + ".";
+        path += this.option("path") + "." + item;
+        if (this.debug) this.debug("LocalStorageStore: Reading " + path);
+        var str = localStorage.getItem(path);
+        if (str === null)
+            throw AbstractStore.NODATA;
+        var ab = Utils.PackedStringToArrayBuffer(str);
+        return Promise.resolve(ab);
     }
-    if (str === null) {
-        fail.call(this, AbstractStore.NODATA);
-    } else {
-        var data = Utils.PackedStringToArrayBuffer(str);
-        ok.call(this, data);
-    }
-};
 
-// data is a String or a Blob
-LocalStorageStore.prototype.write = function (path, data, ok, fail) {
-    "use strict";
-
-    if (global.DEBUG) console.debug("LocalStorageStore: Writing " + path);
-    try {
-        var str = Utils.ArrayBufferToPackedString(data);
+    write(item, ab) {
+        let path = "";
+        if (this.option("user"))
+            path += this.option("user") + ".";
+        path += this.option("path") + "." + item;
+        if (this.debug) this.debug("LocalStorageStore: Writing " + path);
+        var str = Utils.ArrayBufferToPackedString(ab);
         localStorage.setItem(path, str);
-    } catch (e) {
-        if (global.DEBUG) console.debug("Caught " + e);
-        fail.call(this, e);
-        return;
+        return Promise.resolve();
     }
-    ok.call(this);
-};
+}
 
 if (typeof module !== "undefined")
     module.exports = LocalStorageStore;
