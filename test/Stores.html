@@ -1,0 +1,37 @@
+<html>
+  <!-- Test stores -->
+  <head>
+    <meta charset="utf-8">
+    <title>Stores Tests</title>
+    <link href="../css/Icons.css" rel="stylesheet" />
+    <link href="../css/Tree.css" rel="stylesheet" />
+    <link href="//cdnjs.cloudflare.com/ajax/libs/mocha/5.2.0/mocha.css" rel="stylesheet" />
+  </head>
+  <body>
+    <span id="countdown">60</span>
+    <input type="text" value="" id="webdav_url" />
+    <button id="webdav_run">Run</button>
+    <div id="mocha"></div>
+    <div id="container"><div id="sites-node"></div></div>
+    <script src="//code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="//code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/mocha/5.2.0/mocha.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/chai/4.2.0/chai.js"></script>
+    <script src="../node_modules/utf8/utf8.js"></script>
+    <script src="../test/require.js"></script>
+    <script src="../src/Utils.js"></script>
+    <script src="../libs/davclient.js"></script>
+    <script src="../libs/aes.js"></script>
+    <script src="../src/AES.js"></script>
+    <script src="../src/AbstractStore.js"></script>
+    <script src="../src/LayeredStore.js"></script>
+    <script src="../src/LocalStorageStore.js"></script>
+    <script src="../src/EncryptedStore.js"></script>
+    <script src="../src/WebDAVClient.js"></script>
+    <script src="../src/WebDAVStore.js"></script>
+    <script src="../src/Tree.js"></script>
+    <script>mocha.setup("bdd");mocha.globals(['jQuery','Squirrel']);</script>
+    <script src="Stores.js"></script>
+    <script>mocha.run();</script>
+  </body>
+</html>

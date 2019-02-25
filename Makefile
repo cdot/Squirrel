@@ -10,112 +10,117 @@
 
 # Macros using shell commands
 FIND         := find . -name 'jquery*' -prune -o -name
-SQUIRREL_JS  := $(shell \
-		grep '<script class="compressable" src=' Squirrel.html | \
+DATE_SED     := sed -e 's/BUILD_DATE/$(shell date)/g'
+SQUIRREL_JS  := $(shell cat index.html | \
+		grep '<script class="compressable" src=' $^ | \
 		sed -e 's/.*src="//;s/[?"].*//g' )
-SQUIRREL_CSS := $(shell \
-		grep '<link class="compressable"' Squirrel.html | \
+SQUIRREL_CSS := $(shell cat index.html | \
+		grep '<link class="compressable"' $^ | \
 		sed -e 's/.*href="//;s/[?"].*//g' )
-HELP_JS      := $(shell \
-		grep '<script class="compressable" src=' help.html | \
+HELP_JS      := $(shell cat help.html | \
+		grep '<script class="compressable" src=' $^ | \
 		sed -e 's/.*src="//;s/[?"].*//g' )
-HELP_CSS     := $(shell \
-		grep '<link class="compressable"' help.html | \
+HELP_CSS     := $(shell cat help.html | \
+		grep '<link class="compressable"' $^ | \
 		sed -e 's/.*href="//;s/["?].*//g' )
 
-STORES_JS    := $(wildcard js/*Store.js)
-TESTS        := $(wildcard js/test/*.js test/*.js node.js.server/test/*.js) \
-		$(wildcard js/test/*.html test/*.html node.js.server/test/*.html)
+STORES_JS    := $(wildcard src/*Store.js)
+TESTS_JS     := $(wildcard test/*.js test/*.js node.js.server/test/*.js)
 SERVER_JS    := $(wildcard node.js.server/*.js)
 LANGS        := $(wildcard locale/*.json)
-IMAGES       := $(wildcard images/*)
-TMP          := /tmp/
 
-# Update version numbers to reflect local changes.
-# Use git status to get a list of locally changed files and update the version
-# identifiers in Squirrel.html. Used during development only.
-version:
-	node build/version.js -o Squirrel.html Squirrel.html
+%.map %.min.js : %.js
+	uglifyjs \
+		--comments \
+		--compress \
+		-o $@ \
+		-- $^
 
-# Update version numbers to reflect the current checked-in status ofthe project.
-# Get a list of interesting files from Squirrel.html (the ones with ?version=)
-# and use git log to get the latest checked-in date
-reversion:
-	INTERESTING=`grep -P '\?version=[0-9]*' Squirrel.html | sed -e 's/^.*\(src\|href\)="//;s/\?version.*//'`;\
-	for c in $$INTERESTING; do \
-		DATE=`git log -n 1 $$c | grep Date | sed -e 's/Date: *//;s/ +0.*//'`; \
-		DATE=`date -d "$$DATE" +%s`; \
-		echo "GIT: $$c: $$DATE" ;\
-		sed -e "s#$$c?version=[a-f0-9]*#$$c?version=$$DATE#" Squirrel.html > $(TMP)Squirrel.html;\
-		diff $(TMP)Squirrel.html Squirrel.html || mv $(TMP)Squirrel.html Squirrel.html; \
-	done
+%.min.css : %.css
+	cleancss $^ > $@
+
+%.min.html : %.html
+	cat $^ | \
+	sed -E -e 's/class="compressable" ([^.]*)\.([a-z]+)"/\1.min.\2"/g' > $@
+
+%.map : %.min.js
+
+min:	$(patsubst %.js,%.min.js,$(SQUIRREL_JS) $(STORES_JS)) \
+	$(patsubst %.js,%.map,$(SQUIRREL_JS) $(STORES_JS)) \
+	$(patsubst %.css,%.min.css,$(SQUIRREL_CSS))
+	@echo "Made min"
+
+index.html : $(SQUIRREL_JS)
+	perl build/reversion.pl $@
 
 # Release 
-release/%.css : %.css
-	@mkdir -p $(@D)
-	cleancss -o $@ $^
+# 1. Combining all the non-store js in the order it is included in the HTML
+#    into a single minified file
+# 2. Combining all the css (in the order it is included in the HTML) into a
+#    single minified file
+# Note that the stores are minified but not concatenated
+release/src/Squirrel.min.js : $(SQUIRREL_JS)
+	@mkdir -p release/js
+	uglifyjs \
+		--comments \
+		--compress \
+		--define DEBUG=false \
+		-o $@ \
+		-- $^
+
+release/src/help.min.js : $(HELP_JS)
+	@mkdir -p release/js
+	uglifyjs \
+		--comments \
+		--compress \
+		--define DEBUG=false \
+		-o $@ \
+		-- $^
+
+release/src/%Store.js : src/%Store.js
+	@mkdir -p release/js
+	uglifyjs \
+		--comments \
+		--compress \
+		--define DEBUG=false \
+		-o $@ \
+		-- $^
+
+release/css/Squirrel.min.css : $(SQUIRREL_CSS)
+	@mkdir -p release/css
+	cat $^ | cleancss -o $@
+
+release/css/help.min.css : $(HELP_CSS)
+	@mkdir -p release/css
+	cat $^ | cleancss -o $@t
 
 release/images/% : images/%
-	@mkdir -p $(@D)
+	@mkdir -p release/images
 	cp $^ $@
 
 release/%.html : %.html
-	@mkdir -p $(@D)
-	sed -e 's/BUILD_DATE/$(shell date)/g' $^ \
-	| sed -e 's/<!--babel:\(.*\):babel-->/\1/' $^ > $@
-	@CHANGED=`git status -s --porcelain | grep -v "^\?" | grep -P -v "^ ?D" | sed -e 's/^ M.//;s/^R.*->.//'`;\
-	for c in $$CHANGED; do \
-          export DATE=`stat -c %Y $$c`; \
-          sed -e "s#$$c?version=[0-9]*#$$c?version=$$DATE#" $@ > $(TMP)html;\
-          diff -q $@ $(TMP)html || echo $$c && mv $(TMP)html $@; \
-	done
+	@mkdir -p release
+	cat $^ \
+	| $(DATE_SED) \
+	| sed -E -f build/release.sed \
+	> $@
 
-# locale
-release/locale/%.json : locale/%.json
-	@mkdir -p $(@D)
-	cp $^ $@
-
-release/index.html : release/Squirrel.html
-	@mkdir -p $(@D)
-	cp $^ $@
-
-# @babel/polyfill
-release/libs/polyfill.min.js : node_modules/@babel/polyfill/dist/polyfill.min.js
-	@mkdir -p $(@D)
-	cp $< $@
-
-release/libs/utf8.js : node_modules/utf8/utf8.js
-	@mkdir -p $(@D)
-	cp $< $@
-
-release/libs/bundle.js : node_modules/babel-runtime-amd/dist/bundle.js
-	@mkdir -p $(@D)
-	cp $< $@
-
-release/libs/require.js : node_modules/requirejs/require.js
-	@mkdir -p $(@D)
-	cp $< $@
-
-release/%.js : %.js
-	@mkdir -p $(@D)
-	node_modules/.bin/babel $^ -sourceMap -o $@
-
-release: release/libs/polyfill.min.js \
-	release/libs/utf8.js \
-	release/libs/bundle.js \
-	release/libs/require.js \
-	$(SQUIRREL_JS:%.js=release/%.js) \
-	$(STORES_JS:%.js=release/%.js) \
-	$(HELP_JS:%.js=release/%.js) \
-	$(SQUIRREL_CSS:%.css=release/%.css) \
-	$(HELP_CSS:%.css=release/%.css) \
-	$(IMAGES:images/%=release/images/%) \
-	$(TESTS:%=release/%) \
-	release/index.html release/help.html
-	@mkdir -p release/js/test
+release: release/index.html release/help.html \
+	release/src/help.min.js release/css/Squirrel.min.css \
+	release/src/Squirrel.min.js release/css/Squirrel.min.css \
+	$(patsubst %.js,%.min.js,$(patsubst src/%,release/src/%,$(STORES_JS))) \
+	$(patsubst images/%,release/images/%,$(wildcard images/*))
+	@-rm -f release/src/*.map
 	@echo $^ built
 
-ignore_for_now:	$(LANGS:locale/%.json=release/locale/%.json) \
+# Languages
+
+langs : $(LANGS)
+
+# Tests
+
+test:
+	mocha $(TESTS_JS)
 
 # Clean generated stuff
 
@@ -141,14 +146,16 @@ tidy: $(patsubst %.js,%.js.tidy,$(SQUIRREL_JS) $(STORES_JS) $(SERVER_JS))
 lint: $(patsubst %.js,%.esl,$(patsubst %.min.js,,$(SQUIRREL_JS) $(STORES_JS) $(SERVER_JS)))
 
 # Make a language file
-%.strings: %
+%.js.strings: %.js
 	node build/extractTX.js $^
 
-locale/%.json: $(SQUIRREL_JS:%=%.strings) $(STORES_JS:%=%.strings) \
-		Squirrel.html.strings help.html.strings
+%.html.strings: %.html
+	node build/extractTX.js $^
+
+locale/%.json: $(patsubst %.js,%.js.strings,$(SQUIRREL_JS) $(STORES_JS)) index.html.strings help.html.strings
 	node build/translate.js -l $@ $^
 
-# keep .strings files around
-.SECONDARY: $(patsubst %.js,%.js.strings,$(SQUIRREL_JS) $(STORES_JS)) Squirrel.html.strings help.html.strings
+# debug, keep .strings files around
+#.SECONDARY: $(patsubst %.js,%.js.strings,$(SQUIRREL_JS) $(STORES_JS)) index.html.strings help.html.strings
 
 

@@ -13,12 +13,19 @@
       "ecmaVersion": 6
     },
     "env": {
-      "browser": true,
+      "shared-node-browser": true,
       "jquery": true
     },
-    "globals": {
-      "require": false,
-      "module": false
+      "globals": {
+          "utf8":true,
+          "ArrayBuffer": false,
+          "Buffer": false,
+          "Uint8Array": false,
+          "XMLHttpRequest": false,
+          "WeakMap": false,
+          "require":false,
+          "module":false,
+          "Promise":false
     },
     "rules": {
       "strict": 1,
@@ -41,6 +48,9 @@
     }
   },
   "dependencies": {
+    "cookies": "^0.7.3",
+    "jquery-ui": "^1.12.1",
+    "jquery-ui-dist": "^1.12.1",
     "utf8": "^3.0.0"
   },
   "devDependencies": {
@@ -65,19 +75,21 @@
     "jsdom-global": "3.0.2",
     "mocha": "*",
     "npm-check": "^5.5.2",
-    "requirejs": "^2.3.6",
     "uglify-es": ">=3.2.1",
     "url-parse": "^1.4.4",
     "xmlhttprequest": "^1.8.0"
   },
   "babel": {
     "plugins": [
-        "@babel/plugin-syntax-dynamic-import",
-       ["transform-runtime", {
-            "helpers": true,
-            "regenerator": true,
-            "polyfill": false
-       }]
+      "@babel/plugin-syntax-dynamic-import",
+      [
+        "transform-runtime",
+        {
+          "helpers": true,
+          "regenerator": true,
+          "polyfill": false
+        }
+      ]
     ],
     "moduleRoot": "Squirrel",
     "presets": [
