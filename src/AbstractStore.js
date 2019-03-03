@@ -1,116 +1,124 @@
 /*@preserve Copyright (C) 2015-2018 Crawford Currie http://c-dot.co.uk license MIT*/
 
-/* global Utils:true */
-if (typeof module !== "undefined")
-    Utils = require("../src/Utils");
-
-/* global Serror:true */
-if (typeof module !== "undefined")
-    Serror = require("../src/Serror");
-
-/**
- * Pure virtual base class of store providers.
- *
- * Store providers provide a simple file system interface to data in the
- * store. Data is passed back and forth in ArrayBuffer.
- *
- * This module provides two store provider virtual base classes,
- * AbstractStore (which is the base class of all stores) and LayeredStore
- * (which is an AbstractStore in which an underlying "engine" store provides
- * the actual storage services)
- */
-
-class AbstractStore {
-    /**
-     * @param params parameter block, may contain
-     * debug: debug function, same signature as console.debug
-     */
-    constructor(params) {
-        this.options = {};
-        if (params && typeof params.debug === "function")
-            this.debug = params.debug;
-    }
+define(["js/Utils", "js/Serror"], function(Utils, Serror) {
 
     /**
-     * Return a promise to initialise the store with the given parameters.
-     * @param params default fields (some stores may require more)
+     * Pure virtual base class of store providers.
+     *
+     * Store providers provide a simple file system interface to data in the
+     * store. Data is passed back and forth in Uint8Array.
+     *
+     * This module provides two store provider virtual base classes,
+     * AbstractStore (which is the base class of all stores) and LayeredStore
+     * (which is an AbstractStore in which an underlying "engine" store provides
+     * the actual storage services)
      */
-    init() {
-        return Promise.resolve();
-    }
-
-    // Special error message, must be used when a store is otherwise OK but
-    // data being read is missing.
-
-    /**
-     * Get/set options. Set to null to delete an option.
-     */
-    option(k, v) {
-        if (typeof v !== "undefined") {
-            if (v === null)
-                delete this.options[v];
-            else
-                this.options[k] = v;
+    class AbstractStore {
+        /**
+         * @param params parameter block, may contain
+         * debug: debug function, same signature as console.debug
+         */
+        constructor(params) {
+            this.options = {};
+            if (params && typeof params.debug === "function")
+                this.debug = function() {
+                    let args = [this.option("type")].concat(arguments);
+                    params.debug.apply(this.option("type"), arguments);
+                };
         }
-        return this.options[k];
+
+        /**
+         * Return a promise to initialise the store
+         */
+        init() {
+            return Promise.resolve();
+        }
+
+        /**
+         * Get/set options. 
+         * @param k the key
+         * @param v the new value, undefined to simply retireve the value, or
+         * null to delete the option (make it undefined), anything else will
+         * set the value of the option.
+         */
+        option(k, v) {
+            if (typeof v !== "undefined") {
+                if (v === null)
+                    delete this.options[k];
+                else
+                    this.options[k] = v;
+            }
+            return this.options[k];
+        }
+
+        /**
+         * Generate an exception object
+         */
+        error(path, status, message) {
+            if (this.debug) this.debug(this.option("type"), "error:",
+                                       path, status, message);
+            return new Serror(path, status, message);
+        }
+        
+        /**
+         * Write data. Pure virtual.
+         * @param path pathname to store the data under, a / separated path string
+         * @param data a Uint8Array
+         * @return a Promise that resolves to boolean true if the write
+         * succeeded.
+         * @throws Serror if anything goes wrong
+         */
+        write(path, data) {
+            throw new this.error(path, 500, "Store has no write method");
+        }
+
+        /**
+         * Write a string.
+         * @param path pathname the data is stored under, a / separated path string
+         * @param str the data String
+         * @param ok called on success with this=self
+         * @param fail called on failure
+         * @throws Serror if anything goes wrong
+         */
+        writes(path, str) {
+            return this.write(path, Utils.StringToUint8Array(str));
+        }
+
+        /**
+         * Read from the store. Pure virtual.
+         * @param path pathname the data is stored under, a / separated path string
+         * @return a Promise that resolves to the content of the path
+         * as a Uint8Array. If the path is not found, return
+         * undefined, and store.status() will return an appropriate
+         * HTTP status code. If the resource exists but is empty (has
+         * no content) return an zero-sized Unit8Array.
+         * @throws Serror if anything goes wrong
+         */
+        read(path) {
+            throw this.error(path, 500, "Store has no read method");
+        }
+
+        /**
+         * Promise to read a string.
+         * @param path pathname the data is stored under, a / separated string
+         * @return a promise that will resolve to the String contents of the
+         * resource, or undefined if the resource is not found.
+         * @throws Serror if anything goes wrong
+         */
+        reads(path) {
+            return this.read(path)
+                .then((ab) => {
+                    if (typeof ab === "undefined")
+                        return ab;
+                    try {
+                        return Utils.Uint8ArrayToString(ab);
+                    } catch (e) {
+                        // UTF-8 decode error, most likely
+                        throw this.error(path, 400, e);
+                    }
+                });
+        }
     }
 
-    /**
-     * Write data. Pure virtual.
-     * @param path pathname to store the data under, a / separated path string
-     * @param data an ArrayBuffer (or ArrayBufferView, so it can be a
-     * TypedArray)
-     * @return a Promise that resolves to boolean true if the write
-     * succeeded.
-     * @throws Serror
-     */
-    write(path, data) {
-        throw new Serror(path, 500, "Store has no write method");
-    }
-
-    /**
-     * Write a string.
-     * @param path pathname the data is stored under, a / separated path string
-     * @param str the data String
-     * @param ok called on success with this=self
-     * @param fail called on failure
-     * @throws Serror
-     */
-    writes(path, str) {
-        return this.write(path, Utils.StringToArrayBuffer(str));
-    }
-
-    /**
-     * Read an ArrayBuffer. Pure virtual.
-     * @param path pathname the data is stored under, a / separated path string
-     * @param ok called on success with this=self, passed ArrayBuffer
-     * @param fail called on failure
-     * @return a Promise that resolves to the content of the path. If the
-     * path is not found, return undefined, and store.status() will return
-     * an appropriate HTTP status code. If the resource exists but is
-     * empty (has no content) return an empty ArrayBuffer.
-     * @throws Serror
-     */
-    read(path) {
-        throw new Serror(path, 500, "Store has no read method");
-    }
-
-    /**
-     * Promise to read a string.
-     * @param path pathname the data is stored under, a / separated path string
-     * @return a promise that will resolve to the String contents of the
-     * resource, or undefined if the resource is not found.
-     * @throws Serror
-     */
-    reads(path) {
-        return this.read(path)
-            .then((ab) => {
-                if (typeof ab === "undefined")
-                    return ab;
-                return Utils.ArrayBufferToString(ab);
-            });
-    }
-}
-
-if (typeof module !== "undefined")
-    module.exports = AbstractStore;
+    return AbstractStore;
+});

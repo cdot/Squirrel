@@ -1,0 +1,41 @@
+<html>
+  <!-- Test stores -->
+  <head>
+    <meta charset="utf-8">
+    <title>WebDAVStore Tests</title>
+    <link rel="icon" href="favicon.ico" type="image/x-icon" />
+    <link href="//cdnjs.cloudflare.com/ajax/libs/mocha/6.0.2/mocha.css" rel="stylesheet" />
+    <script src="//code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="//code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/chai/4.2.0/chai.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/mocha/6.0.2/mocha.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.js"></script>
+  </head>
+  <body>
+    <div id="prompting">
+      <div id="needs_url" class="needs">
+        <label for="url">Server URL</label>
+        <input type="text" value="" id="url" />
+      </div>
+      <div id="needs_user" class="needs">
+        <label for="user">Server User</label>
+        <input type="text" value="" id="user" />
+      </div>
+      <div id="needs_pass" class="needs">
+        <label for="pass">Server Pass</label>
+        <input type="text" value="" id="pass" />
+      </div>
+      <button id="run">Run</button>
+    </div>
+    <div id="mocha"></div>
+    <script>
+      mocha.setup("bdd");
+      requirejs.config({
+        urlArgs: "t=" + Date.now() // defeat cache
+      });
+      requirejs(["WebDAVStore"], function() {
+        mocha.run();
+      });
+    </script>
+  </body>
+</html>

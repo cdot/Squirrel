@@ -1,14 +1,19 @@
 /*@preserve Copyright (C) 2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser */
 
-/* global global:false */
-
-/* global Utils:true */
-/* global Squirrel:true */
-/* global Cookies:true */
-/* global Translator:true */
-/* global TX:true */
-/* global document:true */
+requirejs.config({
+    "baseUrl": ".",
+    "paths": {
+        "js": "src",
+        "jsjq": "src/jquery",
+        "jquery": "//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min",
+        "jquery-ui": "//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui",
+        "contextmenu": "//cdnjs.cloudflare.com/ajax/libs/jquery.ui-contextmenu/1.18.1/jquery.ui-contextmenu.min",
+        "cookie": "//cdnjs.cloudflare.com/ajax/libs/js-cookie/2.2.0/js.cookie.min",
+        "mobile-events": "//cdnjs.cloudflare.com/ajax/libs/jquery-touch-events/2.0.0/jquery.mobile-events.min",
+        "clipboard": "//cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.3/clipboard.min"
+    }
+});
 
 if (typeof module !== "undefined") {
     let fs = require("fs");
@@ -24,10 +29,6 @@ if (typeof module !== "undefined") {
     require("jquery-ui/ui/plugin"); // loads ui/widgets/button.js
     require("jquery-ui/ui/widgets/mouse"); // loads ui/widgets/button.js
     require("jquery-ui/ui/widgets/draggable"); // loads ui/widgets/button.js
-    require("../src/jquery/icon_button");
-    Utils = require("../src/Utils");
-    Translator = require("../src/Translator");
-    Squirrel = require("../src/Squirrel");
 
     Cookies = {
         // TODO: save a .rc
@@ -44,7 +45,7 @@ if (typeof module !== "undefined") {
     }
 }
 
-(function ($) {
+define(["js/Utils", "js/Squirrel", "js/Translator", "cookie", "jquery"], function (Utils, Squirrel, Translator, Cookies) {
     // Parse URL parameters
     let qs = Utils.parseURLParams(window.location.search.substring(1));
 
@@ -69,7 +70,7 @@ if (typeof module !== "undefined") {
     if (typeof qs.store === "undefined")
         qs.store = "LocalStorageStore";
 
-    TX = Translator.init({debug: qs.debug ? console.debug : false});
+    TX = Translator.instance({debug: qs.debug ? console.debug : false});
 
     qs.cookies = Cookies;
 
@@ -80,7 +81,7 @@ if (typeof module !== "undefined") {
         squirrel.init_ui();
         $(document).trigger("init_application");
     });
-})(jQuery);
+});
 
 
 

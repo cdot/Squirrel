@@ -1,10 +1,8 @@
 <html>
-  <!-- Test Tree.js -->
+  <!-- Test Utils.js -->
   <head>
     <meta charset="utf-8">
-    <title>Tree Tests</title>
-    <link href="../css/Icons.css" rel="stylesheet" />
-    <link href="../css/Tree.css" rel="stylesheet" />
+    <title>Utils Tests</title>
     <link href="//cdnjs.cloudflare.com/ajax/libs/mocha/5.2.0/mocha.css" rel="stylesheet" />
   </head>
   <body>
@@ -15,22 +13,8 @@
     <script src="//cdnjs.cloudflare.com/ajax/libs/mocha/5.2.0/mocha.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/chai/4.2.0/chai.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.js"></script>
-    <script>
-      requirejs.config({
-        baseUrl: "..",
-        paths: {
-          "jquery": "//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min",
-          "jquery-ui": "//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui",
-          js: "src",
-          jsjq: "src/jquery",
-          test: "test",
-          node_modules: "node_modules"
-        },
-        urlArgs: "bust=" + Date.now()
-      });
-    </script>
     <script>mocha.setup("bdd");mocha.globals(['jQuery','Squirrel']);</script>
-    <script src="Tree.js"></script>
+    <script src="Utils.js"></script>
     <script>mocha.run();</script>
   </body>
 </html>

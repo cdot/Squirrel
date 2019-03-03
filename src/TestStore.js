@@ -6,28 +6,28 @@
 /**
  * Test ''cloud' store using LocalStorage in the browser
  */
-if (typeof module !== "undefined")
-    LocalStorageStore = require("../src/LocalStorageStore");
 
-/**
- * A test store engine
- * @extends LocalStorageStore
- */
-class TestStore extends LocalStorageStore {
-    constructor(params) {
-        super(params);
-        this.option("user", "TestStore");
-        this.option("pass", "x");
+define(["js/LocalStorageStore"], function(LocalStorageStore) {
+
+    /**
+     * A test store engine
+     * @extends LocalStorageStore
+     */
+    class TestStore extends LocalStorageStore {
+        constructor(params) {
+            super(params);
+            this.option("user", "TestStore");
+            this.option("pass", "x");
+        }
+
+        readfunction(path) {
+            return super.read("TestStore" + path);
+        }
+
+        write(path, data) {
+            return super.write("TestStore" + path, data);
+        }
     }
 
-    readfunction(path) {
-        return super.read("TestStore" + path);
-    }
-
-    write(path, data) {
-        return super.write("TestStore" + path, data);
-    }
-}
-
-if (typeof module !== "undefined")
-    module.exports = TestStore;
+    return TestStore;
+});

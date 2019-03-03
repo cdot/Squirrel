@@ -16,7 +16,7 @@
  * data-close="ui-icon-circle-minus"
  */
 
-(function ($) {
+define(["jquery", "jquery-ui", "jsjq/icon_button"], function() {
     $.widget("squirrel.twisted", {
         _create: function () {
             let self = this;
@@ -75,4 +75,4 @@
                 .icon_button("option", "icon", icon);
         }
     });
-})(jQuery);
+});

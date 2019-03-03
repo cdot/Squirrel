@@ -1,92 +1,152 @@
 /*@preserve Copyright (C) 2018-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 
-/* global Serror:true */
-/* global AbstractStore:true */
-if (typeof module !== "undefined") {
-    Serror = require("../src/Serror");
-    AbstractStore = require("../src/AbstractStore");
-}
-
-/**
- * 'cloud' store using ajax to communicate with a remote file server e.g.
- * the node.js.server store included in the Squirrel distribution. Or
- * node simple-server
- * python -m SimpleHTTPServer 3000
- * lighttpd
- * nginx
- * apache server
- * etc.
-
-TODO: If the code is served from the same server as the content then the basic
-auth negotiation has already happened by the time the first store request is
-made, and we don't need to prompt for auth. But if it's one a different
-server then we have to be able to handle a 401.
-*/
-
-class HttpServerStore extends AbstractStore {
-    constructor(p) {
-        super(p);
-        this.option("type", "HttpServerStore");
-        this.option("needs_url", true);
+define(["js/Serror", "js/AbstractStore"], function(Serror, AbstractStore) {
+    if (typeof XMLHttpRequest === "undefined") {
+        // node.js
+        XMLHttpRequest = require("xhr2");
+        btoa = require('btoa');
+        URL = require('url-parse');
     }
 
-    read(path) {
-        // We want to use the features of jQuery.ajax, but by default
-        // it doesn't handle binary files. We could add a jQuery transport,
-        // as described in
-        // https://stackoverflow.com/questions/33902299/using-jquery-ajax-to-download-a-binary-file
-        // but it feels like overkill when we can simply use a XmlHttpRequest.
+    /**
+     * 'cloud' store using ajax to communicate with a remote file server
+     * e.g.  the node.js.server store included in the Squirrel
+     * distribution. Or node simple-server python -m SimpleHTTPServer 3000
+     * Or lighttpd nginx apache server etc. Or a simple server built using
+     * express.
+     */
+    
+    class HttpServerStore extends AbstractStore {
+        
+        constructor(p) {
+            super(p);
+            this.option("needs_auth", true);
+            this.option("type", "HttpServerStore");
+        }
 
-        let xhr = new XMLHttpRequest();
-        xhr.withCredentials = true;
-        xhr.timeout = 5000; // 5 second timeout
-        xhr.responseType = "arraybuffer";
+        /**
+         * @protected
+         * Performs a HTTP request, and returns a Promise. Note that the
+         * response is handled as an Uint8Array, it is up to the caller
+         * to transform that to any other type.
+         * @param {string} method HTTP method e.g. GET
+         * @param {string} url Relative or absolute url
+         * @param {Object} headers HTTP headers
+         * @param {string or Uint8Array} body request body
+         * @return {Promise} a promise which will be resolved with
+         * {status:, xhr:, body:}
+         */
+        request(method, url, headers, body) {
+            let self = this;
 
-        xhr.open("GET", this.option("url") + "/" + path + "?_=" + Date.now());
-        xhr.send();
-        return new Promise((resolve, reject) => {
-            xhr.onreadystatechange = function (e) {
-                if (xhr.readyState != 4)
-                    return;
+            // We would like to use the features of jQuery.ajax, but
+            // by default it doesn't handle binary files. We could add
+            // a jQuery transport, as described in
+            // https://stackoverflow.com/questions/33902299/using-jquery-ajax-to-download-a-binary-file
+            // but that's more work than simply using XMLHttpRequest
 
-                if (200 > xhr.status || xhr.status >= 300)
-                    reject(new Serror(path, xhr.status, e));
-            };
+            return new Promise(function(resolve, reject) {
+                let xhr = new XMLHttpRequest();
 
-            xhr.ontimeout = function() {
-                reject(new Serror(path, 408, 'Timeout exceeded'));
-            };
+                // for binary data (does nothing in node.js)
+                xhr.responseType = "arraybuffer";
+            
+                headers = headers || {};
 
-            xhr.onload = function ( /*e*/ ) {
-                resolve(xhr.response);
-            };
-        });
+                // Override auth if credentials are set
+                let user = self.option("net_user");
+                let pass = self.option("net_pass");
+                if (typeof user !== "undefined") {
+                    if (self.debug) self.debug("Using auth", user, pass);
+                    headers['Authorization'] = 'Basic '
+                        + btoa(user + ':' + pass);
+                } else
+                    if (self.debug) self.debug("No auth header");
+                let base = self.option("url") || "";
+                if (/\w$/.test(base))
+                    base += "/";
+                let turl = new URL(url, base).toString();
+                if (self.debug) self.debug(self.option("type") + " "
+                                           + method + " " + turl);
+                xhr.open(method, turl, true);
+
+                for (let ii in headers) {
+                    xhr.setRequestHeader(ii, headers[ii]);
+                }
+
+                // Workaround for edge
+                if (body === undefined)
+                    xhr.send();
+                else
+                    xhr.send(body);
+
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState !== 4)
+                        return;
+                }
+
+                xhr.onload = function() {
+                    if (xhr.status === 401) {
+                        if (self.debug) self.debug("401");
+                        let handler = self.option("get_auth");
+                        if (typeof handler === "function") {
+                            handler()
+                            .then(() => {
+                                resolve(self.request(method, url, headers, body));
+                            });
+                            return;
+                        }
+                    }
+                    
+                    resolve({
+                        body: new Uint8Array(xhr.response),
+                        status: xhr.status,
+                        xhr: xhr
+                    });
+                };
+
+                xhr.ontimeout = function() {
+                    reject(new Error('Timeout exceeded'));
+                };
+            });
+        }
+
+        /**
+         * Return a promise to make a folder.
+         * Subclasses can override to provide specific path creation steps.
+         * @param path {String} Relative or absolute path to folder
+         * @throws Serror if anything goes wrong
+         */
+        mkpath(path) {
+            return Promise.resolve();
+        }
+        
+        // @Override
+        read(path) {
+            return this.request("GET", path)
+            .then((res) => {
+                if (200 <= res.status && res.status < 300)
+                    return res.body;
+                throw this.error(path, res.status, "read failed");
+            });
+        }
+
+        // @Override
+        write(path, data) {
+            let self = this;
+            if (this.debug) this.debug("Writing", path);
+            let pathbits = path.split('/');
+            let folder = pathbits.slice(0, pathbits.length - 1);
+            return this.mkpath(folder.join('/'))
+            .then(() => {
+                return this.request('PUT', path, {}, data)
+            })
+            .then((res) => {
+                if (res.status < 200 || res.status >= 300)
+                    throw this.error(path, res.status, "write failed");
+            });
+        }
     }
 
-    write(path, data) {
-        let xhr = new XMLHttpRequest();
-        xhr.withCredentials = true;
-        xhr.timeout = 5000; // 5 second timeout
-
-        xhr.open("PUT", this.option("url") + "/" + path + "?_=" + Date.now());
-        xhr.send(data);
-
-        return new Promise((resolve, reject) => {
-            xhr.ontimeout = function (e) {
-                reject(new Serror(path, xhr.status, e));
-            };
-
-            xhr.onreadystatechange = function (e) {
-                if (xhr.readyState === 4 && xhr.status !== 200)
-                    reject(new Serror(path, xhr.status, e));
-            };
-
-            xhr.onload = function ( /*e*/ ) {
-                resolve();
-            };
-        });
-    }
-}
-
-if (typeof module !== "undefined")
-    module.exports = HttpServerStore;
+    return HttpServerStore;
+});

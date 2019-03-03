@@ -1,0 +1,27 @@
+<html>
+  <!-- Test stores -->
+  <head>
+    <meta charset="utf-8">
+    <title>LocalStorageStore Tests</title>
+    <link rel="icon" href="favicon.ico" type="image/x-icon" />
+    <link href="//cdnjs.cloudflare.com/ajax/libs/mocha/6.0.2/mocha.css" rel="stylesheet" />
+    <script src="//code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="//code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/chai/4.2.0/chai.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/mocha/6.0.2/mocha.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.js"></script>
+  </head>
+  <body>
+    <div id="mocha"></div>
+    <div id="container"><div id="sites-node"></div></div>
+    <script>
+      mocha.setup("bdd");
+      requirejs.config({
+        urlArgs: "bust=" + Date.now()
+      });
+      requirejs(["LocalStorageStore"], function() {
+        mocha.run();
+      });
+    </script>
+  </body>
+</html>

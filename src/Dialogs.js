@@ -1,31 +1,15 @@
 /*@preserve Copyright (C) 2015-2018 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser */
 
-/* global global */
+define(["jquery", "js/Utils", "js/Steganographer", "js/Translator", "js/Hoard", "js/Tree", "jsjq/icon_button", "jsjq/squirrel_dialog"], function($, Utils, Steganographer, Translator, Hoard, Tree) {
 
-/* global Utils:true */
-/* global Steganographer:true */
-/* global Translator:true */
-/* global Squirrel:true */
-/* global Hoard:true */
-/* global Tree:true */
-if (typeof module !== "undefined") {
-    Utils = require("../src/Utils");
-    Steganographer = require("../src/Steganographer");
-    Translator = require("../src/Translator");
-    Squirrel = require("../src/Squirrel");
-    Hoard = require("../src/Hoard");
-    Tree = require("../src/Tree");
-}
+    let TX = Translator.instance();
 
-/* global TX:true */
-if (typeof TX === "undefined")
-    TX = Translator.instance;
-
-// Handlers for Squirrel dialogs.
-(function ($) {
-
+    // Handlers for Squirrel dialogs.
     $(function () {
+
+        // Timeout intervals, milliseconds
+        const MSPERDAY = 24 * 60 * 60 * 1000;
 
         /**
          * options:
@@ -128,7 +112,7 @@ if (typeof TX === "undefined")
                 $dlg.squirrel_dialog("control", "path")
                     .text(
                         $dlg.data("node").tree("getPath")
-                        .join("↘"));
+                            .join("↘"));
                 $dlg.squirrel_dialog("control", "coll")
                     .toggle(!$dlg.data("node").hasClass("tree-leaf"));
             });
@@ -181,7 +165,7 @@ if (typeof TX === "undefined")
                 }
 
                 while (i < $from.children("td")
-                    .length) {
+                       .length) {
                     $from.children("td")
                         .last()
                         .remove();
@@ -234,7 +218,7 @@ if (typeof TX === "undefined")
             $dlg.squirrel_dialog("control", "again")
                 .on($.getTapEvent(), function () {
                     $dlg.squirrel_dialog("control", "idea")
-                        .text(Utils.generate_password({
+                        .text(Utils.generatePassword({
                             length: $dlg.squirrel_dialog("control", "len")
                                 .val(),
                             charset: $dlg.squirrel_dialog("control", "chs")
@@ -263,7 +247,7 @@ if (typeof TX === "undefined")
                     $dlg.squirrel_dialog("squirrel").playAction(Hoard.new_action(
                         "X", $dlg.data("node").tree("getPath"), Date.now(),
                         $dlg.squirrel_dialog("control", "len").val() + ";" +
-                        $dlg.squirrel_dialog("control", "chs").val()));
+                            $dlg.squirrel_dialog("control", "chs").val()));
                     constraints_changed($dlg);
                 });
             $dlg.squirrel_dialog("control", "reset")
@@ -304,7 +288,7 @@ if (typeof TX === "undefined")
                 .on($.getTapEvent(), function () {
                     $dlg.squirrel_dialog("close");
                     $dlg.squirrel_dialog("squirrel").search($dlg.squirrel_dialog("control", "string")
-                        .val());
+                                                            .val());
                 });
             $dlg.squirrel_dialog("control", "string")
                 .on("change", function () {
@@ -323,8 +307,8 @@ if (typeof TX === "undefined")
                 .val();
             // Convert to days
             numb = numb * Utils.TIMEUNITS[$dlg.squirrel_dialog("control", "units")
-                .val()].days;
-            let alarmd = new Date(Date.now() + numb * Utils.MSPERDAY);
+                                          .val()].days;
+            let alarmd = new Date(Date.now() + numb * MSPERDAY);
             $dlg.squirrel_dialog("control", "nextmod")
                 .template(
                     "expand",
@@ -351,7 +335,7 @@ if (typeof TX === "undefined")
                     let numb = $dlg.squirrel_dialog("control", "number")
                         .val() *
                         Utils.TIMEUNITS[$dlg.squirrel_dialog("control", "units")
-                            .val()].days;
+                                        .val()].days;
                     $dlg.squirrel_dialog("squirrel").playAction(Hoard.new_action(
                         "A", $dlg.data("node").tree("getPath"), Date.now(),
                         numb));
@@ -373,7 +357,7 @@ if (typeof TX === "undefined")
 
             $dlg.squirrel_dialog("control", "path")
                 .text($node.tree("getPath")
-                    .join("↘"));
+                      .join("↘"));
 
             $dlg.data("node", $node);
             let lastmod = $node.data("last-time-changed");
@@ -381,11 +365,11 @@ if (typeof TX === "undefined")
                 .template(
                     "expand",
                     new Date(lastmod)
-                    .toLocaleString());
+                        .toLocaleString());
 
             if (typeof $node.data("alarm") !== "undefined") {
                 let alarm = new Date(
-                    lastmod + $node.data("alarm") * Utils.MSPERDAY);
+                    lastmod + $node.data("alarm") * MSPERDAY);
                 $dlg.squirrel_dialog("control", "current")
                     .template(
                         "expand",
@@ -408,11 +392,11 @@ if (typeof TX === "undefined")
         function _changeImage($dlg) {
             let s = $dlg.squirrel_dialog("squirrel");
             let file = $dlg.squirrel_dialog("control", "image_file")[0].files[0];
-            Utils.read_file(
+            Utils.readFile(
                 file, "arraybuffer")
                 .then((data) => {
                     data = "data:" + file.type + ";base64," +
-                        Utils.ArrayBufferToBase64(data);
+                        Utils.Uint8ArrayToBase64(data);
                     if (data !== $dlg.squirrel_dialog("control", "steg_image")
                         .attr("src", data)) {
                         $dlg.squirrel_dialog("control", "steg_image")
@@ -468,29 +452,30 @@ if (typeof TX === "undefined")
 
             $dlg.squirrel_dialog("control", "storepath")
                 .on("keyup", function () {
+                    let app = $dlg.squirrel_dialog("squirrel");
                     if ($dlg.squirrel_dialog("control", "storepath")
                         .val() === "") {
                         $dlg.squirrel_dialog("control", "message")
                             .template("pick", "mnbe");
                         return false;
                     }
-                    if ($dlg.squirrel_dialog("squirrel").client
+                    if (app.client
                         .hoard.options.store_path !==
                         $dlg.squirrel_dialog("control", "storepath")
                         .val()) {
-                        $dlg.squirrel_dialog("squirrel").client
+                        app.client
                             .hoard.options.store_path =
                             $dlg.squirrel_dialog("control", "storepath")
                             .val();
-                        if ($dlg.squirrel_dialog("squirrel").client
-                            .status === $dlg.squirrel_dialog("squirrel").IS_LOADED)
-                            $dlg.squirrel_dialog("squirrel").client
-                            .status = $dlg.squirrel_dialog("squirrel").NEW_SETTINGS;
+                        if (app.client
+                            .status === app.IS_LOADED)
+                            app.client
+                            .status = app.NEW_SETTINGS;
                         // No - the cloud isn't affected by the store path,
                         // so don't mark it as changed
                         // if ($dlg.squirrel_dialog("squirrel").cloud.status === $dlg.squirrel_dialog("squirrel").IS_LOADED)
                         //     $dlg.squirrel_dialog("squirrel").cloud.status = $dlg.squirrel_dialog("squirrel").NEW_SETTINGS;
-                        Utils.sometime("update_save");
+                        app.trigger("update_save");
                     }
                     return true;
                 })
@@ -574,15 +559,14 @@ if (typeof TX === "undefined")
                     $dlg.squirrel_dialog("close");
                     let p = $dlg.squirrel_dialog("control", "pass")
                         .val();
-                    $dlg.squirrel_dialog("squirrel").client
+                    let app = $dlg.squirrel_dialog("squirrel");
+                    app.client
                         .store.option("pass", p);
-                    $dlg.squirrel_dialog("squirrel").client
-                        .status = $dlg.squirrel_dialog("squirrel").NEW_SETTINGS;
-                    $dlg.squirrel_dialog("squirrel").cloud
+                    app.client.status = app.NEW_SETTINGS;
+                    app.cloud
                         .store.option("pass", p);
-                    $dlg.squirrel_dialog("squirrel").cloud
-                        .status = $dlg.squirrel_dialog("squirrel").NEW_SETTINGS;
-                    Utils.sometime("update_save");
+                    app.cloud.status = app.NEW_SETTINGS;
+                    app.trigger("update_save");
 
                     return true;
                 });
@@ -609,7 +593,7 @@ if (typeof TX === "undefined")
                     let datum;
                     try {
                         datum = JSON.parse($dlg.squirrel_dialog("control", "text")
-                            .val());
+                                           .val());
                     } catch (e) {
                         $dlg.squirrel_dialog("squirrel").alert({
                             title: TX.tx("JSON could not be parsed"),
@@ -645,14 +629,14 @@ if (typeof TX === "undefined")
             $dlg.squirrel_dialog("control", "theme")
                 .on("selectmenuchange", function () {
                     $dlg.squirrel_dialog("squirrel").theme($(this)
-                        .val());
+                                                           .val());
                 })
                 .selectmenu();
 
             $dlg.squirrel_dialog("control", "autosave")
                 .on("change", function () {
                     $dlg.squirrel_dialog("squirrel").autosave($(this)
-                        .prop("checked"));
+                                                              .prop("checked"));
                 });
 
             $dlg.squirrel_dialog("control", "hidevalues")
@@ -726,9 +710,9 @@ if (typeof TX === "undefined")
             let $dlg = $(this);
 
             if (!($dlg.squirrel_dialog("squirrel").USE_STEGANOGRAPHY ||
-                    $dlg.squirrel_dialog("squirrel").cloud
-                    .store &&
-                    $dlg.squirrel_dialog("squirrel").cloud
+                  $dlg.squirrel_dialog("squirrel").cloud
+                  .store &&
+                  $dlg.squirrel_dialog("squirrel").cloud
                   .store.option("needs_path"))) {
                 $dlg.squirrel_dialog("control", "chss")
                     .hide();
@@ -770,7 +754,7 @@ if (typeof TX === "undefined")
                 $ul.children(".tree-node")
                     .each(function () {
                         if ($dlg.squirrel_dialog("squirrel").compare($(this)
-                                .data("key"), val) === 0) {
+                                                                     .data("key"), val) === 0) {
                             enabled = false;
                             return false;
                         }
@@ -803,9 +787,9 @@ if (typeof TX === "undefined")
                 .on($.getTapEvent(), function () {
                     $dlg.squirrel_dialog("close");
                     $dlg.squirrel_dialog("squirrel").add_child_node($dlg.data("parent"),
-                        $dlg.squirrel_dialog("control", "key")
-                        .val(),
-                        $dlg.data("data"));
+                                                                    $dlg.squirrel_dialog("control", "key")
+                                                                    .val(),
+                                                                    $dlg.data("data"));
                 });
         });
 
@@ -823,7 +807,7 @@ if (typeof TX === "undefined")
                 .children(".tree-node")
                 .each(function () {
                     let m = name.exec($(this)
-                        .data("key"));
+                                      .data("key"));
                     if (m)
                         i = Math.max(i, m[1] ? parseInt(m[1]) : 0);
                 });
@@ -839,10 +823,10 @@ if (typeof TX === "undefined")
                 let $parent = $dlg.data("parent");
                 $dlg.squirrel_dialog("squirrel").add_child_node(
                     $parent, $dlg.squirrel_dialog("control", "key")
-                    .val(),
+                        .val(),
                     $dlg.data("adding_value") ?
-                    $dlg.squirrel_dialog("control", "value")
-                    .val() : undefined);
+                        $dlg.squirrel_dialog("control", "value")
+                        .val() : undefined);
                 return false;
             }
 
@@ -869,7 +853,7 @@ if (typeof TX === "undefined")
 
             $dlg.squirrel_dialog("control", "path")
                 .text($parent.tree("getPath")
-                    .join("↘") + "↘");
+                      .join("↘") + "↘");
             if (is_value) {
                 $dlg.squirrel_dialog("control", "value_help")
                     .show();
@@ -920,7 +904,7 @@ if (typeof TX === "undefined")
                 .template(
                     "expand",
                     $dlg.squirrel_dialog("squirrel").cloud
-                    .hoard.actions.length);
+                        .hoard.actions.length);
             $dlg.squirrel_dialog("control", "study").hide();
             $dlg.squirrel_dialog("control", "pointless").hide();
             $dlg.squirrel_dialog("control", "optimise")
@@ -959,4 +943,4 @@ if (typeof TX === "undefined")
                 });
         });
     });
-})(jQuery);
+});

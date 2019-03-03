@@ -4,7 +4,7 @@
  * Simulated password widget, to overcome Firefox failures and add
  * a "show pass" checkbox
  */
-(function ($) {
+define(["jquery", "jquery-ui"], function($) {
     $.fn.simulated_password = function ( /*options*/ ) {
         $(this).each(function () {
             let $this = $(this);
@@ -67,4 +67,4 @@
             });
         });
     };
-})(jQuery);
+});

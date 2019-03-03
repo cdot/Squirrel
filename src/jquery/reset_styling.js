@@ -1,15 +1,14 @@
 /*@preserve Copyright (C) 2017 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,jquery */
 
-/* global RGBA */
+define(["jquery", "js/RGBA", "jquery-ui"], function($, RGBA) {
 
-/**
- * Plugin to reset custom styling for a new UI theme, by finding all
- * font, color and background-color settings currently set in the UI
- * theme for dialogs, then recolouring our custom styles to achieve
- * the same look.
- */
-(function ($) {
+    /**
+     * Plugin to reset custom styling for a new UI theme, by finding all
+     * font, color and background-color settings currently set in the UI
+     * theme for dialogs, then recolouring our custom styles to achieve
+     * the same look.
+     */
 
     $.reset_styling = function () {
 
@@ -27,7 +26,7 @@
             is_light = false;
         else
             is_light = (new RGBA(bgcol)
-                .luma() < 0.65);
+                        .luma() < 0.65);
 
         // Make a div with UI widget styles
         let $el = $(document.createElement("div"))
@@ -40,10 +39,10 @@
         bgcol = $el.css("background-color");
         let style = "body {";
         for (let attr in {
-                "font": 0,
-                "color": 0,
-                "background-color": 0
-            }) {
+            "font": 0,
+            "color": 0,
+            "background-color": 0
+        }) {
             let av = $el.css(attr);
             style += attr + ": " + av + ";\n";
         }
@@ -57,7 +56,7 @@
             need_light = is_light;
         else
             need_light = (new RGBA(bgcol)
-                .luma() < 0.65);
+                          .luma() < 0.65);
 
         if (is_light && !need_light || !is_light && need_light) {
             // Invert colours. In theory only local stylesheets can be
@@ -118,4 +117,4 @@
             .text(style);
         $body.append($style);
     }
-})(jQuery);
+});

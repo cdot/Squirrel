@@ -1,53 +1,79 @@
-/*@preserve Copyright (C) 2015 Crawford Currie http://c-dot.co.uk license MIT*/
+/*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 
-/* global LayeredStore:true */
-/* global AES:true */
-if (typeof module !== "undefined") {
-    LayeredStore = require("../src/LayeredStore");
-    AES = require("../src/AES");
-}
+define(["js/LayeredStore", "js/AES"], function (LayeredStore,
+    AES) {
 
-/**
- * @class
- * Store engine for encrypted data. Uses an underlying engine to actually
- * store the encrypted data.
- * The encryption requires a password, but no attempt is made to determine
- * if the password is correct. Whatever data is held in the underlying
- * store is simply decrypted using the password provided, it's up to the
- * caller to determine if the resulting data is valid or not.
- * @param params: Standard for LayeredStore
- * @implements LayeredStore
- */
-class EncryptedStore extends LayeredStore {
+    const TAG = "EncryptedStore";
+    
+    /**
+     * Store engine for encrypted data. Uses 256-bit AES and an
+     * underlying engine to actually store the encrypted data. The
+     * encryption requires a password, but no attempt is made to
+     * determine if the password is correct; whatever data is held in
+     * the underlying store is simply decrypted using the password
+     * provided, it's up to the caller to determine if the decryption
+     * worked or not. The option "needs_pass" is set but the store to flag
+     * that this store requires option("pass") to be set to an encryption
+     * password. If option("pass") is undefined. an optional
+     * option("pass_handler") will be called to get a promise to get the
+     * encryption password.
+     * @param params: Standard for LayeredStore
+     * @implements LayeredStore
+     */
+    class EncryptedStore extends LayeredStore {
 
-    constructor(p) {
-        super(p);
-        this.option("needs_pass", true);
-        this.option("type", "Encrypted " + super.option("type"));
-    }
+        constructor(p) {
+            super(p);
+            this.option("type", "Encrypted " + super.option("type"));
+            this.option("needs_pass", true);
+        }
 
-    read(path) {
-        if (this.debug) this.debug(this.option("type") + ": reading " + path +
-                                   " with password " + this.option("pass"));
-        return super.read(path)
+        _with_pass(promise) {
+            // If the pass_handler option is set, use it to get a password
+            if (typeof this.option("pass") === "undefined") {
+                let fn = this.option("get_pass");
+                if (typeof fn === "function")
+                    return fn(this).then((pass) => {
+                        this.option("pass", pass);
+                        return promise;
+                    });
+            }
+            return promise;
+        }
+        
+        read(path) {
+            if (this.debug) this.debug("reading", path,this.option("pass"));
+            let p = super.read(path)
             .then((ab) => {
+                if (this.debug) this.debug("decrypting",this.option("pass"));
                 let data;
-                if (this.debug) this.debug(
-                    "EncryptedStore: decrypting using password " +
-                        this.option("pass"));
-                return AES.decrypt(ab, this.option("pass"), 256);
+                try {
+                    data = AES.decrypt(ab, this.option("pass"), 256);
+                } catch (e) {
+                    // Decryption failure, assume wrong credentials
+                    // Not sure this can ever happen
+                    return Promise.reject(this.error(path, 400, "Decryption failure " + e));
+                }
+                // Check checksum
+                let cs = (data.length - 1) % 255;
+                if (data[0] !== cs)
+                    return Promise.reject(this.error(path, 400, "Checksum failure " + data[0] + "!=" + cs));
+                return Promise.resolve(new Uint8Array(data.buffer, 1));
             });
+            return this._with_pass(p);
+        }
+
+        write(path, a8) {
+            if (this.debug) this.debug(this.option("type"), "writing", path);
+            // Add checksum
+            let a = new Uint8Array(a8.length + 1);
+            a[0] = a8.length % 255;
+            a.set(a8, 1)
+            // And write
+            return this._with_pass(super.write(
+                path, AES.encrypt(a, this.option("pass"), 256)));
+        }
     }
 
-    write(path, ab) {
-        if (this.debug) this.debug(this.option("type") + ": writing " + path +
-                                   " with password " + this.option("pass"));
-
-        return super.write(
-            path,
-            AES.encrypt(ab, this.option("pass"), 256).buffer);
-    }
-}
-
-if (typeof module !== "undefined")
-    module.exports = EncryptedStore;
+    return EncryptedStore;
+});

@@ -27,7 +27,7 @@
  * Event handlers are called this set to the widget.
  */
 
-(function ($) {
+define(["jquery", "jquery-ui"], function () {
     $.widget("squirrel.squirrel_dialog", $.ui.dialog, {
         // Default options
         options: {
@@ -89,4 +89,4 @@
             return this._super(options);
         }
     });
-})(jQuery);
+});

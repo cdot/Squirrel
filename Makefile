@@ -134,7 +134,10 @@ clean:
 # Formatting
 
 %.js.tidy : %.js
-	js-beautify -j --good-stuff -o $^ $^
+	js-beautify --jslint-happy --break-chained-methods \
+		--wrap-line-length 72 --unindent-chained-methods \
+		--preserve-newlines --operator-position after-newline \
+		--good-stuff -o $^ $^
 
 tidy: $(patsubst %.js,%.js.tidy,$(SQUIRREL_JS) $(STORES_JS) $(SERVER_JS))
 

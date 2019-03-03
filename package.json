@@ -16,16 +16,17 @@
       "shared-node-browser": true,
       "jquery": true
     },
-      "globals": {
-          "utf8":true,
-          "ArrayBuffer": false,
-          "Buffer": false,
-          "Uint8Array": false,
-          "XMLHttpRequest": false,
-          "WeakMap": false,
-          "require":false,
-          "module":false,
-          "Promise":false
+    "globals": {
+      "define": false,
+      "utf8": true,
+      "ArrayBuffer": false,
+      "Buffer": false,
+      "Uint8Array": false,
+      "XMLHttpRequest": false,
+      "WeakMap": false,
+      "require": false,
+      "module": false,
+      "Promise": false
     },
     "rules": {
       "strict": 1,
@@ -64,20 +65,24 @@
     "babel-runtime-amd": "^1.1.2",
     "beautifyjs": "0.0.1",
     "btoa": "^1.2.1",
-    "chai": "^4.1.2",
+    "chai": "^4.2.0",
     "chai-http": "*",
     "clean-css": ">=4.1.9",
     "clean-css-cli": ">=4.1.10",
     "eslint": ">=4.13.1",
     "eslint-plugin-promise": "^4.0.1",
+    "express": "^4.16.4",
+    "express-basic-auth": "^1.1.6",
     "fs-extra": "^7.0.1",
     "jsdom": "13.1.0",
     "jsdom-global": "3.0.2",
-    "mocha": "*",
+    "mocha": "^6.0.2",
     "npm-check": "^5.5.2",
+    "requirejs": "^2.3.6",
     "uglify-es": ">=3.2.1",
     "url-parse": "^1.4.4",
-    "xmlhttprequest": "^1.8.0"
+    "w3c-xmlhttprequest": "^2.1.3",
+    "xhr2": "^0.1.4"
   },
   "babel": {
     "plugins": [

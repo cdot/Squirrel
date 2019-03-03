@@ -4,7 +4,8 @@
 /**
  * Simple in-place editing widget
  */
-(function ($) {
+define(["jquery", "jquery-ui"], function () {
+
     $.fn.edit_in_place = function (options) {
 
         let $this = $(this);
@@ -68,4 +69,4 @@
             .blur(blurb)
             .select();
     };
-})(jQuery);
+});

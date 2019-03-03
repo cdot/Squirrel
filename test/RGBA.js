@@ -1,10 +1,16 @@
 /*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 
-if (typeof RGBA === "undefined")
-    RGBA = require("../src/RGBA");
-
-if (typeof assert === "undefined")
-    assert = require("chai").assert;
+if (typeof module !== "undefined") {
+    requirejs = require('requirejs');
+    requirejs.config({
+        baseUrl: "..",
+        paths: {
+            js: "src",
+            jsjq: "src/jquery",
+            test: "test"
+        }
+    });
+}
 
 // Sample colours, from https://en.wikipedia.org/wiki/HSL_and_HSV
 var testMap = [
@@ -144,13 +150,21 @@ var testMap = [
     }
 ];
 
-assert.nearly = function(a, b) {
-    var x = a - b;
-    if (x < 0) x = -x;
-    assert(x < 0.1, b + " != " + a);
-}
-
 describe('Utils', function() {
+    before(function(done) {
+        return requirejs(["js/Utils", "js/RGBA", "chai"], function(u, r, chai) {
+            Utils = u;
+            RGBA = r;
+            assert = chai.assert;
+            assert.nearly = function(a, b) {
+                var x = a - b;
+                if (x < 0) x = -x;
+                assert(x < 0.1, b + " != " + a);
+            }
+            done();
+        });
+    });
+    
     function testIt(i) {
         it("should convert " + testMap[i].hash, function() {
             //console.log(i + " " + testMap[i].hash);

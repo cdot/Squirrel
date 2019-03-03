@@ -36,10 +36,7 @@
  * raw-template - records the unexpanded template
  */
 
-if (typeof module !== "undefined")
-    Utils = require("../../src/Utils");
-
-(function ($) {
+define(["js/Utils", "jquery", "jquery-ui"], function (Utils) {
     $.widget("squirrel.template", {
         _create: function () {
             if (this.element.hasClass("pick-one")) {
@@ -74,4 +71,4 @@ if (typeof module !== "undefined")
             this.element.html(tmpl);
         }
     });
-})(jQuery);
+});
