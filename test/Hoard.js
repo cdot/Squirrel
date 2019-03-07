@@ -73,16 +73,11 @@ var client_size = client_data.actions.length;
 var cloud_size = cloud_data.actions.length;
 var Hoard;
 
-describe('Hoard', function() {
-    before(function(done) {
-        return requirejs(["js/Hoard", "chai"], function(h, chai) {
-            Hoard = h;
-            assert = chai.assert;
-            done();
-        });
-    });
+requirejs(["js/Hoard", "test/TestRunner"], function(Hoard, TestRunner) {
+    let tr = new TestRunner("Hoard");
+    let assert = tr.assert;
     
-    it('should make with data and string', function() {
+    tr.addTest('should make with data and string', function() {
         var h = new Hoard({name: "Test1", data: cloud_data});
 	assert.equal(h.actions[0].path[0], cloud_data.actions[0].path[0]);
 	h = new Hoard({name: "Test2", data: JSON.stringify(cloud_data)});
@@ -91,7 +86,7 @@ describe('Hoard', function() {
         assert.equal(cloud_data.actions.length, cloud_size);
     });
     
-    it("should play_actions into empty hoard", function() {
+    tr.addTest("should play_actions into empty hoard", function() {
         requirejs(["js/Hoard"], function(Hoard) {
 	    // Reconstruct a cache from an actions list in an empty hoard,
             // Monitoring progress
@@ -125,7 +120,7 @@ describe('Hoard', function() {
         });
     });
     
-    it("should play_actions into populated hoard", function() {
+    tr.addTest("should play_actions into populated hoard", function() {
         requirejs(["js/Hoard"], function(Hoard) {
 	    // Play the cloud action set into a populated client hoard
 	    var h = new Hoard({name: "Test1", data: client_data});
@@ -161,7 +156,7 @@ describe('Hoard', function() {
         });
     });
     
-    it('should detect zero path', function() {
+    tr.addTest('should detect zero path', function() {
         requirejs(["js/Hoard"], function(Hoard) {
             var h = new Hoard({name:"Test1"});
 	    return h.play_action({
@@ -176,7 +171,7 @@ describe('Hoard', function() {
             });
         });
         
-        it('should detect no parent', function() {
+        tr.addTest('should detect no parent', function() {
             var h = new Hoard({name:"Test1"});
             let percent = 0;
 	    return h.play_actions(cloud_data.actions, (r) => {
@@ -199,7 +194,7 @@ describe('Hoard', function() {
         });
     });
     
-    it('should detect already existing', function() {
+    tr.addTest('should detect already existing', function() {
         requirejs(["js/Hoard"], function(Hoard) {
             var h = new Hoard({name:"Test1"});
             
@@ -223,7 +218,7 @@ describe('Hoard', function() {
         });
     });
     
-    it('should detect no such node', function() {
+    tr.addTest('should detect no such node', function() {
         requirejs(["js/Hoard"], function(Hoard) {
             var h = new Hoard({name:"Test1", debug: console.debug});
             
@@ -248,7 +243,7 @@ describe('Hoard', function() {
         });
     });
     
-    it('should allow rename', function() {
+    tr.addTest('should allow rename', function() {
         requirejs(["js/Hoard"], function(Hoard) {
             var h = new Hoard({name:"Test1"});
 	    var listened = 0;
@@ -273,7 +268,7 @@ describe('Hoard', function() {
         });
     });
     
-    it('should merge action streams', function() {
+    tr.addTest('should merge action streams', function() {
         requirejs(["js/Hoard"], function(Hoard) {
             var cloud = new Hoard({name:"Cloud"});
             // Initial action stream is empty
@@ -308,4 +303,6 @@ describe('Hoard', function() {
                 ]);
         });
     });
+
+    tr.run();
 });

@@ -13,16 +13,11 @@ requirejs.config({
     }
 });
 
-describe("Tests", function() {
-    before(function(done) {
-        return requirejs(["js/Pseudoword", "chai"], function(h, chai) {
-            Pseudoword = h;
-            assert = chai.assert;
-            done();
-        });
-    });
+requirejs(["js/Pseudoword", "test/TestRunner"], function(Pseudoword, TestRunner) {
+    let tr = new TestRunner("Pseudoword");
+    let assert = tr.assert;
 
-    it("Generates", function() {
+    tr.addTest("Generates", function() {
         let p = new Pseudoword();
 
         let word = p.getWord(12);
@@ -30,4 +25,6 @@ describe("Tests", function() {
 
         assert.equal(word.length, 12);
     });
+
+    tr.run();
 });

@@ -1,8 +1,7 @@
 /*@preserve Copyright (C) 2019 Crawford Currie http://c-dot.co.uk license MIT*//*eslint-env node, mocha */
 
-if (typeof module !== "undefined") {
+if (typeof requirejs === "undefined")
     requirejs = require('requirejs');
-}
 
 requirejs.config({
     baseUrl: "..",
@@ -13,15 +12,6 @@ requirejs.config({
     }
 });
 
-it("EncryptedStore", (done) => {
-    const DEBUG = false;//console.debug;
-    
-    requirejs(["test/StoreTester"], function(StoreTester) {
-        let tester = new StoreTester(["EncryptedStore", "LocalStorageStore"], DEBUG);
-        tester.init({})
-            .then(() => {
-                tester.makeTests(describe, it);
-                done();
-            })
-    });
+requirejs(["test/StoreTester"], function(StoreTester) {
+    new StoreTester([ "EncryptedStore", "LocalStorageStore" ]).run();
 });

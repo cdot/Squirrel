@@ -2,7 +2,14 @@
 
 if (typeof module !== "undefined") {
     requirejs = require('requirejs');
-    require('jsdom-global')();
+    let jsdom = require('jsdom');
+    let document = new jsdom.JSDOM('<!doctype html><html><body></body></html>');
+    let window = document.window;
+    global.document = window.document;
+    global.window = window;
+
+    global.jQuery = require('jquery')(window);
+    global.$ = jQuery;
 }
 
 requirejs.config({
@@ -27,16 +34,11 @@ const TRANSLATIONS = {
 
 var Translator;
 
-describe("Translator", function() {
-    before(function(done) {
-        return requirejs(["js/Translator", "chai"], function(m, chai) {
-            Translator = m;
-            assert = chai.assert;
-            done();
-        });
-    });
+requirejs(["js/Translator", "test/TestRunner"], function(Translator, TestRunner) {
+    let tr = new TestRunner("Translator");
+    let assert = tr.assert;
 
-    it("Works with simple English", function() {
+    tr.addTest("Works with simple English", function() {
         let TX = Translator.instance({
             translations: TRANSLATIONS,
             debug: console.debug
@@ -47,7 +49,7 @@ describe("Translator", function() {
         });
     });
     
-    it("Works with templates", function() {
+    tr.addTest("Works with templates", function() {
         let TX = Translator.instance({
             translations: TRANSLATIONS
         });
@@ -57,7 +59,7 @@ describe("Translator", function() {
         });
     });
 
-    it("Works in an English DOM", function() {
+    tr.addTest("Works in an English DOM", function() {
         let TX = Translator.instance({url:server_url});
         var en = '<div class="TX_html">Stupid</div>';
         document.body.innerHTML = en;
@@ -67,7 +69,7 @@ describe("Translator", function() {
             });
     });
 
-    it("Works in a translated DOM", function() {
+    tr.addTest("Works in a translated DOM", function() {
         let TX = Translator.instance({
             translations: TRANSLATIONS
         });
@@ -80,7 +82,7 @@ describe("Translator", function() {
             });
     });
     
-    it("Translates HTML", function() {
+    tr.addTest("Translates HTML", function() {
         let TX = Translator.instance({
             translations: TRANSLATIONS
         });
@@ -93,7 +95,7 @@ describe("Translator", function() {
             });
     });
 
-    it("Can change language", function() {
+    tr.addTest("Can change language", function() {
         let TX = Translator.instance({url:server_url});
         var en = '<div class="TX_title TX_text" title="Add">Length</div>';
         var fr = '<div class="TX_title TX_text" title="Ajouter">Longueur</div>'
@@ -124,4 +126,6 @@ describe("Translator", function() {
             })
 
     });
+
+    tr.run();
 });

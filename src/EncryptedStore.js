@@ -31,7 +31,7 @@ define(["js/LayeredStore", "js/AES"], function (LayeredStore,
         _with_pass(promise) {
             // If the pass_handler option is set, use it to get a password
             if (typeof this.option("pass") === "undefined") {
-                let fn = this.option("get_pass");
+                let fn = this.option("store_login");
                 if (typeof fn === "function")
                     return fn(this).then((pass) => {
                         this.option("pass", pass);

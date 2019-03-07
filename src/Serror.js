@@ -15,6 +15,11 @@ define(function() {
             this.status = status;
             this.message = message;
         }
+
+        toString() {
+            return "Serror: " + this.status + " " + this.path + " "
+                + (this.message || "");
+        }
     }
 
     return Serror;

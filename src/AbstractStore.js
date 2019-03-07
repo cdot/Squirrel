@@ -22,8 +22,7 @@ define(["js/Utils", "js/Serror"], function(Utils, Serror) {
             this.options = {};
             if (params && typeof params.debug === "function")
                 this.debug = function() {
-                    let args = [this.option("type")].concat(arguments);
-                    params.debug.apply(this.option("type"), arguments);
+                    params.debug(this.option("type"), arguments);
                 };
         }
 

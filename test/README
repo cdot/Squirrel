@@ -1,0 +1,9 @@
+Most tests are designed to be run both under node.js and in browsers. The tests
+are written using Mocha, but are not designed to be run in the Mocha framework.
+Instead, they use the Mocha API, and are run simply using node <file>.js e.g.
+node Tree.js.
+
+Some tests have associated .html files. These are designed to be loaded into
+browsers, where they will run the tests.
+
+The libs subdirectory contains a downloaded version of jquery-ui. This is required because the version in node_modules is brain dead.

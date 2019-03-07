@@ -23,6 +23,8 @@
  * TX_text and TX_html should never be used together on the same node.
  * HTML reaping is done by the build/extractTX.js node.js script.
  */
+if (typeof XMLHttpRequest === "undefined")
+    XMLHttpRequest = require("xhr2");
 
 define(["js/Utils"], function(Utils) {
 
@@ -65,15 +67,13 @@ define(["js/Utils"], function(Utils) {
          * @param document optional DOM
          */
         language(lingo, document) {
-            if (!this.lingo) {
-                if (typeof Cookies !== "undefined")
-                    this.lingo = Cookies.get("tx_lang")
-                    || window.navigator.userLanguage
-                    || window.navigator.language
-                    || "en";
-                else
-                    this.lingo = "en";
-            }
+            if (!this.lingo && typeof Cookies !== "undefined")
+                this.lingo = Cookies.get("tx_lang");
+            if (!this.lingo && window && window.navigator)
+                this.lingo = (window.navigator.userLanguage
+                              || window.navigator.language);
+            if (!this.lingo)
+                this.lingo = "en";
 
             if (typeof lingo === "undefined")
                 return Promise.resolve(this.lingo);

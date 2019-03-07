@@ -1,7 +1,7 @@
 # Copyright (C) 2015-2018 Crawford Currie http://c-dot.co.uk / MIT
 # Main targets are:
 #
-# make test    - run unit tests
+# make tests   - run unit tests
 # make release - build all derived objects
 # make tidy    - beautify code
 # make clean   - remove intermediates and derived objects
@@ -9,24 +9,48 @@
 # make langs   - update all translations
 
 # Macros using shell commands
-FIND         := find . -name 'jquery*' -prune -o -name
+FIND         := find . -name 'jquery*' -prune -o -name node_modules -prune -o
 DATE_SED     := sed -e 's/BUILD_DATE/$(shell date)/g'
-SQUIRREL_JS  := $(shell cat index.html | \
-		grep '<script class="compressable" src=' $^ | \
-		sed -e 's/.*src="//;s/[?"].*//g' )
-SQUIRREL_CSS := $(shell cat index.html | \
+
+JS	:= src/AbstractStore.js src/LayeredStore.js src/EncryptedStore.js \
+	src/Steganographer.js \
+	src/Utils.js src/Serror.js src/RGBA.js src/Translator.js src/AES.js \
+	src/LocalStorageStore.js src/HttpServerStore.js src/WebDAVStore.js \
+	src/StegaStore.js src/FileStore.js src/GoogleDriveStore.js \
+	src/Hoard.js src/Tree.js \
+	src/Server.js src/Dialogs.js src/Squirrel.js \
+	src/web_server.js \
+	src/main.js \
+	src/help.js
+
+CSS	:= $(shell cat index.html help.html | \
 		grep '<link class="compressable"' $^ | \
 		sed -e 's/.*href="//;s/[?"].*//g' )
-HELP_JS      := $(shell cat help.html | \
-		grep '<script class="compressable" src=' $^ | \
-		sed -e 's/.*src="//;s/[?"].*//g' )
-HELP_CSS     := $(shell cat help.html | \
-		grep '<link class="compressable"' $^ | \
-		sed -e 's/.*href="//;s/["?].*//g' )
 
-STORES_JS    := $(wildcard src/*Store.js)
-TESTS_JS     := $(wildcard test/*.js test/*.js node.js.server/test/*.js)
-SERVER_JS    := $(wildcard node.js.server/*.js)
+TESTS_JS     := AES.js \
+		EncryptedStore.js \
+		Hoard.js \
+		HttpServerStore.js \
+		icon_button.js \
+		LocalStorageStore.js \
+		Pseudoword.js \
+		RGBA.js \
+		Server.js \
+		simulated_password.js \
+		Translator.js \
+		Tree.js \
+		Utils.js
+
+# cannot test WebDAVStore.js from makefile, as it requires a webdav server.
+# Test it from the command-line thus:
+#
+# T_net_url=http://localhost/webdav && \
+# T_net_user=<webdavuser> && \
+# T_net_pass=<webdavpass> && \
+# node WebDAVStore.js
+#
+# Or use test/WebDAVStore.html to test in the browser
+
 LANGS        := $(wildcard locale/*.json)
 
 %.map %.min.js : %.js
@@ -119,17 +143,21 @@ langs : $(LANGS)
 
 # Tests
 
-test:
-	mocha $(TESTS_JS)
+tests:
+	for f in $(TESTS_JS); do \
+		(cd test && node $$f); \
+	done
 
 # Clean generated stuff
 
 clean:
-	$(FIND) '*~' -exec rm \{\} \;
-	$(FIND)  '*.min.*' -exec rm \{\} \;
-	$(FIND) '*.map' -exec rm \{\} \;
-	$(FIND) '*.esl' -exec rm \{\} \;
-	$(FIND) '*.strings' -exec rm \{\} \;
+	$(FIND) \( \
+		-name '*~' -o \
+		-name '*.min.*' -o \
+		-name '*.map' -o \
+		-name '*.esl' -o \
+		-name '*.strings' \
+		\) -exec rm \{\} \;
 
 # Formatting
 

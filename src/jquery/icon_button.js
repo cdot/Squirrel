@@ -1,10 +1,10 @@
-/*@preserve Copyright (C) 2017 Crawford Currie http://c-dot.co.uk license MIT*/
+/*@preserve Copyright (C) 2017-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 
 /**
  * Mini-widget that extends the jquery button widget to simplify using
  * buttons with images for icons. The "icon" option is extended to detect
  * if the icon-name starts with "ui-icon-" and if not, assumes the icon
- * is defined by a class. It also supports specifying the icon name via
+ * is defined by a CSS class. It also supports specifying the icon name via
  * a data-icon= attribute in HTML.
  */
 define(["jquery-ui"], function () {

@@ -857,15 +857,15 @@ define(['js/Serror', 'js/Utils', "js/Hoard", "js/LocalStorageStore", "js/Encrypt
         }
 
         /**
-         * STEP 3: Login, fill in details the stores didn't provide, prompt
+         * Login, fill in details the stores didn't provide, prompt
          * if needed.
          */
-        step_2a_identify_user() {
+        _store_login() {
             let self = this;
             let uReq = true;
             let pReq = true;
 
-            if (self.debug) self.debug('step_2a_identify_user');
+            if (self.debug) self.debug('_store_login');
 
             $("#stage")
                 .text(TX.tx("Authentication"));
@@ -908,7 +908,7 @@ define(['js/Serror', 'js/Utils', "js/Hoard", "js/LocalStorageStore", "js/Encrypt
                 return Promise.resolve();
 
             return new Promise((resolve, reject) => {
-                $("#login_dlg")
+                $("#store_login_dlg")
                     .squirrel_dialog("open", {
                         store: self.client.store,
                         on_signin: function (user, pass) {
@@ -930,6 +930,27 @@ define(['js/Serror', 'js/Utils', "js/Hoard", "js/LocalStorageStore", "js/Encrypt
         }
 
         /**
+         * 401 network login
+         */
+        _network_login() {
+            let self = this;
+
+            if (self.debug) self.debug('_network_login');
+
+            return new Promise((resolve, reject) => {
+                $("#network_login_dlg")
+                    .squirrel_dialog("open", {
+                        on_signin: function (user, pass) {
+                            if (self.debug) self.debug("Login prompt said user was " + user);
+                            self.client.store.option("net_user", user);
+                            self.client.store.option("net_pass", pass);
+                            resolve();
+                        }
+                    });
+            });
+        }
+
+        /**
          * STEP 2: Initialise the client store. This sets up the store but
          * doesn't read anything yet.
          */
@@ -944,16 +965,13 @@ define(['js/Serror', 'js/Utils', "js/Hoard", "js/LocalStorageStore", "js/Encrypt
             self.client.store = store;
 
             return store.init({
-                get_auth: function() {
-                    return self.step_2a_identify_user();
+                network_login: function() {
+                    return self._network_login();
                 },
-                get_user: function() {
-                },
-                get_pass: function() {
-                },
-                get_user_and_pass: function() {
+                store_login: function() {
+                    return self._store_login();
                 }
-            )
+            })
             .then(() => {
                 if (self.debug) self.debug(store.option("type") +
                                            " store is ready");

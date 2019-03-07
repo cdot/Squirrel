@@ -1,4 +1,5 @@
 node_modules
+*.strings
 *.esl
 *~
 *.json

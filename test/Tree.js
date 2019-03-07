@@ -3,28 +3,28 @@
 if (typeof module !== "undefined") {
     requirejs = require('requirejs');
     // node.js
-    chai = require("chai");
     const { JSDOM } = require('jsdom');
     document = new JSDOM('<!doctype html><html><body><div id="container"><div id="sites-node"></div></div></body></html>');
     const { window } = document;
     global.window = window;
-    global.document = window.document;
-    global.jQuery = require('jquery')(window);
+    global.document = window.document;   
     global.navigator = { userAgent: "node.js" };
-
-    // This all works fine in the browser, but not in node.js. So the fix
-    // - whetever it is - belongs here :-(
-    requirejs.config({
-        baseUrl: "..",
-        paths: {
-            js: "src",
-            jsjq: "src/jquery",
-            test: "test",
-            jquery: "libs/test/jquery-3.3.1",
-            "jquery-ui": "libs/test/jquery-ui"
-        }
-    });
+    let jQuery = require('jquery');
+    global.jQuery = jQuery;
+    global.$ = jQuery;
 }
+
+// This all works fine in the browser, but not in node.js. So the fix
+// - whetever it is - belongs here :-(
+requirejs.config({
+    baseUrl: "..",
+    paths: {
+        js: "src",
+        jsjq: "src/jquery",
+        test: "test",
+        "jquery-ui": "test/libs/jquery-ui"
+    }
+});
 
 const actions = [
     {
@@ -79,59 +79,58 @@ var undos = [
     "X:Fine-dining/Caviar/Beluga @01/01/2007, 00:00:00"
 ];
 
-function normalise_html(html) {
-    return html
-        .replace(/>\s*/gs,">")
-        .replace(/\s*</gs,"<")
-        .replace(/^\s*/s, "")
-        .replace(/\s*$/s, "")
-        .replace(/></g, ">\n<");
-}
+let deps = ["js/Utils",
+            "js/Hoard",
+            "js/Translator",
+            "js/Tree",
+            "test/TestRunner",
+            "jquery",
+            "jquery-ui"
+           ];
+requirejs(deps, function(Utils, Hoard, Translator, Tree, TestRunner) {
 
-function expect_html(expected_html) {
-    let actual = normalise_html($("#container").html());
-    let expected = normalise_html(expected_html)
-    assert.equal(actual, expected);
-}
+    let tr = new TestRunner("Tree");
+    let assert = tr.assert;
+    let $DOMtree = $("#sites-node");
+       
+    let TX = Translator.instance();
 
-assert = chai.assert;
+    function normalise_html(html) {
+        return html
+            .replace(/>\s*/gs,">")
+            .replace(/\s*</gs,"<")
+            .replace(/^\s*/s, "")
+            .replace(/\s*$/s, "")
+            .replace(/></g, ">\n<");
+    }
 
-it('Tree', function(done) {
-    let $DOMtree, DOMtree, TX;
+    function expect_html(expected_html) {
+        let actual = normalise_html($("#container").html());
+        let expected = normalise_html(expected_html)
+        assert.equal(actual, expected);
+    }
 
-    let deps = ["js/Utils",
-                "js/Hoard",
-                "js/Translator",
-                "js/Tree"];
-        
-    requirejs(deps, function(Utils, Hoard, Translator, Tree) {
+    tr.beforeEach(function() {
+        $DOMtree.tree({});
+    });
+    tr.afterEach(function() {
+        $DOMtree.tree("destroy");
+        $DOMtree.find("ul").remove();
+        Tree.cache = {};
+    });
+    
+    tr.addTest("should play_actions into empty hoard", function() {
+        // Reconstruct a cache from an actions list in an empty hoard
+        var undi = 0;
+        for (let i in actions) {
+            let e = actions[i];
 
-        TX = Translator.instance();
-
-        describe("Tests", function() {
-            beforeEach(function() {
-                $DOMtree = $("#sites-node");
-                $DOMtree.tree({});
+            $DOMtree.tree("action", e, function undo(action, path, time, data) {
+                assert.equal(action+":"+path.join('/')+" @"  + new Date(time)
+                             .toLocaleString() + (typeof data !== "undefined" ? " "+data:""), undos[undi++]);
             });
-
-            afterEach(function() {
-                $("#sites-node").tree("destroy");
-                $("#sites-node").find("ul").remove();
-                Tree.cache = {};
-            });
-
-            it("should play_actions into empty hoard", function() {
-                // Reconstruct a cache from an actions list in an empty hoard
-                var undi = 0;
-                for (let i in actions) {
-                    let e = actions[i];
-
-                    $DOMtree.tree("action", e, function undo(action, path, time, data) {
-                        assert.equal(action+":"+path.join('/')+" @"  + new Date(time)
-                                     .toLocaleString() + (typeof data !== "undefined" ? " "+data:""), undos[undi++]);
-                    });
-                }
-                const empty_tree = '\
+        }
+        const empty_tree = '\
             <div id="sites-node" class="tree-node tree-never-opened tree-root tree-collection tree-has-alarms">\
               <ul class="sortable tree-subnodes" style="display: none;">\
                 <li class="tree-node tree-never-opened tree-collection tree-modified tree-has-alarms">\
@@ -146,17 +145,17 @@ it('Tree', function(done) {
                 </li>\
               </ul>\
             </div>';
-                expect_html(empty_tree);
-            });
+        expect_html(empty_tree);
+    });
             
-            it("should open undecorated", function() {
-                for (let i in actions) {
-                    $DOMtree.tree("action", actions[i]);
-                }
-                // open a leaf node
-                let $node = $DOMtree.tree("getNodeFromPath", ["Fine-dining", "Caviar", "Beluga"]);
-                $node.tree("open");
-                const open_tree = '\
+    tr.addTest("should open undecorated", function() {
+        for (let i in actions) {
+            $DOMtree.tree("action", actions[i]);
+        }
+        // open a leaf node
+        let $node = $DOMtree.tree("getNodeFromPath", ["Fine-dining", "Caviar", "Beluga"]);
+        $node.tree("open");
+        const open_tree = '\
             <div id="sites-node" class="tree-node tree-never-opened tree-root tree-collection tree-has-alarms">\
                 <ul class="sortable tree-subnodes" style="display: none;">\
                   <li class="tree-node tree-never-opened tree-collection tree-modified tree-has-alarms">\
@@ -171,17 +170,17 @@ it('Tree', function(done) {
                   </li>\
                 </ul>\
               </div>';
-                expect_html(open_tree);
-            });
-            
-            it("should open decorated", function() {
-                for (let i in actions) {
-                    $DOMtree.tree("action", actions[i]);
-                }
-                // open a leaf node
-                let $node = $DOMtree.tree("getNodeFromPath", ["Fine-dining", "Caviar", "Beluga"]);
-                $node.tree("open", {decorate:true});
-                const open_tree = '\
+        expect_html(open_tree);
+    });
+    
+    tr.addTest("should open decorated", function() {
+        for (let i in actions) {
+            $DOMtree.tree("action", actions[i]);
+        }
+        // open a leaf node
+        let $node = $DOMtree.tree("getNodeFromPath", ["Fine-dining", "Caviar", "Beluga"]);
+        $node.tree("open", {decorate:true});
+        const open_tree = '\
             <div id="sites-node" class="tree-node tree-never-opened tree-root tree-collection tree-has-alarms">\
               <ul class="sortable tree-subnodes" style="display: none;">\
                 <li class="tree-node tree-never-opened tree-collection tree-modified tree-has-alarms">\
@@ -218,18 +217,18 @@ it('Tree', function(done) {
                 </li>\
               </ul>\
             </div>';
-                expect_html(open_tree);
-            });
-            
-            it("should close decorated", function() {
-                for (let i in actions) {
-                    $DOMtree.tree("action", actions[i]);
-                }
-                // open a leaf node
-                let $node = $DOMtree.tree("getNodeFromPath", ["Fine-dining", "Caviar", "Beluga"]);
-                $node.tree("open", {decorate:true});
-                $node.tree("close");
-                const open_tree = '\
+        expect_html(open_tree);
+    });
+    
+    tr.addTest("should close decorated", function() {
+        for (let i in actions) {
+            $DOMtree.tree("action", actions[i]);
+        }
+        // open a leaf node
+        let $node = $DOMtree.tree("getNodeFromPath", ["Fine-dining", "Caviar", "Beluga"]);
+        $node.tree("open", {decorate:true});
+        $node.tree("close");
+        const open_tree = '\
             <div id="sites-node" class="tree-node tree-never-opened tree-root tree-collection tree-has-alarms">\
               <ul class="sortable tree-subnodes" style="display: none;">\
                 <li class="tree-node tree-never-opened tree-collection tree-modified tree-has-alarms">\
@@ -266,11 +265,10 @@ it('Tree', function(done) {
                 </li>\
               </ul>\
             </div>';
-                expect_html(open_tree);
-            });
-        });
-        done();
+        expect_html(open_tree);
     });
+
+    tr.run();
 });
 
-        
+

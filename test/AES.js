@@ -13,26 +13,21 @@ if (typeof module !== "undefined") {
     });
 }
 
-describe('AES', function() {
-    before(function(done) {
-        return requirejs(["js/Utils", "js/AES", "chai"], function(u, h, chai) {
-            Utils = u;
-            AES = h;
-            assert = chai.assert;
-            done();
-        });
-    });
+requirejs(["js/Utils", "js/AES", "test/TestRunner"], function(Utils, AES, TestRunner) {
+
+    let tr = new TestRunner("AES");
+    let assert = tr.assert;
 
     let plain = "This is test string";
 
-    it('should ab/s', function() {
+    tr.addTest('should ab/s', function() {
 	let ab = Utils.StringToUint8Array(plain);
 	// ab is a byte-buffer containing 16-bit chars
 	let s = Utils.Uint8ArrayToString(ab);
 	assert.equal(s, plain);
     });
 
-    it('should encrypt / decrypt strings', function() {
+    tr.addTest('should encrypt / decrypt strings', function() {
 	let ab = Utils.StringToUint8Array(plain);
 	let cipher = AES.encrypt(ab, "Secret", 128);
 	let decipher = AES.decrypt(cipher, "Secret", 128);
@@ -40,7 +35,7 @@ describe('AES', function() {
 	assert.equal(s, plain);
     });
     
-    it('should encrypt / decrypt bytes', function() {
+    tr.addTest('should encrypt / decrypt bytes', function() {
 	let ab = new Uint8Array(256);
         for (let i = 0; i < 256; i++)
             ab[i] = i;
@@ -48,4 +43,6 @@ describe('AES', function() {
 	let ba = AES.decrypt(cipher, "$ecret", 256);
 	assert.deepEqual(ba, ab);
     });
+
+    tr.run();
 });

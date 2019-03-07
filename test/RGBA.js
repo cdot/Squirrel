@@ -150,23 +150,18 @@ var testMap = [
     }
 ];
 
-describe('Utils', function() {
-    before(function(done) {
-        return requirejs(["js/Utils", "js/RGBA", "chai"], function(u, r, chai) {
-            Utils = u;
-            RGBA = r;
-            assert = chai.assert;
-            assert.nearly = function(a, b) {
-                var x = a - b;
-                if (x < 0) x = -x;
-                assert(x < 0.1, b + " != " + a);
-            }
-            done();
-        });
-    });
+requirejs(["js/Utils", "js/RGBA", "test/TestRunner"], function(Utils, RGBA, TestRunner) {
+    let tr = new TestRunner("RGBA");
+    let assert = tr.assert;
+
+    assert.nearly = function(a, b) {
+        var x = a - b;
+        if (x < 0) x = -x;
+        assert(x < 0.1, b + " != " + a);
+    }
     
     function testIt(i) {
-        it("should convert " + testMap[i].hash, function() {
+        tr.addTest("should convert " + testMap[i].hash, function() {
             //console.log(i + " " + testMap[i].hash);
             var tm = testMap[i];
             var rgb = new RGBA(tm.rgb[0], tm.rgb[1], tm.rgb[2]);
@@ -241,16 +236,18 @@ describe('Utils', function() {
         testIt(i);
     }
 
-    it("should parse hsl", function() {
+    tr.addTest("should parse hsl", function() {
         var hsl = "hsl(155, 0.1, 50%)";
         var rgb = new RGBA(hsl);
         assert.equal("#738C82", rgb.toString());
     });
 
-    it("should parse hsla", function() {
+    tr.addTest("should parse hsla", function() {
         var hsl = "hsla(155, 10%, 0.5, 0.3)";
         var rgb = new RGBA(hsl);
         //console.log(rgb.toString());
         assert.equal("rgba(115,140,130,0.3)", rgb.toString());
     });
+
+    tr.run();
 });

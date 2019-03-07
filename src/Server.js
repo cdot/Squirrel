@@ -30,8 +30,8 @@ define(["url", "extend", "fs-extra"], function(Url, extend, Fs) {
      *        user: Username (required for Basic Auth)
      *        pass: Password (required for Basic Auth)
      *        realm: Authentication realm (required for Basic Auth)
-     *    debug: enable verbose debugging to the console
-     *    log_requests: enable request reporting
+     *    debug: function for verbose debugging
+     *    log: function for request reporting
      * @class
      */
     class Server {
@@ -62,13 +62,13 @@ define(["url", "extend", "fs-extra"], function(Url, extend, Fs) {
                         credentials.pass !== self.auth.pass) {
                         if (self.debug) {
                             if (credentials)
-                                console.log("User ", credentials.name,
+                                self.debug("User ", credentials.name,
                                             " is trying to log in with password '" +
                                             credentials.pass + "'");
-                        } else if (self.log_requests)
-                            console.log("No credentials in request");
-                        if (self.log_requests)
-                            console.log("Authentication failed ", request.url);
+                        } else if (self.log)
+                            self.log("No credentials in request");
+                        if (self.log)
+                            self.log("Authentication failed ", request.url);
                         response.statusCode = 401;
                         response.setHeader('WWW-Authenticate', 'Basic realm="' +
                                            self.auth.realm + '"');
@@ -76,7 +76,7 @@ define(["url", "extend", "fs-extra"], function(Url, extend, Fs) {
                         return false;
                     }
                     if (self.debug)
-                        console.log("User '" + credentials.name +
+                        self.debug("User '" + credentials.name +
                                     "' is authenticated");
                     return true;
                 };
@@ -94,8 +94,8 @@ define(["url", "extend", "fs-extra"], function(Url, extend, Fs) {
             let self = this;
 
             let handler = function (request, response) {
-                if (self.log_requests)
-                    console.log(request.method, " ", request.url,
+                if (self.log)
+                    self.log(request.method, " ", request.url,
                                 "from", request.headers);
 
                 if (self[request.method]) {
@@ -108,17 +108,17 @@ define(["url", "extend", "fs-extra"], function(Url, extend, Fs) {
             };
 
             if (this.debug) {
-                console.log("Starting server on port", self.port);
-                console.log(" docroot '" + self.docroot + "'");
-                console.log(" writable '" + self.writable + "'");
-                console.log(" auth", self.auth);
+                self.debug("Starting server on port", self.port);
+                self.debug(" docroot '" + self.docroot + "'");
+                self.debug(" writable '" + self.writable + "'");
+                self.debug(" auth", self.auth);
             }
 
             if (typeof self.port === "undefined")
                 self.port = 3000;
 
             if (typeof self.auth !== "undefined" && self.debug)
-                console.log("- requires authentication");
+                self.debug("- requires authentication");
 
             let promise = Promise.resolve();
 
@@ -133,7 +133,7 @@ define(["url", "extend", "fs-extra"], function(Url, extend, Fs) {
 
                     .then(function (k) {
                         options.key = k;
-                        if (self.debug) console.log("SSL key loaded");
+                        if (self.debug) self.debug("SSL key loaded");
                     })
 
                     .then(function () {
@@ -142,15 +142,15 @@ define(["url", "extend", "fs-extra"], function(Url, extend, Fs) {
 
                     .then(function (c) {
                         options.cert = c;
-                        if (self.debug) console.log("SSL certificate loaded");
-                        console.log("HTTPS starting on port", self.port);
+                        if (self.debug) self.debug("SSL certificate loaded");
+                        if (self.log) self.log("HTTPS starting on port", self.port);
                     })
 
                     .then(function () {
                         return require("https").createServer(options, handler);
                     });
             } else {
-                console.log("HTTP starting on port", self.port);
+                if (self.log) self.log("HTTP starting on port", self.port);
                 promise = promise
                     .then(function () {
                         return require("http").createServer(handler);
@@ -167,7 +167,7 @@ define(["url", "extend", "fs-extra"], function(Url, extend, Fs) {
         }
 
         stop() {
-            if (this.debug) console.log("Stopping server on port", this.port);
+            if (this.debug) this.debug("Stopping server on port", this.port);
             this.http.close();
         }
 
@@ -202,26 +202,24 @@ define(["url", "extend", "fs-extra"], function(Url, extend, Fs) {
                     response.setHeader("Content-Type", contentType);
                     response.setHeader("Content-Length",
                                        Buffer.byteLength(responseBody));
-                    if (self.debug) console.log(
+                    if (self.debug) self.debug(
                         "Responding with",
                         Buffer.byteLength(responseBody), "bytes");
                     response.write(responseBody);
                 }
                 response.statusCode = 200;
-                if (self.debug) console.log("Response code 200 ", response.getHeaders());
+                if (self.debug) self.debug("Response code 200 ", response.getHeaders());
                 response.end();
             }
 
             function handleError(error) {
                 // Send the error message in the payload
                 if (error.code === "ENOENT") {
-                    if (self.debug) console.log(error);
+                    if (self.debug) self.debug(error);
                     response.statusCode = 404;
                 } else {
-                    if (self.log_requests)
-                        console.log(error);
-                    if (self.debug)
-                        console.error(error.stack);
+                    if (self.log) self.log(error);
+                    if (self.debug) self.debug(error.stack);
                     response.statusCode = 500;
                 }
                 let e = error.toString();
@@ -245,7 +243,7 @@ define(["url", "extend", "fs-extra"], function(Url, extend, Fs) {
             // Get file path
             let spath = req.pathname;
             if (spath.indexOf("/") !== 0 || spath.length === 0) {
-                console.log("ROOT or relative path GET");
+                self.debug("ROOT or relative path GET");
                 response.statusCode = 400;
                 response.end();
                 return;
@@ -263,7 +261,7 @@ define(["url", "extend", "fs-extra"], function(Url, extend, Fs) {
             } else if (request.method === "PUT") {
                 if (this.writable && spath.indexOf(this.writable) !== 0) {
                     if (self.debug)
-                        console.log("Trying to write '" + spath +
+                        self.debug("Trying to write '" + spath +
                                     "' in read-only area. Expected /^" +
                                     this.writable + "/");
                     response.statusCode = 403;
@@ -278,7 +276,7 @@ define(["url", "extend", "fs-extra"], function(Url, extend, Fs) {
                 promise(spath, data)
                     .then(handleResponse, handleError);
             } catch (e) {
-                console.error(e, " in ", request.url, "\n",
+                if (self.debug) self.debug(e, " in ", request.url, "\n",
                               typeof e.stack !== "undefined" ? e.stack : e);
                 response.write(e + " in " + request.url + "\n");
                 response.statusCode = 400;
@@ -315,7 +313,7 @@ define(["url", "extend", "fs-extra"], function(Url, extend, Fs) {
 
             let chunks = [];
             if (self.debug)
-                console.log(request.headers);
+                self.debug(request.headers);
             request.on("data", function (chunk) {
                 chunks.push(chunk);
             }).on("end", function () {

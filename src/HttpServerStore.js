@@ -60,9 +60,8 @@ define(["js/Serror", "js/AbstractStore"], function(Serror, AbstractStore) {
                     if (self.debug) self.debug("Using auth", user, pass);
                     headers['Authorization'] = 'Basic '
                         + btoa(user + ':' + pass);
-                } else
-                    if (self.debug) self.debug("No auth header");
-                let base = self.option("url") || "";
+                } else if (self.debug) self.debug("No auth header");
+                let base = self.option("net_url") || "";
                 if (/\w$/.test(base))
                     base += "/";
                 let turl = new URL(url, base).toString();
@@ -75,10 +74,15 @@ define(["js/Serror", "js/AbstractStore"], function(Serror, AbstractStore) {
                 }
 
                 // Workaround for edge
-                if (body === undefined)
-                    xhr.send();
-                else
-                    xhr.send(body);
+                try {
+                    if (body === undefined)
+                        xhr.send();
+                    else {
+                        xhr.send(body);
+                    }
+                } catch (e) {
+                    reject(new Serror(turl, 500, "xhr.send error: " + e));
+                }
 
                 xhr.onreadystatechange = function() {
                     if (xhr.readyState !== 4)
@@ -86,9 +90,10 @@ define(["js/Serror", "js/AbstractStore"], function(Serror, AbstractStore) {
                 }
 
                 xhr.onload = function() {
+                    if (self.debug) self.debug("response",xhr.status);
                     if (xhr.status === 401) {
-                        if (self.debug) self.debug("401");
-                        let handler = self.option("get_auth");
+                        if (self.debug) self.debug("handling 401");
+                        let handler = self.option("network_login");
                         if (typeof handler === "function") {
                             handler()
                             .then(() => {

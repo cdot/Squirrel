@@ -8,13 +8,17 @@
   <body>
     <div id="mocha"></div>
     <div id="container"><div id="sites-node"></div></div>
-    <script src="//code.jquery.com/jquery-3.3.1.min.js"></script>
-    <script src="//code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/mocha/5.2.0/mocha.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/chai/4.2.0/chai.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.js"></script>
-    <script>mocha.setup("bdd");mocha.globals(['jQuery','Squirrel']);</script>
-    <script src="Utils.js"></script>
-    <script>mocha.run();</script>
+    <script>
+     requirejs.config({
+        urlArgs: "nocache=" + Date.now(),
+        paths: {
+          mocha: "//cdnjs.cloudflare.com/ajax/libs/mocha/6.0.2/mocha",
+          chai: "//cdnjs.cloudflare.com/ajax/libs/chai/4.2.0/chai"
+        }
+      });
+      requirejs(["Utils", "AES", "RGBA"], function() {
+      });
+    </script>
   </body>
 </html>
