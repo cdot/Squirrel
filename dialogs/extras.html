@@ -1,0 +1,175 @@
+<div id="extras_dlg" class="dlg-dialog TX_title" title="Settings">
+  <table>
+    <tr>
+      <th colspan="2">
+        <span class="TX_text">User interface</span>
+        <div class="TX_text twisted" data-open="ui-icon-info">
+          These preferences will be saved in cookies in your browser
+        </div>
+      </th>
+    </tr>
+    <tr>
+      <td class="TX_text">Autosave</td>
+      <td>
+        <input type="checkbox" data-id="autosave" />
+        <div class="twisted" data-open="ui-icon-info">
+          <span class="TX_text">
+            Automatically save whenever anything changes
+          </span>
+          
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td class="TX_text">Hide Values</td>
+      <td>
+        <input type="checkbox" data-id="hidevalues" />
+        <div class="twisted" data-open="ui-icon-info">
+          <span class="TX_text">
+            Hide values until they are hovered over. Use if someone
+            might be looking over your shoulder
+          </span>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td class="TX_text">Language</td>
+      <td>
+        <input type="text" data-id="language" />
+        <div class="twisted TX_text" data-open="ui-icon-info">
+          <span class="TX_text">
+            Enter the language code for a supported language
+          </span>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td class="TX_text">Text size</td>
+      <td>
+        <button data-id="bigger" style="font-size:larger" title="Larger">Aa</button>
+        <button data-id="smaller" style="font-size:smaller" title="Smaller">Aa</button>
+        <span class="twisted TX_text" data-open="ui-icon-info">
+          <span class="TX_text">
+            Increase/decrease text size
+          </span>
+        </span>
+      </td>
+    </tr>
+    <tr>
+      <td class="TX_text">Colour scheme</td>
+      <td>
+        <select data-id="theme">
+          <option value="base">Base</option>
+          <option value="ui-lightness">UI Lightness</option>
+          <option value="ui-darkness">UI Darkness</option>
+          <option value="smoothness">Smoothness</option>
+          <option value="start">Start</option>
+          <option value="redmond">Redmond</option>
+          <option value="sunny">Sunny</option>
+          <option value="overcast">Overcast</option>
+          <option value="le-frog">Le Frog</option>
+          <option value="flick">Flick</option>
+          <option value="pepper-grinder">Pepper Grinder</option>
+          <option value="eggplant">Eggplant</option>
+          <option value="dark-hive">Dark Hive</option>
+          <option value="cupertino">Cupertino</option>
+          <option value="south-street">South Street</option>
+          <option value="blitzer">Blitzer</option>
+          <option value="humanity">Humanity</option>
+          <option value="hot-sneaks">Hot Sneaks</option>
+          <option value="excite-bike">Excite Bike</option>
+          <option value="vader">Vader</option>
+          <option value="dot-luv">Dot Luv</option>
+          <option value="mint-choc">Mint Choc</option>
+          <option value="black-tie">Black Tie</option>
+          <option value="trontastic">Trontastic</option>
+          <option value="swanky-purse">Swanky Purse</option>
+        </select>
+        <div class="twisted" data-open="ui-icon-info">
+          <span class="TX_text">
+            Select your preferred colour scheme.
+          </span>
+          <span class="TX_text">
+            This preference will be saved in a cookie in this browser
+          </span>
+        </div>
+      </td>
+    </tr>
+    <tr><th class="TX_text" colspan="2">Database</th></tr>
+    <tr>
+      <td class="TX_text">Cloud Store</td>
+      <td>
+        <button data-id="chss" class="TX_text">Settings</button>
+      </td>
+    </tr>
+    <tr>
+      <td class="TX_title">Encryption password</td>
+      <td>
+        <button data-id="chpw" class="TX_text">Change</button>
+        <div class="twisted" data-open="ui-icon-info">
+          <span class="TX_text">
+            Change the encryption password for the store.
+          </span>
+          <span class="TX_text">
+            This may be different to the password you use to log in to
+            your cloud data store.
+          </span>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td class="TX_text">Optimise</td>
+      <td>
+        <button data-id="optimise" class="TX_text">Optimise</button>
+        <div class="twisted" data-open="ui-icon-info">
+          <span class="TX_text">
+            Optimise the store by removing old actions.
+          </span>
+          <span class="TX_text">
+            The cloud store keeps a history of all changes from all clients,
+            so that every client has a chance to see every change, however
+            long it ihas been since it last updated. This history can get
+            quite long, so you may want to optimise it by removing this
+            history. You should only do this if you are 100% certain that
+            no client has local changes that may need to be saved to the
+            cloud.
+          </span>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td class="TX_text">Raw JSON</td>
+      <td>
+        <button data-id="json" class="TX_text">View/Edit</button>
+        <div class="twisted" data-open="ui-icon-info">
+          <span class="TX_text">
+            View/Edit raw JSON for the entire store
+          </span>
+          <span class="TX_text">
+            Be very careful!
+          </span>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <th colspan="2">
+        <button data-id="about" class="TX_text">About Squirrel</button>
+      </th>
+    </tr>
+  </table>
+
+  <div class="debug-only">
+    <button id="template-tester">Pick test</button>
+    <div id="template-test" class="pick-one">
+      <p data-id="0" class="template">
+        $1 eat nuts
+      </p>
+      <p data-id="1" class="template">
+        $1 climb trees
+      </p>
+      <p data-id="2" class="template">
+        $1 are $2
+      </p>
+    </div>
+  </div>
+</div>

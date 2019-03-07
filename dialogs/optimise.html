@@ -1,0 +1,25 @@
+<div id="optimise_dlg" class="dlg-dialog TX_title" title="Optimise Cloud">
+  <div class="TX_text dlg-warning">
+    You must ensure that all clients up to date and you
+    are safely connected to the internet before doing this,
+    or you will lose data.
+  </div>
+  <div class="TX_text dlg-warning">
+    Optimising your cloud store will lose all the history, which will
+    make it impossible for any client that is not completely up to
+    date to synchronise. You have been warned!
+  </div>
+  <div data-id="calculating" class="TX_text">
+    Calculating if optimisation is worthwhile
+  </div>
+  <div data-id="existing" class="TX_text template">
+    The cloud currently has $1 action$?($1!=1,s,) in the history.
+  </div>
+  <div data-id="study" class="TX_text template">
+    After optimisation it will have $1 node$?($1!=1,s,) + $2 alarm$?($2!=1,s,) + $3 constraint$?($3!=1,s,) = $4 action$?($4!=1,s,).
+  </div>
+  <div data-id="pointless" class="TX_text">
+    There is no point in optimisation, it will not improve performance
+  </div>
+  <button data-id="optimise" class="TX_text">Optimise</button>
+</div>

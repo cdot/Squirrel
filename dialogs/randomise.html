@@ -1,0 +1,29 @@
+<div id="randomise_dlg" class="dlg-dialog TX_title" title="Generate random value">
+  <span class="TX_text">Suggested value for</span>
+  '<span data-id="key"></span>': '<span data-id="idea" class="dlg-value"></span>'
+  <table>
+    <tr>
+      <td class="TX_text">Length</td>
+      <td>
+        <input data-id="len" size="4" value="20" class="TX_title" title="Enter password length" />
+      </td>
+      <td>
+        <button data-id="remember" class="TX_text TX_title" title="Remember constraints on this value">Remember</button>
+      </td>
+    </tr>
+    <tr>
+      <td class="TX_text">Characters</td>
+      <td>    
+        <input data-id="chs" size="30" value="A-Za-z0-9!%^&*_$+-=;:@#~,./?" class="TX_title" title="Enter the characters that are legal in passwords for this site. You can use character ranges like A-Z or 0-9" />
+      </td>
+      <td>
+        <button data-id="reset" class="TX_text TX_title" title="Reset default constraints">Reset</button>
+      </td>
+    </tr>
+  </table>
+  <div>
+    <button data-id="use" class="TX_text">Use this</button>
+    <button data-id="again" class="TX_text">Try again</button>
+    <button data-id="cancel" class="TX_text">Cancel</button>
+  </div>
+</div>

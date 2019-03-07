@@ -1,0 +1,28 @@
+<div id="json_dlg" class="dlg-dialog TX_title" title="Database JSON">
+  <div class="twisted" data-open="ui-icon-info">
+    <p class="TX_html">
+      This dialog lets you access the raw
+      <a href="https://www.json.org/">JSON</a> of the database. It
+      can be used for:
+    </p>
+    <ul>
+      <li class="TX_text">Making a plain-text copy of the database e.g.
+        for backup</li>
+      <li class="TX_text">Making specific edits</li>
+      <li class="TX_text">Bulk adding new top-level folders and values</li>
+    </ul>
+    <p class="TX_text dlg-warning">
+      Plain text versions of the database must be secured
+      carefully to prevent loss of sensitive data.
+    </p>
+    <p class="TX_text">
+      Note that loading the JSON will only load folders that are
+      not already in the database.
+    </p>
+  </div>
+  <textarea data-id="text">
+  </textarea>
+  <div>
+    <button data-id="ok" class="TX_text">Load this JSON</button>
+  </div>
+</div>

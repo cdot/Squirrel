@@ -28,19 +28,67 @@
  */
 
 define(["jquery", "jquery-ui"], function () {
+
+    let default_dialog_options = {};
+    
+    $.set_dialog_options = function(options) {
+        $.extend(default_dialog_options, options);
+    };
+    
+    $.load_dialog = function(id, options) {
+        options = $.extend({}, default_dialog_options, options);
+        let $dlg = $(id + "_dlg");
+        if ($dlg.length > 0)
+            return Promise.resolve($dlg);
+        
+        if (options.debug) options.debug("loading dialog", id);
+
+        // Use requirejs to locate the resources
+        let html_url = requirejs.toUrl("dialogs" + "/" + id + ".html");
+
+        // HTML first, then js. We don't use requirejs to load the html
+        // because the text! plugin is stupid.
+        return new Promise((resolve, reject) => {
+            $.get(html_url)
+            .then((html) => {
+                let $dlg = $(html);
+                if (options.onload)
+                    options.onload($dlg);
+                console.log("loaded html", html_url);
+                $dlg.squirrel_dialog(options);
+                requirejs(
+                    ["dialogs/" + id], function(js) {
+                        js($dlg);
+                        resolve($dlg);
+                    },
+                    function(err) {
+                        // Don't strictly need a .js
+                        resolve($dlg);
+                    });
+            });
+        });
+    };
+
     $.widget("squirrel.squirrel_dialog", $.ui.dialog, {
         // Default options
         options: {
             modal: true,
             width: "auto",
-            closeOnEscape: false
+            closeOnEscape: false,
+            loadFrom: "dialogs",
+            nocache: false
         },
-        
+
         /**
          * Get the control in the dialog identified by the data-id="name"
          */
         control: function (name) {
-            return this.element.find("[data-id='" + name + "']");
+            let $el = this.element.find("[data-id='" + name + "']");
+            if ($el.length === 0)
+                $el = this.element.find("[name='" + name + "']");
+            if ($el.length === 0)
+                $el = this.element.find("#" + name);
+            return $el;
         },
 
         /**
@@ -60,25 +108,23 @@ define(["jquery", "jquery-ui"], function () {
          * dlg-open handler(s)
          */
         open: function (options) {
-            let $dlg = this.element;
-            options = options || {};
-            
+            let self = this;
+            let $dlg = self.element;
+
             if (!$dlg.hasClass("dlg-initialised")) {
+                console.log("init");
+                self.control("cancel")
+                    .on($.getTapEvent ? $.getTapEvent() : "click",
+                        function () {
+                            $dlg.squirrel_dialog("close");
+                            return false;
+                        });
                 $dlg.addClass("dlg-initialised");
-                this.control("cancel")
-                    .on($.getTapEvent(), function () {
-                        $dlg.squirrel_dialog("close");
-                        return false;
-                    });
                 $dlg.trigger("dlg-initialise");
             }
 
-            if (typeof options.$node !== "undefined")
-                $dlg.data("node", options.$node);
-
-            $dlg.trigger("dlg-open", options);
-
-            if ($.isTouchCapable() && !this.options.position) {
+            if ($.isTouchCapable && $.isTouchCapable()
+                && !this.options.position) {
                 this.options.position = {
                     my: "left top",
                     at: "left top",
@@ -86,7 +132,12 @@ define(["jquery", "jquery-ui"], function () {
                 };
             }
             
-            return this._super(options);
+            // We can't delay this until the promise is resolved;
+            this._super();
+
+            if (typeof this.options.$node !== "undefined")
+                $dlg.data("node", this.options.$node);
+            $dlg.trigger("dlg-open", this.options);
         }
     });
 });

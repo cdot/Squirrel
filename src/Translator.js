@@ -111,8 +111,10 @@ define(["js/Utils"], function(Utils) {
             let getter;
             if (this.options.url) {
                 let xhr = new XMLHttpRequest();
-                let url = this.options.url + lingo + ".json";
-
+                let url = this.options.url + "/" + lingo + ".json";
+                if (this.debug) this.debug("Get language from", url);
+                if (this.debug)
+                    url = url + "?nocache=" + Date.now();               
                 xhr.open("GET", url, true);
                 xhr.send();
 
@@ -143,15 +145,8 @@ define(["js/Utils"], function(Utils) {
                 this.translations = data;
                 if (document) {
                     // Translate the DOM
-                    this.originals = new WeakMap();
-
                     let bod = document.getElementsByTagName("body");
-                    this._translateDOM(bod[0], function (s) {
-                        let tx = this.translations[Translator._clean(s)];
-                        if (typeof tx !== "undefined")
-                            return tx.s;
-                        return s;
-                    });
+                    this.translate(bod[0]);
                 }
                 if (this.debug) this.debug("Using language '" + lingo + "'");
             });
@@ -159,14 +154,33 @@ define(["js/Utils"], function(Utils) {
 
         /**
          * Find all tagged strings under the given DOM node and translate them
+         * in place
+         */
+        translate(dom) {
+            if (!this.translations)
+                return; // no language loaded
+            if (!this.originals)
+                this.originals = new WeakMap();
+            this._translateDOM(dom, function (s) {
+                let tx = this.translations[Translator._clean(s)];
+                if (typeof tx !== "undefined")
+                    return tx.s;
+                return s;
+            })
+        }
+        
+        /**
+         * @private
+         * Find all tagged strings under the given DOM node and translate them
          * in place. The original string is held in dataset so that dynamic changes
          * of language are possible (requires HTML5 dataset)
          * @param node root of the DOM tree to process
          * @param translate function to call on each string to perform the
-         * translation. if this function returns undefined, the string will
+         * translation. If this function returns undefined, the string will
          * not be translated.
          * @param translating boolean that indicates whether to translate text
-         * nodes encountered
+         * nodes encountered. Initially false, it is set true whenever a node
+         * is encountered with TX_text.
          */
         _translateDOM(node, translate, translating) {
             function hasClass(element, thatClass) {
@@ -219,8 +233,10 @@ define(["js/Utils"], function(Utils) {
                     if (hasClass(node, "TX_text"))
                         translating = true;
 
-                    for (let i = 0, len = node.childNodes.length; i < len; ++i) {
-                        this._translateDOM(node.childNodes[i], translate, translating);
+                    if (node.childNodes) {
+                        for (let i = 0, len = node.childNodes.length; i < len; ++i) {
+                            this._translateDOM(node.childNodes[i], translate, translating);
+                        }
                     }
                 }
             }

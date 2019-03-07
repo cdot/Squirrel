@@ -441,7 +441,7 @@
  },
  "About Squirrel": {
   "m": 0.85,
-  "s": "Sur l’écureuil"
+  "s": "Concernant Squirrel"
  },
  "Add": {
   "m": 1,
@@ -813,7 +813,7 @@
  },
  "Squirrel is Copyright © 2015-2018 Crawford Currie <a href=\"http://c-dot.co.uk\">http://c-dot.co.uk</a>": {
   "m": 0.85,
-  "s": "L’écureuil est Copyright © 2015-2018 Crawford Currie </a> http://c-dot.co.uk undefined"
+  "s": "Squirrel est Copyright © 2015-2018 Crawford Currie <a href=\"http://c-dot.co.uk\">http://c-dot.co.uk</a>"
  },
  "The cloud store keeps a history of all changes from all clients, so that every client has a chance to see every change, however long it ihas been since it last updated. This history can get quite long, so you may want to optimise it by removing this history. You should only do this if you are 100% certain that no client has local changes that may need to be saved to the cloud.": {
   "m": 0.85,

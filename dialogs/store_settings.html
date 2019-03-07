@@ -1,0 +1,57 @@
+<div id="store_settings_dlg" class="dlg-dialog TX_title" title="Store settings">
+  <p data-id="message" class="template pick-one">
+    <span data-id="cui" class="template TX_text">
+      Cannot use this image because of this error: $1
+    </span>
+    <span data-id="mnbe" class="template TX_text">
+      Store path may not be empty
+    </span>
+    <span data-id="xbyy" class="template">
+      $1 x $2
+    </span>
+  </p>
+  <div class="using_steganography">
+    <div class="twisted" data-open="ui-icon-info">
+      <p class="twisted-body">
+        <span class="TX_text">
+          Choose a local image that will be copied and used to hide
+          your cloud store.
+        </span>
+        <span class="TX_text">
+          This should be a complex colour image of at least
+          1024x768 pixels, preferably with variable transparency.
+        </span>
+        <span class="TX_text">
+          Note that very large images may take a long time to load
+          and save.
+        </span>
+      </p>
+    </div>
+    <input type="file" data-id="image_file" class="dlg-hidden" />
+    <button data-id="choose_image" class="TX_title TX_text" title="Choose an image file">
+      Choose Image File
+    </button>
+    <p><img id="stegamage" data-id="steg_image" src="images/GCHQ.png" /></p>
+  </div>
+  <div class="twisted" data-open="ui-icon-info">
+    <p class="twisted-body">
+      <span class="TX_text">
+        Set the pathname of the image on your cloud store.
+      </span>
+      <span class="TX_text">
+        For example
+        if you choose 'photos/stills/grandma.png' it will use the file
+        'grandma.png' in the directory 'photos/stills'.
+      </span>
+    </p>
+  </div>
+  <p>
+    <label for="store_settings_storepath" class="TX_text">
+      Store path:
+    </label>
+    <input data-id="storepath" type="text" value="" class="TX_title" title="Path to the image in your cloud store" autofocus/>
+  </p>
+  <p>
+    <button data-id="ok" class="TX_text">OK</button>
+  </p>
+</div>

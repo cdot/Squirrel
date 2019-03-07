@@ -717,14 +717,15 @@ define(['js/Serror', 'js/Utils', "js/Hoard", "js/LocalStorageStore", "js/Encrypt
                 self.cloud.store.option("needs_path")
                     || self.cloud.store.option("needs_image"))) {
                 return new Promise((resolve, reject) => {
-                    $("#store_settings_dlg")
-                        .squirrel_dialog("option", "close", resolve);
-                    $("#store_settings_dlg").squirrel_dialog(
+                    $.load_dialog("store_settings").then(($dlg) => {
+                        $dlg.squirrel_dialog("option", "close", resolve);
+                        $dlg.squirrel_dialog(
                         "open",
                         {
                             get_image: self.cloud.store.option("needs_image"),
                             get_path: self.cloud.store.option("needs_path"),
                         });
+                    });
                 });
             }
             return Promise.resolve();
@@ -817,14 +818,14 @@ define(['js/Serror', 'js/Utils', "js/Hoard", "js/LocalStorageStore", "js/Encrypt
                         && self.cloud.store
                         && self.cloud.store.option("needs_path")) {
                         // Use the settings dlg to set the store path
-                        return new Promise((resolve, reject) => {
-                            $("#store_settings_dlg")
-                                .squirrel_dialog("option", "close", resolve);
-                            $("#store_settings_dlg")
-                                .squirrel_dialog("open", {
+                        return $.load_dialog("store_settings").then(($dlg) => {
+                            return new Promise((resolve, reject) => {
+                                $dlg.squirrel_dialog("option", "close", resolve);
+                                $dlg.squirrel_dialog("open", {
                                     get_image: false,
                                     get_path: true
                                 });
+                            });
                         }).then(() => {
                             return rebuild_hoard();
                         });
@@ -907,9 +908,9 @@ define(['js/Serror', 'js/Utils', "js/Hoard", "js/LocalStorageStore", "js/Encrypt
             if (!(uReq || pReq))
                 return Promise.resolve();
 
-            return new Promise((resolve, reject) => {
-                $("#store_login_dlg")
-                    .squirrel_dialog("open", {
+            return $.load_dialog("store_login").then(($dlg) => {
+                new Promise((resolve, reject) => {
+                    $dlg.squirrel_dialog("open", {
                         store: self.client.store,
                         on_signin: function (user, pass) {
                             if (self.debug) self.debug("Login prompt said user was " + user);
@@ -926,6 +927,7 @@ define(['js/Serror', 'js/Utils', "js/Hoard", "js/LocalStorageStore", "js/Encrypt
                         user_required: uReq,
                         pass_required: pReq
                     });
+                });
             });
         }
 
@@ -937,16 +939,18 @@ define(['js/Serror', 'js/Utils', "js/Hoard", "js/LocalStorageStore", "js/Encrypt
 
             if (self.debug) self.debug('_network_login');
 
-            return new Promise((resolve, reject) => {
-                $("#network_login_dlg")
-                    .squirrel_dialog("open", {
+            return $.load_dialog("network_login").then(($dlg) => {
+                return new Promise((resolve, reject) => {
+                    $dlg.squirrel_dialog("open", {
                         on_signin: function (user, pass) {
-                            if (self.debug) self.debug("Login prompt said user was " + user);
+                            if (self.debug)
+                                self.debug("Login prompt said user was " + user);
                             self.client.store.option("net_user", user);
                             self.client.store.option("net_pass", pass);
                             resolve();
                         }
                     });
+                });
             });
         }
 
@@ -1125,11 +1129,12 @@ define(['js/Serror', 'js/Utils', "js/Hoard", "js/LocalStorageStore", "js/Encrypt
             case "insert_copy":
                 if (self.clipboard) {
                     let data = JSON.parse(self.clipboard);
-                    $("#insert_dlg")
-                        .squirrel_dialog("open", {
+                    $.load_dialog("insert").then(($dlg) => {
+                        $dlg.squirrel_dialog("open", {
                             $node: $node,
                             data: data
                         });
+                    });
                 }
                 break;
 
@@ -1142,47 +1147,53 @@ define(['js/Serror', 'js/Utils', "js/Hoard", "js/LocalStorageStore", "js/Encrypt
                 break;
 
             case "add_value":
-                $("#add_dlg")
-                    .squirrel_dialog("open", {
+                $.load_dialog("add").then(($dlg) => {
+                    $dlg.squirrel_dialog("open", {
                         $node: $node,
                         is_value: true
                     });
+                });
                 break;
 
             case "add_subtree":
-                $("#add_dlg")
-                    .squirrel_dialog("open", {
+                $.load_dialog("add").then(($dlg) => {
+                    $dlg.squirrel_dialog("open", {
                         $node: $node,
                         is_value: false
                     });
+                });
                 break;
 
             case "randomise":
-                $("#randomise_dlg")
-                    .squirrel_dialog("open", {
+                $.load_dialog("randomise").then(($dlg) => {
+                    $dlg.squirrel_dialog("open", {
                         $node: $node
                     });
+                });
                 break;
 
             case "add_alarm":
-                $("#alarm_dlg")
+                $.load_dialog("alarm").then(($dlg) => {
                     .squirrel_dialog("open", {
                         $node: $node
                     });
+                });
                 break;
 
             case "delete":
-                $("#delete_dlg")
+                $.load_dialog("delete").then(($dlg) => {
                     .squirrel_dialog("open", {
                         $node: $node
                     });
+                });
                 break;
 
             case "pick_from":
-                $("#pick_dlg")
+                $.load_dialog("pick").then(($dlg) => {
                     .squirrel_dialog("open", {
                         $node: $node
                     });
+                });
                 break;
 
             default:
@@ -1360,12 +1371,19 @@ define(['js/Serror', 'js/Utils', "js/Hoard", "js/LocalStorageStore", "js/Encrypt
             self.$DOMtree = $("#sites-node");
             self.$DOMtree.tree({});
 
-            $(".dlg-dialog")
-                .squirrel_dialog({
-                    autoOpen: false,
-                    squirrel: this,
-                    debug: self.debug
-                });
+            // Set options for squirrel dialogs
+            $.set_dialog_options({
+                autoOpen: false,
+                squirrel: this,
+                debug: self.debug,
+                // Actions performed when dialog is first loaded
+                onload: function($dlg) {
+                    $dlg.find("button")
+                        .icon_button();
+                    TX.translate($dlg);
+                }
+            });
+            
             $("#alerts")
                 .dialog({
                     autoOpen: false
@@ -1375,6 +1393,8 @@ define(['js/Serror', 'js/Utils', "js/Hoard", "js/LocalStorageStore", "js/Encrypt
                 .template();
             $(".twisted")
                 .twisted();
+            $("button")
+                .icon_button();
 
             $('input[type="password"]').simulated_password();
 
@@ -1417,8 +1437,9 @@ define(['js/Serror', 'js/Utils', "js/Hoard", "js/LocalStorageStore", "js/Encrypt
 
             $("#extras_button")
                 .on($.getTapEvent(), function ( /*evt*/ ) {
-                    $("#extras_dlg")
-                        .squirrel_dialog("open");
+                    $.load_dialog("extras").then(($dlg) => {
+                        $dlg.squirrel_dialog("open");
+                    });
                 });
 
             $("#search_input")
@@ -1432,9 +1453,6 @@ define(['js/Serror', 'js/Utils', "js/Hoard", "js/LocalStorageStore", "js/Encrypt
                     self.search($("#search_input")
                                 .val());
                 });
-
-            $("button")
-                .icon_button();
 
             self._init_menus();
 
