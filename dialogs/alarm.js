@@ -1,90 +1,145 @@
 /**
  * Reminder setting dialog
  */
-define(function() {
-    /* Helper */
-    function _updateNext($dlg) {
-        let numb = $dlg.squirrel_dialog("control", "number")
-            .val();
-        // Convert to days
-        numb = numb * Utils.TIMEUNITS[$dlg.squirrel_dialog("control", "units")
-                                      .val()].days;
-        let alarmd = new Date(Date.now() + numb * Utils.MSPERDAY);
-        $dlg.squirrel_dialog("control", "nextmod")
-            .template(
-                "expand",
-                Utils.deltaTimeString(alarmd),
-                alarmd.toLocaleDateString());
-    }
+define(["dialogs/Dialog", "js/Utils", "jsjq/template"], function(Dialog, Utils) {
+    const TIMEUNITS = {
+        y: {
+            days: 360,
+            ms: 364 * 24 * 60 * 60 * 1000,
+            // TX.tx("$1 year$?($1!=1,s,)")
+            format: "$1 year$?($1!=1,s,)"
+        },
+        m: {
+            days: 30,
+            ms: 30 * 24 * 60 * 60 * 1000,
+            // TX.tx("$1 month$?($1!=1,s,)")
+            format: "$1 month$?($1!=1,s,)"
+        },
+        d: {
+            days: 1,
+            ms: 24 * 60 * 60 * 1000,
+            // TX.tx("$1 day$?($1!=1,s,)")
+            format: "$1 day$?($1!=1,s,)"
+        }
+    };
 
-    return function($dlg) {
-        $dlg.on('dlg-initialise', function () {
-            $dlg.squirrel_dialog("control", "units")
-                .on("change", function () {
-                    _updateNext($dlg);
-                });
+    const MSPERDAY = 24 * 60 * 60 * 1000;
 
-            $dlg.squirrel_dialog("control", "number")
-                .on("change", function () {
-                    _updateNext($dlg);
-                });
+    class AlarmDialog extends Dialog {
 
-            $dlg.squirrel_dialog("control", "remind")
-                .on($.getTapEvent(), function () {
-                    $dlg.squirrel_dialog("close");
-                    let numb = $dlg.squirrel_dialog("control", "number")
-                        .val() *
-                        Utils.TIMEUNITS[$dlg.squirrel_dialog("control", "units")
-                                        .val()].days;
-                    $dlg.squirrel_dialog("squirrel").playAction(Hoard.new_action(
-                        "A", $dlg.data("node").tree("getPath"), Date.now(),
-                        numb));
-                    return false;
-                });
+        deltaTimeString(date) {
+            date = new Date(date.getTime() - Date.now());
 
-            $dlg.squirrel_dialog("control", "clear")
-                .on($.getTapEvent(), function () {
-                    $dlg.squirrel_dialog("close");
-                    $dlg.squirrel_dialog("squirrel").playAction(Hoard.new_action(
-                        "C", $dlg.data("node").tree("getPath"), Date.now()));
-                    return false;
-                });
-        });
+            var s = [];
 
-        $dlg.on('dlg-open', function () {
-            let $node = $dlg.data("node");
+            var delta = date.getUTCFullYear() - 1970;
+            if (delta > 0)
+                s.push(this.tx(TIMEUNITS.y.format, delta));
 
-            $dlg.squirrel_dialog("control", "path")
-                .text($node.tree("getPath")
-                      .join("↘"));
+            // Normalise to year zero
+            date.setUTCFullYear(1970);
 
-            $dlg.data("node", $node);
-            let lastmod = $node.data("last-time-changed");
-            $dlg.squirrel_dialog("control", "lastmod")
+            delta = date.getUTCMonth();
+            if (delta > 0)
+                s.push(this.tx(TIMEUNITS.m.format, delta));
+
+            // Normalise to the same month (January)
+            date.setUTCMonth(0);
+
+            delta = date.getUTCDate();
+            if (delta > 0 || s.length === 0)
+                s.push(this.tx(TIMEUNITS.d.format, delta));
+
+            return s.join(" ");
+        }
+
+        updateNext() {
+            let numb = this.control("number").val();
+            // Convert to days
+            numb = numb * TIMEUNITS[this.control("units").val()].days;
+            let alarmd = new Date(Date.now() + numb * MSPERDAY);
+            this.control("nextmod")
                 .template(
                     "expand",
-                    new Date(lastmod)
-                        .toLocaleString());
+                    this.deltaTimeString(alarmd),
+                    alarmd.toLocaleDateString());
+        }
 
-            if (typeof $node.data("alarm") !== "undefined") {
-                let alarm = new Date(
-                    lastmod + $node.data("alarm") * Utils.MSPERDAY);
-                $dlg.squirrel_dialog("control", "current")
+        initialise() {
+            let self = this;
+            
+            this.find(".template").template();
+            
+            this.control("units")
+                .on("change", function () {
+                    self.updateNext();
+                });
+
+            this.control("number")
+                .on("change", function () {
+                    self.updateNext();
+                });
+
+            this.control("remind")
+                .on(this.tapEvent(), function () {
+                    self.close();
+                    let numb = self.control("number")
+                        .val() *
+                        TIMEUNITS[self.control("units").val()].days;
+                    if (self.app())
+                        self.app().playAction(Hoard.new_action(
+                            "A", self.$node().tree("getPath"), Date.now(),
+                            numb));
+                    return false;
+                });
+
+            this.control("clear")
+                .on(this.tapEvent(), function () {
+                    self.close();
+                    self.app().playAction(Hoard.new_action(
+                        !"C", self.$node().tree("getPath"), Date.now()));
+                    return false;
+                });
+        }
+
+        open() {
+            let $node = this.$node();
+            let lastmod;
+            
+            if ($node) {
+                this.control("path")
+                .text($node.tree("getPath")
+                      .join("↘"));
+                lastmod = $node.data("last-time-changed");
+            } else
+                lastmod = Date.now();
+            
+            this.control("lastmod")
                     .template(
                         "expand",
-                        Utils.deltaTimeString(alarm),
+                        new Date(lastmod)
+                            .toLocaleString());
+
+            if ($node && typeof $node.data("alarm") !== "undefined") {
+                let alarm = new Date(
+                    lastmod + $node.data("alarm") * MSPERDAY);
+                this.control("current")
+                    .template(
+                        "expand",
+                        this.deltaTimeString(alarm),
                         alarm.toLocaleDateString())
                     .show();
-                $dlg.squirrel_dialog("control", "clear")
+                this.control("clear")
                     .show();
             } else {
-                $dlg.squirrel_dialog("control", "current")
+                this.control("current")
                     .hide();
-                $dlg.squirrel_dialog("control", "clear")
+                this.control("clear")
                     .hide();
             }
 
-            _updateNext(this);
-        });
+            this.updateNext();
+        }
     }
+    return AlarmDialog;
 });

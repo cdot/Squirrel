@@ -62,37 +62,6 @@ define(["../node_modules/utf8/utf8"], function() {
         }
 
         /**
-         * Promise to read a file object. The promise is resolved with
-         * the file contents.
-         * @param file File object to read
-         * @param mode optional read mode, one of "arraybuffer", "binarystring",
-         * "datauri" or "text". The default is "text".
-         */
-        static readFile(file, mode) {
-            //let store = this;
-            return new Promise((resolve, reject) => {
-                let reader = new FileReader();
-                reader.onload = function ( /*evt*/ ) {
-                    resolve(reader.result);
-                };
-                reader.onerror = function () {
-                    reject(file.name + " read failed");
-                };
-                reader.onabort = reader.onerror;
-                if (typeof mode === "undefined" || mode === "text")
-                    reader.readAsText(file);
-                else if (mode === "arraybuffer")
-                    reader.readAsArrayBuffer(file);
-                else if (mode === "binarystring")
-                    reader.readAsBinaryString(file);
-                else if (mode === "datauri")
-                    reader.readAsDataURL(file);
-                else
-                    reject("Unrecognised mode " + mode);
-            });
-        }
-
-        /**
          * Convert an Uint8Array containing UTF-8 encoded string into a
          * String.
          * @param a Uint8Array containing the UTF8 encoded string

@@ -1466,6 +1466,18 @@ define(['js/Serror', 'js/Utils', "js/Hoard", "js/LocalStorageStore", "js/Encrypt
                 })
                 .on("update_save", () => {
                     self._update_save();
+                })
+                .on("set_theme", (t) => {
+                    self._theme(t);
+                })
+                .on("set_autosave", (t) => {
+                    self.autosave(t);
+                })
+                .on("set_zoom", (z) => {
+                    self.zoom(z);
+                })
+                .on("set_hiding", (tf) => {
+                    Tree.hidingValues = tf;
                 });
 
             $.reset_styling();

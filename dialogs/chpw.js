@@ -1,53 +1,47 @@
 /**
  * Encryption password change dialog
  */
-define(function() {
-    return function($dlg) {
-        $dlg.on('dlg-initialise', function () {
-            let $dlg = $(this);
+define(["dialogs/Dialog"], function(Dialog) {
+    class ChangePasswordDialog extends Dialog {
+        samePass() {
+            let p = this.control("pass").val(),
+                c = this.control("conf").val();
+            this.control("nomatch")
+                .toggle(p !== c);
+            return (p === c);
+        }
 
-            $dlg.squirrel_dialog("control", "show")
+        initialise() {
+            let self = this;
+            
+            this.control("show")
                 .on("change", function () {
-                    if ($dlg.squirrel_dialog("control", "show")
+                    if (this.control("show")
                         .prop("checked")) {
-                        $dlg.squirrel_dialog("control", "pass")
+                        this.control("pass")
                             .attr("type", "text");
-                        $dlg.squirrel_dialog("control", "conf")
+                        this.control("conf")
                             .attr("type", "text");
                     } else {
-                        $dlg.squirrel_dialog("control", "pass")
+                        this.control("pass")
                             .attr("type", "password");
-                        $dlg.squirrel_dialog("control", "conf")
+                        this.control("conf")
                             .attr("type", "password");
                     }
                 });
 
-            $dlg.data("validate", function () {
-                let p = $dlg.squirrel_dialog("control", "pass")
-                    .val(),
-                    c = $dlg.squirrel_dialog("control", "conf")
-                    .val();
-
-                $dlg.squirrel_dialog("control", "nomatch")
-                    .toggle(p !== c);
-                return (p === c);
-            });
-
-            $dlg.squirrel_dialog("control", "conf")
+            this.control("conf")
                 .on("change", function () {
-                    $dlg.data("validate")
-                        .call();
+                   self.samePass();
                 });
 
-            $dlg.squirrel_dialog("control", "set")
-                .on($.getTapEvent(), function () {
-                    if (!$dlg.data("validate")
-                        .call())
+            this.control("set")
+                .on(this.tapEvent(), function () {
+                    if (!self.samePass())
                         return false;
-                    $dlg.squirrel_dialog("close");
-                    let p = $dlg.squirrel_dialog("control", "pass")
-                        .val();
-                    let app = $dlg.squirrel_dialog("squirrel");
+                    this.close();
+                    let p = this.control("pass").val();
+                    let app = this.app();
                     app.client
                         .store.option("pass", p);
                     app.client.status = app.NEW_SETTINGS;
@@ -58,13 +52,12 @@ define(function() {
 
                     return true;
                 });
-        });
+        }
 
-        $dlg.on('dlg-open', function () {
-            let $dlg = $(this);
-            $dlg.data("validate")
-                .call();
-        });
-    };
+        open() {
+            this.samePass();
+        }
+    }
+    return ChangePasswordDialog;
 });
       

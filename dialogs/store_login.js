@@ -1,5 +1,5 @@
-define(function() {
-    return function($dlg) {
+define(["dialogs/Dialog"], function(Dialog) {
+    class StoreLoginDialog extends Dialog {
         /**
          * options:
          * on_signin - passing the user and password
@@ -9,20 +9,21 @@ define(function() {
          * store - store we are logging in to
          * on_signin
          */
-        $dlg.on('dlg-open', function (e, options) {
-            $dlg.squirrel_dialog("control", "uReq")
+        open(e, options) {
+            let self = this;
+            this.control("uReq")
                 .toggle(options.user_required);
-            $dlg.squirrel_dialog("control", "pReq")
+            this.control("pReq")
                 .toggle(options.pass_required);
 
-            let $user = $dlg.squirrel_dialog("control", "store_user");
-            let $pass = $dlg.squirrel_dialog("control", "store_pass");
-            let $signin = $dlg.squirrel_dialog("control", "store_signin");
+            let $user = this.control("store_user");
+            let $pass = this.control("store_pass");
+            let $signin = this.control("store_signin");
 
             let sign_in = function () {
-                if ($dlg.squirrel_dialog("isOpen")) {
-                    $dlg.squirrel_dialog("close");
-                    $signin.off($.getTapEvent());
+                if (self.$dlg.squirrel_dialog("isOpen")) {
+                    self.close();
+                    $signin.off(self.tapEvent());
                     $user.off("change");
                     $pass.off("change");
                     options.on_signin.call(
@@ -33,13 +34,13 @@ define(function() {
             };
 
             $signin
-                .off($.getTapEvent())
-                .on($.getTapEvent(), sign_in);
+                .off(this.tapEvent())
+                .on(this.tapEvent(), sign_in);
 
-            $user.off("change")
-                .val(options.store.option("user"));
-            $pass.off("change")
-                .val(options.store.option("pass"));
+            if (options.store) {
+                $user.off("change").val(options.store.option("user"));
+                $pass.off("change").val(options.store.option("pass"));
+            }
 
             if (options.user_required) {
                 $user.attr("autofocus", "autofocus");
@@ -58,7 +59,7 @@ define(function() {
             }
 
             if (options.pass_required) {
-                $dlg.squirrel_dialog("control", "foruser")
+                this.control("foruser")
                     .toggle(options.store.option("user") !== null)
                     .text(options.store.option("user") || "");
 
@@ -74,6 +75,7 @@ define(function() {
                     });
                 }
             }
-        });
+        }
     }
+    return StoreLoginDialog;
 });

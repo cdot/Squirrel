@@ -1,69 +1,67 @@
-define(["dialogs/Validator", function(validateUniqueKey) {
-    return function($dlg) {
-        $dlg.on('dlg-initialise', function () {
-            let $dlg = $(this);
+define(["dialogs/Dialog", "js/Translator"], function(Dialog, Translator) {
+    
+    class AddDialog extends Dialog {
+        initialise() {
+            let self = this;
 
-            function ok_dialog() {
-                $dlg.squirrel_dialog("close");
-                let $parent = $dlg.data("parent");
-                $dlg.squirrel_dialog("squirrel").add_child_node(
-                    $parent, $dlg.squirrel_dialog("control", "key")
-                        .val(),
-                    $dlg.data("adding_value") ?
-                        $dlg.squirrel_dialog("control", "value")
-                        .val() : undefined);
-                return false;
-            }
-
-            $dlg.squirrel_dialog("control", "key")
+            this.control("key")
                 .on("input", function () {
-                    _validateUniqueKey($dlg);
+                    self.validateUniqueKey();
                 })
-                .on("change", ok_dialog)
+                .on("change", () => {
+                    self.control("ok").trigger(self.tapEvent());
+                })
                 .autocomplete({
                     source: [
-                        TX.tx("User"), TX.tx("Pass")]
+                        self.tx("User"), self.tx("Pass")]
                 });
+        }
 
-            $dlg.squirrel_dialog("control", "ok")
-                .on($.getTapEvent(), ok_dialog);
-        });
-
-        $dlg.on('dlg-open', function (e, options) {
-            let $dlg = $(this);
-            let $parent = options.$node;
+        ok() {
+            if (this.$parent && this.app()) {
+                this.app().add_child_node(
+                    this.$parent, this.control("key").val(),
+                    this.adding_value ?
+                        this.control("value").val() : undefined);
+            }
+            return true;
+        }
+        
+        open(e, options) {
+            this.$parent = options.$node;
             let is_value = options.is_value;
-            $dlg.data("parent", $parent);
-            $dlg.data("adding_value", is_value);
+            this.adding_value = is_value;
 
-            $dlg.squirrel_dialog("control", "path")
-                .text($parent.tree("getPath")
+            if (this.$parent)
+                this.control("path")
+                .text(this.$parent.tree("getPath")
                       .join("↘") + "↘");
             if (is_value) {
-                $dlg.squirrel_dialog("control", "value_help")
+                this.control("value_help")
                     .show();
-                $dlg.squirrel_dialog("control", "folder_help")
+                this.control("folder_help")
                     .hide();
-                $dlg.squirrel_dialog("control", "value_parts")
+                this.control("value_parts")
                     .show();
-                $dlg.squirrel_dialog("control", "key")
+                this.control("key")
                     .autocomplete("enable")
                     .select();
-                $dlg.squirrel_dialog("control", "value")
+                this.control("value")
                     .val("");
             } else {
-                $dlg.squirrel_dialog("control", "value_help")
+                this.control("value_help")
                     .hide();
-                $dlg.squirrel_dialog("control", "folder_help")
+                this.control("folder_help")
                     .show();
-                $dlg.squirrel_dialog("control", "value_parts")
+                this.control("value_parts")
                     .hide();
-                $dlg.squirrel_dialog("control", "key")
+                this.control("key")
                     .autocomplete("disable")
                     .select();
             }
 
-            validateUniqueKey($dlg);
-        });
+            this.validateUniqueKey();
+        }
     }
+    return AddDialog;
 });

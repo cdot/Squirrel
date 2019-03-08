@@ -1,81 +1,107 @@
-define(function() {
-    /* Helper */
-    function changeImage($dlg) {
-        let s = $dlg.squirrel_dialog("squirrel");
-        let file = $dlg.squirrel_dialog("control", "image_file")[0].files[0];
-        Utils.readFile(
-            file, "arraybuffer")
-            .then((data) => {
-                data = "data:" + file.type + ";base64," +
-                    Utils.Uint8ArrayToBase64(data);
-                if (data !== $dlg.squirrel_dialog("control", "steg_image")
-                    .attr("src", data)) {
-                    $dlg.squirrel_dialog("control", "steg_image")
-                        .attr("src", data)
-                        .off("load")
-                        .on("load", function () {
-                            $(this)
-                                .off("load");
-                            // Check that we can use the image.
-                            let steg = new Steganographer({image:this});
-                            steg.inject("tada");
-                            $dlg.squirrel_dialog("control", "ok")
-                                .icon_button("enable");
-                            let h = this.naturalHeight;
-                            let w = this.naturalWidth;
-                            this.height = 100;
-                            $dlg.squirrel_dialog("control", "message")
-                                .template("pick", "xbyy")
-                                .template("expand", w, h);
-                            if (s.client
-                                .status === s.IS_LOADED)
-                                s.client
-                                .status = s.NEW_SETTINGS;
-                            if (s.cloud
-                                .status === s.IS_LOADED)
-                                s.cloud
-                                .status = s.NEW_SETTINGS;
-                            s.trigger("update_save");
-                        });
+define(["dialogs/Dialog", "js/Utils", "jsjq/template"], function(Dialog, Utils) {
+
+    /**
+     * Promise to read a file object. The promise is resolved with
+     * the file contents.
+     * @param file File object to read
+     * @param mode optional read mode, one of "arraybuffer", "binarystring",
+     * "datauri" or "text". The default is "text".
+     */
+    function readFile(file) {
+        return new Promise((resolve, reject) => {
+            let reader = new FileReader();
+            reader.onload = function ( /*evt*/ ) {
+                // SMELL: use readAsDataURL?
+                let data = new Uint8Array(reader.result);
+                resolve("data:" + file.type + ";base64," +
+                        Utils.Uint8ArrayToBase64(data));
+            };
+            reader.onerror = function () {
+                reject(file.name + " read failed");
+            };
+            reader.onabort = reader.onerror;
+            reader.readAsArrayBuffer(file);
+        });
+    }
+
+    class StoreSettingsDialog extends Dialog {
+
+        newImage(img) {
+            let self = this;
+ 
+            // Check that we can use the image.
+            requirejs(["js/Steganographer"], function(Steganographer) {
+                let steg = new Steganographer({image: img});
+                steg.insert("tada");
+                self.control("ok").icon_button("enable");
+                let h = img.naturalHeight;
+                let w = img.naturalWidth;
+                img.height = 100;
+                self.control("message")
+                    .show()
+                    .template("pick", "xbyy")
+                    .template("expand", w, h);
+                let squirrel = self.app();
+                if (squirrel) {
+                    if (squirrel.client.status === squirrel.IS_LOADED)
+                        squirrel.client.status = squirrel.NEW_SETTINGS;
+                    if (squirrel.cloud.status === squirrel.IS_LOADED)
+                        squirrel.cloud
+                        .status = squirrel.NEW_SETTINGS;
+                    squirrel.trigger("update_save");
                 }
-            }).catch((e) => {
-                $dlg.squirrel_dialog("control", "message")
+            });
+        }
+        
+        changeImage() {
+            let self = this;
+
+            let file = this.control("image_file")[0].files[0];
+            readFile(file)
+            .then((data) => {
+                if (data === this.control("steg_image").attr("src", data))
+                    return;
+                let $img = this.control("steg_image");
+                $img.attr("src", data)
+                    .off("load")
+                    .on("load", () => {
+                        self.newImage($img[0]);
+                    });
+            })
+            .catch((e) => {
+                this.control("message")
+                    .show()
                     .template("pick", "cui")
                     .template("expand", e);
             });
-    }
+        }
 
-    return function($dlg) {
-        $dlg.on('dlg-initialise', function () {
-            $dlg.squirrel_dialog("control", "image_file")
-                .hide()
-                .on($.getTapEvent(), function () {
-                    changeImage($dlg);
+        initialise() {
+            let self = this;
+            
+            this.find(".template").template();
+            
+            this.control("image_file").on("change", function () {
+                    self.changeImage();
                 });
 
-            $dlg.squirrel_dialog("control", "image")
-                .hide()
-                .on($.getTapEvent(), function (e) {
-                    $dlg.squirrel_dialog("control", "image_file")
-                        .trigger("change", e);
-                });
+            this.control("steg_image").attr(
+                "src", requirejs.toUrl("images/GCHQ.png"));
 
-            $dlg.squirrel_dialog("control", "storepath")
+            this.control("storepath")
                 .on("keyup", function () {
-                    let app = $dlg.squirrel_dialog("squirrel");
-                    if ($dlg.squirrel_dialog("control", "storepath")
-                        .val() === "") {
-                        $dlg.squirrel_dialog("control", "message")
+                    if (self.control("storepath").val() === "") {
+                        this.control("message")
+                            .show()
                             .template("pick", "mnbe");
                         return false;
                     }
-                    if (app.client
-                        .hoard.options.store_path !==
-                        $dlg.squirrel_dialog("control", "storepath")
-                        .val()) {
+                    let app = self.app();
+                    if (app && app.client.hoard.options.store_path !==
+                        self.control("storepath").val()) {
                         app.client
                             .hoard.options.store_path =
-                            $dlg.squirrel_dialog("control", "storepath")
+                            self.control("storepath")
                             .val();
                         if (app.client
                             .status === app.IS_LOADED)
@@ -83,42 +109,39 @@ define(function() {
                             .status = app.NEW_SETTINGS;
                         // No - the cloud isn't affected by the store path,
                         // so don't mark it as changed
-                        // if ($dlg.squirrel_dialog("squirrel").cloud.status === $dlg.squirrel_dialog("squirrel").IS_LOADED)
-                        //     $dlg.squirrel_dialog("squirrel").cloud.status = $dlg.squirrel_dialog("squirrel").NEW_SETTINGS;
+                        // if (this.app().cloud.status === this.app().IS_LOADED)
+                        //     this.app().cloud.status = this.app().NEW_SETTINGS;
                         app.trigger("update_save");
                     }
                     return true;
                 })
                 .on("change", function () {
-                    $dlg.squirrel_dialog("control", "ok")
-                        .trigger($.getTapEvent());
+                    self.control("ok")
+                        .trigger(self.tapEvent());
                 });
+        }
 
-            $dlg.squirrel_dialog("control", "ok")
-                .on($.getTapEvent(), function () {
-                    if ($dlg.squirrel_dialog("control", "storepath")
-                        .val() === "") {
-                        $dlg.squirrel_dialog("control", "message")
-                            .template("pick", "mnbe");
-                        return false;
-                    }
-                    $dlg.squirrel_dialog("close");
-                });
-        });
-
-        $dlg.on('dlg-open', function (options) {
-            if (options.get_image)
-                $dlg.find(".using_steganography").show();
+        ok() {
+            if (this.control("storepath").val() === "") {
+                this.control("message").show().template("pick", "mnbe");;
+                return false;
+            }
+            return true;
+        }
+        
+        open(options) {
+            if (options.get_image || this.debug)
+                this.find(".using_steganography").show();
             else
-                $dlg.find(".using_steganography").show();
-            $dlg.squirrel_dialog("control", "message")
-                .hide();
-            if (options.get_path)
-                $dlg.squirrel_dialog("control", "storepath")
+                this.find(".using_steganography").hide();
+            this.control("message").hide();
+            if ((options.get_path || this.debug) && this.app())
+                this.control("storepath")
                 .focus()
                 .val(
-                    $dlg.squirrel_dialog("squirrel").client
+                    this.app().client
                         .hoard.options.store_path);
-        });
+        }
     }
+    return StoreSettingsDialog;
 });

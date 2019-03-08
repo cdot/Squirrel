@@ -1,29 +1,29 @@
-define(function() {
-    return function($dlg) {
-        $dlg.on('dlg-initialise', function () {
-            let $dlg = $(this);
-            $dlg.squirrel_dialog("control", "clear")
-                .on($.getTapEvent(), function () {
-                    $dlg.find(".dlg-picked")
+define(["dialogs/Dialog"], function(Dialog) {
+    class PickDialog extends Dialog {
+        initialise() {
+            let self = this;
+            this.control("clear")
+                .on(this.tapEvent(), function () {
+                    self.find(".dlg-picked")
                         .removeClass("dlg-picked");
                 });
-        });
+        }
 
-        $dlg.on('dlg-open', function () {
-            let $node = $dlg.data("node");
-            let val = $node.data("value");
-            let $which = $dlg.squirrel_dialog("control", "which");
-            let $from = $dlg.squirrel_dialog("control", "from");
+        open() {
+            let self = this;
+            let $node = this.$node();
+            let val = $node ? $node.data("value") : "test";
+            let $which = this.control("which");
+            let $from = this.control("from");
             let i, $f;
 
-            $dlg.find(".dlg-pick-cell")
+            this.find(".dlg-pick-cell")
                 .remove();
 
             let item_clicked = function () {
                 let ii = $(this)
                     .data("i");
-                $dlg
-                    .find("td.i" + ii)
+                self.find("td.i" + ii)
                     .addClass("dlg-picked");
             };
 
@@ -34,12 +34,12 @@ define(function() {
                         .data("i", i)
                         .addClass("dlg-pick-cell i" + i)
                         .text(i + 1)
-                        .on($.getTapEvent(), item_clicked)
+                        .on(this.tapEvent(), item_clicked)
                         .appendTo($which);
                     $f = $(document.createElement("td"))
                         .data("i", i)
                         .addClass("dlg-pick-cell i" + i)
-                        .on($.getTapEvent(), item_clicked)
+                        .on(this.tapEvent(), item_clicked)
                         .appendTo($from);
                 }
                 $f.text(val.charAt(i));
@@ -53,8 +53,9 @@ define(function() {
                 i++;
             }
 
-            $dlg.find(".dlg-picked")
+            this.find(".dlg-picked")
                 .removeClass("dlg-picked");
-        });
+        }
     }
+    return PickDialog;
 });

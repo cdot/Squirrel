@@ -107,7 +107,7 @@ define(function() {
 
             let imageData = shadowCtx.getImageData(
                 0, 0, shadowCanvas.width, shadowCanvas.height);
-            let iData = imageData.data;
+            let iData = imageData.data; // a Uint8ClampedArray
 
             // The image data consists of width*height pixels, where each pixel
             // is 4 bytes (RGBA)
@@ -148,7 +148,7 @@ define(function() {
             let a8_iM1;      // what remains of the i-1'th byte
             let bits;        // Number of bits remaining to process in the i'th byte
             let pending = 0; // number of bits still pending from the i-1'th byte
-            for (i = 0; i < a8_len; i++) {
+            for (let i = 0; i < a8_len; i++) {
                 a8_i = a8[i];
                 bits = 8;
                 if (pending > 0) {
@@ -199,9 +199,6 @@ define(function() {
                 "Steg: Embedded " + numChunks + " chunks of "
                     + chunkSize + " bits, " + (numChunks * chunkSize) + " bits / "
                     + (numChunks * chunkSize / 8) + " bytes of data");
-
-            imageData.data = iData;
-            shadowCtx.putImageData(imageData, 0, 0);
 
             return shadowCanvas;
         }

@@ -38,27 +38,34 @@ define(["jquery", "jquery-ui"], function () {
     $.load_dialog = function(id, options) {
         options = $.extend({}, default_dialog_options, options);
         let $dlg = $(id + "_dlg");
-        if ($dlg.length > 0)
+        if ($dlg.length > 0) {
+            console.log(id,"already loaded");
             return Promise.resolve($dlg);
+        }
         
         if (options.debug) options.debug("loading dialog", id);
 
         // Use requirejs to locate the resources
         let html_url = requirejs.toUrl("dialogs" + "/" + id + ".html");
+        let js_url = requirejs.toUrl("dialogs" + "/" + id + ".html");
 
         // HTML first, then js. We don't use requirejs to load the html
         // because the text! plugin is stupid.
         return new Promise((resolve, reject) => {
             $.get(html_url)
             .then((html) => {
+                console.log("Got the HTML");
                 let $dlg = $(html);
-                if (options.onload)
-                    options.onload($dlg);
+                $dlg.attr("id", id + "_dlg");
+                $dlg.addClass("dlg-dialog");
+                $("body").append($dlg);
                 console.log("loaded html", html_url);
                 $dlg.squirrel_dialog(options);
+                console.log("Loading",js_url);
                 requirejs(
-                    ["dialogs/" + id], function(js) {
-                        js($dlg);
+                    ["dialogs/" + id], function(dlgClass) {
+                        console.log("loaded JS");
+                        new dlgClass($dlg);
                         resolve($dlg);
                     },
                     function(err) {
@@ -98,9 +105,11 @@ define(["jquery", "jquery-ui"], function () {
         squirrel: function() {
             // toss up between $dlg.squirrel_dialog("squirrel") and
             // $dlg.squirrel_dialog("instance").options.squirrel
-            return this.options.squirrel;
+            if (typeof this.options.squirrel !== "undefined")
+                return this.options.squirrel;
+            return null;
         },
-        
+
         /**
          * e.g. $("my_dlg").squirrel_dialog("open", { $node: $node });
          * The $node is automatically placed in the data-node attribute
@@ -111,15 +120,8 @@ define(["jquery", "jquery-ui"], function () {
             let self = this;
             let $dlg = self.element;
 
+            console.log("Opening");
             if (!$dlg.hasClass("dlg-initialised")) {
-                console.log("init");
-                self.control("cancel")
-                    .on($.getTapEvent ? $.getTapEvent() : "click",
-                        function () {
-                            $dlg.squirrel_dialog("close");
-                            return false;
-                        });
-                $dlg.addClass("dlg-initialised");
                 $dlg.trigger("dlg-initialise");
             }
 

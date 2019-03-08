@@ -1,106 +1,120 @@
 /**
  * Password generation for the given leaf node
  */
- define(function() {
-     const DEFAULT_RANDOM_LEN = 30;
-     const DEFAULT_RANDOM_CHS = "A-Za-z0-9!%^&*_$+-=;:@#~,./?";
+define(["dialogs/Dialog", "js/Utils"], function(Dialog, Utils) {
+    const DEFAULT_RANDOM_LEN = 30;
+    const DEFAULT_RANDOM_CHS = "A-Za-z0-9!%^&*_$+-=;:@#~,./?";
 
-     function constraints_changed($dlg) {
-         let $node = $dlg.data("node");
-         let nc = $node.data("constraints");
-         if (typeof nc !== "undefined")
-             nc = nc.split(/;/, 2);
-         else
-             nc = [DEFAULT_RANDOM_LEN, DEFAULT_RANDOM_CHS];
-         let dlg_l = $dlg.squirrel_dialog("control", "len").val();
-         let dlg_c = $dlg.squirrel_dialog("control", "chs").val();
+    let test_constraints = DEFAULT_RANDOM_LEN + ";" + DEFAULT_RANDOM_CHS;
+    
+    class RandomiseDialog extends Dialog {
 
-         if (dlg_l !== nc[0] || dlg_c !== nc[1])
-             $dlg.squirrel_dialog("control", "remember").show();
-         else
-             $dlg.squirrel_dialog("control", "remember").hide();
+        constraints_changed() {
+            let $node = this.$node();
+            let nc = $node ? $node.data("constraints") : test_constraints;
+            if (typeof nc !== "undefined")
+                nc = nc.split(/;/, 2);
+            else
+                nc = [DEFAULT_RANDOM_LEN, DEFAULT_RANDOM_CHS];
+            let dlg_l = this.control("len").val();
+            let dlg_c = this.control("chs").val();
 
-         if (dlg_l !== DEFAULT_RANDOM_LEN || dlg_c !== DEFAULT_RANDOM_CHS)
-             $dlg.squirrel_dialog("control", "reset").show();
-         else
-             $dlg.squirrel_dialog("control", "reset").hide();
+            if (dlg_l !== nc[0] || dlg_c !== nc[1])
+                this.control("remember").show();
+            else
+                this.control("remember").hide();
 
-         $dlg.squirrel_dialog("control", "again")
-             .trigger($.getTapEvent());
-     }
+            if (dlg_l !== DEFAULT_RANDOM_LEN || dlg_c !== DEFAULT_RANDOM_CHS)
+                this.control("reset").show();
+            else
+                this.control("reset").hide();
 
-     function reset_constraints($dlg) {
-         $dlg.squirrel_dialog("control", "len").val(DEFAULT_RANDOM_LEN);
-         $dlg.squirrel_dialog("control", "chs").val(DEFAULT_RANDOM_CHS);
-         constraints_changed($dlg);
-     }
+            this.control("again")
+                .trigger(this.tapEvent());
+        }
 
-     return function($dlg) {
-         $dlg.on('dlg-initialise', function () {
-             $dlg.squirrel_dialog("control", "again")
-                 .on($.getTapEvent(), function () {
-                    $dlg.squirrel_dialog("control", "idea")
+        reset_constraints() {
+            this.control("len").val(DEFAULT_RANDOM_LEN);
+            this.control("chs").val(DEFAULT_RANDOM_CHS);
+            this.constraints_changed();
+        }
+
+        initialise() {
+            let self = this;
+            
+            this.control("again")
+                .on(this.tapEvent(), function () {
+                    self.control("idea")
                         .text(Utils.generatePassword({
-                            length: $dlg.squirrel_dialog("control", "len")
-                                .val(),
-                            charset: $dlg.squirrel_dialog("control", "chs")
-                                .val()
+                            length: self.control("len").val(),
+                            charset: self.control("chs").val()
                         }));
                     return false;
                 });
-            $dlg.squirrel_dialog("control", "use")
-                .on($.getTapEvent(), function () {
-                    $dlg.squirrel_dialog("close");
-                    $dlg.squirrel_dialog("squirrel").playAction(Hoard.new_action(
-                        "E", $dlg.data("node").tree("getPath"), Date.now(),
-                        $dlg.squirrel_dialog("control", "idea").text()));
+            this.control("use")
+                .on(this.tapEvent(), function () {
+                    self.close();
+                    if (self.app())
+                        self.app().playAction(Hoard.new_action(
+                            "E", self.$node().tree("getPath"), Date.now(),
+                            self.control("idea").text()));
                     return true;
                 });
-            $dlg.squirrel_dialog("control", "len")
+            this.control("len")
                 .on("change", function () {
-                    constraints_changed($dlg);
+                    self.constraints_changed();
                 });
-            $dlg.squirrel_dialog("control", "chs")
+            this.control("chs")
                 .on("change", function () {
-                    constraints_changed($dlg);
+                    self.constraints_changed();
                 });
-            $dlg.squirrel_dialog("control", "remember")
-                .on($.getTapEvent(), function () {
-                    $dlg.squirrel_dialog("squirrel").playAction(Hoard.new_action(
-                        "X", $dlg.data("node").tree("getPath"), Date.now(),
-                        $dlg.squirrel_dialog("control", "len").val() + ";" +
-                            $dlg.squirrel_dialog("control", "chs").val()));
-                    constraints_changed($dlg);
+            this.control("remember")
+                .on(this.tapEvent(), function () {
+                    let c = self.control("len").val() + ";" +
+                        self.control("chs").val();
+                    if (self.app())
+                        self.app().playAction(Hoard.new_action(
+                            "X", self.$node().tree("getPath"), Date.now(),
+                            c));
+                    else
+                        test_constraints = c;
+                    self.constraints_changed();
                 });
-            $dlg.squirrel_dialog("control", "reset")
-                .on($.getTapEvent(), function () {
-                    reset_constraints($dlg);
+            this.control("reset")
+                .on(this.tapEvent(), function () {
+                    self.reset_constraints();
                 });
-        });
+        }
 
-        $dlg.on('dlg-open', function () {
-            let $node = $dlg.data("node");
-            let my_key = $node.data("key");
-            let c = $node.data("constraints");
+        open() {
+            let $node = this.$node();
 
+            let my_key, c, path;
+            if ($node) {
+                my_key = $node.data("key");
+                c = $node.data("constraints");
+                path = $node.tree("getPath");
+            } else {
+                my_key = "test";
+                c = test_constraints;
+                path = [ "A", "B", "C" ];
+            }
+            
             if (c) {
                 c = c.split(";", 2);
-                $dlg.squirrel_dialog("control", "len").val(c[0]);
-                $dlg.squirrel_dialog("control", "chs").val(c[1]);
+                this.control("len").val(c[0]);
+                this.control("chs").val(c[1]);
             }
 
-            let path = $node.tree("getPath");
-            $dlg.squirrel_dialog("control", "path")
-                .text(path.join("↘"));
-            $dlg.squirrel_dialog("control", "key")
-                .text(my_key);
-            $dlg.squirrel_dialog("control", "again")
-                .trigger($.getTapEvent());
+            
+            this.control("path").text(path.join("↘"));
+            this.control("key").text(my_key);
+            this.control("again").trigger(this.tapEvent());
 
-            $dlg.squirrel_dialog("control", "remember")
-                .hide();
+            this.control("remember").hide();
 
-            constraints_changed($dlg);
-        });
+            this.constraints_changed();
+        }
     }
+    return RandomiseDialog;
 });

@@ -1,47 +1,42 @@
-define(function() {
-    return function($dlg) {
-        $dlg.on('dlg-initialise', function () {
-            $dlg.squirrel_dialog("control", "text")
+define(["dialogs/Dialog"], function(Dialog) {
+    class JSONDialog extends Dialog {
+        initialise() {
+            this.control("text")
                 .on("input", function () {
-                    $dlg.squirrel_dialog("control", "ok")
-                        .icon_button("enable");
+                    this.control("ok").icon_button("enable");
                 });
+        }
 
-            $dlg.squirrel_dialog("control", "ok")
-                .on($.getTapEvent ? $.getTapEvent() : "click", function () {
-                    $dlg.squirrel_dialog("close");
-                    let datum;
-                    try {
-                        datum = JSON.parse($dlg.squirrel_dialog("control", "text")
-                                           .val());
-                    } catch (e) {
-                        $dlg.squirrel_dialog("squirrel").alert({
-                            title: TX.tx("JSON could not be parsed"),
-                            severity: "error",
-                            message: e
-                        });
-                        return false;
-                    }
-                    $dlg.squirrel_dialog("control", "ok")
-                        .icon_button("disable");
-                    let self = $dlg.squirrel_dialog("instance");
-                    if (self.options.debug) self.options.debug("Importing...");
-                    $dlg.squirrel_dialog("squirrel").insert_data([], datum);
-                    return true;
+        ok() {
+            let datum;
+            try {
+                datum = JSON.parse(this.control("text")
+                                   .val());
+            } catch (e) {
+                this.app().alert({
+                    title: TX.tx("JSON could not be parsed"),
+                    severity: "error",
+                    message: e
                 });
-        });
+                return false;
+            }
+            this.control("ok").icon_button("disable");
+            this.app().insert_data([], datum);
+            return true;
+        }
 
-        $dlg.on('dlg-open', function () {
-            let $dlg = $(this);
-
-            let data = $dlg.squirrel_dialog("squirrel").client
-                .hoard.JSON();
-            $dlg.squirrel_dialog("control", "text")
+        open() {
+            let data;
+            if (this.app())
+                data = this.app().client.hoard.JSON();
+            else
+                data = '{"some":"json"}'; /// test
+            this.control("text")
                 .text(data)
                 .select();
-            $dlg.squirrel_dialog("control", "ok")
-                .icon_button("disable");
-        });
-    };
+            this.control("ok").icon_button("disable");
+        }
+    }
+    return JSONDialog;
 });
 
