@@ -39,7 +39,7 @@
  * names to DOM nodes.
  */
 
-define(["jquery", "jsjq/edit_in_place", "jsjq/scroll_into_view", "jsjq/icon_button", "jsjq/squirrel_dialog"], function() {
+define(["jquery", "jsjq/edit_in_place", "jsjq/scroll_into_view", "jsjq/icon_button", "jquery-ui"], function() {
 
     Tree = {
         PATHSEP: String.fromCharCode(1), // separator used in Path->node mapping index
@@ -399,10 +399,9 @@ define(["jquery", "jsjq/edit_in_place", "jsjq/scroll_into_view", "jsjq/icon_butt
                         icon: "tree-icon-alarm"
                     })
                         .on("click", function () {
-                            $("#alarm_dlg")
-                                .squirrel_dialog("open", {
-                                    $node: $node
-                                });
+                            let $dlg = $("#alarm_dlg");
+                            $dlg.dialog("option", "$node", $node);
+                            $dlg.dialog("open");
                             return false;
                         });
                     return $button;

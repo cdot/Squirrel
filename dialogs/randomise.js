@@ -1,7 +1,11 @@
+/*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /**
  * Password generation for the given leaf node
+ * Options:
+ * $node (required)
+ * app (required)
  */
-define(["dialogs/Dialog", "js/Utils"], function(Dialog, Utils) {
+define(["js/Dialog", "js/Utils", "js/Hoard"], function(Dialog, Utils, Hoard) {
     const DEFAULT_RANDOM_LEN = 30;
     const DEFAULT_RANDOM_CHS = "A-Za-z0-9!%^&*_$+-=;:@#~,./?";
 
@@ -10,8 +14,8 @@ define(["dialogs/Dialog", "js/Utils"], function(Dialog, Utils) {
     class RandomiseDialog extends Dialog {
 
         constraints_changed() {
-            let $node = this.$node();
-            let nc = $node ? $node.data("constraints") : test_constraints;
+            let $node = this.options.$node;
+            let nc = $node.data("constraints");
             if (typeof nc !== "undefined")
                 nc = nc.split(/;/, 2);
             else
@@ -54,10 +58,9 @@ define(["dialogs/Dialog", "js/Utils"], function(Dialog, Utils) {
             this.control("use")
                 .on(this.tapEvent(), function () {
                     self.close();
-                    if (self.app())
-                        self.app().playAction(Hoard.new_action(
-                            "E", self.$node().tree("getPath"), Date.now(),
-                            self.control("idea").text()));
+                    self.options.app.playAction(Hoard.new_action(
+                        "E", self.options.$node.tree("getPath"), Date.now(),
+                        self.control("idea").text()));
                     return true;
                 });
             this.control("len")
@@ -72,12 +75,9 @@ define(["dialogs/Dialog", "js/Utils"], function(Dialog, Utils) {
                 .on(this.tapEvent(), function () {
                     let c = self.control("len").val() + ";" +
                         self.control("chs").val();
-                    if (self.app())
-                        self.app().playAction(Hoard.new_action(
-                            "X", self.$node().tree("getPath"), Date.now(),
-                            c));
-                    else
-                        test_constraints = c;
+                    self.options.app.playAction(Hoard.new_action(
+                        "X", self.options.$node.tree("getPath"), Date.now(),
+                        c));
                     self.constraints_changed();
                 });
             this.control("reset")
@@ -87,30 +87,19 @@ define(["dialogs/Dialog", "js/Utils"], function(Dialog, Utils) {
         }
 
         open() {
-            let $node = this.$node();
-
-            let my_key, c, path;
-            if ($node) {
-                my_key = $node.data("key");
-                c = $node.data("constraints");
-                path = $node.tree("getPath");
-            } else {
-                my_key = "test";
-                c = test_constraints;
-                path = [ "A", "B", "C" ];
-            }
-            
+            let $node = this.options.$node;
+            let my_key = $node.data("key");
+            let c = $node.data("constraints");
+            let path = $node.tree("getPath");
             if (c) {
                 c = c.split(";", 2);
                 this.control("len").val(c[0]);
                 this.control("chs").val(c[1]);
             }
 
-            
-            this.control("path").text(path.join("↘"));
+            //this.control("path").text(path.join("↘"));
             this.control("key").text(my_key);
             this.control("again").trigger(this.tapEvent());
-
             this.control("remember").hide();
 
             this.constraints_changed();

@@ -1,8 +1,7 @@
 /*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 
 if (typeof requirejs === "undefined") {
-    console.log(__filename + " is not runnable stand-alone");
-    return;
+    throw new Error(__filename + " is not runnable on its own");
 }
 
 /**

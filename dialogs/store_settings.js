@@ -1,4 +1,10 @@
-define(["dialogs/Dialog", "js/Utils", "jsjq/template"], function(Dialog, Utils) {
+/*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
+/**
+ * Options:
+ * app (required)
+ */
+
+define(["js/Dialog", "js/Utils", "jsjq/template"], function(Dialog, Utils) {
 
     /**
      * Promise to read a file object. The promise is resolved with
@@ -28,6 +34,7 @@ define(["dialogs/Dialog", "js/Utils", "jsjq/template"], function(Dialog, Utils) 
 
         newImage(img) {
             let self = this;
+            let app = self.options.app;
  
             // Check that we can use the image.
             requirejs(["js/Steganographer"], function(Steganographer) {
@@ -41,15 +48,12 @@ define(["dialogs/Dialog", "js/Utils", "jsjq/template"], function(Dialog, Utils) 
                     .show()
                     .template("pick", "xbyy")
                     .template("expand", w, h);
-                let squirrel = self.app();
-                if (squirrel) {
-                    if (squirrel.client.status === squirrel.IS_LOADED)
-                        squirrel.client.status = squirrel.NEW_SETTINGS;
-                    if (squirrel.cloud.status === squirrel.IS_LOADED)
-                        squirrel.cloud
-                        .status = squirrel.NEW_SETTINGS;
-                    squirrel.trigger("update_save");
-                }
+                if (app.client.status === app.IS_LOADED)
+                    app.client.status = app.NEW_SETTINGS;
+                if (app.cloud.status === app.IS_LOADED)
+                    app.cloud
+                    .status = app.NEW_SETTINGS;
+                app.trigger("update_save");
             });
         }
         
@@ -78,6 +82,7 @@ define(["dialogs/Dialog", "js/Utils", "jsjq/template"], function(Dialog, Utils) 
 
         initialise() {
             let self = this;
+            let app = this.options.app;
             
             this.find(".template").template();
             
@@ -96,8 +101,7 @@ define(["dialogs/Dialog", "js/Utils", "jsjq/template"], function(Dialog, Utils) 
                             .template("pick", "mnbe");
                         return false;
                     }
-                    let app = self.app();
-                    if (app && app.client.hoard.options.store_path !==
+                    if (app.client.hoard.options.store_path !==
                         self.control("storepath").val()) {
                         app.client
                             .hoard.options.store_path =
@@ -109,8 +113,6 @@ define(["dialogs/Dialog", "js/Utils", "jsjq/template"], function(Dialog, Utils) 
                             .status = app.NEW_SETTINGS;
                         // No - the cloud isn't affected by the store path,
                         // so don't mark it as changed
-                        // if (this.app().cloud.status === this.app().IS_LOADED)
-                        //     this.app().cloud.status = this.app().NEW_SETTINGS;
                         app.trigger("update_save");
                     }
                     return true;
@@ -129,18 +131,17 @@ define(["dialogs/Dialog", "js/Utils", "jsjq/template"], function(Dialog, Utils) 
             return true;
         }
         
-        open(options) {
-            if (options.get_image || this.debug)
+        open() {
+            let app = this.options.app;
+            if (app.cloud.store.option("needs_image"))
                 this.find(".using_steganography").show();
             else
                 this.find(".using_steganography").hide();
             this.control("message").hide();
-            if ((options.get_path || this.debug) && this.app())
+            if (app.cloud.store.option("needs_path"))
                 this.control("storepath")
                 .focus()
-                .val(
-                    this.app().client
-                        .hoard.options.store_path);
+                .val(app.client.hoard.options.store_path);
         }
     }
     return StoreSettingsDialog;

@@ -19,7 +19,7 @@ requirejs.config({
     }
 });
 
-define(["src/Translator", "jquery", "jsjq/simulated_password", "jsjq/icon_button", "test/simulated_password", "jsjq/squirrel_dialog"], function(Translator) {
+define(["src/Translator", "jquery", "jsjq/simulated_password", "jsjq/icon_button", "test/simulated_password"], function(Translator) {
 
     let TX = Translator.instance({ url: "locale", debug: console.debug});
 
@@ -55,42 +55,11 @@ define(["src/Translator", "jquery", "jsjq/simulated_password", "jsjq/icon_button
         $(".icon_button").icon_button();
     }
 
-    function squirrel_dialog() {
-        $.set_dialog_options({
-            loadFrom: "dialogs",
-            autoOpen: false,
-            debug: console.debug
-        });
-        
-        $("#test_dlg_open").on("click", () => {
-            $.load_dialog("test").then(($dlg) => {
-                $dlg.on('dlg-initialise', function() {
-                    $dlg.find(".icon_button").icon_button();
-                    TX.translate($dlg[0]);
-                });
-                $dlg.on('dlg-open', function() {
-                    let $signin = $dlg.squirrel_dialog("control", "test_signin");
-                    if ($signin.length === 0)
-                        throw new Error("Control failed");
-                    $signin.on("click", function() {
-                        $dlg.squirrel_dialog("close");
-                        assert($dlg.squirrel_dialog("control", "by_id").attr("id") === "by_id");
-                        assert($dlg.squirrel_dialog("control", "by_name").attr("name") === "by_name");
-                        assert($dlg.squirrel_dialog("control", "by_data_id").data("id") === "by_data_id");
-                        console.debug("controls verified");
-                    });
-                });
-                $dlg.squirrel_dialog("open");
-            });
-        });
-    }
-    
     return () => {
         // on ready
         TX.language("fr").then(() => {
             simulated_password();
             icon_button();
-            squirrel_dialog();
         });
     };
 });

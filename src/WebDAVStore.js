@@ -12,10 +12,10 @@ define(["js/Utils", "js/HttpServerStore", "js/Serror"], (Utils, HttpServerStore,
     class WebDAVStore extends HttpServerStore {
 
         constructor(p) {
+            p = p || {};
+            p.type = "WebDAVStore";
+            p.needs_url = true;
             super(p);
-            this.option("type", "WebDAVStore");
-            this.option("needs_url", true);
-            if (this.debug) this.debug("Constructed WebDAVStore");
         }
 
         /**

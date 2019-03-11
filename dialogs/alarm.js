@@ -1,7 +1,11 @@
+/*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /**
  * Reminder setting dialog
+ * Options:
+ * $node (rquired)
+ * app (required)
  */
-define(["dialogs/Dialog", "js/Utils", "jsjq/template"], function(Dialog, Utils) {
+define(["js/Dialog", "js/Hoard", "jsjq/template"], function(Dialog, Hoard) {
     const TIMEUNITS = {
         y: {
             days: 360,
@@ -86,33 +90,29 @@ define(["dialogs/Dialog", "js/Utils", "jsjq/template"], function(Dialog, Utils) 
                     let numb = self.control("number")
                         .val() *
                         TIMEUNITS[self.control("units").val()].days;
-                    if (self.app())
-                        self.app().playAction(Hoard.new_action(
-                            "A", self.$node().tree("getPath"), Date.now(),
-                            numb));
+                    self.options.app.playAction(Hoard.new_action(
+                        "A", self.options.$node.tree("getPath"), Date.now(),
+                        numb));
                     return false;
                 });
 
             this.control("clear")
                 .on(this.tapEvent(), function () {
                     self.close();
-                    self.app().playAction(Hoard.new_action(
-                        !"C", self.$node().tree("getPath"), Date.now()));
+                    self.options.app.playAction(Hoard.new_action(
+                        "C", self.options.$node.tree("getPath"), Date.now()));
                     return false;
                 });
         }
 
         open() {
-            let $node = this.$node();
+            let $node = this.options.$node;
             let lastmod;
             
-            if ($node) {
-                this.control("path")
+            this.control("path")
                 .text($node.tree("getPath")
                       .join("↘"));
-                lastmod = $node.data("last-time-changed");
-            } else
-                lastmod = Date.now();
+            lastmod = $node.data("last-time-changed");
             
             this.control("lastmod")
                     .template(
@@ -120,7 +120,7 @@ define(["dialogs/Dialog", "js/Utils", "jsjq/template"], function(Dialog, Utils) 
                         new Date(lastmod)
                             .toLocaleString());
 
-            if ($node && typeof $node.data("alarm") !== "undefined") {
+            if (typeof $node.data("alarm") !== "undefined") {
                 let alarm = new Date(
                     lastmod + $node.data("alarm") * MSPERDAY);
                 this.control("current")

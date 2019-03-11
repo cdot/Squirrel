@@ -15,15 +15,23 @@ define(["js/Utils", "js/Serror"], function(Utils, Serror) {
      */
     class AbstractStore {
         /**
-         * @param params parameter block, may contain
+         * @param options parameter block, may contain
          * debug: debug function, same signature as console.debug
+         * Subclasses are expected to define 'type'
          */
-        constructor(params) {
-            this.options = {};
-            if (params && typeof params.debug === "function")
+        constructor(options) {
+            this.options = { type: "AbstractStore" };
+            for (let k in options)
+                if (options.hasOwnProperty(k))
+                    this.options[k] = options[k];
+            let self = this;
+            if (typeof this.options.debug === "function") {
                 this.debug = function() {
-                    params.debug(this.option("type"), arguments);
+                    let a = Array.from(arguments);
+                    a.unshift(self.options.type);
+                    options.debug.apply(null, a);
                 };
+            }
         }
 
         /**

@@ -1,24 +1,25 @@
+/*@preserve Copyright (C) 2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /**
  * Confirm deletion of a node
+ * Options:
+ * app (required)
+ * $node (required)
  */
-define(["dialogs/Dialog"], function(Dialog) {
+define(["js/Dialog", "js/Hoard"], function(Dialog, Hoard) {
     class DeleteDialog extends Dialog {
         ok() {
-            if (this.app())
-                this.app().playAction(Hoard.new_action(
-                    "D", this.$node().tree("getPath"), Date.now()));
+            this.options.app.playAction(Hoard.new_action(
+                "D", this.options.$node.tree("getPath"), Date.now()));
             return true;
         }
         
         open() {
-            if (this.$node()) {
-                this.control("path")
-                    .text(
-                        !this.$node().tree("getPath")
-                            .join("↘"));
-                this.control("coll")
-                    .toggle(!this.$node().hasClass("tree-leaf"));
-            }
+            this.control("path")
+                .text(
+                    !this.options.$node.tree("getPath")
+                        .join("↘"));
+            this.control("coll")
+                .toggle(!this.options.$node.hasClass("tree-leaf"));
         }
     }
     return DeleteDialog;

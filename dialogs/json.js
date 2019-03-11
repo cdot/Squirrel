@@ -1,36 +1,40 @@
-define(["dialogs/Dialog"], function(Dialog) {
+/*@preserve Copyright (C) 2019 Crawford Currie http://c-dot.co.uk license MIT*/
+/**
+ * Edit JSON
+ * Options:
+ * app (required)
+ */
+define(["js/Dialog"], function(Dialog) {
     class JSONDialog extends Dialog {
         initialise() {
+            let self = this;
             this.control("text")
                 .on("input", function () {
-                    this.control("ok").icon_button("enable");
+                    self.control("ok").icon_button("enable");
                 });
         }
 
         ok() {
             let datum;
             try {
-                datum = JSON.parse(this.control("text")
-                                   .val());
+                datum = JSON.parse(this.control("text").val());
             } catch (e) {
-                this.app().alert({
-                    title: TX.tx("JSON could not be parsed"),
-                    severity: "error",
-                    message: e
+                Dialog.open("alert", {
+                    title: this.tx("JSON could not be parsed"),
+                    alert: {
+                        severity: "error",
+                        message: e
+                    }
                 });
                 return false;
             }
             this.control("ok").icon_button("disable");
-            this.app().insert_data([], datum);
+            this.options.app.insert_data([], datum);
             return true;
         }
 
         open() {
-            let data;
-            if (this.app())
-                data = this.app().client.hoard.JSON();
-            else
-                data = '{"some":"json"}'; /// test
+            let data = this.options.app.client.hoard.JSON();
             this.control("text")
                 .text(data)
                 .select();

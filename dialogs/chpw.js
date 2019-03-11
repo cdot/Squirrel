@@ -1,61 +1,45 @@
+/*@preserve Copyright (C) 2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /**
  * Encryption password change dialog
+ * Options:
+ * app (required)
  */
-define(["dialogs/Dialog"], function(Dialog) {
+define(["js/Dialog"], function(Dialog) {
+
     class ChangePasswordDialog extends Dialog {
-        samePass() {
+
+        _checkSamePass() {
             let p = this.control("pass").val(),
                 c = this.control("conf").val();
-            this.control("nomatch")
-                .toggle(p !== c);
+            this.control("nomatch").toggle(p !== c);
             return (p === c);
         }
 
         initialise() {
             let self = this;
-            
-            this.control("show")
-                .on("change", function () {
-                    if (this.control("show")
-                        .prop("checked")) {
-                        this.control("pass")
-                            .attr("type", "text");
-                        this.control("conf")
-                            .attr("type", "text");
-                    } else {
-                        this.control("pass")
-                            .attr("type", "password");
-                        this.control("conf")
-                            .attr("type", "password");
-                    }
-                });
 
+            this.find('input[type="password"]').simulated_password();
+            
             this.control("conf")
                 .on("change", function () {
-                   self.samePass();
+                   self._checkSamePass();
                 });
 
             this.control("set")
                 .on(this.tapEvent(), function () {
-                    if (!self.samePass())
+                    if (!self._checkSamePass()) {
                         return false;
-                    this.close();
-                    let p = this.control("pass").val();
-                    let app = this.app();
-                    app.client
-                        .store.option("pass", p);
-                    app.client.status = app.NEW_SETTINGS;
-                    app.cloud
-                        .store.option("pass", p);
-                    app.cloud.status = app.NEW_SETTINGS;
-                    app.trigger("update_save");
+                    }
+                    self.close();
+                    let app = self.options.app;
+                    app.encryptionPass(self.control("pass").val());
 
                     return true;
                 });
         }
 
         open() {
-            this.samePass();
+            this._checkSamePass();
         }
     }
     return ChangePasswordDialog;

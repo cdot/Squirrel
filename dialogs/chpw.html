@@ -1,4 +1,4 @@
-<div id="chpw_dlg" class="dlg-dialog TX_title" title="Change Password">
+<div id="chpw_dlg" class="dlg-dialog TX_title" title="Change Encryption Password">
   <p class="dlg-warning">
     <span class="TX_text">
       You must ensure that all clients up to date and you
@@ -6,17 +6,17 @@
       or you will lose data.
     </span>
     <span class="TX_text">
-      Changing the master password will overwrite all data in
+      Changing the encryption password will overwrite all data in
       the cloud with what you can currently see in the browser.
     </span>
   </p>
   <table>
     <tr>
       <td>
-        <label for="chpw_pass" class="TX_text">New password</label>
+        <label for="chpw_pass"class="TX_text">New password</label>
       </td>
       <td>
-        <input type="password" size="50" data-id="pass" class="TX_title" title="Enter new password" value="" />
+        <input id="chpw_pass" type="password" size="50" data-id="pass" class="TX_title" title="Enter new password" value="" />
       </td>
     </tr>
     <tr>
@@ -26,15 +26,12 @@
         </label>
       </td>
       <td>
-        <input type="password" size="50" data-id="conf" class="TX_title" title="Re-enter new password" value="" />
+        <input id="chpw_conf" type="password" size="50" data-id="conf" class="TX_title" title="Re-enter new password" value="" />
       </td>
     </tr>
   </table>
-  <p>
-    <input type="checkbox" data-id="show">
-    <label for="chpw_show" class="TX_text">
-      Show password
-    </label>
+  <p data-id="nomatch" class="dlg-error TX_text">
+      Passwords do not match
   </p>
   <div>
     <button data-id="set" class="TX_title TX_text" title="Set new master password">Set new password</button>

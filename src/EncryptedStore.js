@@ -23,9 +23,10 @@ define(["js/LayeredStore", "js/AES"], function (LayeredStore,
     class EncryptedStore extends LayeredStore {
 
         constructor(p) {
+            p = p || {};
+            p.needs_pass = true;
+            p.type = "EncryptedStore";
             super(p);
-            this.option("type", "Encrypted " + super.option("type"));
-            this.option("needs_pass", true);
         }
 
         _with_pass(promise) {

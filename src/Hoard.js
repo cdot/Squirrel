@@ -57,7 +57,7 @@ define(["js/Utils", "js/Translator"], function(Utils, Translator) {
     /**
      * Create a new Hoard.
      * @class
-     * @param p paramaters, including {
+     * @param p parameters, including {
      * name: identifier for the hoard. The name is transitory and
      * only used for debugging; it is not saved with the hoard.
      * data: an optional JSON string containing a serialised Hoard
@@ -70,6 +70,7 @@ define(["js/Utils", "js/Translator"], function(Utils, Translator) {
     class Hoard {
 
         constructor(p) {
+            p = p || {};
             this.debug = p.debug;
             let name = p.name;
             let data = p.data;
@@ -417,9 +418,8 @@ define(["js/Utils", "js/Translator"], function(Utils, Translator) {
          * @param {function} reconstruct
          * reconstruct.call(this:Hoard, action:Action, follow:Function)
          * on each reconstructed action.
-         * @param {function} progress optional, called with %age
-         ;     */
-        _reconstruct_actions(data, path, reconstruct, progress) {
+         */
+        _reconstruct_actions(data, path, reconstruct) {
 
             let self = this;
 
@@ -468,12 +468,7 @@ define(["js/Utils", "js/Translator"], function(Utils, Translator) {
                 count++;
                 let promise = handle_node(node, pat);
 
-                if (progress)
-                    progress = progress.then(() => {
-                        progress(Math.floor(100 * (counter++) / count));
-                    });
-
-                if (typeof node.data === "object") {
+                 if (typeof node.data === "object") {
                     for (let key in node.data) {
                         let p = pat.slice();
                         p.push(key);
@@ -489,19 +484,21 @@ define(["js/Utils", "js/Translator"], function(Utils, Translator) {
         }
 
         /**
-         * Reconstruct an action stream (which will all be 'N', 'A' and 'X' actions)
-         * from a data block. Does not (directly) affect the actions stored in
-         * the hoard (though the listener might).
+         * Promise to reconstruct an action stream (which will all be
+         * 'N', 'A' and 'X' actions) from a data block. Does not
+         * (directly) affect the actions stored in the hoard (though
+         * the listener might).
          * @param data data structure, a simple hierarchical structure
          * of keys and the data they contain e.g.
          * { "key1" : { data: { subkey1: { data: "string data" } } } }
          * Other fields (such as time) may be present and are used if they are.
          * @param {function} reconstruct function to call on each action as it
          * is constructed. reconstruct.call(this:Hoard, action:Action, follow:Function)
-         * @param {function} progress optional called with percent
          */
-        actions_from_hierarchy(data, reconstruct, progress) {
-            return this._reconstruct_actions(data, [], reconstruct, progress);
+        actions_from_hierarchy(data, reconstruct) {
+            if (data && data.length > 0)
+                return this._reconstruct_actions(data, [], reconstruct);
+            return Promise.resolve();
         }
 
         /**
@@ -512,13 +509,9 @@ define(["js/Utils", "js/Translator"], function(Utils, Translator) {
          * the cache.
          * @param {function} reconstruct function to call on each action as it
          * is constructed. reconstruct.call(this:Hoard, action:Action, follow:Function)
-         * @param {function} progress optional, called with a %age
          */
-        reconstruct_actions(reconstruct, progress) {
-            if (this.cache)
-                return this._reconstruct_actions(this.cache, [], reconstruct, progress);
-            // No cache => no actions
-            return Promise.resolve();
+        reconstruct_actions(reconstruct) {
+            return this._reconstruct_actions(this.cache, [], reconstruct);
         }
 
         /**
@@ -531,7 +524,6 @@ define(["js/Utils", "js/Translator"], function(Utils, Translator) {
          * fields {
          * event: an Action
          * conflict: a message, if there was a conflict
-         * progress: an integer percentage
          * }
          */
         play_actions(new_actions, listener) {
@@ -540,7 +532,6 @@ define(["js/Utils", "js/Translator"], function(Utils, Translator) {
             if (this.debug) this.debug(
                 "Playing new actions since " + new Date(this.last_sync).toLocaleString());
             let p = Promise.resolve();
-            let progress = 0;
             for (let i = 0; i < count; i++) {
                 if (new_actions[i].time > this.last_sync) {
                     p = p.then(() => {
@@ -548,7 +539,6 @@ define(["js/Utils", "js/Translator"], function(Utils, Translator) {
                             "Play " + Hoard.stringify_action(new_actions[i]));
                         return this
                             .play_action(new_actions[i]).then((res) => {
-                                res.progress = Math.floor(100 * (++progress) / count);
                                 if (listener)
                                     listener(res);
                             });

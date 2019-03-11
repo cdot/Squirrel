@@ -1,42 +1,33 @@
-define(["dialogs/Dialog"], function(Dialog) {
+/*@preserve Copyright (C) 2019 Crawford Currie http://c-dot.co.uk license MIT*/
+/**
+ * Network login (e.g. basic auth)
+ * Options:
+ * user (optional, default user)
+ * pass (optional, default pass)
+ * on_login (required, function)
+ */
+define(["js/Dialog"], function(Dialog) {
     class NetworkLoginDialog extends Dialog {
         initialise() {
             let self = this;
-            let $user = this.control("net_user");
             let $pass = this.control("net_pass");
-            let $signin = this.control("net_signin");
             
-            $user.on("change", function () {
+            this.control("net_user").on("change", function () {
                 $pass.focus();
             });
             
             $pass.on("change", function () {
-                $signin.focus();
+                self.control("cancel").focus();
             });
-            
-            $signin
-                .off(this.tapEvent())
-                .on(this.tapEvent(), function () {
-                    if (self.$dlg.squirrel_dialog("isOpen")) {
-                        self.close();
-                        $signin.off(self.tapEvent());
-                        self.options.on_signin.call(
-                            $user.val(),
-                            $pass.val());
-                    }
-                    return true;
-                })
         }
         
         /**
          * options:
          * on_signin - passing the user and password
          */
-        open(e, options) {
-            if (options.store) {
-                this.control("net_user").val(options.store.option("user"));
-                this.control("net_pass").val(options.store.option("pass"));
-            }           
+        open() {
+            this.control("net_user").val(this.options.user);
+            this.control("net_pass").val(this.options.pass);
         }
     }
     return NetworkLoginDialog;

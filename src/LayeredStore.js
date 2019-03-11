@@ -16,6 +16,10 @@ define(["js/AbstractStore"], function(AbstractStore) {
     class LayeredStore extends AbstractStore {
 
         constructor(p) {
+            if (typeof p.understore === "undefined")
+                throw new Error("LayeredStore requires an understore");
+            console.log(p.understore);
+            p.type = p.type + "/" + p.understore.options.type;
             super(p);
             this.understore = p.understore;
         }

@@ -35,10 +35,9 @@ define(['js/Utils', 'js/Translator', 'js/AbstractStore'], function(Utils, Transl
     class GoogleDriveStore extends AbstractStore {
 
         constructor(p) {
+            p = p || {};
+            this.type = "GoogleDriveStore";
             super(p);
-            this.option("type", "GoogleDriveStore");
-            this.option("needs_user", true);
-            this.option("needs_pass", true);
         }
 
         init() {

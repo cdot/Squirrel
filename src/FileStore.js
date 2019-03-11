@@ -10,9 +10,9 @@ define(["fs-extra", "js/AbstractStore"], function(fs, AbstractStore) {
     class FileStore extends AbstractStore {
 
         constructor(p) {
+            p = p || {};
+            p.type = "FileStore";
             super(p);
-            this.option("type", "FileStore");
-            this.option("needs_path", true);
         }
 
         read(path) {
@@ -21,7 +21,7 @@ define(["fs-extra", "js/AbstractStore"], function(fs, AbstractStore) {
 
         write(path, data) {
             // data is an Uint8Array so is already bytes
-            return fs.writeFile(path, Buffer.from(data));
+            return fs.writeFile(path, data);
         }
     }
 

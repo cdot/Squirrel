@@ -1,4 +1,9 @@
-define(["dialogs/Dialog"], function(Dialog) {
+/*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
+/*
+* Options:
+* $node (required)
+*/
+define(["js/Dialog"], function(Dialog) {
     class PickDialog extends Dialog {
         initialise() {
             let self = this;
@@ -11,8 +16,8 @@ define(["dialogs/Dialog"], function(Dialog) {
 
         open() {
             let self = this;
-            let $node = this.$node();
-            let val = $node ? $node.data("value") : "test";
+            debugger;
+            let val = this.options.$node.data("value") || "";
             let $which = this.control("which");
             let $from = this.control("from");
             let i, $f;

@@ -17,49 +17,32 @@ define(["js/Utils", "js/LayeredStore", "js/Steganographer"], function(Utils, Lay
      */
     class StegaStore extends LayeredStore {
         constructor(p) {
+            p = p || {};
+            p.type = "StegaStore";
+            p.needs_image = true;
             super(p);
-            this.option("needs_image", true);
+            this.steg = new Steganographer({ debug: this.debug });
         }
 
         read(path) {
-            if (this.debug) this.debug("StegaStore: reading " + path);
+            if (this.debug) this.debug("reading " + path);
 
             return super.read(path)
-                .then((ab) => {
-                    // Make a data-URI
-                    let datauri = "data:image/png;base64," +
-                        Utils.Uint8ArrayToBase64(ab);
-                    let el = document.getElementById("stegamage");
-                    let steg = new Steganographer(el);
-                    if (datauri !== el.src) {
-                        // if the image has changed, wait for it to reload
-                        return new Promise((resolve, reject) => {
-                            el.onload = function () {
-                                el.onload = undefined;
-                                resolve(steg.extract());
-                            };
-                            el.src = datauri;
-                        });
-                    }
-                    return steg.extract();
+                .then((a) => {
+                    return this.steg.extract(a);
                 });
         }
 
         write(path, data) {
             if (this.debug) this.debug("StegaStore: writing " + path);
 
+            // Get the source image
             let image = document.getElementById("stegamage");
             if (!image)
                 throw new Error("no #stegamage");
 
-            let steg = new Steganographer({ image: image, debug: this.debug });
-            let canvas = steg.insert(data);
-            // Bit convoluted, but can't see another way to do it
-            let datauri = canvas.toDataURL();
-            let b64 = datauri.split(",", 2)[1];
-            let xdata = Utils.Base64ToUint8Array(b64);
-
-            return super.write(path, xdata);
+            let imageData = this.steg.insert(data, image);
+            return super.write(path, imageData);
         }
     }
 
