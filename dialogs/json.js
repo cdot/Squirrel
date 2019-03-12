@@ -15,22 +15,24 @@ define(["js/Dialog"], function(Dialog) {
         }
 
         ok() {
-            let datum;
-            try {
-                datum = JSON.parse(this.control("text").val());
-            } catch (e) {
-                Dialog.open("alert", {
-                    title: this.tx("JSON could not be parsed"),
-                    alert: {
+            return Dialog.open("alert", {
+                title: TX.tx("Loading")
+            })
+            .then((progress) => {
+                let datum;
+                try {
+                    datum = JSON.parse(this.control("text").val());
+                } catch (e) {
+                    progress.add({
                         severity: "error",
-                        message: e
-                    }
-                });
-                return false;
-            }
-            this.control("ok").icon_button("disable");
-            this.options.app.insert_data([], datum);
-            return true;
+                        message: tx("JSON could not be parsed: " + e),
+                    })
+                    return false;
+                }
+                this.control("ok").icon_button("disable");
+                this.options.app.insert_data([], datum, progress);
+                return true;
+            });
         }
 
         open() {

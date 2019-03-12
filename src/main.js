@@ -30,7 +30,7 @@ if (typeof module !== "undefined") {
     require("jquery-ui/ui/widgets/mouse"); // loads ui/widgets/button.js
     require("jquery-ui/ui/widgets/draggable"); // loads ui/widgets/button.js
 
-    Cookies = {
+    global.Cookies = {
         // TODO: save a .rc
         vals: {},
         get: (k) => {
@@ -45,7 +45,7 @@ if (typeof module !== "undefined") {
     }
 }
 
-define(["js/Utils", "js/Squirrel", "js/Translator", "cookie", "jquery"], function (Utils, Squirrel, Translator, Cookies) {
+define(["js/Utils", "js/Squirrel", "js/Translator", "jquery"], function (Utils, Squirrel, Translator, Cookies) {
     // Parse URL parameters
     let qs = Utils.parseURLParams(window.location.search.substring(1));
 
@@ -67,15 +67,23 @@ define(["js/Utils", "js/Squirrel", "js/Translator", "cookie", "jquery"], functio
         });
     }
 
-    if (typeof qs.store === "undefined")
-        qs.store = "LocalStorageStore";
+    if (typeof qs.stores === "undefined")
+        qs.cloudStore = "EncryptedStore,LocalStorageStore";
 
     TX = Translator.instance({debug: qs.debug ? console.debug : false});
 
-    qs.cookies = Cookies;
-
     // Initialise UI components
     $(function() {
+        if (qs.enc) {
+            if (self.debug) self.debug("Encryption enabled");
+            stores.unshift("EncryptedStore");
+        }
+
+        if (self.steg) {
+            if (self.debug) self.debug("Steganography enabled");
+            stores.unshift("StegaStore");
+        }
+
         let squirrel = new Squirrel(qs);
 
         squirrel.init_ui();

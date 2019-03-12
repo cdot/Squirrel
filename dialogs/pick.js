@@ -16,7 +16,7 @@ define(["js/Dialog"], function(Dialog) {
 
         open() {
             let self = this;
-            debugger;
+
             let val = this.options.$node.data("value") || "";
             let $which = this.control("which");
             let $from = this.control("from");

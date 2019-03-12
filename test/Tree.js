@@ -97,11 +97,12 @@ requirejs(deps, function(Utils, Hoard, Translator, Tree, TestRunner) {
 
     function normalise_html(html) {
         return html
-            .replace(/>\s*/gs,">")
-            .replace(/\s*</gs,"<")
-            .replace(/^\s*/s, "")
-            .replace(/\s*$/s, "")
-            .replace(/></g, ">\n<");
+            .replace(/\n/g, " ")
+            .replace(/ +</g,"<")
+            .replace(/> +/g,">")
+            .replace(/ +/g," ")
+            .replace(/^ /, "")
+            .replace(/ $/, "");
     }
 
     function expect_html(expected_html) {

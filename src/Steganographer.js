@@ -51,9 +51,7 @@ define(function() {
                 image instanceof Int32Array ||
                 image instanceof Uint32Array ||
                 image instanceof Float32Array ||
-                image instanceof Float64Array ||
-                image instanceof BigInt64Array ||
-                image instanceof BigUint64Array)
+                image instanceof Float64Array)
                 return new Uint8Array(image.buffer);
  
             if (image instanceof ImageData)

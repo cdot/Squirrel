@@ -9,11 +9,12 @@ define(["js/Dialog", "jsjq/template"], function(Dialog) {
         initialise() {
             this.control("optimise")
                 .on(this.tapEvent(), function () {
-                    this.app.client
-                        .hoard.clear_actions();
-                    this.app.construct_new_cloud(function () {
-                        this.close();
-                    });
+                    this.app.client.hoard.clear_actions();
+                    this.app.construct_new_cloud(function() {
+                    })
+                        .then(function () {
+                            self.close();
+                        });
                     // Local actions will now be reflected in the cloud,
                     // so we can clear them
                     return false;

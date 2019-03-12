@@ -51,8 +51,10 @@
  */
 const VERSION = 2.0;
 
-define(["js/Utils", "js/Translator"], function(Utils, Translator) {
+define(["js/Translator"], function(Translator) {
     var TX = Translator.instance();
+
+    const MSPERDAY = 24 * 60 * 60 * 1000;
 
     /**
      * Create a new Hoard.
@@ -175,8 +177,9 @@ define(["js/Utils", "js/Translator"], function(Utils, Translator) {
         /**
          * Push a new action on to the end of the action stream. No checking
          * is done on the action, though it will default the time to 'now'.
-         * @param arguments the action to push. This can be in the form of an existing
-         * action structure, or ordered arguments (type, path, time, data)
+         * @param arguments the action to push. This can be in the
+         * form of an existing action structure, or ordered arguments
+         * (type, path, time, data)
          * @return a reference to the action object pushed (this may have
          * defaulted fields)
          */
@@ -201,8 +204,8 @@ define(["js/Utils", "js/Translator"], function(Utils, Translator) {
          * @private
          * Locate the node referenced by the given path in the tree
          * @param path array of path elements
-         * @param offset optional offset from the leaf e.g. 1 will find the parent
-         * of the node identified by the path
+         * @param offset optional offset from the leaf e.g. 1 will
+         * find the parent of the node identified by the path
          */
         _locate_node(path, offset) {
             let node = this.cache;
@@ -222,8 +225,10 @@ define(["js/Utils", "js/Translator"], function(Utils, Translator) {
         }
 
         /**
-         * Promise to play a single action into the cache. The cache is updated, but
-         * the action is <em>not</em> added to the action stream.
+         * Promise to play a single action into the cache. The cache
+         * is updated, but the action is <em>not</em> added to the
+         * action stream.
+         *
          * Action types:
          * <ul>
          * <li>'N' with no data - create collection</li>
@@ -274,8 +279,8 @@ define(["js/Utils", "js/Translator"], function(Utils, Translator) {
                 };
             }
             let parent = this._locate_node(e.path, 1);
-            // Path must always point to a valid parent pre-existing in the cache
-            // parent will never be null
+            // Path must always point to a valid parent pre-existing
+            // in the cache parent will never be null
             if (!parent)
                 return conflict(e, TX.tx("Parent folder not found"));
 
@@ -308,14 +313,16 @@ define(["js/Utils", "js/Translator"], function(Utils, Translator) {
                         return conflict(TX.tx("New folder '$1' does not exist",
                                               e.data.join("↘")));
 
-                    new_parent.time = parent.time = e.time; // collection is being modified
+                    // collection is being modified
+                    new_parent.time = parent.time = e.time;
                     delete parent.data[name];
                     new_parent.data[name] = node;
                     break;
 
                 case "D": // Delete
                     delete parent.data[name];
-                    parent.time = e.time; // collection is being modified
+                    // collection is being modified
+                    parent.time = e.time;
                     break;
 
                 case "R": // Rename
@@ -324,7 +331,8 @@ define(["js/Utils", "js/Translator"], function(Utils, Translator) {
                                         TX.tx("It already exists"));
                     parent.data[e.data] = node;
                     delete parent.data[name];
-                    parent.time = e.time; // collection is being modified, node is not
+                    // collection is being modified, node is not
+                    parent.time = e.time;
                     break;
 
                 case "E": // Edit
@@ -367,9 +375,10 @@ define(["js/Utils", "js/Translator"], function(Utils, Translator) {
         }
 
         /**
-         * Merge an action stream into the hoard. Duplicate actions are ignored, and
-         * the merged stream is sorted into time order.
-         * @param actions the actions to merge. This must be in time order.
+         * Merge an action stream into the hoard. Duplicate actions
+         * are ignored, and the merged stream is sorted into time
+         * order.
+         * @param actions the actions to merge. They must be in time order.
          * @return the number of actions added
          */
         merge_actions(actions) {
@@ -443,9 +452,9 @@ define(["js/Utils", "js/Translator"], function(Utils, Translator) {
                         self,
                         action,
                         function () {
-                            // The 'N' has been completed so the factory has the
-                            // node. We can now reconstruct 'A' and 'X' actoins on
-                            // it.
+                            // The 'N' has been completed so the
+                            // factory has the node. We can now
+                            // reconstruct 'A' and 'X' actions on it.
                             if (node.alarm) {
                                 reconstruct.call(
                                     self, Hoard.new_action(
@@ -511,17 +520,19 @@ define(["js/Utils", "js/Translator"], function(Utils, Translator) {
          * is constructed. reconstruct.call(this:Hoard, action:Action, follow:Function)
          */
         reconstruct_actions(reconstruct) {
-            return this._reconstruct_actions(this.cache, [], reconstruct);
+            if (this.cache && this.cache.length > 0)
+                return this._reconstruct_actions(this.cache, [], reconstruct);
+            return Promise.resolve();
         }
 
         /**
-         * Promise to add the actions that are timestamped since the last sync into
-         * this hoard. Updates the sync time to now.
-         * Actions are *not* appended to our local actions stream, they are simply
-         * played into the cache.
+         * Promise to add the actions that are timestamped since the
+         * last sync into this hoard. Updates the sync time to now.
+         * Actions are *not* appended to our local actions stream,
+         * they are simply played into the cache.
          * @param new_actions actions to add
-         * @param {function} listener called to report events. Passed an object with
-         * fields {
+         * @param {function} listener called to report events. Passed
+         * an object with fields {
          * event: an Action
          * conflict: a message, if there was a conflict
          * }
@@ -568,57 +579,50 @@ define(["js/Utils", "js/Translator"], function(Utils, Translator) {
         }
 
         /**
-         * @private
+         * Promise to check all alarms. Returns a promise to resolve all the
+         * promises returned by 'ring'.
+         * @param ring function([], Date), return a promise
+         * @return a promise
          */
-        _each_alarm() {
-            let self = this,
-                alarum = function () {
-                    self._each_alarm();
-                };
+        check_alarms(ring) {
 
-            while (this.check && this.check.queue.length > 0) {
-                let item = this.check.queue.pop(),
-                    node = item.node,
-                    name;
+            if (!this.cache) {
+                console.log("Empty cache");
+                return Promise.resolve();
+            }
 
-                if (typeof node.data === "object")
-                    for (name in node.data) {
+            let checkAlarms = [{
+                path: [],
+                node: this.cache
+            }];
+            
+            let promise = Promise.resolve();
+            
+            while (checkAlarms.length > 0) {
+                let item = checkAlarms.pop();
+                let node = item.node;
+                if (typeof node.data === "object") {
+                    for (let name in node.data) {
                         let snode = node.data[name];
-                        this.check.queue.push({
+                        checkAlarms.push({
                             node: snode,
                             path: item.path.slice()
                                 .concat([name])
                         });
                     }
-
+                }
+                // An alarm rings when it is more than .alarm days
+                // since the last node modification.
+                // SMELL: this is OK for leaf nodes but tree nodes are
+                // modified whenever a child node is modified.
                 if (typeof node.alarm !== "undefined" &&
-                    (Date.now() - node.time) >= (node.alarm * Utils.MSPERDAY)) {
-                    this.check.listener(
+                    (Date.now() - node.time) >= (node.alarm * MSPERDAY)) {
+                    promise = promise.then(ring(
                         item.path,
-                        new Date(node.time + node.alarm * Utils.MSPERDAY),
-                        alarum);
-                    return;
+                        new Date(node.time + node.alarm * MSPERDAY)));
                 }
             }
-            delete this.check;
-        }
-
-        /**
-         * Check alarms, calling listener on all alarms that have fired
-         * @param listener listener function([], Date, node)
-         */
-        check_alarms(listener) {
-
-            if (!this.cache)
-                return;
-            this.check = {
-                queue: [{
-                    path: [],
-                    node: this.cache
-                }],
-                listener: listener
-            };
-            this._each_alarm();
+            return promise;
         }
 
         /**

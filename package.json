@@ -52,6 +52,7 @@
     "btoa": "^1.2.1",
     "jquery": "^3.3.1",
     "jquery-ui": "^1.12.1",
+    "js-cookie": "^2.2.0",
     "requirejs": "^2.3.6",
     "text": "github:requirejs/text",
     "utf8": "^3.0.0"

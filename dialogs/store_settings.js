@@ -38,8 +38,8 @@ define(["js/Dialog", "js/Utils", "jsjq/template"], function(Dialog, Utils) {
  
             // Check that we can use the image.
             requirejs(["js/Steganographer"], function(Steganographer) {
-                let steg = new Steganographer({image: img});
-                steg.insert("tada");
+                let steg = new Steganographer({debug: self.debug});
+                steg.insert("tada", img);
                 self.control("ok").icon_button("enable");
                 let h = img.naturalHeight;
                 let w = img.naturalWidth;
@@ -83,7 +83,7 @@ define(["js/Dialog", "js/Utils", "jsjq/template"], function(Dialog, Utils) {
         initialise() {
             let self = this;
             let app = this.options.app;
-            
+
             this.find(".template").template();
             
             this.control("image_file").on("change", function () {

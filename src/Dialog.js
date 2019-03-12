@@ -64,7 +64,7 @@ define(["js/Translator", "jquery", "jquery-ui", "jsjq/icon_button"], function(Tr
                     .then((html) => {
                         if (options.debug) options.debug("HTML was loaded");
                         let $dlg = $(html);
-                        
+                        Translator.instance().translate($dlg);
                         // force the id so we can find it again
                         $dlg.attr("id", id + "_dlg");
                         // force the CSS class - should be hidden
@@ -155,10 +155,9 @@ define(["js/Translator", "jquery", "jquery-ui", "jsjq/icon_button"], function(Tr
             
             let bfc = options.beforeClose;
             options.beforeClose = (e) => {
-                return !self.blocking;
-                if (bfc)
-                    return bfc(e);
-                return true;
+                if (self.blocking)
+                    return true;
+                return bfc ? bfc(e) : true;
             };
 
             let jq_options = $.extend({

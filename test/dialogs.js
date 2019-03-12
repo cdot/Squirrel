@@ -8,10 +8,10 @@ if (typeof requirejs === "undefined")
  */
 requirejs.config({
     baseUrl: "..",
-    urlArgs: "nocache=" + Date.now(),
     paths: {
         mocha: "//cdnjs.cloudflare.com/ajax/libs/mocha/6.0.2/mocha",
         chai: "//cdnjs.cloudflare.com/ajax/libs/chai/4.2.0/chai",
+        cookie: "//cdnjs.cloudflare.com/ajax/libs/js-cookie/2.2.0/js.cookie.min",
         jquery: "//code.jquery.com/jquery-3.3.1",
         "jquery-ui": "//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui",
         js: "src",
@@ -42,10 +42,6 @@ define(["js/Dialog", "js/Translator", "js/LocalStorageStore", "js/Hoard", "js/Tr
     ];
 
     let debug = console.debug;
-    let fun = (s, a) => {
-        a.unshift(s);
-        console.debug.apply(null, a);
-    };
     
     // Make sure global options get passed in
     Dialog.set_default_options({
@@ -62,14 +58,14 @@ define(["js/Dialog", "js/Translator", "js/LocalStorageStore", "js/Hoard", "js/Tr
             store: new LocalStorageStore(),
             hoard: new Hoard()
         },
-        add_child_node: function() { fun("add_child_node", Array.from(arguments)); },
-        trigger: function() { fun("trigger", Array.from(arguments)); },
-        insert_data: function() { fun("insert_data", Array.from(arguments)); },
-        playAction: function() { fun("playAction", Array.from(arguments)); },
-        theme: function() { fun("theme", Array.from(arguments)); },
-        autosave: function() { fun("autosave", Array.from(arguments)); },
-        zoom: function() { fun("zoom", Array.from(arguments)); },
-        encryptionPass: function() { fun("encryptionPass", Array.from(arguments)); },
+        add_child_node: function() { debug("add_child_node", arguments); },
+        trigger: function() { debug("trigger", arguments); },
+        insert_data: function() { debug("insert_data", arguments); },
+        playAction: function() { debug("playAction", arguments); },
+        theme: function() { debug("theme", arguments); },
+        autosave: function() { debug("autosave", arguments); },
+        zoom: function() { debug("zoom", arguments); },
+        encryptionPass: function() { debug("encryptionPass", arguments); },
         USE_STEGANOGRAPHY: true
     };
 
@@ -133,8 +129,25 @@ define(["js/Dialog", "js/Translator", "js/LocalStorageStore", "js/Hoard", "js/Tr
         }
     };
 
+    let Cookies = {
+        // TODO: save a .rc
+        vals: {},
+        get: (k) => {
+            return Cookies.vals[k];
+        },
+        set: (k, v) => {
+            Cookies.vals[k] = v;
+        },
+        remove: (k) => {
+            delete Cookies.vals[k];
+        }
+    }
+
     return () => {
         Translator.instance({ url: "locale" }).language("en");
+        // Fake the need for store_settings
+        test_app.cloud.store.option("needs_image", true);
+
         $("#node")
             .data("key", "spoon")
             .data("value",TESTR)
@@ -149,6 +162,7 @@ define(["js/Dialog", "js/Translator", "js/LocalStorageStore", "js/Hoard", "js/Tr
                     Dialog.open(name, {
                         app: test_app,
                         $node: $("#node"),
+                        cookies: Cookies,
                         close: function() {
                             Dialog.open("alert", {
                                 alert: "Closed"

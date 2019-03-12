@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,jquery */
 
-define(['js/Serror', 'js/Utils', "js/Hoard", "js/LocalStorageStore", "js/EncryptedStore", "js/Translator", "js/Tree", "clipboard", "jsjq/simulated_password", "jsjq/scroll_into_view", "jsjq/icon_button", "jsjq/reset_styling", "jsjq/template", "jsjq/twisted", "jquery", "jquery-ui", "mobile-events" ], function(Serror, Utils, Hoard, LocalStorageStore, EncryptedStore, Translator, Tree, ClipboardJS) {
+define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore", "js/EncryptedStore", "js/Translator", "js/Tree", "clipboard", "cookie", "jsjq/simulated_password", "jsjq/scroll_into_view", "jsjq/theme_control", "jsjq/icon_button", "jsjq/styling", "jsjq/template", "jsjq/twisted", "jquery", "jquery-ui", "mobile-events" ], function(Serror, Utils, Dialog, Hoard, LocalStorageStore, EncryptedStore, Translator, Tree, ClipboardJS, Cookies) {
     TX = Translator.instance();
 
     /*
@@ -33,7 +33,7 @@ define(['js/Serror', 'js/Utils', "js/Hoard", "js/LocalStorageStore", "js/Encrypt
         constructor(options) {
             let self = this;
 
-            options = options || {};
+            self.options = options || {};
 
             if (options.debug) {
                 self.debug = console.debug;
@@ -43,26 +43,11 @@ define(['js/Serror', 'js/Utils', "js/Hoard", "js/LocalStorageStore", "js/Encrypt
                 self.dumpCloud = options.dump_cloud;
             }
 
-            if (!options.cookies)
-                throw new Error("option 'cookies' is required");
-
-            self.cookies = options.cookies;
-
-            options.theme = options.theme || self.cookies.get("ui_theme");
-
-            if (options.theme && options.theme !== "base")
-                self.theme(options.theme);
-
-            options.scale = options.scale || self.cookies.get("ui_scale");
-            if (options.scale && options.scale > 0)
-                self.scale(options.scale);
-
-            // Steganography is off by default
-            self.useSteganography = options.steg;
-
-            // Encryption is on by default
-            self.useEncryption = (typeof options.plain !== "undefined" ?
-                                  (options.plain !== "off") : true);
+            // Comma-separated string is OK too
+            if (typeof options.cloudStore === "string")
+                self.cloudStorageProvider = options.cloudStore.split(",");
+            else
+                self.cloudStorageProvider = options.cloudStore;
 
             self.clipboard = null;
 
@@ -108,49 +93,8 @@ define(['js/Serror', 'js/Utils', "js/Hoard", "js/LocalStorageStore", "js/Encrypt
             self.client_ok = true;
             self.cloud_ok = true;
 
-            self.cloudStorageProvider = options.store;
-
             self.last_search = "";
             self.picked_hit = 0;
-        }
-
-        // Change jQuery UI theme
-        theme(theme) {
-            let self = this;
-
-            if (typeof theme !== "undefined") {
-                $("#jQueryTheme")
-                    .each(function () {
-                        this.href = this.href.replace(
-                                /\/themes\/[^/]+/, "/themes/" + theme);
-                        $(this)
-                            .replaceWith($(this));
-                    });
-                $.reset_styling();
-                if (theme === "base") {
-                    self.cookies.remove("ui_theme");
-                } else {
-                    self.cookies.set("ui_theme", theme, {
-                        expires: 365
-                    });
-                }
-            }
-            return self.cookies.get("ui_theme");
-        }
-
-        scale(scale) {
-            let self = this;
-
-            if (typeof scale !== "undefined") {
-                if (scale > 6) { // don't go below 6px
-                    $("body")
-                        .css("font-size", scale + "px");
-                    self.cookies.set("ui_scale", scale, {
-                        expires: 365
-                    });
-                }
-            }
-            return self.cookies.get("ui_scale");
         }
 
         hideValues(on) {
@@ -159,28 +103,6 @@ define(['js/Serror', 'js/Utils', "js/Hoard", "js/LocalStorageStore", "js/Encrypt
             return Tree.hidingValues;
         }
         
-        zoom(factor) {
-            let self = this;
-            let now = $("body")
-                .css("font-size");
-            now = now.replace(/px/, "");
-            self.scale(Math.round(factor * parseInt(now)));
-        }
-
-        autosave(on) {
-            let self = this;
-            if (typeof on !== undefined) {
-                let ons = (on ? "on" : "off");
-                if (self.cookies.get("ui_autosave") !== ons) {
-                    self.cookies.set("ui_autosave", ons, {
-                        expires: 365
-                    });
-                    self.trigger("update_save");
-                }
-            }
-            return self.cookies.get("ui_autosave");
-        }
-
         encryptionPass(p) {
             this.client.store.option("pass", p);
             this.client.status = app.NEW_SETTINGS;
@@ -190,13 +112,13 @@ define(['js/Serror', 'js/Utils', "js/Hoard", "js/LocalStorageStore", "js/Encrypt
         }
         
         // Event handler code for "check_alarms" event
-        _check_alarms( /* event */ ) {
+        _handle_alarms( /* event */ ) {
             let self = this;
             self.client.hoard.check_alarms(
-                function (path, expired, next) {
+                function (path, expired) {
                     let $node = self.$DOMtree.tree("getNodeFromPath", path);
                     $node.tree("ringAlarm");
-                    Dialog.confirm("alert").then((dlg) => {
+                    return Dialog.confirm("alert").then((dlg) => {
                         dlg.add({
                             severity: "warning",
                             message:
@@ -205,8 +127,6 @@ define(['js/Serror', 'js/Utils', "js/Hoard", "js/LocalStorageStore", "js/Encrypt
                                       path.join("↘"),
                                       expired.toLocaleDateString())
                         });
-                    }).then((dlg) => {
-                        next();
                     });
                 });
         }
@@ -261,21 +181,23 @@ define(['js/Serror', 'js/Utils', "js/Hoard", "js/LocalStorageStore", "js/Encrypt
             if (self.debug) self.debug("...save finished");
             self.trigger("update_save");
             if (self.client_ok && self.cloud_ok) {
-                if (self.cookies.get("ui_autosave") === "on")
-                    progress.close();
-                else
-                    // Otherwise leave alert open
-                    progress.add({
-                        severity: "notice",
-                        message: TX.tx("Save complete")
-                    });
+                if (progress) {
+                    if (Cookies.get("ui_autosave") === "on")
+                        progress.close();
+                    else
+                        // Otherwise leave alert open
+                        progress.add({
+                            severity: "notice",
+                            message: TX.tx("Save complete")
+                        });
+                }
 
             } else {
-                progress.add({
+                if (progress) progress.add({
                     severity: "error",
                     message: TX.tx("Save encountered errors")
                 });
-                self.cookies.set("ui_autosave", "off", {
+                Cookies.set("ui_autosave", "off", {
                     expires: 365
                 });
             }
@@ -291,14 +213,14 @@ define(['js/Serror', 'js/Utils', "js/Hoard", "js/LocalStorageStore", "js/Encrypt
                     $(".tree-modified")
                         .removeClass("tree-modified");
                     self.client.status = STATII.IS_LOADED;
-                    progress.add({
+                    if (progress) progress.add({
                         severity: "notice",
                         message: TX.tx("Saved in $1", self.client.store.option("type"))
                     });
                 })
                 .catch((e) => {
                     if (self.debug) self.debug("...client save failed " + e);
-                    progress.add({
+                    if (progress) progress.add({
                         severity: "error",
                         message: TX.tx("Failed to save in $1: $2",
                                        self.client.store.option("type"), e)
@@ -338,7 +260,7 @@ define(['js/Serror', 'js/Utils', "js/Hoard", "js/LocalStorageStore", "js/Encrypt
                     self.client.hoard.last_sync = Date.now();
                     // Can  no longer undo
                     self.undos = [];
-                    progress.add({
+                    if (progress) progress.add({
                         severity: "notice",
                         message: TX.tx("Saved in $1", self.cloud.store.option("type"))
                     });
@@ -346,7 +268,7 @@ define(['js/Serror', 'js/Utils', "js/Hoard", "js/LocalStorageStore", "js/Encrypt
                 })
                 .catch((e) => {
                     if (self.debug) self.debug("...cloud save failed " + e);
-                    progress.add({
+                    if (progress) progress.add({
                         severity: "error",
                         message: TX.tx("Failed to save in $1: $2",
                                        self.cloud.store.option("type"), e)
@@ -376,9 +298,10 @@ define(['js/Serror', 'js/Utils', "js/Hoard", "js/LocalStorageStore", "js/Encrypt
                 });
         }
 
-        // Promise to construct a new cloud hoard from data in the client. This will
-        // happen if the cloud is read and found to be empty or corrupt,
-        // but not if the read failed.
+        // Promise to construct a new cloud hoard from data in the
+        // client. This will happen if the cloud is read and found to
+        // be empty or corrupt, but not if the read failed.
+        // Public because it will be called form the optimise dialog.
         construct_new_cloud(progress) {
             let self = this;
             if (self.debug) self.debug("...construct cloud ");
@@ -395,12 +318,12 @@ define(['js/Serror', 'js/Utils', "js/Hoard", "js/LocalStorageStore", "js/Encrypt
                 });
         }
 
-        // Promise to handle the cloud store being reloaded prior to a save action.
-        // The actions read from the cloud have to be merged into the client
-        // before the save is completed. SMELL: There's a risk of a race
-        // condition here if the cloud is updated while we are still updating
-        // the client. Some sort of locking could be done, but strikes me
-        // as overkill.
+        // Promise to handle the cloud store being reloaded prior to a
+        // save action.  The actions read from the cloud have to be
+        // merged into the client before the save is completed. SMELL:
+        // There's a risk of a race condition here if the cloud is
+        // updated while we are still updating the client. Some sort
+        // of locking could be done, but strikes me as overkill.
         _cloud_store_reloaded_ok(data, progress) {
             let self = this;
             if (self.debug) self.debug("...cloud read OK ");
@@ -413,10 +336,9 @@ define(['js/Serror', 'js/Utils', "js/Hoard", "js/LocalStorageStore", "js/Encrypt
                 // We'll get here if decryption failed....
                 if (self.debug) self.debug("Cloud hoard JSON parse failed: " + e);
                 if (progress) progress.add({
-                        severity: "error",
-                        message: TX.tx("$1 hoard can't be read for update",
-                                       self.cloud.store.option("type"))
-                    }
+                    severity: "error",
+                    message: TX.tx("$1 hoard can't be read for update",
+                                   self.cloud.store.option("type"))
                 });
                 self.cloud.status = STATII.IS_CORRUPT;
                 self.cloud_ok = false;
@@ -472,7 +394,7 @@ define(['js/Serror', 'js/Utils', "js/Hoard", "js/LocalStorageStore", "js/Encrypt
                     })
                     .catch((e) => {
                         if (self.debug) self.debug("...cloud read failed " + e);
-                        progress.add({
+                        if (progress) progress.add({
                             severity: "error",
                             message: TX.tx("Failed to refresh from $1: $2",
                                            self.cloud.store.option("type"), e)
@@ -484,7 +406,7 @@ define(['js/Serror', 'js/Utils', "js/Hoard", "js/LocalStorageStore", "js/Encrypt
         }
 
         /// Evemnt handler for "update_save" event
-        _update_save( /*event*/ ) {
+        _handle_update_save( /*event*/ ) {
             let self = this;
             $("#undo_button")
                 .toggle(self.can_undo());
@@ -492,7 +414,7 @@ define(['js/Serror', 'js/Utils', "js/Hoard", "js/LocalStorageStore", "js/Encrypt
             let $sb = $("#save_button");
 
             if (us !== null) {
-                if (self.cookies.get("ui_autosave") === "on") {
+                if (Cookies.get("ui_autosave") === "on") {
                     self._save_hoards(false).then(() => {
                         return self._save_client(false)
                     });
@@ -692,6 +614,8 @@ define(['js/Serror', 'js/Utils', "js/Hoard", "js/LocalStorageStore", "js/Encrypt
          * the client hoard. This will give us the baseline cache data and the
          * location of the cloud hoard, so we can then chain loading and merging
          * the cloud hoard.
+         *
+         * This will prompt for encryption details.
          */
         step_3_load_client_hoard() {
             let self = this;
@@ -705,7 +629,7 @@ define(['js/Serror', 'js/Utils', "js/Hoard", "js/LocalStorageStore", "js/Encrypt
                 return self.client.hoard.reconstruct_actions(
                     function (a, next) {
                         // this:Hoard, a:Action, next:function
-                        self.$DOMtree.tree("action",a, null, next);
+                        self.$DOMtree.tree("action", a, null, next);
                     },
                     function (percent) {
                         $("#load_progress")
@@ -735,63 +659,82 @@ define(['js/Serror', 'js/Utils', "js/Hoard", "js/LocalStorageStore", "js/Encrypt
                     });
             }
 
-            $("#stage")
-                .text(TX.tx("Reading from client"));
-            return self.client.store.reads(
-                "S." + self.client.store.option("user"))
-                .then((data) => {
-                    try {
-                        self.client.hoard = new Hoard("Client", data);
-                        self.client.status = STATII.IS_LOADED;
-                    } catch (e) {
-                        if (self.debug) self.debug("Caught " + e);
-                        return Dialog.confirm("alert", {
-                            title: TX.tx("Error"),
-                            alert: [
-                                {
-                                    severity: "error",
-                                    message: TX.tx("$1 hoard exists, but can't be read.",
-                                                   self.client.store.option("type")),
-                                },
-                                {
-                                    severity: "notice",
-                                    message: TX.tx("Check that you have the correct password.")
-                                }
-                            ]})
+            function _init_from(data) {
+                try {
+                    self.client.hoard = new Hoard("Client", data);
+                    self.client.status = STATII.IS_LOADED;
+                } catch (e) {
+                    if (self.debug) self.debug("Caught " + e);
+                    return Dialog.confirm("alert", {
+                        title: TX.tx("Error"),
+                        alert: [
+                            {
+                                severity: "error",
+                                message: TX.tx(
+                                    "$1 hoard exists, but can't be read.",
+                                    self.client.store.option("type")),
+                            },
+                            TX.tx("Check that you have the correct password.")
+                        ]})
                         .then(() => {
                             $(document).trigger("init_application");
-                        }
-                    });
-
-                    // Make sure we have a store path. The client store records the
-                    // path, which is used to load the cloud store/
-                    if (!self.client.hoard.options.store_path
-                        && self.cloud.store
-                        && self.cloud.store.option("needs_path")) {
-                        // Use the settings dlg to set the store path
-                        return Dialog.open("store_settings", {
-                            blocking: true,
-                            app: this,
-                        }).then(() => {
-                            return _rebuild_hoard();
                         });
-                    }
-                    return _rebuild_hoard();
+                }
+
+                // Make sure we have a store path. The client
+                // store records the path, which is used to load
+                // the cloud store/
+                if (!self.client.hoard.options.store_path
+                    && self.cloud.store
+                    && self.cloud.store.option("needs_path")) {
+                    // Use the settings dlg to set the store path
+                    return Dialog.open("store_settings", {
+                        blocking: true,
+                        app: this,
+                    }).then(() => {
+                        return _rebuild_hoard();
+                    });
+                }
+                return _rebuild_hoard();
+            }
+            
+            $("#stage")
+                .text(TX.tx("Reading from client"));
+
+            // propagate user information from the cloud if we don't have any yet
+            if (typeof self.client.store.option("user") === "undefined")
+                self.client.store.option("user", self.cloud.store.option("user"));
+            if (typeof self.client.store.option("pass") === "undefined")
+                self.client.store.option("pass", self.cloud.store.option("user"));
+            
+            return self.client.store.reads(self.client.store.option("user"))
+                .then((data) => {
+                    _init_from(data);
                 })
                 .catch((e) => {
-                    if (e instanceof Serror && e.status === 404)
-                        mess = TX.tx(
-                            "Client $1 not found",
-                            self.client.store.option("type"));
-                    else
-                        mess = TX.tx(
-                            "$1 store error: $2",
-                            self.client.store.option("type"), e.message)
+                    let mess;
+                    if (e instanceof Serror && e.status === 404) {
+                        // A 404 means the path to the store did not exist
+                        // but that doesn't mean it can't be used.
+                        return Dialog.confirm("alert", {
+                            title: TX.tx("Error"),
+                            alert: {
+                                severity: "error",
+                                message: TX.tx(
+                                    "$1 for client not found. Continue to create one.",
+                                    self.client.store.option("type"))
+                            }
+                        }).then(() => {
+                            _init_from();
+                        });
+                    }
                     return Dialog.confirm("alert", {
                         title: TX.tx("Error"),
                         alert: {
                             severity: "error",
-                            message: mess
+                            message: TX.tx(
+                                "$1 store error: $2",
+                                self.client.store.option("type"), e.message)
                         }
                     }).then(() => {
                         $(document).trigger("init_application");
@@ -814,8 +757,7 @@ define(['js/Serror', 'js/Utils', "js/Hoard", "js/LocalStorageStore", "js/Encrypt
             $("#stage")
                 .text(TX.tx("Authentication"));
 
-            // Spread user information determined during store initialisation
-            // around.
+            // Spread user information
             if (self.cloud.store &&
                 typeof self.cloud.store.option("user") !== "undefined") {
                 // Force the cloud user onto the client store
@@ -894,26 +836,29 @@ define(['js/Serror', 'js/Utils', "js/Hoard", "js/LocalStorageStore", "js/Encrypt
         }
 
         /**
-         * STEP 2: Initialise the client store. This sets up the store but
-         * doesn't read anything yet.
+         * STEP 2: Initialise the client store. This sets up the store
+         * but doesn't read anything yet. Initialisation of the client
+         * store *may* provide user information, but it will be
+         * overridden by any user information coming from the cloud
+         * store.
          */
         step_2_init_client_store() {
             let self = this;
             if (self.debug) self.debug('step_2_init_client_store');
-            let store = new LocalStorageStore();
+            self.client.store = new EncryptedStore({
+                understore: new LocalStorageStore()
+            });
 
-            if (self.useEncryption)
-                store = new EncryptedStore({ understore: store });
-
-            self.client.store = store;
-
-            return store.init({
+            return self.client.store.init({
+                role: "client",
                 network_login: function() {
                     return self._network_login();
                 },
                 store_login: function() {
                     return self._store_login();
-                }
+                },
+                user: self.cloud.store.option("user"),
+                pass: self.cloud.store.option("pass")
             })
             .then(() => {
                 if (self.debug) self.debug(store.option("type") +
@@ -922,49 +867,67 @@ define(['js/Serror', 'js/Utils', "js/Hoard", "js/LocalStorageStore", "js/Encrypt
         }
 
         /**
-         * STEP 1: Initialise the cloud store, and prompt for user details.
-         * This step will establish initial contact with OAuth2 stores, but
-         * it won't modify anything in the store or download any data.
+         * STEP 1: Initialise the cloud store. Initialisation of the cloud
+         * store *may* provide user information. If so, it will be propagated
+         * to the client store.
          */
         step_1_init_cloud_store() {
             let self = this;
             if (self.debug) self.debug('step_1_init_cloud_store');
 
-            let deps = ["js/" + self.cloudStorageProvider];
-            if (self.useSteganography) {
-                if (self.debug) self.debug("Steganography enabled");
-                deps.push("js/StegaStore");
+            // Starting from the end of the class list, construct store objects
+            let p;
+            let store;
+            for (let i = this.cloudStorageProvider.length - 1; i >= 0; i--) {
+                let storeClass = this.cloudStorageProvider[i];
+                let sc;
+                try {
+                    sc = eval(storeClass);
+                    p = Promise.resolve(sc);
+                } catch (e) {
+                    if (self.debug) self.debug("Require", storeClass);
+                    p = p.then(function () {
+                        return new Promise(function(res,rej) {
+                            requirejs(["js/" + storeClass],
+                                      function(module) {
+                                          res(module);
+                                      },
+                                      function(e) {
+                                          rej(e);
+                                      });
+                        });
+                    });
+                }
+                p = p.then((module) => {
+                    store = new module({
+                        debug: self.debug,
+                        understore: store
+                    });
+                });
             }
-           
-            return new Promise((resolve, reject) => {
-                requirejs(deps, function(Store, StegaStore) {
-                    let store = new Store({ debug: self.debug });
 
-                    if (self.useEncryption) {
-                        if (self.debug) self.debug("Encryption enabled");
-                        store = new EncryptedStore({ understore: store, debug: self.debug });
+            return p.then(() => {
+                console.log("Init",store);
+                return store.init({
+                    role: "cloud",
+                    store_login: function() {
+                        return self._store_login();
+                    },
+                    network_login: function() {
+                        return self._network_login();
                     }
-
-                    if (self.useSteganography) {
-                        if (self.debug) self.debug("Steganography enabled");
-                        store = new StegaStore({ understore: store, debug: self.debug });
-                    }
-            
-                    console.log("Init",store);
-                    return store.init()
-                    .then(() => {
-                        self.cloud.store = store;
-                        resolve();
-                    })
-                    .catch((e) => {
-                        Dialog.confirm("alert", {
-                            title: TX.tx("Warning"),
-                            alert: {
-                                severity: "warning",
-                                message: TX.tx("Could not open cloud store: $1", e)
-                                    + TX.tx("If you continue, only the client store will be available"),
-                            }
-                        }).then(resolve);
+                })
+                .then(() => {
+                    self.cloud.store = store;
+                })
+                .catch((e) => {
+                    return Dialog.confirm("alert", {
+                        title: TX.tx("Warning"),
+                        alert: {
+                            severity: "warning",
+                            message: TX.tx("Could not open cloud store: $1", e)
+                                + TX.tx("If you continue, only the client store will be available"),
+                        }
                     });
                 });
             });
@@ -1085,7 +1048,7 @@ define(['js/Serror', 'js/Utils', "js/Hoard", "js/LocalStorageStore", "js/Encrypt
                 break;
 
             case "add_value":
-                Dialog.open("add"{
+                Dialog.open("add", {
                     $node: $node,
                     is_value: true
                 });
@@ -1229,9 +1192,10 @@ define(['js/Serror', 'js/Utils', "js/Hoard", "js/LocalStorageStore", "js/Encrypt
         }
 
         /**
+         * Event handler for "init_application" event
          * Promise to initialise application (new Squirrel(), effectively)
          */
-        _init_application() {
+        _handle_init_application() {
             let self = this;
             // Kick off by initialising the cloud store.
             $("#stage")
@@ -1268,6 +1232,8 @@ define(['js/Serror', 'js/Utils', "js/Hoard", "js/LocalStorageStore", "js/Encrypt
         init_ui() {
             let self = this;
 
+            $.styling.init(self.options);
+
             Tree.compare = function (a, b) {
                 if (a === b)
                     return 0;
@@ -1291,30 +1257,19 @@ define(['js/Serror', 'js/Utils', "js/Hoard", "js/LocalStorageStore", "js/Encrypt
                 return self.contextMenu("isOpen");
             };
             Tree.hidingValues = () => {
-                return (self.cookies.get("ui_hidevalues") === "on");
+                return (Cookies.get("ui_hidevalues") === "on");
             };
 
             self.$DOMtree = $("#sites-node");
             self.$DOMtree.tree({});
 
             // Set options for squirrel dialogs
-            $.set_dialog_options({
+            Dialog.set_default_options({
                 autoOpen: false,
-                squirrel: this,
-                debug: self.debug,
-                // Actions performed when dialog is first loaded
-                onload: function($dlg) {
-                    $dlg.find("button")
-                        .icon_button();
-                    TX.translate($dlg);
-                }
+                app: this,
+                debug: self.debug
             });
             
-            $("#alerts")
-                .dialog({
-                    autoOpen: false
-                });
-
             $(".template")
                 .template();
             $(".twisted")
@@ -1392,16 +1347,16 @@ define(['js/Serror', 'js/Utils', "js/Hoard", "js/LocalStorageStore", "js/Encrypt
             // Set up event handlers
             $(document)
                 .on("init_application", () => {
-                    self._init_application();
+                    self._handle_init_application();
                 })
                 .on("check_alarms", () => {
-                    self._check_alarms();
+                    self._handle_alarms();
                 })
                 .on("update_save", () => {
-                    self._update_save();
+                    self._handle_update_save();
                 });
 
-            $.reset_styling();
+            $.styling.reset();
         }
 
         /**
@@ -1414,6 +1369,18 @@ define(['js/Serror', 'js/Utils', "js/Hoard", "js/LocalStorageStore", "js/Encrypt
             let e = self.client.hoard.push_action(
                 "N", p, Date.now(),
                 (typeof value === "string") ? value : undefined);
+
+            function newnode($newnode) {
+                if (!$newnode)
+                    throw new Error("ERROR: node creation failed");
+                
+                if (typeof value !== "string" && typeof value !== "undefined")
+                    self.insert_data($newnode.tree("getPath"), value);
+                $newnode.tree("open", {
+                    decorate: true
+                });
+            }
+            
             self.client.hoard.play_action(e)
                 .then((res) => {
                     if (res.conflict)
@@ -1429,17 +1396,7 @@ define(['js/Serror', 'js/Utils', "js/Hoard", "js/LocalStorageStore", "js/Encrypt
                             "action",
                             res.event,
                             self.pushUndo.bind(self),
-                            function ($newnode) {
-                                if (!$newnode) {
-                                    throw new Error("ERROR: node creation failed");
-                                }
-                                let p;
-                                if (typeof value !== "string" && typeof value !== "undefined")
-                                    self.insert_data($newnode.tree("getPath"), value);
-                                $newnode.tree("open", {
-                                    decorate: true
-                                });
-                            });
+                            newnode);
                 })
                 .then(() => {
                     $(document).trigger("update_save");
@@ -1517,46 +1474,44 @@ define(['js/Serror', 'js/Utils', "js/Hoard", "js/LocalStorageStore", "js/Encrypt
         }
 
         /**
-         * Insert data from a structure under the given path
+         * Insert data from a structure under the given path. public because
+         * it is used by dialogs/json.js
          * @param path path to the parent below which this data will be inserted
          * @param data hoard cache format data
+         * @param progress dialog to add messages to
          */
-        insert_data(path, data) {
+        insert_data(path, data, progress) {
             let self = this;
-            Dialog.open("alert", {
-                title: TX.tx("Loading")
-            }).then((progress) => {
 
-                self.client.hoard.actions_from_hierarchy(
-                    {
-                        data: data
-                    },
-                    function (act, conflict, progress) {
-                        // this:Hoard, e:Action, next:function
-                        //if (self.debug) self.debug(Hoard.stringify_action(act));
-                        act.path = path.slice()
-                            .concat(act.path);
-                        act = self.push_action(act);
-                        self.play_action(act)
-                            .then((res) => {
-                                if (res.conflict) {
-                                    progress.add({
-                                        severity: "notice",
-                                        message: res.conflict
-                                    });
-                                } else
-                                    // this:Hoard, e:Action
-                                    self.$DOMtree.tree("action", res.event, null);
-                            });
-                    })
-                    .then(() => {
-                        $(document).trigger("update_save");
-                        progress.add({
-                            severity: "notice",
-                            message: TX.tx("JSON has been loaded")
+            self.client.hoard.actions_from_hierarchy(
+                {
+                    data: data
+                },
+                function (act, conflict, progress) {
+                    // this:Hoard, e:Action, next:function
+                    //if (self.debug) self.debug(Hoard.stringify_action(act));
+                    act.path = path.slice()
+                        .concat(act.path);
+                    act = self.push_action(act);
+                    self.play_action(act)
+                        .then((res) => {
+                            if (res.conflict) {
+                                if (progress) progress.add({
+                                    severity: "notice",
+                                    message: res.conflict
+                                });
+                            } else
+                                // this:Hoard, e:Action
+                                self.$DOMtree.tree("action", res.event, null);
                         });
+                })
+                .then(() => {
+                    $(document).trigger("update_save");
+                    progress.add({
+                        severity: "notice",
+                        message: TX.tx("JSON has been loaded")
                     });
-            });
+                });
         }
 
         // Interface to action playing for interactive functions

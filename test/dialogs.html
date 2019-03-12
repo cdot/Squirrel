@@ -14,6 +14,9 @@
     <h1>Click the button to open the dialog</h1>
     <div id="buttons"></div>
     <script>
+      requirejs.config({
+        urlArgs: "nocache=" + Date.now()
+      });
       requirejs(["dialogs"], function(when_ready) {
         $(when_ready);
       });
