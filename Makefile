@@ -174,7 +174,7 @@ tidy: $(patsubst %.js,%.js.tidy,$(SQUIRREL_JS) $(STORES_JS) $(SERVER_JS))
 %.esl : %.js
 	-eslint $^ && touch $@
 
-lint: $(patsubst %.js,%.esl,$(patsubst %.min.js,,$(SQUIRREL_JS) $(STORES_JS) $(SERVER_JS)))
+lint: $(patsubst %.js,%.esl,$(patsubst %.min.js,,$(JS) $(STORES_JS) $(SERVER_JS)))
 
 # Make a language file
 %.js.strings: %.js

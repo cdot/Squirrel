@@ -30,9 +30,6 @@ var cloud_data = {
 	}
     ],
     cache: null,
-    options: {
-	store_path: "food"
-    },
     version: 1
 };
 
@@ -62,9 +59,6 @@ var client_data = {
 	    }
 	},
 	time:1513078020279
-    },
-    options: {
-	store_path: "bleh"
     },
     version: 1
 };

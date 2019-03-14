@@ -7,7 +7,7 @@
  * from a file found using requirejs, and (2) a JS subclass of
  * "Dialog" again loaded by requirejs.
  */
-define(["js/Translator", "jquery", "jquery-ui", "jsjq/icon_button"], function(Translator) {
+define(["js/Translator", "jquery", "jquery-ui", "jsjq/icon_button", "jsjq/twisted"], function(Translator) {
     
     // Default options
     let default_dialog_options = {};
@@ -46,8 +46,8 @@ define(["js/Translator", "jquery", "jquery-ui", "jsjq/icon_button"], function(Tr
             // stupid, but we do use requirejs.toUrl to locate the
             // resource.
             if ($dlg.length > 0) {
-                if (options.debug)
-                    options.debug("HTML for dialog", id, "is already loaded");
+                //if (options.debug)
+                //    options.debug("HTML for dialog", id, "is already loaded");
                 p = Promise.resolve($dlg);
             } else {               
                 let html_url = requirejs.toUrl("dialogs" + "/" + id + ".html");
@@ -56,13 +56,13 @@ define(["js/Translator", "jquery", "jquery-ui", "jsjq/icon_button"], function(Tr
                 if (options.htmlRoot)
                     html_url = options.htmlRoot + "dialogs/" + id + ".html";
                 
-                if (options.debug)
-                    options.debug(
-                        "Loading HTML for dialog", id, "from", html_url);
+                //if (options.debug)
+                //    options.debug(
+                //        "Loading HTML for dialog", id, "from", html_url);
 
                 p = $.get(html_url)
                     .then((html) => {
-                        if (options.debug) options.debug("HTML was loaded");
+                        //if (options.debug) options.debug("HTML was loaded");
                         let $dlg = $(html);
                         Translator.instance().translate($dlg);
                         // force the id so we can find it again
@@ -78,12 +78,12 @@ define(["js/Translator", "jquery", "jquery-ui", "jsjq/icon_button"], function(Tr
 
             return p.then(($dlg) => {
                 if (classes[id]) {
-                    if (options.debug)
-                        options.debug("JS for dialog", id, "is already loaded");
+                    //if (options.debug)
+                    //    options.debug("JS for dialog", id, "is already loaded");
                     return Promise.resolve(classes[id]);
                 }
             
-                if (options.debug) options.debug("Loading JS for dialog", id);
+                //if (options.debug) options.debug("Loading JS for dialog", id);
                 return new Promise((resolve) => {
                     requirejs(
                         ["dialogs/" + id],
@@ -91,7 +91,7 @@ define(["js/Translator", "jquery", "jquery-ui", "jsjq/icon_button"], function(Tr
                             classes[id] = new dlgClass($dlg, options);
                             resolve(classes[id]);
                         },
-                        function(err) {
+                        function(/*err*/) {
                             // Don't strictly need a .js
                             throw new Error("Missing dialog " + id + ".js");
                         });
@@ -123,7 +123,6 @@ define(["js/Translator", "jquery", "jquery-ui", "jsjq/icon_button"], function(Tr
          * the dialog is closed.
          */
         static confirm(id, options) {
-            let self = this;
             return new Promise((resolve) => {
                 Dialog.load(id, options)
                 .then((dlg) => {
@@ -165,7 +164,7 @@ define(["js/Translator", "jquery", "jquery-ui", "jsjq/icon_button"], function(Tr
                 width: "auto",
                 autoOpen: false,
                 closeOnEscape: false,
-                open: function(event, ui) {
+                open: function(/*event, ui*/) {
                     // jqueryui.dialog open event
 
                     // Lazy initialisation
@@ -198,6 +197,7 @@ define(["js/Translator", "jquery", "jquery-ui", "jsjq/icon_button"], function(Tr
             
             this.initialise();
 
+            this.find(".twisted").twisted();
             this.find("button").icon_button();
             
             // Add handler to default OK control

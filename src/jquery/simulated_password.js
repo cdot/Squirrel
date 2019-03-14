@@ -1,4 +1,5 @@
 /*@preserve Copyright (C) 2018-2019 Crawford Currie http://c-dot.co.uk license MIT*/
+/* eslint-env browser */
 
 /**
  * Simulated password plugin, to overcome Firefox infinite loop and add
@@ -34,6 +35,28 @@ define(["jquery"], function() {
         }
     }
 
+    /**
+     * Switch between shown/not shown
+     * @param el DOM element
+     * @param show boolean whther to show or not
+     */
+    function showPass(el, show) {
+        let $this = $(el);
+        let isHidden = $this.hasClass("pass_hidden");
+        if (show && isHidden) {
+            $.fn.raw_val.call($this, $this.data("hidden_pass"));
+            $this.removeClass("pass_hidden");
+        } else if (!show && !isHidden) {
+            let dv = $.fn.raw_val.call($this);
+            $this.data("hidden_pass", dv);
+            if (typeof dv === "string") {
+                let hv = dv.replace(/./g, SPOT)
+                $.fn.raw_val.call($this, hv);
+            }
+            $this.addClass("pass_hidden");
+        }
+    }
+    
     // Require an unload handler on FF (and maybe others) to revert the
     // password field to the hidden value. Otherwise the browser caches
     // the display dots.
@@ -60,28 +83,6 @@ define(["jquery"], function() {
         return $this.data("hidden_pass");
     };
 
-    /**
-     * Switch between shown/not shown
-     * @param el DOM element
-     * @param show boolean whther to show or not
-     */
-    function showPass(el, show) {
-        let $this = $(el);
-        let isHidden = $this.hasClass("pass_hidden");
-        if (show && isHidden) {
-            $.fn.raw_val.call($this, $this.data("hidden_pass"));
-            $this.removeClass("pass_hidden");
-        } else if (!show && !isHidden) {
-            let dv = $.fn.raw_val.call($this);
-            $this.data("hidden_pass", dv);
-            if (typeof dv === "string") {
-                let hv = dv.replace(/./g, SPOT)
-                $.fn.raw_val.call($this, hv);
-            }
-            $this.addClass("pass_hidden");
-        }
-    }
-    
     /**
      * options.hidden: false to show the pass initially (default true)
      * options.checkbox: false to hide checkbox (default true)

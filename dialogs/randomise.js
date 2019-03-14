@@ -9,8 +9,6 @@ define(["js/Dialog", "js/Utils", "js/Hoard"], function(Dialog, Utils, Hoard) {
     const DEFAULT_RANDOM_LEN = 30;
     const DEFAULT_RANDOM_CHS = "A-Za-z0-9!%^&*_$+-=;:@#~,./?";
 
-    let test_constraints = DEFAULT_RANDOM_LEN + ";" + DEFAULT_RANDOM_CHS;
-    
     class RandomiseDialog extends Dialog {
 
         constraints_changed() {
@@ -58,9 +56,11 @@ define(["js/Dialog", "js/Utils", "js/Hoard"], function(Dialog, Utils, Hoard) {
             this.control("use")
                 .on(this.tapEvent(), function () {
                     self.close();
-                    self.options.app.playAction(Hoard.new_action(
-                        "E", self.options.$node.tree("getPath"), Date.now(),
-                        self.control("idea").text()));
+                    self.options.app.playAction(Hoard.new_action({
+                        type: "E",
+                        path: self.options.$node.tree("getPath"),
+                        data: self.control("idea").text()
+                    }));
                     return true;
                 });
             this.control("len")
@@ -75,9 +75,11 @@ define(["js/Dialog", "js/Utils", "js/Hoard"], function(Dialog, Utils, Hoard) {
                 .on(this.tapEvent(), function () {
                     let c = self.control("len").val() + ";" +
                         self.control("chs").val();
-                    self.options.app.playAction(Hoard.new_action(
-                        "X", self.options.$node.tree("getPath"), Date.now(),
-                        c));
+                    self.options.app.playAction(Hoard.new_action({
+                        type: "X",
+                        path: self.options.$node.tree("getPath"),
+                        data: c
+                    }));
                     self.constraints_changed();
                 });
             this.control("reset")
@@ -90,7 +92,7 @@ define(["js/Dialog", "js/Utils", "js/Hoard"], function(Dialog, Utils, Hoard) {
             let $node = this.options.$node;
             let my_key = $node.data("key");
             let c = $node.data("constraints");
-            let path = $node.tree("getPath");
+
             if (c) {
                 c = c.split(";", 2);
                 this.control("len").val(c[0]);

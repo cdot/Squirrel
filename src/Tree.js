@@ -1,5 +1,7 @@
 /*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 
+/* global Tree: true */
+
 /**
  * Functions involved in the management of the DOM tree that represents
  * the content of the client hoard cache.
@@ -39,54 +41,71 @@
  * names to DOM nodes.
  */
 
-define(["jquery", "jsjq/edit_in_place", "jsjq/scroll_into_view", "jsjq/icon_button", "jquery-ui"], function() {
+define(["js/Hoard", "jquery", "jsjq/edit_in_place", "jsjq/scroll_into_view", "jsjq/icon_button", "jquery-ui"], function(Hoard) {
+
+    // separator used in Path->node mapping index
+    const PATHSEP = String.fromCharCode(1);
+
+    // Character used to hide values
+    const HIDE = "※";
+    
+    /**
+     * Static mapping paths to nodes
+     */
+    let path2$node = {};
 
     Tree = {
-        PATHSEP: String.fromCharCode(1), // separator used in Path->node mapping index
 
-        // Default global handlers. These are intended to be overridden in the
-        // calling context.
+        // The next few methods reflect global settings that must affect
+        // all Tree instances at the same time. They are intended to be
+        // overridden once in the calling context.
+
+        /**
+         * Compare keys for sorting
+         */
         compareKeys: (a, b) => {
             if (a == b)
                 return 0;
             return (a < b) ? -1 : 1;
         },
+
         /**
          * A change has been made to a node. Play the relevant action.
+         * Override in calling context
          * @param {Action} act
          */
         playAction: () => {},
 
         /**
          * An editor is about to be opened.
+         * Override in calling context
          */
         onOpenEditor: () => {},
 
         /**
          * An editor is about to be opened.
+         * Override in calling context
          */
         onCloseEditor: () => {},
 
         /**
          * Invoked when the mouse hovers over a node title.
+         * Override in calling context
          * @returns {Boolean} true to terminate the hover-in action.
          */
         onTitleHoverIn: () => false,
         /**
          * Invoked when the mouse hover over a node title ends.
+         * Override in calling context
          * @returns {Boolean} true to terminate the hover-out action.
          */
         onTitleHoverOut: () => false,
 
         /**
          * Are we to hide values when the tree is opened?
+         * Override in calling context
          */
-        hidingValues: false,
-
-        /**
-         * Private cache mapping paths to nodes
-         */
-        cache: {},
+        hidingValues: () => false,
 
         /**
          * Construct a new UI element for a tree node. The created element
@@ -111,7 +130,7 @@ define(["jquery", "jsjq/edit_in_place", "jsjq/scroll_into_view", "jsjq/icon_butt
             $node.addClass("tree-never-opened");
 
             if (is_root) {
-                Tree.cache[""] = $node;
+                path2$node[""] = $node;
                 $node.addClass("tree-root"); // should be there in HTML?
                 $node.data("path", []);
             } else {
@@ -151,13 +170,38 @@ define(["jquery", "jsjq/edit_in_place", "jsjq/scroll_into_view", "jsjq/icon_butt
                 this.options.onCreate.call($node);
         },
 
-        _obscuredValue: function() {
+        /**
+         * @private
+         * Get the current node value for display, obscuring as
+         * required
+         */
+        _displayedValue: function() {
             let s = this.element.data("value");
-            if (Tree.hidingValues)
-                return s.replace(/./g, "※");
+            if (Tree.hidingValues())
+                return s.replace(/./g, HIDE);
             return s;
         },
 
+        /**
+         * Change the display of values
+         */
+        showHideValues: function(on) {
+            if (on && Tree.hidingValues() ||
+                !on && !Tree.hidingValues())
+                return;
+            
+            $(".tree-leaf")
+                .each(function() {
+                    let v = $(this).data("value");
+                    $(this)
+                        .find(".tree-value")
+                        .each(
+                            function () {
+                                $(this).text(on ? v.replace(/./g, HIDE) : v);
+                            });
+                });
+        },
+        
         /**
          * Requires edit_in_place. selector may be a jquery selector or
          * an object.
@@ -187,11 +231,11 @@ define(["jquery", "jsjq/edit_in_place", "jsjq/scroll_into_view", "jsjq/icon_butt
                 width: w,
                 text: text,
                 changed: function (s) {
-                    Tree.playAction({
+                    Tree.playAction(Hoard.new_action({
                         type: action,
                         path: nodepath,
                         data: s
-                    });
+                    }));
                     return s;
                 },
                 closed: function () {
@@ -268,11 +312,11 @@ define(["jquery", "jsjq/edit_in_place", "jsjq/scroll_into_view", "jsjq/icon_butt
                     $new_parent.removeClass("drop-target");
                     let oldpath = $node.tree("getPath");
                     let newpath = $new_parent.tree("getPath");
-                    Tree.playAction({
+                    Tree.playAction(Hoard.new_action({
                         type: "M",
                         path: oldpath,
                         data: newpath
-                    });
+                    }));
                 });
             }
 
@@ -330,7 +374,7 @@ define(["jquery", "jsjq/edit_in_place", "jsjq/scroll_into_view", "jsjq/icon_butt
          * @return a JQuery element
          */
         getNodeFromPath: function(path) {
-            let $node = Tree.cache[path.join(Tree.PATHSEP)];
+            let $node = path2$node[path.join(PATHSEP)];
             if ($node && $node.length === 0)
                 throw new Error("Not in the cache, was something not been through get_path?");
             return $node;
@@ -422,13 +466,13 @@ define(["jquery", "jsjq/edit_in_place", "jsjq/scroll_into_view", "jsjq/icon_butt
                 $(".tree-hover")
                     .removeClass("tree-hover");
 
-                if (Tree.hidingValues && $node.hasClass("tree-leaf")) {
+                // Unobscure the value if it's hidden
+                if (Tree.hidingValues() && $node.hasClass("tree-leaf")) {
                     $(this)
                         .find(".tree-value")
                         .each(
                             function () {
-                                $(this)
-                                    .text($node.data("value"));
+                                $(this).text($node.data("value"));
                             });
                 }
 
@@ -449,13 +493,14 @@ define(["jquery", "jsjq/edit_in_place", "jsjq/scroll_into_view", "jsjq/icon_butt
                     .length > 0)
                     return true;
 
-                if (Tree.hidingValues && $node.hasClass("tree-leaf")) {
+                // Re-obscure the node if required
+                if (Tree.hidingValues() && $node.hasClass("tree-leaf")) {
                     $(this)
                         .find(".tree-value")
                         .each(
                             function () {
-                                $(this)
-                                    .text(self._obscuredValue.bind(self));
+                                // Obscure the value
+                                $(this).text(self._displayedValue());
                             });
                 }
                 $(this)
@@ -516,7 +561,7 @@ define(["jquery", "jsjq/edit_in_place", "jsjq/scroll_into_view", "jsjq/icon_butt
                 $("<span></span>")
                     .appendTo($info)
                     .addClass("tree-value")
-                    .text(this._obscuredValue())
+                    .text(this._displayedValue())
                     .on($.isTouchCapable && $.isTouchCapable() ?
                         "doubletap" : "dblclick",
                         function (e) {
@@ -543,7 +588,7 @@ define(["jquery", "jsjq/edit_in_place", "jsjq/scroll_into_view", "jsjq/icon_butt
                 // first time this node has been opened
                 $node.removeClass("tree-never-opened");
                 $node.children(".tree-subnodes").children().each(function () {
-                    this.tree("instance")._decorate_node();
+                    $(this).tree("instance")._decorate_node();
                 });
             }
 
@@ -591,7 +636,7 @@ define(["jquery", "jsjq/edit_in_place", "jsjq/scroll_into_view", "jsjq/icon_butt
                 .data("value", action.data)
                 .find(".tree-value")
                 .first()
-                .text(this._obscuredValue());
+                .text(this._displayedValue());
 
             this.setModified(action.time);
         },
@@ -771,8 +816,6 @@ define(["jquery", "jsjq/edit_in_place", "jsjq/scroll_into_view", "jsjq/icon_butt
          * played. Passed the modified node.
          */
         action: function(action, undoable, chain) {
-            // SMELL: currently only seems to be used in testing? Rewrite to use
-            // promises?
             if (action.type === "N") {
                 // Create the new node. Automatically adds it to the right parent.
                 $("<li></li>")
@@ -819,7 +862,7 @@ define(["jquery", "jsjq/edit_in_place", "jsjq/scroll_into_view", "jsjq/icon_butt
                 if (this.debug) {
                     if (!pa)
                         throw "recache outside tree";
-                    if (Tree.cache[path.join(Tree.PATHSEP)]) {
+                    if (path2$node[path.join(PATHSEP)]) {
                         debugger;
                         throw "Remapping path -> node";
                     }
@@ -831,7 +874,7 @@ define(["jquery", "jsjq/edit_in_place", "jsjq/scroll_into_view", "jsjq/icon_butt
                 $node.data("path", path);
 
                 // path->node mapping
-                Tree.cache[path.join(Tree.PATHSEP)] = $node;
+                path2$node[path.join(PATHSEP)] = $node;
 
                 // Repeat for subnodes
                 $node
@@ -868,8 +911,8 @@ define(["jquery", "jsjq/edit_in_place", "jsjq/scroll_into_view", "jsjq/icon_butt
                 $node = $node.closest(".tree-node");
 
             if ($node.data("path"))
-                delete Tree.cache[$node.data("path")
-                                  .join(Tree.PATHSEP)];
+                delete path2$node[$node.data("path")
+                                  .join(PATHSEP)];
 
             $node
                 .removeData("path")
@@ -877,8 +920,7 @@ define(["jquery", "jsjq/edit_in_place", "jsjq/scroll_into_view", "jsjq/icon_butt
                 .find(".tree-node")
                 .each(function () {
                     let $s = $(this);
-                    delete Tree.cache[$s.data("path")
-                                      .join(Tree.PATHSEP)];
+                    delete path2$node[$s.data("path").join(PATHSEP)];
                     $s.removeData("path");
                 });
         }

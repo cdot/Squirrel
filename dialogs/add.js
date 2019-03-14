@@ -7,7 +7,7 @@
  * is_value (optional)
  */
 
-define(["js/Dialog", "js/Translator"], function(Dialog, Translator) {
+define(["js/Dialog"], function(Dialog) {
     
     class AddDialog extends Dialog {
 
@@ -29,8 +29,8 @@ define(["js/Dialog", "js/Translator"], function(Dialog, Translator) {
                     .first();
                 $ul.children(".tree-node")
                     .each(function () {
-                        if (this.app.compare(
-                            $(this).data("key"), val) === 0) {
+                        if (val === $(this).data("key")) {
+                            // Key not unique
                             enabled = false;
                             return false;
                         }

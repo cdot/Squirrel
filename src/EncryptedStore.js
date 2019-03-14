@@ -1,10 +1,7 @@
 /*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 
-define(["js/LayeredStore", "js/AES"], function (LayeredStore,
-    AES) {
+define(["js/LayeredStore", "js/AES"], function (LayeredStore, AES) {
 
-    const TAG = "EncryptedStore";
-    
     /**
      * Store engine for encrypted data. Uses 256-bit AES and an
      * underlying engine to actually store the encrypted data. The
@@ -29,19 +26,6 @@ define(["js/LayeredStore", "js/AES"], function (LayeredStore,
             super(p);
         }
 
-        _with_pass(promise) {
-            // If the pass_handler option is set, use it to get a password
-            if (typeof this.option("pass") === "undefined") {
-                let fn = this.option("store_login");
-                if (typeof fn === "function")
-                    return fn(this).then((pass) => {
-                        this.option("pass", pass);
-                        return promise;
-                    });
-            }
-            return promise;
-        }
-        
         read(path) {
             if (this.debug) this.debug("reading", path,this.option("pass"));
             let p = super.read(path)
@@ -61,7 +45,7 @@ define(["js/LayeredStore", "js/AES"], function (LayeredStore,
                     return Promise.reject(this.error(path, 400, "Checksum failure " + data[0] + "!=" + cs));
                 return Promise.resolve(new Uint8Array(data.buffer, 1));
             });
-            return this._with_pass(p);
+            return p;
         }
 
         write(path, a8) {
@@ -71,8 +55,8 @@ define(["js/LayeredStore", "js/AES"], function (LayeredStore,
             a[0] = a8.length % 255;
             a.set(a8, 1)
             // And write
-            return this._with_pass(super.write(
-                path, AES.encrypt(a, this.option("pass"), 256)));
+            return super.write(
+                path, AES.encrypt(a, this.option("pass"), 256));
         }
     }
 

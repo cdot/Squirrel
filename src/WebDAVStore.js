@@ -1,6 +1,7 @@
 /*@preserve Copyright (C) 2018-2019 Crawford Currie http://c-dot.co.uk license MIT*/
+/* eslint-env browser,jquery */
 
-define(["js/Utils", "js/HttpServerStore", "js/Serror"], (Utils, HttpServerStore, Serror) => {
+define(["js/Utils", "js/HttpServerStore"], (Utils, HttpServerStore) => {
 
     const XML_NAMESPACES = {
         'DAV:' : 'd'
@@ -23,6 +24,7 @@ define(["js/Utils", "js/HttpServerStore", "js/Serror"], (Utils, HttpServerStore,
          */
         // @Override
         request(method, url, headers, body) {
+            let self = this;
             return super.request(method, url, headers, body)
             .then((res) => {
                 if (res.status === 207)

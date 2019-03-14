@@ -121,10 +121,6 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
                     store.option("net_pass", RIGHT.pass);
                     return Promise.resolve();
                 });
-                store.option("store_login", function() {
-                    store.option("user", RIGHT.user);
-                    store.option("pass", RIGHT.pass);
-                });
                 return Promise.resolve();
             }
             

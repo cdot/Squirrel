@@ -15,8 +15,10 @@ define(["js/Dialog"], function(Dialog) {
         }
 
         ok() {
+            let self = this;
+            
             return Dialog.open("alert", {
-                title: TX.tx("Loading")
+                title: self.tx("Loading")
             })
             .then((progress) => {
                 let datum;
@@ -25,7 +27,8 @@ define(["js/Dialog"], function(Dialog) {
                 } catch (e) {
                     progress.add({
                         severity: "error",
-                        message: tx("JSON could not be parsed: " + e),
+                        message: self.tx("JSON could not be parsed:")
+                            + " " + e
                     })
                     return false;
                 }

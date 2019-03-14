@@ -1,6 +1,5 @@
 /*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 
-/* global AbstractStore:true */
 define(["js/AbstractStore"], function(AbstractStore) {
 
     /**
@@ -20,6 +19,7 @@ define(["js/AbstractStore"], function(AbstractStore) {
                 throw new Error("LayeredStore requires an understore");
             console.log(p.understore);
             p.type = p.type + "/" + p.understore.options.type;
+            p.debug = p.understore.debug;
             super(p);
             this.understore = p.understore;
         }

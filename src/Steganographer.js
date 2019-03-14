@@ -1,6 +1,7 @@
 /*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
+/* eslint-env browser */
 
-define(function() {
+define(["js/Utils"], function(Utils) {
     /* 
      * Steganography using the least-significant bits of the
      * colour channels in an image.
@@ -191,7 +192,7 @@ define(function() {
                 if (byte_i % 4 === 3)
                     byte_i++; // skip alpha channel
                 numChunks++;
-            };
+            }
             
             // 00000001 00000010 00000011 00000100 00000101
             // 001 000 000 001 000 110 000 000 100 000 100
@@ -233,7 +234,6 @@ define(function() {
             let shift = 30;
             while (shift >= 0) {
                 for (let channel = 0; channel < 3 && shift >= 0; channel++) {
-                    let was = iData[byte_i];
                     iData[byte_i] = (iData[byte_i] & 0xFC)
                         | ((numChunks >> shift) & 0x3);
                     shift -= 2;

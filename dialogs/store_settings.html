@@ -10,7 +10,7 @@
       $1 x $2
     </span>
   </p>
-  <div class="using_steganography">
+  <div data-id="get_image">
     <div class="twisted" data-open="ui-icon-info">
       <p class="twisted-body">
         <span class="TX_text">
@@ -30,24 +30,19 @@
     <input type="file" data-id="image_file" class="dlg-hidden" />
     <p><img id="stegamage" data-id="steg_image" /></p>
   </div>
-  <div class="twisted" data-open="ui-icon-info">
-    <p class="twisted-body">
-      <span class="TX_text">
-        Set the pathname of the image on your cloud store.
-      </span>
-      <span class="TX_text">
-        For example
-        if you choose 'photos/stills/grandma.png' it will use the file
-        'grandma.png' in the directory 'photos/stills'.
-      </span>
-    </p>
-  </div>
-  <p>
-    <label for="store_settings_storepath" class="TX_text">
+  <div data-id="get_path">
+    <div class="twisted" data-open="ui-icon-info">
+      <p class="twisted-body">
+        <span class="TX_text">
+          Enter the path to your cloud data store
+        </span>
+      </p>
+    </div>
+    <label for="store_path" class="TX_text">
       Store path:
     </label>
-    <input data-id="storepath" type="text" value="" class="TX_title" title="Path to the image in your cloud store" autofocus/>
-  </p>
+    <input id="store_path" data-id="path" type="text" value="" class="TX_title" title="Path to your cloud store" autofocus/>
+  </div>
   <p>
     <button data-id="ok" class="TX_text">OK</button>
   </p>

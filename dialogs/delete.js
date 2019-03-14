@@ -8,8 +8,10 @@
 define(["js/Dialog", "js/Hoard"], function(Dialog, Hoard) {
     class DeleteDialog extends Dialog {
         ok() {
-            this.options.app.playAction(Hoard.new_action(
-                "D", this.options.$node.tree("getPath"), Date.now()));
+            this.options.app.playAction(Hoard.new_action({
+                type: "D",
+                path: this.options.$node.tree("getPath")
+            }));
             return true;
         }
         

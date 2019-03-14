@@ -35,9 +35,8 @@ define(['js/Utils', 'js/Translator', 'js/AbstractStore'], function(Utils, Transl
     class GoogleDriveStore extends AbstractStore {
 
         constructor(p) {
-            p = p || {};
-            this.type = "GoogleDriveStore";
             super(p);
+            this.type = "GoogleDriveStore";
         }
 
         init() {
@@ -46,7 +45,7 @@ define(['js/Utils', 'js/Translator', 'js/AbstractStore'], function(Utils, Transl
                 return this._init();
             }
             let self = this;
-            return new Promise((resolve, reject) => {
+            return new Promise((resolve) => {
                 gapi_loader = function () {
                     if (this.debug) this.debug("Loading GoogleDriveStore");
                     resolve(self._init());
@@ -257,7 +256,7 @@ define(['js/Utils', 'js/Translator', 'js/AbstractStore'], function(Utils, Transl
                     },
                     body: multipartRequestBody
                 })
-                .then((response) => {
+                .then((/*response*/) => {
                     return true;
                 })
                 .catch((e) => {

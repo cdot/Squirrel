@@ -84,7 +84,6 @@ define(["js/Translator"], function(Translator) {
                 this.last_sync = data.last_sync;
                 this.actions = data.actions;
                 this.cache = data.cache;
-                this.options = data.options;
                 this.version = data.version || VERSION;
 
                 if (this.version > VERSION)
@@ -97,17 +96,6 @@ define(["js/Translator"], function(Translator) {
                 this.cache = null;
                 this.version = VERSION;
             }
-            if (typeof this.options === "undefined")
-                this.options = {
-                    // options exist in both the client and cloud hoards, but
-                    // are only read from the client - they are never read
-                    // from the cloud. This is so that (for example) a tablet
-                    // doesn't get the autosave option when it spends most of
-                    // its time disconnected.
-
-                    // What's the server path to the hoard store?
-                    store_path: null
-                };
         }
 
         /**
@@ -433,21 +421,25 @@ define(["js/Translator"], function(Translator) {
             let self = this;
 
             // Promise to handle a node
-            function handle_node(node, p, ready) {
+            function handle_node(node, p/*, ready*/) {
                 if (p.length === 0) {
                     // No action for the root
                     return Promise.resolve();
                 }
                 let time = (typeof node.time !== "undefined" ? node.time : Date.now());
-                let action = Hoard.new_action("N", p, time);
+                let action = Hoard.new_action({
+                    type: "N",
+                    path: p,
+                    time: time
+                });
 
                 if (typeof node.data === "string")
                     action.data = node.data;
-                else if (this.debug && typeof node.data === "undefined")
+                else if (self.debug && typeof node.data === "undefined")
                     debugger;
 
                 // Execute the 'N'
-                return new Promise((resolve, reject) => {
+                return new Promise((resolve) => {
                     reconstruct.call(
                         self,
                         action,
@@ -457,39 +449,42 @@ define(["js/Translator"], function(Translator) {
                             // reconstruct 'A' and 'X' actions on it.
                             if (node.alarm) {
                                 reconstruct.call(
-                                    self, Hoard.new_action(
-                                        "A", p, time, node.alarm));
+                                    self, Hoard.new_action({
+                                        type: "A",
+                                        path: p,
+                                        time: time,
+                                        data: node.alarm
+                                    }));
                             }
                             if (node.constraints) {
                                 reconstruct.call(
-                                    self, Hoard.new_action(
-                                        "X", p, time, node.constraints));
+                                    self, Hoard.new_action({
+                                        type: "X",
+                                        path: p,
+                                        time: time,
+                                        data: node.constraints
+                                    }));
                             }
                             resolve();
                         });
                 });
             }
 
-            let count, counter;
-
             // Recursively traverse nodes, starting at the root
-            function list_nodes(node, pat) {
-                count++;
+            function visit_nodes(node, pat) {
                 let promise = handle_node(node, pat);
 
                  if (typeof node.data === "object") {
                     for (let key in node.data) {
                         let p = pat.slice();
                         p.push(key);
-                        promise = promise.then(() => {
-                            return list_nodes(node.data[key], p);
-                        });
+                        promise = promise.then(visit_nodes(node.data[key], p));
                     }
                 }
                 return promise;
             }
 
-            return list_nodes(data, path.slice());
+            return visit_nodes(data, path.slice());
         }
 
         /**
@@ -505,7 +500,7 @@ define(["js/Translator"], function(Translator) {
          * is constructed. reconstruct.call(this:Hoard, action:Action, follow:Function)
          */
         actions_from_hierarchy(data, reconstruct) {
-            if (data && data.length > 0)
+            if (data)
                 return this._reconstruct_actions(data, [], reconstruct);
             return Promise.resolve();
         }
@@ -520,9 +515,7 @@ define(["js/Translator"], function(Translator) {
          * is constructed. reconstruct.call(this:Hoard, action:Action, follow:Function)
          */
         reconstruct_actions(reconstruct) {
-            if (this.cache && this.cache.length > 0)
-                return this._reconstruct_actions(this.cache, [], reconstruct);
-            return Promise.resolve();
+            return this.actions_from_hierarchy(this.cache, reconstruct);
         }
 
         /**

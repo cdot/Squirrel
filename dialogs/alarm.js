@@ -90,17 +90,21 @@ define(["js/Dialog", "js/Hoard", "jsjq/template"], function(Dialog, Hoard) {
                     let numb = self.control("number")
                         .val() *
                         TIMEUNITS[self.control("units").val()].days;
-                    self.options.app.playAction(Hoard.new_action(
-                        "A", self.options.$node.tree("getPath"), Date.now(),
-                        numb));
+                    self.options.app.playAction(Hoard.new_action({
+                        type: "A",
+                        path: self.options.$node.tree("getPath"),
+                        data: numb
+                    }));
                     return false;
                 });
 
             this.control("clear")
                 .on(this.tapEvent(), function () {
                     self.close();
-                    self.options.app.playAction(Hoard.new_action(
-                        "C", self.options.$node.tree("getPath"), Date.now()));
+                    self.options.app.playAction(Hoard.new_action({
+                        type: "C",
+                        path: self.options.$node.tree("getPath")
+                    }));
                     return false;
                 });
         }

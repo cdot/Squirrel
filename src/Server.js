@@ -282,7 +282,7 @@ define(["url", "extend", "fs-extra"], function(Url, extend, Fs) {
                 response.statusCode = 400;
                 response.end();
             }
-        };
+        }
 
         /**
          * handler for incoming OPTIONS request (tuned for CORS pre-flight request)

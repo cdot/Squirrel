@@ -1,10 +1,14 @@
 /*@preserve Copyright (C) 2018-2019 Crawford Currie http://c-dot.co.uk license MIT*/
+/* eslint-env shared-node-browser */
 
 define(["js/Serror", "js/AbstractStore"], function(Serror, AbstractStore) {
     if (typeof XMLHttpRequest === "undefined") {
         // node.js
+        /* global XMLHttpRequest: true */
         XMLHttpRequest = require("xhr2");
+        /* global btoa: true */
         btoa = require('btoa');
+        /* global URL: true */
         URL = require('url-parse');
     }
 
@@ -59,7 +63,7 @@ define(["js/Serror", "js/AbstractStore"], function(Serror, AbstractStore) {
                 let pass = self.option("net_pass");
                 if (typeof user !== "undefined") {
                     if (self.debug) self.debug("Using auth", user, pass);
-                    headers['Authorization'] = 'Basic '
+                    headers.Authorization = 'Basic '
                         + btoa(user + ':' + pass);
                 } else if (self.debug) self.debug("No auth header");
                 let base = self.option("net_url") || "";
@@ -123,7 +127,7 @@ define(["js/Serror", "js/AbstractStore"], function(Serror, AbstractStore) {
          * @param path {String} Relative or absolute path to folder
          * @throws Serror if anything goes wrong
          */
-        mkpath(path) {
+        mkpath(/*path*/) {
             return Promise.resolve();
         }
         
@@ -139,7 +143,6 @@ define(["js/Serror", "js/AbstractStore"], function(Serror, AbstractStore) {
 
         // @Override
         write(path, data) {
-            let self = this;
             if (this.debug) this.debug("Writing", path);
             let pathbits = path.split('/');
             let folder = pathbits.slice(0, pathbits.length - 1);

@@ -15,7 +15,7 @@ define(["js/Dialog"], function(Dialog) {
          */
         open() {
             let self = this;
-            console.log("Opening", this.options.alert);
+            //if (self.debug) self.debug(this.options.alert);
             self.control("messages").empty();
             if (this.options.alert)
                 this.add(this.options.alert);

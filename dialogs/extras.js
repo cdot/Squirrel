@@ -1,23 +1,26 @@
 /*@preserve Copyright (C) 2019 Crawford Currie http://c-dot.co.uk license MIT*/
+/* eslint-env jquery */
+/* global document */
+
 /**
  * Options:
  * app (required)
  */
-define(["js/Dialog", "js/Translator", "js/Tree", "jsjq/styling"], function(Dialog, Translator, Tree) {
+define(["js/Dialog", "js/Translator", "js/Tree", "cookie", "jsjq/styling"], function(Dialog, Translator, Tree, Cookies) {
     
     class ExtrasDialog extends Dialog {
 
         _autosave(on) {
             if (typeof on !== "undefined") {
                 let ons = (on ? "on" : "off");
-                if (this.options.cookies.get("ui_autosave") !== ons) {
-                    this.options.cookies.set("ui_autosave", ons, {
+                if (Cookies.get("ui_autosave") !== ons) {
+                    Cookies.set("ui_autosave", ons, {
                         expires: 365
                     });
-                    this.options.app.trigger("update_save");
+                    $(document).trigger("update_save");
                 }
             }
-            return this.options.cookies.get("ui_autosave");
+            return Cookies.get("ui_autosave") === "on";
         }
         
         initialise() {
@@ -36,7 +39,9 @@ define(["js/Dialog", "js/Translator", "js/Tree", "jsjq/styling"], function(Dialo
 
             this.control("hidevalues")
                 .on("change", function () {
-                    Tree.hidingValues = $(this).prop("checked");
+                    let checked = $(this).prop("checked");
+                    Tree.showHideValues(checked);
+                    Cookies.set("ui_hidevalues", checked ? "on" : null);
                 });
 
             this.control("chpw")
@@ -48,7 +53,7 @@ define(["js/Dialog", "js/Translator", "js/Tree", "jsjq/styling"], function(Dialo
             this.control("chss")
                 .on(this.tapEvent(), function () {
                     self.close();
-                    Dialog.open("store_settings", self.options);
+                    self.options.app.get_store_settings(true);
                 });
 
             this.control("theme")
@@ -111,7 +116,8 @@ define(["js/Dialog", "js/Translator", "js/Tree", "jsjq/styling"], function(Dialo
             this.control("autosave").prop("checked", this._autosave());
 
             this.control("hidevalues")
-                .prop("checked", Tree.hidingValues);
+                .prop("checked",
+                      Cookies.get("ui_hidevalues")  === "on");
             
             Translator.instance().language().then((lingo) => {
                 this.control("language").val(lingo);

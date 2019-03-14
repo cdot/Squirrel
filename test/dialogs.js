@@ -25,20 +25,19 @@ define(["js/Dialog", "js/Translator", "js/LocalStorageStore", "js/Hoard", "js/Tr
 
     let list = [
         "about",
+        "add",
+        "alarm",
         "alert",
         "chpw",
-        "insert",
-        "optimise",
-        "store_login",
-        "add",
         "delete",
-        "json",
-        "pick",
-        "store_settings",
-        "alarm",
         "extras",
-        "network_login",
-        "randomise"
+        "insert",
+        "json",
+        "login",
+        "optimise",
+        "pick",
+        "randomise",
+        "store_settings"
     ];
 
     let debug = console.debug;
@@ -68,31 +67,20 @@ define(["js/Dialog", "js/Translator", "js/LocalStorageStore", "js/Hoard", "js/Tr
         encryptionPass: function() { debug("encryptionPass", arguments); },
         USE_STEGANOGRAPHY: true
     };
-
+    
+    let login_title = "Login";
     let specials = {
-        network_login: function() {
-            Dialog.confirm("network_login", {
-                user: "Bungdit", pass: "Din"
+        login: function() {
+            Dialog.confirm("login", {
+                title: login_title,
+                user: "Jaffar",
+                pass: "Cayke"
             }).then((dlg) => {
-                let user = dlg.control("net_user").val();
-                let pass = dlg.control("net_pass").val();
+                let user = dlg.control("user").val();
+                let pass = dlg.control("pass").val();
+                login_title = "Login " + user + ":" + pass;
                 Dialog.open("alert", {
-                    alert: {
-                        severity: "notice",
-                        message: user + ":" + pass
-                    }
-                });
-            });
-        },
-        store_login: function() {
-            Dialog.confirm("store_login", {
-                user: "Jaffar", pass: "Cayke",
-                user_required: true, pass_required: true
-            }).then((dlg) => {
-                let user = dlg.control("store_user").val();
-                let pass = dlg.control("store_pass").val();
-                Dialog.open("alert", {
-                    alert: user + ":" + pass
+                    alert: login_title
                 });
             });
         },

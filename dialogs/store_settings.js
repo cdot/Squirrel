@@ -1,4 +1,5 @@
 /*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
+/* global FileReader */
 /**
  * Options:
  * app (required)
@@ -34,7 +35,6 @@ define(["js/Dialog", "js/Utils", "jsjq/template"], function(Dialog, Utils) {
 
         newImage(img) {
             let self = this;
-            let app = self.options.app;
  
             // Check that we can use the image.
             requirejs(["js/Steganographer"], function(Steganographer) {
@@ -48,13 +48,7 @@ define(["js/Dialog", "js/Utils", "jsjq/template"], function(Dialog, Utils) {
                     .show()
                     .template("pick", "xbyy")
                     .template("expand", w, h);
-                if (app.client.status === app.IS_LOADED)
-                    app.client.status = app.NEW_SETTINGS;
-                if (app.cloud.status === app.IS_LOADED)
-                    app.cloud
-                    .status = app.NEW_SETTINGS;
-                app.trigger("update_save");
-            });
+             });
         }
         
         changeImage() {
@@ -82,7 +76,6 @@ define(["js/Dialog", "js/Utils", "jsjq/template"], function(Dialog, Utils) {
 
         initialise() {
             let self = this;
-            let app = this.options.app;
 
             this.find(".template").template();
             
@@ -93,55 +86,40 @@ define(["js/Dialog", "js/Utils", "jsjq/template"], function(Dialog, Utils) {
             this.control("steg_image").attr(
                 "src", requirejs.toUrl("images/GCHQ.png"));
 
-            this.control("storepath")
+            this.control("path")
                 .on("keyup", function () {
-                    if (self.control("storepath").val() === "") {
+                    if (self.control("path").val() === "") {
                         this.control("message")
                             .show()
                             .template("pick", "mnbe");
                         return false;
                     }
-                    if (app.client.hoard.options.store_path !==
-                        self.control("storepath").val()) {
-                        app.client
-                            .hoard.options.store_path =
-                            self.control("storepath")
-                            .val();
-                        if (app.client
-                            .status === app.IS_LOADED)
-                            app.client
-                            .status = app.NEW_SETTINGS;
-                        // No - the cloud isn't affected by the store path,
-                        // so don't mark it as changed
-                        app.trigger("update_save");
-                    }
                     return true;
                 })
                 .on("change", function () {
-                    self.control("ok")
-                        .trigger(self.tapEvent());
+                    self.control("ok").trigger(self.tapEvent());
                 });
         }
 
         ok() {
-            if (this.control("storepath").val() === "") {
-                this.control("message").show().template("pick", "mnbe");;
+            if (this.control("path").val() === "") {
+                this.control("message").show().template("pick", "mnbe");
                 return false;
             }
             return true;
         }
         
         open() {
-            let app = this.options.app;
-            if (app.cloud.store.option("needs_image"))
-                this.find(".using_steganography").show();
+            if (this.options.needs_image)
+                this.control("get_image").show();
             else
-                this.find(".using_steganography").hide();
+                this.control("get_image").hide();
             this.control("message").hide();
-            if (app.cloud.store.option("needs_path"))
-                this.control("storepath")
-                .focus()
-                .val(app.client.hoard.options.store_path);
+            if (this.options.needs_path) {
+                this.control("get_path").show();
+                this.control("path").focus().val(this.options.path);
+            } else
+                this.control("get_path").hide();
         }
     }
     return StoreSettingsDialog;

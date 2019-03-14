@@ -1,10 +1,6 @@
 /*@preserve Copyright (C) 2015-2017 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,node,jquery */
 
-if (typeof define !== 'function') {
-    var define = require('amdefine')(module);
-}
-
 define(["../node_modules/utf8/utf8"], function() {
 
     /**

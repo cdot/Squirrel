@@ -35,13 +35,13 @@ define(["js/Dialog"], function(Dialog) {
             for (i = 0; i < val.length; i++) {
                 $f = $from.children("td.i" + i);
                 if ($f.length === 0) {
-                    $(document.createElement("td"))
+                    $("<td></td>")
                         .data("i", i)
                         .addClass("dlg-pick-cell i" + i)
                         .text(i + 1)
                         .on(this.tapEvent(), item_clicked)
                         .appendTo($which);
-                    $f = $(document.createElement("td"))
+                    $f = $("<td></td>")
                         .data("i", i)
                         .addClass("dlg-pick-cell i" + i)
                         .on(this.tapEvent(), item_clicked)

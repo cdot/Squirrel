@@ -1,5 +1,7 @@
 /*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,node */
+/* global XMLHttpRequest:true */
+
 /**
  * Translations module. Guesses the language to use from cookies, or
  * from the browser locale.
@@ -26,7 +28,7 @@
 if (typeof XMLHttpRequest === "undefined")
     XMLHttpRequest = require("xhr2");
 
-define(["js/Utils"], function(Utils) {
+define(["js/Utils", "cookie"], function(Utils, Cookies) {
 
     class Translator {
 
@@ -67,7 +69,7 @@ define(["js/Utils"], function(Utils) {
          * @param document optional DOM
          */
         language(lingo, document) {
-            if (!this.lingo && typeof Cookies !== "undefined")
+            if (!this.lingo)
                 this.lingo = Cookies.get("tx_lang");
             if (!this.lingo && window && window.navigator)
                 this.lingo = (window.navigator.userLanguage

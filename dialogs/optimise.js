@@ -7,6 +7,8 @@ define(["js/Dialog", "jsjq/template"], function(Dialog) {
     class OptimiseDialog extends Dialog {
 
         initialise() {
+            let self = this;
+
             this.control("optimise")
                 .on(this.tapEvent(), function () {
                     this.app.client.hoard.clear_actions();
