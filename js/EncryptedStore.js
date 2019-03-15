@@ -27,12 +27,13 @@ define(["js/LayeredStore", "js/AES"], function (LayeredStore, AES) {
         }
 
         read(path) {
-            if (this.debug) this.debug("reading", path,this.option("pass"));
+            if (this.debug) this.debug("reading", path);
             let p = super.read(path)
             .then((ab) => {
-                if (this.debug) this.debug("decrypting",this.option("pass"));
+                if (this.debug) this.debug("decrypting");
                 let data;
                 try {
+                    debugger;
                     data = AES.decrypt(ab, this.option("pass"), 256);
                 } catch (e) {
                     // Decryption failure, assume wrong credentials

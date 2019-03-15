@@ -5,7 +5,7 @@
  * $node (rquired)
  * app (required)
  */
-define(["js/Dialog", "js/Hoard", "jsjq/template"], function(Dialog, Hoard) {
+define(["js/Dialog", "js/Hoard", "js/jq/template"], function(Dialog, Hoard) {
     const TIMEUNITS = {
         y: {
             days: 360,
@@ -71,9 +71,9 @@ define(["js/Dialog", "js/Hoard", "jsjq/template"], function(Dialog, Hoard) {
 
         initialise() {
             let self = this;
-            
+
             this.find(".template").template();
-            
+
             this.control("units")
                 .on("change", function () {
                     self.updateNext();
@@ -112,12 +112,12 @@ define(["js/Dialog", "js/Hoard", "jsjq/template"], function(Dialog, Hoard) {
         open() {
             let $node = this.options.$node;
             let lastmod;
-            
+
             this.control("path")
                 .text($node.tree("getPath")
                       .join("↘"));
             lastmod = $node.data("last-time-changed");
-            
+
             this.control("lastmod")
                     .template(
                         "expand",

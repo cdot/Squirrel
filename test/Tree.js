@@ -7,7 +7,7 @@ if (typeof module !== "undefined") {
     document = new JSDOM('<!doctype html><html><body><div id="container"><div id="sites-node"></div></div></body></html>');
     const { window } = document;
     global.window = window;
-    global.document = window.document;   
+    global.document = window.document;
     global.navigator = { userAgent: "node.js" };
     let jQuery = require('jquery');
     global.jQuery = jQuery;
@@ -19,9 +19,6 @@ if (typeof module !== "undefined") {
 requirejs.config({
     baseUrl: "..",
     paths: {
-        js: "src",
-        jsjq: "src/jquery",
-        test: "test",
         "jquery-ui": "test/libs/jquery-ui"
     }
 });
@@ -92,7 +89,7 @@ requirejs(deps, function(Utils, Hoard, Translator, Tree, TestRunner) {
     let tr = new TestRunner("Tree");
     let assert = tr.assert;
     let $DOMtree = $("#sites-node");
-       
+
     let TX = Translator.instance();
 
     function normalise_html(html) {
@@ -119,7 +116,7 @@ requirejs(deps, function(Utils, Hoard, Translator, Tree, TestRunner) {
         $DOMtree.find("ul").remove();
         Tree.cache = {};
     });
-    
+
     tr.addTest("should play_actions into empty hoard", function() {
         // Reconstruct a cache from an actions list in an empty hoard
         var undi = 0;
@@ -148,7 +145,7 @@ requirejs(deps, function(Utils, Hoard, Translator, Tree, TestRunner) {
             </div>';
         expect_html(empty_tree);
     });
-            
+
     tr.addTest("should open undecorated", function() {
         for (let i in actions) {
             $DOMtree.tree("action", actions[i]);
@@ -173,7 +170,7 @@ requirejs(deps, function(Utils, Hoard, Translator, Tree, TestRunner) {
               </div>';
         expect_html(open_tree);
     });
-    
+
     tr.addTest("should open decorated", function() {
         for (let i in actions) {
             $DOMtree.tree("action", actions[i]);
@@ -220,7 +217,7 @@ requirejs(deps, function(Utils, Hoard, Translator, Tree, TestRunner) {
             </div>';
         expect_html(open_tree);
     });
-    
+
     tr.addTest("should close decorated", function() {
         for (let i in actions) {
             $DOMtree.tree("action", actions[i]);

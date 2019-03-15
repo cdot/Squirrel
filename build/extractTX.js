@@ -22,7 +22,7 @@ function processHTML(fname) {
 function processJS(fname) {
     console.log("Reading " + fname);
     var sname = fname + ".strings";
-    
+
     return Fs.readFile(fname).then((data) => {
         var strings = [];
         ("" + data).replace(

@@ -4,8 +4,6 @@
 requirejs.config({
     baseUrl: ".",
     paths: {
-        js: "src",
-        jsjq: "src/jquery",
         jquery: "//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery",
         "jquery-ui": "//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui",
         "jquery-ui/ui": "node_modules/jquery-ui/ui",
@@ -74,17 +72,11 @@ define(["js/Utils", "js/Squirrel", "js/Translator", "jquery"], function (Utils, 
         });
     }
 
-    if (typeof qs.stores === "undefined")
-        qs.cloudStore = "LocalStorageStore";
-
     Translator.instance({debug: qs.debug ? console.debug : false});
 
     // Initialise UI components
     $(function() {
-        let squirrel = new Squirrel(qs);
-
-        squirrel.init_ui();
-        $(document).trigger("init_application");
+        new Squirrel(qs).begin();
     });
 });
 

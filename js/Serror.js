@@ -17,7 +17,7 @@ define(function() {
         }
 
         toString() {
-            return "Serror: " + this.status + " " + this.path + " "
+            return "status " + this.status + " " + this.path + " "
                 + (this.message || "");
         }
     }

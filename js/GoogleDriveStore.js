@@ -12,7 +12,7 @@ function gapi_on_load() {
         gapi_loader();
 }
 
-define(['js/Utils', 'js/Translator', 'js/AbstractStore'], function(Utils, Translator, AbstractStore) {
+define(['js/Utils', 'js/Translator', 'js/HttpServerStore', 'js/Serror'], function(Utils, Translator, HttpServerStore, Serror) {
     let TX = Translator.instance();
 
     /**
@@ -32,22 +32,26 @@ define(['js/Utils', 'js/Translator', 'js/AbstractStore'], function(Utils, Transl
     const DELIMITER = "\r\n--" + BOUNDARY + "\r\n";
     const RETIMILED = "\r\n--" + BOUNDARY + "--";
 
-    class GoogleDriveStore extends AbstractStore {
+    class GoogleDriveStore extends HttpServerStore {
 
         constructor(p) {
+            
             super(p);
-            this.type = "GoogleDriveStore";
+            this.option("type", "GoogleDriveStore");
+            this.option("needs_url", false);
+            this.option("url", "");
         }
 
+        // @Override
         init() {
+            let self = this;
             if (gapi_is_loaded) {
                 if (this.debug) this.debug("gapi is already loaded");
                 return this._init();
             }
-            let self = this;
             return new Promise((resolve) => {
                 gapi_loader = function () {
-                    if (this.debug) this.debug("Loading GoogleDriveStore");
+                    if (self.debug) self.debug("Loading GoogleDriveStore");
                     resolve(self._init());
                 };
                 return $.getScript("https://apis.google.com/js/client.js?onload=gapi_on_load");
@@ -59,21 +63,23 @@ define(['js/Utils', 'js/Translator', 'js/AbstractStore'], function(Utils, Transl
          * Analyse an error returned by a Google promise
          */
         _gError(r, context) {
-            if (this.debug) {
-                let mess = context + TX.tx(" failed: ");
-                if (r.status === 401) {
-                    mess +=
-                        TX.tx("Your access token has expired, or you are not logged in.") +
-                        " " +
-                        TX.tx("Please refresh the page in order to save in Google Drive");
-                } else if (r.result) {
-                    mess += r.result.error.message;
-                } else {
-                    mess += r.body;
-                }
-                this.debug(mess);
+            let mess = context + TX.tx(" failed: ");
+            if (typeof r.details !== "undefined")
+                mess += r.details;
+            else if (typeof r.error !== "undefined")
+                mess += r.error;
+            else if (r.status === 401) {
+                mess +=
+                    TX.tx("Your access token has expired, or you are not logged in.") +
+                    " " +
+                    TX.tx("Please refresh the page in order to save in Google Drive");
+            } else if (r.result && r.result.error) {
+                mess += r.result.error.message;
+            } else {
+                mess += r.body;
             }
-            this.status(r.status);
+            if (this.debug) this.debug(mess);
+            return mess;
         }
 
         _init() {
@@ -87,7 +93,7 @@ define(['js/Utils', 'js/Translator', 'js/AbstractStore'], function(Utils, Transl
                         " " + TX.tx("Are popups blocked in your browser?"));
             }, 20000);
 
-            if (this.debug) this.debug("GoogleDriveStore: authorising");
+            if (this.debug) this.debug("authorising");
 
             return gapi.auth
                 .authorize({
@@ -103,11 +109,11 @@ define(['js/Utils', 'js/Translator', 'js/AbstractStore'], function(Utils, Transl
                         throw new Error(authResult.fail);
                     // Access token has been retrieved, requests
                     // can be sent to the API.
-                    if (this.debug) this.debug("GoogleDriveStore: auth OK");
+                    if (this.debug) this.debug("auth OK");
                     return gapi.client.load("drive", "v2");
                 })
                 .then(() => {
-                    if (this.debug) this.debug("GoogleDriveStore: drive/v2 loaded");
+                    if (this.debug) this.debug("drive/v2 loaded");
                     return gapi.client.drive.about.get("name");
                 })
                 .then((result) => {
@@ -117,33 +123,15 @@ define(['js/Utils', 'js/Translator', 'js/AbstractStore'], function(Utils, Transl
                     // We're done, fall through to resolve
                 })
                 .catch((r) => {
-                    self._gError(r, TX.tx("Google Drive load"));
-                    throw new Error("GoogleDriveStore: init failed");
+                    throw new Serror(
+                        "", 500, self._gError(r, TX.tx("Google Drive load")));
                 });
         }
 
-        /**
-         * @private
-         * Promise to get the (binary) content of a file
-         * @param url url to GET
-         * @param ok callback on ok, passed the data
-         * @param fail callback on fail
-         */
-        _getfile(url) {
-            if (this.debug) this.debug("GoogleDriveStore: GET " + url);
-
-            // SMELL: no client API to get file content from Drive
-            return $.ajax({
-                url: url,
-                method: "GET",
-                dataType: "binary",
-                responseType: "arraybuffer",
-                beforeSend: function (jqXHR) {
-                    jqXHR.setRequestHeader(
-                        "Authorization",
-                        "Bearer " + gapi.auth.getToken().access_token);
-                }
-            });
+        // @Override
+        addAuth(headers) {
+            headers["Authorization"] =
+            "Bearer " + gapi.auth.getToken().access_token;
         }
 
         /**
@@ -156,7 +144,7 @@ define(['js/Utils', 'js/Translator', 'js/AbstractStore'], function(Utils, Transl
             let self = this;
 
             if (path.length === 0)
-                return parentid;
+                return Promise.resolve(parentid);
 
             let p = path.slice();
             let pathel = p.shift();
@@ -192,10 +180,10 @@ define(['js/Utils', 'js/Translator', 'js/AbstractStore'], function(Utils, Transl
                     let items = response.result.items;
                     if (items.length > 0) {
                         let id = items[0].id;
-                        if (this.debug) this.debug("GoogleDriveStore: found " + query + " at " + id);
+                        if (this.debug) this.debug("found " + query + " at " + id);
                         return self._follow_path(id, p, create);
                     }
-                    if (this.debug) this.debug("GoogleDriveStore: could not find " + query);
+                    if (this.debug) this.debug("could not find " + query);
                     if (create)
                         return create_folder();
                     self.status(404);
@@ -265,13 +253,14 @@ define(['js/Utils', 'js/Translator', 'js/AbstractStore'], function(Utils, Transl
                 });
         }
 
+        // @Override
         write(path, data) {
             let self = this;
 
             let p = path.split("/");
             let name = p.pop();
 
-            if (this.debug) this.debug("GoogleDriveStore: following " + path);
+            if (this.debug) this.debug("following " + path);
             return this
                 ._follow_path("root", p, true)
                 .then((parentId) => {
@@ -282,7 +271,7 @@ define(['js/Utils', 'js/Translator', 'js/AbstractStore'], function(Utils, Transl
                     let query = "title='" + name + "'" +
                         " and '" + parentId + "' in parents" +
                         " and trashed=false";
-                    if (this.debug) this.debug("GoogleDriveStore: checking existance of " + name);
+                    if (this.debug) this.debug("checking existance of " + name);
                     return gapi.client.drive.files
                         .list({
                             q: query
@@ -292,20 +281,20 @@ define(['js/Utils', 'js/Translator', 'js/AbstractStore'], function(Utils, Transl
                             let id;
                             if (items.length > 0) {
                                 id = items[0].id;
-                                if (this.debug) this.debug("GoogleDriveStore: updating " + name + " id " + id);
+                                if (this.debug) this.debug("updating " + name + " id " + id);
                             } else
-                                if (this.debug) this.debug("GoogleDriveStore: creating " + name + " in " + parentId);
+                                if (this.debug) this.debug("creating " + name + " in " + parentId);
                             return self._putfile(parentId, name, data, id);
                         })
                         .catch((r) => {
-                            self._gError(r, TX.tx("Write"));
-                            return false;
+                            throw new Serror(path, 400, self._gError(r, TX.tx("Write")));
                         });
                 });
         }
 
+        // @Override
         read(path) {
-            if (this.debug) this.debug("GoogleDriveStore: read " + path);
+            if (this.debug) this.debug("read " + path);
 
             let p = path.split("/");
             let name = p.pop();
@@ -319,7 +308,6 @@ define(['js/Utils', 'js/Translator', 'js/AbstractStore'], function(Utils, Transl
                     let query = "title='" + name + "'" +
                         " and '" + parentId + "' in parents" +
                         " and trashed=false";
-
                     return gapi.client.drive.files
                         .list({
                             q: query
@@ -328,17 +316,17 @@ define(['js/Utils', 'js/Translator', 'js/AbstractStore'], function(Utils, Transl
                             let items = response.result.items;
                             if (items.length === 0) {
                                 if (this.debug) this.debug(
-                                    "GoogleDriveStore: could not find " + name);
-                                throw new Error("No data");
+                                    "could not find " + name);
+                                throw new Serror(path, 401, "Not found");
                             }
                             let url = items[0].downloadUrl;
                             if (this.debug) this.debug(
-                                "GoogleDriveStore: download found " + name + " at " + url);
-                            return self._getfile(url);
+                                "download found " + name + " at " + url);
+                            // use HttpServerStore.request
+                            return self.request("GET", url);
                         })
                         .catch((r) => {
-                            self._gError(r, TX.tx("Read"));
-                            return undefined;
+                            throw new Serror(path, 400, self._gError(r, TX.tx("Read")));
                         });
                 });
         }

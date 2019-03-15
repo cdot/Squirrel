@@ -2,7 +2,7 @@
 /*eslint-env node, mocha */
 
 /**
- * TestRunner for src/jquery/simulated_password.js only.
+ * TestRunner for js/jq/simulated_password.js only.
  * Note this may not run correctly under node.js, due to the lack of event
  * handlers in jsdom. The gold standard is that it runs in a browser.
  */
@@ -13,7 +13,7 @@ if (typeof module !== "undefined") {
     document = new JSDOM('<!doctype html><html><body id="working"></body></html>');
     const { window } = document;
     global.window = window;
-    global.document = window.document;   
+    global.document = window.document;
     global.navigator = { userAgent: "node.js" };
     let jQuery = require('jquery');
     global.jQuery = jQuery;
@@ -21,15 +21,10 @@ if (typeof module !== "undefined") {
 }
 
 requirejs.config({
-    baseUrl: "..",
-    paths: {
-        js: "src",
-        jsjq: "src/jquery",
-        test: "test"
-    }
+    baseUrl: ".."
 });
 
-requirejs(["test/TestRunner", "jquery", "jsjq/simulated_password"], function(TestRunner) {
+requirejs(["test/TestRunner", "jquery", "js/jq/simulated_password"], function(TestRunner) {
 
     let tr = new TestRunner("simulated_password");
     let assert = tr.assert;
@@ -37,7 +32,7 @@ requirejs(["test/TestRunner", "jquery", "jsjq/simulated_password"], function(Tes
     tr.afterEach(function() {
         $("#working").empty();
     });
-    
+
     tr.addTest('basic', function() {
         let $html = $('<input type="password">');
         $("#working").append($html);
@@ -84,7 +79,7 @@ requirejs(["test/TestRunner", "jquery", "jsjq/simulated_password"], function(Tes
         });
         $p.trigger(jQuery.Event("input"));
     });
-    
+
     tr.addTest('typing', function() {
         $("#working").html('<input class="password" id="tt" value="bass">');
         let $p = $(".password");
@@ -97,7 +92,7 @@ requirejs(["test/TestRunner", "jquery", "jsjq/simulated_password"], function(Tes
         });
         $p.trigger(new jQuery.Event("input", { key: "h" }));
     });
-    
+
     tr.addTest('set val', function() {
         $("#working").html('<input class="password" id="tt" value="bass">');
         let $p = $(".password");
@@ -116,7 +111,7 @@ requirejs(["test/TestRunner", "jquery", "jsjq/simulated_password"], function(Tes
             $p.val("roach");
         });
     });
-    
+
     $(() => {
         tr.run();
     });

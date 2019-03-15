@@ -1,16 +1,16 @@
 /*@preserve Copyright (C) 2019 Crawford Currie http://c-dot.co.uk license MIT*/
-    
+
 define(function() {
 
     class Pseudoword {
         /**
-         * Generate a pseudoword 
+         * Generate a pseudoword
          * @param len length of word to generate
          */
         getWord(len) {
             if (!len || len <= 0)
                 len = 5;
-            
+
             let cStreak = 0, vStreak = 0;
             let ch1 = Math.floor(Math.random() * 26);
             let str = "";
@@ -20,7 +20,7 @@ define(function() {
                     c = 0, v = vStreak + 1;
                 else
                     c = cStreak + 1, v = 0;
-                
+
                 if (c < 3 && v < 3)
                     str += ch;
                 cStreak = c; vStreak = v;

@@ -41,14 +41,14 @@
  * names to DOM nodes.
  */
 
-define(["js/Hoard", "jquery", "jsjq/edit_in_place", "jsjq/scroll_into_view", "jsjq/icon_button", "jquery-ui"], function(Hoard) {
+define(["js/Hoard", "jquery", "js/jq/edit_in_place", "js/jq/scroll_into_view", "js/jq/icon_button", "jquery-ui"], function(Hoard) {
 
     // separator used in Path->node mapping index
     const PATHSEP = String.fromCharCode(1);
 
     // Character used to hide values
     const HIDE = "※";
-    
+
     /**
      * Static mapping paths to nodes
      */
@@ -189,7 +189,7 @@ define(["js/Hoard", "jquery", "jsjq/edit_in_place", "jsjq/scroll_into_view", "js
             if (on && Tree.hidingValues() ||
                 !on && !Tree.hidingValues())
                 return;
-            
+
             $(".tree-leaf")
                 .each(function() {
                     let v = $(this).data("value");
@@ -201,7 +201,7 @@ define(["js/Hoard", "jquery", "jsjq/edit_in_place", "jsjq/scroll_into_view", "js
                             });
                 });
         },
-        
+
         /**
          * Requires edit_in_place. selector may be a jquery selector or
          * an object.

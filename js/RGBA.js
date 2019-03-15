@@ -476,4 +476,4 @@ define(function() {
 
     return RGBA;
 });
-    
+

@@ -5,12 +5,7 @@ if (typeof requirejs === "undefined")
     requirejs = require('requirejs');
 
 requirejs.config({
-    baseUrl: "..",
-    paths: {
-        js: "src",
-        jsjq: "src/jquery",
-        test: "test"
-    }
+    baseUrl: ".."
 });
 
 var server;
@@ -29,31 +24,31 @@ requirejs(deps, function(StoreTester, express, basicAuth) {
     if (express) {
         // node.js, express is available, make a simple server
         let app = express();
-        
+
         let users = {};
         users[StoreTester.right().user] = StoreTester.right().pass;
         console.log("Server users:",users);
         app.use(basicAuth({
             users: users
         }));
-        
+
         app.use(function(req, res, next) {
             let chunks = [];
             req.on('data', function(chunk) {
                 chunks.push(chunk);
             });
-            
+
             req.on('end', function() {
                 req.body = Buffer.concat(chunks);
                 next();
             });
         });
-        
+
         app.put('/*', (req, res) => {
             datastore[req.path] = req.body;
             res.sendStatus(200);
         });
-        
+
         app.get('/*', (req, res) => {
             if (typeof datastore[req.path] !== "undefined") {
                 res.send(datastore[req.path]);
@@ -61,16 +56,16 @@ requirejs(deps, function(StoreTester, express, basicAuth) {
             }
             res.sendStatus(404);
         });
-        
+
         config = new Promise((resolve, reject) => {
             server = app.listen(function() {
                 let url = "http://localhost:" + server.address().port;
                 console.debug("Express server listening on " + url);
-                resolve({ net_url: url });
+                resolve({ url: url });
             });
         });
     }
-        
+
     config.then((cfg) => {
         new StoreTester(["HttpServerStore"]).run(cfg)
             .then(() => {

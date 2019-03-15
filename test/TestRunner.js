@@ -10,7 +10,7 @@ if (typeof requirejs === "undefined") {
 define(["mocha", "chai"], function(maybeMocha, chai) {
     if (typeof Mocha === "undefined")
         Mocha = maybeMocha; // node.js
-    
+
     class TestRunner {
         constructor(title, debug) {
             this.assert = chai.assert;
@@ -30,7 +30,7 @@ define(["mocha", "chai"], function(maybeMocha, chai) {
         afterEach(after) {
             this.after = after;
         }
-        
+
         addTest(title, fn) {
             let self = this;
             let test = new Mocha.Test(title, function() {
@@ -48,7 +48,7 @@ define(["mocha", "chai"], function(maybeMocha, chai) {
             });
             this.mocha.suite.addTest(test);
         }
-        
+
         run() {
             return new Promise((resolve) => {
                 this.mocha.timeout(0);

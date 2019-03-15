@@ -14,9 +14,8 @@ define(["js/Utils", "js/HttpServerStore"], (Utils, HttpServerStore) => {
 
         constructor(p) {
             p = p || {};
-            p.type = "WebDAVStore";
-            p.needs_url = true;
             super(p);
+            this.option("type", "WebDAVStore");
         }
 
         /**
@@ -32,7 +31,7 @@ define(["js/Utils", "js/HttpServerStore"], (Utils, HttpServerStore) => {
                 return res;
             });
         }
-        
+
         /**
          * Escape special characters in an XML string
          * @param {type} s string to exacpe
@@ -51,7 +50,7 @@ define(["js/Utils", "js/HttpServerStore"], (Utils, HttpServerStore) => {
             });
         }
         */
-        
+
         /* UNUSED
         _parseClarkNotation(propertyName) {
             let result = propertyName.match(/^{([^}]+)}(.*)$/);
@@ -121,7 +120,7 @@ define(["js/Utils", "js/HttpServerStore"], (Utils, HttpServerStore) => {
                 });
         }
         */
-        
+
         /**
          * Renders a "d:set" block for the given properties.
          *
@@ -156,7 +155,7 @@ define(["js/Utils", "js/HttpServerStore"], (Utils, HttpServerStore) => {
             return body;
         }
         */
-        
+
         /**
          * Generates a propPatch request.
          *
@@ -189,12 +188,12 @@ define(["js/Utils", "js/HttpServerStore"], (Utils, HttpServerStore) => {
                 });
         }
         */
-        
+
         /**
          * Generates a MKCOL request.
          * If attributes are given, it will use an extended MKCOL request.
          *
-         * @param {string} url Url to do the proppatch request on
+         * @param {string} url Url to do the request on
          * @param {Object.<String,String>} [properties] list of properties to store.
          * @param {Object} [headers] headers
          * @return {Promise}
@@ -224,7 +223,7 @@ define(["js/Utils", "js/HttpServerStore"], (Utils, HttpServerStore) => {
             });
         }
         */
-        
+
         /**
          * Parses a property node.
          *
@@ -305,7 +304,7 @@ define(["js/Utils", "js/HttpServerStore"], (Utils, HttpServerStore) => {
                     response.propStat.push(propStat);
                     propStatNode = propStatIterator.iterateNext();
 
-                    
+
                 }
 
                 result.push(response);
@@ -314,7 +313,7 @@ define(["js/Utils", "js/HttpServerStore"], (Utils, HttpServerStore) => {
             }
             return result;
         }
-        
+
         /**
          * Return a Promise to make a folder.
          * @param {String} path folder URL relative to this.option("url")
@@ -327,7 +326,7 @@ define(["js/Utils", "js/HttpServerStore"], (Utils, HttpServerStore) => {
             let self = this;
 
             return this.request('PROPFIND', path.join('/'), { Depth: 1 })
-                .then((res) => {                    
+                .then((res) => {
                     if (200 <= res.status && res.status < 300)
                         return Promise.resolve();
 
@@ -335,6 +334,7 @@ define(["js/Utils", "js/HttpServerStore"], (Utils, HttpServerStore) => {
                         let p = path.slice();
                         p.pop();
                         return self.mkpath(p).then(() => {
+                            // Simple MKCOL request, no properties
                             return this.request('MKCOL', path.join('/'));
                         });
                     }

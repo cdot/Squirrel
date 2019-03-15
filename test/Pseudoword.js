@@ -5,12 +5,7 @@ if (typeof module !== "undefined") {
 }
 
 requirejs.config({
-    baseUrl: "..",
-    paths: {
-        js: "src",
-        jsjq: "src/jquery",
-        test: "test"
-    }
+    baseUrl: ".."
 });
 
 requirejs(["js/Pseudoword", "test/TestRunner"], function(Pseudoword, TestRunner) {

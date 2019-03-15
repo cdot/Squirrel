@@ -5,7 +5,7 @@
  * app (required)
  */
 
-define(["js/Dialog", "js/Utils", "jsjq/template"], function(Dialog, Utils) {
+define(["js/Dialog", "js/Utils", "js/jq/template"], function(Dialog, Utils) {
 
     /**
      * Promise to read a file object. The promise is resolved with
@@ -35,7 +35,7 @@ define(["js/Dialog", "js/Utils", "jsjq/template"], function(Dialog, Utils) {
 
         newImage(img) {
             let self = this;
- 
+
             // Check that we can use the image.
             requirejs(["js/Steganographer"], function(Steganographer) {
                 let steg = new Steganographer({debug: self.debug});
@@ -44,13 +44,13 @@ define(["js/Dialog", "js/Utils", "jsjq/template"], function(Dialog, Utils) {
                 let h = img.naturalHeight;
                 let w = img.naturalWidth;
                 img.height = 100;
-                self.control("message")
+                self.control("image_message")
                     .show()
                     .template("pick", "xbyy")
                     .template("expand", w, h);
              });
         }
-        
+
         changeImage() {
             let self = this;
 
@@ -67,7 +67,7 @@ define(["js/Dialog", "js/Utils", "jsjq/template"], function(Dialog, Utils) {
                     });
             })
             .catch((e) => {
-                this.control("message")
+                this.control("image_message")
                     .show()
                     .template("pick", "cui")
                     .template("expand", e);
@@ -78,7 +78,7 @@ define(["js/Dialog", "js/Utils", "jsjq/template"], function(Dialog, Utils) {
             let self = this;
 
             this.find(".template").template();
-            
+
             this.control("image_file").on("change", function () {
                     self.changeImage();
                 });
@@ -89,9 +89,7 @@ define(["js/Dialog", "js/Utils", "jsjq/template"], function(Dialog, Utils) {
             this.control("path")
                 .on("keyup", function () {
                     if (self.control("path").val() === "") {
-                        this.control("message")
-                            .show()
-                            .template("pick", "mnbe");
+                        self.control("mnbe").show();
                         return false;
                     }
                     return true;
@@ -103,23 +101,17 @@ define(["js/Dialog", "js/Utils", "jsjq/template"], function(Dialog, Utils) {
 
         ok() {
             if (this.control("path").val() === "") {
-                this.control("message").show().template("pick", "mnbe");
+                this.control("mnbe").show();
                 return false;
             }
             return true;
         }
-        
+
         open() {
-            if (this.options.needs_image)
-                this.control("get_image").show();
-            else
-                this.control("get_image").hide();
-            this.control("message").hide();
-            if (this.options.needs_path) {
-                this.control("get_path").show();
-                this.control("path").focus().val(this.options.path);
-            } else
-                this.control("get_path").hide();
+            this.control("image_message").hide();
+            this.control("get_image").toggle(this.options.needs_image);
+            this.control("path").focus().val(this.options.path);
+            this.control("mnbe").toggle(!this.options.path || this.options.path === "");
         }
     }
     return StoreSettingsDialog;

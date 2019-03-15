@@ -7,7 +7,7 @@
  */
 define(["dialogs/add"], function(AddDialog) {
     class InsertDialog extends AddDialog {
-        
+
         initialise() {
             let self = this;
             self.control("key")

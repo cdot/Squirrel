@@ -2,7 +2,7 @@
 /**
 * Store optimisiation control dialog
 */
-define(["js/Dialog", "jsjq/template"], function(Dialog) {
+define(["js/Dialog", "js/jq/template"], function(Dialog) {
 
     class OptimiseDialog extends Dialog {
 
@@ -35,7 +35,7 @@ define(["js/Dialog", "jsjq/template"], function(Dialog) {
                 .toggle("pulsate", 101);
 
             let app = this.options.app;
-            
+
             this.control("existing")
                 .template(
                     "expand",

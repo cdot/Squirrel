@@ -19,16 +19,31 @@ define(["js/Serror", "js/AbstractStore"], function(Serror, AbstractStore) {
      * Or lighttpd nginx apache server etc. Or a simple server built using
      * express.
      */
-    
+
     class HttpServerStore extends AbstractStore {
-        
+
         constructor(p) {
             p = p || {};
-            p.needs_auth = true;
+            p.needs_url = true;
             p.type = "HttpServerStore";
             super(p);
         }
 
+        /**
+         * Overridable method to set auth headers for requests
+         */
+        addAuth(headers) {
+            // Override auth if credentials are set
+            let user = self.option("net_user");
+            let pass = self.option("net_pass");
+            if (typeof user !== "undefined") {
+                if (self.debug) self.debug("Using auth", user, pass);
+                headers.Authorization = 'Basic '
+                + btoa(user + ':' + pass);
+            } else if (self.debug)
+                self.debug("No auth header");
+        }
+        
         /**
          * @protected
          * Performs a HTTP request, and returns a Promise. Note that the
@@ -50,28 +65,24 @@ define(["js/Serror", "js/AbstractStore"], function(Serror, AbstractStore) {
             // https://stackoverflow.com/questions/33902299/using-jquery-ajax-to-download-a-binary-file
             // but that's more work than simply using XMLHttpRequest
 
+            headers = headers || {};
+            this.addAuth(headers);
+
+            let turl;
+            let base = self.option("url");
+            if (base && base.length > 0) {
+                if (/\w$/.test(base))
+                    base += "/";
+                turl = new URL(url, base).toString();
+            } else
+                turl = new URL(url);
+
             return new Promise(function(resolve, reject) {
                 let xhr = new XMLHttpRequest();
 
                 // for binary data (does nothing in node.js)
                 xhr.responseType = "arraybuffer";
-            
-                headers = headers || {};
 
-                // Override auth if credentials are set
-                let user = self.option("net_user");
-                let pass = self.option("net_pass");
-                if (typeof user !== "undefined") {
-                    if (self.debug) self.debug("Using auth", user, pass);
-                    headers.Authorization = 'Basic '
-                        + btoa(user + ':' + pass);
-                } else if (self.debug) self.debug("No auth header");
-                let base = self.option("net_url") || "";
-                if (/\w$/.test(base))
-                    base += "/";
-                let turl = new URL(url, base).toString();
-                if (self.debug) self.debug(self.option("type") + " "
-                                           + method + " " + turl);
                 xhr.open(method, turl, true);
 
                 for (let ii in headers) {
@@ -89,11 +100,6 @@ define(["js/Serror", "js/AbstractStore"], function(Serror, AbstractStore) {
                     reject(new Serror(turl, 500, "xhr.send error: " + e));
                 }
 
-                xhr.onreadystatechange = function() {
-                    if (xhr.readyState !== 4)
-                        return;
-                }
-
                 xhr.onload = function() {
                     if (self.debug) self.debug("response",xhr.status);
                     if (xhr.status === 401) {
@@ -107,7 +113,7 @@ define(["js/Serror", "js/AbstractStore"], function(Serror, AbstractStore) {
                             return;
                         }
                     }
-                    
+
                     resolve({
                         body: new Uint8Array(xhr.response),
                         status: xhr.status,
@@ -130,7 +136,7 @@ define(["js/Serror", "js/AbstractStore"], function(Serror, AbstractStore) {
         mkpath(/*path*/) {
             return Promise.resolve();
         }
-        
+
         // @Override
         read(path) {
             return this.request("GET", path)

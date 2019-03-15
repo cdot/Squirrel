@@ -1,7 +1,7 @@
 /**
  * About dialog
  */
-define(["js/Dialog", "jsjq/template"], function(Dialog) {
+define(["js/Dialog", "js/jq/template"], function(Dialog) {
 
     const BUILD_DATE = "TODO: Work out a way to do this";
 
@@ -9,9 +9,10 @@ define(["js/Dialog", "jsjq/template"], function(Dialog) {
 
         initialise() {
             this.find(".template").template();
-            this.control("built").template("expand", BUILD_DATE);
+            this.control("built").template(
+                "expand", $("meta[name='build-date']").attr("content"));
         }
     }
     return AboutDialog;
 });
-      
+

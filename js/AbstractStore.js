@@ -42,7 +42,7 @@ define(["js/Utils", "js/Serror"], function(Utils, Serror) {
         }
 
         /**
-         * Get/set options. 
+         * Get/set options.
          * @param k the key
          * @param v the new value, undefined to simply retireve the value, or
          * null to delete the option (make it undefined), anything else will
@@ -66,7 +66,7 @@ define(["js/Utils", "js/Serror"], function(Utils, Serror) {
                                        path, status, message);
             return new Serror(path, status, message);
         }
-        
+
         /**
          * Write data. Pure virtual.
          * @param path pathname to store the data under, a / separated path string

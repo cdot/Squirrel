@@ -14,7 +14,7 @@ define(["js/Dialog", "js/Hoard"], function(Dialog, Hoard) {
             }));
             return true;
         }
-        
+
         open() {
             this.control("path")
                 .text(

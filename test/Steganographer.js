@@ -4,11 +4,7 @@ if (typeof module !== "undefined")
     throw new Error("This test is not runnable from node.js");
 
 requirejs.config({
-    baseUrl: "..",
-    paths: {
-        js: "src",
-        test: "test"
-    }
+    baseUrl: ".."
 });
 
 requirejs(["test/TestRunner", "js/Steganographer", "js/Utils", "jquery"], function(TestRunner, Steganographer, Utils) {

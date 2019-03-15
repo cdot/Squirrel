@@ -19,7 +19,7 @@ define(["js/Dialog"], function(Dialog) {
             let self = this;
 
             this.find('input[type="password"]').simulated_password();
-            
+
             this.control("conf")
                 .on("change", function () {
                    self._checkSamePass();
@@ -44,4 +44,4 @@ define(["js/Dialog"], function(Dialog) {
     }
     return ChangePasswordDialog;
 });
-      
+

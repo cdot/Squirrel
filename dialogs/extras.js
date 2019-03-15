@@ -6,8 +6,8 @@
  * Options:
  * app (required)
  */
-define(["js/Dialog", "js/Translator", "js/Tree", "cookie", "jsjq/styling"], function(Dialog, Translator, Tree, Cookies) {
-    
+define(["js/Dialog", "js/Translator", "js/Tree", "cookie", "js/jq/styling"], function(Dialog, Translator, Tree, Cookies) {
+
     class ExtrasDialog extends Dialog {
 
         _autosave(on) {
@@ -22,10 +22,10 @@ define(["js/Dialog", "js/Translator", "js/Tree", "cookie", "jsjq/styling"], func
             }
             return Cookies.get("ui_autosave") === "on";
         }
-        
+
         initialise() {
             let self = this;
-            
+
             this.control("theme")
                 .on("selectmenuchange", function () {
                     $.styling.theme($(this).val());
@@ -100,15 +100,11 @@ define(["js/Dialog", "js/Translator", "js/Tree", "cookie", "jsjq/styling"], func
 
         open() {
             let app = this.options.app;
-            
+
             this.control("theme")
                 .find("option:selected")
                 .prop("selected", false);
 
-            if (!(app.cloud.store &&
-                  app.cloud.store.option("needs_path"))) {
-                this.control("chss").hide();
-            }
             this.control("theme")
                 .find("option[value='" + $.styling.theme() + "']")
                 .prop("selected", true);
@@ -118,7 +114,7 @@ define(["js/Dialog", "js/Translator", "js/Tree", "cookie", "jsjq/styling"], func
             this.control("hidevalues")
                 .prop("checked",
                       Cookies.get("ui_hidevalues")  === "on");
-            
+
             Translator.instance().language().then((lingo) => {
                 this.control("language").val(lingo);
             });

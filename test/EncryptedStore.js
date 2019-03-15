@@ -4,12 +4,7 @@ if (typeof requirejs === "undefined")
     requirejs = require('requirejs');
 
 requirejs.config({
-    baseUrl: "..",
-    paths: {
-        js: "src",
-        jsjq: "src/jquery",
-        test: "test"
-    }
+    baseUrl: ".."
 });
 
 requirejs(["test/StoreTester"], function(StoreTester) {

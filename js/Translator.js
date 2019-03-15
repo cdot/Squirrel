@@ -116,7 +116,7 @@ define(["js/Utils", "cookie"], function(Utils, Cookies) {
                 let url = this.options.url + "/" + lingo + ".json";
                 if (this.debug) this.debug("Get language from", url);
                 if (this.debug)
-                    url = url + "?nocache=" + Date.now();               
+                    url = url + "?nocache=" + Date.now();
                 xhr.open("GET", url, true);
                 xhr.send();
 
@@ -170,7 +170,7 @@ define(["js/Utils", "cookie"], function(Utils, Cookies) {
                 return s;
             })
         }
-        
+
         /**
          * @private
          * Find all tagged strings under the given DOM node and translate them

@@ -21,20 +21,20 @@ physical - where they write down their passwords. An unencrypted
 electronic document is a really, really, bad idea. A physical book is
 as secure as anything else in your house or office, so can't easily be
 hacked, but you depend on having physical access to the book. What you
-really want is anm online password safe - somewhere where passwords can be
+really want is an online password safe - somewhere where passwords can be
 stored together, that is accessible from all your devices and from anywhere,
-but is totally secure.
+but is highly secure.
 
 There are excellent free tools that solve this problem already. So why
 use Squirrel?
    - it runs entirely in the web browser, so nothing needs to be installed
-   - it works on anything that has a reasonably modern browser (including those on mobile phones)
+   - it works on anything that has a reasonably modern browser (including those on mobile devices)
    - it doesn't require an internet connection to run
    - it encrypts *everything* that it stores, sends or receives
-   - it doesn't require a special website to store stuff (it can use a number of different online cloud services, and you can even add more)
+   - it doesn't require a special website to store stuff (it can use a number of different online services, and you can even add more)
    - it uses 256 bit AES (Rijndael), one of the toughest ciphers to crack
    - it can use image steganography to mask its use
-   - it's entirely open source, allowing you to inspect, and if you want, propose modifications to the code
+   - it's entirely open source, allowing you to inspect, and if you want, propose modifications to, the code
    - it doesn't have any way for users - or even developers - to access the data without your unique password
    - it's simple to use
 
@@ -47,28 +47,32 @@ Additional features include:
 ## Getting started
 
 Getting started with Squirrel is as simple as visiting the web address
-of the site where the code is stored. We use the project 'github pages'
+of the site where the code is stored. We use the 'github pages'
 CDN (content delivery network) that gets the code currently checked into
 the git repository, https://cdot.github.io/Squirrel, but you are welcome
 to make your own copy and host it on your own trusted server.
 
-Run it from github pages by loading the following URL into your browser:
+Run it from 'github pages' by loading the following URL into your browser (using GoogleDriveStore as an example):
 
 https://cdot.github.io/Squirrel/release/Squirrel.html?store=GoogleDriveStore
 
-The following standard URL parameters are used:
-- `steg=1' to enable steganography
-- `store=<store name>' to set the file store to use (default is `TestStore', the example above uses `GoogleDriveStore`)
+The following URL parameters are available:
+- `steg=1' to enable image steganography
+- `store=<store name>' to set the file store to use (default is `LocalStorageStore', the example above uses `GoogleDriveStore`)
+- 'plaintext=1' to disable encryption, for debugging
+- 'debug=1' to enable verbose debug output to the console
 
 ## Choosing a File Store
 
-Squirrel normally stores its database in a single online file in an online
-file store. It's up to you which file store you use. We recommend:
+Squirrel normally stores its database in a single online file. It's up
+to you which file store you use. We recommend:
 * If you have your own web server:
  * If it supports WebDAV, use `WebDAVStore`
- * If you have support for CGI and `node.js`, you can use `HttpServerStore` with `node.js.server.js` (or another server back end script of your own choosing e.g. PHP)
-* If you don't have your own web server, or simply prefer to use a publicly available service, use `GoogleDriveStore` or `DropboxStore` (not available in China)
-* If you don't want to use an online store, you can use `LocalStorageStore`
+ * If you have a web server (e.g. Apache, nginx, lighttpd etc) with CGI and a back-end script that supports PUT requests, you can use `HttpServerStore`
+* If you want your own web server but don't want to bother installing Apache/nginx etc:
+ * If you have `node.js` on your server host, you can use `HttpServerStore` withthe included `node.js.server.js`
+* If you prefer to use a publicly available service, use `GoogleDriveStore` (not available in China)
+* If you don't want to use an online store, you can use `LocalStorageStore`, which simulates the online store in the browser. Howver you won't be able to share your store with other devices.
 
 ### GoogleDriveStore
 You must be logged in to Google in the browser for this to work. The
@@ -79,13 +83,6 @@ encrypted data will be stored on Drive.
 Squirrel will prompt for a password every time you open it. This is
 the encryption password for your database, and will not usually be the same
 as your Google password.
-
-### DropboxStore
-
-You will be prompted for authentication details for Dropbox.
-Squirrel will prompt for a password every time you open it. This is
-the encryption password for your database, and will not usually be the same
-as your Dropbox password.
 
 ### HttpServerStore
 
@@ -247,7 +244,7 @@ For example,
 ```
 https://cdn.rawgit.com/cdot/Squirrel/release/Squirrel.html?store=GoogleDriveStore
 ```
-If you want to use steganography, pass the `steg` parameter as well:
+If you want to use image steganography, pass the `steg` parameter as well:
 ```
 https://cdn.rawgit.com/cdot/Squirrel/release/Squirrel.html?steg&store=DropboxStore
 ```
@@ -256,14 +253,14 @@ from your local drive before running Squirrel. Your password safe will
 be embedded into this image, so it needs to be large enough to store
 all the data without degrading the image too much. For an average
 sized password store, a 1024x768 RGB colour image will usually
-suffice. It's a good idea to change the image you use on a regular
-basis (and change where it is stored) as you may otherwise leave
-traceable usage patterns (e.g. by updating the same image frequently
-with no obvious visual change).
+suffice. If you are changing the content of your database regularly,
+it's a good idea to change the image you use on a regular basis as you
+may otherwise leave traceable usage patterns (e.g. by updating the
+same image frequently with no obvious visual change).
 
-You will be prompted for the encryption password you want to use. The
-first time you run you will be asked for the image you want to use (if
-using steganography), and the store path in the cloud.
+You will be prompted for the encryption username and password you want
+to use. The first time you run you will be asked for the image you
+want to use (if using steganography), and the path to your store in the cloud.
 
 You are then presented with a simple interface where you can create
 keys (and keys within keys), and add data associated with those

@@ -82,7 +82,7 @@ define(["js/Translator"], function(Translator) {
                     data = JSON.parse(data);
 
                 this.last_sync = data.last_sync;
-                this.actions = data.actions;
+                this.actions = data.actions || [];
                 this.cache = data.cache;
                 this.version = data.version || VERSION;
 
@@ -532,11 +532,12 @@ define(["js/Translator"], function(Translator) {
          */
         play_actions(new_actions, listener) {
             // Play in all actions since the last sync
-            let count = new_actions.length;
+            if (!new_actions)
+                return;
             if (this.debug) this.debug(
                 "Playing new actions since " + new Date(this.last_sync).toLocaleString());
             let p = Promise.resolve();
-            for (let i = 0; i < count; i++) {
+            for (let i = 0; i < new_actions.length; i++) {
                 if (new_actions[i].time > this.last_sync) {
                     p = p.then(() => {
                         if (this.debug) this.debug(
@@ -588,9 +589,9 @@ define(["js/Translator"], function(Translator) {
                 path: [],
                 node: this.cache
             }];
-            
+
             let promise = Promise.resolve();
-            
+
             while (checkAlarms.length > 0) {
                 let item = checkAlarms.pop();
                 let node = item.node;

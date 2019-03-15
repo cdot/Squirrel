@@ -4,12 +4,7 @@
 if (typeof module !== "undefined") {
     requirejs = require('requirejs');
     requirejs.config({
-        baseUrl: "..",
-        paths: {
-            js: "src",
-            jsjq: "src/jquery",
-            test: "test"
-        }
+        baseUrl: ".."
     });
 }
 
@@ -80,7 +75,7 @@ const MSPERDAY = 24 * 60 * 60 * 1000;
 requirejs(["js/Hoard", "test/TestRunner"], function(Hoard, TestRunner) {
     let tr = new TestRunner("Hoard");
     let assert = tr.assert;
-    
+
     tr.addTest('should make with data and string', function() {
         var h = new Hoard({name: "Test1", data: cloud_data});
 	assert.equal(h.actions[0].path[0], cloud_data.actions[0].path[0]);
@@ -89,7 +84,7 @@ requirejs(["js/Hoard", "test/TestRunner"], function(Hoard, TestRunner) {
         assert.equal(client_data.actions.length, client_size);
         assert.equal(cloud_data.actions.length, cloud_size);
     });
-    
+
     tr.addTest("should play_actions into empty hoard", function() {
 	// Reconstruct a cache from an actions list in an empty hoard
         let h = new Hoard({name: "Test1"});
@@ -116,7 +111,7 @@ requirejs(["js/Hoard", "test/TestRunner"], function(Hoard, TestRunner) {
             assert.equal(cloud_data.actions.length, cloud_size);
         });
     });
-    
+
     tr.addTest("should play_actions into populated hoard", function() {
 	// Play the cloud action set into a populated client hoard
 	var h = new Hoard({name: "Test1", data: client_data});
@@ -147,7 +142,7 @@ requirejs(["js/Hoard", "test/TestRunner"], function(Hoard, TestRunner) {
             assert.equal(cloud_data.actions.length, cloud_size);
         });
     });
-    
+
     tr.addTest('should detect zero path', function() {
         var h = new Hoard({name:"Test1"});
 	return h.play_action({
@@ -161,7 +156,7 @@ requirejs(["js/Hoard", "test/TestRunner"], function(Hoard, TestRunner) {
             assert.equal(cloud_data.actions.length, cloud_size);
         });
     });
-        
+
     tr.addTest('should detect no parent', function() {
         var h = new Hoard({name:"Test1"});
 	return h.play_actions(cloud_data.actions, (r) => {
@@ -180,7 +175,7 @@ requirejs(["js/Hoard", "test/TestRunner"], function(Hoard, TestRunner) {
             assert.equal(cloud_data.actions.length, cloud_size);
         });
     });
-    
+
     tr.addTest('should detect already existing', function() {
         var h = new Hoard({name:"Test1"});
 
@@ -211,7 +206,7 @@ requirejs(["js/Hoard", "test/TestRunner"], function(Hoard, TestRunner) {
 	    time: new Date("1 Jan 2004").getTime(),
 	    path: ["Fine-dining", "Doner"]
 	};
-            
+
 	return h.play_action(cloud_data.actions[0])
 	    .then((e) => {
 		assert.equal(cloud_data.actions[0], e.event);
@@ -225,7 +220,7 @@ requirejs(["js/Hoard", "test/TestRunner"], function(Hoard, TestRunner) {
                 assert.equal(cloud_data.actions.length, cloud_size);
             });
     });
-    
+
     tr.addTest('should allow rename', function() {
         var h = new Hoard({name:"Test1"});
 	var listened = 0;
@@ -245,19 +240,19 @@ requirejs(["js/Hoard", "test/TestRunner"], function(Hoard, TestRunner) {
             assert.equal(cloud_data.actions.length, cloud_size);
         });
     });
-    
+
     tr.addTest('should merge action streams', function() {
         var cloud = new Hoard({name:"Cloud"});
         // Initial action stream is empty
         assert.equal(cloud.merge_actions(cloud_data.actions), 2);
         assert.deepEqual(cloud.actions, cloud_data.actions);
-        
+
         // Merging should skip duplicates
         assert.equal(cloud.merge_actions(cloud_data.actions), 0);
         assert.deepEqual(cloud.actions, cloud_data.actions);
-        
+
         assert.equal(cloud.merge_actions(client_data.actions), 1);
-        
+
         assert.deepEqual(
             cloud.actions,
             [
@@ -265,11 +260,11 @@ requirejs(["js/Hoard", "test/TestRunner"], function(Hoard, TestRunner) {
                 cloud_data.actions[1],
                 client_data.actions[1],
             ]);
-        
+
         // A merge the other way should work the same
         var client = new Hoard({name: "Client"});
         assert.equal(client.merge_actions(client_data.actions), 2);
-        
+
         assert.equal(client.merge_actions(cloud_data.actions), 1);
         assert.deepEqual(
             cloud.actions,
@@ -348,6 +343,6 @@ requirejs(["js/Hoard", "test/TestRunner"], function(Hoard, TestRunner) {
             }
         });
     });
-    
+
     tr.run();
 });

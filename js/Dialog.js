@@ -7,11 +7,11 @@
  * from a file found using requirejs, and (2) a JS subclass of
  * "Dialog" again loaded by requirejs.
  */
-define(["js/Translator", "jquery", "jquery-ui", "jsjq/icon_button", "jsjq/twisted"], function(Translator) {
-    
+define(["js/Translator", "jquery", "jquery-ui", "js/jq/icon_button", "js/jq/twisted"], function(Translator) {
+
     // Default options
     let default_dialog_options = {};
-    
+
     // Cache of loaded code modules
     let classes = {};
 
@@ -40,7 +40,7 @@ define(["js/Translator", "jquery", "jquery-ui", "jsjq/icon_button", "jsjq/twiste
             options = $.extend({}, default_dialog_options, options);
             let $dlg = $("#" + id + "_dlg");
             let p;
-        
+
             // Load HTML first (if we need to), then js. We don't use
             // requirejs to load the html because the text! plugin is
             // stupid, but we do use requirejs.toUrl to locate the
@@ -49,13 +49,13 @@ define(["js/Translator", "jquery", "jquery-ui", "jsjq/icon_button", "jsjq/twiste
                 //if (options.debug)
                 //    options.debug("HTML for dialog", id, "is already loaded");
                 p = Promise.resolve($dlg);
-            } else {               
+            } else {
                 let html_url = requirejs.toUrl("dialogs" + "/" + id + ".html");
 
                 // testing only
                 if (options.htmlRoot)
                     html_url = options.htmlRoot + "dialogs/" + id + ".html";
-                
+
                 //if (options.debug)
                 //    options.debug(
                 //        "Loading HTML for dialog", id, "from", html_url);
@@ -69,9 +69,9 @@ define(["js/Translator", "jquery", "jquery-ui", "jsjq/icon_button", "jsjq/twiste
                         $dlg.attr("id", id + "_dlg");
                         // force the CSS class - should be hidden
                         $dlg.addClass("dlg-dialog");
-                        
+
                         $("body").append($dlg);
-                        
+
                         return $dlg;
                     });
             }
@@ -82,7 +82,7 @@ define(["js/Translator", "jquery", "jquery-ui", "jsjq/icon_button", "jsjq/twiste
                     //    options.debug("JS for dialog", id, "is already loaded");
                     return Promise.resolve(classes[id]);
                 }
-            
+
                 //if (options.debug) options.debug("Loading JS for dialog", id);
                 return new Promise((resolve) => {
                     requirejs(
@@ -114,7 +114,7 @@ define(["js/Translator", "jquery", "jquery-ui", "jsjq/icon_button", "jsjq/twiste
                 return dlg;
             });
         }
-        
+
         /**
          * Return a promise to load (if necessary) and open a blocking
          * dialog. The promise returned will not resolve until the dialog
@@ -137,7 +137,7 @@ define(["js/Translator", "jquery", "jquery-ui", "jsjq/icon_button", "jsjq/twiste
                 });
             });
         }
-        
+
         /**
          * @param $dlg jQuery object for the dialog being constructed
          * @param options options that will be passed on the the jQuery UI
@@ -151,7 +151,7 @@ define(["js/Translator", "jquery", "jquery-ui", "jsjq/icon_button", "jsjq/twiste
 
             // Default options
             self.options = $.extend({}, options);
-            
+
             let bfc = options.beforeClose;
             options.beforeClose = (e) => {
                 if (self.blocking)
@@ -194,12 +194,12 @@ define(["js/Translator", "jquery", "jquery-ui", "jsjq/icon_button", "jsjq/twiste
          */
         _initialise() {
             let self = this;
-            
+
             this.initialise();
 
             this.find(".twisted").twisted();
             this.find("button").icon_button();
-            
+
             // Add handler to default OK control
             this.control("ok", true)
                 .on(this.tapEvent(), function () {
@@ -207,13 +207,13 @@ define(["js/Translator", "jquery", "jquery-ui", "jsjq/icon_button", "jsjq/twiste
                         self.close();
                     return false;
                 });
-                    
+
             this.control("cancel", true)
                 .on(this.tapEvent(), function () {
                     self.close();
                     return false;
                 });
-                    
+
             this.$dlg.addClass("dlg-initialised");
         }
 
@@ -238,14 +238,14 @@ define(["js/Translator", "jquery", "jquery-ui", "jsjq/icon_button", "jsjq/twiste
         ok() {
             return true;
         }
-        
+
         /**
          * Service for subclasses.
          */
         isOpen() {
             return this.$dlg.dialog("isOpen");
         }
-        
+
         /**
          * Service for subclasses.
          * Get the control in the dialog identified by the key
@@ -267,7 +267,7 @@ define(["js/Translator", "jquery", "jquery-ui", "jsjq/icon_button", "jsjq/twiste
             return this.$dlg.find(sel);
         }
 
-        
+
         /**
          * Service for subclasses.
          * Get the tap event
@@ -275,7 +275,7 @@ define(["js/Translator", "jquery", "jquery-ui", "jsjq/icon_button", "jsjq/twiste
         tapEvent() {
             return $.getTapEvent ? $.getTapEvent() : "click";
         }
-        
+
         /**
          * Service for subclasses.
          * Close the dialog
@@ -284,7 +284,7 @@ define(["js/Translator", "jquery", "jquery-ui", "jsjq/icon_button", "jsjq/twiste
             this.blocking = false;
             this.$dlg.dialog("close");
         }
-        
+
         /**
          * Service for subclasses.
          * Translate the string (and option parameters) passed

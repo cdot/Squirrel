@@ -13,15 +13,11 @@ requirejs.config({
         chai: "//cdnjs.cloudflare.com/ajax/libs/chai/4.2.0/chai",
         cookie: "//cdnjs.cloudflare.com/ajax/libs/js-cookie/2.2.0/js.cookie.min",
         jquery: "//code.jquery.com/jquery-3.3.1",
-        "jquery-ui": "//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui",
-        js: "src",
-        jsjq: "src/jquery",
-        dialogs: "dialogs",
-        images: "images"
+        "jquery-ui": "//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui"
     }
 });
 
-define(["js/Dialog", "js/Translator", "js/LocalStorageStore", "js/Hoard", "js/Tree", "jquery", "jsjq/simulated_password", "jsjq/icon_button"], function(Dialog, Translator, LocalStorageStore, Hoard) {
+define(["js/Dialog", "js/Translator", "js/LocalStorageStore", "js/Hoard", "js/Tree", "jquery", "js/jq/simulated_password", "js/jq/icon_button"], function(Dialog, Translator, LocalStorageStore, Hoard) {
 
     let list = [
         "about",
@@ -41,13 +37,13 @@ define(["js/Dialog", "js/Translator", "js/LocalStorageStore", "js/Hoard", "js/Tr
     ];
 
     let debug = console.debug;
-    
+
     // Make sure global options get passed in
     Dialog.set_default_options({
         debug: debug,
     });
     const TESTR = "1234567普通话/普通話العَرَبِيَّة";
-    
+
     let test_app = {
         client: {
             store: new LocalStorageStore(),
@@ -67,7 +63,7 @@ define(["js/Dialog", "js/Translator", "js/LocalStorageStore", "js/Hoard", "js/Tr
         encryptionPass: function() { debug("encryptionPass", arguments); },
         USE_STEGANOGRAPHY: true
     };
-    
+
     let login_title = "Login";
     let specials = {
         login: function() {

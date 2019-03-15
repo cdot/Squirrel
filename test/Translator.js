@@ -13,12 +13,7 @@ if (typeof module !== "undefined") {
 }
 
 requirejs.config({
-    baseUrl: "..",
-    paths: {
-        js: "src",
-        jsjq: "src/jquery",
-        test: "test"
-    }
+    baseUrl: ".."
 });
 
 const server_url = "http://cdot.github.io/Squirrel/locale/";
@@ -48,7 +43,7 @@ requirejs(["js/Translator", "test/TestRunner"], function(Translator, TestRunner)
             assert.equal(TX.tx("Skinny"), "Slim");
         });
     });
-    
+
     tr.addTest("Works with templates", function() {
         let TX = Translator.instance({
             translations: TRANSLATIONS
@@ -81,7 +76,7 @@ requirejs(["js/Translator", "test/TestRunner"], function(Translator, TestRunner)
                 assert.equal(document.body.innerHTML, pc);
             });
     });
-    
+
     tr.addTest("Translates HTML", function() {
         let TX = Translator.instance({
             translations: TRANSLATIONS

@@ -3,12 +3,7 @@
 if (typeof module !== "undefined") {
     requirejs = require('requirejs');
     requirejs.config({
-        baseUrl: "..",
-        paths: {
-            js: "src",
-            jsjq: "src/jquery",
-            test: "test"
-        }
+        baseUrl: ".."
     });
 }
 
@@ -159,19 +154,19 @@ requirejs(["js/Utils", "js/RGBA", "test/TestRunner"], function(Utils, RGBA, Test
         if (x < 0) x = -x;
         assert(x < 0.1, b + " != " + a);
     }
-    
+
     function testIt(i) {
         tr.addTest("should convert " + testMap[i].hash, function() {
             //console.log(i + " " + testMap[i].hash);
             var tm = testMap[i];
             var rgb = new RGBA(tm.rgb[0], tm.rgb[1], tm.rgb[2]);
             assert.equal(tm.hash, rgb.toString());
-            
+
             var hrgb = new RGBA(tm.hash);
             assert.equal(tm.rgb.r, rgb[0]);
             assert.equal(tm.rgb.g, rgb[1]);
             assert.equal(tm.rgb.b, rgb[2]);
-                
+
             var hsv = rgb.toHSV();
             assert.nearly(tm.hsv[0], hsv[0]);
             assert.nearly(tm.hsv[1], hsv[1]);
@@ -195,7 +190,7 @@ requirejs(["js/Utils", "js/RGBA", "test/TestRunner"], function(Utils, RGBA, Test
             assert.nearly(rgb.r, reco.r);
             assert.nearly(rgb.g, reco.g);
             assert.nearly(rgb.b, reco.b);
-            
+
             reco = RGBA.fromHSL(tm.hsl);
             assert.nearly(rgb.r, reco.r);
             assert.nearly(rgb.g, reco.g);
@@ -231,7 +226,7 @@ requirejs(["js/Utils", "js/RGBA", "test/TestRunner"], function(Utils, RGBA, Test
 
         });
     }
-    
+
     for (var i = 0; i < testMap.length; i++) {
         testIt(i);
     }

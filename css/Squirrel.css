@@ -131,13 +131,13 @@ https://developer.chrome.com/multidevice/webview/pixelperfect
 @media screen and (min-width: 500px) {
   button {
     width: 60%;
-  } 
+  }
 }
 
 @media screen and (min-width: 750px) {
   button {
     width: 40%;
     max-width: 400px;
-  } 
+  }
 }
 */

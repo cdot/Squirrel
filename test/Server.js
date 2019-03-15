@@ -4,19 +4,14 @@
 if (typeof module !== "undefined") {
     requirejs = require('requirejs');
     requirejs.config({
-        baseUrl: "..",
-        paths: {
-            js: "src",
-            jsjq: "src/jquery",
-            test: "test"
-        }
+        baseUrl: ".."
     });
 }
 
 // Was using chai-http, but couldn't work out how to test the body
 // of a response :-( So use "Request" instead, as described in
 // https://davidbeath.com/posts/testing-http-responses-in-nodejs.html
-requirejs(["js/Utils", "js/AES", "js/Server", "fs", "request-promise-any", "test/TestRunner"], function(Utils, AES, Server, Fs, request, TestRunner) { 
+requirejs(["js/Utils", "js/AES", "js/Server", "fs", "request-promise-any", "test/TestRunner"], function(Utils, AES, Server, Fs, request, TestRunner) {
 
     let tr = new TestRunner("Server");
     let assert = tr.assert;
@@ -68,7 +63,7 @@ requirejs(["js/Utils", "js/AES", "js/Server", "fs", "request-promise-any", "test
         });
         });
     });
-                
+
     tr.addTest("bad-root-get", (resolve) => {
         return new Promise((resolve) => {
             request.get(serverUrl + '/', {
@@ -132,13 +127,13 @@ requirejs(["js/Utils", "js/AES", "js/Server", "fs", "request-promise-any", "test
                          "\0" + "Some 16 bit text".split('').join("\0") + "\n");
         });
     });
-                
+
     tr.addTest("text-file-post-8bit", () => {
         var ef = workingDir + "/transitory8";
         try {
             Fs.unlinkSync(ef);
         } catch (e) {};
-                    
+
         return request.put(workingUrl + '/transitory8', {
             auth: { user: server_config.auth.user,
                     pass: server_config.auth.pass },
@@ -165,7 +160,7 @@ requirejs(["js/Utils", "js/AES", "js/Server", "fs", "request-promise-any", "test
             Fs.unlinkSync(ef);
         } catch (e) {}
         var text = "\0S\0o\0m\0e\0 \0" + "1\0" + "6\0 \0b\0i\0t\0 \0t\0e\0x\0t";
-                    
+
         return request.put(workingUrl + '/transitory16', {
             auth: { user: server_config.auth.user,
                     pass: server_config.auth.pass },
@@ -215,7 +210,7 @@ requirejs(["js/Utils", "js/AES", "js/Server", "fs", "request-promise-any", "test
         var text = "Alice, Bob, Charlie, and Doug";
         var pass = "password";
         var xa = AES.encrypt(Utils.StringToUint8Array(text), pass, 256);
-                    
+
         return request.put(workingUrl + '/encrypted', {
             auth: { user: server_config.auth.user,
                     pass: server_config.auth.pass },

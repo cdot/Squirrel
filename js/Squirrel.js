@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,jquery */
 
-define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore", "js/EncryptedStore", "js/Translator", "js/Tree", "clipboard", "cookie", "jsjq/simulated_password", "jsjq/scroll_into_view", "jsjq/icon_button", "jsjq/styling", "jsjq/template", "jsjq/twisted", "jquery", "jquery-ui", "mobile-events", "contextmenu" ], function(Serror, Utils, Dialog, Hoard, LocalStorageStore, EncryptedStore, Translator, Tree, ClipboardJS, Cookies) {
+define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore", "js/EncryptedStore", "js/Translator", "js/Tree", "clipboard", "cookie", "js/jq/simulated_password", "js/jq/scroll_into_view", "js/jq/icon_button", "js/jq/styling", "js/jq/template", "js/jq/twisted", "jquery", "jquery-ui", "mobile-events", "contextmenu" ], function(Serror, Utils, Dialog, Hoard, LocalStorageStore, EncryptedStore, Translator, Tree, ClipboardJS, Cookies) {
     let TX = Translator.instance();
 
     /*
@@ -32,7 +32,7 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
 
             self.options = options || {};
 
-            if (options.debug) {
+            if (self.options.debug) {
                 self.debug = console.debug;
                 self.debug("Debug enabled");
                 // Option to dump the JSON for the cloud database on load.
@@ -40,7 +40,10 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
                 self.dumpCloud = options.dump_cloud;
             }
 
-            self.cloudStorageProvider = options.cloudStore;
+            if (!self.options.store) {
+                if (self.debug) self.debug("Defaulting to LocalStorageStore");
+                self.options.store = "LocalStorageStore";
+            }
 
             self.clipboard = null;
 
@@ -62,10 +65,10 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
 
             // The user currently engaged with us
             self.user = null;
-            
+
             // pathname of the cloud store
             self.cloud_path = null;
-            
+
             // status may be one of IS_EMPTY, IS_CORRUPT, IS_LOADED or
             // NEW_SETTINGself. If the status is anything but IS_LOADED
             // then it is a candidate for saving.
@@ -101,7 +104,7 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
                 Tree.hidingValues = on;
             return Tree.hidingValues;
         }
-        
+
         encryptionPass(p) {
             this.client.store.option("pass", p);
             this.client.status = NEW_SETTINGS;
@@ -109,7 +112,7 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
             this.cloud.status = NEW_SETTINGS;
             this.trigger("update_save");
         }
-        
+
         // Event handler code for "check_alarms" event
         _handle_alarms( /* event */ ) {
             let self = this;
@@ -202,20 +205,22 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
             }
         }
 
-        _write_client_store(progress) {
+        _write_client(progress) {
             let self = this;
 
             // Make a serialisable data block
-            let client = {};
+            let data = {
+                cloud_path: self.cloud_path
+            };
             for (let f in self.client) {
                 // We don't want to serialize the store
                 if (self.client.hasOwnProperty(f) && f !== "store")
-                    client[f] = self.client[f];
+                    data[f] = self.client[f];
             }
-            
+
             let p = self.client.store.writes(
                 self.user,
-                JSON.stringify(client))
+                JSON.stringify(data))
                 .then(() => {
                     if (self.debug) self.debug("...client save OK");
                     $(".tree-modified")
@@ -223,11 +228,11 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
                     self.client.status = IS_LOADED;
                     if (progress) progress.add({
                         severity: "notice",
-                        message: TX.tx("Saved in $1", self.client.store.option("type"))
+                        message: TX.tx("Saved in client $1", self.client.store.option("type"))
                     });
                 })
                 .catch((e) => {
-                    if (self.debug) self.debug("...client save failed " + e);
+                    if (self.debug) self.debug("...client save failed " + e.stack);
                     if (progress) progress.add({
                         severity: "error",
                         message: TX.tx("Failed to save in $1: $2",
@@ -235,7 +240,9 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
                     });
                     self.client_ok = false;
                 });
-            return p.then(() => { return self._finished_save(progress); });
+            return p.then(() => {
+                return self._finished_save(progress);
+            });
         }
 
         _save_client(progress) {
@@ -251,10 +258,10 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
 
             self.client.status = self.PENDING_SAVE;
 
-            return self._write_client_store(progress);
+            return self._write_client(progress);
         }
 
-        _write_cloud_store(progress) {
+        _write_cloud(progress) {
             // Cloud doesn't need the cache. Could kill it, but it's
             // small and there's not much advantage to doing so.
             let self = this;
@@ -270,12 +277,12 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
                     self.undos = [];
                     if (progress) progress.add({
                         severity: "notice",
-                        message: TX.tx("Saved in $1", self.cloud.store.option("type"))
+                        message: TX.tx("Saved in cloud $1", self.cloud.store.option("type"))
                     });
                     self.cloud.status = IS_LOADED;
                 })
                 .catch((e) => {
-                    if (self.debug) self.debug("...cloud save failed " + e);
+                    if (self.debug) self.debug("...cloud save failed " + e.stack);
                     if (progress) progress.add({
                         severity: "error",
                         message: TX.tx("Failed to save in $1: $2",
@@ -300,7 +307,7 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
 
             self.cloud.status = self.PENDING_SAVE;
 
-            return self._write_cloud_store(progress)
+            return self._write_cloud(progress)
                 .then(() => {
                     return self._save_client(progress);
                 });
@@ -342,7 +349,7 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
                 p = Promise.resolve();
             } catch (e) {
                 // We'll get here if decryption failed....
-                if (self.debug) self.debug("Cloud hoard JSON parse failed: " + e);
+                if (self.debug) self.debug("Cloud hoard JSON parse failed: " + e.stack);
                 if (progress) progress.add({
                     severity: "error",
                     message: TX.tx("$1 hoard can't be read for update",
@@ -391,7 +398,7 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
                 self.cloud.status === IS_EMPTY) {
                 // Don't attempt to resync out before saving, simply
                 // overwrite the cloud.
-                if (self.debug) self.debug("...constructing new cloud because settings");
+                if (self.debug) self.debug("...constructing new cloud");
                 return self.construct_new_cloud(progress);
             } else {
                 // Reload and save the cloud hoard
@@ -401,7 +408,7 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
                         return self._cloud_store_reloaded_ok(progress);
                     })
                     .catch((e) => {
-                        if (self.debug) self.debug("...cloud read failed " + e);
+                        if (self.debug) self.debug("...cloud read failed " + e.stack);
                         if (progress) progress.add({
                             severity: "error",
                             message: TX.tx("Failed to refresh from $1: $2",
@@ -438,87 +445,40 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
 
         /**
          * Public as it's used from dialogs/extras.js
-         * @param force true to force the dialog even if there is nothing to
-         * prompt for
          */
-        get_store_settings(force) {
+        get_store_settings() {
             let self = this;
-            
-            let needs_path = (this.cloud.store.option("needs_path") &&
-                              !this.cloud_path) || force;
-            let needs_image = this.cloud.store.option("needs_image") || force;
 
-            if (!(needs_path || needs_image))
-                return Promise.resolve();
+            let needs_image =
+                this.cloud.store &&
+                this.cloud.store.option("needs_image");
 
             return Dialog.confirm("store_settings", {
                 needs_image: needs_image,
-                needs_path: needs_path,
                 path: this.cloud_path
             })
             .then((dlg) => {
-                if (needs_path) {
-                    let path = dlg.control("path").val();
-                    if (self.cloud_path !== path) {
-                        self.cloud_path = path;
-                        if (self.client.status === IS_LOADED)
-                            self.client.status = NEW_SETTINGS;
-                    }
-                    if (needs_image) {
-                        if (self.client.status === IS_LOADED)
-                            self.client.status = NEW_SETTINGS;
-                        if (self.cloud.status === IS_LOADED)
-                            self.cloud.status = NEW_SETTINGS;
-                    }
-                    $(document).trigger("update_save");
+                let path = dlg.control("path").val();
+                if (path !== self.cloud_path) {
+                    self.cloud_path = path;
+                    if (self.client.status === IS_LOADED)
+                        self.client.status = NEW_SETTINGS;
                 }
-            });
-        }
-        
-        // Final step before allowing interaction
-        step_7_interact() {
-            let self = this;
-            return new Promise((resolve) => {
-                if (self.debug) self.debug('step_7_interact');
-                $("#whoami")
-                    .text(self.user);
-                $("#unauthenticated")
-                    .hide();
-                $("#authenticated")
-                    .show();
-
-                // Open the root node
-                $("#sites-node").tree("open");
-                resolve();
-            });
-        }
-
-        // Last in the initial hoard load sequence
-        step_6_hoards_loaded() {
-            let self = this;
-            return new Promise((resolve) => {
-                if (self.debug) self.debug('step_6_hoards_loaded');
-                $(window)
-                    .on("beforeunload", function () {
-                        let us = self._unsaved_changes(10);
-                        if (us !== null) {
-                            us = TX.tx("You have unsaved changes") +
-                                "\n" + us +
-                                "\n" + TX.tx("Are you really sure?");
-                            return us;
-                        }
-                    });
+                if (needs_image) {
+                    if (self.client.status === IS_LOADED)
+                        self.client.status = NEW_SETTINGS;
+                    if (self.cloud.status === IS_LOADED)
+                        self.cloud.status = NEW_SETTINGS;
+                }
                 $(document).trigger("update_save");
-                $(document).trigger("check_alarms");
-                resolve();
             });
         }
 
         // Optional initialisation step, executed when both hoards are
         // known to have loaded successfully.
-        step_5a_merge_from_cloud() {
+        _merge_from_cloud() {
             let self = this;
-            if (self.debug) self.debug('step_5a_merge_from_cloud');
+            if (self.debug) self.debug('_merge_from_cloud');
             return self.client.hoard.play_actions(
                 self.cloud.hoard.actions,
                 function (e, c, p) {
@@ -563,21 +523,22 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
         }
 
         /**
-         * STEP 6: Called when we have a (possibly empty) client hoard.
-         * Try and synch it from the self.cloud.
+         * Called when we have a (possibly empty) client hoard.
+         * Try and synch it from the cloud.
+         * Resolve to true if the cloud hoard is ready to be merged from,
+         * false otherwise.
          */
-        step_5_load_cloud_hoard() {
+        _load_cloud() {
             let self = this;
+            let cloud_store = self.cloud.store;
 
-            if (self.debug) self.debug('step_5_load_cloud_hoard');
-
-            let store = self.cloud.store;
-            if (store)
+            if (!cloud_store)
                 return Promise.resolve(false);
 
+            if (self.debug) self.debug('_load_cloud');
 
-            $("#stage")
-                .text(TX.tx("Reading from cloud"));
+            $("#stage").text(TX.tx("Reading from cloud"));
+
             let p;
 
             // Make sure we have a store path. The client
@@ -585,36 +546,36 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
             // the cloud store/
             if (self.cloud_path)
                 p = Promise.resolve();
-            // Use the settings dlg to set the store path
             else
+                // Use the settings dlg to initialise the cloud store path
                 p = self.get_store_settings();
 
             return p.then(() => {
-                return store.reads(self.cloud_path);
+                return cloud_store.reads(self.cloud_path);
             })
             .then((data) => {
                 if (data.length === 0) {
                     if (self.debug) self.debug(
-                        store.option("type") + " is empty");
+                        cloud_store.option("type") + " is empty");
                     self.cloud.status = IS_EMPTY;
                     return Promise.resolve();
                 }
 
                 if (self.debug) self.debug(
-                    store.option("type") + " is ready to be read");
+                    cloud_store.option("type") + " is ready to be read");
 
                 try {
                     self.cloud.hoard = new Hoard({name: "loaded Cloud", data: data});
                 } catch (e) {
                     if (self.debug) self.debug(
-                        "Cloud hoard JSON parse failed: " + e + data);
+                        "Cloud hoard JSON parse failed: " + e.stack + data);
                     Dialog.open("alert", {
                         title: TX.tx("Error"),
                         alert: {
                             severity: "error",
                             message: TX.tx(
                                 "Cloud store exists, but can't be read.",
-                                store.option("type")) +
+                                cloud_store.option("type")) +
                                 " " +
                                 TX.tx(
                                     "Check that you have the correct password.")
@@ -623,6 +584,7 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
                     self.cloud.status = IS_CORRUPT;
                 }
 
+                // Ready to merge from cloud hoard
                 return Promise.resolve(true);
             })
             .catch((e) => {
@@ -631,14 +593,15 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
                         self.cloud_path + " not found in the cloud");
                     Dialog.open("alert", {
                         title: TX.tx("Error"),
-                        alert: {
-                            severity: "error",
-                            message: TX.tx("Could not load cloud store")
-                        }
-                    }).add({
-                        severity: "notice",
-                        message: TX.tx("Check that the cloud store exists and you have the correct password.")
-                    });
+                        alert: [
+                            {
+                                severity: "error",
+                                message: TX.tx("Could not load cloud store")
+                            },
+                            {
+                                severity: "notice",
+                                message: TX.tx("Check that the cloud store exists and you have the correct password.")
+                            }]});
                     // Could not contact cloud; continue all the same
                 }
                 return Promise.resolve(false);
@@ -653,39 +616,32 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
          *
          * This will prompt for encryption details.
          */
-        step_3_load_client_hoard() {
+        _load_client() {
             let self = this;
 
             self.client.status = IS_LOADING;
-            if (self.debug) self.debug('step_3_load_client_hoard');
+            if (self.debug) self.debug('_load_client');
 
 
-            $("#stage")
-                .text(TX.tx("Reading from client"));
+            $("#stage").text(TX.tx("Reading from client"));
             return self.client.store.reads(self.user)
             .then((str) => {
                 let data = JSON.parse(str);
                 self.cloud_path = data.cloud_path;
-                return Promise.resolve(data.hoard);
-            })
-            .then((hoard) => {
                 try {
                     self.client.hoard = new Hoard(
-                        { name: "loaded Client", data: hoard });
+                        { name: "loaded Client", data: data.hoard });
                     self.client.status = IS_LOADED;
-                    return Promise.resolve();
                 } catch (e) {
-                    if (self.debug) self.debug("Caught " + e);
+                    if (self.debug) self.debug("Caught " + e.stack);
                     throw new Error(
                         TX.tx("Client exists, but can't be read.",
                               self.client.store.option("type"))
                     + TX.tx("Check that you have the correct password."));
                 }
-            })
-            .then(() => {
-                if (self.debug) self.debug("Reconstructing client actions");
-                $("#stage")
-                    .text(TX.tx("Building UI"));
+
+                if (self.debug) self.debug("...reconstructing client actions");
+                $("#stage").text(TX.tx("Building UI"));
                 return self.client.hoard.reconstruct_actions(
                     function (a, next) {
                         // this:Hoard, a:Action, next:function
@@ -769,15 +725,15 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
         }
 
         /**
-         * STEP 2: Initialise the client store. This sets up the store
+         * Initialise the client store. This sets up the store
          * but doesn't read anything yet. Initialisation of the client
          * store *may* provide user information, but it will be
          * overridden by any user information coming from the cloud
          * store.
          */
-        step_2_init_client_store() {
+        _init_client_store() {
             let self = this;
-            if (self.debug) self.debug('step_2_init_client_store');
+            if (self.debug) self.debug('_init_client_store');
 
             self.client.store = new LocalStorageStore({
                 role: "client",
@@ -793,16 +749,19 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
                 });
             }
 
-            $("#stage").text(TX.tx("Authentication"));
-            
             // Initialisation of the cloud store may have provided
             // initial user information, either from a network login
             // or from a service login. Seed the login dialog with one
             // of them.
+            let poss_user;
+            if (self.cloud.store)
+                poss_user = (self.cloud.store.option("user") ||
+                             self.cloud.store.option("net_user"));
+
+            $("#stage").text(TX.tx("Authentication"));
             return Dialog.confirm("login", {
                 title: "User details",
-                user: self.cloud.store.option("user") ||
-                    self.cloud.store.option("net_user")
+                user: poss_user
             })
             .then((dlg) => {
                 let user = dlg.control("user").val();
@@ -814,38 +773,39 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
                 self.client.store.option("user", user);
                 self.client.store.option("pass", pass);
 
-                self.cloud.store.option("user", user);
-                self.cloud.store.option("pass", pass);
-            })
-            .then(() => {
+                if (self.cloud.store) {
+                    self.cloud.store.option("user", user);
+                    self.cloud.store.option("pass", pass);
+                }
+
                 return self.client.store.init({
                     role: "client",
                     network_login: () => {
                         return self._network_login("client");
                     }
-                })
-                .then(() => {
-                    if (self.debug) self.debug("Client store is ready");
                 });
+            })
+            .then(() => {
+                if (self.debug) self.debug("Client store is ready");
             });
         }
 
         /**
-         * STEP 1: Initialise the cloud store. Initialisation of the cloud
-         * store *may* provide user information - for example, initialisation
-         * of a GoogleDriveStore will require a google login to a specific
-         * user. We leverage this to get initial user information which
-         * can be used in determining the encryption user for the client
-         * store.
+         * Initialise the cloud store. Initialisation of the cloud
+         * store *may* provide user information - for example,
+         * initialisation of a GoogleDriveStore will require a google
+         * login to a specific user. We leverage this to get initial
+         * user information which can be used in determining the
+         * encryption user for the client store.
          */
-        step_1_init_cloud_store() {
+        _init_cloud_store() {
             let self = this;
-            if (self.debug) self.debug('step_1_init_cloud_store');
+            if (self.debug) self.debug('_init_cloud_store');
             let store;
-            
+
             let p = new Promise(function(res,rej) {
                 requirejs(
-                    ["js/" + self.cloudStorageProvider],
+                    ["js/" + self.options.store],
                     function(module) {
                         store = new module({
                             role: "cloud",
@@ -867,9 +827,39 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
                     })
                 });
             }
-            
+
+            if (typeof self.options.steg !== "undefined") {
+                if (self.debug) self.debug('adding steganography to cloud');
+                p = p.then(() => {
+                    return new Promise((resolve) => {
+                        requirejs(["js/StegaStore"], function(StegaStore) {
+                            store = new StegaStore({
+                                debug: self.debug,
+                                understore: store
+                            });
+                            resolve();
+                        });
+                    });
+                });
+            }
+
             return p.then(() => {
                 console.log("Init",store);
+                if (store.option("needs_url")) {
+                    if (self.options.url) {
+                        store.option("url", self.options.url);
+                    } else {
+                        return Dialog.confirm("alert", {
+                            alert: {
+                                severity: "error",
+                                message: TX.tx("A URL is required for $1",
+                                               store.option("type"))
+                            }
+                        }).then(() => {
+                            throw new Error("No URL given for store");
+                        });
+                    }
+                }
                 return store.init({
                     role: "cloud",
                     network_login: () => {
@@ -888,6 +878,7 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
                     alert: {
                         severity: "warning",
                         message: TX.tx("Could not open cloud store: $1", e)
+                            + "<br>"
                             + TX.tx("If you continue, only the client store will be available"),
                     }
                 });
@@ -895,7 +886,7 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
         }
 
         // CONTEXT MENU
-        
+
         _context_menu(f) {
             let self = this;
             switch (f) {
@@ -962,7 +953,7 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
         _handle_menu_choice(ui) {
             let self = this;
             let $node = self.$menuTarget;
-            
+
             if (!$node) {
                 if (self.debug) self.debug("No node for contextmenu>" + ui.cmd);
                 return;
@@ -1162,36 +1153,55 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
         _handle_init_application() {
             let self = this;
             // Kick off by initialising the cloud store.
-            $("#stage")
-                .text(TX.tx("Loading application"));
-            return self.step_1_init_cloud_store()
-                .then(() => {
-                    return self.step_2_init_client_store();
-                })
-                .then(() =>{
-                    return self.step_3_load_client_hoard();
-                })
-                .then(() =>{
-                    return self.step_5_load_cloud_hoard();
-                })
-                .then((merge) => {
-                    if (merge)
-                        return self.step_5a_merge_from_cloud();
-                    return Promise.resolve();
-                })
-                .then(() => {
-                    return self.step_6_hoards_loaded();
-                })
-                .then(() => {
-                    return self.step_7_interact();
-                });
+
+            return self._init_cloud_store()
+            .then(() => {
+                return self._init_client_store();
+            })
+            .then(() =>{
+                return self._load_client();
+            })
+            .then(() =>{
+                return self._load_cloud();
+            })
+            .then((merge) => {
+                if (merge)
+                    return self._merge_from_cloud();
+                return Promise.resolve();
+            })
+            .then(() => {
+                if (self.debug) self.debug('interacting');
+                
+                $(window)
+                    .on("beforeunload", function () {
+                        let us = self._unsaved_changes(10);
+                        if (us !== null) {
+                            us = TX.tx("You have unsaved changes") +
+                                "\n" + us +
+                                "\n" + TX.tx("Are you really sure?");
+                            return us;
+                        }
+                    });
+                
+                $(document).trigger("update_save");
+                $(document).trigger("check_alarms");
+
+                $("#whoami").text(self.user);
+                $("#unauthenticated").hide();
+                $("#authenticated").show();
+
+                // Open the root node
+                $("#sites-node").tree("open");
+            });
         }
 
         /**
-         * Main entry point for the application
+         * Main entry point for the application, invoked from main.js
          */
-        init_ui() {
+        begin() {
             let self = this;
+
+            $("#stage").text(TX.tx("Loading application"));
 
             $.styling.init(self.options);
 
@@ -1294,7 +1304,9 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
                 });
 
             $.styling.reset();
-        }
+            
+            self._handle_init_application();
+       }
 
         /**
          * Perform a (manual) new tree node action
@@ -1310,14 +1322,14 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
             function newnode($newnode) {
                 if (!$newnode)
                     throw new Error("ERROR: node creation failed");
-                
+
                 if (typeof value !== "string" && typeof value !== "undefined")
                     self.insert_data($newnode.tree("getPath"), value);
                 $newnode.tree("open", {
                     decorate: true
                 });
             }
-            
+
             self.client.hoard.play_action(e)
                 .then((res) => {
                     if (res.conflict)
@@ -1467,7 +1479,7 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
                         });
             })
             .catch((e) => {
-                
+
                 return Dialog.confirm("alert", {
                     title: TX.tx("Error"),
                     alert: {

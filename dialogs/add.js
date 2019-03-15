@@ -8,7 +8,7 @@
  */
 
 define(["js/Dialog"], function(Dialog) {
-    
+
     class AddDialog extends Dialog {
 
         /**
@@ -57,9 +57,6 @@ define(["js/Dialog"], function(Dialog) {
                 .on("input", function () {
                     self.validateUniqueKey();
                 })
-                .on("change", () => {
-                    self.control("ok").trigger(self.tapEvent());
-                })
                 .autocomplete({
                     source: [
                         self.tx("User"), self.tx("Pass")]
@@ -71,24 +68,15 @@ define(["js/Dialog"], function(Dialog) {
                 .text(this.options.$node.tree("getPath")
                       .join("↘") + "↘");
             if (this.options.is_value) {
-                this.control("value_help")
-                    .show();
-                this.control("folder_help")
-                    .hide();
-                this.control("value_parts")
-                    .show();
-                this.control("key")
-                    .autocomplete("enable")
-                    .select();
-                this.control("value")
-                    .val("");
+                this.control("value_help").show();
+                this.control("folder_help").hide();
+                this.control("value_parts").show();
+                this.control("key").autocomplete("enable").select();
+                this.control("value").val("");
             } else {
-                this.control("value_help")
-                    .hide();
-                this.control("folder_help")
-                    .show();
-                this.control("value_parts")
-                    .hide();
+                this.control("value_help").hide();
+                this.control("folder_help").show();
+                this.control("value_parts").hide();
                 this.control("key")
                     .autocomplete("disable")
                     .select();
@@ -105,7 +93,7 @@ define(["js/Dialog"], function(Dialog) {
                     this.control("value").val() : this.options.data);
             return super.ok();
         }
-        
+
     }
     return AddDialog;
 });

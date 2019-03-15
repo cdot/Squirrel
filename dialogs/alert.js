@@ -5,7 +5,7 @@
 define(["js/Dialog"], function(Dialog) {
 
     class AlertDialog extends Dialog {
-        
+
         /**
          * @param p map with following fields:
          *  severity: one of "notice", "warning", "error"

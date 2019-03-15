@@ -18,7 +18,7 @@ define(lss_deps, function(Utils, Serror, AbstractStore, Storage) {
     // Unique (hopefully!) string used to identify the boundary between
     // path and username in keys
     const KEY_COMMA = ".50C1BBE1.";
-    
+
     /**
      * A store engine using HTML5 localStorage.
      * @implements AbstractStore
@@ -28,7 +28,6 @@ define(lss_deps, function(Utils, Serror, AbstractStore, Storage) {
         constructor(p) {
             p = p || {};
             p.type = "LocalStorageStore";
-            p.needs_path = true;
             super(p);
         }
 
@@ -74,10 +73,17 @@ define(lss_deps, function(Utils, Serror, AbstractStore, Storage) {
             return this.writes(item, Utils.Uint8ArrayToPackedString(ab));
         }
 
-        reads(item) {
+        _makeKey(item) {
             let path = this.option("role") + ":" + item + KEY_COMMA;
             if (typeof this.option("user") !== "undefined")
                 path = path + this.option("user");
+            if (typeof this.option("path") !== "undefined")
+                path = path + this.option("path");
+            return path;
+        }
+
+        reads(item) {
+            let path = this._makeKey(item);
             if (this.debug) this.debug("ReadingS " + path);
             let str = localStorage.getItem(path);
             if (str === null) {
@@ -89,9 +95,7 @@ define(lss_deps, function(Utils, Serror, AbstractStore, Storage) {
         }
 
         writes(item, str) {
-            let path = this.option("role") + ":" + item + KEY_COMMA;
-            if (typeof this.option("user") !== "undefined")
-                path = path + this.option("user");
+            let path = this._makeKey(item);
             if (this.debug) this.debug("Writing", path, str);
             localStorage.setItem(path, str);
             return Promise.resolve();
@@ -100,4 +104,3 @@ define(lss_deps, function(Utils, Serror, AbstractStore, Storage) {
 
     return LocalStorageStore;
 });
-    

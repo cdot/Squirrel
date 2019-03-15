@@ -1,19 +1,19 @@
 /*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser */
 
+/**
+ * Steganography using the least-significant bits of the
+ * colour channels in an image.
+ *
+ * We use the colour channels because using the alpha channel is a dead
+ * giveaway that stenography is being used. Using the colour channels
+ * will give some chromatic perturbation than might act as a statistical
+ * signature, as a normal image will have runs of equal, or close,
+ * pixel values, and injecting random data will confuse that. We try to
+ * make it hard to detect by only using a small number of bits from each
+ * channel, such that the data just looks like noise.
+ */
 define(["js/Utils"], function(Utils) {
-    /* 
-     * Steganography using the least-significant bits of the
-     * colour channels in an image.
-     *
-     * We use the colour channels because using the alpha channel is a dead
-     * giveaway that stenography is being used. Using the colour channels
-     * will give some chromatic perturbation than might act as a statistical
-     * signature, as a normal image will have runs of equal, or close,
-     * pixel values, and injecting random data will confuse that. We try to
-     * make it hard to detect by only using a small number of bits from each
-     * channel, such that the data just looks like noise.
-     */
 
     class Steganographer {
         /**
@@ -26,7 +26,7 @@ define(["js/Utils"], function(Utils) {
          * colour channels, would be 8 bits, but that would replace the
          * image.
          * debug: function, same signature as console.debug
-         */    
+         */
         constructor(params) {
             // Messages are stored in chunks held in the least significant
             // bits of the three colour channels.
@@ -45,7 +45,7 @@ define(["js/Utils"], function(Utils) {
             if (image instanceof Uint8Array ||
                 image instanceof Uint8ClampedArray)
                 return image;
-            
+
             if (image instanceof Int8Array ||
                 image instanceof Int16Array ||
                 image instanceof Uint16Array ||
@@ -54,7 +54,7 @@ define(["js/Utils"], function(Utils) {
                 image instanceof Float32Array ||
                 image instanceof Float64Array)
                 return new Uint8Array(image.buffer);
- 
+
             if (image instanceof ImageData)
                 return image.data;
 
@@ -101,7 +101,7 @@ define(["js/Utils"], function(Utils) {
             let b64 = canvas.toDataURL(type, 1).split(",", 2)[1];
             return Utils.Base64ToUint8Array(b64);
         }
-        
+
         /**
          * @private
          * Adjust chunkSize until the data fits as well as
@@ -111,7 +111,7 @@ define(["js/Utils"], function(Utils) {
          */
         _adjustToFit(size, available) {
             let bits = size * 8; // Number of bits to be stored
-            
+
             // number of chunks (32 bits) and chunk size (4 bits) are stored
             // 2 bits per channel, so that means 18 channels, 3 channels
             // per pixel so need 6 pixels for this info.
@@ -152,7 +152,7 @@ define(["js/Utils"], function(Utils) {
          * all the data given the current parameters.
          */
         insert(a8, image) {
-          
+
             if (this.debug) this.debug(
                 "Embedding " + a8.length + " bytes ("
                     + (a8.length * 8) + " bits)");
@@ -193,7 +193,7 @@ define(["js/Utils"], function(Utils) {
                     byte_i++; // skip alpha channel
                 numChunks++;
             }
-            
+
             // 00000001 00000010 00000011 00000100 00000101
             // 001 000 000 001 000 110 000 000 100 000 100
             //   1   0   0   1   0   6   0   0   4   0   4

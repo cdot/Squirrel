@@ -21,7 +21,7 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
         user: "GoodUser",
         pass: "Th15 15 a g00d P*$$w1Rd"
     };
-        
+
     const WRONG = {
         user: "BadUser",
         pass: "Th15 15 a b44d P*$$w1rd"
@@ -44,12 +44,12 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
         static right() {
             return RIGHT;
         }
-        
+
         // Return a promise to construct self.store
         buildStore() {
             let self = this;
             let p = Promise.resolve();
-            
+
             // Starting from the end of the class list, construct store objects
             for (let i = this.storeClasses.length - 1; i >= 0; i--) {
                 let storeClass = this.storeClasses[i];
@@ -80,20 +80,19 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
             }
             return p;
         }
-        
+
         analyseParams(config) {
             let self = this;
-            let store = self.store; 
+            let store = self.store;
             if (!config)
                 config = {};
 
-            if (store.option("needs_path"))
-                store.option("path", "/numb/nuts");
-            
+            store.option("path", "/numb/nuts");
+
             const PROMPTABLE = {
                 user: true, pass: true,
-                net_url: true, net_user: true, net_pass: true };
-            
+                url: true, net_user: true, net_pass: true };
+
             if (typeof global !== "undefined") {
                 if (self.debug) self.debug("StoreTester: node.js startup");
                 // node.js allows environment variables to override the
@@ -123,9 +122,9 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
                 });
                 return Promise.resolve();
             }
-            
+
             if (self.debug) self.debug("Browser startup");
-            
+
             // browser
             // Query params override config, and parts missing from
             // config are prompted for
@@ -145,7 +144,7 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
                                 $("#needs_" + option).show();
                             });
                     }
-                    
+
                     // If we have a #run button, wait for it to be clicked
                     let $run = $("#run");
                     if ($run.length > 0)
@@ -161,11 +160,11 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
         static user() {
             return RIGHT;
         }
-        
+
         makeTests() {
             let self = this;
             let assert = this.assert;
- 
+
             this.addTest("Write/Read 1 byte", function() {
                 let store = self.store;
                 let a = new Uint8Array(1);
@@ -179,7 +178,7 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
                         assert.equal(Utils.Uint8ArrayToString(ab), String.fromCodePoint(69));
                     });
             });
-            
+
             this.addTest("Write/Read 0 bytes", function() {
                 let store = self.store;
                 let a = new Uint8Array(0);
@@ -191,7 +190,7 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
                         assert.equal(ab.byteLength, 0);
                     });
             });
-            
+
             this.addTest("Read non-existant", function() {
                 let store = self.store;
                 return store.read("not/a/known/resource.dat")
@@ -203,7 +202,7 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
                         assert(se.status === 404, "" + se);
                     });
             });
-            
+
             this.addTest("Write/Read string", function() {
                 let store = self.store;
                 return store.writes(test_path, TESTR)
@@ -214,11 +213,11 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
                         assert.equal(str, TESTR);
                     });
             });
-            
+
             this.addTest("Write/read binary", function() {
                 let store = self.store;
                 let a = new Uint8Array(DATASIZE);
-                
+
                 for (let i = 0; i < DATASIZE; i++)
                     a[i] = ((i + 1) & 0xFF);
                 //if (debug) debug("W:",block(a,214,220));
@@ -233,8 +232,8 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
                             assert.equal(a[i], ((i + 1) & 255), "Position " + i);
                     });
             });
-            
-            if (self.store.option("needs_auth")) {
+
+            if (self.store.option("needs_url")) {
                 this.addTest("Handles incorrect net user", function() {
                     let store = self.store;
                     return store.writes(test_path, TESTR)
@@ -248,7 +247,7 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
                         .then(function(data) {
                             assert(false, "Expected an error");
                         })
-                        .catch(function(e) {                               
+                        .catch(function(e) {
                             assert(e instanceof Serror, "Not an Serror "+e);
                             assert.equal(e.status, 401);
                             store.option("network_login", h401);
@@ -259,7 +258,7 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
                         assert(false, "Write error" + e);
                     });
                 });
-                
+
                 this.addTest("Handles incorrect net pass", function() {
                     let store = self.store;
                     return store.writes(test_path, TESTR)
@@ -285,7 +284,7 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
                     });
                 });
             }
-            
+
             if (self.store.option("needs_user")) {
                 this.addTest("Handles incorrect user", function() {
                     let store = self.store;
@@ -314,10 +313,10 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
                         });
                 });
             }
-            
+
             if (self.store.option("needs_pass")) {
                 // Note this is testing encryption (needs_pass)
-                // not web authentication (needs_auth)
+                // not web authentication (needs_url)
                 this.addTest("Handles incorrect password", function() {
                     let store = self.store;
                     store.option("pass", RIGHT.pass);
@@ -346,7 +345,7 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
                 });
             }
         }
-        
+
         run(params) {
             return this.buildStore()
                 .then(() => {
@@ -362,6 +361,6 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
                     return super.run();
                 });
         }
-    }        
+    }
     return StoreTester;
 });

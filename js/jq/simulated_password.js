@@ -56,7 +56,7 @@ define(["jquery"], function() {
             $this.addClass("pass_hidden");
         }
     }
-    
+
     // Require an unload handler on FF (and maybe others) to revert the
     // password field to the hidden value. Otherwise the browser caches
     // the display dots.
@@ -65,7 +65,7 @@ define(["jquery"], function() {
             showPass(this, true);
         });
     });
-    
+
     // Override global val() to handle this plugin
     $.fn.raw_val = $.fn.val;
 
@@ -102,10 +102,10 @@ define(["jquery"], function() {
                 options.checkbox = true;
             if (typeof options.hidden === "undefined")
                 options.hidden = true;
-        
+
             if (this.type === "password")
                 this.type = "text"; // because Firefox screws up "password"
-            
+
             if (options.checkbox) {
                 // Add a show/no show checkbox
                 let $showpass = $('<input type="checkbox"/>');

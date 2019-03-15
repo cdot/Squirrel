@@ -5,14 +5,14 @@
  * user: initial value for username
  * pass: initial value for password
  */
-define(["js/Dialog", "jsjq/simulated_password"], function(Dialog) {
+define(["js/Dialog", "js/jq/simulated_password"], function(Dialog) {
     class LoginDialog extends Dialog {
         initialise() {
             let self = this;
             let $pass = this.control("pass");
-            
+
             $pass.simulated_password();
-            
+
             this.control("user")
                 .on("change", function () {
                     $pass.focus();
@@ -21,7 +21,7 @@ define(["js/Dialog", "jsjq/simulated_password"], function(Dialog) {
                 self.control("cancel").focus();
             });
         }
-        
+
         open() {
             let $user = this.control("user");
 

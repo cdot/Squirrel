@@ -16,7 +16,7 @@ define(["js/RGBA", "cookie", "jquery", "jquery-ui"], function(RGBA, Cookies) {
          */
          init: function(options) {
              options = options || {};
-            
+
              options.theme = options.theme || Cookies.get("ui_theme");
 
              if (options.theme && options.theme !== "base")
@@ -27,7 +27,7 @@ define(["js/RGBA", "cookie", "jquery", "jquery-ui"], function(RGBA, Cookies) {
              if (options.scale && options.scale > 0)
                 $.styling.scale(options.scale);
         },
-        
+
         /**
          * Reset the theme by finding all font, color and
          * background-color settings currently set in the theme for
@@ -47,10 +47,9 @@ define(["js/RGBA", "cookie", "jquery", "jquery-ui"], function(RGBA, Cookies) {
             if (!bgcol || bgcol === "transparent" ||
                 bgcol === "inherit" || bgcol === "initial")
                 // Really there's no way to determine, but make a guess
-                is_light = false;
+                is_light = true;
             else
-                is_light = (new RGBA(bgcol)
-                            .luma() < 0.65);
+                is_light = (new RGBA(bgcol).luma() > 0.65);
 
             // Make a div with UI widget styles
             let $el = $(document.createElement("div"))
@@ -79,8 +78,7 @@ define(["js/RGBA", "cookie", "jquery", "jquery-ui"], function(RGBA, Cookies) {
                 bgcol === "inherit")
                 need_light = is_light;
             else
-                need_light = (new RGBA(bgcol)
-                              .luma() < 0.65);
+                need_light = (new RGBA(bgcol).luma() < 0.65);
 
             if (is_light && !need_light || !is_light && need_light) {
                 // Invert colours. In theory only local stylesheets can be
@@ -113,7 +111,7 @@ define(["js/RGBA", "cookie", "jquery", "jquery-ui"], function(RGBA, Cookies) {
                                         a.inverse()
                                         .toString() + ";\n"
                                 } catch (e) {
-                                    if (this.debug) this.debug(e);
+                                    console.debug(e);
                                 }
                             }
                             if (rule.style.backgroundColor) {
@@ -124,7 +122,7 @@ define(["js/RGBA", "cookie", "jquery", "jquery-ui"], function(RGBA, Cookies) {
                                         a.inverse()
                                         .toString() + ";\n"
                                 } catch (e) {
-                                    if (this.debug) this.debug(e + ":" + rule.style.backgroundColor);
+                                    console.debug(e + ":" + rule.style.backgroundColor);
                                 }
                             }
                             if (s.length > 0)

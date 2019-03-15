@@ -5,12 +5,7 @@ if (typeof module !== "undefined") {
 }
 
 requirejs.config({
-    baseUrl: "..",
-    paths: {
-        js: "src",
-        jsjq: "src/jquery",
-        test: "test"
-    }
+    baseUrl: ".."
 });
 
 // Max code point in Unicode is:
@@ -21,7 +16,7 @@ requirejs(["js/Utils", "test/TestRunner"], function(Utils, TestRunner) {
 
     let tr = new TestRunner("Utils");
     let assert = tr.assert;
-    
+
     tr.addTest("StringToUint8Array and Uint8ArrayToString", () => {
         let a8 = Utils.StringToUint8Array(TESTR);
         assert.equal(a8.length, 53);
@@ -49,7 +44,7 @@ requirejs(["js/Utils", "test/TestRunner"], function(Utils, TestRunner) {
         let ba = new Uint8Array(Utils.PackedStringToUint8Array(ps));
         assert.deepEqual(ba, ab);
     });
-            
+
     tr.addTest("Uint8ArrayToPackedString 16 bit", () => {
             let ab = new Uint8Array(65536);
             for (let i = 0; i < 65536; i++)
@@ -59,7 +54,7 @@ requirejs(["js/Utils", "test/TestRunner"], function(Utils, TestRunner) {
             let ba = new Uint8Array(Utils.PackedStringToUint8Array(ps));
             assert.deepEqual(ba, ab);
     });
-            
+
     tr.addTest("Uint8ArrayToBase64", () => {
         let ab = new Uint8Array(256);
         for (let i = 0; i < 256; i++)
@@ -74,14 +69,14 @@ requirejs(["js/Utils", "test/TestRunner"], function(Utils, TestRunner) {
         let pw = Utils.generatePassword();
         assert(!/[^A-Za-z0-9]/.test(pw), pw);
         assert.equal(pw.length, 24);
-            
+
         pw = Utils.generatePassword({
             charset: "ABC\"'",
             length:80
         });
         assert(!/[^ABC\"\']/.test(pw), pw);
         assert.equal(pw.length, 80);
-        
+
         try {
             pw = Utils.generatePassword({
                 charset: "Z-Q9-0"

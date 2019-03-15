@@ -13,13 +13,11 @@ requirejs.config({
         mocha: "//cdnjs.cloudflare.com/ajax/libs/mocha/6.0.2/mocha",
         chai: "//cdnjs.cloudflare.com/ajax/libs/chai/4.2.0/chai",
         jquery: "//code.jquery.com/jquery-3.3.1",
-        "jquery-ui": "//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui",
-        js: "src",
-        jsjq: "src/jquery"
+        "jquery-ui": "//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui"
     }
 });
 
-define(["src/Translator", "jquery", "jsjq/simulated_password", "jsjq/icon_button", "test/simulated_password"], function(Translator) {
+define(["js/Translator", "jquery", "js/jq/simulated_password", "js/jq/icon_button", "test/simulated_password"], function(Translator) {
 
     let TX = Translator.instance({ url: "locale", debug: console.debug});
 
@@ -31,7 +29,7 @@ define(["src/Translator", "jquery", "jsjq/simulated_password", "jsjq/icon_button
                 throw "Assret failed";
         }
     }
-    
+
     function simulated_password() {
         let res = $("#hidden_pw")
             .simulated_password()
@@ -49,7 +47,7 @@ define(["src/Translator", "jquery", "jsjq/simulated_password", "jsjq/icon_button
             $("#hidden_pw").val("reset");
             $("#pw_val").text($("#hidden_pw").val());
         });
-    }      
+    }
 
     function icon_button() {
         $(".icon_button").icon_button();

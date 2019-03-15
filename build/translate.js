@@ -28,19 +28,19 @@ function translate(s) {
             return protection[parseInt(i)];
         });
     }
-    
+
     function lengthInUtf8Bytes(str) {
         // Matches only the 10.. bytes that are non-initial
         // characters in a multi-byte sequence.
         var m = encodeURIComponent(str).match(/%[89ABab]/g);
         return str.length + (m ? m.length : 0);
     }
-    
+
     s = protect(s);
 
     if (lengthInUtf8Bytes(s) > 500)
         throw "Cannot auto-translate " + s + " it's > 500 bytes";
-    
+
     if (lang === "en")
         return { s: s, m: 0 }; // handy debug
 
@@ -105,7 +105,7 @@ for (var i in opt.argv) {
 // Delete strings that are known but not wanted
 Promise
     .all(loads)
-    .then(() => {       
+    .then(() => {
         for (let k in known) {
             if (wanted[k]) continue;
             console.log("Delete " + k);

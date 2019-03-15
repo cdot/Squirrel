@@ -21,15 +21,9 @@ define(["js/Dialog", "js/Utils", "js/Hoard"], function(Dialog, Utils, Hoard) {
             let dlg_l = this.control("len").val();
             let dlg_c = this.control("chs").val();
 
-            if (dlg_l !== nc[0] || dlg_c !== nc[1])
-                this.control("remember").show();
-            else
-                this.control("remember").hide();
+            this.control("remember").toggle(dlg_l !== nc[0] || dlg_c !== nc[1]);
 
-            if (dlg_l !== DEFAULT_RANDOM_LEN || dlg_c !== DEFAULT_RANDOM_CHS)
-                this.control("reset").show();
-            else
-                this.control("reset").hide();
+            this.control("reset").toggle(dlg_l !== DEFAULT_RANDOM_LEN || dlg_c !== DEFAULT_RANDOM_CHS);
 
             this.control("again")
                 .trigger(this.tapEvent());
@@ -43,7 +37,7 @@ define(["js/Dialog", "js/Utils", "js/Hoard"], function(Dialog, Utils, Hoard) {
 
         initialise() {
             let self = this;
-            
+
             this.control("again")
                 .on(this.tapEvent(), function () {
                     self.control("idea")

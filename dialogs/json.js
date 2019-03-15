@@ -16,7 +16,7 @@ define(["js/Dialog"], function(Dialog) {
 
         ok() {
             let self = this;
-            
+
             return Dialog.open("alert", {
                 title: self.tx("Loading")
             })

@@ -4,12 +4,7 @@
 if (typeof module !== "undefined") {
     requirejs = require('requirejs');
     requirejs.config({
-        baseUrl: "..",
-        paths: {
-            js: "src",
-            jsjq: "src/jquery",
-            test: "test"
-        }
+        baseUrl: ".."
     });
 }
 
@@ -34,7 +29,7 @@ requirejs(["js/Utils", "js/AES", "test/TestRunner"], function(Utils, AES, TestRu
 	let s = Utils.Uint8ArrayToString(decipher);
 	assert.equal(s, plain);
     });
-    
+
     tr.addTest('should encrypt / decrypt bytes', function() {
 	let ab = new Uint8Array(256);
         for (let i = 0; i < 256; i++)
