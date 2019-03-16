@@ -21,15 +21,16 @@ define(["js/Utils", "js/Serror"], function(Utils, Serror) {
          */
         constructor(options) {
             this.options = { type: "AbstractStore" };
-            for (let k in options)
-                if (options.hasOwnProperty(k))
-                    this.options[k] = options[k];
+            if (options)
+                for (let k in options)
+                    if (options.hasOwnProperty(k))
+                        this.options[k] = options[k];
             let self = this;
             if (typeof this.options.debug === "function") {
                 this.debug = function() {
                     let a = Array.from(arguments);
                     a.unshift(self.options.type);
-                    options.debug.apply(null, a);
+                    self.options.debug.apply(null, a);
                 };
             }
         }
@@ -43,12 +44,15 @@ define(["js/Utils", "js/Serror"], function(Utils, Serror) {
 
         /**
          * Get/set options.
-         * @param k the key
-         * @param v the new value, undefined to simply retireve the value, or
+         * @param k the key. If undefined, will return the entire options map
+         * @param v the new value, undefined to simply retrieve the value, or
          * null to delete the option (make it undefined), anything else will
          * set the value of the option.
          */
         option(k, v) {
+            if (typeof k === "undefined")
+                return this.options;
+
             if (typeof v !== "undefined") {
                 if (v === null)
                     delete this.options[k];
@@ -114,16 +118,14 @@ define(["js/Utils", "js/Serror"], function(Utils, Serror) {
          */
         reads(path) {
             return this.read(path)
-                .then((ab) => {
-                    if (typeof ab === "undefined")
-                        return ab;
-                    try {
-                        return Utils.Uint8ArrayToString(ab);
-                    } catch (e) {
-                        // UTF-8 decode error, most likely
-                        throw this.error(path, 400, e);
-                    }
-                });
+            .then((ab) => {
+                try {
+                    return Utils.Uint8ArrayToString(ab);
+                } catch (e) {
+                    // UTF-8 decode error, most likely
+                    throw this.error(path, 400, e);
+                }
+            });
         }
     }
 

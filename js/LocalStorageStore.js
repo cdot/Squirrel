@@ -26,9 +26,8 @@ define(lss_deps, function(Utils, Serror, AbstractStore, Storage) {
     class LocalStorageStore extends AbstractStore {
 
         constructor(p) {
-            p = p || {};
-            p.type = "LocalStorageStore";
             super(p);
+            this.option("type", "LocalStorageStore");
         }
 
         init() {

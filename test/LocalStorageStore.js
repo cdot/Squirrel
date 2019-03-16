@@ -9,5 +9,4 @@ requirejs.config({
 
 requirejs(["test/StoreTester"], function(StoreTester) {
     new StoreTester(["LocalStorageStore"]).run();
-    console.log(StoreTester.user());
 });

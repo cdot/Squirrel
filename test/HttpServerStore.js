@@ -25,8 +25,11 @@ requirejs(deps, function(StoreTester, express, basicAuth) {
         // node.js, express is available, make a simple server
         let app = express();
 
+        let express_user = "u" + Date.now();
+        let express_pass = "p" + express_user;
+        
         let users = {};
-        users[StoreTester.right().user] = StoreTester.right().pass;
+        users[express_user] = express_pass;
         console.log("Server users:",users);
         app.use(basicAuth({
             users: users
@@ -61,13 +64,13 @@ requirejs(deps, function(StoreTester, express, basicAuth) {
             server = app.listen(function() {
                 let url = "http://localhost:" + server.address().port;
                 console.debug("Express server listening on " + url);
-                resolve({ url: url });
+                resolve({ url: url, net_user: express_user, net_pass: express_pass });
             });
         });
     }
 
     config.then((cfg) => {
-        new StoreTester(["HttpServerStore"]).run(cfg)
+        new StoreTester(["HttpServerStore"], console.debug).run(cfg)
             .then(() => {
                 server.close();
             });

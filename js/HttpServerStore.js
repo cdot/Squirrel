@@ -34,14 +34,13 @@ define(["js/Serror", "js/AbstractStore"], function(Serror, AbstractStore) {
          */
         addAuth(headers) {
             // Override auth if credentials are set
-            let user = self.option("net_user");
-            let pass = self.option("net_pass");
+            let user = this.option("net_user");
+            let pass = this.option("net_pass");
             if (typeof user !== "undefined") {
-                if (self.debug) self.debug("Using auth", user, pass);
-                headers.Authorization = 'Basic '
-                + btoa(user + ':' + pass);
-            } else if (self.debug)
-                self.debug("No auth header");
+                if (this.debug) this.debug("addAuth: Using BasicAuth", user);
+                headers.Authorization = 'Basic ' + btoa(user + ':' + pass);
+            } else if (this.debug)
+                this.debug("addAuth: No auth header");
         }
         
         /**
@@ -73,7 +72,7 @@ define(["js/Serror", "js/AbstractStore"], function(Serror, AbstractStore) {
             if (base && base.length > 0) {
                 if (/\w$/.test(base))
                     base += "/";
-                turl = new URL(url, base).toString();
+                turl = new URL(url, base);
             } else
                 turl = new URL(url);
 
@@ -82,8 +81,7 @@ define(["js/Serror", "js/AbstractStore"], function(Serror, AbstractStore) {
 
                 // for binary data (does nothing in node.js)
                 xhr.responseType = "arraybuffer";
-
-                xhr.open(method, turl, true);
+                xhr.open(method, turl.toString(), true);
 
                 for (let ii in headers) {
                     xhr.setRequestHeader(ii, headers[ii]);

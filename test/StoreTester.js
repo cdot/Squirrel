@@ -17,16 +17,6 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
 
     const test_path = "test.dat";
 
-    const RIGHT = {
-        user: "GoodUser",
-        pass: "Th15 15 a g00d P*$$w1Rd"
-    };
-
-    const WRONG = {
-        user: "BadUser",
-        pass: "Th15 15 a b44d P*$$w1rd"
-    };
-
     class StoreTester extends TestRunner{
 
         /**
@@ -38,11 +28,6 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
 
             this.storeClasses = storeClasses;
             this.store = undefined;
-        }
-
-        // Get constant for tests
-        static right() {
-            return RIGHT;
         }
 
         // Return a promise to construct self.store
@@ -81,84 +66,118 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
             return p;
         }
 
+        /**
+         * config provides a baseline source of parameter values.
+         * node.js also allows environment variables to override this baseline.
+         * only parameters marked as "needs_" in the store options are passed
+         * to the store. "net_user" and "net_pass" are used in the 401 handler
+         * for node.js.
+         */
         analyseParams(config) {
             let self = this;
             let store = self.store;
+            let four01 = {};
             if (!config)
                 config = {};
 
-            store.option("path", "/numb/nuts");
-
-            const PROMPTABLE = {
-                user: true, pass: true,
-                url: true, net_user: true, net_pass: true };
-
             if (typeof global !== "undefined") {
-                if (self.debug) self.debug("StoreTester: node.js startup");
-                // node.js allows environment variables to override the
-                // store configuration
+
+                if (self.debug) self.debug("node.js startup");
+
                 let remember = {};
-                for (let option in PROMPTABLE) {
-                    let v = config[option];
-                    if (typeof v === "undefined")
-                        v = process.env["T_" + option];
-                    if (typeof v === "undefined")
-                        v = RIGHT[option];
-                    if (self.debug) self.debug("OPTION", option, v);
-                    store.option(option, v);
+
+                let cli = {};
+                for (var i in process.argv) {
+                    let p = process.argv[i].split("=");
+                    cli[p[0]] = p[1];
                 }
+
+                for (let option in store.option()) {
+                    if (/^needs_/.test(option)) {
+                        let key = option.replace(/^needs_/, "");
+                        // CLI overrides env vars
+                        let v = cli[key];
+                        // Env vars override config
+                        if (typeof v === "undefined")
+                            v = process.env["T_" + key];
+                        // Config is last dicth
+                        if (typeof v === "undefined")
+                            v = config[key];
+                        if (typeof v === "undefined")
+                            throw "Require a value for "+key;
+                        if (self.debug) self.debug(option,key, "=", v);
+                        store.option(key, v);
+                    }
+                }
+                if (store.option("needs_url")) {
+                    for (let key in { net_user: 1, net_pass: 1 }) {
+                        let v = config[key];
+                        if (typeof v === "undefined")
+                            v = process.env["T_" + key];
+                        if (self.debug) self.debug(key, "=", v);
+                        four01[key] = v;
+                    }
+                }
+                
                 // 401 handler, build credentials and pass back
                 store.option("network_login", function() {
-                    if (self.debug) self.debug("Called network_login");
-                    if (store.option("net_user") === RIGHT.user
-                        && store.option("net_pass") === RIGHT.pass) {
+                    if (self.debug) self.debug("Called network_login",store.option());
+                    if (store.option("net_user") === four01.net_user
+                        && store.option("net_pass") === four01.net_pass) {
+                        // If we get here, this is a second pass through
+                        // this code. We can't improve on credentials, so
+                        // it's a fail.
                         if (self.debug) self.debug("auth failed with "
                                                    + store.option("net_user"));
                         return Promise.reject();
                     }
-                    store.option("net_user", RIGHT.user);
-                    store.option("net_pass", RIGHT.pass);
+                    store.option("net_user", four01.net_user);
+                    store.option("net_pass", four01.net_pass);
                     return Promise.resolve();
                 });
+
                 return Promise.resolve();
-            }
+            } else {
 
-            if (self.debug) self.debug("Browser startup");
+                if (self.debug) self.debug("Browser startup");
 
-            // browser
-            // Query params override config, and parts missing from
-            // config are prompted for
-            return new Promise(function(resolve, reject) {
-                requirejs(["jquery"], function() {
-                    let qs = Utils.parseURLParams(window.location.search.substring(1));
-                    for (let option in PROMPTABLE) {
-                        if (typeof qs[option] !== "undefined")
-                            config[option] = qs[option];
-                        else if (typeof config[option] === "undefined")
-                            config[option] = RIGHT[option];
-                        store.option(option, config[option]);
-                        $("#" + option)
+                // Query params override config, and parts missing from
+                // config are prompted for
+                return new Promise(function(resolve, reject) {
+                    requirejs(["jquery"], resolve);
+                })
+                .then(() => {
+                    config = Utils.parseURLParams(window.location.search.substring(1));
+                    let needs = 0;
+                    for (let option in store.option()) {
+                        let v = config[option];
+                        if (/^needs_/.test(option)) {
+                            store.option(option, config[option]);
+                            let $div = $("<div>" + option + "</div>");
+                            let $input = $('<input/>');
+                            $input
                             .val(config[option])
                             .on("change", function() {
-                                store.option(option, $("#" + option).val());
-                                $("#needs_" + option).show();
+                                store.option(option, $(this).val());
                             });
+                            $("body").append($div);
+                            needs++;
+                        }
                     }
 
-                    // If we have a #run button, wait for it to be clicked
-                    let $run = $("#run");
-                    if ($run.length > 0)
-                        $run.on("click", function() {
+                    // Shouldn't need a 401 handler, the browser should take
+                    // care of it
+
+                    if (needs > 0) {
+                        let $run = $("<button>Run</button>");
+                        $button.on("click", function() {
                             resolve();
                         });
-                    else
+                        $("body").append($run);
+                    } else
                         resolve();
                 });
-            });
-        }
-
-        static user() {
-            return RIGHT;
+            }
         }
 
         makeTests() {
@@ -234,6 +253,8 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
             });
 
             if (self.store.option("needs_url")) {
+                // Won't do anything in the browser, as 401 isn't handled
+                // by us
                 this.addTest("Handles incorrect net user", function() {
                     let store = self.store;
                     return store.writes(test_path, TESTR)
@@ -242,7 +263,7 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
                         let h401 = store.option("network_login");
                         store.option("network_login", null);
                         let nu = store.option("net_user");
-                        store.option("net_user", WRONG.user);
+                        store.option("net_user", Date.now());
                         return store.reads(test_path)
                         .then(function(data) {
                             assert(false, "Expected an error");
@@ -259,6 +280,8 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
                     });
                 });
 
+                // Won't do anything in the browser, as 401 isn't handled
+                // by us
                 this.addTest("Handles incorrect net pass", function() {
                     let store = self.store;
                     return store.writes(test_path, TESTR)
@@ -267,7 +290,7 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
                         let h401 = store.option("network_login");
                         store.option("network_login", null);
                         let np = store.option("net_pass");
-                        store.option("net_pass", WRONG.pass);
+                        store.option("net_pass", Date.now());
                         return store.reads(test_path, TESTR)
                         .then(function(data) {
                             assert(false, "Unexpected");
@@ -288,29 +311,27 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
             if (self.store.option("needs_user")) {
                 this.addTest("Handles incorrect user", function() {
                     let store = self.store;
-                    store.option("pass", RIGHT.pass);
+                    let u = store.option("pass");
                     return store.writes(test_path, TESTR)
-                        .then(function () {
-                            store.option("user", WRONG.user);
-                            return store.reads(test_path)
-                                .then(function(data) {
-                                    assert(false, "Unexpected");
-                                })
-                                .catch(function(e) {
-                                    assert(e instanceof Serror);
-                                    assert.equal(e.status, 401);
-                                });
-                        })
+                    .then(function () {
+                        store.option("user", Date.now());
+                        return store.reads(test_path)
                         .then(function(data) {
-                            assert.notEqual(data, TESTR);
+                            assert(false, "Unexpected");
                         })
-                        .then(function () {
-                            store.option("user", RIGHT.user);
-                            return store.reads(test_path);
-                        })
-                        .then(function(data) {
-                            assert.equal(data, TESTR);
+                        .catch(function(e) {
+                            assert(e instanceof Serror);
+                            assert.equal(e.status, 401);
+                            store.option("user", u);
                         });
+                    })
+                    .then(function(data) {
+                        assert.notEqual(data, TESTR);
+                        return store.reads(test_path);
+                    })
+                    .then(function(data) {
+                        assert.equal(data, TESTR);
+                    });
                 });
             }
 
@@ -319,29 +340,27 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
                 // not web authentication (needs_url)
                 this.addTest("Handles incorrect password", function() {
                     let store = self.store;
-                    store.option("pass", RIGHT.pass);
+                    let p = store.option("pass");
                     return store.writes(test_path, TESTR)
-                        .then(function () {
-                            store.option("pass", WRONG.pass);
-                            return store.reads(test_path)
-                                .then(function(data) {
-                                    assert(false, "Unexpected success "+data);
-                                })
-                                .catch(function(e) {
-                                    assert(e instanceof Serror);
-                                    assert.equal(e.status, 400);
-                                });
-                        })
+                    .then(function () {
+                        store.option("pass", Date.now());
+                        return store.reads(test_path)
                         .then(function(data) {
-                            assert.notEqual(data, TESTR);
+                            assert(false, "Unexpected success "+data);
                         })
-                        .then(function () {
-                            store.option("pass", RIGHT.pass);
-                            return store.reads(test_path);
-                        })
-                        .then(function(data) {
-                            assert.equal(data, TESTR);
+                        .catch(function(e) {
+                            assert(e instanceof Serror);
+                            assert.equal(e.status, 400);
+                            store.option("pass", p);
                         });
+                    })
+                    .then(function(data) {
+                        assert.notEqual(data, TESTR);
+                        return store.reads(test_path);
+                    })
+                    .then(function(data) {
+                        assert.equal(data, TESTR);
+                    });
                 });
             }
         }

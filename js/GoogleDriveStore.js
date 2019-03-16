@@ -38,6 +38,7 @@ define(['js/Utils', 'js/Translator', 'js/HttpServerStore', 'js/Serror'], functio
             
             super(p);
             this.option("type", "GoogleDriveStore");
+            // Override HttpServerStore
             this.option("needs_url", false);
             this.option("url", "");
         }

@@ -13,7 +13,6 @@ define(["js/Utils", "js/HttpServerStore"], (Utils, HttpServerStore) => {
     class WebDAVStore extends HttpServerStore {
 
         constructor(p) {
-            p = p || {};
             super(p);
             this.option("type", "WebDAVStore");
         }
@@ -21,6 +20,7 @@ define(["js/Utils", "js/HttpServerStore"], (Utils, HttpServerStore) => {
         /**
          * Override HttpServerStore.request to add 207 handling
          */
+
         // @Override
         request(method, url, headers, body) {
             let self = this;

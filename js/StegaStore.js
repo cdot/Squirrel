@@ -15,11 +15,10 @@ define(["js/LayeredStore", "js/Steganographer"], function(LayeredStore, Steganog
     class StegaStore extends LayeredStore {
 
         constructor(p) {
-            p = p || {};
-            p.type = "StegaStore";
-            p.needs_image = true;
             super(p);
             this.steg = new Steganographer({ debug: this.debug });
+            this.option("type", "StegaStore/" + this.option("type"));
+            this.option("needs_image", true);
         }
 
         read(path) {

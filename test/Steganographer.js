@@ -33,8 +33,8 @@ requirejs(["test/TestRunner", "js/Steganographer", "js/Utils", "jquery"], functi
     tr.addTest("insert.extract large", function() {
         let steg = new Steganographer({ debug: console.debug });
         let a = new Uint8Array(100000);
-        for (let i = 0; i < 100000; i++
-             a[i] = i;
+        for (let i = 0; i < 100000; i++)
+            a[i] = i;
         let id = steg.insert(a, $("#source")[0]);
 
         // Write the image to the canvas
@@ -47,7 +47,7 @@ requirejs(["test/TestRunner", "js/Steganographer", "js/Utils", "jquery"], functi
         let gets = new Steganographer({ debug: console.debug });
         console.log("Extracting");
         let b = gets.extract(id);
-        for (let i = 0; i < 100000; i++
+        for (let i = 0; i < 100000; i++)
              assert.equal(b[i], i);
     });
 

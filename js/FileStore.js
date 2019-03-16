@@ -1,27 +1,33 @@
 /*@preserve Copyright (C) 2017-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env node */
 
-define(["fs-extra", "js/AbstractStore"], function(fs, AbstractStore) {
+define(["fs-extra", "js/AbstractStore", "js/Serror"], function(fs, AbstractStore, Serror) {
 
     /**
      * A store engine using file store, used with node.js
+     * Uses 'url' to set the base path
      * @implements AbstractStore
      */
     class FileStore extends AbstractStore {
 
         constructor(p) {
-            p = p || {};
-            p.type = "FileStore";
             super(p);
+            this.option("type", "FileStore");
+            this.option("needs_path", true);
         }
 
         read(path) {
-            return fs.readFile(path);
+            return fs.readFile(this.option("path") + "/" + path)
+            .catch((e) => {
+                if (/ENOENT/.test(e.message))
+                    throw new Serror(path, 404, e.message);
+                throw e;
+            });
         }
 
         write(path, data) {
             // data is an Uint8Array so is already bytes
-            return fs.writeFile(path, data);
+            return fs.writeFile(this.option("path") + "/" + path, data);
         }
     }
 
