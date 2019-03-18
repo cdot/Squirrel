@@ -90,7 +90,12 @@ define(["js/Dialog", "js/Translator", "js/LocalStorageStore", "js/Hoard", "js/Tr
                     {
                         severity: "warning",
                         message: "Close this dialog to open a non-blocking",
-                    }
+                    },
+                    {
+                        severity: "error",
+                        http: 401
+                    },
+                    "Plain text"
                 ]
             }).then((dlg) => {
                 Dialog.open("alert", {

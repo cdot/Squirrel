@@ -61,19 +61,19 @@ define(["js/Translator", "jquery", "jquery-ui", "js/jq/icon_button", "js/jq/twis
                 //        "Loading HTML for dialog", id, "from", html_url);
 
                 p = $.get(html_url)
-                    .then((html) => {
-                        //if (options.debug) options.debug("HTML was loaded");
-                        let $dlg = $(html);
-                        Translator.instance().translate($dlg);
-                        // force the id so we can find it again
-                        $dlg.attr("id", id + "_dlg");
-                        // force the CSS class - should be hidden
-                        $dlg.addClass("dlg-dialog");
+                .then((html) => {
+                    //if (options.debug) options.debug("HTML was loaded");
+                    let $dlg = $(html);
+                    Translator.instance().translate($dlg);
+                    // force the id so we can find it again
+                    $dlg.attr("id", id + "_dlg");
+                    // force the CSS class - should be hidden
+                    $dlg.addClass("dlg-dialog");
 
-                        $("body").append($dlg);
+                    $("body").append($dlg);
 
-                        return $dlg;
-                    });
+                    return $dlg;
+                });
             }
 
             return p.then(($dlg) => {
@@ -293,6 +293,14 @@ define(["js/Translator", "jquery", "jquery-ui", "js/jq/icon_button", "js/jq/twis
         tx() {
             return Translator.prototype.tx.apply(
                 Translator.instance(), arguments);
+        }
+
+        /**
+         * Service for subclasses.
+         * Translate the dom passed
+         */
+        translate(dom) {
+            return Translator.instance().translate(dom);
         }
     }
     return Dialog;

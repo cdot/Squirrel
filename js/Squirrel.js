@@ -19,8 +19,6 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
     const IS_LOADING = "is loading";
     // TX.tx("is loaded")
     const IS_LOADED = "is loaded";
-    // TX.tx("is corrupt")
-    const IS_CORRUPT = "is corrupt";
     // TX.tx("is empty")
     const IS_EMPTY = "is empty";
 
@@ -69,8 +67,8 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
             // pathname of the cloud store
             self.cloud_path = null;
 
-            // status may be one of IS_EMPTY, IS_CORRUPT, IS_LOADED or
-            // NEW_SETTINGself. If the status is anything but IS_LOADED
+            // status may be one of IS_EMPTY, IS_LOADED or
+            // NEW_SETTINGS. If the status is anything but IS_LOADED
             // then it is a candidate for saving.
             self.client = {
                 store: null, // The store used actively
@@ -83,14 +81,6 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
                 hoard: null, // The hoard in that store
                 status: IS_EMPTY
             };
-
-            // Special keys in sort ordering
-            self.sort_prio = [
-                TX.tx("A new folder"),
-                TX.tx("A new value"),
-                TX.tx("User"),
-                TX.tx("Pass")
-            ];
 
             self.client_ok = true;
             self.cloud_ok = true;
@@ -269,27 +259,27 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
             return self.cloud.store.writes(
                 self.cloud_path,
                 JSON.stringify(self.cloud.hoard))
-                .then(() => {
-                    if (self.debug) self.debug("...cloud save OK");
-                    self.client.hoard.actions = [];
-                    self.client.hoard.last_sync = Date.now();
-                    // Can  no longer undo
-                    self.undos = [];
-                    if (progress) progress.add({
-                        severity: "notice",
-                        message: TX.tx("Saved in cloud $1", self.cloud.store.option("type"))
-                    });
-                    self.cloud.status = IS_LOADED;
-                })
-                .catch((e) => {
-                    if (self.debug) self.debug("...cloud save failed " + e.stack);
-                    if (progress) progress.add({
-                        severity: "error",
-                        message: TX.tx("Failed to save in $1: $2",
-                                       self.cloud.store.option("type"), e)
-                    });
-                    self.cloud_ok = false;
+            .then(() => {
+                if (self.debug) self.debug("...cloud save OK");
+                self.client.hoard.actions = [];
+                self.client.hoard.last_sync = Date.now();
+                // Can  no longer undo
+                self.undos = [];
+                if (progress) progress.add({
+                    severity: "notice",
+                    message: TX.tx("Saved in cloud $1", self.cloud.store.option("type"))
                 });
+                self.cloud.status = IS_LOADED;
+            })
+            .catch((e) => {
+                if (self.debug) self.debug("...cloud save failed " + e.stack);
+                if (progress) progress.add({
+                    severity: "error",
+                    message: TX.tx("Failed to save in $1: $2",
+                                   self.cloud.store.option("type"), e)
+                });
+                self.cloud_ok = false;
+            });
         }
 
         // Save into the cloud.
@@ -308,9 +298,9 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
             self.cloud.status = self.PENDING_SAVE;
 
             return self._write_cloud(progress)
-                .then(() => {
-                    return self._save_client(progress);
-                });
+            .then(() => {
+                return self._save_client(progress);
+            });
         }
 
         // Promise to construct a new cloud hoard from data in the
@@ -321,16 +311,17 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
             let self = this;
             if (self.debug) self.debug("...construct cloud ");
             self.cloud.hoard = new Hoard({name: "new Cloud"});
-            return self.client.hoard.reconstruct_actions(
+            return self.client.hoard
+            .reconstruct_actions(
                 function (a, next) {
                     // this:Hoard, a:Action, next:function
                     self.cloud.hoard.push_action(a);
                     if (next)
                         next();
                 })
-                .then(() => {
-                    return self._update_cloud_store(progress);
-                });
+            .then(() => {
+                return self._update_cloud_store(progress);
+            });
         }
 
         // Promise to handle the cloud store being reloaded prior to a
@@ -355,7 +346,7 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
                     message: TX.tx("$1 hoard can't be read for update",
                                    self.cloud.store.option("type"))
                 });
-                self.cloud.status = IS_CORRUPT;
+                self.cloud.status = IS_EMPTY;
                 self.cloud_ok = false;
                 p = self.construct_new_cloud(progress);
             }
@@ -369,10 +360,6 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
                             // asynchronous listener
                             // this:Hoard, e:Action
                             self.$DOMtree.tree("action",e);
-                        },
-                        function (percent) {
-                            $("#merge_progress")
-                                .text(percent + "%");
                         });
                 }
             }).then(() => {
@@ -403,20 +390,21 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
             } else {
                 // Reload and save the cloud hoard
                 if (self.debug) self.debug("...reloading cloud");
-                return self.cloud.store.reads(self.cloud_path)
-                    .then(() => {
-                        return self._cloud_store_reloaded_ok(progress);
-                    })
-                    .catch((e) => {
-                        if (self.debug) self.debug("...cloud read failed " + e.stack);
-                        if (progress) progress.add({
-                            severity: "error",
-                            message: TX.tx("Failed to refresh from $1: $2",
-                                           self.cloud.store.option("type"), e)
-                        });
-                        self.cloud_ok = false;
-                        return Promise.resolve();
+                return self.cloud.store
+                .reads(self.cloud_path)
+                .then(() => {
+                    return self._cloud_store_reloaded_ok(progress);
+                })
+                .catch((e) => {
+                    if (self.debug) self.debug("...cloud read failed " + e.stack);
+                    if (progress) progress.add({
+                        severity: "error",
+                        message: TX.tx("Failed to refresh from $1: $2",
+                                       self.cloud.store.option("type"), e)
                     });
+                    self.cloud_ok = false;
+                    return Promise.resolve();
+                });
             }
         }
 
@@ -481,45 +469,37 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
             if (self.debug) self.debug('_merge_from_cloud');
             return self.client.hoard.play_actions(
                 self.cloud.hoard.actions,
-                function (e, c, p) {
-                    $("#merge_progress")
-                        .text(p + "%");
-
-                    // e:Action [, c: Conflict]
-                    if (c) {
+                function (e) {
+                    // e { event: Action [, conflict: String] }
+                    if (e.conflict) {
                         Dialog.open("alert", {
                             alert: {
                                 severity: "warning",
-                                message: Hoard.stringify_action(e) +
-                                    ": " + c.message
+                                message: Hoard.stringify_action(e.event) +
+                                ": " + e.conflict
                             }
                         });
                     } else
-                        self.$DOMtree.tree("action",e);
+                        self.$DOMtree.tree("action", e.event);
                 })
-                .then((conflicts) => {
-                    if (!conflicts || conflicts.length === 0)
-                        return;
-                    Dialog.open("alert", {
-                        title: TX.tx("Warning"),
-                        alert: {
-                            severity: "warning",
-                            message: TX.tx("Conflicts were detected while merging actions from the Cloud.")
-                                + " "
-                                + TX.tx("Please review these rejected actions, and make sure the data displayed is correct before saving.")
-                        }
-                    }).then((report) => {
-                        $.each(conflicts, function (i, c) {
-                            report.add({
-                                severity: "warning",
-                                message: c
-                            });
-                        });
+            .then((conflicts) => {
+                if (!conflicts || conflicts.length === 0)
+                    return;
+                let opts = [];
+                $.each(conflicts, function (i, c) {
+                    opts.push({
+                        severity: "warning",
+                        message: c
                     });
-                })
-                .then(() => {
-                    self.cloud.status = IS_LOADED;
                 });
+                return Dialog.confirm("alert", {
+                    title: TX.tx("Conflicts Detected"),
+                    body: "conflicts_detected"
+                })
+            })
+            .then(() => {
+                self.cloud.status = IS_LOADED;
+            });
         }
 
         /**
@@ -564,45 +544,49 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
                 if (self.debug) self.debug(
                     cloud_store.option("type") + " is ready to be read");
 
-                try {
-                    self.cloud.hoard = new Hoard({name: "loaded Cloud", data: data});
-                } catch (e) {
-                    if (self.debug) self.debug(
-                        "Cloud hoard JSON parse failed: " + e.stack + data);
-                    Dialog.open("alert", {
-                        title: TX.tx("Error"),
-                        alert: {
-                            severity: "error",
-                            message: TX.tx(
-                                "Cloud store exists, but can't be read.",
-                                cloud_store.option("type")) +
-                                " " +
-                                TX.tx(
-                                    "Check that you have the correct password.")
-                        }
-                    });
-                    self.cloud.status = IS_CORRUPT;
-                }
+                self.cloud.hoard = new Hoard({
+                    name: "loaded Cloud", data: data});
 
                 // Ready to merge from cloud hoard
                 return Promise.resolve(true);
             })
             .catch((e) => {
-                if (e instanceof Serror && e.status === 404) {
+                if (e instanceof Serror) {
+                    // Could not contact cloud; continue all the same
                     if (self.debug) self.debug(
                         self.cloud_path + " not found in the cloud");
-                    Dialog.open("alert", {
-                        title: TX.tx("Error"),
+                    let mess = [];
+                    mess.push({
+                        severity: "error",
+                        message: TX.tx("Could not load cloud store '$1'",
+                                       self.cloud_path)
+                    });
+                    if (e.status)
+                        mess.push({ severity: "warning", http: e.status });
+                    if (e.message)
+                        mess.push(e.message);
+                    mess.push(TX.tx("Continuing and saving will create a new cloud store."));
+                    return Dialog.confirm("alert", {
+                        title: TX.tx("Cloud error"),
+                        alert: mess
+                    });
+                } else {
+                    // Some other error
+                    if (self.debug) self.debug(e.stack);
+                    self.cloud.status = IS_EMPTY;
+                    return Dialog
+                    .confirm("alert", {
+                        title: TX.tx("Cloud store read failed"),
                         alert: [
                             {
                                 severity: "error",
-                                message: TX.tx("Could not load cloud store")
+                                message: TX.tx(
+                                    "Cloud store exists, but can't be read."),
                             },
-                            {
-                                severity: "notice",
-                                message: TX.tx("Check that the cloud store exists and you have the correct password.")
-                            }]});
-                    // Could not contact cloud; continue all the same
+                            TX.tx("Check that you have the correct password."),
+                            TX.tx("If you continue and save, the cloud store will be overwritten and you may lose data.")
+                        ]
+                    });
                 }
                 return Promise.resolve(false);
             });
@@ -622,23 +606,14 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
             self.client.status = IS_LOADING;
             if (self.debug) self.debug('_load_client');
 
-
             $("#stage").text(TX.tx("Reading from client"));
             return self.client.store.reads(self.user)
             .then((str) => {
                 let data = JSON.parse(str);
                 self.cloud_path = data.cloud_path;
-                try {
-                    self.client.hoard = new Hoard(
-                        { name: "loaded Client", data: data.hoard });
-                    self.client.status = IS_LOADED;
-                } catch (e) {
-                    if (self.debug) self.debug("Caught " + e.stack);
-                    throw new Error(
-                        TX.tx("Client exists, but can't be read.",
-                              self.client.store.option("type"))
-                    + TX.tx("Check that you have the correct password."));
-                }
+                self.client.hoard = new Hoard(
+                    { name: "loaded Client", data: data.hoard });
+                self.client.status = IS_LOADED;
 
                 if (self.debug) self.debug("...reconstructing client actions");
                 $("#stage").text(TX.tx("Building UI"));
@@ -671,32 +646,33 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
                 }
             })
             .catch((e) => {
-                if (e instanceof Serror && e.status === 404) {
-                    // A 404 means the path to the store did not exist
-                    // but that doesn't mean it can't be used.
+                if (e instanceof Serror) {
                     self.client.hoard = new Hoard({name: "new Client"});
-                    return Dialog.confirm("alert", {
-                        title: TX.tx("Error"),
-                        alert: {
-                            severity: "error",
-                            message: TX.tx(
-                                "$1 for client not found. Continuing will create one.",
-                                self.client.store.option("type"))
-                        }
+                    let mess = [];
+                    mess.push({
+                        severity: "warning",
+                        message: TX.tx("Could not load client store.")
                     });
+                    if (e.status)
+                        mess.push({ severity: "warning", http: e.status });
+                    if (e.message)
+                        mess.push(e.message);
+                    mess.push(TX.tx("Continuing and saving will create a new client store."));
+                    return Dialog.confirm("alert", {
+                        title: TX.tx("Warning"),
+                        alert: mess });
                 }
+                if (this.debug && e.stack) this.debug(e.stack);
                 return Dialog.confirm("alert", {
-                    title: TX.tx("Error"),
-                    alert: {
-                        severity: "error",
-                        message: TX.tx(
-                            "$1 store error: $2",
-                            self.client.store.option("type"), e.message)
-                    }
-                }).then(() => {
-                    $(document).trigger("init_application");
-                    return Promise.reject();
-                });
+                    title: TX.tx("Client store read failed"),
+                    alert: [
+                        {
+                            severity: "error",
+                            message: TX.tx("Client store exists, but can't be read.")
+                        },
+                        TX.tx("Check that you have the correct password."),
+                        TX.tx("If you continue and save, the client store will be overwritten and you may lose data.")
+                    ]});
             });
         }
 
@@ -1171,7 +1147,7 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
             })
             .then(() => {
                 if (self.debug) self.debug('interacting');
-                
+
                 $(window)
                     .on("beforeunload", function () {
                         let us = self._unsaved_changes(10);
@@ -1182,7 +1158,7 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
                             return us;
                         }
                     });
-                
+
                 $(document).trigger("update_save");
                 $(document).trigger("check_alarms");
 
@@ -1204,6 +1180,24 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
             $("#stage").text(TX.tx("Loading application"));
 
             $.styling.init(self.options);
+
+            // Special keys in sort ordering. Currently only works for
+            // English.
+            let sort_prio = [
+                "User", "Pass"
+            ];
+
+            Tree.compareKeys = (a, b) => {
+                if (a === b)
+                    return 0;
+                for (let i in self.sort_prio) {
+                    if (a === self.sort_prio[i])
+                        return -1;
+                    if (b === self.sort_prio[i])
+                        return 1;
+                }
+                return (a < b) ? -1 : 1;
+            };
 
             Tree.playAction = (action) => {
                 return self.playAction(action);
@@ -1304,7 +1298,7 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
                 });
 
             $.styling.reset();
-            
+
             self._handle_init_application();
        }
 
@@ -1331,25 +1325,25 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
             }
 
             self.client.hoard.play_action(e)
-                .then((res) => {
-                    if (res.conflict)
-                        Dialog.open("alert", {
-                            alert: {
-                                severity: "warning",
-                                message: res.conflict
-                            }
-                        });
-                    else
-                        // this:Hoard, e:Action
-                        self.$DOMtree.tree(
-                            "action",
-                            res.event,
-                            self.pushUndo.bind(self),
-                            newnode);
-                })
-                .then(() => {
-                    $(document).trigger("update_save");
-                });
+            .then((res) => {
+                if (res.conflict)
+                    Dialog.open("alert", {
+                        alert: {
+                            severity: "warning",
+                            message: res.conflict
+                        }
+                    });
+                else
+                    // this:Hoard, e:Action
+                    self.$DOMtree.tree(
+                        "action",
+                        res.event,
+                        self.pushUndo.bind(self),
+                        newnode);
+            })
+            .then(() => {
+                $(document).trigger("update_save");
+            });
         }
 
         /**
@@ -1443,7 +1437,7 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
                         .concat(act.path);
                     act = self.push_action(act);
                     self.play_action(act)
-                        .then((res) => {
+                    .then((res) => {
                             if (res.conflict) {
                                 if (progress) progress.add({
                                     severity: "notice",
@@ -1454,13 +1448,13 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
                                 self.$DOMtree.tree("action", res.event, null);
                         });
                 })
-                .then(() => {
-                    $(document).trigger("update_save");
-                    progress.add({
-                        severity: "notice",
-                        message: TX.tx("JSON has been loaded")
-                    });
+            .then(() => {
+                $(document).trigger("update_save");
+                progress.add({
+                    severity: "notice",
+                    message: TX.tx("JSON has been loaded")
                 });
+            });
         }
 
         // Interface to action playing for interactive functions
@@ -1468,18 +1462,17 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
             let self = this;
             action = self.client.hoard.push_action(action);
             return self.client.hoard.play_action(action)
-                .then((e) => {
-                    // this:Hoard, e:Action
-                    self.$DOMtree.tree(
-                        "action",
-                        e.event,
-                        Squirrel.prototype.pushUndo.bind(self),
-                        function () {
-                            $(document).trigger("update_save");
-                        });
+            .then((e) => {
+                // this:Hoard, e:Action
+                self.$DOMtree.tree(
+                    "action",
+                    e.event,
+                    Squirrel.prototype.pushUndo.bind(self),
+                    function () {
+                        $(document).trigger("update_save");
+                    });
             })
             .catch((e) => {
-
                 return Dialog.confirm("alert", {
                     title: TX.tx("Error"),
                     alert: {

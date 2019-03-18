@@ -59,7 +59,7 @@ define(["js/Dialog"], function(Dialog) {
                 })
                 .autocomplete({
                     source: [
-                        self.tx("User"), self.tx("Pass")]
+                        self.tx("User"), self.tx("Pass"), "Email"]
                 });
         }
 

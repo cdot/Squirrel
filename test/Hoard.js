@@ -181,10 +181,10 @@ requirejs(["js/Hoard", "test/TestRunner"], function(Hoard, TestRunner) {
 
 	// No cache, so promise should be resolved will be called
 	return h.play_action(cloud_data.actions[0])
-	    .then((e) => {
+	.then((e) => {
 		assert.equal(cloud_data.actions[0], e.event);
 	    })
-            .then(() => {
+        .then(() => {
                 // Cache now there, should trip when re-adding
 	        return h.play_action(cloud_data.actions[0]);
             }).then((c) => {
@@ -208,7 +208,7 @@ requirejs(["js/Hoard", "test/TestRunner"], function(Hoard, TestRunner) {
 	};
 
 	return h.play_action(cloud_data.actions[0])
-	    .then((e) => {
+	.then((e) => {
 		assert.equal(cloud_data.actions[0], e.event);
 	        return h.play_action(kfc);
             }).then((e) => {

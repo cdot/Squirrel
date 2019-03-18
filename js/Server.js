@@ -126,44 +126,42 @@ define(["url", "extend", "fs-extra"], function(Url, extend, Fs) {
                 let options = {};
 
                 promise = promise
+                .then(function () {
+                    return self.ssl.key.read();
+                })
 
-                    .then(function () {
-                        return self.ssl.key.read();
-                    })
+                .then(function (k) {
+                    options.key = k;
+                    if (self.debug) self.debug("SSL key loaded");
+                })
 
-                    .then(function (k) {
-                        options.key = k;
-                        if (self.debug) self.debug("SSL key loaded");
-                    })
+                .then(function () {
+                    return self.ssl.cert.read();
+                })
 
-                    .then(function () {
-                        return self.ssl.cert.read();
-                    })
+                .then(function (c) {
+                    options.cert = c;
+                    if (self.debug) self.debug("SSL certificate loaded");
+                    if (self.log) self.log("HTTPS starting on port", self.port);
+                })
 
-                    .then(function (c) {
-                        options.cert = c;
-                        if (self.debug) self.debug("SSL certificate loaded");
-                        if (self.log) self.log("HTTPS starting on port", self.port);
-                    })
-
-                    .then(function () {
-                        return require("https").createServer(options, handler);
-                    });
+                .then(function () {
+                    return require("https").createServer(options, handler);
+                });
             } else {
                 if (self.log) self.log("HTTP starting on port", self.port);
                 promise = promise
-                    .then(function () {
-                        return require("http").createServer(handler);
-                    });
+                .then(function () {
+                    return require("http").createServer(handler);
+                });
             }
 
             return promise
-
-                .then(function (httpot) {
-                    self.ready = true;
-                    self.http = httpot;
-                    httpot.listen(self.port);
-                });
+            .then(function (httpot) {
+                self.ready = true;
+                self.http = httpot;
+                httpot.listen(self.port);
+            });
         }
 
         stop() {
@@ -274,7 +272,7 @@ define(["url", "extend", "fs-extra"], function(Url, extend, Fs) {
 
             try {
                 promise(spath, data)
-                    .then(handleResponse, handleError);
+                .then(handleResponse, handleError);
             } catch (e) {
                 if (self.debug) self.debug(e, " in ", request.url, "\n",
                               typeof e.stack !== "undefined" ? e.stack : e);

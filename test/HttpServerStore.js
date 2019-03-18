@@ -27,7 +27,7 @@ requirejs(deps, function(StoreTester, express, basicAuth) {
 
         let express_user = "u" + Date.now();
         let express_pass = "p" + express_user;
-        
+
         let users = {};
         users[express_user] = express_pass;
         console.log("Server users:",users);
@@ -71,7 +71,7 @@ requirejs(deps, function(StoreTester, express, basicAuth) {
 
     config.then((cfg) => {
         new StoreTester(["HttpServerStore"], console.debug).run(cfg)
-            .then(() => {
+        .then(() => {
                 server.close();
             });
     });

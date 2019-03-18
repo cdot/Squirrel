@@ -14,9 +14,9 @@ define(["js/Dialog", "js/jq/template"], function(Dialog) {
                     this.app.client.hoard.clear_actions();
                     this.app.construct_new_cloud(function() {
                     })
-                        .then(function () {
-                            self.close();
-                        });
+                    .then(function () {
+                        self.close();
+                    });
                     // Local actions will now be reflected in the cloud,
                     // so we can clear them
                     return false;

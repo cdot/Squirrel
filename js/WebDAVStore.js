@@ -179,7 +179,7 @@ define(["js/Utils", "js/HttpServerStore"], (Utils, HttpServerStore) => {
             body += '>' + this._renderPropSet(properties) + '</d:propertyupdate>';
 
             return this.request('PROPPATCH', url, headers, body)
-                .then((result) => {
+            .then((result) => {
                     return {
                         status: result.status,
                         body: result.body,
@@ -326,24 +326,24 @@ define(["js/Utils", "js/HttpServerStore"], (Utils, HttpServerStore) => {
             let self = this;
 
             return this.request('PROPFIND', path.join('/'), { Depth: 1 })
-                .then((res) => {
-                    if (200 <= res.status && res.status < 300)
-                        return Promise.resolve();
+            .then((res) => {
+                if (200 <= res.status && res.status < 300)
+                    return Promise.resolve();
 
-                    if (res.status === 404) {
-                        let p = path.slice();
-                        p.pop();
-                        return self.mkpath(p).then(() => {
-                            // Simple MKCOL request, no properties
-                            return this.request('MKCOL', path.join('/'));
-                        });
-                    }
-
-                    return self._handle_error(path, res)
-                    .then(() => {
-                        return self.mkpath(path);
+                if (res.status === 404) {
+                    let p = path.slice();
+                    p.pop();
+                    return self.mkpath(p).then(() => {
+                        // Simple MKCOL request, no properties
+                        return this.request('MKCOL', path.join('/'));
                     });
+                }
+
+                return self._handle_error(path, res)
+                .then(() => {
+                    return self.mkpath(path);
                 });
+            });
         }
     }
 

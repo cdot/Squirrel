@@ -59,9 +59,9 @@ requirejs(["js/Translator", "test/TestRunner"], function(Translator, TestRunner)
         var en = '<div class="TX_html">Stupid</div>';
         document.body.innerHTML = en;
         return TX.language("en", document)
-            .then(() => {
-                assert.equal(document.body.innerHTML, en);
-            });
+        .then(() => {
+            assert.equal(document.body.innerHTML, en);
+        });
     });
 
     tr.addTest("Works in a translated DOM", function() {
@@ -72,9 +72,9 @@ requirejs(["js/Translator", "test/TestRunner"], function(Translator, TestRunner)
         var pc = '<div class="TX_title TX_text" title="Stocky">Slim</div>'
         document.body.innerHTML = en;
         return TX.language("pc", document)
-            .then(() => {
-                assert.equal(document.body.innerHTML, pc);
-            });
+        .then(() => {
+            assert.equal(document.body.innerHTML, pc);
+        });
     });
 
     tr.addTest("Translates HTML", function() {
@@ -85,9 +85,9 @@ requirejs(["js/Translator", "test/TestRunner"], function(Translator, TestRunner)
         var pc = '<div class="TX_html"><a name="silly">Twit</a></div>'
         document.body.innerHTML = en;
         return TX.language("pc", document)
-            .then(() => {
-                assert.equal(document.body.innerHTML, pc);
-            });
+        .then(() => {
+            assert.equal(document.body.innerHTML, pc);
+        });
     });
 
     tr.addTest("Can change language", function() {
@@ -98,28 +98,27 @@ requirejs(["js/Translator", "test/TestRunner"], function(Translator, TestRunner)
         document.body.innerHTML = en;
         return TX
             .language("fr", document)
-            .then(() => {
-                assert.equal(document.body.innerHTML, fr);
-            })
-            .then(() => {
-                return TX.language("de", document);
-            })
-            .then(() => {
-                assert.equal(document.body.innerHTML, de);
-            })
-            .then(() => {
-                return TX.language("fr", document);
-            })
-            .then(() => {
-                assert.equal(document.body.innerHTML, fr);
-            })
-            .then(() => {
-                return TX.language("en", document);
-            })
-            .then(() => {
-                assert.equal(document.body.innerHTML, en);
-            })
-
+        .then(() => {
+            assert.equal(document.body.innerHTML, fr);
+        })
+        .then(() => {
+            return TX.language("de", document);
+        })
+        .then(() => {
+            assert.equal(document.body.innerHTML, de);
+        })
+        .then(() => {
+            return TX.language("fr", document);
+        })
+        .then(() => {
+            assert.equal(document.body.innerHTML, fr);
+        })
+        .then(() => {
+            return TX.language("en", document);
+        })
+        .then(() => {
+            assert.equal(document.body.innerHTML, en);
+        })
     });
 
     tr.run();

@@ -51,16 +51,17 @@ requirejs(["js/Utils", "js/AES", "js/Server", "fs", "request-promise-any", "test
 
     tr.addTest("bad-auth-get", () => {
         return new Promise((resolve) => {
-        request.get(workingUrl, {
-            auth: { user: "plum", pass: "fairy" }
-        })
-        .then(() => {
-            assert("Unexpected");
-        })
-        .catch((e) => {
-            assert.equal(e.statusCode, 401);
-            resolve();
-        });
+            request
+            .get(workingUrl, {
+                auth: { user: "plum", pass: "fairy" }
+            })
+            .then(() => {
+                assert("Unexpected");
+            })
+            .catch((e) => {
+                assert.equal(e.statusCode, 401);
+                resolve();
+            });
         });
     });
 

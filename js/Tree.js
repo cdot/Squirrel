@@ -863,7 +863,6 @@ define(["js/Hoard", "jquery", "js/jq/edit_in_place", "js/jq/scroll_into_view", "
                     if (!pa)
                         throw "recache outside tree";
                     if (path2$node[path.join(PATHSEP)]) {
-                        debugger;
                         throw "Remapping path -> node";
                     }
                     if ($node.data("path"))

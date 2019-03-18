@@ -51,7 +51,7 @@ function translate(s) {
                 langpair: "en|" + lang
             }
         })
-        .then(function(response) {
+    .then(function(response) {
             var result = response.data.responseData;
             return { m: result.match,
                      s: unprotect(result.translatedText) };
@@ -82,9 +82,9 @@ if (lf) {
         Fs.access(lf, Fs.constants.R_OK).then(() => {
             console.log("Reading " + lf);
             return Fs.readFile(lf, 'utf8')
-                .then(function(data) {
-                    known = JSON.parse(data);
-                });
+            .then(function(data) {
+                known = JSON.parse(data);
+            });
         }));
 }
 
@@ -93,58 +93,57 @@ for (var i in opt.argv) {
     let fname = opt.argv[i];
     loads.push(
         Fs.readFile(fname, 'utf8')
-            .then(function(data) {
-                var arr = JSON.parse(data);
-                for (var i = 0; i < arr.length; i++) {
-                    //console.log("Want " + arr[i]);
-                    wanted[arr[i]] = true;
-                }
-            }));
+        .then(function(data) {
+            var arr = JSON.parse(data);
+            for (var i = 0; i < arr.length; i++) {
+                //console.log("Want " + arr[i]);
+                wanted[arr[i]] = true;
+            }
+        }));
 }
 
 // Delete strings that are known but not wanted
-Promise
-    .all(loads)
-    .then(() => {
-        for (let k in known) {
-            if (wanted[k]) continue;
-            console.log("Delete " + k);
-            delete known[k];
+Promise.all(loads)
+.then(() => {
+    for (let k in known) {
+        if (wanted[k]) continue;
+        console.log("Delete " + k);
+        delete known[k];
+    }
+})
+.then(() => {
+    // Get translations of strings that are wanted but are not currently
+    // known
+    let translations = [];
+    for (var k in wanted) {
+        if (!known[k] || improve) {
+            // Get a translation for this string
+            translations.push(
+                translate(k)
+                .then((tx) => {
+                    var m = {};
+                    m[k] = tx;
+                    console.log("Translated '" + k +
+                                "' to '" + tx.s +
+                                "' with confidence " + tx.m);
+                    if (!known[k] || tx.m > known[k].m)
+                        known[k] = tx;
+                })
+                .catch((e) => {
+                    console.error("Cannot translate '" + k + "': " + e);
+                }));
         }
-    })
-    .then(() => {
-        // Get translations of strings that are wanted but are not currently
-        // known
-        let translations = [];
-        for (var k in wanted) {
-            if (!known[k] || improve) {
-                // Get a translation for this string
-                translations.push(
-                    translate(k)
-                        .then((tx) => {
-                            var m = {};
-                            m[k] = tx;
-                            console.log("Translated '" + k +
-                                        "' to '" + tx.s +
-                                        "' with confidence " + tx.m);
-                            if (!known[k] || tx.m > known[k].m)
-                                known[k] = tx;
-                        })
-                        .catch((e) => {
-                            console.error("Cannot translate '" + k + "': " + e);
-                        }));
-            }
-        }
-        return Promise.all(translations);
-    })
-    .then(() => {
-        // Generate output
-        if (lf) {
-            console.log("Writing " + lf);
-            return Fs.writeFile(
-                lf, JSON.stringify(known, null, 1), 'utf8');
-        }
-        console.log(JSON.stringify(known, null, 1));
-    });
+    }
+    return Promise.all(translations);
+})
+.then(() => {
+    // Generate output
+    if (lf) {
+        console.log("Writing " + lf);
+        return Fs.writeFile(
+            lf, JSON.stringify(known, null, 1), 'utf8');
+    }
+    console.log(JSON.stringify(known, null, 1));
+});
 
 

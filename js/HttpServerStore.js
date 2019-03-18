@@ -42,7 +42,7 @@ define(["js/Serror", "js/AbstractStore"], function(Serror, AbstractStore) {
             } else if (this.debug)
                 this.debug("addAuth: No auth header");
         }
-        
+
         /**
          * @protected
          * Performs a HTTP request, and returns a Promise. Note that the
@@ -95,7 +95,7 @@ define(["js/Serror", "js/AbstractStore"], function(Serror, AbstractStore) {
                         xhr.send(body);
                     }
                 } catch (e) {
-                    reject(new Serror(turl, 500, "xhr.send error: " + e));
+                    reject(self.error(turl, 500, "xhr.send error: " + e));
                 }
 
                 xhr.onload = function() {
@@ -137,6 +137,7 @@ define(["js/Serror", "js/AbstractStore"], function(Serror, AbstractStore) {
 
         // @Override
         read(path) {
+            if (this.debug) this.debug("read", path);
             return this.request("GET", path)
             .then((res) => {
                 if (200 <= res.status && res.status < 300)
@@ -147,7 +148,7 @@ define(["js/Serror", "js/AbstractStore"], function(Serror, AbstractStore) {
 
         // @Override
         write(path, data) {
-            if (this.debug) this.debug("Writing", path);
+            if (this.debug) this.debug("write", path);
             let pathbits = path.split('/');
             let folder = pathbits.slice(0, pathbits.length - 1);
             return this.mkpath(folder.join('/'))

@@ -22,16 +22,15 @@ define(["js/LayeredStore", "js/Steganographer"], function(LayeredStore, Steganog
         }
 
         read(path) {
-            if (this.debug) this.debug("reading " + path);
-
+            if (this.debug) this.debug("read", path);
             return super.read(path)
-                .then((a) => {
-                    return this.steg.extract(a);
-                });
+            .then((a) => {
+                return this.steg.extract(a);
+            });
         }
 
         write(path, data) {
-            if (this.debug) this.debug("StegaStore: writing " + path);
+            if (this.debug) this.debug("write", path);
 
             // Get the source image
             let image = document.getElementById("stegamage");

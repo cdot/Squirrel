@@ -4,6 +4,8 @@
  */
 define(["js/Dialog"], function(Dialog) {
 
+    let $http = null;
+
     class AlertDialog extends Dialog {
 
         /**
@@ -17,7 +19,11 @@ define(["js/Dialog"], function(Dialog) {
             let self = this;
             //if (self.debug) self.debug(this.options.alert);
             self.control("messages").empty();
-            if (this.options.alert)
+
+            if (this.options.title)
+                this.$dlg.dialog("option", "title", this.options.title);
+
+             if (this.options.alert)
                 this.add(this.options.alert);
         }
 
@@ -29,11 +35,31 @@ define(["js/Dialog"], function(Dialog) {
             }
             if (typeof lert === "string")
                 lert = { message: lert };
+            else if (lert.http) {
+                if (!$http) {
+                    let http_url = requirejs.toUrl("dialogs/http.html");
+                    let self = this;
+                    let morlert = $.extend({ first: true }, lert);
+                    $.get(http_url)
+                    .then((html) => {
+                        $http = $(html);
+                        $("body").append($http);
+                        self.translate($http);
+                        self.add(morlert);
+                    });
+                    return;
+                }
+                lert.message = $http.find(
+                    "[title='http" + lert.http + "']").html();
+            }
             if (!lert.severity)
                 lert.severity = "notice";
-            let $mess = $("<div></div>").addClass('dlg-' + lert.severity);
-            $mess.append(lert.message);
-            this.control("messages").append($mess);
+            let $mess = $("<div>" + lert.message + "</div>")
+                .addClass('dlg-' + lert.severity);
+            if (lert.first)
+                this.control("messages").prepend($mess);
+            else
+                this.control("messages").append($mess);
         }
     }
     return AlertDialog;

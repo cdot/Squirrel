@@ -61,45 +61,42 @@ define(lss_deps, function(Utils, Serror, AbstractStore, Storage) {
             return super.init();
         }
 
-        read(item) {
-            return this.reads(item)
-            .then((str) => {
-                return Utils.PackedStringToUint8Array(str);
-            });
-        }
-
-        write(item, ab) {
-            return this.writes(item, Utils.Uint8ArrayToPackedString(ab));
-        }
-
-        _makeKey(item) {
-            let path = this.option("role") + ":" + item + KEY_COMMA;
-            if (typeof this.option("user") !== "undefined")
-                path = path + this.option("user");
-            if (typeof this.option("path") !== "undefined")
-                path = path + this.option("path");
-            return path;
-        }
-
-        reads(item) {
-            let path = this._makeKey(item);
-            if (this.debug) this.debug("ReadingS " + path);
-            let str = localStorage.getItem(path);
+        _read(path) {
+            let str = localStorage.getItem(this._makeKey(path));
             if (str === null) {
-                if (this.debug) this.debug(path + " does not exist");
-                return Promise.reject(this.error(path, 404, path + " does not exist"));
+                return Promise.reject(this.error(path, 404, path
+                                                 + " does not exist"));
             }
 
             return Promise.resolve(str);
         }
 
-        writes(item, str) {
-            let path = this._makeKey(item);
-            if (this.debug) this.debug("Writing", path, str);
-            localStorage.setItem(path, str);
+        _write(path, str) {
+            localStorage.setItem(this._makeKey(path), str);
             return Promise.resolve();
         }
-    }
 
+        read(path) {
+            if (this.debug) this.debug("read", path);
+            return this._read(path)
+            .then((str) => {
+                return Utils.PackedStringToUint8Array(str);
+            });
+        }
+
+        write(path, a8) {
+            if (this.debug) this.debug("write", path);
+            return this._write(path, Utils.Uint8ArrayToPackedString(a8));
+        }
+
+        _makeKey(path) {
+            let key = this.option("role") + ":" + path + KEY_COMMA;
+            if (typeof this.option("user") !== "undefined")
+                key = key + this.option("user");
+            if (typeof this.option("path") !== "undefined")
+                key = key + this.option("path");
+            return key;
+        }
+    }
     return LocalStorageStore;
 });

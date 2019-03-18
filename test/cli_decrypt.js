@@ -1,11 +1,3 @@
-// Decode a pre-existing encrypted file
-// OPTIONS:
-// path=<path to dir containing files>
-// input=<file to decode>
-// output=<file to write re-encrypted in latest format>
-// pass=<decoding pass>
-// debug=1 to enable debug
-// format=N to enable version N encryption format
 if (typeof requirejs === "undefined")
     requirejs = require('requirejs');
 
@@ -14,6 +6,19 @@ requirejs.config({
 });
 
 requirejs(["js/FileStore", "js/EncryptedStore"], function(FileStore, EncryptedStore) {
+    if (process.argv.length < 3) {
+        console.log("Decode a pre-existing encrypted file");
+        console.log("OPTIONS:");
+        console.log("path=<path to dir containing files>");
+        console.log("input=<file to decode>");
+        console.log("output=<file to write re-encrypted in latest format>");
+        console.log("pass=<decoding pass>");
+        console.log("debug=1 to enable debug");
+        console.log("v1=1 to decrypt old-format");
+        console.log("format=N to enable version N encryption format");
+        return;
+    }
+    console.log(process.argv);
     let opt = {};
     for (let i in process.argv) {
         let set = process.argv[i].split("=", 2);
@@ -29,6 +34,7 @@ requirejs(["js/FileStore", "js/EncryptedStore"], function(FileStore, EncryptedSt
     });
     store.option("pass", opt.pass);
     store.option("path", opt.path);
+    store.option("v1", (typeof opt.v1 !== "undefined"));
     if (typeof opt.format !== "undefined") {
         store.option("format", opt.format);
     }

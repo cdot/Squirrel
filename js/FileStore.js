@@ -17,15 +17,17 @@ define(["fs-extra", "js/AbstractStore", "js/Serror"], function(fs, AbstractStore
         }
 
         read(path) {
+            if (this.debug) this.debug("read", path);
             return fs.readFile(this.option("path") + "/" + path)
             .catch((e) => {
                 if (/ENOENT/.test(e.message))
-                    throw new Serror(path, 404, e.message);
+                    throw this.error(path, 404, e.message);
                 throw e;
             });
         }
 
         write(path, data) {
+            if (this.debug) this.debug("write", path);
             // data is an Uint8Array so is already bytes
             return fs.writeFile(this.option("path") + "/" + path, data);
         }

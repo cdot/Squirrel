@@ -1,8 +1,9 @@
 /*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 
-define(["js/LayeredStore", "js/AES"], function (LayeredStore, AES) {
+define(["js/LayeredStore", "js/Utils", "js/AES"], function (LayeredStore, Utils, AES) {
 
-    const CHECKSUMS = false;
+    const SIGNATURE = 0x53;
+    const VERSION = 1;
 
     /**
      * Store engine for encrypted data. Uses 256-bit AES and an
@@ -32,54 +33,58 @@ define(["js/LayeredStore", "js/AES"], function (LayeredStore, AES) {
 
         // @Override
         read(path) {
-            if (this.debug) this.debug("reading", path);
-            let p = super.read(path)
-            .then((ab) => {
-                if (this.debug) this.debug("decrypting");
+            let self = this;
+            if (this.debug) this.debug("read", path);
+            return super.read(path)
+            .then((a8) => {
+                if (self.debug) self.debug("decrypting", path);
+
                 let data;
                 try {
-                    data = AES.decrypt(ab, this.option("pass"), 256);
+                    data = AES.decrypt(a8, self.option("pass"), 256);
                 } catch (e) {
                     // Decryption failure, assume wrong credentials
-                    // Not sure this can ever happen
-                    return Promise.reject(this.error(path, 400, "Decryption failure " + e));
+                    throw self.error(path, 400, "Decryption failure " + e);
                 }
-                if (this.option("format") > 1) {
-                    // Check checksum
-                    let cs = (data.length - 1) % 255;
-                    if (data[0] !== cs)
-                        return Promise.reject(this.error(path, 400, "Checksum failure " + data[0] + "!=" + cs));
-                    data = new Uint8Array(data.buffer, 1);
+
+                // Check signature and checksum
+                let cs = data.length % 255;
+                if (data[0] === SIGNATURE &&
+                    ((data[2] << 8) | data[3]) === cs) {
+                    if (self.debug) self.debug("data version", data[1]);
+                    data = new Uint8Array(data.buffer, 4);
                 }
+                else if ((data.length & 1) === 0 && self.option("v1")) {
+                    // If self is old format, the file contains a
+                    // 16-bit-per-character string and therefore
+                    // must be an even length
+                    let s = String.fromCharCode.apply(
+                        null, new Uint16Array(data.buffer));
+                    data = Utils.StringToUint8Array(s);
+                }
+                else {
+                    throw self.error(path, 400, "Decryption failed");
+                }
+
                 return Promise.resolve(data);
             });
-            return p;
         }
 
         // @Override
         write(path, a8) {
-            if (this.debug) this.debug(this.option("type"), "writing", path);
-            if (this.option("format") >= 2) {
-                // Add marker and checksum
-                let a = new Uint8Array(a8.length + 1);
-                a[0] = a8.length % 255;
-                a.set(a8, 1)
-                a8 = a;
-            }
+            if (this.debug) this.debug("write", path);
+            // Add signature and checksum
+            let a = new Uint8Array(a8.length + 4);
+            let cs = a.length % 255;
+            a[0] = SIGNATURE;
+            a[1] = VERSION;
+            a[2] = (cs & 0xFF00) >> 8;
+            a[3] = (cs & 0xFF);
+            a.set(a8, 4);
+            a8 = a;
             // And write
             return super.write(
                 path, AES.encrypt(a8, this.option("pass"), 256));
-        }
-
-        // @Override
-        reads(path) {
-            if (this.option("format") < 2) {
-                return this.read(path)
-                .then((ab) => {
-                    return String.fromCharCode.apply(null, new Uint16Array(ab.buffer));
-                });
-            }
-            return super.reads(path);
         }
     }
 

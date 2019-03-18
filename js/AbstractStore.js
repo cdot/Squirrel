@@ -25,13 +25,14 @@ define(["js/Utils", "js/Serror"], function(Utils, Serror) {
                 for (let k in options)
                     if (options.hasOwnProperty(k))
                         this.options[k] = options[k];
-            let self = this;
             if (typeof this.options.debug === "function") {
-                this.debug = function() {
-                    let a = Array.from(arguments);
-                    a.unshift(self.options.type);
-                    self.options.debug.apply(null, a);
-                };
+                this.debug = this.options.debug;
+//                let self = this;
+//                this.debug = function() {
+//                    let a = Array.from(arguments);
+//                    a.unshift(self.options.type);
+//                    self.options.debug.apply(null, a);
+//                };
             }
         }
 
@@ -64,6 +65,10 @@ define(["js/Utils", "js/Serror"], function(Utils, Serror) {
 
         /**
          * Generate an exception object
+         * @param {string} the path used in the request (a / separated string)
+         * @param {integer} status HTTP status code
+         * @param {string} message optional additional message
+         * @return an Serror object
          */
         error(path, status, message) {
             if (this.debug) this.debug(this.option("type"), "error:",
@@ -73,7 +78,8 @@ define(["js/Utils", "js/Serror"], function(Utils, Serror) {
 
         /**
          * Write data. Pure virtual.
-         * @param path pathname to store the data under, a / separated path string
+         * @param path pathname to store the data under, a / separated
+         * path string
          * @param data a Uint8Array
          * @return a Promise that resolves to boolean true if the write
          * succeeded.
@@ -84,11 +90,12 @@ define(["js/Utils", "js/Serror"], function(Utils, Serror) {
         }
 
         /**
-         * Write a string.
-         * @param path pathname the data is stored under, a / separated path string
+         * Promise to write a string.
+         * @param path pathname the data is stored under, a /
+         * separated path string
          * @param str the data String
-         * @param ok called on success with this=self
-         * @param fail called on failure
+         * @return a Promise that resolves to boolean true if the write
+         * succeeded.
          * @throws Serror if anything goes wrong
          */
         writes(path, str) {
@@ -97,12 +104,14 @@ define(["js/Utils", "js/Serror"], function(Utils, Serror) {
 
         /**
          * Read from the store. Pure virtual.
-         * @param path pathname the data is stored under, a / separated path string
+         * @param path pathname the data is stored under, a /
+         * separated path string
          * @return a Promise that resolves to the content of the path
-         * as a Uint8Array. If the path is not found, return
-         * undefined, and store.status() will return an appropriate
-         * HTTP status code. If the resource exists but is empty (has
-         * no content) return an zero-sized Unit8Array.
+         * as a Uint8Array. If the path is not found, throw an Serror
+         * with status 400. Other HTTP status codes may be handled by
+         * the implementing store (e.g. 401). If the resource exists
+         * but is empty (has no content) return an zero-sized
+         * Unit8Array.
          * @throws Serror if anything goes wrong
          */
         read(path) {
@@ -118,9 +127,9 @@ define(["js/Utils", "js/Serror"], function(Utils, Serror) {
          */
         reads(path) {
             return this.read(path)
-            .then((ab) => {
+            .then((a8) => {
                 try {
-                    return Utils.Uint8ArrayToString(ab);
+                    return Utils.Uint8ArrayToString(a8);
                 } catch (e) {
                     // UTF-8 decode error, most likely
                     throw this.error(path, 400, e);

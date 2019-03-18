@@ -134,9 +134,9 @@ define(["js/Utils", "cookie"], function(Utils, Cookies) {
                 // Specific to node.js - no browser support!
                 const fs = require("fs-extra");
                 getter = fs.readFile(this.options.files + lingo + ".json")
-                    .then((json) => {
-                        return JSON.parse(json);
-                    });
+                .then((json) => {
+                    return JSON.parse(json);
+                });
             } else if (this.options.translations) {
                 getter = Promise.resolve(this.options.translations[lingo]);
             }

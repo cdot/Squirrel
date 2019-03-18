@@ -35,7 +35,7 @@ define(['js/Utils', 'js/Translator', 'js/HttpServerStore', 'js/Serror'], functio
     class GoogleDriveStore extends HttpServerStore {
 
         constructor(p) {
-            
+
             super(p);
             this.option("type", "GoogleDriveStore");
             // Override HttpServerStore
@@ -102,31 +102,31 @@ define(['js/Utils', 'js/Translator', 'js/HttpServerStore', 'js/Serror'], functio
                     client_id: CLIENT_ID,
                     scope: SCOPE
                 })
-                .then((authResult) => {
-                    window.clearTimeout(tid);
-                    if (!authResult)
-                        throw new Error(TX.tx("Could not authorise access to Google Drive"));
-                    else if (authResult.fail)
-                        throw new Error(authResult.fail);
-                    // Access token has been retrieved, requests
-                    // can be sent to the API.
-                    if (this.debug) this.debug("auth OK");
-                    return gapi.client.load("drive", "v2");
-                })
-                .then(() => {
-                    if (this.debug) this.debug("drive/v2 loaded");
-                    return gapi.client.drive.about.get("name");
-                })
-                .then((result) => {
-                    if (result.status !== 200)
-                        throw result;
-                    self.option("user", result.result.user.displayName);
-                    // We're done, fall through to resolve
-                })
-                .catch((r) => {
-                    throw new Serror(
-                        "", 500, self._gError(r, TX.tx("Google Drive load")));
-                });
+            .then((authResult) => {
+                window.clearTimeout(tid);
+                if (!authResult)
+                    throw new Error(TX.tx("Could not authorise access to Google Drive"));
+                else if (authResult.fail)
+                    throw new Error(authResult.fail);
+                // Access token has been retrieved, requests
+                // can be sent to the API.
+                if (this.debug) this.debug("auth OK");
+                return gapi.client.load("drive", "v2");
+            })
+            .then(() => {
+                if (this.debug) this.debug("drive/v2 loaded");
+                return gapi.client.drive.about.get("name");
+            })
+            .then((result) => {
+                if (result.status !== 200)
+                    throw result;
+                self.option("user", result.result.user.displayName);
+                // We're done, fall through to resolve
+            })
+            .catch((r) => {
+                throw self.error(
+                    "", 500, self._gError(r, TX.tx("Google Drive load")));
+            });
         }
 
         // @Override
@@ -162,10 +162,10 @@ define(['js/Utils', 'js/Translator', 'js/HttpServerStore', 'js/Serror'], functio
                     }];
                 if (this.debug) this.debug("Creating folder " + pathel + " under " + parentid);
                 return gapi.client.drive.files
-                    .insert(metadata)
-                    .then((response) => {
-                        return self._follow_path(response.result.id, p, true);
-                    });
+                .insert(metadata)
+                .then((response) => {
+                    return self._follow_path(response.result.id, p, true);
+                });
             }
 
             let query = "title='" + pathel + "'" +
@@ -174,22 +174,22 @@ define(['js/Utils', 'js/Translator', 'js/HttpServerStore', 'js/Serror'], functio
                 " and trashed=false";
 
             return gapi.client.drive.files
-                .list({
-                    q: query
-                })
-                .then((response) => {
-                    let items = response.result.items;
-                    if (items.length > 0) {
-                        let id = items[0].id;
-                        if (this.debug) this.debug("found " + query + " at " + id);
-                        return self._follow_path(id, p, create);
-                    }
-                    if (this.debug) this.debug("could not find " + query);
-                    if (create)
-                        return create_folder();
-                    self.status(404);
-                    return undefined;
-                });
+            .list({
+                q: query
+            })
+            .then((response) => {
+                let items = response.result.items;
+                if (items.length > 0) {
+                    let id = items[0].id;
+                    if (this.debug) this.debug("found " + query + " at " + id);
+                    return self._follow_path(id, p, create);
+                }
+                if (this.debug) this.debug("could not find " + query);
+                if (create)
+                    return create_folder();
+                self.status(404);
+                return undefined;
+            });
         }
 
         /**
@@ -236,100 +236,104 @@ define(['js/Utils', 'js/Translator', 'js/HttpServerStore', 'js/Serror'], functio
                 RETIMILED;
 
             return gapi.client
-                .request({
-                    path: url,
-                    method: method,
-                    params: params,
-                    headers: {
-                        "Content-Type": "multipart/related; boundary=\"" + BOUNDARY + "\""
-                    },
-                    body: multipartRequestBody
-                })
-                .then((/*response*/) => {
-                    return true;
-                })
-                .catch((e) => {
-                    self.status(e.code);
-                    return false;
-                });
+            .request({
+                path: url,
+                method: method,
+                params: params,
+                headers: {
+                    "Content-Type": "multipart/related; boundary=\""
+                    + BOUNDARY + "\""
+                },
+                body: multipartRequestBody
+            })
+            .then((/*response*/) => {
+                return true;
+            })
+            .catch((e) => {
+                self.status(e.code);
+                return false;
+            });
         }
 
         // @Override
         write(path, data) {
+            if (this.debug) this.debug("write", path);
             let self = this;
 
             let p = path.split("/");
             let name = p.pop();
 
-            if (this.debug) this.debug("following " + path);
             return this
-                ._follow_path("root", p, true)
-                .then((parentId) => {
-                    if (typeof parentId === "undefined")
-                        return false;
+            ._follow_path("root", p, true)
+            .then((parentId) => {
+                if (typeof parentId === "undefined")
+                    return false;
 
-                    // See if the file already exists, if it does then use it's id
-                    let query = "title='" + name + "'" +
-                        " and '" + parentId + "' in parents" +
-                        " and trashed=false";
-                    if (this.debug) this.debug("checking existance of " + name);
-                    return gapi.client.drive.files
-                        .list({
-                            q: query
-                        })
-                        .then((response) => {
-                            let items = response.result.items;
-                            let id;
-                            if (items.length > 0) {
-                                id = items[0].id;
-                                if (this.debug) this.debug("updating " + name + " id " + id);
-                            } else
-                                if (this.debug) this.debug("creating " + name + " in " + parentId);
-                            return self._putfile(parentId, name, data, id);
-                        })
-                        .catch((r) => {
-                            throw new Serror(path, 400, self._gError(r, TX.tx("Write")));
-                        });
+                // See if the file already exists, if it does then use it's id
+                let query = "title='" + name + "'" +
+                    " and '" + parentId + "' in parents" +
+                    " and trashed=false";
+                if (this.debug) this.debug("checking existance of " + name);
+                return gapi.client.drive.files
+                .list({
+                    q: query
+                })
+                .then((response) => {
+                    let items = response.result.items;
+                    let id;
+                    if (items.length > 0) {
+                        id = items[0].id;
+                        if (this.debug) this.debug("updating " + name + " id " + id);
+                    } else
+                        if (this.debug) this.debug("creating " + name + " in " + parentId);
+                    return self._putfile(parentId, name, data, id);
+                })
+                .catch((r) => {
+                    throw self.error(path, 400, self._gError(r, TX.tx("Write")));
                 });
+            });
         }
 
         // @Override
         read(path) {
-            if (this.debug) this.debug("read " + path);
+            if (this.debug) this.debug("read", path);
 
             let p = path.split("/");
             let name = p.pop();
             let self = this;
 
             return this
-                ._follow_path("root", p, false)
-                .then((parentId) => {
-                    if (typeof parentId === "undefined")
-                        return undefined;
-                    let query = "title='" + name + "'" +
-                        " and '" + parentId + "' in parents" +
-                        " and trashed=false";
-                    return gapi.client.drive.files
-                        .list({
-                            q: query
-                        })
-                        .then((response) => {
-                            let items = response.result.items;
-                            if (items.length === 0) {
-                                if (this.debug) this.debug(
-                                    "could not find " + name);
-                                throw new Serror(path, 401, "Not found");
-                            }
-                            let url = items[0].downloadUrl;
-                            if (this.debug) this.debug(
-                                "download found " + name + " at " + url);
-                            // use HttpServerStore.request
-                            return self.request("GET", url);
-                        })
-                        .catch((r) => {
-                            throw new Serror(path, 400, self._gError(r, TX.tx("Read")));
-                        });
+            ._follow_path("root", p, false)
+            .then((parentId) => {
+                if (typeof parentId === "undefined")
+                    return undefined;
+                let query = "title='" + name + "'" +
+                    " and '" + parentId + "' in parents" +
+                    " and trashed=false";
+                return gapi.client.drive.files
+                .list({
+                    q: query
+                })
+                .then((response) => {
+                    let items = response.result.items;
+                    if (items.length === 0) {
+                        if (this.debug) this.debug(
+                            "could not find " + name);
+                        throw self.error(path, 401, "Not found");
+                    }
+                    let url = items[0].downloadUrl;
+                    if (this.debug) this.debug(
+                        "found '" + name + "' at " + url);
+                    // use HttpServerStore.request
+                    return self.request("GET", url)
+                    .then((r) => {
+                        return r.body;
+                    });
+                })
+                .catch((r) => {
+                    throw self.error(path, 400, self._gError(r, TX.tx("Read")));
                 });
+            });
         }
     }
 

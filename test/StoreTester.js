@@ -13,7 +13,7 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
 
     // Deliberately make it an odd length to throw off 16-bit-assuming
     // conversions
-    const DATASIZE = 255;//89345;
+    const DATASIZE = 89345;
 
     const test_path = "test.dat";
 
@@ -118,7 +118,7 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
                         four01[key] = v;
                     }
                 }
-                
+
                 // 401 handler, build credentials and pass back
                 store.option("network_login", function() {
                     if (self.debug) self.debug("Called network_login",store.option());
@@ -189,10 +189,10 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
                 let a = new Uint8Array(1);
                 a[0] = 69;
                 return store.write(test_path, a)
-                    .then(function() {
+                .then(function() {
                         return store.read(test_path);
                     })
-                    .then(function(ab) {
+                .then(function(ab) {
                         assert.equal(ab.length, 1);
                         assert.equal(Utils.Uint8ArrayToString(ab), String.fromCodePoint(69));
                     });
@@ -202,10 +202,10 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
                 let store = self.store;
                 let a = new Uint8Array(0);
                 return store.write(test_path, a)
-                    .then(function () {
+                .then(function () {
                         return store.read(test_path);
                     })
-                    .then(function(ab) {
+                .then(function(ab) {
                         assert.equal(ab.byteLength, 0);
                     });
             });
@@ -213,7 +213,7 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
             this.addTest("Read non-existant", function() {
                 let store = self.store;
                 return store.read("not/a/known/resource.dat")
-                    .then(function(ab) {
+                .then(function(ab) {
                         assert(false, "Non existant should not resolve");
                     })
                     .catch(function(se) {
@@ -225,10 +225,10 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
             this.addTest("Write/Read string", function() {
                 let store = self.store;
                 return store.writes(test_path, TESTR)
-                    .then(function () {
+                .then(function () {
                         return store.reads(test_path);
                     })
-                    .then(function(str) {
+                .then(function(str) {
                         assert.equal(str, TESTR);
                     });
             });
@@ -241,10 +241,10 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
                     a[i] = ((i + 1) & 0xFF);
                 //if (debug) debug("W:",block(a,214,220));
                 return store.write(test_path, a)
-                    .then(function () {
+                .then(function () {
                         return store.read(test_path);
                     })
-                    .then(function(a) {
+                .then(function(a) {
                         assert.equal(a.length, DATASIZE);
                         //if (debug) debug("R:",block(a,214,220));
                         for (let i = 0; i < DATASIZE; i++)
@@ -367,18 +367,18 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
 
         run(params) {
             return this.buildStore()
-                .then(() => {
-                    return this.analyseParams(params);
-                })
-                .then(() => {
-                    return this.store.init();
-                })
-                .then(() => {
-                    return this.makeTests();
-                })
-                .then(() => {
-                    return super.run();
-                });
+            .then(() => {
+                return this.analyseParams(params);
+            })
+            .then(() => {
+                return this.store.init();
+            })
+            .then(() => {
+                return this.makeTests();
+            })
+            .then(() => {
+                return super.run();
+            });
         }
     }
     return StoreTester;
