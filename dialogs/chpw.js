@@ -21,21 +21,21 @@ define(["js/Dialog"], function(Dialog) {
             this.find('input[type="password"]').simulated_password();
 
             this.control("conf")
-                .on("change", function () {
-                   self._checkSamePass();
-                });
+            .on("change", function () {
+                self._checkSamePass();
+            });
 
             this.control("set")
-                .on(this.tapEvent(), function () {
-                    if (!self._checkSamePass()) {
-                        return false;
-                    }
-                    self.close();
-                    let app = self.options.app;
-                    app.encryptionPass(self.control("pass").val());
+            .on(Dialog.tapEvent(), function () {
+                if (!self._checkSamePass()) {
+                    return false;
+                }
+                self.close();
+                let app = self.options.app;
+                app.encryptionPass(self.control("pass").val());
 
-                    return true;
-                });
+                return true;
+            });
         }
 
         open() {

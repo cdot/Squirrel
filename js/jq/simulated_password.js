@@ -21,7 +21,7 @@ define(["jquery"], function() {
             sel.moveStart('character', -input.value.length);
             return sel.text.length - selLen;
         }
-   }
+    }
 
     function setCursorPosition(input, pos) {
         if ('setSelectionRange' in input) {
@@ -111,10 +111,10 @@ define(["jquery"], function() {
                 let $showpass = $('<input type="checkbox"/>');
                 $this.after($showpass);
                 $showpass
-                    .on("click", function () {
-                        showPass($this, $this.hasClass("pass_hidden"));
-                    })
-                    .prop("checked", !options.hidden);
+                .on($.getTapEvent ? $.getTapEvent() : "click", function () {
+                    showPass($this, $this.hasClass("pass_hidden"));
+                })
+                .prop("checked", !options.hidden);
             }
 
             // Handle input rather than keydown, as it's more friendly to
@@ -128,8 +128,8 @@ define(["jquery"], function() {
                     if (dv.length > hv.length) {
                         // Character added
                         hv = hv.substring(0, cPos - 1) +
-                            dv.substring(cPos - 1, cPos) +
-                            hv.substring(cPos - 1);
+                        dv.substring(cPos - 1, cPos) +
+                        hv.substring(cPos - 1);
                         $this.data("hidden_pass", hv);
                         $.fn.raw_val.call($this, hv.replace(/./g, SPOT));
                         setCursorPosition(self, cPos);

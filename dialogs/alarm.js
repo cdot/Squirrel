@@ -5,144 +5,119 @@
  * $node (rquired)
  * app (required)
  */
-define(["js/Dialog", "js/Hoard", "js/jq/template"], function(Dialog, Hoard) {
-    const TIMEUNITS = {
-        y: {
-            days: 360,
-            ms: 364 * 24 * 60 * 60 * 1000,
-            // TX.tx("$1 year$?($1!=1,s,)")
-            format: "$1 year$?($1!=1,s,)"
-        },
-        m: {
-            days: 30,
-            ms: 30 * 24 * 60 * 60 * 1000,
-            // TX.tx("$1 month$?($1!=1,s,)")
-            format: "$1 month$?($1!=1,s,)"
-        },
-        d: {
-            days: 1,
-            ms: 24 * 60 * 60 * 1000,
-            // TX.tx("$1 day$?($1!=1,s,)")
-            format: "$1 day$?($1!=1,s,)"
-        }
-    };
+define(["js/Dialog", "js/Hoard", "js/jq/template", "jquery-ui"], function(Dialog, Hoard) {
 
     const MSPERDAY = 24 * 60 * 60 * 1000;
 
     class AlarmDialog extends Dialog {
 
-        deltaTimeString(date) {
-            date = new Date(date.getTime() - Date.now());
-
-            var s = [];
-
-            var delta = date.getUTCFullYear() - 1970;
-            if (delta > 0)
-                s.push(this.tx(TIMEUNITS.y.format, delta));
-
-            // Normalise to year zero
-            date.setUTCFullYear(1970);
-
-            delta = date.getUTCMonth();
-            if (delta > 0)
-                s.push(this.tx(TIMEUNITS.m.format, delta));
-
-            // Normalise to the same month (January)
-            date.setUTCMonth(0);
-
-            delta = date.getUTCDate();
-            if (delta > 0 || s.length === 0)
-                s.push(this.tx(TIMEUNITS.d.format, delta));
-
-            return s.join(" ");
+        _getPickedDate() {
+            return this.control("date").datepicker("getDate").getTime();
         }
 
-        updateNext() {
+        _updateSave() {
+            let isEnabled = this.control("enabled").prop("checked");
+            let curd = this._getPickedDate() / MSPERDAY;
+            let oldd = this.alarmTime / MSPERDAY;
+            //console.log(curd, oldd);
+            this.control("ok").toggle(
+                isEnabled !== this.wasEnabled || Math.abs(curd - oldd) > 1);
+        }
+
+        _updateFromDelta() {
             let numb = this.control("number").val();
-            // Convert to days
-            numb = numb * TIMEUNITS[this.control("units").val()].days;
-            let alarmd = new Date(Date.now() + numb * MSPERDAY);
-            this.control("nextmod")
-                .template(
-                    "expand",
-                    this.deltaTimeString(alarmd),
-                    alarmd.toLocaleDateString());
+            let unit = this.control("unit").val();
+            this.control("date")
+            .datepicker("setDate", "+" + numb + unit);
+            this._updateSave();
         }
 
+        // @Override
         initialise() {
             let self = this;
 
-            this.find(".template").template();
+            this.control("enabled")
+            .on("change", function() {
+                let checked = $(this).prop("checked");
+                self.control("settings")
+                .find(":input").prop("disabled", !checked);
+                self._updateSave();
+            });
 
-            this.control("units")
+            this.control("date")
+            .datepicker({ dateFormat: "yy-mm-dd" })
+            .change(() => {
+                let delta = Math.floor(
+                    (this._getPickedDate() - Date.now()) / MSPERDAY);
+                this.control("number").val(delta);
+                this.control("unit").val("d");
+                self._updateSave();
+            });
+
+            this.control("unit")
                 .on("change", function () {
-                    self.updateNext();
+                    self._updateFromDelta();
                 });
 
             this.control("number")
                 .on("change", function () {
-                    self.updateNext();
-                });
-
-            this.control("remind")
-                .on(this.tapEvent(), function () {
-                    self.close();
-                    let numb = self.control("number")
-                        .val() *
-                        TIMEUNITS[self.control("units").val()].days;
-                    self.options.app.playAction(Hoard.new_action({
-                        type: "A",
-                        path: self.options.$node.tree("getPath"),
-                        data: numb
-                    }));
-                    return false;
-                });
-
-            this.control("clear")
-                .on(this.tapEvent(), function () {
-                    self.close();
-                    self.options.app.playAction(Hoard.new_action({
-                        type: "C",
-                        path: self.options.$node.tree("getPath")
-                    }));
-                    return false;
+                    self._updateFromDelta();
                 });
         }
 
+        // @Override
+        ok() {
+            let isEnabled = this.control("enabled").prop("checked");
+            let pat = this.options.$node.tree("getPath");
+            if (isEnabled)
+                this.options.app.playAction(Hoard.new_action({
+                    type: "A", path: pat,
+                    data: {
+                        time: this.control("date")
+                        .datepicker("getDate").getTime()
+                    }
+                }));
+            else if (this.wasEnabled)
+                this.options.app.playAction(Hoard.new_action({
+                    type: "C", path: pat
+                }));
+
+            return true;
+        }
+
+        // @Override
         open() {
             let $node = this.options.$node;
             let lastmod;
 
-            this.control("path")
-                .text($node.tree("getPath")
-                      .join("↘"));
-            lastmod = $node.data("last-time-changed");
+            this.control("path").text($node.tree("getPath").join("↘"));
 
-            this.control("lastmod")
-                    .template(
-                        "expand",
-                        new Date(lastmod)
-                            .toLocaleString());
+            let enabled = (typeof $node.data("alarm") !== "undefined");
+            this.wasEnabled = enabled;
 
-            if (typeof $node.data("alarm") !== "undefined") {
-                let alarm = new Date(
-                    lastmod + $node.data("alarm") * MSPERDAY);
-                this.control("current")
-                    .template(
-                        "expand",
-                        this.deltaTimeString(alarm),
-                        alarm.toLocaleDateString())
-                    .show();
-                this.control("clear")
-                    .show();
-            } else {
-                this.control("current")
-                    .hide();
-                this.control("clear")
-                    .hide();
-            }
+            this.control("enabled").prop("checked", enabled);
+            this.control("settings").find(":input").prop("disabled", !enabled);
+            let now = new Date();
 
-            this.updateNext();
+            if (enabled) {
+                // Old format alarms had one number, number of days from
+                // last node change.
+                let alarm = $node.data("alarm");
+                if (typeof alarm === "number") {
+                    // Update format
+                    alarm = {
+                        time: $node.data("last-time-changed")
+                        + alarm * MSPERDAY };
+                    $node.data("alarm", alarm);
+                }
+                this.alarmTime = new Date(alarm.time);
+            } else
+                this.alarmTime = now;
+
+            this.control("unit").val("d");
+            this.control("number").val(Math.floor((this.alarmTime - now) / MSPERDAY));
+            this.control("date").datepicker("setDate", this.alarmTime);
+            this.control("ok").hide()
         }
     }
     return AlarmDialog;

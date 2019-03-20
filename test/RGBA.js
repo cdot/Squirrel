@@ -150,7 +150,7 @@ requirejs(["js/Utils", "js/RGBA", "test/TestRunner"], function(Utils, RGBA, Test
     let assert = tr.assert;
 
     assert.nearly = function(a, b) {
-        var x = a - b;
+        let x = a - b;
         if (x < 0) x = -x;
         assert(x < 0.1, b + " != " + a);
     }
@@ -158,21 +158,21 @@ requirejs(["js/Utils", "js/RGBA", "test/TestRunner"], function(Utils, RGBA, Test
     function testIt(i) {
         tr.addTest("should convert " + testMap[i].hash, function() {
             //console.log(i + " " + testMap[i].hash);
-            var tm = testMap[i];
-            var rgb = new RGBA(tm.rgb[0], tm.rgb[1], tm.rgb[2]);
+            let tm = testMap[i];
+            let rgb = new RGBA(tm.rgb[0], tm.rgb[1], tm.rgb[2]);
             assert.equal(tm.hash, rgb.toString());
 
-            var hrgb = new RGBA(tm.hash);
+            let hrgb = new RGBA(tm.hash);
             assert.equal(tm.rgb.r, rgb[0]);
             assert.equal(tm.rgb.g, rgb[1]);
             assert.equal(tm.rgb.b, rgb[2]);
 
-            var hsv = rgb.toHSV();
+            let hsv = rgb.toHSV();
             assert.nearly(tm.hsv[0], hsv[0]);
             assert.nearly(tm.hsv[1], hsv[1]);
             assert.nearly(tm.hsv[2], hsv[2]);
 
-            var reco = RGBA.fromHSV(tm.hsv[0], tm.hsv[1], tm.hsv[2]);
+            let reco = RGBA.fromHSV(tm.hsv[0], tm.hsv[1], tm.hsv[2]);
             assert.nearly(rgb.r, reco.r);
             assert.nearly(rgb.g, reco.g);
             assert.nearly(rgb.b, reco.b);
@@ -182,7 +182,7 @@ requirejs(["js/Utils", "js/RGBA", "test/TestRunner"], function(Utils, RGBA, Test
             assert.nearly(rgb.g, reco.g);
             assert.nearly(rgb.b, reco.b);
 
-            var hsl = rgb.toHSL();
+            let hsl = rgb.toHSL();
             assert.nearly(tm.hsl[0], hsl[0]);
             assert.nearly(tm.hsl[1], hsl[1]);
             assert.nearly(tm.hsl[2], hsl[2]);
@@ -196,14 +196,14 @@ requirejs(["js/Utils", "js/RGBA", "test/TestRunner"], function(Utils, RGBA, Test
             assert.nearly(rgb.g, reco.g);
             assert.nearly(rgb.b, reco.b);
 
-            var comp = rgb.complement();
-            var inv = rgb.inverse();
+            let comp = rgb.complement();
+            let inv = rgb.inverse();
             //console.log(rgb.toString() + "~" + comp.toString()
             //            + "~" +inv.toString());
             assert.equal(tm.complement, comp.toString());
             assert.equal(tm.inverse, inv.toString());
 
-            var comp = rgb.complement();
+            let comp = rgb.complement();
             assert.equal(tm.complement, comp.toString());
 
             rgb.a = 0.5;
@@ -232,14 +232,14 @@ requirejs(["js/Utils", "js/RGBA", "test/TestRunner"], function(Utils, RGBA, Test
     }
 
     tr.addTest("should parse hsl", function() {
-        var hsl = "hsl(155, 0.1, 50%)";
-        var rgb = new RGBA(hsl);
+        let hsl = "hsl(155, 0.1, 50%)";
+        let rgb = new RGBA(hsl);
         assert.equal("#738C82", rgb.toString());
     });
 
     tr.addTest("should parse hsla", function() {
-        var hsl = "hsla(155, 10%, 0.5, 0.3)";
-        var rgb = new RGBA(hsl);
+        let hsl = "hsla(155, 10%, 0.5, 0.3)";
+        let rgb = new RGBA(hsl);
         //console.log(rgb.toString());
         assert.equal("rgba(115,140,130,0.3)", rgb.toString());
     });

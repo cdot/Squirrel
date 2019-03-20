@@ -130,7 +130,7 @@ requirejs(["js/Utils", "js/AES", "js/Server", "fs", "request-promise-any", "test
     });
 
     tr.addTest("text-file-post-8bit", () => {
-        var ef = workingDir + "/transitory8";
+        let ef = workingDir + "/transitory8";
         try {
             Fs.unlinkSync(ef);
         } catch (e) {};
@@ -156,11 +156,11 @@ requirejs(["js/Utils", "js/AES", "js/Server", "fs", "request-promise-any", "test
     });
 
     tr.addTest("text-file-post-16bit", () => {
-        var ef = workingDir + "/transitory16";
+        let ef = workingDir + "/transitory16";
         try {
             Fs.unlinkSync(ef);
         } catch (e) {}
-        var text = "\0S\0o\0m\0e\0 \0" + "1\0" + "6\0 \0b\0i\0t\0 \0t\0e\0x\0t";
+        let text = "\0S\0o\0m\0e\0 \0" + "1\0" + "6\0 \0b\0i\0t\0 \0t\0e\0x\0t";
 
         return request.put(workingUrl + '/transitory16', {
             auth: { user: server_config.auth.user,
@@ -204,13 +204,13 @@ requirejs(["js/Utils", "js/AES", "js/Server", "fs", "request-promise-any", "test
 
     // Make sure a loop through encryption works
     tr.addTest("encrypt-decrypt", () => {
-        var ef = workingDir + "/encrypted";
+        let ef = workingDir + "/encrypted";
         try {
             Fs.unlinkSync(ef);
         } catch (e) {}
-        var text = "Alice, Bob, Charlie, and Doug";
-        var pass = "password";
-        var xa = AES.encrypt(Utils.StringToUint8Array(text), pass, 256);
+        let text = "Alice, Bob, Charlie, and Doug";
+        let pass = "password";
+        let xa = AES.encrypt(Utils.StringToUint8Array(text), pass, 256);
 
         return request.put(workingUrl + '/encrypted', {
             auth: { user: server_config.auth.user,
@@ -229,7 +229,7 @@ requirejs(["js/Utils", "js/AES", "js/Server", "fs", "request-promise-any", "test
             });
         })
         .then((body) => {
-            var s = Utils.Uint8ArrayToString(AES.decrypt(body, pass, 256));
+            let s = Utils.Uint8ArrayToString(AES.decrypt(body, pass, 256));
             assert.equal(s, text);
             Fs.unlinkSync(ef);
         });

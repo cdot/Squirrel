@@ -41,7 +41,7 @@
  * names to DOM nodes.
  */
 
-define(["js/Hoard", "jquery", "js/jq/edit_in_place", "js/jq/scroll_into_view", "js/jq/icon_button", "jquery-ui"], function(Hoard) {
+define(["js/Hoard", "js/Dialog", "jquery", "js/jq/edit_in_place", "js/jq/scroll_into_view", "js/jq/icon_button", "jquery-ui"], function(Hoard, Dialog) {
 
     // separator used in Path->node mapping index
     const PATHSEP = String.fromCharCode(1);
@@ -143,9 +143,9 @@ define(["js/Hoard", "jquery", "js/jq/edit_in_place", "js/jq/scroll_into_view", "
                     this.options.value !== null) {
 
                     $node
-                        .data("value", this.options.value)
-                        .data("is_leaf", true)
-                        .addClass("tree-leaf");
+                    .data("value", this.options.value)
+                    .data("is_leaf", true)
+                    .addClass("tree-leaf");
                     is_leaf = true;
                 }
             }
@@ -155,8 +155,8 @@ define(["js/Hoard", "jquery", "js/jq/edit_in_place", "js/jq/scroll_into_view", "
                     .addClass("sortable tree-subnodes")
                     .hide();
                 $node
-                    .addClass("tree-collection")
-                    .append($ul);
+                .addClass("tree-collection")
+                .append($ul);
             }
 
             if ($parent)
@@ -191,15 +191,15 @@ define(["js/Hoard", "jquery", "js/jq/edit_in_place", "js/jq/scroll_into_view", "
                 return;
 
             $(".tree-leaf")
-                .each(function() {
-                    let v = $(this).data("value");
-                    $(this)
-                        .find(".tree-value")
-                        .each(
-                            function () {
-                                $(this).text(on ? v.replace(/./g, HIDE) : v);
-                            });
-                });
+            .each(function() {
+                let v = $(this).data("value");
+                $(this)
+                .find(".tree-value")
+                .each(
+                    function () {
+                        $(this).text(on ? v.replace(/./g, HIDE) : v);
+                    });
+            });
         },
 
         /**
@@ -216,13 +216,13 @@ define(["js/Hoard", "jquery", "js/jq/edit_in_place", "js/jq/scroll_into_view", "
             let w = $node.closest(".tree-root")
                 .width();
             w -= $span.position()
-                .left;
+            .left;
             $span.parents()
-                .each(function () {
-                    w -= $(this)
-                        .position()
-                        .left;
-                });
+            .each(function () {
+                w -= $(this)
+                .position()
+                .left;
+            });
 
             Tree.onOpenEditor();
 
@@ -248,14 +248,14 @@ define(["js/Hoard", "jquery", "js/jq/edit_in_place", "js/jq/scroll_into_view", "
             let $node = this.element;
             this._edit(
                 $node.find(".tree-key")
-                    .first(), $node.data("key"), "R");
+                .first(), $node.data("key"), "R");
         },
 
         editValue: function() {
             let $node = this.element;
             this._edit(
                 $node.find(".tree-value")
-                    .first(), $node.data("value"), "E");
+                .first(), $node.data("value"), "E");
         },
 
         /**
@@ -263,11 +263,11 @@ define(["js/Hoard", "jquery", "js/jq/edit_in_place", "js/jq/scroll_into_view", "
          */
         ringAlarm: function() {
             this.element
-                .find(".tree-alarm")
-                .addClass("tree-expired")
-                .find(".tree-icon-alarm")
-                .removeClass("tree-icon-alarm")
-                .addClass("tree-icon-rang");
+            .find(".tree-alarm")
+            .addClass("tree-expired")
+            .find(".tree-icon-alarm")
+            .removeClass("tree-icon-alarm")
+            .addClass("tree-icon-rang");
         },
 
         _makeDraggable: function($node) {
@@ -296,7 +296,7 @@ define(["js/Hoard", "jquery", "js/jq/edit_in_place", "js/jq/scroll_into_view", "
                     });
                 // inside $this
                 $(".drop-target")
-                    .removeClass("drop-target");
+                .removeClass("drop-target");
                 if ($within.length > 0) {
                     $within = $within.last();
                     $within.addClass("drop-target");
@@ -328,8 +328,8 @@ define(["js/Hoard", "jquery", "js/jq/edit_in_place", "js/jq/scroll_into_view", "
                 })
                 .hide();
             $node
-                .children(".tree-title")
-                .append($button);
+            .children(".tree-title")
+            .append($button);
 
             // Make the node draggable by using the drag handle
             $node.draggable({
@@ -402,15 +402,15 @@ define(["js/Hoard", "jquery", "js/jq/edit_in_place", "js/jq/scroll_into_view", "
             if ($ul.length === 0)
                 throw new Error("Assert: No ul in parent");
             $ul.children(".tree-node")
-                .each(function () {
-                    if (Tree.compareKeys(
-                        $(this)
-                            .data("key"), key) > 0) {
-                        $node.insertBefore($(this));
-                        inserted = true;
-                        return false;
-                    }
-                });
+            .each(function () {
+                if (Tree.compareKeys(
+                    $(this)
+                    .data("key"), key) > 0) {
+                    $node.insertBefore($(this));
+                    inserted = true;
+                    return false;
+                }
+            });
             if (!inserted) {
                 $ul.append($node);
             }
@@ -422,8 +422,8 @@ define(["js/Hoard", "jquery", "js/jq/edit_in_place", "js/jq/scroll_into_view", "
          */
         setModified: function(time) {
             return this.element
-                .addClass("tree-modified")
-                .data("last-time-changed", time);
+            .addClass("tree-modified")
+            .data("last-time-changed", time);
         },
 
         // Add UI components for handling any alarm that may be on
@@ -433,23 +433,21 @@ define(["js/Hoard", "jquery", "js/jq/edit_in_place", "js/jq/scroll_into_view", "
             if (!alarm)
                 return; // no alarm
             $node
-                .find(".tree-key")
-                .first()
-                .before(function () {
-                    let $button = $("<button></button>")
-                        .addClass("tree-alarm");
+            .find(".tree-key")
+            .first()
+            .before(function () {
+                let $button = $("<button></button>")
+                    .addClass("tree-alarm");
 
-                    $button.icon_button({
-                        icon: "tree-icon-alarm"
-                    })
-                        .on("click", function () {
-                            let $dlg = $("#alarm_dlg");
-                            $dlg.dialog("option", "$node", $node);
-                            $dlg.dialog("open");
-                            return false;
-                        });
-                    return $button;
+                $button.icon_button({
+                    icon: "tree-icon-alarm"
+                })
+                .on(Dialog.tapEvent(), function () {
+                    Dialog.open("alarm", { $node: $node });
+                    return false;
                 });
+                return $button;
+            });
         },
 
         _decorate_node: function() {
@@ -464,23 +462,23 @@ define(["js/Hoard", "jquery", "js/jq/edit_in_place", "js/jq/scroll_into_view", "
                     return true;
 
                 $(".tree-hover")
-                    .removeClass("tree-hover");
+                .removeClass("tree-hover");
 
                 // Unobscure the value if it's hidden
                 if (Tree.hidingValues() && $node.hasClass("tree-leaf")) {
                     $(this)
-                        .find(".tree-value")
-                        .each(
-                            function () {
-                                $(this).text($node.data("value"));
-                            });
+                    .find(".tree-value")
+                    .each(
+                        function () {
+                            $(this).text($node.data("value"));
+                        });
                 }
 
                 $(this)
-                    .addClass("tree-hover")
-                    .find(".tree-draghandle")
-                    .first()
-                    .show();
+                .addClass("tree-hover")
+                .find(".tree-draghandle")
+                .first()
+                .show();
 
                 return false;
             }
@@ -496,18 +494,18 @@ define(["js/Hoard", "jquery", "js/jq/edit_in_place", "js/jq/scroll_into_view", "
                 // Re-obscure the node if required
                 if (Tree.hidingValues() && $node.hasClass("tree-leaf")) {
                     $(this)
-                        .find(".tree-value")
-                        .each(
-                            function () {
-                                // Obscure the value
-                                $(this).text(self._displayedValue());
-                            });
+                    .find(".tree-value")
+                    .each(
+                        function () {
+                            // Obscure the value
+                            $(this).text(self._displayedValue());
+                        });
                 }
                 $(this)
-                    .removeClass("tree-hover")
-                    .find(".tree-draghandle")
-                    .first()
-                    .hide();
+                .removeClass("tree-hover")
+                .find(".tree-draghandle")
+                .first()
+                .hide();
             }
 
             // <title>
@@ -528,11 +526,11 @@ define(["js/Hoard", "jquery", "js/jq/edit_in_place", "js/jq/scroll_into_view", "
                 $control.icon_button({
                     icon: "squirrel-icon-folder-closed"
                 })
-                    .on($.getTapEvent(),
-                        function () {
-                            $node.tree("toggle");
-                            return false;
-                        });
+                .on(Dialog.tapEvent(),
+                    function () {
+                        $node.tree("toggle");
+                        return false;
+                    });
             }
 
             // <info>
@@ -542,33 +540,33 @@ define(["js/Hoard", "jquery", "js/jq/edit_in_place", "js/jq/scroll_into_view", "
 
             // Create the key span
             $("<span></span>")
-                .appendTo($info)
-                .addClass("tree-key")
-                .text($node.data("key"))
-                .on($.isTouchCapable && $.isTouchCapable() ?
-                    "doubletap" : "dblclick",
-                    function (e) {
-                        if (this.debug) this.debug("Double-click 1");
-                        e.preventDefault();
-                        $(e.target).closest(".tree-node").tree("editKey");
-                    });
+            .appendTo($info)
+            .addClass("tree-key")
+            .text($node.data("key"))
+            .on($.isTouchCapable && $.isTouchCapable() ?
+                "doubletap" : "dblclick",
+                function (e) {
+                    if (this.debug) this.debug("Double-click 1");
+                    e.preventDefault();
+                    $(e.target).closest(".tree-node").tree("editKey");
+                });
 
             if ($node.hasClass("tree-leaf")) {
                 $("<span></span>")
-                    .text(" : ")
-                    .addClass("tree-separator")
-                    .appendTo($info);
+                .text(" : ")
+                .addClass("tree-separator")
+                .appendTo($info);
                 $("<span></span>")
-                    .appendTo($info)
-                    .addClass("tree-value")
-                    .text(this._displayedValue())
-                    .on($.isTouchCapable && $.isTouchCapable() ?
-                        "doubletap" : "dblclick",
-                        function (e) {
-                            if (this.debug) this.debug("Double-click 2");
-                            e.preventDefault();
-                            $(e.target).closest(".tree-node").tree("editValue");
-                        });
+                .appendTo($info)
+                .addClass("tree-value")
+                .text(this._displayedValue())
+                .on($.isTouchCapable && $.isTouchCapable() ?
+                    "doubletap" : "dblclick",
+                    function (e) {
+                        if (this.debug) this.debug("Double-click 2");
+                        e.preventDefault();
+                        $(e.target).closest(".tree-node").tree("editValue");
+                    });
             }
             this._makeDraggable($node);
             this._decorate_with_alarm($node);
@@ -598,9 +596,9 @@ define(["js/Hoard", "jquery", "js/jq/edit_in_place", "js/jq/scroll_into_view", "
                 fruitbat.icon_button("option", "icon", "squirrel-icon-folder-open");
             }
             return $node
-                .addClass("tree-node-is-open")
-                .children(".tree-subnodes")
-                .show();
+            .addClass("tree-node-is-open")
+            .children(".tree-subnodes")
+            .show();
         },
 
         close: function() {
@@ -608,12 +606,12 @@ define(["js/Hoard", "jquery", "js/jq/edit_in_place", "js/jq/scroll_into_view", "
             if (!$node.hasClass("tree-node-is-open"))
                 return $node;
             $node.find(".tree-node-is-open-close")
-                .first()
-                .icon_button("option", "icon", "squirrel-icon-folder-closed");
+            .first()
+            .icon_button("option", "icon", "squirrel-icon-folder-closed");
             return $node
-                .removeClass("tree-node-is-open")
-                .children(".tree-subnodes")
-                .hide();
+            .removeClass("tree-node-is-open")
+            .children(".tree-subnodes")
+            .hide();
         },
 
         toggle: function() {
@@ -633,10 +631,10 @@ define(["js/Hoard", "jquery", "js/jq/edit_in_place", "js/jq/scroll_into_view", "
                          action.time, $node.data("value"));
 
             $node
-                .data("value", action.data)
-                .find(".tree-value")
-                .first()
-                .text(this._displayedValue());
+            .data("value", action.data)
+            .find(".tree-value")
+            .first()
+            .text(this._displayedValue());
 
             this.setModified(action.time);
         },
@@ -685,14 +683,14 @@ define(["js/Hoard", "jquery", "js/jq/edit_in_place", "js/jq/scroll_into_view", "
 
                 // Run up the tree, incrementing the alarm count
                 $node.parents(".tree-node")
-                    .each(function () {
-                        let c = $(this)
-                            .data("alarm-count") || 0;
-                        $(this)
-                            .data("alarm-count", c + 1);
-                        $(this)
-                            .addClass("tree-has-alarms");
-                    });
+                .each(function () {
+                    let c = $(this)
+                        .data("alarm-count") || 0;
+                    $(this)
+                    .data("alarm-count", c + 1);
+                    $(this)
+                    .addClass("tree-has-alarms");
+                });
 
                 // Undo by cancelling the new alarm
                 if (undoable)
@@ -722,20 +720,20 @@ define(["js/Hoard", "jquery", "js/jq/edit_in_place", "js/jq/scroll_into_view", "
 
             // run up the tree decrementing the alarm count
             $node.parents(".tree-node")
-                .each(function () {
-                    let c = $(this)
-                        .data("alarm-count") || 0;
-                    c = c - 1;
+            .each(function () {
+                let c = $(this)
+                    .data("alarm-count") || 0;
+                c = c - 1;
+                $(this)
+                .data("alarm-count", c);
+                if (c === 0)
                     $(this)
-                        .data("alarm-count", c);
-                    if (c === 0)
-                        $(this)
-                        .removeClass("tree-has-alarms");
-                });
+                .removeClass("tree-has-alarms");
+            });
 
             $(".tree-alarm")
-                .first()
-                .remove();
+            .first()
+            .remove();
 
             $node.removeData("alarm");
 
@@ -788,10 +786,10 @@ define(["js/Hoard", "jquery", "js/jq/edit_in_place", "js/jq/scroll_into_view", "
             let key = action.path[action.path.length - 1]; // record old node name
 
             $node
-                .data("key", action.data)
-                .find(".tree-key")
-                .first()
-                .text(action.data);
+            .data("key", action.data)
+            .find(".tree-key")
+            .first()
+            .text(action.data);
 
             this.setModified(action.time);
 
@@ -819,21 +817,21 @@ define(["js/Hoard", "jquery", "js/jq/edit_in_place", "js/jq/scroll_into_view", "
             if (action.type === "N") {
                 // Create the new node. Automatically adds it to the right parent.
                 $("<li></li>")
-                    .tree($.extend(
-                        {},
-                        this.options,
-                        {
-                            path: action.path,
-                            value: action.data,
-                            time: action.time,
-                            onCreate: function () {
-                                // get_path will update the caches on the fly with the
-                                // new node
-                                if (undoable)
-                                    undoable("D", this.tree("getPath"), action.time);
-                                if (chain) chain(this);
-                            }
-                        }));
+                .tree($.extend(
+                    {},
+                    this.options,
+                    {
+                        path: action.path,
+                        value: action.data,
+                        time: action.time,
+                        onCreate: function () {
+                            // get_path will update the caches on the fly with the
+                            // new node
+                            if (undoable)
+                                undoable("D", this.tree("getPath"), action.time);
+                            if (chain) chain(this);
+                        }
+                    }));
             } else {
                 let $node = this.getNodeFromPath(action.path);
                 let widget = $node.tree("instance");
@@ -877,12 +875,12 @@ define(["js/Hoard", "jquery", "js/jq/edit_in_place", "js/jq/scroll_into_view", "
 
                 // Repeat for subnodes
                 $node
-                    .find("ul")
-                    .first()
-                    .children(".tree-node")
-                    .each(function () {
-                        recache($(this), path);
-                    });
+                .find("ul")
+                .first()
+                .children(".tree-node")
+                .each(function () {
+                    recache($(this), path);
+                });
             }
 
             let $el = this.element;
@@ -892,7 +890,7 @@ define(["js/Hoard", "jquery", "js/jq/edit_in_place", "js/jq/scroll_into_view", "
             if (!$parent || $parent.length == 0)
                 throw new Error("No immediate parent");
             $parent = $parent
-                .closest(".tree-node")
+            .closest(".tree-node")
             if (!$parent || $parent.length == 0)
                 throw new Error("No containing treenode");
             let pa = $parent.tree("getPath");
@@ -914,14 +912,14 @@ define(["js/Hoard", "jquery", "js/jq/edit_in_place", "js/jq/scroll_into_view", "
                                   .join(PATHSEP)];
 
             $node
-                .removeData("path")
+            .removeData("path")
             // Reset the path of all subnodes
-                .find(".tree-node")
-                .each(function () {
-                    let $s = $(this);
-                    delete path2$node[$s.data("path").join(PATHSEP)];
-                    $s.removeData("path");
-                });
+            .find(".tree-node")
+            .each(function () {
+                let $s = $(this);
+                delete path2$node[$s.data("path").join(PATHSEP)];
+                $s.removeData("path");
+            });
         }
     };
 

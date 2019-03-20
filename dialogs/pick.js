@@ -1,17 +1,17 @@
 /*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /*
-* Options:
-* $node (required)
-*/
+ * Options:
+ * $node (required)
+ */
 define(["js/Dialog"], function(Dialog) {
     class PickDialog extends Dialog {
         initialise() {
             let self = this;
             this.control("clear")
-                .on(this.tapEvent(), function () {
-                    self.find(".dlg-picked")
-                        .removeClass("dlg-picked");
-                });
+            .on(Dialog.tapEvent(), function () {
+                self.find(".dlg-picked")
+                .removeClass("dlg-picked");
+            });
         }
 
         open() {
@@ -23,29 +23,29 @@ define(["js/Dialog"], function(Dialog) {
             let i, $f;
 
             this.find(".dlg-pick-cell")
-                .remove();
+            .remove();
 
             let item_clicked = function () {
                 let ii = $(this)
                     .data("i");
                 self.find("td.i" + ii)
-                    .addClass("dlg-picked");
+                .addClass("dlg-picked");
             };
 
             for (i = 0; i < val.length; i++) {
                 $f = $from.children("td.i" + i);
                 if ($f.length === 0) {
                     $("<td></td>")
-                        .data("i", i)
-                        .addClass("dlg-pick-cell i" + i)
-                        .text(i + 1)
-                        .on(this.tapEvent(), item_clicked)
-                        .appendTo($which);
+                    .data("i", i)
+                    .addClass("dlg-pick-cell i" + i)
+                    .text(i + 1)
+                    .on(Dialog.tapEvent(), item_clicked)
+                    .appendTo($which);
                     $f = $("<td></td>")
-                        .data("i", i)
-                        .addClass("dlg-pick-cell i" + i)
-                        .on(this.tapEvent(), item_clicked)
-                        .appendTo($from);
+                    .data("i", i)
+                    .addClass("dlg-pick-cell i" + i)
+                    .on(Dialog.tapEvent(), item_clicked)
+                    .appendTo($from);
                 }
                 $f.text(val.charAt(i));
             }
@@ -53,13 +53,13 @@ define(["js/Dialog"], function(Dialog) {
             while (i < $from.children("td")
                    .length) {
                 $from.children("td")
-                    .last()
-                    .remove();
+                .last()
+                .remove();
                 i++;
             }
 
             this.find(".dlg-picked")
-                .removeClass("dlg-picked");
+            .removeClass("dlg-picked");
         }
     }
     return PickDialog;

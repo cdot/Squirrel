@@ -42,12 +42,12 @@ define(["jquery", "jquery-ui", "js/jq/icon_button"], function() {
                 .detach()
                 .insertBefore($container)
                 .prepend($button)
-                .on("click", handleTap);
+                .on($.getTapEvent ? $.getTapEvent() : "click", handleTap);
 
             if ($title.length === 0) {
                 $button
-                    .insertBefore($container)
-                    .on("click", handleTap);
+                .insertBefore($container)
+                .on($.getTapEvent ? $.getTapEvent() : "click", handleTap);
             }
 
             $container.data("twisted-button", $button);
@@ -59,20 +59,20 @@ define(["jquery", "jquery-ui", "js/jq/icon_button"], function() {
             let icon = this.element.data("close") ||
                 "ui-icon-circle-minus";
             this.element
-                .removeClass("twisted-shut")
-                .show()
-                .data("twisted-button")
-                .icon_button("option", "icon", icon)
+            .removeClass("twisted-shut")
+            .show()
+            .data("twisted-button")
+            .icon_button("option", "icon", icon)
         },
 
         close: function () {
             let icon = this.element.data("open") ||
                 "ui-icon-circle-plus";
             this.element
-                .addClass("twisted-shut")
-                .hide()
-                .data("twisted-button")
-                .icon_button("option", "icon", icon);
+            .addClass("twisted-shut")
+            .hide()
+            .data("twisted-button")
+            .icon_button("option", "icon", icon);
         }
     });
 });

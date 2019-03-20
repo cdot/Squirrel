@@ -18,7 +18,8 @@ define(["js/Dialog"], function(Dialog) {
             let self = this;
 
             return Dialog.open("alert", {
-                title: self.tx("Loading")
+                title: self.tx("Loading"),
+                alert: ""
             })
             .then((progress) => {
                 let datum;

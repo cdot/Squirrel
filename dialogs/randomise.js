@@ -26,7 +26,7 @@ define(["js/Dialog", "js/Utils", "js/Hoard"], function(Dialog, Utils, Hoard) {
             this.control("reset").toggle(dlg_l !== DEFAULT_RANDOM_LEN || dlg_c !== DEFAULT_RANDOM_CHS);
 
             this.control("again")
-                .trigger(this.tapEvent());
+                .trigger(Dialog.tapEvent());
         }
 
         reset_constraints() {
@@ -39,7 +39,7 @@ define(["js/Dialog", "js/Utils", "js/Hoard"], function(Dialog, Utils, Hoard) {
             let self = this;
 
             this.control("again")
-                .on(this.tapEvent(), function () {
+                .on(Dialog.tapEvent(), function () {
                     self.control("idea")
                         .text(Utils.generatePassword({
                             length: self.control("len").val(),
@@ -48,7 +48,7 @@ define(["js/Dialog", "js/Utils", "js/Hoard"], function(Dialog, Utils, Hoard) {
                     return false;
                 });
             this.control("use")
-                .on(this.tapEvent(), function () {
+                .on(Dialog.tapEvent(), function () {
                     self.close();
                     self.options.app.playAction(Hoard.new_action({
                         type: "E",
@@ -66,7 +66,7 @@ define(["js/Dialog", "js/Utils", "js/Hoard"], function(Dialog, Utils, Hoard) {
                     self.constraints_changed();
                 });
             this.control("remember")
-                .on(this.tapEvent(), function () {
+                .on(Dialog.tapEvent(), function () {
                     let c = self.control("len").val() + ";" +
                         self.control("chs").val();
                     self.options.app.playAction(Hoard.new_action({
@@ -77,7 +77,7 @@ define(["js/Dialog", "js/Utils", "js/Hoard"], function(Dialog, Utils, Hoard) {
                     self.constraints_changed();
                 });
             this.control("reset")
-                .on(this.tapEvent(), function () {
+                .on(Dialog.tapEvent(), function () {
                     self.reset_constraints();
                 });
         }
@@ -95,7 +95,7 @@ define(["js/Dialog", "js/Utils", "js/Hoard"], function(Dialog, Utils, Hoard) {
 
             //this.control("path").text(path.join("↘"));
             this.control("key").text(my_key);
-            this.control("again").trigger(this.tapEvent());
+            this.control("again").trigger(Dialog.tapEvent());
             this.control("remember").hide();
 
             this.constraints_changed();

@@ -23,7 +23,7 @@ define(["js/Dialog"], function(Dialog) {
             if (this.options.title)
                 this.$dlg.dialog("option", "title", this.options.title);
 
-             if (this.options.alert)
+            if (this.options.alert)
                 this.add(this.options.alert);
         }
 

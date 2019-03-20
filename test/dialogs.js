@@ -138,9 +138,13 @@ define(["js/Dialog", "js/Translator", "js/LocalStorageStore", "js/Hoard", "js/Tr
         test_app.cloud.store.option("needs_image", true);
 
         $("#node")
-            .data("key", "spoon")
-            .data("value",TESTR)
-            .tree();
+        .data("key", "spoon")
+        .data("value",TESTR)
+        .data("path", ["A", "B", "C" ])
+        .tree({ path: ["A", "B", "C" ] });
+
+        $("#node").data("alarm", { time: new Date("2020-02-02").getTime() });
+
         for (let i in list) {
             let name = list[i];
             let $button = $("<button>" + name + " </button>");

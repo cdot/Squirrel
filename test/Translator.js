@@ -56,7 +56,7 @@ requirejs(["js/Translator", "test/TestRunner"], function(Translator, TestRunner)
 
     tr.addTest("Works in an English DOM", function() {
         let TX = Translator.instance({url:server_url});
-        var en = '<div class="TX_html">Stupid</div>';
+        let en = '<div class="TX_html">Stupid</div>';
         document.body.innerHTML = en;
         return TX.language("en", document)
         .then(() => {
@@ -68,8 +68,8 @@ requirejs(["js/Translator", "test/TestRunner"], function(Translator, TestRunner)
         let TX = Translator.instance({
             translations: TRANSLATIONS
         });
-        var en = '<div class="TX_title TX_text" title="Fat">Skinny</div>';
-        var pc = '<div class="TX_title TX_text" title="Stocky">Slim</div>'
+        let en = '<div class="TX_title TX_text" title="Fat">Skinny</div>';
+        let pc = '<div class="TX_title TX_text" title="Stocky">Slim</div>'
         document.body.innerHTML = en;
         return TX.language("pc", document)
         .then(() => {
@@ -81,8 +81,8 @@ requirejs(["js/Translator", "test/TestRunner"], function(Translator, TestRunner)
         let TX = Translator.instance({
             translations: TRANSLATIONS
         });
-        var en = '<div class="TX_html"><em>Stupid</em></div>';
-        var pc = '<div class="TX_html"><a name="silly">Twit</a></div>'
+        let en = '<div class="TX_html"><em>Stupid</em></div>';
+        let pc = '<div class="TX_html"><a name="silly">Twit</a></div>'
         document.body.innerHTML = en;
         return TX.language("pc", document)
         .then(() => {
@@ -92,9 +92,9 @@ requirejs(["js/Translator", "test/TestRunner"], function(Translator, TestRunner)
 
     tr.addTest("Can change language", function() {
         let TX = Translator.instance({url:server_url});
-        var en = '<div class="TX_title TX_text" title="Add">Length</div>';
-        var fr = '<div class="TX_title TX_text" title="Ajouter">Longueur</div>'
-        var de = '<div class="TX_title TX_text" title="Hinzufügen">Länge</div>'
+        let en = '<div class="TX_title TX_text" title="Add">Length</div>';
+        let fr = '<div class="TX_title TX_text" title="Ajouter">Longueur</div>'
+        let de = '<div class="TX_title TX_text" title="Hinzufügen">Länge</div>'
         document.body.innerHTML = en;
         return TX
             .language("fr", document)

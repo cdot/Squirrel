@@ -202,17 +202,17 @@ define(["js/Translator", "jquery", "jquery-ui", "js/jq/icon_button", "js/jq/twis
 
             // Add handler to default OK control
             this.control("ok", true)
-                .on(this.tapEvent(), function () {
-                    if (self.ok())
-                        self.close();
-                    return false;
-                });
+            .on(Dialog.tapEvent(), function () {
+                if (self.ok())
+                    self.close();
+                return false;
+            });
 
             this.control("cancel", true)
-                .on(this.tapEvent(), function () {
-                    self.close();
-                    return false;
-                });
+            .on(Dialog.tapEvent(), function () {
+                self.close();
+                return false;
+            });
 
             this.$dlg.addClass("dlg-initialised");
         }
@@ -254,8 +254,10 @@ define(["js/Translator", "jquery", "jquery-ui", "js/jq/icon_button", "js/jq/twis
          */
         control(key, mayBeMissing) {
             let $el = this.$dlg.find("[data-id='" + key + "']");
-            if (this.debug && $el.length === 0 && !mayBeMissing)
+            if (this.debug && $el.length === 0 && !mayBeMissing) {
+                this.debug("Unknown control", key);
                 throw new Error("Unknown control " + key);
+            }
             return $el;
         }
 
@@ -272,7 +274,7 @@ define(["js/Translator", "jquery", "jquery-ui", "js/jq/icon_button", "js/jq/twis
          * Service for subclasses.
          * Get the tap event
          */
-        tapEvent() {
+        static tapEvent() {
             return $.getTapEvent ? $.getTapEvent() : "click";
         }
 

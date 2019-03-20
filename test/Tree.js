@@ -119,7 +119,7 @@ requirejs(deps, function(Utils, Hoard, Translator, Tree, TestRunner) {
 
     tr.addTest("should play_actions into empty hoard", function() {
         // Reconstruct a cache from an actions list in an empty hoard
-        var undi = 0;
+        let undi = 0;
         for (let i in actions) {
             let e = actions[i];
 

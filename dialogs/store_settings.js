@@ -45,10 +45,10 @@ define(["js/Dialog", "js/Utils", "js/jq/template"], function(Dialog, Utils) {
                 let w = img.naturalWidth;
                 img.height = 100;
                 self.control("image_message")
-                    .show()
-                    .template("pick", "xbyy")
-                    .template("expand", w, h);
-             });
+                .show()
+                .template("pick", "xbyy")
+                .template("expand", w, h);
+            });
         }
 
         changeImage() {
@@ -61,16 +61,16 @@ define(["js/Dialog", "js/Utils", "js/jq/template"], function(Dialog, Utils) {
                     return;
                 let $img = this.control("steg_image");
                 $img.attr("src", data)
-                    .off("load")
-                    .on("load", () => {
-                        self.newImage($img[0]);
-                    });
+                .off("load")
+                .on("load", () => {
+                    self.newImage($img[0]);
+                });
             })
             .catch((e) => {
                 this.control("image_message")
-                    .show()
-                    .template("pick", "cui")
-                    .template("expand", e);
+                .show()
+                .template("pick", "cui")
+                .template("expand", e);
             });
         }
 
@@ -80,23 +80,23 @@ define(["js/Dialog", "js/Utils", "js/jq/template"], function(Dialog, Utils) {
             this.find(".template").template();
 
             this.control("image_file").on("change", function () {
-                    self.changeImage();
-                });
+                self.changeImage();
+            });
 
             this.control("steg_image").attr(
                 "src", requirejs.toUrl("images/GCHQ.png"));
 
             this.control("path")
-                .on("keyup", function () {
-                    if (self.control("path").val() === "") {
-                        self.control("mnbe").show();
-                        return false;
-                    }
-                    return true;
-                })
-                .on("change", function () {
-                    self.control("ok").trigger(self.tapEvent());
-                });
+            .on("keyup", function () {
+                if (self.control("path").val() === "") {
+                    self.control("mnbe").show();
+                    return false;
+                }
+                return true;
+            })
+            .on("change", function () {
+                self.control("ok").trigger(Dialog.tapEvent());
+            });
         }
 
         ok() {

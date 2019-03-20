@@ -24,7 +24,7 @@ var cloud_data = {
 	    path: [ "Fine-dining", "Caviar" ]
 	}
     ],
-    cache: null,
+    tree: null,
     version: 1
 };
 
@@ -41,7 +41,7 @@ var client_data = {
 	    path: ["Fine-dining", "Truffles" ],
             data: "Fungi"
 	}],
-    cache: {
+    tree: {
 	data: {
 	    "Fine-dining": {
 		time:new Date("1 Jan 2000").getTime(),
@@ -77,9 +77,9 @@ requirejs(["js/Hoard", "test/TestRunner"], function(Hoard, TestRunner) {
     let assert = tr.assert;
 
     tr.addTest('should make with data and string', function() {
-        var h = new Hoard({name: "Test1", data: cloud_data});
+        let h = new Hoard({data: cloud_data});
 	assert.equal(h.actions[0].path[0], cloud_data.actions[0].path[0]);
-	h = new Hoard({name: "Test2", data: JSON.stringify(cloud_data)});
+	h = new Hoard({data: JSON.stringify(cloud_data)});
 	assert.equal(h.actions[0].path[0], cloud_data.actions[0].path[0]);
         assert.equal(client_data.actions.length, client_size);
         assert.equal(cloud_data.actions.length, cloud_size);
@@ -87,12 +87,12 @@ requirejs(["js/Hoard", "test/TestRunner"], function(Hoard, TestRunner) {
 
     tr.addTest("should play_actions into empty hoard", function() {
 	// Reconstruct a cache from an actions list in an empty hoard
-        let h = new Hoard({name: "Test1"});
+        let h = new Hoard({});
 	return h.play_actions(cloud_data.actions, (r) => {
             assert(r.event);
             assert(!r.conflict);
         }).then(() => {
-	    assert.deepEqual(h.cache, {
+	    assert.deepEqual(h.tree, {
 	        data:{
 		    "Fine-dining":{
 		        time:new Date("1 Jan 2002").getTime(),
@@ -104,7 +104,7 @@ requirejs(["js/Hoard", "test/TestRunner"], function(Hoard, TestRunner) {
 		        }
 		    }
 	        },
-	        "time": h.cache.time
+	        "time": h.tree.time
 	    });
 	    assert.equal(h.actions.length, 0);
             assert.equal(client_data.actions.length, client_size);
@@ -114,13 +114,13 @@ requirejs(["js/Hoard", "test/TestRunner"], function(Hoard, TestRunner) {
 
     tr.addTest("should play_actions into populated hoard", function() {
 	// Play the cloud action set into a populated client hoard
-	var h = new Hoard({name: "Test1", data: client_data});
-	assert(h.cache.data["Fine-dining"].data.Truffles);
+	var h = new Hoard({data: client_data});
+	assert(h.tree.data["Fine-dining"].data.Truffles);
 	return h.play_actions(cloud_data.actions, (r) => {
             assert(r.event);
             assert(!r.conflict);
         }).then(() => {
-	    assert.deepEqual(h.cache, {
+	    assert.deepEqual(h.tree, {
 	        data:{
 		    "Fine-dining":{
 		        time:new Date("1 Jan 2002").getTime(),
@@ -136,7 +136,7 @@ requirejs(["js/Hoard", "test/TestRunner"], function(Hoard, TestRunner) {
 		        }
 		    }
 	        },
-	        time: h.cache.time
+	        time: h.tree.time
 	    });
             assert.equal(client_data.actions.length, client_size);
             assert.equal(cloud_data.actions.length, cloud_size);
@@ -144,7 +144,7 @@ requirejs(["js/Hoard", "test/TestRunner"], function(Hoard, TestRunner) {
     });
 
     tr.addTest('should detect zero path', function() {
-        var h = new Hoard({name:"Test1"});
+        let h = new Hoard({});
 	return h.play_action({
 	    type: "N",
 	    time: new Date("1 Jan 2004").getTime(),
@@ -158,7 +158,7 @@ requirejs(["js/Hoard", "test/TestRunner"], function(Hoard, TestRunner) {
     });
 
     tr.addTest('should detect no parent', function() {
-        var h = new Hoard({name:"Test1"});
+        let h = new Hoard({});
 	return h.play_actions(cloud_data.actions, (r) => {
             assert(r.event);
             assert(!r.conflict);
@@ -170,38 +170,30 @@ requirejs(["js/Hoard", "test/TestRunner"], function(Hoard, TestRunner) {
 	    });
         }).then((r) => {
 	    assert.equal(r.conflict,
-                         "Cannot create 'Junk↘Burger': Parent folder not found");
+                         "Cannot create 'Junk↘Burger': Node not found");
             assert.equal(client_data.actions.length, client_size);
             assert.equal(cloud_data.actions.length, cloud_size);
         });
     });
 
-    tr.addTest('should detect already existing', function() {
-        var h = new Hoard({name:"Test1"});
+    tr.addTest('should detect no such node', function() {
+        let h = new Hoard({});
 
 	// No cache, so promise should be resolved will be called
-	return h.play_action(cloud_data.actions[0])
-	.then((e) => {
-		assert.equal(cloud_data.actions[0], e.event);
-	    })
-        .then(() => {
-                // Cache now there, should trip when re-adding
-	        return h.play_action(cloud_data.actions[0]);
-            }).then((c) => {
-                assert.equal(
-                    c.conflict,
-                    "Cannot create 'Fine-dining': It already exists @"
-                        + new Date("1 Jan 2000"));
-                assert.deepEqual(c.event, cloud_data.actions[0]);
-                assert.equal(client_data.actions.length, client_size);
-                assert.equal(cloud_data.actions.length, cloud_size);
-            });
+	return h.play_action({
+            type: "D",
+            path: ["Fine-dining", "La Gavroche"]
+        }).then((c) => {
+            assert.equal(
+                c.conflict,
+                "Cannot delete 'Fine-dining↘La Gavroche': Node not found");
+        });
     });
 
     tr.addTest('should detect no such node', function() {
-        var h = new Hoard({name:"Test1", debug: console.debug});
+        let h = new Hoard({debug: console.debug});
 
-        var kfc = {
+        let kfc = {
 	    type: "E",
 	    time: new Date("1 Jan 2004").getTime(),
 	    path: ["Fine-dining", "Doner"]
@@ -222,7 +214,7 @@ requirejs(["js/Hoard", "test/TestRunner"], function(Hoard, TestRunner) {
     });
 
     tr.addTest('should allow rename', function() {
-        var h = new Hoard({name:"Test1"});
+        let h = new Hoard({});
 	var listened = 0;
 	return h.play_actions(cloud_data.actions, (r) => {
             assert(r.event);
@@ -242,7 +234,7 @@ requirejs(["js/Hoard", "test/TestRunner"], function(Hoard, TestRunner) {
     });
 
     tr.addTest('should merge action streams', function() {
-        var cloud = new Hoard({name:"Cloud"});
+        let cloud = new Hoard({});
         // Initial action stream is empty
         assert.equal(cloud.merge_actions(cloud_data.actions), 2);
         assert.deepEqual(cloud.actions, cloud_data.actions);
@@ -262,7 +254,7 @@ requirejs(["js/Hoard", "test/TestRunner"], function(Hoard, TestRunner) {
             ]);
 
         // A merge the other way should work the same
-        var client = new Hoard({name: "Client"});
+        let client = new Hoard({});
         assert.equal(client.merge_actions(client_data.actions), 2);
 
         assert.equal(client.merge_actions(cloud_data.actions), 1);
@@ -307,7 +299,7 @@ requirejs(["js/Hoard", "test/TestRunner"], function(Hoard, TestRunner) {
 	        path: [ "Fine-dining", "Caviare", "Beluga" ],
 	        time: new Date("2003-01-01Z").getTime(),
                 ring_expected: new Date("2003-04-11Z"),
-                data: 100
+                data: { time: new Date("2003-04-11Z") }
             },
             {
                 type: "A",
@@ -316,7 +308,7 @@ requirejs(["js/Hoard", "test/TestRunner"], function(Hoard, TestRunner) {
                 data: 1000000
             }
         ];
-        var cloud = new Hoard({name:"Cloud"});
+        let cloud = new Hoard({});
         return cloud.play_actions(actions, (r) => {
             assert(r.event);
             assert(!r.conflict);
@@ -343,6 +335,137 @@ requirejs(["js/Hoard", "test/TestRunner"], function(Hoard, TestRunner) {
             }
         });
     });
+
+    tr.addTest("push/pop actions and get_node", function() {
+        const actions = [
+            {
+	        type: "N",
+	        time: new Date("2000-01-01Z").getTime(),
+	        path: ["A"]
+            },
+            {
+	        type: "N",
+	        time: new Date("2001-07-01Z").getTime(),
+	        path: [ "A", "A" ]
+            },
+            {
+	        type: "N",
+	        time: new Date("2002-01-01Z").getTime(),
+	        path: [ "A", "B" ]
+            },
+            {
+	        type: "N",
+	        time: new Date("2002-01-01Z").getTime(),
+	        path: [ "A", "C" ]
+            },
+            {
+                type: "N",
+	        path: [ "A", "B", "C" ],
+	        time: new Date("2003-01-01Z").getTime()
+            },
+            {
+	        type: "N",
+	        time: new Date("2002-01-02Z").getTime(),
+	        path: ["A", "C"]
+            },
+        ];
+        let cloud = new Hoard({});
+        return cloud.play_actions(actions, (r) => {
+            assert(r.event);
+            assert(!r.conflict); // no conflict on duplicate node create
+        }).then(() => {
+            cloud.push_action({
+	        type: "N",
+	        time: new Date("2001-07-01Z").getTime(),
+	        path: [ "A", "A" ]
+            });
+            let n = cloud.get_node(["A", "B", "C"]);
+            assert.equal(n.time, new Date("2003-01-01Z").getTime());
+            n = cloud.get_node(["A", "A"]);
+            assert.equal(n.time, new Date("2001-07-01Z").getTime());
+            n = cloud.get_node(["A", "B", "D"]);
+            assert.isNull(n);
+        });
+    });
+
+    tr.addTest("actions from tree", function() {
+
+        const actions = [
+            {
+	        type: "N",
+	        time: 100,
+	        path: ["Fine-dining"]
+            },
+            {
+	        type: "A",
+	        time: 200,
+                data: 100000,
+	        path: ["Fine-dining"]
+            },
+            {
+	        type: "N",
+	        time: 300,
+	        path: [ "Fine-dining", "Caviare" ]
+            },
+            {
+	        type: "N",
+	        time: 400,
+	        path: [ "Fine-dining", "Caviare", "Beluga" ],
+                data: "£6.70 per gram"
+            },
+            {
+                type: "A",
+	        path: [ "Fine-dining", "Caviare", "Beluga" ],
+	        time: 500,
+                data: 100
+            },
+            {
+                type: "A",
+	        path: [ "Fine-dining", "Caviare" ],
+	        time: 600,
+                data: 11111
+            },
+            {
+	        type: "X",
+	        time: 300,
+	        path: [ "Fine-dining", "Caviare", "Beluga" ],
+                data: "32;A-Z;0-9"
+            },
+        ];
+        let cloud = new Hoard({});
+        let acts = [];
+        return cloud.play_actions(actions, (r) => {
+            assert(r.event);
+            assert(!r.conflict); // no conflict on duplicate node create
+        }).then(() => {
+            return cloud.actions_from_tree(cloud.tree, (a) => {
+                acts.push(a);
+                return Promise.resolve();
+            });
+        }).then(() => {
+            assert.deepEqual(acts, [
+                { type: 'N', path: [ 'Fine-dining' ],
+                  time: 300 }, // creation of 'Caviare'
+                { type: 'N', path: [ 'Fine-dining', 'Caviare' ],
+                  time: 600 }, // alarm
+                { type: 'N', path: [ 'Fine-dining', 'Caviare', 'Beluga' ],
+                  time: 601, // create time before parent
+                  data: '£6.70 per gram' },
+                { type: 'A', path: [ 'Fine-dining' ],
+                  time: 300, // creation of 'Caviare'
+                  data: 100000 },
+                { type: 'A', path: [ 'Fine-dining', 'Caviare' ],
+                  time: 600,
+                  data: 11111 },
+                { type: 'A', path: [ 'Fine-dining', 'Caviare', 'Beluga' ],
+                  time: 601,
+                  data: 100 },
+                { type: 'X', path: [ 'Fine-dining', 'Caviare', 'Beluga' ],
+                  time: 601,
+                  data: '32;A-Z;0-9' } ]);
+        });
+    });
+    //    JSON
 
     tr.run();
 });
