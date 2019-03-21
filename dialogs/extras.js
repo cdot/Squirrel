@@ -6,7 +6,7 @@
  * Options:
  * app (required)
  */
-define(["js/Dialog", "js/Translator", "js/Tree", "cookie", "js/jq/styling"], function(Dialog, Translator, Tree, Cookies) {
+define(["js/Dialog", "js/Translator", "js/Tree", "js-cookie", "js/jq/styling"], function(Dialog, Translator, Tree, Cookies) {
 
     class ExtrasDialog extends Dialog {
 
@@ -94,7 +94,7 @@ define(["js/Dialog", "js/Translator", "js/Tree", "cookie", "js/jq/styling"], fun
             .on("change", function () {
                 let TX = Translator.instance();
                 let fresh = self.control("language").val();
-                TX.language(fresh);
+                TX.language(fresh, document);
             });
         }
 

@@ -11,7 +11,7 @@ requirejs.config({
     paths: {
         mocha: "//cdnjs.cloudflare.com/ajax/libs/mocha/6.0.2/mocha",
         chai: "//cdnjs.cloudflare.com/ajax/libs/chai/4.2.0/chai",
-        cookie: "//cdnjs.cloudflare.com/ajax/libs/js-cookie/2.2.0/js.cookie.min",
+        "js-cookie": "//cdnjs.cloudflare.com/ajax/libs/js-cookie/2.2.0/js.cookie.min",
         jquery: "//code.jquery.com/jquery-3.3.1",
         "jquery-ui": "//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui"
     }
@@ -118,20 +118,6 @@ define(["js/Dialog", "js/Translator", "js/LocalStorageStore", "js/Hoard", "js/Tr
         }
     };
 
-    let Cookies = {
-        // TODO: save a .rc
-        vals: {},
-        get: (k) => {
-            return Cookies.vals[k];
-        },
-        set: (k, v) => {
-            Cookies.vals[k] = v;
-        },
-        remove: (k) => {
-            delete Cookies.vals[k];
-        }
-    }
-
     return () => {
         Translator.instance({ url: "locale" }).language("en");
         // Fake the need for store_settings
@@ -155,7 +141,6 @@ define(["js/Dialog", "js/Translator", "js/LocalStorageStore", "js/Hoard", "js/Tr
                     Dialog.open(name, {
                         app: test_app,
                         $node: $("#node"),
-                        cookies: Cookies,
                         close: function() {
                             Dialog.open("alert", {
                                 alert: "Closed"

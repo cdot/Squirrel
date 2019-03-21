@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2017 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,jquery */
 
-define(["js/RGBA", "cookie", "jquery", "jquery-ui"], function(RGBA, Cookies) {
+define(["js/RGBA", "js-cookie", "jquery", "jquery-ui"], function(RGBA, Cookies) {
 
     /**
      * Plugin to manage custom styling for a UI theme

@@ -42,6 +42,17 @@ NODE_TESTS :=	AES.js \
 		Tree.js \
 		Utils.js
 
+BROWSER_TESTS := dialogs.html \
+		EncryptedStore.html \
+		HttpServerStore.html \
+		jquery_tests.html \
+		LocalStorageStore.html \
+		Steganographer.html \
+		StegaStore.html \
+		Tree.html \
+		Utils.html \
+		WebDAVStore.html
+
 # cannot test WebDAVStore.js from makefile, as it requires a webdav server.
 # Test it from the command-line thus:
 #
