@@ -70,7 +70,7 @@ requirejs(deps, function(StoreTester, express, basicAuth) {
     }
 
     config.then((cfg) => {
-        new StoreTester(["HttpServerStore"], console.debug).run(cfg)
+        new StoreTester(["HttpServerStore"]).run(cfg)
         .then(() => {
                 server.close();
             });

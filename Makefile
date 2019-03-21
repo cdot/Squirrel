@@ -27,8 +27,9 @@ CSS	:= $(shell cat index.html help.html | \
 		grep '<link class="compressable"' $^ | \
 		sed -e 's/.*href="//;s/[?"].*//g' )
 
-TESTS_JS     := AES.js \
+NODE_TESTS :=	AES.js \
 		EncryptedStore.js \
+		FileStore.js \
 		Hoard.js \
 		HttpServerStore.js \
 		icon_button.js \

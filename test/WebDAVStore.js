@@ -16,6 +16,6 @@ requirejs.config({
  * $T_pass.
  */
 requirejs(["test/StoreTester"], function(StoreTester) {
-    new StoreTester(["WebDAVStore"], console.debug).run();
+    new StoreTester(["WebDAVStore"]).run();
 });
 

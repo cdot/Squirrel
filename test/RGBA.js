@@ -203,7 +203,7 @@ requirejs(["js/Utils", "js/RGBA", "test/TestRunner"], function(Utils, RGBA, Test
             assert.equal(tm.complement, comp.toString());
             assert.equal(tm.inverse, inv.toString());
 
-            let comp = rgb.complement();
+            comp = rgb.complement();
             assert.equal(tm.complement, comp.toString());
 
             rgb.a = 0.5;

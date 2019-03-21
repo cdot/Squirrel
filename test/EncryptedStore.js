@@ -8,5 +8,5 @@ requirejs.config({
 });
 
 requirejs(["test/StoreTester"], function(StoreTester) {
-    new StoreTester([ "EncryptedStore", "LocalStorageStore" ], console.debug).run();
+    new StoreTester([ "EncryptedStore", "LocalStorageStore" ]).run();
 });

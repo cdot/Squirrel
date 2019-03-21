@@ -66,118 +66,113 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
             return p;
         }
 
+        getParams(config) {
+            let key;
+            
+            if (typeof global === "undefined") {
+                // Browser
+                config.inBrowser = true;
+                let up = Utils.parseURLParams(
+                    window.location.search.substring(1));
+                for (key in up)
+                    config[key] = up[key];
+            } else if (typeof process !== "undefined") {
+                // Node.js
+                config.inBrowser = false;
+                for (key in process.argv)
+                    config[key] = process.env[key];
+                for (key in process.argv) {
+                    let p = process.argv[key].split("=");
+                    config[p[0]] = p[1];
+                }
+            }
+            if (config.debug)
+                this.debug = console.debug;
+            return Promise.resolve(config);
+        }
+
         /**
+         * Transfer parameters into the store, as required.
          * config provides a baseline source of parameter values.
-         * node.js also allows environment variables to override this baseline.
-         * only parameters marked as "needs_" in the store options are passed
+         * parameters marked as "needs_" in the store options are passed
          * to the store. "net_user" and "net_pass" are used in the 401 handler
          * for node.js.
          */
-        analyseParams(config) {
+        configureStore(config) {
             let self = this;
             let store = self.store;
             let four01 = {};
-            if (!config)
-                config = {};
 
-            if (typeof global !== "undefined") {
-
-                if (self.debug) self.debug("node.js startup");
-
-                let remember = {};
-
-                let cli = {};
-                for (var i in process.argv) {
-                    let p = process.argv[i].split("=");
-                    cli[p[0]] = p[1];
+            for (let option in store.option()) {
+                if (/^needs_/.test(option)) {
+                    let key = option.replace(/^needs_/, "");
+                    let v = config[key];
+                    if (!config.inBrowser && typeof v === "undefined")
+                        throw "Require parameter " + key;
+                    if (self.debug) self.debug(option,key, "=", v);
+                    store.option(key, v);
                 }
-
-                for (let option in store.option()) {
-                    if (/^needs_/.test(option)) {
-                        let key = option.replace(/^needs_/, "");
-                        // CLI overrides env vars
-                        let v = cli[key];
-                        // Env vars override config
-                        if (typeof v === "undefined")
-                            v = process.env["T_" + key];
-                        // Config is last dicth
-                        if (typeof v === "undefined")
-                            v = config[key];
-                        if (typeof v === "undefined")
-                            throw "Require a value for "+key;
-                        if (self.debug) self.debug(option,key, "=", v);
-                        store.option(key, v);
-                    }
-                }
-                if (store.option("needs_url")) {
-                    for (let key in { net_user: 1, net_pass: 1 }) {
-                        let v = config[key];
-                        if (typeof v === "undefined")
-                            v = process.env["T_" + key];
-                        if (self.debug) self.debug(key, "=", v);
-                        four01[key] = v;
-                    }
-                }
-
-                // 401 handler, build credentials and pass back
-                store.option("network_login", function() {
-                    if (self.debug) self.debug("Called network_login",store.option());
-                    if (store.option("net_user") === four01.net_user
-                        && store.option("net_pass") === four01.net_pass) {
-                        // If we get here, this is a second pass through
-                        // this code. We can't improve on credentials, so
-                        // it's a fail.
-                        if (self.debug) self.debug("auth failed with "
-                                                   + store.option("net_user"));
-                        return Promise.reject();
-                    }
-                    store.option("net_user", four01.net_user);
-                    store.option("net_pass", four01.net_pass);
-                    return Promise.resolve();
-                });
-
-                return Promise.resolve();
-            } else {
-
-                if (self.debug) self.debug("Browser startup");
-
-                // Query params override config, and parts missing from
-                // config are prompted for
-                return new Promise(function(resolve, reject) {
-                    requirejs(["jquery"], resolve);
-                })
-                .then(() => {
-                    config = Utils.parseURLParams(window.location.search.substring(1));
-                    let needs = 0;
-                    for (let option in store.option()) {
-                        let v = config[option];
-                        if (/^needs_/.test(option)) {
-                            store.option(option, config[option]);
-                            let $div = $("<div>" + option + "</div>");
-                            let $input = $('<input/>');
-                            $input
-                            .val(config[option])
-                            .on("change", function() {
-                                store.option(option, $(this).val());
-                            });
-                            $("body").append($div);
-                            needs++;
-                        }
-                    }
-
-                    // Shouldn't need a 401 handler, the browser should take
-                    // care of it
-
-                    if (needs > 0) {
-                        let $run = $("<button>Run</button>");
-                        $button.on("click", function() {
-                            resolve();
-                        });
-                        $("body").append($run);
-                    } else
-                        resolve();
-                });
             }
+
+            if (store.option("needs_url")) {
+                for (let key in { net_user: 1, net_pass: 1 }) {
+                    let v = config[key];
+                    if (self.debug) self.debug(key, "=", v);
+                    four01[key] = v;
+                }
+            }
+
+            // 401 handler, build credentials and pass back
+            store.option("network_login", function() {
+                if (self.debug) self.debug("Called network_login",store.option());
+                if (store.option("net_user") === four01.net_user
+                    && store.option("net_pass") === four01.net_pass) {
+                    // If we get here, this is a second pass through
+                    // this code. We can't improve on credentials, so
+                    // it's a fail.
+                    if (self.debug) self.debug("auth failed with "
+                                               + store.option("net_user"));
+                    return Promise.reject();
+                }
+                store.option("net_user", four01.net_user);
+                store.option("net_pass", four01.net_pass);
+                return Promise.resolve();
+            });
+
+            if (!config.inBrowser)
+                return Promise.resolve();
+
+            // Build a UI to capture required parameters in the browser
+            return new Promise(function(resolve, reject) {
+                requirejs(["jquery"], resolve);
+            })
+            .then(() => {
+                let needs = 0;
+                for (let option in store.option()) {
+                    let v = config[option];
+                    if (/^needs_/.test(option)) {
+                        store.option(option, config[option]);
+                        let $div = $("<div>" + option + "</div>");
+                        let $input = $('<input/>');
+                        $input
+                        .val(config[option])
+                        .on("change", function() {
+                            store.option(option, $(this).val());
+                        });
+                        $("body").append($div);
+                        needs++;
+                    }
+                }
+
+                if (needs > 0) {
+                    let $run = $("<button>Run</button>");
+                    $button.on("click", function() {
+                        resolve();
+                    });
+                    $("body").append($run);
+                } else
+                    resolve();
+            });
         }
 
         makeTests() {
@@ -190,12 +185,13 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
                 a[0] = 69;
                 return store.write(test_path, a)
                 .then(function() {
-                        return store.read(test_path);
-                    })
+                    return store.read(test_path);
+                })
                 .then(function(ab) {
-                        assert.equal(ab.length, 1);
-                        assert.equal(Utils.Uint8ArrayToString(ab), String.fromCodePoint(69));
-                    });
+                    assert.equal(ab.length, 1);
+                    assert.equal(Utils.Uint8ArrayToString(ab),
+                                 String.fromCodePoint(69));
+                });
             });
 
             this.addTest("Write/Read 0 bytes", function() {
@@ -203,34 +199,34 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
                 let a = new Uint8Array(0);
                 return store.write(test_path, a)
                 .then(function () {
-                        return store.read(test_path);
-                    })
+                    return store.read(test_path);
+                })
                 .then(function(ab) {
-                        assert.equal(ab.byteLength, 0);
-                    });
+                    assert.equal(ab.byteLength, 0);
+                });
             });
 
             this.addTest("Read non-existant", function() {
                 let store = self.store;
                 return store.read("not/a/known/resource.dat")
                 .then(function(ab) {
-                        assert(false, "Non existant should not resolve");
-                    })
-                    .catch(function(se) {
-                        assert(se instanceof Serror, "" + se);
-                        assert(se.status === 404, "" + se);
-                    });
+                    assert(false, "Non existant should not resolve");
+                })
+                .catch(function(se) {
+                    assert(se instanceof Serror, "" + se);
+                    assert(se.status === 404, "" + se);
+                });
             });
 
             this.addTest("Write/Read string", function() {
                 let store = self.store;
                 return store.writes(test_path, TESTR)
                 .then(function () {
-                        return store.reads(test_path);
-                    })
+                    return store.reads(test_path);
+                })
                 .then(function(str) {
-                        assert.equal(str, TESTR);
-                    });
+                    assert.equal(str, TESTR);
+                });
             });
 
             this.addTest("Write/read binary", function() {
@@ -242,14 +238,14 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
                 //if (debug) debug("W:",block(a,214,220));
                 return store.write(test_path, a)
                 .then(function () {
-                        return store.read(test_path);
-                    })
+                    return store.read(test_path);
+                })
                 .then(function(a) {
-                        assert.equal(a.length, DATASIZE);
-                        //if (debug) debug("R:",block(a,214,220));
-                        for (let i = 0; i < DATASIZE; i++)
-                            assert.equal(a[i], ((i + 1) & 255), "Position " + i);
-                    });
+                    assert.equal(a.length, DATASIZE);
+                    //if (debug) debug("R:",block(a,214,220));
+                    for (let i = 0; i < DATASIZE; i++)
+                        assert.equal(a[i], ((i + 1) & 255), "Position " + i);
+                });
             });
 
             if (self.store.option("needs_url")) {
@@ -366,9 +362,13 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
         }
 
         run(params) {
-            return this.buildStore()
-            .then(() => {
-                return this.analyseParams(params);
+            params = params || {};
+            return this.getParams(params)
+            .then((config) => {
+                return this.buildStore()
+                .then(() => {
+                    return this.configureStore(config);
+                });
             })
             .then(() => {
                 return this.store.init();

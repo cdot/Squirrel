@@ -9,5 +9,5 @@ requirejs.config({
 });
 
 requirejs(["test/StoreTester"], function(StoreTester) {
-    new StoreTester([ "StegaStore", "LocalStorageStore" ], console.debug).run();
+    new StoreTester([ "StegaStore", "LocalStorageStore" ]).run();
 });

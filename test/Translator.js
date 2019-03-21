@@ -10,6 +10,19 @@ if (typeof module !== "undefined") {
 
     global.jQuery = require('jquery')(window);
     global.$ = jQuery;
+    global.Cookies = Cookies = {
+        // TODO: save a .rc
+        vals: {},
+        get: (k) => {
+            return Cookies.vals[k];
+        },
+        set: (k, v) => {
+            Cookies.vals[k] = v;
+        },
+        remove: (k) => {
+            delete Cookies.vals[k];
+        }
+    };
 }
 
 requirejs.config({

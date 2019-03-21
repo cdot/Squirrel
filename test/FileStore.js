@@ -16,6 +16,6 @@ requirejs.config({
  * $T_pass.
  */
 requirejs(["test/StoreTester"], function(StoreTester) {
-    new StoreTester(["FileStore"], console.debug).run();
+    new StoreTester(["FileStore"]).run();
 });
 

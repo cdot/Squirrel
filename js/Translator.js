@@ -1,6 +1,7 @@
 /*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,node */
 /* global XMLHttpRequest:true */
+/* global Cookies: true */
 
 /**
  * Translations module. Guesses the language to use from cookies, or
@@ -28,7 +29,7 @@
 if (typeof XMLHttpRequest === "undefined")
     XMLHttpRequest = require("xhr2");
 
-define(["js/Utils", "cookie"], function(Utils, Cookies) {
+define(["js/Utils"], function(Utils) {
 
     class Translator {
 
