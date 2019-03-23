@@ -5,38 +5,34 @@
  * app (required)
  */
 define(["js/Dialog"], function(Dialog) {
+
     class JSONDialog extends Dialog {
+
+        _parse() {
+            try {
+                this.parsed = JSON.parse(this.control("text").val());
+                this.control("messages").text("");
+                this.control("ok").icon_button("enable");
+                return true;
+            } catch (e) {
+                this.control("messages").html(
+                    this.tx("JSON could not be parsed:") + " " + e);
+                this.control("ok").icon_button("disable");
+                return false;
+            }
+        }
+        
         initialise() {
             let self = this;
+
             this.control("text")
-                .on("input", function () {
-                    self.control("ok").icon_button("enable");
-                });
+            .on("input", function () {
+                self._parse();
+            });
         }
 
         ok() {
-            let self = this;
-
-            return Dialog.open("alert", {
-                title: self.tx("Loading"),
-                alert: ""
-            })
-            .then((progress) => {
-                let datum;
-                try {
-                    datum = JSON.parse(this.control("text").val());
-                } catch (e) {
-                    progress.add({
-                        severity: "error",
-                        message: self.tx("JSON could not be parsed:")
-                            + " " + e
-                    })
-                    return false;
-                }
-                this.control("ok").icon_button("disable");
-                this.options.app.insert_data([], datum, progress);
-                return true;
-            });
+            return this.options.app.insert_data([], self.parsed, self);
         }
 
         open() {

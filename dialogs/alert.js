@@ -16,9 +16,7 @@ define(["js/Dialog"], function(Dialog) {
          * If p is undefined the dialog will be closed
          */
         open() {
-            let self = this;
-            //if (self.debug) self.debug(this.options.alert);
-            self.control("messages").empty();
+            this.control("messages").empty();
 
             if (this.options.title)
                 this.$dlg.dialog("option", "title", this.options.title);

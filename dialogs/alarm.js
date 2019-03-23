@@ -65,24 +65,22 @@ define(["js/Dialog", "js/Hoard", "js/jq/template", "jquery-ui"], function(Dialog
                 });
         }
 
-        // @Override
         ok() {
             let isEnabled = this.control("enabled").prop("checked");
             let pat = this.options.$node.tree("getPath");
+            let act;
             if (isEnabled)
-                this.options.app.playAction(Hoard.new_action({
+                act = Hoard.new_action({
                     type: "A", path: pat,
                     data: {
                         time: this.control("date")
                         .datepicker("getDate").getTime()
                     }
-                }));
+                });
             else if (this.wasEnabled)
-                this.options.app.playAction(Hoard.new_action({
-                    type: "C", path: pat
-                }));
-
-            return true;
+                act = Hoard.new_action({ type: "C", path: pat });
+            
+            return this.options.app.playAction(act);
         }
 
         // @Override

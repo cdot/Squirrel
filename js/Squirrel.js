@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,jquery */
 
-define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore", "js/EncryptedStore", "js/Translator", "js/Tree", "clipboard", "js-cookie", "js/jq/simulated_password", "js/jq/scroll_into_view", "js/jq/icon_button", "js/jq/styling", "js/jq/template", "js/jq/twisted", "jquery", "jquery-ui", "mobile-events", "contextmenu" ], function(Serror, Utils, Dialog, Hoard, LocalStorageStore, EncryptedStore, Translator, Tree, ClipboardJS, Cookies) {
+define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore", "js/EncryptedStore", "js/Translator", "js/Tree", "js-cookie", "js/ContextMenu", "js/jq/simulated_password", "js/jq/scroll_into_view", "js/jq/icon_button", "js/jq/styling", "js/jq/template", "js/jq/twisted", "jquery", "jquery-ui", "mobile-events" ], function(Serror, Utils, Dialog, Hoard, LocalStorageStore, EncryptedStore, Translator, Tree, Cookies, ContextMenu) {
     let TX = Translator.instance();
 
     /*
@@ -21,6 +21,8 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
     const IS_LOADED = "is loaded";
     // TX.tx("is empty")
     const IS_EMPTY = "is empty";
+
+    const CLIENT_PATH = "client";
 
     class Squirrel {
 
@@ -50,8 +52,6 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
                 self.options.store = "LocalStorageStore";
             }
 
-            self.clipboard = null;
-
             self.$DOMtree = null;
 
             // undo stack
@@ -59,17 +59,6 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
 
             // Pointer to tree widget at root of DOM tree
             //self.DOMtree;
-
-            // Node that is the target of a context menu operation
-            self.$menuTarget;
-
-            // For unknown reasons, we get a taphold event on mobile devices
-            // even when a taphold hasn't happened. So we have to selectively
-            // disable the context menu :-(
-            self.contextMenuDisables = 0;
-
-            // The user currently engaged with us
-            self.user = null;
 
             // pathname of the cloud store
             self.cloud_path = null;
@@ -252,9 +241,7 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
                     data[f] = self.client[f];
             }
 
-            let p = self.client.store.writes(
-                self.user,
-                JSON.stringify(data))
+            let p = self.client.store.writes(CLIENT_PATH, JSON.stringify(data))
                 .then(() => {
                     if (self.debug) self.debug("...client save OK");
                     $(".tree-modified")
@@ -339,8 +326,7 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
         /**
          * Public because it is used by the optimise dialog.
          * Promise to construct a new cloud hoard from data in the
-         * client. This will happen if the cloud is read and found to
-         * be empty or corrupt, but not if the read failed.
+         * client.
          */
         construct_new_cloud(progress) {
             let self = this;
@@ -351,6 +337,7 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
             .actions_from_tree(self.client.hoard.tree, (a) => {
                 // this:Hoard, a:Action, next:function
                 self.cloud.hoard.push_action(a, true);
+                return Promise.resolve();
             })
             .then(() => {
                 return self._update_stores(progress);
@@ -365,6 +352,8 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
          * There's a risk of a race condition here if the cloud is
          * updated while we are still updating the client. Some sort
          * of locking could be done, but strikes me as overkill.
+         * @param data the data tree for the hoard
+         * @param {Dialog} progress dialog
          */
         _cloud_store_reloaded_ok(data, progress) {
             let self = this;
@@ -375,16 +364,20 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
                 self.cloud.status = IS_LOADED;
                 p = Promise.resolve();
             } catch (e) {
-                // We'll get here if decryption failed....
+                // We'll get here if the JSON parse failed, but NOT if
+                // decryption failed.
                 if (self.debug) self.debug("Cloud hoard JSON parse failed: " + e.stack);
-                if (progress) progress.add({
-                    severity: "error",
-                    message: TX.tx("$1 hoard can't be read for update",
-                                   self.cloud.store.option("type"))
+                if (progress) progress.add([
+                    {
+                        severity: "warning",
+                        message: TX.tx("Cloud hoard can't be read for update")
+                    },
+                    TX.tx("Click OK to continue with the save and overwrite the cloud store")]);
+                p = progress.wait().then(() => {
+                    self.cloud.status = IS_EMPTY;
+                    self.cloud_ok = false;
+                    return self.construct_new_cloud(progress);
                 });
-                self.cloud.status = IS_EMPTY;
-                self.cloud_ok = false;
-                p = self.construct_new_cloud(progress);
             }
             return p.then(() => {
                 if (self.cloud.status === IS_LOADED) {
@@ -395,11 +388,12 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
                         function (e) {
                             // asynchronous listener
                             // this:Hoard, e:Action
-                            self.$DOMtree.tree("action",e);
+                            self.$DOMtree.tree("action", e);
                         });
                 }
-            }).then(() => {
-                // Only save if there area actually some changes
+            })
+            .then(() => {
+                // Only save if there are actually some changes
                 if (self.cloud.status !== IS_LOADED ||
                     self.client.hoard.actions.length !== 0) {
                     if (self.debug) self.debug("...update from cloud: " + self.cloud.status);
@@ -436,7 +430,7 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
                     return self._cloud_store_reloaded_ok(data, progress);
                 })
                 .catch((e) => {
-                    if (self.debug) self.debug("...cloud read failed " + e.stack);
+                    if (self.debug) self.debug("...cloud refresh failed " + e.stack);
                     if (progress) progress.add({
                         severity: "error",
                         message: TX.tx("Failed to refresh from $1: $2",
@@ -541,7 +535,7 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
                         message: c
                     });
                 });
-                Dialog.open("alert", {
+                return Dialog.confirm("alert", {
                     title: TX.tx("Conflicts Detected"),
                     alert: lerts
                 })
@@ -597,7 +591,7 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
                 self.cloud.hoard = new Hoard({data: data});
 
                 // Ready to merge from cloud hoard
-                return Promise.resolve(true);
+                return self._merge_from_cloud();
             })
             .catch((e) => {
                 let mess = [];
@@ -631,7 +625,9 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
                     title: TX.tx("Cloud store read failed"),
                     alert: mess
                 })
-                .then(false);
+                .then(() => {
+                    return Promise.resolve(false);
+                });
             });
         }
 
@@ -649,7 +645,7 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
             if (self.debug) self.debug('_load_client');
 
             $("#stage").text(TX.tx("Reading from client"));
-            return self.client.store.reads(self.user)
+            return self.client.store.reads(CLIENT_PATH)
             .then((str) => {
                 let data = JSON.parse(str);
                 self.cloud_path = data.cloud_path;
@@ -723,24 +719,23 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
          * 401 network login handler. Normally a 401 will be handled by
          * the browser. This is a "just in case".
          */
-        _network_login(role) {
+        _network_login(domain) {
             let self = this;
 
-            if (self.debug) self.debug(role, "network login");
+            if (self.debug) self.debug(domain, "network login");
 
             return Dialog.confirm("login", {
-                title: TX.tx("Network login for $1", role),
+                title: TX.tx("Network login for $1", TX.tx(domain)),
                 // Copy default user from the stores if there
-                user: self.user ||
-                    self.cloud.store.option("user") ||
-                    self.client.store.option("user")
+                user: self.cloud.store.option("user")
+                || self.client.store.option("user")
             }).then((dlg) => {
                 let user = dlg.control("user").val();
                 let pass = dlg.control("pass").val();
                 if (self.debug)
                     self.debug("Login prompt said user was " + user);
-                self[role].store.option("net_user", user);
-                self[role].store.option("net_pass", pass);
+                self[domain].store.option("net_user", user);
+                self[domain].store.option("net_pass", pass);
             });
         }
 
@@ -752,12 +747,11 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
          * overridden by any user information coming from the cloud
          * store.
          */
-        _init_client_store() {
+        _init_client() {
             let self = this;
-            if (self.debug) self.debug('_init_client_store');
+            if (self.debug) self.debug('_init_client');
 
             self.client.store = new LocalStorageStore({
-                role: "client",
                 debug: self.debug
             });
 
@@ -774,37 +768,52 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
             // initial user information, either from a network login
             // or from a service login. Seed the login dialog with one
             // of them.
-            let poss_user;
-            if (self.cloud.store)
-                poss_user = (self.cloud.store.option("user") ||
-                             self.cloud.store.option("net_user"));
-
-            $("#stage").text(TX.tx("Authentication"));
-            return Dialog.confirm("login", {
-                title: "User details",
-                user: poss_user
-            })
-            .then((dlg) => {
-                let user = dlg.control("user").val();
-                let pass = dlg.control("pass").val();
-
-                self.user = user;
-
-                // Propagate to the stores
-                self.client.store.option("user", user);
-                self.client.store.option("pass", pass);
-
-                if (self.cloud.store) {
-                    self.cloud.store.option("user", user);
-                    self.cloud.store.option("pass", pass);
+            return self.client.store.init({
+                network_login: () => {
+                    // TX.tx("client")
+                    return self._network_login("client");
                 }
+            })
+            .then(() => {
+                if (self.debug) self.debug("client store initialised");
 
-                return self.client.store.init({
-                    role: "client",
-                    network_login: () => {
-                        return self._network_login("client");
+                if (self.client.store.option("needs_pass") ||
+                    !self.client.store.option("user")) {
+
+                    let poss_user;
+                    if (self.cloud.store) {
+                        poss_user = self.cloud.store.option("user")
+                        || self.cloud.store.option("net_user");
                     }
-                });
+                    if (!poss_user)
+                        poss_user = self.client.store.option("user");
+
+                    if (self.debug) self.debug("store user may be", poss_user);
+
+                    // Need to confirm user/pass, which may have been
+                    // seeded from the store initialisation process
+                    $("#stage").text(TX.tx("Authentication"));
+                    return Dialog.confirm("login", {
+                        title: "User details",
+                        user: poss_user
+                    })
+                    .then((dlg) => {
+                        if (self.debug) self.debug("Login confirmed");
+
+                        let user = dlg.control("user").val();
+                        let pass = dlg.control("pass").val();
+
+                        // Propagate to the stores
+                        self.client.store.option("user", user);
+                        self.client.store.option("pass", pass);
+
+                        if (self.cloud.store) {
+                            self.cloud.store.option("user", user);
+                            self.cloud.store.option("pass", pass);
+                        }
+                    });
+                }
+                return Promise.resolve();
             })
             .then(() => {
                 if (self.debug) self.debug("Client store is ready");
@@ -820,9 +829,9 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
          * user information which can be used in determining the
          * encryption user for the client store.
          */
-        _init_cloud_store() {
+        _init_cloud() {
             let self = this;
-            if (self.debug) self.debug('_init_cloud_store');
+            if (self.debug) self.debug('_init_cloud');
             let store;
 
             let p = new Promise(function(res,rej) {
@@ -830,7 +839,6 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
                     ["js/" + self.options.store],
                     function(module) {
                         store = new module({
-                            role: "cloud",
                             debug: self.debug
                         });
                         res(store);
@@ -866,7 +874,7 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
             }
 
             return p.then(() => {
-                console.log("Init",store);
+                console.log("cloud store type is", store);
                 if (store.option("needs_url")) {
                     if (self.options.url) {
                         store.option("url", self.options.url);
@@ -883,16 +891,21 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
                     }
                 }
                 return store.init({
-                    role: "cloud",
                     network_login: () => {
+                        // TX.tx("cloud")
                         return self._network_login("cloud");
                     }
                 })
             })
             .then(() => {
                 self.cloud.store = store;
-                if (typeof self.cloud.store.option("user") !== "undefined")
-                    self.user = self.cloud.store.option("user");
+                let cluser = self.cloud.store.option("user");
+                if (cluser) {
+                    if (self.debug) self.debug(
+                        "cloud init has identified user", cluser);        
+                } else {
+                    console.log("cloud store initialised, no user known");
+                }
             })
             .catch((e) => {
                 return Dialog.confirm("alert", {
@@ -907,269 +920,6 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
             });
         }
 
-        // CONTEXT MENU
-
-        /**
-         * @private
-         * Handle context menu enable/disable
-         */
-        _context_menu(f) {
-            let self = this;
-            switch (f) {
-            case "enable":
-                if (self.contextMenuDisables > 0)
-                    self.contextMenuDisables--;
-                if (self.debug) self.debug("Context menu disables " +
-                                           self.contextMenuDisables);
-                if (self.contextMenuDisables <= 0)
-                    $("body").contextmenu("option", "autoTrigger", true);
-                break;
-            case "disable":
-                self.contextMenuDisables++;
-                if (self.debug) self.debug("Context menu disables " +
-                                           self.contextMenuDisables);
-                $("body").contextmenu("option", "autoTrigger", false);
-                break;
-            default:
-                return $("body").contextmenu(f);
-            }
-        }
-
-        /**
-         * @private
-         * Handle context menu open on a node
-         */
-        _before_menu_open(ui) {
-            let self = this;
-            if (self.contextMenuDisables > 0)
-                return false;
-
-            let $node = (ui.target.is(".tree-node")) ?
-                ui.target :
-                ui.target.closest(".tree-node");
-
-            let has_alarm = typeof $node.data("alarm") !== "undefined";
-            let is_leaf = $node.hasClass("tree-leaf");
-            let is_root = ui.target.closest(".tree-node")
-                .hasClass("tree-root");
-            let is_open = $node.hasClass("tree-node-is-open");
-            let $root = $("body");
-
-            if (self.debug) self.debug("beforeOpen contextmenu on",
-                                       $node.data("key"), is_leaf);
-
-            $root
-                .contextmenu("showEntry", "add_alarm", !has_alarm && !is_root)
-                .contextmenu("showEntry", "add_subtree",
-                             is_open && !is_leaf)
-                .contextmenu("showEntry", "add_value",
-                             is_open && !is_leaf && !is_root)
-                .contextmenu("showEntry", "copy_value", is_leaf)
-                .contextmenu("showEntry", "delete", !is_root)
-                .contextmenu("showEntry", "edit", is_leaf)
-                .contextmenu("showEntry", "insert_copy", !is_leaf && (typeof self.clipboard !== "undefined"))
-                .contextmenu("showEntry", "make_copy", !is_root && !is_leaf)
-                .contextmenu("showEntry", "pick_from", is_leaf)
-                .contextmenu("showEntry", "randomise", is_leaf)
-                .contextmenu("showEntry", "rename", !is_root);
-
-            self.$menuTarget = $node;
-        }
-
-        /**
-         * @private
-         * Handler for context menu items
-         */
-        _handle_menu_choice(ui) {
-            let self = this;
-            let $node = self.$menuTarget;
-
-            if (!$node) {
-                if (self.debug) self.debug("No node for contextmenu>" + ui.cmd);
-                return;
-            }
-
-            switch (ui.cmd) {
-            case "copy_value":
-                self.clipboard = $node.data("value");
-                break;
-
-            case "make_copy":
-                self.clipboard = JSON.stringify(self.client.hoard.get_node($node.tree("getPath")));
-                break;
-
-                /* Can't get it to work like this - would need an intermediate
-                   element that a Ctrl+V event happens on.
-                   case "paste":
-                   document.designMode = "on";
-                   $(window).on("paste", function(e) {
-	           let   systemPasteContent =
-                   e.clipboardData.getData("text/plain");
-                   });
-                   $("#pasteboard").focus();
-                   document.execCommand("Paste");
-                   break;
-                   /**/
-
-            case "insert_copy":
-                if (self.clipboard) {
-                    let data = JSON.parse(self.clipboard);
-                    Dialog.open("insert", {
-                        $node: $node,
-                        data: data
-                    });
-                }
-                break;
-
-            case "rename":
-                $node.tree("editKey");
-                break;
-
-            case "edit":
-                $node.tree("editValue");
-                break;
-
-            case "add_value":
-                Dialog.open("add", { $node: $node, is_value: true });
-                break;
-
-            case "add_subtree":
-                Dialog.open("add", { $node: $node, is_value: false });
-                break;
-
-            case "randomise":
-                Dialog.open("randomise", { $node: $node });
-                break;
-
-            case "add_alarm":
-                Dialog.open("alarm", { $node: $node });
-                break;
-
-            case "delete":
-                Dialog.open("delete", { $node: $node });
-                break;
-
-            case "pick_from":
-                Dialog.open("pick", { $node: $node });
-                break;
-
-            default:
-                throw new Error("ERROR: unrecognised command " + ui.cmd);
-            }
-        }
-
-        /**
-         * @private
-         * Construct context menu
-         */
-        _init_menus() {
-            let self = this;
-            let menu = {
-                delegate: ".tree-title",
-                menu: [
-                    {
-                        title: TX.tx("Copy value"),
-                        cmd: "copy_value",
-                        uiIcon: "squirrel-icon-copy squirrel-icon"
-                    },
-                    /* Can't get it to work
-                       {
-                       title: TX.tx("Paste"),
-                       cmd: "paste",
-                       uiIcon: "squirrel-icon-paste squirrel-icon"
-                       },
-                       /**/
-                    {
-                        title: TX.tx("Pick characters"),
-                        cmd: "pick_from",
-                        uiIcon: "squirrel-icon-pick squirrel-icon"
-                    },
-                    {
-                        title: TX.tx("Rename"),
-                        cmd: "rename",
-                        uiIcon: "squirrel-icon-edit squirrel-icon"
-                    },
-                    {
-                        title: TX.tx("Edit value"),
-                        cmd: "edit",
-                        uiIcon: "squirrel-icon-edit squirrel-icon"
-                    },
-                    {
-                        title: TX.tx("Add reminder"),
-                        cmd: "add_alarm",
-                        uiIcon: "squirrel-icon-alarm squirrel-icon"
-                    },
-                    {
-                        title: TX.tx("Generate new random value"),
-                        cmd: "randomise",
-                        uiIcon: "squirrel-icon-key squirrel-icon"
-                    },
-                    {
-                        title: TX.tx("Add new value"),
-                        cmd: "add_value",
-                        uiIcon: "squirrel-icon-add-value squirrel-icon"
-                    },
-                    {
-                        title: TX.tx("Add new folder"),
-                        cmd: "add_subtree",
-                        uiIcon: "squirrel-icon-add-folder squirrel-icon"
-                    },
-                    {
-                        title: TX.tx("Copy folder"),
-                        cmd: "make_copy",
-                        uiIcon: "squirrel-icon-copy squirrel-icon"
-                    },
-                    {
-                        title: TX.tx("Insert copy of folder"),
-                        cmd: "insert_copy",
-                        uiIcon: "squirrel-icon-paste squirrel-icon"
-                    },
-                    {
-                        title: TX.tx("Delete"),
-                        cmd: "delete",
-                        uiIcon: "squirrel-icon-delete squirrel-icon"
-                    }
-                ],
-                preventContextMenuForPopup: true,
-                preventSelect: true,
-                //taphold: true,
-                beforeOpen: function (e, ui) { self._before_menu_open(ui); },
-                select: function (e, ui) { self._handle_menu_choice(ui); }
-            };
-
-            $("body")
-                .contextmenu(menu);
-
-            self.valueCopyClipboard =
-                new ClipboardJS(".ui-contextmenu li[data-command='copy_value']", {
-                    text: function () {
-                        let $node = self.$menuTarget;
-                        if (self.debug) self.debug("clip val from: " +
-                                                   $node.data("key"));
-                        return $node.data("value");
-                    }
-                });
-
-        }
-
-        /**
-         * @private
-         * Construct clipboard
-         */
-        _init_clipboard() {
-            self.treeCopyClipboard =
-                new ClipboardJS(".ui-contextmenu li[data-command='make_copy']", {
-                    text: function () {
-                        let $node = self.$menuTarget;
-                        if (self.debug) self.debug("clip json from: " +
-                                                   $node.data("key"));
-                        let p = $node.tree("getPath");
-                        let n = self.client.hoard.get_node(p);
-                        return JSON.stringify(n);
-                    }
-                });
-        }
-
         /**
          * Event handler for "init_application" event
          * Promise to initialise application (new Squirrel(), effectively)
@@ -1178,20 +928,15 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
             let self = this;
             // Kick off by initialising the cloud store.
 
-            return self._init_cloud_store()
+            return self._init_cloud()
             .then(() => {
-                return self._init_client_store();
+                return self._init_client();
             })
             .then(() =>{
                 return self._load_client();
             })
             .then(() =>{
                 return self._load_cloud();
-            })
-            .then((merge) => {
-                if (merge)
-                    return self._merge_from_cloud();
-                return Promise.resolve();
             })
             .then(() => {
                 if (self.debug) self.debug('interacting');
@@ -1210,7 +955,7 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
                 $(document).trigger("update_save");
                 $(document).trigger("check_alarms");
 
-                $("#whoami").text(self.user);
+                $("#whoami").text(self.client.store.option("user"));
                 $("#unauthenticated").hide();
                 $("#authenticated").show();
 
@@ -1231,17 +976,16 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
 
             // Special keys in sort ordering. Currently only works for
             // English.
-            let sort_prio = [
-                "User", "Pass"
-            ];
+            // TODO: translation
+            let sort_prio = ["User", "Pass", "Email"];
 
             Tree.compareKeys = (a, b) => {
                 if (a === b)
                     return 0;
-                for (let i in self.sort_prio) {
-                    if (a === self.sort_prio[i])
+                for (let i in sort_prio) {
+                    if (a === sort_prio[i])
                         return -1;
-                    if (b === self.sort_prio[i])
+                    if (b === sort_prio[i])
                         return 1;
                 }
                 return (a < b) ? -1 : 1;
@@ -1250,13 +994,17 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
             Tree.playAction = (action) => {
                 return self.playAction(action);
             };
-            Tree.onOpenEditor = () => { self._context_menu("disable"); };
-            Tree.onCloseEditor = () => { self._context_menu("enable"); };
+            Tree.onOpenEditor = () => {
+                self.contextMenu.toggle(false);
+            };
+            Tree.onCloseEditor = () => {
+                self.contextMenu.toggle(true);
+            };
             Tree.onHoverIn = () => {
-                self._context_menu("close"); return false;
+                $("body").contextmenu("close"); return false;
             };
             Tree.onHoverOut = () => {
-                return self._context_menu("isOpen");
+                return $("body").contextmenu("isOpen");
             };
             Tree.hidingValues = () => {
                 return (Cookies.get("ui_hidevalues") === "on");
@@ -1288,7 +1036,8 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
                         title: "Saving",
                         alert: ""
                     }).then((progress) => {
-                        self._save_hoards(progress).then(() => {
+                        self._save_hoards(progress)
+                        .then(() => {
                             return self._save_client(progress);
                         });
                     });
@@ -1300,7 +1049,7 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
                 .hide()
                 .on(Dialog.tapEvent(), function ( /*evt*/ ) {
                     self.undo(function (mess) {
-                        Dialog.open("alert", {
+                        Dialog.confirm("alert", {
                             title: "Undo",
                             alert: {
                                 severity: "error",
@@ -1314,7 +1063,7 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
             $("#extras_button")
                 .icon_button()
                 .on(Dialog.tapEvent(), function ( /*evt*/ ) {
-                    Dialog.open("extras");
+                    Dialog.confirm("extras");
                 });
 
             $("#search_input")
@@ -1330,10 +1079,8 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
                                 .val());
                 });
 
-            self._init_menus();
-
-            self._init_clipboard();
-
+            self.contextMenu = new ContextMenu(self);
+            
             // Set up event handlers
             $(document)
                 .on("init_application", () => {
@@ -1348,19 +1095,18 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
 
             $.styling.reset();
 
-            self._handle_init_application();
+            $(document).trigger("init_application");
        }
 
         /**
-         * Perform a (manual) new tree node action
+         * Promise to perform a (manual) new tree node action
          */
         add_child_node($node, title, value) {
             let self = this;
-            let p = $node.tree("getPath");
-            p = p.concat(title);
+            let path = $node.tree("getPath").concat(title);
             let e = self.client.hoard.push_action(
                 Hoard.new_action(
-                    "N", p, Date.now(),
+                    "N", path, Date.now(),
                     (typeof value === "string") ? value : undefined));
 
             function newnode($newnode) {
@@ -1374,10 +1120,10 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
                 });
             }
 
-            self.client.hoard.play_action(e)
+            return self.client.hoard.play_action(e)
             .then((res) => {
                 if (res.conflict)
-                    Dialog.open("alert", {
+                    return Dialog.confirm("alert", {
                         alert: {
                             severity: "warning",
                             message: res.conflict
@@ -1412,7 +1158,7 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
                 try {
                     re = new RegExp(s, "i");
                 } catch (e) {
-                    Dialog.open("alert", {
+                    Dialog.confirm("alert", {
                         alert: {
                             severity: "error",
                             message: TX.tx("Error in search expression") +
@@ -1467,8 +1213,8 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
         }
 
         /**
-         * Insert data from a structure under the given path. Public because
-         * it is used by dialogs/json.js
+         * Promise to insert data from a structure under the given
+         * path. Public because it is used by dialogs/json.js
          * @param path path to the parent below which this data will be inserted
          * @param data hoard tree format data
          * @param progress dialog to add messages to
@@ -1476,7 +1222,7 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
         insert_data(path, data, progress) {
             let self = this;
 
-            self.client.hoard.actions_from_tree(
+            return self.client.hoard.actions_from_tree(
                 {
                     data: data
                 },

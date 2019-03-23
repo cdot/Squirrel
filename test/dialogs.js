@@ -20,20 +20,15 @@ requirejs.config({
 define(["js/Dialog", "js/Translator", "js/LocalStorageStore", "js/Hoard", "js/Tree", "jquery", "js/jq/simulated_password", "js/jq/icon_button"], function(Dialog, Translator, LocalStorageStore, Hoard) {
 
     let list = [
-        "about",
         "add",
         "alarm",
         "alert",
-        "chpw",
         "delete",
         "extras",
         "insert",
-        "json",
         "login",
-        "optimise",
         "pick",
-        "randomise",
-        "store_settings"
+        "randomise"
     ];
 
     let debug = console.debug;
@@ -53,15 +48,25 @@ define(["js/Dialog", "js/Translator", "js/LocalStorageStore", "js/Hoard", "js/Tr
             store: new LocalStorageStore(),
             hoard: new Hoard()
         },
-        add_child_node: function() { debug("add_child_node", arguments); },
-        trigger: function() { debug("trigger", arguments); },
-        insert_data: function() { debug("insert_data", arguments); },
-        playAction: function() { debug("playAction", arguments); },
-        theme: function() { debug("theme", arguments); },
-        autosave: function() { debug("autosave", arguments); },
-        zoom: function() { debug("zoom", arguments); },
+        add_child_node: function() {
+            debug("add_child_node", arguments);
+            return Promise.resolve();
+        },
+        insert_data: function() {
+            debug("insert_data", arguments);
+            return Promise.resolve();
+        },
+        playAction: function() {
+            debug("playAction", arguments);
+            return Promise.resolve();
+        },
         encryptionPass: function() { debug("encryptionPass", arguments); },
-        USE_STEGANOGRAPHY: true
+        get_store_settings: function() {
+            return Dialog.confirm("store_settings", {
+                needs_image: true,
+                path: "/path/to/cloud"
+            })
+        }
     };
 
     let login_title = "Login";
@@ -75,9 +80,19 @@ define(["js/Dialog", "js/Translator", "js/LocalStorageStore", "js/Hoard", "js/Tr
                 let user = dlg.control("user").val();
                 let pass = dlg.control("pass").val();
                 login_title = "Login " + user + ":" + pass;
-                Dialog.open("alert", {
+                Dialog.confirm("alert", {
                     alert: login_title
                 });
+            }).catch((dlg) => {
+                console.log("login aborted");
+            });
+        },
+        store_settings: function() {
+            Dialog.confirm("store_settings", {
+                needs_image: true,
+                path: "/this/is/a/path"
+            }).then((dlg) => {
+                console.debug("store_settings", dlg.wasOked());
             });
         },
         alert: function() {
@@ -113,7 +128,15 @@ define(["js/Dialog", "js/Translator", "js/LocalStorageStore", "js/Hoard", "js/Tr
                             severity: "notice",
                             message: "And a notice"
                         }]);
+                    return dlg;
                 })
+                .then((dlg) => {
+                    console.debug("Waiting for confirmation or cancel");
+                    return dlg.wait();
+                })
+                .then((dlg) => {
+                    console.debug("Closed", dlg.wasOked());
+                });
             });
         }
     };
@@ -138,14 +161,11 @@ define(["js/Dialog", "js/Translator", "js/LocalStorageStore", "js/Hoard", "js/Tr
                 if (specials[name])
                     specials[name]();
                 else {
-                    Dialog.open(name, {
+                    Dialog.confirm(name, {
                         app: test_app,
-                        $node: $("#node"),
-                        close: function() {
-                            Dialog.open("alert", {
-                                alert: "Closed"
-                            });
-                        }
+                        $node: $("#node")
+                    }).then((dlg) => {
+                        console.debug(name,dlg.wasOked());
                     });
                 }
             });

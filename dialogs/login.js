@@ -10,7 +10,7 @@ define(["js/Dialog", "js/jq/simulated_password"], function(Dialog) {
         initialise() {
             let self = this;
             let $pass = this.control("pass");
-            let $button = self.control("cancel");
+            let $button = self.control("ok");
 
             $pass.simulated_password();
 

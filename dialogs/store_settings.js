@@ -1,9 +1,5 @@
 /*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* global FileReader */
-/**
- * Options:
- * app (required)
- */
 
 define(["js/Dialog", "js/Utils", "js/jq/template"], function(Dialog, Utils) {
 
@@ -102,9 +98,9 @@ define(["js/Dialog", "js/Utils", "js/jq/template"], function(Dialog, Utils) {
         ok() {
             if (this.control("path").val() === "") {
                 this.control("mnbe").show();
-                return false;
+                return Promise.resolve(false);
             }
-            return true;
+            return Promise.resolve(true);
         }
 
         open() {

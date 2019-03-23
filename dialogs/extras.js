@@ -46,32 +46,27 @@ define(["js/Dialog", "js/Translator", "js/Tree", "js-cookie", "js/jq/styling"], 
 
             this.control("chpw")
             .on(Dialog.tapEvent(), function () {
-                self.close();
-                Dialog.open("chpw", self.options);
+                Dialog.confirm("chpw", self.options);
             });
 
             this.control("chss")
             .on(Dialog.tapEvent(), function () {
-                self.close();
                 self.options.app.get_store_settings(true);
             });
 
             this.control("theme")
             .on(Dialog.tapEvent(), function () {
-                self.close();
-                Dialog.open("theme", self.options);
+                Dialog.confirm("theme", self.options);
             });
 
             this.control("json")
             .on(Dialog.tapEvent(), function () {
-                self.close();
-                Dialog.open("json", self.options);
+                Dialog.confirm("json", self.options);
             });
 
             this.control("optimise")
             .on(Dialog.tapEvent(), function () {
-                self.close();
-                Dialog.open("optimise", self.options);
+                Dialog.confirm("optimise", self.options);
             });
 
             this.control("bigger")
@@ -86,8 +81,7 @@ define(["js/Dialog", "js/Translator", "js/Tree", "js-cookie", "js/jq/styling"], 
 
             this.control("about")
             .on(Dialog.tapEvent(), function () {
-                self.close();
-                Dialog.open("about", self.options);
+                Dialog.confirm("about", self.options);
             });
 
             this.control("language")

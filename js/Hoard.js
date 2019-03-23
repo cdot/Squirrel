@@ -251,15 +251,15 @@ define(["js/Translator"], function(Translator) {
                 e.time = Date.now();
 
             function conflict(e, mess) {
-                let s = TX.tx("Cannot ") + {
-                    A: TX.tx("add reminder to"),
-                    C: TX.tx("cancel reminder"),
-                    D: TX.tx("delete"),
-                    E: TX.tx("change value of"),
-                    M: TX.tx("move"),
-                    N: TX.tx("create"),
-                    R: TX.tx("rename"),
-                    X: TX.tx("constrain")
+                let s = {
+                    A: TX.tx("Cannot add reminder to"),
+                    C: TX.tx("Cannot cancel reminder"),
+                    D: TX.tx("Cannot delete"),
+                    E: TX.tx("Cannot change value of"),
+                    M: TX.tx("Cannot move"),
+                    N: TX.tx("Cannot create"),
+                    R: TX.tx("Cannot rename"),
+                    X: TX.tx("Cannot constrain")
                 }[e.type];
                 return Promise.resolve({
                     event: e,
@@ -289,7 +289,7 @@ define(["js/Translator"], function(Translator) {
                 if (node)
                     // This is not really an error, we can survive it
                     // easily enough
-                    //return conflict(e, TX.tx("It already exists") + " @" +
+                    //return conflict(e, "It already exists" + " @" +
                     //                new Date(node.time));
                     return Promise.resolve({ event: e });
 
@@ -494,7 +494,7 @@ define(["js/Translator"], function(Translator) {
             function _visit_nodes(node, pat, after) {
                 let promise = _visit_node(node, pat, after);
 
-                 if (typeof node.data === "object") {
+                if (typeof node.data === "object") {
                     for (let key in node.data) {
                         let p = pat.slice();
                         p.push(key);

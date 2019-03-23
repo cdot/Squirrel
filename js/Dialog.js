@@ -26,6 +26,57 @@ define(["js/Translator", "jquery", "jquery-ui", "js/jq/icon_button", "js/jq/twis
         }
 
         /**
+         * @param $dlg jQuery object for the dialog being constructed
+         * @param options options that will be passed on the the jQuery UI
+         * $.dialog() constructor. This class will use the 'debug' option
+         * which is a debug function.
+         */
+        constructor($dlg, options) {
+            let self = this;
+            this.debug = options.debug;
+            this.$dlg = $dlg;
+
+            // Default options
+            self.options = $.extend({}, options);
+
+            let jq_options = $.extend({
+                modal: true,
+                width: "auto",
+                autoOpen: false,
+                closeOnEscape: false,
+                open: function(/*event, ui*/) {
+                    // jqueryui.dialog open event
+
+                    // Lazy initialisation
+                    if (!$dlg.hasClass("dlg-initialised"))
+                        self._initialise();
+
+                    self._oked = false;
+                    self._resolve = undefined;
+                    self.open();
+                },
+                beforeClose: function() {
+                    if (self._resolve)
+                        self._resolve(self);
+                    return true;
+                }
+            }, options);
+
+            // On touch capable devices, position the dialog at the
+            // left top of the body by default. On other devices it
+            // will default to the centre.
+            if ($.isTouchCapable && $.isTouchCapable()
+                && !jq_options.position) {
+                jq_options.position = {
+                    my: "left top",
+                    at: "left top",
+                    of: $("body")
+                };
+            }
+            $dlg.dialog(jq_options);
+        }
+
+        /**
          * Return a promise to load and initialise the code for a dialog.
          * @param id the root name of the dialog. HTML will be loaded from
          * dialogs/<id>.html and js from dialogs/<id>.js. dialogs/ is found
@@ -105,10 +156,9 @@ define(["js/Translator", "jquery", "jquery-ui", "js/jq/icon_button", "js/jq/twis
          * @return a promise that will resolve to the Dialog object
          */
         static open(id, options) {
+            this.resolve = undefined;
             return Dialog.load(id, options)
             .then((dlg) => {
-                dlg.blocking = false;
-                dlg.$dlg.parent().find(".ui-dialog-titlebar>button").show();
                 dlg.options = $.extend(dlg.options, options);
                 dlg.$dlg.dialog("open");
                 return dlg;
@@ -118,75 +168,43 @@ define(["js/Translator", "jquery", "jquery-ui", "js/jq/icon_button", "js/jq/twis
         /**
          * Return a promise to load (if necessary) and open a blocking
          * dialog. The promise returned will not resolve until the dialog
-         * is explicitly closed.
+         * is explicitly closed. Most dialogs are of this type.
          * @return a promise that will resolve to the Dialog object when
          * the dialog is closed.
          */
         static confirm(id, options) {
-            return new Promise((resolve) => {
-                Dialog.load(id, options)
-                .then((dlg) => {
-                    dlg.blocking = true;
-                    dlg.$dlg.parent().find(".ui-dialog-titlebar>button").hide();
-                    dlg.$dlg.dialog("option", "close", () => {
-                        dlg.$dlg.dialog("option", "close", null);
-                        resolve(dlg);
-                    });
-                    dlg.options = $.extend(dlg.options, options);
-                    dlg.$dlg.dialog("open");
-                });
+            return Dialog.load(id, options)
+            .then((dlg) => {
+                dlg.options = $.extend(dlg.options, options);
+                dlg.$dlg.dialog("open");
+                return dlg.wait();
             });
         }
 
         /**
-         * @param $dlg jQuery object for the dialog being constructed
-         * @param options options that will be passed on the the jQuery UI
-         * $.dialog() constructor. This class will use the 'debug' option
-         * which is a debug function.
+         * Promise to wait for a dialog that was opened using Dialog.open to
+         * be closed (e.g.
+         * Dialog.open("dialog").then((dlg) => {
+         *    return dlg.wait();
+         * })
+         * .then((dlg) => { if (dlg.wasOked()) ... });
+         * @return a promise that will resolve to the Dialog object when
+         * the dialog is closed.
          */
-        constructor($dlg, options) {
+        wait() {
             let self = this;
-            this.debug = options.debug;
-            this.$dlg = $dlg;
+            //this.$dlg.parent().find(".ui-dialog-titlebar>button").hide();
+            return new Promise((resolve) => {
+                this._resolve = resolve;
+            });
+        }
 
-            // Default options
-            self.options = $.extend({}, options);
-
-            let bfc = options.beforeClose;
-            options.beforeClose = (e) => {
-                if (self.blocking)
-                    return true;
-                return bfc ? bfc(e) : true;
-            };
-
-            let jq_options = $.extend({
-                modal: true,
-                width: "auto",
-                autoOpen: false,
-                closeOnEscape: false,
-                open: function(/*event, ui*/) {
-                    // jqueryui.dialog open event
-
-                    // Lazy initialisation
-                    if (!$dlg.hasClass("dlg-initialised"))
-                        self._initialise();
-
-                    self.open();
-                }
-            }, options);
-
-            // On touch capable devices, position the dialog at the
-            // left top of the body by default. On other devices it
-            // will default to the centre.
-            if ($.isTouchCapable && $.isTouchCapable()
-                && !jq_options.position) {
-                jq_options.position = {
-                    my: "left top",
-                    at: "left top",
-                    of: $("body")
-                };
-            }
-            $dlg.dialog(jq_options);
+        /**
+         * Intended for use in promise resolutions, this indicates if
+         * the dialog was closed by an OK press, or cancelled.
+         */
+        wasOked() {
+            return this._oked;
         }
 
         /**
@@ -201,18 +219,24 @@ define(["js/Translator", "jquery", "jquery-ui", "js/jq/icon_button", "js/jq/twis
             this.find("button").icon_button();
 
             // Add handler to default OK control
-            this.control("ok", true)
-            .on(Dialog.tapEvent(), function () {
-                if (self.ok())
-                    self.close();
-                return false;
-            });
+            let $ok = this.control("ok", true);
+            if ($ok) {
+                $ok.on(Dialog.tapEvent(), function () {
+                    if (self.ok) {
+                        self.ok()
+                        .then(() => {
+                            self._oked = true;
+                            self.close();
+                        });
+                    }
+                });
+            }
 
-            this.control("cancel", true)
-            .on(Dialog.tapEvent(), function () {
-                self.close();
-                return false;
-            });
+            let $cancel = this.control("cancel", true);
+            if ($cancel)
+                $cancel.on(Dialog.tapEvent(), () => {
+                    self.close();
+                });
 
             this.$dlg.addClass("dlg-initialised");
         }
@@ -236,7 +260,7 @@ define(["js/Translator", "jquery", "jquery-ui", "js/jq/icon_button", "js/jq/twis
          * @return false to cancel the close.
          */
         ok() {
-            return true;
+            return Promise.resolve(true);
         }
 
         /**
@@ -283,7 +307,6 @@ define(["js/Translator", "jquery", "jquery-ui", "js/jq/icon_button", "js/jq/twis
          * Close the dialog
          */
         close() {
-            this.blocking = false;
             this.$dlg.dialog("close");
         }
 

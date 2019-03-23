@@ -11,31 +11,25 @@ define(["js/Dialog"], function(Dialog) {
         _checkSamePass() {
             let p = this.control("pass").val(),
                 c = this.control("conf").val();
+            let ok = (p !== "" && p === c);
+            this.control("nonull").toggle(p === "");
             this.control("nomatch").toggle(p !== c);
-            return (p === c);
+            this.control("ok").toggle(ok);
+            return ok;
         }
 
         initialise() {
-            let self = this;
+            let chk = this._checkSamePass.bind(this);
+            this.control("pass").on("change", chk).simulated_password();
+            this.control("conf").on("change", chk).simulated_password();
+        }
 
-            this.find('input[type="password"]').simulated_password();
-
-            this.control("conf")
-            .on("change", function () {
-                self._checkSamePass();
-            });
-
-            this.control("set")
-            .on(Dialog.tapEvent(), function () {
-                if (!self._checkSamePass()) {
-                    return false;
-                }
-                self.close();
-                let app = self.options.app;
-                app.encryptionPass(self.control("pass").val());
-
-                return true;
-            });
+        ok() {
+            if (!this._checkSamePass())
+                return Promise.reject();
+            let app = this.options.app;
+            app.encryptionPass(this.control("pass").val());
+            return Promise.resolve();
         }
 
         open() {

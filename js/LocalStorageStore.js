@@ -17,7 +17,7 @@ define(lss_deps, function(Utils, Serror, AbstractStore, Storage) {
 
     // Unique (hopefully!) string used to identify the boundary between
     // path and username in keys
-    const KEY_COMMA = ".50C1BBE1.";
+    const ROOT_PATH = "50C1BBE1";
 
     /**
      * A store engine using HTML5 localStorage.
@@ -38,16 +38,20 @@ define(lss_deps, function(Utils, Serror, AbstractStore, Storage) {
                 let i = 0;
                 let key;
                 let poss_user = null;
-                let re = new RegExp(KEY_COMMA + "(.*)$");
+                let re = new RegExp( "^(.*)\." + ROOT_PATH);
                 while ((key = localStorage.key(i)) != null) {
+                    console.log("SNIFF",key);
                     let m = re.exec(key);
                     if (m) {
-                        if (this.debug) this.debug("Possible user", poss_user);
                         if (poss_user) {
+                            if (this.debug) this.debug(
+                                "No unique user", poss_user, m[1]);
                             poss_user = null;
                             break;
                         } else {
                             poss_user = m[1];
+                            if (this.debug) this.debug(
+                                "LocalStorageStore possible user", poss_user);
                         }
                     }
                     i++;
@@ -90,12 +94,12 @@ define(lss_deps, function(Utils, Serror, AbstractStore, Storage) {
         }
 
         _makeKey(path) {
-            let key = this.option("role") + ":" + path + KEY_COMMA;
+            let key = [];
             if (typeof this.option("user") !== "undefined")
-                key = key + this.option("user");
-            if (typeof this.option("path") !== "undefined")
-                key = key + this.option("path");
-            return key;
+                key.push(this.option("user"));
+            key.push(ROOT_PATH);
+            key.push(path);
+            return key.join(".");
         }
     }
     return LocalStorageStore;

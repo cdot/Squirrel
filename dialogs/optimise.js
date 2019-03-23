@@ -2,34 +2,29 @@
 /**
 * Store optimisiation control dialog
 */
-define(["js/Dialog", "js/jq/template"], function(Dialog) {
+define(["dialogs/alert", "js/jq/template"], function(AlertDialog) {
 
-    class OptimiseDialog extends Dialog {
+    class OptimiseDialog extends AlertDialog {
 
         initialise() {
             let self = this;
 
-            this.control("optimise")
-            .on(Dialog.tapEvent(), function () {
-                this.app.client.hoard.clear_actions();
-                this.app.construct_new_cloud(function() {
-                })
-                .then(function () {
-                    self.close();
-                });
-                // Local actions will now be fully reflected in the cloud,
-                // so we can clear them
-                return false;
-            });
-            this.control("optimise").icon_button();
             this.control("existing").template();
+            this.control("study").template();
+        }
+
+        ok() {
+            let app = this.options.app;
+            // Local actions will now be fully reflected in the cloud,
+            // so we can clear them
+            app.client.hoard.clear_actions();
+            return app.construct_new_cloud(this);
         }
 
         open() {
+            super.open();
+
             this.control("study").hide();
-            this.control("pointless").hide();
-            this.control("optimise")
-            .icon_button("disable");
             this.control("calculating")
             .show()
             .toggle("pulsate", 101);
@@ -46,8 +41,10 @@ define(["js/Dialog", "js/jq/template"], function(Dialog) {
                 "A": 0,
                 "X": 0
             };
+            let self = this;
             hoard.actions_from_tree(hoard.tree, (e) => {
                 counts[e.type]++;
+                return Promise.resolve();
             })
             .then(() => {
                 this.control("calculating").hide();
@@ -57,11 +54,9 @@ define(["js/Dialog", "js/jq/template"], function(Dialog) {
                     counts.N, counts.A, counts.X,
                     counts.N + counts.A + counts.X)
                 .show();
-                if (counts.N + counts.A + counts.X <
+                if (counts.N + counts.A + counts.X >=
                     app.cloud.hoard.actions.length)
-                    this.control("optimise").icon_button("enable");
-                else
-                    this.control("pointless").show();
+                    this.add(self.tx("Optimisation will not improve performance"));
             });
         }
     }

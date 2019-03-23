@@ -47,16 +47,6 @@ define(["js/Dialog", "js/Utils", "js/Hoard"], function(Dialog, Utils, Hoard) {
                         }));
                     return false;
                 });
-            this.control("use")
-                .on(Dialog.tapEvent(), function () {
-                    self.close();
-                    self.options.app.playAction(Hoard.new_action({
-                        type: "E",
-                        path: self.options.$node.tree("getPath"),
-                        data: self.control("idea").text()
-                    }));
-                    return true;
-                });
             this.control("len")
                 .on("change", function () {
                     self.constraints_changed();
@@ -80,6 +70,14 @@ define(["js/Dialog", "js/Utils", "js/Hoard"], function(Dialog, Utils, Hoard) {
                 .on(Dialog.tapEvent(), function () {
                     self.reset_constraints();
                 });
+        }
+
+        ok() {
+            return this.options.app.playAction(Hoard.new_action({
+                type: "E",
+                path: this.options.$node.tree("getPath"),
+                data: this.control("idea").text()
+            }));
         }
 
         open() {

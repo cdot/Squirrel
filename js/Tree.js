@@ -443,7 +443,7 @@ define(["js/Hoard", "js/Dialog", "jquery", "js/jq/edit_in_place", "js/jq/scroll_
                     icon: "tree-icon-alarm"
                 })
                 .on(Dialog.tapEvent(), function () {
-                    Dialog.open("alarm", { $node: $node });
+                    Dialog.confirm("alarm", { $node: $node });
                     return false;
                 });
                 return $button;

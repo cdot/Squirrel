@@ -3,7 +3,6 @@
 /**
  * Options:
  * $node (required)
- * app (required)
  * is_value (optional)
  */
 
@@ -28,13 +27,13 @@ define(["js/Dialog"], function(Dialog) {
                     .find("ul")
                     .first();
                 $ul.children(".tree-node")
-                    .each(function () {
-                        if (val === $(this).data("key")) {
-                            // Key not unique
-                            enabled = false;
-                            return false;
-                        }
-                    });
+                .each(function () {
+                    if (val === $(this).data("key")) {
+                        // Key not unique
+                        enabled = false;
+                        return false;
+                    }
+                });
             }
 
             if (enabled) {
@@ -54,46 +53,29 @@ define(["js/Dialog"], function(Dialog) {
             let self = this;
 
             this.control("key")
-                .on("input", function () {
-                    self.validateUniqueKey();
-                })
-                .autocomplete({
-                    source: [
-                        self.tx("User"), self.tx("Pass"), "Email"]
-                });
+            .on("input", function () {
+                self.validateUniqueKey();
+            })
+            .autocomplete({
+                // TOOD: translation
+                source: ["User", "Pass", "Email"]
+            });
         }
 
         open() {
             this.control("path")
-                .text(this.options.$node.tree("getPath")
-                      .join("↘") + "↘");
-            if (this.options.is_value) {
-                this.control("value_help").show();
-                this.control("folder_help").hide();
-                this.control("value_parts").show();
-                this.control("key").autocomplete("enable").select();
-                this.control("value").val("");
-            } else {
-                this.control("value_help").hide();
-                this.control("folder_help").show();
-                this.control("value_parts").hide();
-                this.control("key")
-                    .autocomplete("disable")
-                    .select();
-            }
+            .text(this.options.$node.tree("getPath")
+                  .join("↘") + "↘");
+            let isV = this.options.is_value;
+            this.control("value_help").toggle(isV);
+            this.control("folder_help").toggle(!isV);
+            this.control("value_parts").toggle(isV);
+            this.control("key")
+            .autocomplete(isV ? "enable" : "disable").select();
+            this.control("value").val("");
 
             this.validateUniqueKey();
         }
-
-        ok() {
-            this.options.app.add_child_node(
-                this.options.$node,
-                this.control("key").val(),
-                this.options.is_value ?
-                    this.control("value").val() : this.options.data);
-            return super.ok();
-        }
-
     }
     return AddDialog;
 });

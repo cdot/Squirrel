@@ -90,8 +90,6 @@ requirejs(deps, function(Utils, Hoard, Translator, Tree, TestRunner) {
     let assert = tr.assert;
     let $DOMtree = $("#sites-node");
 
-    let TX = Translator.instance();
-
     function normalise_html(html) {
         return html
             .replace(/\n/g, " ")
