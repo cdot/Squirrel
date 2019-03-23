@@ -11,8 +11,8 @@ define(["../node_modules/utf8/utf8"], function() {
         /**
          * Generate a new password subject to constraints:
          * length: length of password
-         * charset: characters legal in the password. Ranges can be defined using
-         * A-Z syntax.
+         * charset: characters legal in the password. Ranges can be defined
+         * using A-Z syntax.
          */
         static generatePassword(constraints) {
             let sor, eor;

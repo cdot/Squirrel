@@ -12,6 +12,9 @@ define(["js/Translator", "jquery", "jquery-ui", "js/jq/icon_button", "js/jq/twis
     // Default options
     let default_dialog_options = {};
 
+    // Promises for HTML modules waiting for load
+    let htmls = [];
+    
     // Cache of loaded code modules
     let classes = {};
 
@@ -111,42 +114,44 @@ define(["js/Translator", "jquery", "jquery-ui", "js/jq/icon_button", "js/jq/twis
                 //    options.debug(
                 //        "Loading HTML for dialog", id, "from", html_url);
 
-                p = $.get(html_url)
-                .then((html) => {
-                    //if (options.debug) options.debug("HTML was loaded");
-                    let $dlg = $(html);
-                    Translator.instance().translate($dlg);
-                    // force the id so we can find it again
-                    $dlg.attr("id", id + "_dlg");
-                    // force the CSS class - should be hidden
-                    $dlg.addClass("dlg-dialog");
+                if (!htmls[html_url]) {
+                    htmls[html_url] = $.get(html_url)
+                    .then((html) => {
+                        //if (options.debug) options.debug("HTML was loaded");
+                        let $dlg = $(html);
+                        Translator.instance().translate($dlg);
+                        // force the id so we can find it again
+                        $dlg.attr("id", id + "_dlg");
+                        // force the CSS class - should be hidden
+                        $dlg.addClass("dlg-dialog");
 
-                    $("body").append($dlg);
+                        $("body").append($dlg);
 
-                    return $dlg;
-                });
+                        return $dlg;
+                    });
+                }
+                p = htmls[html_url];
             }
 
             return p.then(($dlg) => {
-                if (classes[id]) {
-                    //if (options.debug)
-                    //    options.debug("JS for dialog", id, "is already loaded");
-                    return Promise.resolve(classes[id]);
+                if (typeof classes[id] === "undefined") {
+                    classes[id] = new Promise((resolve) => {
+                        requirejs(
+                            ["dialogs/" + id],
+                            function(dlgClass) {
+                                classes[id] = new dlgClass($dlg, options);
+                                resolve(classes[id]);
+                            },
+                            function(/*err*/) {
+                                // Don't strictly need a .js
+                                throw new Error("Missing dialog " + id + ".js");
+                            });
+                    });
                 }
+                else if (classes[id] instanceof Promise)
+                    return classes[id];
 
-                //if (options.debug) options.debug("Loading JS for dialog", id);
-                return new Promise((resolve) => {
-                    requirejs(
-                        ["dialogs/" + id],
-                        function(dlgClass) {
-                            classes[id] = new dlgClass($dlg, options);
-                            resolve(classes[id]);
-                        },
-                        function(/*err*/) {
-                            // Don't strictly need a .js
-                            throw new Error("Missing dialog " + id + ".js");
-                        });
-                });
+                return Promise.resolve(classes[id]);
             });
         }
 

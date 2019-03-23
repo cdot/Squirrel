@@ -24,6 +24,13 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
 
     const CLIENT_PATH = "client";
 
+    // Dialogs for loading in the background. These are loaded in roughly
+    // the order they are likely to be used, but the loads are supposed to
+    // be asynchronous so the order shouldn't really matter.
+    const DIALOGS = [ "alert", "login", "alarm", "insert", "pick", "add",
+                      "delete", "randomise", "extras", "about", "chpw",
+                      "store_settings", "optimise", "json" ];
+    
     class Squirrel {
 
         /**
@@ -1080,7 +1087,12 @@ define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore"
                 });
 
             self.contextMenu = new ContextMenu(self);
-            
+
+            for (let i in DIALOGS) {
+                // Don't wait, let these load in the background
+                Dialog.load(DIALOGS[i]);
+            }
+
             // Set up event handlers
             $(document)
                 .on("init_application", () => {
