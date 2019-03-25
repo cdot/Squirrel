@@ -1,6 +1,5 @@
 /*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
-
-/*eslint-env node */
+/* eslint-env node */
 
 // Yes, I could have used express, but I wrote this before I knew about
 // it, and it "just works". Only handles binary files, but knows about CORS.

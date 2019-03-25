@@ -1,9 +1,10 @@
+/*@preserve Copyright (C) 2019 Crawford Currie http://c-dot.co.uk license MIT*/
+/* eslint-env browser */
+
 /**
  * About dialog
  */
 define(["js/Dialog", "js/jq/template"], function(Dialog) {
-
-    const BUILD_DATE = "TODO: Work out a way to do this";
 
     class AboutDialog extends Dialog {
 

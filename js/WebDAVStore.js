@@ -1,5 +1,5 @@
 /*@preserve Copyright (C) 2018-2019 Crawford Currie http://c-dot.co.uk license MIT*/
-/* eslint-env browser,jquery */
+/* eslint-env node,browser,jquery */
 
 define(["js/Utils", "js/HttpServerStore"], (Utils, HttpServerStore) => {
 

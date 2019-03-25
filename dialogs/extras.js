@@ -1,5 +1,5 @@
 /*@preserve Copyright (C) 2019 Crawford Currie http://c-dot.co.uk license MIT*/
-/* eslint-env jquery */
+/* eslint-env browser */
 /* global document */
 
 /**

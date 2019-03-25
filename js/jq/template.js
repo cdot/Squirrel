@@ -1,6 +1,5 @@
 /*@preserve Copyright (C) 2017 Crawford Currie http://c-dot.co.uk license MIT*/
-
-/* eslint-env jquery */
+/* eslint-env browser,jquery */
 
 /**
  * Supports two simple styles of template expansion.

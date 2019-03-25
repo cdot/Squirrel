@@ -1,5 +1,5 @@
 /*@preserve Copyright (C) 2018-2019 Crawford Currie http://c-dot.co.uk license MIT*/
-/* eslint-env browser */
+/* eslint-env browser,jquery */
 
 /**
  * Simulated password plugin, to overcome Firefox infinite loop and add

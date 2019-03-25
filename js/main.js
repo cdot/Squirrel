@@ -6,7 +6,6 @@ requirejs.config({
     paths: {
         jquery: "//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery",
         "jquery-ui": "//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui",
-        "jquery-ui/ui": "node_modules/jquery-ui/ui",
         contextmenu: "//cdnjs.cloudflare.com/ajax/libs/jquery.ui-contextmenu/1.18.1/jquery.ui-contextmenu.min",
         "js-cookie": "//cdnjs.cloudflare.com/ajax/libs/js-cookie/2.2.0/js.cookie.min",
         "mobile-events": "//cdnjs.cloudflare.com/ajax/libs/jquery-touch-events/2.0.0/jquery.mobile-events.min",
@@ -16,6 +15,11 @@ requirejs.config({
 
 if (typeof module !== "undefined") {
     /* eslint-env node */
+    requirejs.config({
+        paths: {
+            "jquery-ui/ui": "../node_modules/jquery-ui/ui"
+        }
+    });
     let fs = require("fs");
     let html = fs.readFileSync("../index.html");
     let jsdom = require('jsdom');

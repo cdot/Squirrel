@@ -1,4 +1,6 @@
 /*@preserve Copyright (C) 2019 Crawford Currie http://c-dot.co.uk license MIT*/
+/* eslint-env browser */
+
 /**
  * Options:
  * title: title for the dialog

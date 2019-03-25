@@ -1,4 +1,5 @@
 /*@preserve Copyright (C) 2015-2018 Crawford Currie http://c-dot.co.uk license MIT*/
+/* eslint-env browser,node */
 
 define(["js/Utils", "js/Serror"], function(Utils, Serror) {
 

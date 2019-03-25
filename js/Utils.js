@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2015-2017 Crawford Currie http://c-dot.co.uk license MIT*/
-/* eslint-env browser,node,jquery */
+/* eslint-env browser,node */
 
-define(["../node_modules/utf8/utf8"], function() {
+define(["libs/utf8"], function() {
 
     /**
      * Utilities and plugins used by Squirrel

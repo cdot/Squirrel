@@ -1,4 +1,6 @@
 /*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
+/* eslint-env browser */
+
 /* global FileReader */
 
 define(["js/Dialog", "js/Utils", "js/jq/template"], function(Dialog, Utils) {

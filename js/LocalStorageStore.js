@@ -1,13 +1,13 @@
 /*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
-/* eslint-env browser */
+/* eslint-env browser,node */
 
-let lss_deps = ["js/Utils", "js/Serror", "js/AbstractStore"];
+let deps = ["js/Utils", "js/Serror", "js/AbstractStore"];
 if (typeof localStorage === "undefined") {
     // Use dom-storage to simulate localStorage with node.js
-    lss_deps.push('dom-storage');
+    deps.push('dom-storage');
 }
 
-define(lss_deps, function(Utils, Serror, AbstractStore, Storage) {
+define(deps, function(Utils, Serror, AbstractStore, Storage) {
 
     if (typeof localStorage === "undefined") {
         // Use dom-storage to simulate localStorage with node.js

@@ -1,3 +1,5 @@
+cat dialogs/*.js
+
 # Copyright (C) 2015-2018 Crawford Currie http://c-dot.co.uk / MIT
 # Main targets are:
 #
@@ -202,3 +204,7 @@ locale/%.json: $(patsubst %.js,%.js.strings,$(SQUIRREL_JS) $(STORES_JS)) index.h
 #.SECONDARY: $(patsubst %.js,%.js.strings,$(SQUIRREL_JS) $(STORES_JS)) index.html.strings help.html.strings
 
 
+# node_modules/requirejs/bin/r.js -o build.js
+# will generate dist/main.js
+# grep -P 'link href=".*" rel="stylesheet"'
+# node_modules/requirejs/bin/r.js -o cssIn=css/Icons.css out=dist/Icons.css
