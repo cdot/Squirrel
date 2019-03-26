@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,node */
 
-define(["js/LayeredStore", "js/Utils", "js/AES"], function (LayeredStore, Utils, AES) {
+define("js/EncryptedStore", ["js/LayeredStore", "js/Utils", "js/AES"], function (LayeredStore, Utils, AES) {
 
     const SIGNATURE = 0x53;
     const VERSION = 1;

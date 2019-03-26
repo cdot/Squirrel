@@ -42,7 +42,7 @@
  * names to DOM nodes.
  */
 
-define(["js/Hoard", "js/Dialog", "jquery", "js/jq/edit_in_place", "js/jq/scroll_into_view", "js/jq/icon_button", "jquery-ui"], function(Hoard, Dialog) {
+define("js/Tree", ["js/Hoard", "js/Dialog", "jquery", "js/jq/edit_in_place", "js/jq/scroll_into_view", "js/jq/icon_button", "jquery-ui"], function(Hoard, Dialog) {
 
     // separator used in Path->node mapping index
     const PATHSEP = String.fromCharCode(1);

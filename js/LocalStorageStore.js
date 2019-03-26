@@ -7,7 +7,7 @@ if (typeof localStorage === "undefined") {
     deps.push('dom-storage');
 }
 
-define(deps, function(Utils, Serror, AbstractStore, Storage) {
+define("js/LocalStorageStore", deps, function(Utils, Serror, AbstractStore, Storage) {
 
     if (typeof localStorage === "undefined") {
         // Use dom-storage to simulate localStorage with node.js

@@ -12,7 +12,7 @@ function gapi_on_load() {
         gapi_loader();
 }
 
-define(['js/Utils', 'js/Translator', 'js/HttpServerStore', 'js/Serror'], function(Utils, Translator, HttpServerStore, Serror) {
+define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore', 'js/Serror'], function(Utils, Translator, HttpServerStore, Serror) {
     let TX = Translator.instance();
 
     /**

@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,jquery */
 
-define(["js/Translator", "clipboard", "js/Dialog", "jquery", "jquery-ui", "contextmenu" ], function(Translator, ClipboardJS, Dialog) {
+define("js/ContextMenu", ["js/Translator", "clipboard", "js/Dialog", "jquery", "jquery-ui", "contextmenu" ], function(Translator, ClipboardJS, Dialog) {
 
         let TX = Translator.instance();
 

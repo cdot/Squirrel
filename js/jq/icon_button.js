@@ -8,7 +8,7 @@
  * is defined by a CSS class. It also supports specifying the icon name via
  * a data-icon= attribute in HTML.
  */
-define(["jquery-ui"], function () {
+define("js/jq/icon_button", ["jquery-ui"], function () {
     $.widget("squirrel.icon_button", $.ui.button, {
         _create: function () {
             this.options.icon = this.options.icon || this.element.data("icon");

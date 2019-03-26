@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,node */
 
-define(["libs/aes"], function(Aes) {
+define("js/AES", ["libs/aes"], function(Aes) {
     /**
      * AES Counter-mode implementation in JavaScript
      * Based on Chris Veness' work (C) 2005-2014 Chris Veness / MIT Licence

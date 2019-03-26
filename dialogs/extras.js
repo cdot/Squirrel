@@ -6,7 +6,7 @@
  * Options:
  * app (required)
  */
-define(["js/Dialog", "js/Translator", "js/Tree", "js-cookie", "js/jq/styling"], function(Dialog, Translator, Tree, Cookies) {
+define("dialogs/extras", ["js/Dialog", "js/Translator", "js/Tree", "js-cookie", "js/jq/styling"], function(Dialog, Translator, Tree, Cookies) {
 
     class ExtrasDialog extends Dialog {
 

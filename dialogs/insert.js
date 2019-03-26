@@ -7,7 +7,7 @@
  * $node (required)
  * data: data value to insert
  */
-define(["dialogs/add"], function(AddDialog) {
+define("dialogs/insert", ["dialogs/add"], function(AddDialog) {
     class InsertDialog extends AddDialog {
 
         initialise() {

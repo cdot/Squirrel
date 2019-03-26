@@ -51,7 +51,7 @@ if (typeof module !== "undefined") {
     }
 }
 
-define(["js/Utils", "js/Squirrel", "js/Translator", "jquery"], function (Utils, Squirrel, Translator) {
+define("js/main", ["js/Utils", "js/Squirrel", "js/Translator", "jquery"], function (Utils, Squirrel, Translator) {
     // Parse URL parameters
     let qs = Utils.parseURLParams(window.location.search.substring(1));
 

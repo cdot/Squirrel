@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,jquery */
 
-define(['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore", "js/EncryptedStore", "js/Translator", "js/Tree", "js-cookie", "js/ContextMenu", "js/jq/simulated_password", "js/jq/scroll_into_view", "js/jq/icon_button", "js/jq/styling", "js/jq/template", "js/jq/twisted", "jquery", "jquery-ui", "mobile-events" ], function(Serror, Utils, Dialog, Hoard, LocalStorageStore, EncryptedStore, Translator, Tree, Cookies, ContextMenu) {
+define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore", "js/EncryptedStore", "js/Translator", "js/Tree", "js-cookie", "js/ContextMenu", "js/jq/simulated_password", "js/jq/scroll_into_view", "js/jq/icon_button", "js/jq/styling", "js/jq/template", "js/jq/twisted", "jquery", "jquery-ui", "mobile-events" ], function(Serror, Utils, Dialog, Hoard, LocalStorageStore, EncryptedStore, Translator, Tree, Cookies, ContextMenu) {
     let TX = Translator.instance();
 
     /*

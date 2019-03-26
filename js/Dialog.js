@@ -8,7 +8,7 @@
  * from a file found using requirejs, and (2) a JS subclass of
  * "Dialog" again loaded by requirejs.
  */
-define(["js/Translator", "jquery", "jquery-ui", "js/jq/icon_button", "js/jq/twisted"], function(Translator) {
+define("js/Dialog", ["js/Translator", "jquery", "jquery-ui", "js/jq/icon_button", "js/jq/twisted"], function(Translator) {
 
     // Default options
     let default_dialog_options = {};

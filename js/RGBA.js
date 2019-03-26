@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2017-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,node */
 
-define(function() {
+define("js/RGBA", function() {
 
     /**
      * Class to represent an RGBA colour, and convert to/from other

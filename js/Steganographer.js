@@ -13,7 +13,7 @@
  * make it hard to detect by only using a small number of bits from each
  * channel, such that the data just looks like noise.
  */
-define(["js/Utils"], function(Utils) {
+define("js/Steganographer", ["js/Utils"], function(Utils) {
 
     class Steganographer {
         /**

@@ -29,7 +29,7 @@
 if (typeof XMLHttpRequest === "undefined")
     XMLHttpRequest = require("xhr2");
 
-define(["js/Utils", "js-cookie"], function(Utils, Cookies) {
+define("js/Translator", ["js/Utils", "js-cookie"], function(Utils, Cookies) {
 
     class Translator {
 

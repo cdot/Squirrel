@@ -61,7 +61,7 @@
  */
 const VERSION = 2.0;
 
-define(["js/Translator"], function(Translator) {
+define("js/Hoard", ["js/Translator"], function(Translator) {
     let TX = Translator.instance();
 
     const MSPERDAY = 24 * 60 * 60 * 1000;

@@ -4,7 +4,7 @@
 // Yes, I could have used express, but I wrote this before I knew about
 // it, and it "just works". Only handles binary files, but knows about CORS.
 
-define(["url", "extend", "fs-extra"], function(Url, extend, Fs) {
+define("js/Server", ["url", "extend", "fs-extra"], function(Url, extend, Fs) {
 
     //require("https") done dynamically
     //require("http") done dynamically

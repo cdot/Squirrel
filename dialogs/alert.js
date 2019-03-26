@@ -4,7 +4,7 @@
 /**
  * Notification dialog
  */
-define(["js/Dialog"], function(Dialog) {
+define("dialogs/alert", ["js/Dialog"], function(Dialog) {
 
     let $http = null;
 

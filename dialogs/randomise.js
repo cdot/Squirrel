@@ -7,7 +7,7 @@
  * $node (required)
  * app (required)
  */
-define(["js/Dialog", "js/Utils", "js/Hoard"], function(Dialog, Utils, Hoard) {
+define("dialogs/randomise", ["js/Dialog", "js/Utils", "js/Hoard"], function(Dialog, Utils, Hoard) {
     const DEFAULT_RANDOM_LEN = 30;
     const DEFAULT_RANDOM_CHS = "A-Za-z0-9!%^&*_$+-=;:@#~,./?";
 

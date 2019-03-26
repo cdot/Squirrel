@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2018-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env shared-node-browser */
 
-define(["js/Serror", "js/AbstractStore"], function(Serror, AbstractStore) {
+define("js/HttpServerStore", ["js/Serror", "js/AbstractStore"], function(Serror, AbstractStore) {
     if (typeof XMLHttpRequest === "undefined") {
         // node.js
         /* global XMLHttpRequest: true */

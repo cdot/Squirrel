@@ -5,7 +5,7 @@
  * Options:
  * $node (required)
  */
-define(["js/Dialog"], function(Dialog) {
+define("dialogs/pick", ["js/Dialog"], function(Dialog) {
     class PickDialog extends Dialog {
         initialise() {
             let self = this;

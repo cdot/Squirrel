@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2017 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser */
 
-define(["js-cookie", "jquery", "js/jq/icon_button", "js/jq/twisted"], (Cookies) => {
+define("js/help", ["js-cookie", "jquery", "js/jq/icon_button", "js/jq/twisted"], (Cookies) => {
     $("button").icon_button();
     $(".twisted").twisted();
     if (Cookies.get("ui_scale"))

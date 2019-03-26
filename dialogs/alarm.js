@@ -6,7 +6,7 @@
  * $node (rquired)
  * app (required)
  */
-define(["js/Dialog", "js/Hoard", "js/jq/template", "jquery-ui"], function(Dialog, Hoard) {
+define("dialogs/alarm", ["js/Dialog", "js/Hoard", "js/jq/template", "jquery-ui"], function(Dialog, Hoard) {
 
     const MSPERDAY = 24 * 60 * 60 * 1000;
 

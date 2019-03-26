@@ -5,7 +5,7 @@
  * Simulated password plugin, to overcome Firefox infinite loop and add
  * a "show pass" checkbox
  */
-define(["jquery"], function() {
+define("js/jq/simulated_password", ["jquery"], function() {
 
     const SPOT = "•";
 

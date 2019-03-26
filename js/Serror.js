@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,node */
 
-define(function() {
+define("js/Serror", function() {
     /**
      * Store error. Generic vehicle for exceptions thrown by a store.
      */

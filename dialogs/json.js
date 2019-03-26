@@ -6,7 +6,7 @@
  * Options:
  * app (required)
  */
-define(["js/Dialog"], function(Dialog) {
+define("dialogs/json", ["js/Dialog"], function(Dialog) {
 
     class JSONDialog extends Dialog {
 

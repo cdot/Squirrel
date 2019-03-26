@@ -4,7 +4,7 @@
 /**
  * About dialog
  */
-define(["js/Dialog", "js/jq/template"], function(Dialog) {
+define("dialogs/about", ["js/Dialog", "js/jq/template"], function(Dialog) {
 
     class AboutDialog extends Dialog {
 

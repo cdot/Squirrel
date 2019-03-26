@@ -2,7 +2,7 @@
 /**
 * Store optimisiation control dialog
 */
-define(["dialogs/alert", "js/jq/template"], function(AlertDialog) {
+define("dialogs/optimise", ["dialogs/alert", "js/jq/template"], function(AlertDialog) {
 
     class OptimiseDialog extends AlertDialog {
 

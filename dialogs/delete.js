@@ -7,7 +7,7 @@
  * app (required)
  * $node (required)
  */
-define(["js/Dialog", "js/Hoard"], function(Dialog, Hoard) {
+define("dialogs/delete", ["js/Dialog", "js/Hoard"], function(Dialog, Hoard) {
     class DeleteDialog extends Dialog {
 
         ok() {

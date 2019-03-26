@@ -3,7 +3,7 @@
 
 /* global FileReader */
 
-define(["js/Dialog", "js/Utils", "js/jq/template"], function(Dialog, Utils) {
+define("dialogs/store_settings", ["js/Dialog", "js/Utils", "js/jq/template"], function(Dialog, Utils) {
 
     /**
      * Promise to read a file object. The promise is resolved with

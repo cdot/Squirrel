@@ -1,6 +1,18 @@
+/*@preserve Copyright (C) 2019 Crawford Currie http://c-dot.co.uk license MIT*/
+/* eslint-env node */
+
+/**
+ * Build script for Squirrel. This basically duplicates many of the functions
+ * of r.js, but in a more accessible and understandable way. I wrote it while
+ * trying to work out what r.js was doing!
+ */
 let requirejs = require("requirejs");
 
-requirejs(["fs-extra", "uglify-es", "clean-css", "jsdom"], function(fs, uglify, cleancss, jsdom, jQuery) {
+requirejs(["getopts", "fs-extra", "uglify-es", "clean-css", "jsdom"], function(getopts, fs, uglify, cleancss, jsdom, jQuery) {
+
+    let options = getopts(process.argv.slice(2), {
+        boolean: ["release"]
+    });
 
     function extend(a, b) {
         let join = {};
@@ -98,7 +110,7 @@ requirejs(["fs-extra", "uglify-es", "clean-css", "jsdom"], function(fs, uglify, 
                 config = extend(config, cfg);
             }
 
-            m = /\n(?:(?:requirejs|define)\(|let deps\s*=\s*)(\[.*?\])/s
+            m = /\n(?:(?:requirejs|define)\s*\((?:\s*"[^"]*"\s*,\s*)?|let\s*deps\s*=\s*)(\[.*?\])/s
             .exec(data);
             
             if (!m) {
@@ -198,22 +210,39 @@ requirejs(["fs-extra", "uglify-es", "clean-css", "jsdom"], function(fs, uglify, 
         
         for (k in js) {
             let f = js[k];
+            let id = f.replace(/\.js$/, "");
             if (!/^\/\//.test(f)) {
                 proms.push(
                     fs.readFile(f)
                     .then((src) => {
-                        return src.toString();
+                        let codes = src.toString();
+                        // Make sure all define's have a module id
+                        codes = codes.replace(
+                            /((?:^|\s)define\s*\(\s*)(\[|function|\()/,
+                            "$1 \"" + id + "\", $2");
+                        // Make sure there's a define specifying this module
+                        let check = new RegExp(
+                            "(^|\\s)define\\s*\\(\\s*[\"']" + id + "[\"']", "m");
+                        if (!check.test(codes)) {
+                            // If not, add one
+                            console.log(check);
+                            codes = codes + "\ndefine(\"" + id
+                            + "\",function(){});\n";
+                        }
+                        return codes;
                     }));
             }
         }
+        
         return Promise.all(proms)
         .then((code) => {
-            return uglify.minify(code.join(''), {
+            code.push("requirejs(['js/main']);");
+            let codes = code.join("\n");
+            return (options.release)
+            ? uglify.minify(codes, {
                 ie8: true
-            });
-        })
-        .then((result) => {
-            return result.code;
+            })
+            : codes;
         });
     }
     
@@ -233,7 +262,6 @@ requirejs(["fs-extra", "uglify-es", "clean-css", "jsdom"], function(fs, uglify, 
     }
 
     function mkpath(file) {
-        console.log("mkpath", file);
         let m = /^(.+)\/(.*?)$/.exec(file);
         let p = (m) ? mkpath(m[1]) : Promise.resolve()
         return p.then(() => {
@@ -249,7 +277,7 @@ requirejs(["fs-extra", "uglify-es", "clean-css", "jsdom"], function(fs, uglify, 
             return fs.mkdir(file);
         });
     }
-    
+          
     fs.readFile("index.html")
     .then((html) => {
         global.document = new jsdom.JSDOM(html);
@@ -352,9 +380,8 @@ requirejs(["fs-extra", "uglify-es", "clean-css", "jsdom"], function(fs, uglify, 
         return Promise.all(promises);
     })
     .then(() => {
-//        let head = "<head>" + $("head").html() + "</head>";
-//        let body = "<body>" + $("body").html() + "</head>";
-        return fs.writeFile("dist/index.html", $("html").html());
+        let index = "<!DOCTYPE html>\n" + $("html").html();
+        return fs.writeFile("dist/index.html", index);
     })
     .catch((e) => {
         console.log("Failure:", e, e.stack);

@@ -7,7 +7,7 @@
  * is_value (optional)
  */
 
-define(["js/Dialog"], function(Dialog) {
+define("dialogs/add", ["js/Dialog"], function(Dialog) {
 
     class AddDialog extends Dialog {
 
