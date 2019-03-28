@@ -19,7 +19,6 @@ define("js/jq/scroll_into_view", ["jquery", "jquery-ui"], function () {
                 let newtop = offset - winht / 2;
                 if (newtop < 0)
                     newtop = 0;
-                console.log("Scrolling to " + newtop);
                 $("html,body")
                     .animate({
                         scrollTop: newtop

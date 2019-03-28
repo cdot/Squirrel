@@ -8,7 +8,7 @@
  */
 let requirejs = require("requirejs");
 
-requirejs(["getopts", "fs-extra", "uglify-es", "clean-css", "jsdom"], function(getopts, fs, uglify, cleancss, jsdom, jQuery) {
+requirejs(["request", "getopts", "fs-extra", "uglify-es", "clean-css", "jsdom"], function(request, getopts, fs, uglify, cleancss, jsdom) {
 
     let options = getopts(process.argv.slice(2), {
         boolean: ["release"]
@@ -31,50 +31,75 @@ requirejs(["getopts", "fs-extra", "uglify-es", "clean-css", "jsdom"], function(g
         }
         return join;
     }
-    
-    function simplifyPath(path) {
-        path = path.replace(/\/[^\/]*\/\.\./g, "");
-        return path.replace("\.\/", "");
-    }
-    
+        
     let depends_on = {};
 
     function addDependency(dependant, dependee) {
-        dependant = simplifyPath(dependant);
-        dependee = simplifyPath(dependee);
         let d = depends_on[dependant];
-        if (!d) d = {};
-        d[dependee] = true;
-        depends_on[dependant] = d;
-        //console.log(dependant,"depends on",d);
+        if (!d)
+            depends_on[dependant] = d = {};
+        if (dependee && !d[dependee]) {
+            //console.debug(dependant, "depends on", dependee);
+            d[dependee] = true;
+        }
     }
     
-    function resolvePaths(deps, config) {
-        let ndeps = [];
+    function resolveID(id, config) {
+        let path = id;
+        
+        if (config && config.paths) {
+            let order = [];
+            for (let i in config.paths)
+                order.push({ key: i, path: config.paths[i] });
+            order = order.sort((a,b) => {
+                return a.key.length > b.key.length ? -1
+                : a.key.length < b.key.length ? 1 : 0;
+            });
 
-        for (let i in deps) {
-            let dep = deps[i];
-            let changed = true;
-            while (changed) {
-                changed = false;
-                for (k in config.paths) {
-                    let re = new RegExp("^" + k + "(/|$)");
-                    if (re.test(dep)) {
-                        dep = dep.replace(re, config.paths[k] + "/");
-                        changed = true;
-                    }
+            for (let i in order) {
+                let re = new RegExp("^" + order[i].key + "(/|$)");
+                let m = re.exec(path);
+                if (m) {
+                    path = path.replace(re, order[i].path + m[1]);
                 }
             }
-            if (config.baseUrl && !/^\//.test(dep))
-                dep = config.baseUrl + "/" + dep;
-
-            ndeps.push(dep);
         }
-        return ndeps;
+
+        if (config.baseUrl && !/^\//.test(path))
+            path = config.baseUrl + "/" + path;
+        if (!/\.js$/.test(path))
+            path = path + ".js";
+        return path;
     }
 
-    function getConfig(file) {
-        return fs.readFile(file)
+    function get(path) {
+        if (/^(https?:)?\/\//.test(path)) {
+            if (!/^http/.test(path))
+                path = "https:" + path;
+
+            return new Promise((resolve, reject) => {
+                request
+                .get(path)
+                .on('response', (response) => {
+                    if (response.statusCode !== 200) {
+                        reject(new Error(path + ": " + response.statusCode));
+                        return;
+                    }
+                    let body = '';
+                    response.on('data', (chunk) => {
+                        body += chunk;
+                    });
+                    response.on('end', () => {
+                        resolve(body);
+                    });
+                });
+            });
+        } else
+            return fs.readFile(path);
+    }
+    
+    function getConfig(path) {
+        return get(resolveID(path, {}))
         .then((data) => {
             let m = /\nrequirejs\.config\((.*?)\);/s.exec(data);
             if (m) {
@@ -86,97 +111,48 @@ requirejs(["getopts", "fs-extra", "uglify-es", "clean-css", "jsdom"], function(g
         });
     }
 
-    let processedJS = {};
-    
-    function analyseJS(path, config) {
-        if (processedJS[simplifyPath(path.join("/"))])
+    let found_at = {};
+
+    function analyseDependencies(id, config, js) {
+        addDependency(id);
+        let m = /\nrequirejs\.config\((.*?)\);/s.exec(js);
+        if (m) {
+            let cfg;
+            eval("cfg=" + m[1]);
+            config = extend(config, cfg);
+        }
+
+        m = /(?:(?:requirejs|define)\s*\((?:\s*"[^"]*"\s*,\s*)?|let\s*deps\s*=\s*)(\[.*?\])/s
+        .exec(js);
+            
+        if (!m) {
+            //console.debug(id,"has no dependencies");
             return Promise.resolve();
-        processedJS[simplifyPath(path.join("/"))] = true;
-
-        //console.debug("Analysing", path.join("/"));
-        return fs.readFile(path.join("/"))
-        .then((data) => {
-            // Do we want to pack this file? if we do, it will be marked
-            // with eslint-env browser
-            if (!/\n\/\*\s*eslint-env\s[^\n]*browser/.test(data)) {
-                console.debug(path.join("/"),"has no eslint-env browser");
-                return Promise.resolve();
-            }
-
-            let m = /\nrequirejs\.config\((.*?)\);/s.exec(data);
-            if (m) {
-                let cfg;
-                eval("cfg=" + m[1]);
-                config = extend(config, cfg);
-            }
-
-            m = /\n(?:(?:requirejs|define)\s*\((?:\s*"[^"]*"\s*,\s*)?|let\s*deps\s*=\s*)(\[.*?\])/s
-            .exec(data);
+        }
             
-            if (!m) {
-                console.debug(path.join("/"),"has no dependencies");
-                return Promise.resolve();
-            }
+        let deps;
+        eval("deps=" + m[1]);
+        if (typeof deps === "string")
+            deps = [deps];
             
-            let deps;
-            eval("deps=" + m[1]);
-            if (typeof deps === "string")
-                deps = [deps];
-            if (config && config.paths)
-                deps = resolvePaths(deps, config);
-            
-            let promises = [];
-            for (let i in deps) {
-                let dep = deps[i];
-                if (/^\/\//.test(dep)) {
-                    // Network dependency
-                    addDependency(dep, "HTTP");
-                    addDependency(path.join("/"), dep);
-                } else {
-                    let js = dep + ".js";
-                    promises.push(
-                        fs.stat(js)
-                        .then((stat) => {
-                            addDependency(path.join("/"), js);
-                            return analyseJS(js.split("/"), config);
-                        })
-                        .catch((e) => {
-                            console.log("Could not find",
-                                        dep+" from",path.join("/"));
-                            return Promise.resolve();
-                        }));
-                }
-            }
-            return Promise.all(promises);
-        });
+        let promises = [];
+        for (let i in deps) {
+            addDependency(id, deps[i]);
+            promises.push(analyse(deps[i], config));
+        }
+        return Promise.all(promises);
     }
 
-    function analyseDir(dir, config) {
-        return fs.readdir(dir.join("/"))
-        .then((entries) => {
-            let promises = [];
-            for (let i in entries) {
-                let entry = entries[i];
-                if (entry === "node_modules"
-                    || entry == "test"
-                    || entry == "build"
-                    || entry == "dist"
-                    || entry.indexOf(".") === 0)
-                    continue;
-                let path = dir.slice();
-                path.push(entry);
-                if (/\.js$/.test(entry))
-                    promises.push(analyseJS(path, config));
-                else
-                    promises.push(
-                        fs.stat(path.join("/"))
-                        .then((stat) => {
-                            if (stat.isDirectory())
-                                return analyseDir(path, config);
-                            return Promise.resolve();
-                        }));
-            }
-            return Promise.all(promises);
+    function analyse(id, config) {
+        if (found_at[id])
+            return Promise.resolve();
+
+        let path = resolveID(id, config);
+        //console.debug(id,"found at",path);
+        found_at[id] = path;
+        return get(path)
+        .then((js) => {
+            return analyseDependencies(id, config, js);
         });
     }
 
@@ -186,6 +162,7 @@ requirejs(["getopts", "fs-extra", "uglify-es", "clean-css", "jsdom"], function(g
             if (!visited[d])
                 treeSort(d, visited, stack);
         }
+        //console.log("Embed",key);
         stack.push(key);
     }          
 
@@ -195,43 +172,32 @@ requirejs(["getopts", "fs-extra", "uglify-es", "clean-css", "jsdom"], function(g
         let k;
 
         for (k in depends_on) {
-            if (depends_on[k].HTTP) {
-                console.log("HTTP:", k);
-                visited[k] = true;
-            }
-        }
-        
-        for (k in depends_on) {
             if (!visited[k])
                 treeSort(k, visited, js);
         }
 
         let proms = [];
-        
         for (k in js) {
-            let f = js[k];
-            let id = f.replace(/\.js$/, "");
-            if (!/^\/\//.test(f)) {
-                proms.push(
-                    fs.readFile(f)
-                    .then((src) => {
-                        let codes = src.toString();
-                        // Make sure all define's have a module id
-                        codes = codes.replace(
-                            /((?:^|\s)define\s*\(\s*)(\[|function|\()/,
-                            "$1 \"" + id + "\", $2");
-                        // Make sure there's a define specifying this module
-                        let check = new RegExp(
-                            "(^|\\s)define\\s*\\(\\s*[\"']" + id + "[\"']", "m");
-                        if (!check.test(codes)) {
-                            // If not, add one
-                            console.log(check);
-                            codes = codes + "\ndefine(\"" + id
-                            + "\",function(){});\n";
-                        }
-                        return codes;
-                    }));
-            }
+            let id = js[k];
+            proms.push(
+                get(found_at[id])
+                .then((src) => {
+                    let codes = src.toString();
+                    // Make sure all define's have a module id
+                    codes = codes.replace(
+                        /((?:^|\W)define\s*\(\s*)([^"'\s])/,
+                        "$1\"" + id + "\", $2");
+                    // Make sure there's a define specifying this module
+                    let check = new RegExp(
+                        "(^|\\W)define\\s*\\(\\s*[\"']" + id + "[\"']", "m");
+                    if (!check.test(codes)) {
+                        // If not, add one
+                        //console.debug("Adding ID to", id);
+                        codes = codes + "\ndefine(\"" + id
+                        + "\",function(){});\n";
+                    }
+                    return codes;
+                }));
         }
         
         return Promise.all(proms)
@@ -270,7 +236,6 @@ requirejs(["getopts", "fs-extra", "uglify-es", "clean-css", "jsdom"], function(g
         .then((stat) => {
             if (stat.isDirectory())
                 return Promise.resolve();
-            console.log("mkdir",file);
             return fs.mkdir(file);
         })
         .catch(() => {
@@ -289,9 +254,40 @@ requirejs(["getopts", "fs-extra", "uglify-es", "clean-css", "jsdom"], function(g
 
         // Analyse and generate shared JS
         promises.push(
-            getConfig("js/main.js")
+            getConfig("js/main")
             .then((config) => {
-                return analyseDir(["."], config);
+                return analyse("js/main", config)
+                .then(() => {
+                    return fs.readdir("dialogs");
+                })
+                .then((entries) => {
+                    let proms = [];
+                    for (let i in entries) {
+                        let entry = entries[i];
+                        if (/\.js$/.test(entry)) {
+                            proms.push(analyse(
+                                "dialogs/" + entry.replace(".js", ""),
+                                config));
+                        }
+                    }
+                    return Promise.all(proms);
+                })
+                .then(() => {
+                    return fs.readdir("js");
+                })
+                .then((entries) => {
+                    let proms = [];
+                    for (let i in entries) {
+                        let entry = entries[i];
+                        if (/Store\.js$/.test(entry)
+                            && entry !== "FileStore.js") {
+                            proms.push(analyse(
+                                "js/" + entry.replace(".js", ""),
+                                config));
+                        }
+                    }
+                    return Promise.all(proms);
+                });
             })
             .then(() => {
                 return generateJS();
@@ -384,6 +380,6 @@ requirejs(["getopts", "fs-extra", "uglify-es", "clean-css", "jsdom"], function(g
         return fs.writeFile("dist/index.html", index);
     })
     .catch((e) => {
-        console.log("Failure:", e, e.stack);
+        console.log("Failure:", e.stack);
     });
 })

@@ -881,7 +881,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/Loc
             }
 
             return p.then(() => {
-                console.log("cloud store type is", store);
+                //console.log("cloud store type is", store);
                 if (store.option("needs_url")) {
                     if (self.options.url) {
                         store.option("url", self.options.url);
@@ -911,7 +911,8 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/Loc
                     if (self.debug) self.debug(
                         "cloud init has identified user", cluser);        
                 } else {
-                    console.log("cloud store initialised, no user known");
+                    if (self.debug)
+                        self.debug("cloud store initialised, no user known");
                 }
             })
             .catch((e) => {

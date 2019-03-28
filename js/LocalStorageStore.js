@@ -40,7 +40,6 @@ define("js/LocalStorageStore", deps, function(Utils, Serror, AbstractStore, Stor
                 let poss_user = null;
                 let re = new RegExp( "^(.*)\." + ROOT_PATH);
                 while ((key = localStorage.key(i)) != null) {
-                    console.log("SNIFF",key);
                     let m = re.exec(key);
                     if (m) {
                         if (poss_user) {

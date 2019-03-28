@@ -111,7 +111,7 @@ define("js/jq/styling", ["js/RGBA", "js-cookie", "jquery", "jquery-ui"], functio
                                         a.inverse()
                                         .toString() + ";\n"
                                 } catch (e) {
-                                    console.debug(e);
+                                    //console.debug(e);
                                 }
                             }
                             if (rule.style.backgroundColor) {
@@ -122,7 +122,7 @@ define("js/jq/styling", ["js/RGBA", "js-cookie", "jquery", "jquery-ui"], functio
                                         a.inverse()
                                         .toString() + ";\n"
                                 } catch (e) {
-                                    console.debug(e + ":" + rule.style.backgroundColor);
+                                    //console.debug(e + ":" + rule.style.backgroundColor);
                                 }
                             }
                             if (s.length > 0)

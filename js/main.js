@@ -6,6 +6,7 @@ requirejs.config({
     paths: {
         jquery: "//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery",
         "jquery-ui": "//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui",
+        "jquery-ui/ui": "//cdn.jsdelivr.net/npm/jquery-ui@1.12.1/ui",
         contextmenu: "//cdnjs.cloudflare.com/ajax/libs/jquery.ui-contextmenu/1.18.1/jquery.ui-contextmenu.min",
         "js-cookie": "//cdnjs.cloudflare.com/ajax/libs/js-cookie/2.2.0/js.cookie.min",
         "mobile-events": "//cdnjs.cloudflare.com/ajax/libs/jquery-touch-events/2.0.0/jquery.mobile-events.min",
@@ -13,45 +14,7 @@ requirejs.config({
     }
 });
 
-if (typeof module !== "undefined") {
-    /* eslint-env node */
-    requirejs.config({
-        paths: {
-            "jquery-ui/ui": "../node_modules/jquery-ui/ui"
-        }
-    });
-    let fs = require("fs");
-    let html = fs.readFileSync("../index.html");
-    let jsdom = require('jsdom');
-    var { JSDOM } = jsdom;
-    /* global document: true */
-    document = new JSDOM(html);
-    var { window } = document;
-    global.jQuery = require('jquery')(window);
-    global.$ = jQuery;
-    require("jquery-ui"); // loads ui/widgets.js
-    require("jquery-ui/ui/widgets/button"); // loads ui/widgets/button.js
-    require("jquery-ui/ui/plugin"); // loads ui/widgets/button.js
-    require("jquery-ui/ui/widgets/mouse"); // loads ui/widgets/button.js
-    require("jquery-ui/ui/widgets/draggable"); // loads ui/widgets/button.js
-
-    /* global Cookies */
-    global.Cookies = {
-        // TODO: save a .rc
-        vals: {},
-        get: (k) => {
-            return Cookies.vals[k];
-        },
-        set: (k, v) => {
-            Cookies.vals[k] = v;
-        },
-        remove: (k) => {
-            delete Cookies.vals[k];
-        }
-    }
-}
-
-define("js/main", ["js/Utils", "js/Squirrel", "js/Translator", "jquery"], function (Utils, Squirrel, Translator) {
+define(["js/Utils", "js/Squirrel", "js/Translator", "jquery"], function (Utils, Squirrel, Translator) {
     // Parse URL parameters
     let qs = Utils.parseURLParams(window.location.search.substring(1));
 
