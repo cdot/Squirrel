@@ -69,6 +69,7 @@ requirejs(["request", "getopts", "fs-extra", "uglify-es", "clean-css", "jsdom"],
             path = config.baseUrl + "/" + path;
         if (!/\.js$/.test(path))
             path = path + ".js";
+        
         return path;
     }
 
@@ -148,7 +149,8 @@ requirejs(["request", "getopts", "fs-extra", "uglify-es", "clean-css", "jsdom"],
             return Promise.resolve();
 
         let path = resolveID(id, config);
-        //console.debug(id,"found at",path);
+        if (/jquery-ui\/ui/.test(path))
+            console.debug(id,"found at",path);
         found_at[id] = path;
         return get(path)
         .then((js) => {
