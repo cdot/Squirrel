@@ -39,7 +39,7 @@ requirejs(["request", "getopts", "fs-extra", "uglify-es", "clean-css", "jsdom"],
         if (!d)
             depends_on[dependant] = d = {};
         if (dependee && !d[dependee]) {
-            //console.debug(dependant, "depends on", dependee);
+            console.debug(dependant, "depends on", dependee);
             d[dependee] = true;
         }
     }
@@ -123,11 +123,11 @@ requirejs(["request", "getopts", "fs-extra", "uglify-es", "clean-css", "jsdom"],
             config = extend(config, cfg);
         }
 
-        m = /(?:(?:requirejs|define)\s*\((?:\s*"[^"]*"\s*,\s*)?|let\s*deps\s*=\s*)(\[.*?\])/s
+        m = /(?:(?:requirejs|define)\s*\(\s*(?:"[^"]*"\s*,\s*)?|let\s*deps\s*=\s*)(\[.*?\])/s
         .exec(js);
             
         if (!m) {
-            //console.debug(id,"has no dependencies");
+            console.debug(id,"has no dependencies");
             return Promise.resolve();
         }
             
@@ -138,8 +138,13 @@ requirejs(["request", "getopts", "fs-extra", "uglify-es", "clean-css", "jsdom"],
             
         let promises = [];
         for (let i in deps) {
-            addDependency(id, deps[i]);
-            promises.push(analyse(deps[i], config));
+            let dep = deps[i];
+            if (/^\.\.\//.test(dep))
+                dep = dep.replace("../", id.replace(/[^\/]*\/[^\/]*$/, ""));
+            else if (/^\.\//.test(dep))
+                dep = dep.replace("./", id.replace(/\/[^\/]*$/, "/"));
+            addDependency(id, dep);
+            promises.push(analyse(dep, config));
         }
         return Promise.all(promises);
     }
@@ -149,8 +154,6 @@ requirejs(["request", "getopts", "fs-extra", "uglify-es", "clean-css", "jsdom"],
             return Promise.resolve();
 
         let path = resolveID(id, config);
-        if (/jquery-ui\/ui/.test(path))
-            console.debug(id,"found at",path);
         found_at[id] = path;
         return get(path)
         .then((js) => {
