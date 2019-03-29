@@ -1,19 +1,30 @@
 /*@preserve Copyright (C) 2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env node */
 
-/**
- * Build script for Squirrel. This basically duplicates many of the functions
- * of r.js, but in a more accessible and understandable way. I wrote it while
- * trying to work out what r.js was doing!
- */
+const DESCRIPTION =
+      "DESCRIPTION\nBuild script for Squirrel.";
+
+// This basically duplicates many of the functions * of r.js,
+// but in a more manageable way. I wrote it while trying to work
+// out what r.js was doing!
 let requirejs = require("requirejs");
 
-requirejs(["request", "getopts", "fs-extra", "uglify-es", "clean-css", "jsdom"], function(request, getopts, fs, uglify, cleancss, jsdom) {
+requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "jsdom", "js/Locales"], function(request, getopt, fs, uglify, cleancss, jsdom, Locales) {
 
-    let options = getopts(process.argv.slice(2), {
-        boolean: ["release"]
-    });
+    let opts = getopt
+        .create([
+            [ "c", "compress", "Enable compression" ],
+            [ "d", "debug", "Debug id dependencies" ],
+            [ "h", "help", "Display this help" ],
+            [ "t", "translate", "Try to improve translations" ]
+        ])
+        .bindHelp()
+        .setHelp(DESCRIPTION + "[[OPTIONS]]")
+        .parseSystem();
 
+    opts = opts.options;
+    let debug = opts.debug ? console.debug : function() {};
+    
     function extend(a, b) {
         let join = {};
         if (!a)
@@ -31,19 +42,25 @@ requirejs(["request", "getopts", "fs-extra", "uglify-es", "clean-css", "jsdom"],
         }
         return join;
     }
-        
+
+    // Map of module id to a set of module id's that it depends on
     let depends_on = {};
 
+    // Add a dependency to the depends_on
     function addDependency(dependant, dependee) {
         let d = depends_on[dependant];
         if (!d)
             depends_on[dependant] = d = {};
         if (dependee && !d[dependee]) {
-            console.debug(dependant, "depends on", dependee);
+            debug(dependant, "depends on", dependee);
             d[dependee] = true;
         }
     }
-    
+
+    // Expand paths from config.paths in the id. Paths must start
+    // the id, and the longest match is done first. Finally add
+    // the baseUrl if the path is relative, and .js extension to
+    // create the module path.
     function resolveID(id, config) {
         let path = id;
         
@@ -73,6 +90,8 @@ requirejs(["request", "getopts", "fs-extra", "uglify-es", "clean-css", "jsdom"],
         return path;
     }
 
+    // Get the file or URL referenced by the given path. URLs are
+    // recognised by starting with http and/or //
     function get(path) {
         if (/^(https?:)?\/\//.test(path)) {
             if (!/^http/.test(path))
@@ -98,7 +117,8 @@ requirejs(["request", "getopts", "fs-extra", "uglify-es", "clean-css", "jsdom"],
         } else
             return fs.readFile(path);
     }
-    
+
+    // Load the requirejhs.config from the given ID
     function getConfig(path) {
         return get(resolveID(path, {}))
         .then((data) => {
@@ -114,6 +134,9 @@ requirejs(["request", "getopts", "fs-extra", "uglify-es", "clean-css", "jsdom"],
 
     let found_at = {};
 
+    // Analyse the dependencies described in the given block of code. This
+    // is npot a general solution - the code is not parsed, just
+    // processed by regexps.
     function analyseDependencies(id, config, js) {
         addDependency(id);
         let m = /\nrequirejs\.config\((.*?)\);/s.exec(js);
@@ -127,7 +150,7 @@ requirejs(["request", "getopts", "fs-extra", "uglify-es", "clean-css", "jsdom"],
         .exec(js);
             
         if (!m) {
-            console.debug(id,"has no dependencies");
+            debug(id,"has no dependencies");
             return Promise.resolve();
         }
             
@@ -139,6 +162,7 @@ requirejs(["request", "getopts", "fs-extra", "uglify-es", "clean-css", "jsdom"],
         let promises = [];
         for (let i in deps) {
             let dep = deps[i];
+            // Deal with relative paths, as encountered in menu.js
             if (/^\.\.\//.test(dep))
                 dep = dep.replace("../", id.replace(/[^\/]*\/[^\/]*$/, ""));
             else if (/^\.\//.test(dep))
@@ -149,6 +173,7 @@ requirejs(["request", "getopts", "fs-extra", "uglify-es", "clean-css", "jsdom"],
         return Promise.all(promises);
     }
 
+    // Analyse the code in the module reference by the given id
     function analyse(id, config) {
         if (found_at[id])
             return Promise.resolve();
@@ -158,31 +183,31 @@ requirejs(["request", "getopts", "fs-extra", "uglify-es", "clean-css", "jsdom"],
         return get(path)
         .then((js) => {
             return analyseDependencies(id, config, js);
-        });
+        })
+        .then(() => config);
     }
 
-    function treeSort(key, visited, stack) {
+    // Support for partial ordering
+    function treeSort(key, stack, visited) {
+        if (!stack) stack = [];
+        if (!visited) visited = {};
         visited[key] = true;
         for (d in depends_on[key]) {
             if (!visited[d])
-                treeSort(d, visited, stack);
+                treeSort(d, stack, visited);
         }
-        //console.log("Embed",key);
+        //debug("Embed",key);
         stack.push(key);
+        return stack;
     }          
 
-    function generateJS() {
-        let visited = {};
-        let js = [];
-        let k;
-
-        for (k in depends_on) {
-            if (!visited[k])
-                treeSort(k, visited, js);
-        }
+    // Generate a single monolithic code module for all the modules in
+    // the dependency tree.
+    function generateJS(root) {
+        let js = treeSort(root);
 
         let proms = [];
-        for (k in js) {
+        for (let k in js) {
             let id = js[k];
             proms.push(
                 get(found_at[id])
@@ -197,7 +222,7 @@ requirejs(["request", "getopts", "fs-extra", "uglify-es", "clean-css", "jsdom"],
                         "(^|\\W)define\\s*\\(\\s*[\"']" + id + "[\"']", "m");
                     if (!check.test(codes)) {
                         // If not, add one
-                        //console.debug("Adding ID to", id);
+                        //debug("Adding ID to", id);
                         codes = codes + "\ndefine(\"" + id
                         + "\",function(){});\n";
                     }
@@ -207,9 +232,9 @@ requirejs(["request", "getopts", "fs-extra", "uglify-es", "clean-css", "jsdom"],
         
         return Promise.all(proms)
         .then((code) => {
-            code.push("requirejs(['js/main']);");
+            code.push("requirejs(['" + root + "']);");
             let codes = code.join("\n");
-            return (options.release)
+            return (opts.release)
             ? uglify.minify(codes, {
                 ie8: true
             })
@@ -232,6 +257,7 @@ requirejs(["request", "getopts", "fs-extra", "uglify-es", "clean-css", "jsdom"],
         });
     }
 
+    // Make the path to a directory
     function mkpath(file) {
         let m = /^(.+)\/(.*?)$/.exec(file);
         let p = (m) ? mkpath(m[1]) : Promise.resolve()
@@ -247,119 +273,157 @@ requirejs(["request", "getopts", "fs-extra", "uglify-es", "clean-css", "jsdom"],
             return fs.mkdir(file);
         });
     }
-          
-    fs.readFile("index.html")
-    .then((html) => {
-        global.document = new jsdom.JSDOM(html);
-        global.window = document.window;
-        global.$ = global.jQuery = require("jquery");
-        
-        let compressed_js;
-        let promises = [];
 
-        // Analyse and generate shared JS
-        promises.push(
+    function processJS() {
+        return Promise.all([
+            
+            // Analyse dependencies rooted at js/help.js
+            getConfig("js/help")
+            .then((cfg) => {
+                return analyse("js/help", cfg);
+            }),
+
+            // Analyse dependencies rooted at js/main.js
             getConfig("js/main")
-            .then((config) => {
-                return analyse("js/main", config)
-                .then(() => {
-                    return fs.readdir("dialogs");
-                })
-                .then((entries) => {
-                    let proms = [];
-                    for (let i in entries) {
-                        let entry = entries[i];
-                        if (/\.js$/.test(entry)) {
-                            proms.push(analyse(
-                                "dialogs/" + entry.replace(".js", ""),
-                                config));
+            .then((cfg) => {
+                let deps = [ analyse("js/main", cfg) ];
+                
+                Promise.all([
+                    // Analyse dependencies for dynamically-loaded
+                    // dialog modules (they are becoming statically
+                    // loaded)
+                    fs.readdir("dialogs")
+                    .then((entries) => {
+                        for (let i in entries) {
+                            let entry = entries[i];
+                            if (/\.js$/.test(entry)) {
+                                let id = "dialogs/" + entry.replace(".js", "");
+                                addDependency("js/main", id);
+                                deps.push(analyse(id, cfg));
+                            }
                         }
-                    }
-                    return Promise.all(proms);
-                })
-                .then(() => {
-                    return fs.readdir("js");
-                })
-                .then((entries) => {
-                    let proms = [];
-                    for (let i in entries) {
-                        let entry = entries[i];
-                        if (/Store\.js$/.test(entry)
-                            && entry !== "FileStore.js") {
-                            proms.push(analyse(
-                                "js/" + entry.replace(".js", ""),
-                                config));
+                        
+                    }),
+                    
+                    // Analyse dependencies for *Store modules, except those
+                    // that are not marked as /* eslint-env browser */
+                    fs.readdir("js")
+                    .then((entries) => {
+                        for (let i in entries) {
+                            let entry = entries[i];
+                            if (/Store\.js$/.test(entry)
+                                && entry !== "FileStore.js") {
+                                let id = "js/" + entry.replace(".js", "");
+                                addDependency("js/main", id);
+                                deps.push(analyse(id, cfg));
+                            }
                         }
-                    }
-                    return Promise.all(proms);
-                });
+                    })
+                ])
+                .then(() => Promise.all(deps));
             })
-            .then(() => {
-                return generateJS();
-            })
-            .then((js) => {
-                return mkpath("dist/js")
-                .then(() => {
-                    return fs.writeFile("dist/js/main.js", js);
-                });
-            }));
-        
-        // HTML for all the dialogs. Embed in index.html.
-        promises.push(
-            listDir("dialogs", "html")
-            .then((files) => {
-                let proms = [];
-                for (let i in files) {
-                    let f = files[i];
-                    proms.push(
-                        fs.readFile(f)
-                        .then((data) => {
-                            $("body").append(data.toString());
-                        }));
-                }
-                return Promise.all(proms);
-            }));
+        ])
 
-        // Merge CSS files
-        promises.push(
-            listDir("css", "css")
-            .then((files) => {
-                let proms = [];
-                for (let i in files) {
-                    let f = files[i];
-                    if (i == 0) {
-                        $("link[href='" + f + "']")
-                        .attr("href", "css/combined.min.css");
-                    } else {
-                        $("link[href='" + f + "']").remove();
-                    }
-                    proms.push(
-                        fs.readFile(f)
-                        .then((data) => {
-                            return data.toString();
-                        }));
-                }
-                return Promise.all(proms)
-                .then((all) => {
-                    return new cleancss({
-                        compatibility: "ie8",
-                        returnPromise: true
-                    }).minify(all.join(''))
-                    .then((css) => {
-                        return mkpath("dist/css")
-                        .then(() => {
-                            return fs.writeFile("dist/css/combined.min.css",
-                                                css.styles);
-                        });
+        // Generate monolithic JS for all dependencies
+        .then(() => {
+            return Promise.all([
+                generateJS("js/help")
+                .then((js) => {
+                    return locales.js(js)
+                    .then(() => {
+                        return fs.writeFile("dist/js/help.js", js);
                     });
-                });
-            }));
- 
-        promises.push(
-            mkpath("dist/images")
-            .then(() => {
-                return listDir("images");
-            })
+                }),
+                
+                generateJS("js/main")
+                .then((js) => {
+                    return locales.js(js)
+                    .then(() => {
+                        return fs.writeFile("dist/js/main.js", js);
+                    });
+                })
+            ]);
+        });
+    }
+
+    function processImages() {
+        // Copy images
+        return listDir("images")
+        .then((files) => {
+            let proms = [];
+            for (let i in files) {
+                let f = files[i];
+                proms.push(
+                    fs.readFile(f)
+                    .then((data) => {
+                        return fs.writeFile("dist/" + f, data);
+                    }));
+            }
+            return Promise.all(proms);
+        });
+    }
+
+    function processCSS(module, document) {
+        // Merge and minify CSS
+        let i = 0;
+        let proms = [];
+
+        let links = document.getElementsByTagName("link");
+        for (let link of links) {
+            if (!link.id
+                || link.getAttribute("rel") != "stylesheet")
+                return;
+            let f = link.getAttribute("href");
+            if (i++ == 0)
+                link.setAttribute("href", "css/" + module + ".min.css");
+            else
+                link.remove();
+            console.log("PUSSY",f);
+            proms.push(
+                fs.readFile(f)
+                .then((data) => {
+                    return data.toString();
+                }));
+        }
+        
+        Promise.all(proms)
+        .then((all) => {
+            let allCss = all.join('\n');
+            if (opts.compress)
+                return new cleancss({
+                    compatibility: "ie8",
+                    returnPromise: true
+                }).minify(allCss);
+            else
+                return allCss;
+        })
+        .then((css) => {
+            return fs.writeFile("dist/css/" + module + ".min.css",
+                                css.styles);
+        });
+    }
+          
+    function processHTML(module) {
+        let window, document;
+        // Load and parse the root HTML. We know this is in index.html. We
+        // further know this loads js/main.js as the main module.
+        return jsdom.JSDOM.fromFile(module + ".html")
+        .then((dom) => {
+            window = dom.window;
+            document = window.document;
+            // Rewrite meta tags as required
+            let metas = document.getElementsByTagName("meta");
+            for (let meta of metas) {
+                if (meta.name === "build-date")
+                    meta.content = new Date();
+            }
+        })
+        .then(() => {
+            if (module !== "index")
+                return Promise.resolve();
+            
+            // Get HTML for all the dialogs, and embed in index.html.
+            return listDir("dialogs", "html")
             .then((files) => {
                 let proms = [];
                 for (let i in files) {
@@ -367,24 +431,67 @@ requirejs(["request", "getopts", "fs-extra", "uglify-es", "clean-css", "jsdom"],
                     proms.push(
                         fs.readFile(f)
                         .then((data) => {
-                            return fs.writeFile("dist/" + f, data);
+                            let s = data.toString();
+                            document.body.append(s);
                         }));
                 }
                 return Promise.all(proms);
-            }));
+            })
+        })
+        .then(() => {
+            // The HTML is complete, process the CSS
+            return processCSS(module, document);
+        })
+        .then(() => {
+            // Generate new HTML
+            let index = "<!DOCTYPE html>\n" +
+                document.querySelector("html").innerHTML;
+            debug("Extracting strings from",module+".html");
+            return locales.html(index)
+            .then(() => {
+                return fs.writeFile("dist/" + module + ".html", index);
+            });
+            $("head").empty();
+        });
+    }
 
-        promises.push(new Promise((resolve)  => {
-            $("meta[name='build-date']").attr("content", new Date());
-            resolve();
-        }));
-        
-        return Promise.all(promises);
+    let locales = new Locales();
+
+    locales.loadTranslations()
+
+    .then(() => {
+        return Promise.all([
+            mkpath("dist/js"),
+            mkpath("dist/images"),
+            mkpath("dist/css"),
+            mkpath("dist/locale"),
+        ]);
+    })
+
+    .then(() => {
+        return Promise.all([
+            processImages(),
+            processJS("main"),
+            processJS("help"),
+            processHTML("index").then(() => processHTML("help")),
+        ]);
+    })
+
+    .then(() => {
+        // Update translations
+        debug("Updating translations");
+        return locales.updateTranslations(opts.translate)
+        .then(() => {
+            return locales.saveTranslations();
+        });
     })
     .then(() => {
-        let index = "<!DOCTYPE html>\n" + $("html").html();
-        return fs.writeFile("dist/index.html", index);
+
+        debug("Saving translations");
+        return locales.saveTranslations("dist");
     })
     .catch((e) => {
-        console.log("Failure:", e.stack);
+        
+        console.error("Failure:", e);
     });
 })
