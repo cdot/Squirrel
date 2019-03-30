@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <head>
-    <!-- index.html -->
+    <meta name="copyright" content="Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT">
     <meta charset="UTF-8">
     <meta name="cache-control" content="public">
-    <meta name="expires" content="Mon, 2 Apr 2018 09:00:00 GMT">
+    <meta name="cache-control" content="max-age=315360000">
+    <meta name="expires" content="Sat Mar 30 2019 10:12:18 GMT+0000 (GMT)">
     <!-- for ios 7 style, multi-resolution icon of 152x152 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-barstyle" content="black-translucent">
@@ -12,16 +13,16 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <meta name="build-date" content="Fri Mar 29 2019 14:34:14 GMT+0000 (GMT)">
+    <meta name="build-date" content="Sat Mar 30 2019 10:12:18 GMT+0000 (GMT)">
     <link rel="shortcut icon" sizes="196x196" href="images/squirrel.svg">
     <title>Squirrel</title>
     <link rel="icon" href="images/favicon.ico" type="image/x-icon">
 
     <link id="jQueryTheme" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" rel="stylesheet">
-    <link href="css/Icons.css" rel="stylesheet">
-    <link href="css/Tree.css" rel="stylesheet">
+    <link href="css/index.min.css" rel="stylesheet">
+    
     <link href="css/Dialogs.css" rel="stylesheet">
-    <link href="css/Squirrel.css" rel="stylesheet">
+    
 
     <script data-main="js/main" src="//cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.js"></script>
   </head>
@@ -62,255 +63,249 @@
     </div>
   
 
-&lt;div id="about_dlg" class="dlg-dialog TX_title" title="About Squirrel"&gt;
-  &lt;p class="TX_html"&gt;
-    Squirrel is Copyright &amp;copy; 2015-2019 Crawford Currie &lt;a href="http://c-dot.co.uk"&gt;http://c-dot.co.uk&lt;/a&gt;
-  &lt;/p&gt;
-  &lt;p data-id="built" class="TX_text template"&gt;
+<div id="about_dlg" class="dlg-dialog TX_title" title="About Squirrel">
+  <p class="TX_html">
+    Squirrel is Copyright © 2015-2019 Crawford Currie <a href="http://c-dot.co.uk">http://c-dot.co.uk</a>
+  </p>
+  <p data-id="built" class="TX_text template">
     This version was released on $1
-  &lt;/p&gt;
-  &lt;p class="TX_html"&gt;
+  </p>
+  <p class="TX_html">
     Licensed under the MIT License. Reuse within proprietary software is
     permitted provided all copies of the licensed software include a
     copy of the MIT License terms and the copyright notice.
-  &lt;/p&gt;
-  &lt;button data-id="cancel" class="TX_text"&gt;Close&lt;/button&gt;
-&lt;/div&gt;
-&lt;div id="add_dlg" class="dlg-dialog TX_title" title="Add"&gt;
-  &lt;p&gt;
-    &lt;span data-id="folder_help" class="TX_text"&gt;
+  </p>
+  <button data-id="cancel" class="TX_text">Close</button>
+</div><div id="add_dlg" class="dlg-dialog TX_title" title="Add">
+  <p>
+    <span data-id="folder_help" class="TX_text">
       Enter the name for the new folder
-    &lt;/span&gt;
-    &lt;span data-id="value_help" class="TX_text"&gt;
+    </span>
+    <span data-id="value_help" class="TX_text">
       Enter the name and value for the new entry
-    &lt;/span&gt;
-  &lt;/p&gt;
-  &lt;table&gt;
-    &lt;tbody&gt;
-      &lt;tr&gt;
-        &lt;td data-id="path"&gt;&lt;/td&gt;
-        &lt;td&gt;
-          &lt;input data-id="key" type="text" value="" /&gt;
-        &lt;/td&gt;
-      &lt;/tr&gt;
-      &lt;tr data-id="value_parts"&gt;
-        &lt;th class="TX-text"&gt;Value:&lt;/th&gt;
-        &lt;td&gt;
-          &lt;input class="TX_title" data-id="value" type="text" value="" title="Enter value"/&gt;
-        &lt;/td&gt;
-      &lt;/tr&gt;
-  &lt;/table&gt;
-  &lt;button data-id="ok" class="TX_text TX_title" title="Add new entry" &gt;OK&lt;/button&gt;
-&lt;/div&gt;
-&lt;div id="alarm_dlg" class="dlg-dialog TX_title" title="Reminder"&gt;
-  &lt;p&gt;
-    &lt;span class="TX_text"&gt;Choose when you want to be reminded about&lt;/span&gt;
-    '&lt;span data-id="path"&gt;&lt;/span&gt;'
-  &lt;/p&gt;
-  &lt;p&gt;
-    &lt;label for="alarm_enable" class="TX_text"&gt;Enable reminder&lt;/label&gt;
-    &lt;input type="checkbox" data-id="enabled" id="alarm-enable"&gt;
-    &lt;div data-id="settings"&gt;
-      &lt;label for="alarm_number" class="TX_text"&gt;Remind in&lt;/label&gt;
-      &lt;input data-id="number" size="3" value="6" /&gt;
-      &lt;select data-id="unit"&gt;
-        &lt;option value="d" selected="selected" class="TX_text"&gt;days&lt;/option&gt;
-        &lt;option value="m" class="TX_text"&gt;months&lt;/option&gt;
-        &lt;option value="y" class="TX_text"&gt;years&lt;/option&gt;
-      &lt;/select&gt;
-      &lt;span class="TX_text"&gt;on&lt;/span&gt;
-      &lt;input data-id="date" type="text"/&gt;
-    &lt;/div&gt;
-  &lt;/p&gt;
-  &lt;button data-id="ok" class="TX_text TX_title" title="Save"&gt;Save&lt;/button&gt;
-&lt;/div&gt;
-&lt;div id="alert_dlg" class="dlg-dialog TX_title" title="Alert"&gt;
-  &lt;p data-id="messages"&gt;&lt;/p&gt;
-  &lt;button data-id="ok" class="TX_text"&gt;OK&lt;/button&gt;
-&lt;/div&gt;
-&lt;div id="chpw_dlg" class="dlg-dialog TX_title" title="Change Encryption Password"&gt;
-  &lt;p class="dlg-warning"&gt;
-    &lt;span class="TX_text"&gt;
+    </span>
+  </p>
+  <table>
+    <tbody>
+      <tr>
+        <td data-id="path"></td>
+        <td>
+          <input data-id="key" type="text" value="">
+        </td>
+      </tr>
+      <tr data-id="value_parts">
+        <th class="TX-text">Value:</th>
+        <td>
+          <input class="TX_title" data-id="value" type="text" value="" title="Enter value">
+        </td>
+      </tr>
+  </tbody></table>
+  <button data-id="ok" class="TX_text TX_title" title="Add new entry">OK</button>
+</div><div id="alarm_dlg" class="dlg-dialog TX_title" title="Reminder">
+  <p>
+    <span class="TX_text">Choose when you want to be reminded about</span>
+    '<span data-id="path"></span>'
+  </p>
+  <p>
+    <label for="alarm_enable" class="TX_text">Enable reminder</label>
+    <input type="checkbox" data-id="enabled" id="alarm-enable">
+    </p><div data-id="settings">
+      <label for="alarm_number" class="TX_text">Remind in</label>
+      <input data-id="number" size="3" value="6">
+      <select data-id="unit">
+        <option value="d" selected="selected" class="TX_text">days</option>
+        <option value="m" class="TX_text">months</option>
+        <option value="y" class="TX_text">years</option>
+      </select>
+      <span class="TX_text">on</span>
+      <input data-id="date" type="text">
+    </div>
+  <p></p>
+  <button data-id="ok" class="TX_text TX_title" title="Save">Save</button>
+</div><div id="alert_dlg" class="dlg-dialog TX_title" title="Alert">
+  <p data-id="messages"></p>
+  <button data-id="ok" class="TX_text">OK</button>
+</div><div id="chpw_dlg" class="dlg-dialog TX_title" title="Change Encryption Password">
+  <p class="dlg-warning">
+    <span class="TX_text">
       You must ensure that all clients up to date and you
       are safely connected to the internet before doing this,
       or you will lose data.
-    &lt;/span&gt;
-    &lt;span class="TX_text"&gt;
+    </span>
+    <span class="TX_text">
       Changing the encryption password will overwrite all data in
       the cloud with what you can currently see in the browser.
-    &lt;/span&gt;
-  &lt;/p&gt;
-  &lt;table&gt;
-    &lt;tr&gt;
-      &lt;td&gt;
-        &lt;label for="chpw_pass"class="TX_text"&gt;New password&lt;/label&gt;
-      &lt;/td&gt;
-      &lt;td&gt;
-        &lt;input id="chpw_pass" type="password" size="50" data-id="pass" class="TX_title" title="Enter new password" value="" /&gt;
-      &lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;
-        &lt;label for="chpw_conf" class="TX_text"&gt;
+    </span>
+  </p>
+  <table>
+    <tbody><tr>
+      <td>
+        <label for="chpw_pass" class="TX_text">New password</label>
+      </td>
+      <td>
+        <input id="chpw_pass" type="password" size="50" data-id="pass" class="TX_title" title="Enter new password" value="">
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <label for="chpw_conf" class="TX_text">
           Confirm new password
-        &lt;/label&gt;
-      &lt;/td&gt;
-      &lt;td&gt;
-        &lt;input id="chpw_conf" type="password" size="50" data-id="conf" class="TX_title" title="Re-enter new password" value="" /&gt;
-      &lt;/td&gt;
-    &lt;/tr&gt;
-  &lt;/table&gt;
-  &lt;p data-id="nomatch" class="dlg-error TX_text"&gt;
+        </label>
+      </td>
+      <td>
+        <input id="chpw_conf" type="password" size="50" data-id="conf" class="TX_title" title="Re-enter new password" value="">
+      </td>
+    </tr>
+  </tbody></table>
+  <p data-id="nomatch" class="dlg-error TX_text">
       Passwords do not match
-  &lt;/p&gt;
-  &lt;p data-id="nonull" class="dlg-error TX_text"&gt;
+  </p>
+  <p data-id="nonull" class="dlg-error TX_text">
       Password may not be empty
-  &lt;/p&gt;
-  &lt;div&gt;
-    &lt;button data-id="ok" class="TX_title TX_text" title="Set new master password"&gt;Set new password&lt;/button&gt;
-  &lt;/div&gt;
-&lt;/div&gt;
-&lt;div id="delete_dlg" class="dlg-dialog TX_title" title="Delete entry"&gt;
-  &lt;p&gt;
-    &lt;span class="TX_text"&gt;Are you sure you want to delete&lt;/span&gt; '&lt;span data-id="path"&gt;&lt;/span&gt;'
-    &lt;span data-id="coll" class="TX_text"&gt; and everything under it?&lt;/span&gt;
-  &lt;/p&gt;
-  &lt;p&gt;
-    &lt;strong class="TX_text"&gt;This action cannot be undone&lt;/strong&gt;
-  &lt;/p&gt;
-  &lt;div&gt;
-    &lt;button data-id="cancel" class="TX_text"&gt;Cancel&lt;/button&gt;
-    &lt;button data-id="ok" class="TX_text"&gt;Delete&lt;/button&gt;
-  &lt;/div&gt;
-&lt;/div&gt;
-&lt;div id="extras_dlg" class="dlg-dialog TX_title" title="Settings"&gt;
-  &lt;table&gt;
-    &lt;tr&gt;
-      &lt;th colspan="2"&gt;
-        &lt;span class="TX_text"&gt;User interface&lt;/span&gt;
-        &lt;div class="TX_text twisted" data-open="ui-icon-info"&gt;
+  </p>
+  <div>
+    <button data-id="ok" class="TX_title TX_text" title="Set new master password">Set new password</button>
+  </div>
+</div><div id="delete_dlg" class="dlg-dialog TX_title" title="Delete entry">
+  <p>
+    <span class="TX_text">Are you sure you want to delete</span> '<span data-id="path"></span>'
+    <span data-id="coll" class="TX_text"> and everything under it?</span>
+  </p>
+  <p>
+    <strong class="TX_text">This action cannot be undone</strong>
+  </p>
+  <div>
+    <button data-id="cancel" class="TX_text">Cancel</button>
+    <button data-id="ok" class="TX_text">Delete</button>
+  </div>
+</div><div id="extras_dlg" class="dlg-dialog TX_title" title="Settings">
+  <table>
+    <tbody><tr>
+      <th colspan="2">
+        <span class="TX_text">User interface</span>
+        <div class="TX_text twisted" data-open="ui-icon-info">
           These preferences will be saved in cookies in your browser
-        &lt;/div&gt;
-      &lt;/th&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td class="TX_text"&gt;Autosave&lt;/td&gt;
-      &lt;td&gt;
-        &lt;input type="checkbox" data-id="autosave" /&gt;
-        &lt;div class="twisted" data-open="ui-icon-info"&gt;
-          &lt;span class="TX_text"&gt;
+        </div>
+      </th>
+    </tr>
+    <tr>
+      <td class="TX_text">Autosave</td>
+      <td>
+        <input type="checkbox" data-id="autosave">
+        <div class="twisted" data-open="ui-icon-info">
+          <span class="TX_text">
             Automatically save whenever anything changes
-          &lt;/span&gt;
+          </span>
 
-        &lt;/div&gt;
-      &lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td class="TX_text"&gt;Hide Values&lt;/td&gt;
-      &lt;td&gt;
-        &lt;input type="checkbox" data-id="hidevalues" /&gt;
-        &lt;div class="twisted" data-open="ui-icon-info"&gt;
-          &lt;span class="TX_text"&gt;
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td class="TX_text">Hide Values</td>
+      <td>
+        <input type="checkbox" data-id="hidevalues">
+        <div class="twisted" data-open="ui-icon-info">
+          <span class="TX_text">
             Hide values until they are hovered over. Use if someone
             might be looking over your shoulder
-          &lt;/span&gt;
-        &lt;/div&gt;
-      &lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td class="TX_text"&gt;Language&lt;/td&gt;
-      &lt;td&gt;
-        &lt;input type="text" data-id="language" /&gt;
-        &lt;div class="twisted TX_text" data-open="ui-icon-info"&gt;
-          &lt;span class="TX_text"&gt;
+          </span>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td class="TX_text">Language</td>
+      <td>
+        <input type="text" data-id="language">
+        <div class="twisted TX_text" data-open="ui-icon-info">
+          <span class="TX_text">
             Enter the language code for a supported language
-          &lt;/span&gt;
-        &lt;/div&gt;
-      &lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td class="TX_text"&gt;Text size&lt;/td&gt;
-      &lt;td&gt;
-        &lt;button data-id="bigger" style="font-size:larger" title="Larger"&gt;Aa&lt;/button&gt;
-        &lt;button data-id="smaller" style="font-size:smaller" title="Smaller"&gt;Aa&lt;/button&gt;
-        &lt;span class="twisted TX_text" data-open="ui-icon-info"&gt;
-          &lt;span class="TX_text"&gt;
+          </span>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td class="TX_text">Text size</td>
+      <td>
+        <button data-id="bigger" style="font-size:larger" title="Larger">Aa</button>
+        <button data-id="smaller" style="font-size:smaller" title="Smaller">Aa</button>
+        <span class="twisted TX_text" data-open="ui-icon-info">
+          <span class="TX_text">
             Increase/decrease text size
-          &lt;/span&gt;
-        &lt;/span&gt;
-      &lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td class="TX_text"&gt;Colour scheme&lt;/td&gt;
-      &lt;td&gt;
-        &lt;select data-id="theme"&gt;
-          &lt;option value="base"&gt;Base&lt;/option&gt;
-          &lt;option value="ui-lightness"&gt;UI Lightness&lt;/option&gt;
-          &lt;option value="ui-darkness"&gt;UI Darkness&lt;/option&gt;
-          &lt;option value="smoothness"&gt;Smoothness&lt;/option&gt;
-          &lt;option value="start"&gt;Start&lt;/option&gt;
-          &lt;option value="redmond"&gt;Redmond&lt;/option&gt;
-          &lt;option value="sunny"&gt;Sunny&lt;/option&gt;
-          &lt;option value="overcast"&gt;Overcast&lt;/option&gt;
-          &lt;option value="le-frog"&gt;Le Frog&lt;/option&gt;
-          &lt;option value="flick"&gt;Flick&lt;/option&gt;
-          &lt;option value="pepper-grinder"&gt;Pepper Grinder&lt;/option&gt;
-          &lt;option value="eggplant"&gt;Eggplant&lt;/option&gt;
-          &lt;option value="dark-hive"&gt;Dark Hive&lt;/option&gt;
-          &lt;option value="cupertino"&gt;Cupertino&lt;/option&gt;
-          &lt;option value="south-street"&gt;South Street&lt;/option&gt;
-          &lt;option value="blitzer"&gt;Blitzer&lt;/option&gt;
-          &lt;option value="humanity"&gt;Humanity&lt;/option&gt;
-          &lt;option value="hot-sneaks"&gt;Hot Sneaks&lt;/option&gt;
-          &lt;option value="excite-bike"&gt;Excite Bike&lt;/option&gt;
-          &lt;option value="vader"&gt;Vader&lt;/option&gt;
-          &lt;option value="dot-luv"&gt;Dot Luv&lt;/option&gt;
-          &lt;option value="mint-choc"&gt;Mint Choc&lt;/option&gt;
-          &lt;option value="black-tie"&gt;Black Tie&lt;/option&gt;
-          &lt;option value="trontastic"&gt;Trontastic&lt;/option&gt;
-          &lt;option value="swanky-purse"&gt;Swanky Purse&lt;/option&gt;
-        &lt;/select&gt;
-        &lt;div class="twisted" data-open="ui-icon-info"&gt;
-          &lt;span class="TX_text"&gt;
+          </span>
+        </span>
+      </td>
+    </tr>
+    <tr>
+      <td class="TX_text">Colour scheme</td>
+      <td>
+        <select data-id="theme">
+          <option value="base">Base</option>
+          <option value="ui-lightness">UI Lightness</option>
+          <option value="ui-darkness">UI Darkness</option>
+          <option value="smoothness">Smoothness</option>
+          <option value="start">Start</option>
+          <option value="redmond">Redmond</option>
+          <option value="sunny">Sunny</option>
+          <option value="overcast">Overcast</option>
+          <option value="le-frog">Le Frog</option>
+          <option value="flick">Flick</option>
+          <option value="pepper-grinder">Pepper Grinder</option>
+          <option value="eggplant">Eggplant</option>
+          <option value="dark-hive">Dark Hive</option>
+          <option value="cupertino">Cupertino</option>
+          <option value="south-street">South Street</option>
+          <option value="blitzer">Blitzer</option>
+          <option value="humanity">Humanity</option>
+          <option value="hot-sneaks">Hot Sneaks</option>
+          <option value="excite-bike">Excite Bike</option>
+          <option value="vader">Vader</option>
+          <option value="dot-luv">Dot Luv</option>
+          <option value="mint-choc">Mint Choc</option>
+          <option value="black-tie">Black Tie</option>
+          <option value="trontastic">Trontastic</option>
+          <option value="swanky-purse">Swanky Purse</option>
+        </select>
+        <div class="twisted" data-open="ui-icon-info">
+          <span class="TX_text">
             Select your preferred colour scheme.
-          &lt;/span&gt;
-          &lt;span class="TX_text"&gt;
+          </span>
+          <span class="TX_text">
             This preference will be saved in a cookie in this browser
-          &lt;/span&gt;
-        &lt;/div&gt;
-      &lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;&lt;th class="TX_text" colspan="2"&gt;Database&lt;/th&gt;&lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td class="TX_text"&gt;Cloud Store&lt;/td&gt;
-      &lt;td&gt;
-        &lt;button data-id="chss" class="TX_text"&gt;Settings&lt;/button&gt;
-      &lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td class="TX_title"&gt;Encryption password&lt;/td&gt;
-      &lt;td&gt;
-        &lt;button data-id="chpw" class="TX_text"&gt;Change&lt;/button&gt;
-        &lt;div class="twisted" data-open="ui-icon-info"&gt;
-          &lt;span class="TX_text"&gt;
+          </span>
+        </div>
+      </td>
+    </tr>
+    <tr><th class="TX_text" colspan="2">Database</th></tr>
+    <tr>
+      <td class="TX_text">Cloud Store</td>
+      <td>
+        <button data-id="chss" class="TX_text">Settings</button>
+      </td>
+    </tr>
+    <tr>
+      <td class="TX_title">Encryption password</td>
+      <td>
+        <button data-id="chpw" class="TX_text">Change</button>
+        <div class="twisted" data-open="ui-icon-info">
+          <span class="TX_text">
             Change the encryption password for the store.
-          &lt;/span&gt;
-          &lt;span class="TX_text"&gt;
+          </span>
+          <span class="TX_text">
             This may be different to the password you use to log in to
             your cloud data store.
-          &lt;/span&gt;
-        &lt;/div&gt;
-      &lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td class="TX_text"&gt;Optimise&lt;/td&gt;
-      &lt;td&gt;
-        &lt;button data-id="optimise" class="TX_text"&gt;Optimise&lt;/button&gt;
-        &lt;div class="twisted" data-open="ui-icon-info"&gt;
-          &lt;span class="TX_text"&gt;
+          </span>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td class="TX_text">Optimise</td>
+      <td>
+        <button data-id="optimise" class="TX_text">Optimise</button>
+        <div class="twisted" data-open="ui-icon-info">
+          <span class="TX_text">
             Optimise the store by removing old actions.
-          &lt;/span&gt;
-          &lt;span class="TX_text"&gt;
+          </span>
+          <span class="TX_text">
             The cloud store keeps a history of all changes from all clients,
             so that every client has a chance to see every change, however
             long it ihas been since it last updated. This history can get
@@ -318,206 +313,197 @@
             history. You should only do this if you are 100% certain that
             no client has local changes that may need to be saved to the
             cloud.
-          &lt;/span&gt;
-        &lt;/div&gt;
-      &lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td class="TX_text"&gt;Raw JSON&lt;/td&gt;
-      &lt;td&gt;
-        &lt;button data-id="json" class="TX_text"&gt;View/Edit&lt;/button&gt;
-        &lt;div class="twisted" data-open="ui-icon-info"&gt;
-          &lt;span class="TX_text"&gt;
+          </span>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td class="TX_text">Raw JSON</td>
+      <td>
+        <button data-id="json" class="TX_text">View/Edit</button>
+        <div class="twisted" data-open="ui-icon-info">
+          <span class="TX_text">
             View/Edit raw JSON for the entire store
-          &lt;/span&gt;
-          &lt;span class="TX_text"&gt;
+          </span>
+          <span class="TX_text">
             Be very careful!
-          &lt;/span&gt;
-        &lt;/div&gt;
-      &lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;th colspan="2"&gt;
-        &lt;button data-id="about" class="TX_text"&gt;About Squirrel&lt;/button&gt;
-      &lt;/th&gt;
-    &lt;/tr&gt;
-  &lt;/table&gt;
-&lt;/div&gt;
-&lt;div id="insert_dlg" class="dlg-dialog TX_title" title="Insert copy"&gt;
-  &lt;p class="TX_text"&gt;Insert copy from clipboard&lt;/p&gt;
-  &lt;p&gt;
-    &lt;span class="TX_text"&gt;New name:&lt;/span&gt;
-    &lt;input data-id="key" type="text" value="" /&gt;
-  &lt;/p&gt;
-  &lt;button data-id="ok" class="TX_text TX_title" title="Insert copy" &gt;Insert&lt;/button&gt;
-&lt;/div&gt;
-&lt;div id="json_dlg" class="dlg-dialog TX_title" title="Database JSON"&gt;
-  &lt;div class="twisted" data-open="ui-icon-info"&gt;
-    &lt;p class="TX_html"&gt;
+          </span>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <th colspan="2">
+        <button data-id="about" class="TX_text">About Squirrel</button>
+      </th>
+    </tr>
+  </tbody></table>
+</div><div id="insert_dlg" class="dlg-dialog TX_title" title="Insert copy">
+  <p class="TX_text">Insert copy from clipboard</p>
+  <p>
+    <span class="TX_text">New name:</span>
+    <input data-id="key" type="text" value="">
+  </p>
+  <button data-id="ok" class="TX_text TX_title" title="Insert copy">Insert</button>
+</div><div id="json_dlg" class="dlg-dialog TX_title" title="Database JSON">
+  <div class="twisted" data-open="ui-icon-info">
+    <p class="TX_html">
       This dialog lets you access the raw
-      &lt;a href="https://www.json.org/"&gt;JSON&lt;/a&gt; of the database. It
+      <a href="https://www.json.org/">JSON</a> of the database. It
       can be used for:
-    &lt;/p&gt;
-    &lt;ul&gt;
-      &lt;li class="TX_text"&gt;Making a plain-text copy of the database e.g.
-        for backup&lt;/li&gt;
-      &lt;li class="TX_text"&gt;Making specific edits&lt;/li&gt;
-      &lt;li class="TX_text"&gt;Bulk adding new top-level folders and values&lt;/li&gt;
-    &lt;/ul&gt;
-    &lt;p class="TX_text dlg-warning"&gt;
+    </p>
+    <ul>
+      <li class="TX_text">Making a plain-text copy of the database e.g.
+        for backup</li>
+      <li class="TX_text">Making specific edits</li>
+      <li class="TX_text">Bulk adding new top-level folders and values</li>
+    </ul>
+    <p class="TX_text dlg-warning">
       Plain text versions of the database must be secured
       carefully to prevent loss of sensitive data.
-    &lt;/p&gt;
-    &lt;p class="TX_text"&gt;
+    </p>
+    <p class="TX_text">
       Note that loading the JSON will only load folders that are
       not already in the database.
-    &lt;/p&gt;
-  &lt;/div&gt;
-  &lt;textarea data-id="text"&gt;
-  &lt;/textarea&gt;
-  &lt;div&gt;
-    &lt;button data-id="ok" class="TX_text"&gt;Load this JSON&lt;/button&gt;
-  &lt;/div&gt;
-  &lt;div data-id="messages"&gt;
-  &lt;/div&gt;
-&lt;/div&gt;
-&lt;div id="login_dlg" class="dlg-dialog TX_title" title="Login"&gt;
-  &lt;table width="100%"&gt;
-    &lt;tbody&gt;
-      &lt;tr&gt;
-        &lt;td&gt;&lt;label for="user" class="TX_text"&gt;User:&lt;/label&gt;&lt;/td&gt;
-        &lt;td&gt;
-	  &lt;input size="25" data-id="user" value="" class="TX_title" title="Enter username" /&gt;
-        &lt;/td&gt;
-      &lt;/tr&gt;
-      &lt;tr&gt;
-        &lt;td&gt;
-          &lt;label for="pass" class="TX_text"&gt;Pass:&lt;/label&gt;
-        &lt;/td&gt;
-        &lt;td&gt;
-	  &lt;input type="text" size="25" data-id="pass" class="TX_title" title="Enter password" value="" /&gt;&lt;br /&gt;
-        &lt;/td&gt;
-      &lt;/tr&gt;
-    &lt;/tbody&gt;
-  &lt;/table&gt;
-  &lt;p&gt;
-    &lt;button data-id="ok" class="TX_text"&gt;Sign In&lt;/button&gt;
-  &lt;/p&gt;
-&lt;/div&gt;
-&lt;div id="optimise_dlg" class="dlg-dialog TX_title" title="Optimise Cloud"&gt;
-  &lt;div class="TX_text dlg-warning"&gt;
+    </p>
+  </div>
+  <textarea data-id="text">  </textarea>
+  <div>
+    <button data-id="ok" class="TX_text">Load this JSON</button>
+  </div>
+  <div data-id="messages">
+  </div>
+</div><div id="login_dlg" class="dlg-dialog TX_title" title="Login">
+  <table width="100%">
+    <tbody>
+      <tr>
+        <td><label for="user" class="TX_text">User:</label></td>
+        <td>
+	  <input size="25" data-id="user" value="" class="TX_title" title="Enter username">
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <label for="pass" class="TX_text">Pass:</label>
+        </td>
+        <td>
+	  <input type="text" size="25" data-id="pass" class="TX_title" title="Enter password" value=""><br>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <p>
+    <button data-id="ok" class="TX_text">Sign In</button>
+  </p>
+</div><div id="optimise_dlg" class="dlg-dialog TX_title" title="Optimise Cloud">
+  <div class="TX_text dlg-warning">
     You must ensure that all clients up to date and you
     are safely connected to the internet before doing this,
     or you will lose data.
-  &lt;/div&gt;
-  &lt;div class="TX_text dlg-warning"&gt;
+  </div>
+  <div class="TX_text dlg-warning">
     Optimising your cloud store will lose all the history, which will
     make it impossible for any client that is not completely up to
     date to synchronise. You have been warned!
-  &lt;/div&gt;
-  &lt;div data-id="calculating" class="TX_text"&gt;
+  </div>
+  <div data-id="calculating" class="TX_text">
     Calculating if optimisation is worthwhile
-  &lt;/div&gt;
-  &lt;div data-id="existing" class="TX_text template"&gt;
+  </div>
+  <div data-id="existing" class="TX_text template">
     The cloud currently has $1 action$?($1!=1,s,) in the history.
-  &lt;/div&gt;
-  &lt;div data-id="study" class="TX_text template"&gt;
+  </div>
+  <div data-id="study" class="TX_text template">
     After optimisation it will have $1 node$?($1!=1,s,) + $2 alarm$?($2!=1,s,) + $3 constraint$?($3!=1,s,) = $4 action$?($4!=1,s,).
-  &lt;/div&gt;
-  &lt;button data-id="ok" class="TX_text"&gt;Optimise&lt;/button&gt;
-  &lt;div data-id="messages"&gt;&lt;/div&gt;
-&lt;/div&gt;
-&lt;div id="pick_dlg" class="dlg-dialog TX_title" title="Pick characters"&gt;
-  &lt;p class="TX_text"&gt;
+  </div>
+  <button data-id="ok" class="TX_text">Optimise</button>
+  <div data-id="messages"></div>
+</div><div id="pick_dlg" class="dlg-dialog TX_title" title="Pick characters">
+  <p class="TX_text">
     Click on a character position to see what character it is
-  &lt;/p&gt;
-  &lt;table&gt;
-    &lt;tbody&gt;
-      &lt;tr data-id="which"&gt;&lt;/tr&gt;
-      &lt;tr data-id="from"&gt;&lt;/tr&gt;
-    &lt;/tbody&gt;
-  &lt;/table&gt;
-  &lt;p&gt;
-    &lt;button data-id="clear" class="TX_text"&gt;Clear&lt;/button&gt;
-  &lt;/p&gt;
-&lt;/div&gt;
-&lt;div id="randomise_dlg" class="dlg-dialog TX_title" title="Generate random value"&gt;
-  &lt;span class="TX_text"&gt;Suggested value for&lt;/span&gt;
-  '&lt;span data-id="key"&gt;&lt;/span&gt;': '&lt;code data-id="idea" class="dlg-value"&gt;&lt;/code&gt;'
-  &lt;table&gt;
-    &lt;tr&gt;
-      &lt;td class="TX_text"&gt;Length&lt;/td&gt;
-      &lt;td&gt;
-        &lt;input data-id="len" size="4" value="20" class="TX_title" title="Enter password length" /&gt;
-      &lt;/td&gt;
-      &lt;td&gt;
-        &lt;button data-id="remember" class="TX_text TX_title" title="Remember constraints on this value"&gt;Remember&lt;/button&gt;
-      &lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td class="TX_text"&gt;Characters&lt;/td&gt;
-      &lt;td&gt;
-        &lt;input data-id="chs" size="30" value="A-Za-z0-9!%^&amp;*_$+-=;:@#~,./?" class="TX_title" title="Enter the characters that are legal in passwords for this site. You can use character ranges like A-Z or 0-9" /&gt;
-      &lt;/td&gt;
-      &lt;td&gt;
-        &lt;button data-id="reset" class="TX_text TX_title" title="Reset default constraints"&gt;Reset&lt;/button&gt;
-      &lt;/td&gt;
-    &lt;/tr&gt;
-  &lt;/table&gt;
-  &lt;div&gt;
-    &lt;button data-id="ok" class="TX_text"&gt;Use this&lt;/button&gt;
-    &lt;button data-id="again" class="TX_text"&gt;Try again&lt;/button&gt;
-    &lt;button data-id="cancel" class="TX_text"&gt;Cancel&lt;/button&gt;
-  &lt;/div&gt;
-&lt;/div&gt;
-&lt;div id="store_settings_dlg" class="dlg-dialog TX_title" title="Store settings"&gt;
-  &lt;p data-id="image_message" class="template pick-one"&gt;
-    &lt;span data-id="cui" class="dlg-error template TX_text"&gt;
+  </p>
+  <table>
+    <tbody>
+      <tr data-id="which"></tr>
+      <tr data-id="from"></tr>
+    </tbody>
+  </table>
+  <p>
+    <button data-id="clear" class="TX_text">Clear</button>
+  </p>
+</div><div id="store_settings_dlg" class="dlg-dialog TX_title" title="Store settings">
+  <p data-id="image_message" class="template pick-one">
+    <span data-id="cui" class="dlg-error template TX_text">
       Cannot use this image because of this error: $1
-    &lt;/span&gt;
-    &lt;span data-id="xbyy" class="template"&gt;
+    </span>
+    <span data-id="xbyy" class="template">
       $1 x $2
-    &lt;/span&gt;
-  &lt;/p&gt;
-  &lt;div data-id="get_image"&gt;
-    &lt;div class="twisted" data-open="ui-icon-info"&gt;
-      &lt;p class="twisted-body"&gt;
-        &lt;span class="TX_text"&gt;
+    </span>
+  </p>
+  <div data-id="get_image">
+    <div class="twisted" data-open="ui-icon-info">
+      <p class="twisted-body">
+        <span class="TX_text">
           Choose a local image that will be copied and used to hide
           your cloud store.
-        &lt;/span&gt;
-        &lt;span class="TX_text"&gt;
+        </span>
+        <span class="TX_text">
           This should be a complex colour image of at least
           1024x768 pixels, preferably with variable transparency.
-        &lt;/span&gt;
-        &lt;span class="TX_text"&gt;
+        </span>
+        <span class="TX_text">
           Note that very large images may take a long time to load
           and save.
-        &lt;/span&gt;
-      &lt;/p&gt;
-    &lt;/div&gt;
-    &lt;label for="change_image_file" class="TX_text"&gt;Choose Image for Steganography&lt;/label&gt;
-    &lt;input type="file" data-id="image_file" class="dlg-hidden TX_title" accept="image/*" id="change_image_file"/&gt;
-    &lt;p&gt;&lt;img id="stegamage" data-id="steg_image" /&gt;&lt;/p&gt;
-  &lt;/div&gt;
-  &lt;div data-id="get_path"&gt;
-    &lt;div class="twisted" data-open="ui-icon-info"&gt;
-      &lt;p class="twisted-body"&gt;
-        &lt;span class="TX_text"&gt;
+        </span>
+      </p>
+    </div>
+    <label for="change_image_file" class="TX_text">Choose Image for Steganography</label>
+    <input type="file" data-id="image_file" class="dlg-hidden TX_title" accept="image/*" id="change_image_file">
+    <p><img id="stegamage" data-id="steg_image"></p>
+  </div>
+  <div data-id="get_path">
+    <div class="twisted" data-open="ui-icon-info">
+      <p class="twisted-body">
+        <span class="TX_text">
           Enter the path to your cloud data store
-        &lt;/span&gt;
-      &lt;/p&gt;
-    &lt;/div&gt;
-    &lt;div data-id="mnbe" class="dlg-error TX_text hidden"&gt;
+        </span>
+      </p>
+    </div>
+    <div data-id="mnbe" class="dlg-error TX_text hidden">
       Store path may not be empty
-    &lt;/div&gt;
-    &lt;label for="store_path" class="TX_text"&gt;
+    </div>
+    <label for="store_path" class="TX_text">
       Store path:
-    &lt;/label&gt;
-    &lt;input id="store_path" data-id="path" type="text" value="" class="TX_title" title="Path to your cloud store" autofocus/&gt;
-  &lt;/div&gt;
-  &lt;p&gt;
-    &lt;button data-id="ok" class="TX_text"&gt;OK&lt;/button&gt;
-  &lt;/p&gt;
-&lt;/div&gt;
-</body>
+    </label>
+    <input id="store_path" data-id="path" type="text" value="" class="TX_title" title="Path to your cloud store" autofocus="">
+  </div>
+  <p>
+    <button data-id="ok" class="TX_text">OK</button>
+  </p>
+</div><div id="randomise_dlg" class="dlg-dialog TX_title" title="Generate random value">
+  <span class="TX_text">Suggested value for</span>
+  '<span data-id="key"></span>': '<code data-id="idea" class="dlg-value"></code>'
+  <table>
+    <tbody><tr>
+      <td class="TX_text">Length</td>
+      <td>
+        <input data-id="len" size="4" value="20" class="TX_title" title="Enter password length">
+      </td>
+      <td>
+        <button data-id="remember" class="TX_text TX_title" title="Remember constraints on this value">Remember</button>
+      </td>
+    </tr>
+    <tr>
+      <td class="TX_text">Characters</td>
+      <td>
+        <input data-id="chs" size="30" value="A-Za-z0-9!%^&amp;*_$+-=;:@#~,./?" class="TX_title" title="Enter the characters that are legal in passwords for this site. You can use character ranges like A-Z or 0-9">
+      </td>
+      <td>
+        <button data-id="reset" class="TX_text TX_title" title="Reset default constraints">Reset</button>
+      </td>
+    </tr>
+  </tbody></table>
+  <div>
+    <button data-id="ok" class="TX_text">Use this</button>
+    <button data-id="again" class="TX_text">Try again</button>
+    <button data-id="cancel" class="TX_text">Cancel</button>
+  </div>
+</div></body>

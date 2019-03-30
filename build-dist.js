@@ -2,19 +2,19 @@
 /* eslint-env node */
 
 const DESCRIPTION =
-      "DESCRIPTION\nBuild script for Squirrel.";
+      "DESCRIPTION\nBuild script for Squirrel.\n";
 
 // This basically duplicates many of the functions * of r.js,
 // but in a more manageable way. I wrote it while trying to work
 // out what r.js was doing!
 let requirejs = require("requirejs");
 
-requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "jsdom", "js/Locales"], function(request, getopt, fs, uglify, cleancss, jsdom, Locales) {
+requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html-minifier", "jsdom", "js/Locales"], function(request, getopt, fs, uglify, MinifyCSS, MinifyHTML, jsdom, Locales) {
 
     let opts = getopt
         .create([
-            [ "c", "compress", "Enable compression" ],
-            [ "d", "debug", "Debug id dependencies" ],
+            [ "c", "compress", "Enable compression (for release)" ],
+            [ "d", "debug", "Debug dependencies" ],
             [ "h", "help", "Display this help" ],
             [ "t", "translate", "Try to improve translations" ]
         ])
@@ -370,15 +370,13 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "jsdo
 
         let links = document.getElementsByTagName("link");
         for (let link of links) {
-            if (!link.id
-                || link.getAttribute("rel") != "stylesheet")
-                return;
+            if (link.id || link.getAttribute("rel") != "stylesheet")
+                continue;
             let f = link.getAttribute("href");
             if (i++ == 0)
                 link.setAttribute("href", "css/" + module + ".min.css");
             else
                 link.remove();
-            console.log("PUSSY",f);
             proms.push(
                 fs.readFile(f)
                 .then((data) => {
@@ -389,17 +387,21 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "jsdo
         Promise.all(proms)
         .then((all) => {
             let allCss = all.join('\n');
-            if (opts.compress)
-                return new cleancss({
+            if (opts.compress) {
+                return new MinifyCSS({
                     compatibility: "ie8",
                     returnPromise: true
-                }).minify(allCss);
+                }).minify(allCss)
+                .then((css) => {
+                    return css.styles;
+                });
+            }
             else
                 return allCss;
         })
         .then((css) => {
             return fs.writeFile("dist/css/" + module + ".min.css",
-                                css.styles);
+                                css);
         });
     }
           
@@ -414,8 +416,12 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "jsdo
             // Rewrite meta tags as required
             let metas = document.getElementsByTagName("meta");
             for (let meta of metas) {
-                if (meta.name === "build-date")
+                if (meta.content === "BUILD_DATE")
                     meta.content = new Date();
+                else if (/^cache-control$/i.test(meta.name)
+                         && /^max-age/i.test(meta.content))
+                    // Ten years in seconds
+                    meta.content = "max-age=315360000";
             }
         })
         .then(() => {
@@ -431,8 +437,9 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "jsdo
                     proms.push(
                         fs.readFile(f)
                         .then((data) => {
-                            let s = data.toString();
-                            document.body.append(s);
+                            let div = document.createElement("div");
+                            div.innerHTML = data.toString();
+                            document.body.append(div.firstChild);
                         }));
                 }
                 return Promise.all(proms);
@@ -449,6 +456,11 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "jsdo
             debug("Extracting strings from",module+".html");
             return locales.html(index)
             .then(() => {
+                if (opts.compress)
+                    index = MinifyHTML.minify(index, {
+                        collapseWhitespace: true,
+                        removeComments: true
+                    });
                 return fs.writeFile("dist/" + module + ".html", index);
             });
             $("head").empty();
@@ -473,7 +485,8 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "jsdo
             processImages(),
             processJS("main"),
             processJS("help"),
-            processHTML("index").then(() => processHTML("help")),
+            processHTML("index"),
+            processHTML("help")
         ]);
     })
 

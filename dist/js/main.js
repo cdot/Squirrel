@@ -36058,6 +36058,680 @@ define("js/WebDAVStore", ["js/Utils", "js/HttpServerStore"], (Utils, HttpServerS
  * Licensed MIT © Zeno Rocha
  */
 !function(t,e){"object"==typeof exports&&"object"==typeof module?module.exports=e():"function"==typeof define&&define.amd?define("clipboard", [],e):"object"==typeof exports?exports.ClipboardJS=e():t.ClipboardJS=e()}(window,function(){return function(n){var o={};function r(t){if(o[t])return o[t].exports;var e=o[t]={i:t,l:!1,exports:{}};return n[t].call(e.exports,e,e.exports,r),e.l=!0,e.exports}return r.m=n,r.c=o,r.d=function(t,e,n){r.o(t,e)||Object.defineProperty(t,e,{enumerable:!0,get:n})},r.r=function(t){"undefined"!=typeof Symbol&&Symbol.toStringTag&&Object.defineProperty(t,Symbol.toStringTag,{value:"Module"}),Object.defineProperty(t,"__esModule",{value:!0})},r.t=function(e,t){if(1&t&&(e=r(e)),8&t)return e;if(4&t&&"object"==typeof e&&e&&e.__esModule)return e;var n=Object.create(null);if(r.r(n),Object.defineProperty(n,"default",{enumerable:!0,value:e}),2&t&&"string"!=typeof e)for(var o in e)r.d(n,o,function(t){return e[t]}.bind(null,o));return n},r.n=function(t){var e=t&&t.__esModule?function(){return t.default}:function(){return t};return r.d(e,"a",e),e},r.o=function(t,e){return Object.prototype.hasOwnProperty.call(t,e)},r.p="",r(r.s=0)}([function(t,e,n){"use strict";var r="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(t){return typeof t}:function(t){return t&&"function"==typeof Symbol&&t.constructor===Symbol&&t!==Symbol.prototype?"symbol":typeof t},i=function(){function o(t,e){for(var n=0;n<e.length;n++){var o=e[n];o.enumerable=o.enumerable||!1,o.configurable=!0,"value"in o&&(o.writable=!0),Object.defineProperty(t,o.key,o)}}return function(t,e,n){return e&&o(t.prototype,e),n&&o(t,n),t}}(),a=o(n(1)),c=o(n(3)),u=o(n(4));function o(t){return t&&t.__esModule?t:{default:t}}var l=function(t){function o(t,e){!function(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,o);var n=function(t,e){if(!t)throw new ReferenceError("this hasn't been initialised - super() hasn't been called");return!e||"object"!=typeof e&&"function"!=typeof e?t:e}(this,(o.__proto__||Object.getPrototypeOf(o)).call(this));return n.resolveOptions(e),n.listenClick(t),n}return function(t,e){if("function"!=typeof e&&null!==e)throw new TypeError("Super expression must either be null or a function, not "+typeof e);t.prototype=Object.create(e&&e.prototype,{constructor:{value:t,enumerable:!1,writable:!0,configurable:!0}}),e&&(Object.setPrototypeOf?Object.setPrototypeOf(t,e):t.__proto__=e)}(o,c.default),i(o,[{key:"resolveOptions",value:function(){var t=0<arguments.length&&void 0!==arguments[0]?arguments[0]:{};this.action="function"==typeof t.action?t.action:this.defaultAction,this.target="function"==typeof t.target?t.target:this.defaultTarget,this.text="function"==typeof t.text?t.text:this.defaultText,this.container="object"===r(t.container)?t.container:document.body}},{key:"listenClick",value:function(t){var e=this;this.listener=(0,u.default)(t,"click",function(t){return e.onClick(t)})}},{key:"onClick",value:function(t){var e=t.delegateTarget||t.currentTarget;this.clipboardAction&&(this.clipboardAction=null),this.clipboardAction=new a.default({action:this.action(e),target:this.target(e),text:this.text(e),container:this.container,trigger:e,emitter:this})}},{key:"defaultAction",value:function(t){return s("action",t)}},{key:"defaultTarget",value:function(t){var e=s("target",t);if(e)return document.querySelector(e)}},{key:"defaultText",value:function(t){return s("text",t)}},{key:"destroy",value:function(){this.listener.destroy(),this.clipboardAction&&(this.clipboardAction.destroy(),this.clipboardAction=null)}}],[{key:"isSupported",value:function(){var t=0<arguments.length&&void 0!==arguments[0]?arguments[0]:["copy","cut"],e="string"==typeof t?[t]:t,n=!!document.queryCommandSupported;return e.forEach(function(t){n=n&&!!document.queryCommandSupported(t)}),n}}]),o}();function s(t,e){var n="data-clipboard-"+t;if(e.hasAttribute(n))return e.getAttribute(n)}t.exports=l},function(t,e,n){"use strict";var o,r="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(t){return typeof t}:function(t){return t&&"function"==typeof Symbol&&t.constructor===Symbol&&t!==Symbol.prototype?"symbol":typeof t},i=function(){function o(t,e){for(var n=0;n<e.length;n++){var o=e[n];o.enumerable=o.enumerable||!1,o.configurable=!0,"value"in o&&(o.writable=!0),Object.defineProperty(t,o.key,o)}}return function(t,e,n){return e&&o(t.prototype,e),n&&o(t,n),t}}(),a=n(2),c=(o=a)&&o.__esModule?o:{default:o};var u=function(){function e(t){!function(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,e),this.resolveOptions(t),this.initSelection()}return i(e,[{key:"resolveOptions",value:function(){var t=0<arguments.length&&void 0!==arguments[0]?arguments[0]:{};this.action=t.action,this.container=t.container,this.emitter=t.emitter,this.target=t.target,this.text=t.text,this.trigger=t.trigger,this.selectedText=""}},{key:"initSelection",value:function(){this.text?this.selectFake():this.target&&this.selectTarget()}},{key:"selectFake",value:function(){var t=this,e="rtl"==document.documentElement.getAttribute("dir");this.removeFake(),this.fakeHandlerCallback=function(){return t.removeFake()},this.fakeHandler=this.container.addEventListener("click",this.fakeHandlerCallback)||!0,this.fakeElem=document.createElement("textarea"),this.fakeElem.style.fontSize="12pt",this.fakeElem.style.border="0",this.fakeElem.style.padding="0",this.fakeElem.style.margin="0",this.fakeElem.style.position="absolute",this.fakeElem.style[e?"right":"left"]="-9999px";var n=window.pageYOffset||document.documentElement.scrollTop;this.fakeElem.style.top=n+"px",this.fakeElem.setAttribute("readonly",""),this.fakeElem.value=this.text,this.container.appendChild(this.fakeElem),this.selectedText=(0,c.default)(this.fakeElem),this.copyText()}},{key:"removeFake",value:function(){this.fakeHandler&&(this.container.removeEventListener("click",this.fakeHandlerCallback),this.fakeHandler=null,this.fakeHandlerCallback=null),this.fakeElem&&(this.container.removeChild(this.fakeElem),this.fakeElem=null)}},{key:"selectTarget",value:function(){this.selectedText=(0,c.default)(this.target),this.copyText()}},{key:"copyText",value:function(){var e=void 0;try{e=document.execCommand(this.action)}catch(t){e=!1}this.handleResult(e)}},{key:"handleResult",value:function(t){this.emitter.emit(t?"success":"error",{action:this.action,text:this.selectedText,trigger:this.trigger,clearSelection:this.clearSelection.bind(this)})}},{key:"clearSelection",value:function(){this.trigger&&this.trigger.focus(),window.getSelection().removeAllRanges()}},{key:"destroy",value:function(){this.removeFake()}},{key:"action",set:function(){var t=0<arguments.length&&void 0!==arguments[0]?arguments[0]:"copy";if(this._action=t,"copy"!==this._action&&"cut"!==this._action)throw new Error('Invalid "action" value, use either "copy" or "cut"')},get:function(){return this._action}},{key:"target",set:function(t){if(void 0!==t){if(!t||"object"!==(void 0===t?"undefined":r(t))||1!==t.nodeType)throw new Error('Invalid "target" value, use a valid Element');if("copy"===this.action&&t.hasAttribute("disabled"))throw new Error('Invalid "target" attribute. Please use "readonly" instead of "disabled" attribute');if("cut"===this.action&&(t.hasAttribute("readonly")||t.hasAttribute("disabled")))throw new Error('Invalid "target" attribute. You can\'t cut text from elements with "readonly" or "disabled" attributes');this._target=t}},get:function(){return this._target}}]),e}();t.exports=u},function(t,e){t.exports=function(t){var e;if("SELECT"===t.nodeName)t.focus(),e=t.value;else if("INPUT"===t.nodeName||"TEXTAREA"===t.nodeName){var n=t.hasAttribute("readonly");n||t.setAttribute("readonly",""),t.select(),t.setSelectionRange(0,t.value.length),n||t.removeAttribute("readonly"),e=t.value}else{t.hasAttribute("contenteditable")&&t.focus();var o=window.getSelection(),r=document.createRange();r.selectNodeContents(t),o.removeAllRanges(),o.addRange(r),e=o.toString()}return e}},function(t,e){function n(){}n.prototype={on:function(t,e,n){var o=this.e||(this.e={});return(o[t]||(o[t]=[])).push({fn:e,ctx:n}),this},once:function(t,e,n){var o=this;function r(){o.off(t,r),e.apply(n,arguments)}return r._=e,this.on(t,r,n)},emit:function(t){for(var e=[].slice.call(arguments,1),n=((this.e||(this.e={}))[t]||[]).slice(),o=0,r=n.length;o<r;o++)n[o].fn.apply(n[o].ctx,e);return this},off:function(t,e){var n=this.e||(this.e={}),o=n[t],r=[];if(o&&e)for(var i=0,a=o.length;i<a;i++)o[i].fn!==e&&o[i].fn._!==e&&r.push(o[i]);return r.length?n[t]=r:delete n[t],this}},t.exports=n},function(t,e,n){var d=n(5),h=n(6);t.exports=function(t,e,n){if(!t&&!e&&!n)throw new Error("Missing required arguments");if(!d.string(e))throw new TypeError("Second argument must be a String");if(!d.fn(n))throw new TypeError("Third argument must be a Function");if(d.node(t))return s=e,f=n,(l=t).addEventListener(s,f),{destroy:function(){l.removeEventListener(s,f)}};if(d.nodeList(t))return a=t,c=e,u=n,Array.prototype.forEach.call(a,function(t){t.addEventListener(c,u)}),{destroy:function(){Array.prototype.forEach.call(a,function(t){t.removeEventListener(c,u)})}};if(d.string(t))return o=t,r=e,i=n,h(document.body,o,r,i);throw new TypeError("First argument must be a String, HTMLElement, HTMLCollection, or NodeList");var o,r,i,a,c,u,l,s,f}},function(t,n){n.node=function(t){return void 0!==t&&t instanceof HTMLElement&&1===t.nodeType},n.nodeList=function(t){var e=Object.prototype.toString.call(t);return void 0!==t&&("[object NodeList]"===e||"[object HTMLCollection]"===e)&&"length"in t&&(0===t.length||n.node(t[0]))},n.string=function(t){return"string"==typeof t||t instanceof String},n.fn=function(t){return"[object Function]"===Object.prototype.toString.call(t)}},function(t,e,n){var a=n(7);function i(t,e,n,o,r){var i=function(e,n,t,o){return function(t){t.delegateTarget=a(t.target,n),t.delegateTarget&&o.call(e,t)}}.apply(this,arguments);return t.addEventListener(n,i,r),{destroy:function(){t.removeEventListener(n,i,r)}}}t.exports=function(t,e,n,o,r){return"function"==typeof t.addEventListener?i.apply(null,arguments):"function"==typeof n?i.bind(null,document).apply(null,arguments):("string"==typeof t&&(t=document.querySelectorAll(t)),Array.prototype.map.call(t,function(t){return i(t,e,n,o,r)}))}},function(t,e){if("undefined"!=typeof Element&&!Element.prototype.matches){var n=Element.prototype;n.matches=n.matchesSelector||n.mozMatchesSelector||n.msMatchesSelector||n.oMatchesSelector||n.webkitMatchesSelector}t.exports=function(t,e){for(;t&&9!==t.nodeType;){if("function"==typeof t.matches&&t.matches(e))return t;t=t.parentNode}}}])});
+/*!
+ * jQuery UI Menu 1.12.1
+ * http://jqueryui.com
+ *
+ * Copyright jQuery Foundation and other contributors
+ * Released under the MIT license.
+ * http://jquery.org/license
+ */
+
+//>>label: Menu
+//>>group: Widgets
+//>>description: Creates nestable menus.
+//>>docs: http://api.jqueryui.com/menu/
+//>>demos: http://jqueryui.com/menu/
+//>>css.structure: ../../themes/base/core.css
+//>>css.structure: ../../themes/base/menu.css
+//>>css.theme: ../../themes/base/theme.css
+
+( function( factory ) {
+	if ( typeof define === "function" && define.amd ) {
+
+		// AMD. Register as an anonymous module.
+		define( "jquery-ui/ui/widgets/menu", [
+			"jquery",
+			"../keycode",
+			"../position",
+			"../safe-active-element",
+			"../unique-id",
+			"../version",
+			"../widget"
+		], factory );
+	} else {
+
+		// Browser globals
+		factory( jQuery );
+	}
+}( function( $ ) {
+
+return $.widget( "ui.menu", {
+	version: "1.12.1",
+	defaultElement: "<ul>",
+	delay: 300,
+	options: {
+		icons: {
+			submenu: "ui-icon-caret-1-e"
+		},
+		items: "> *",
+		menus: "ul",
+		position: {
+			my: "left top",
+			at: "right top"
+		},
+		role: "menu",
+
+		// Callbacks
+		blur: null,
+		focus: null,
+		select: null
+	},
+
+	_create: function() {
+		this.activeMenu = this.element;
+
+		// Flag used to prevent firing of the click handler
+		// as the event bubbles up through nested menus
+		this.mouseHandled = false;
+		this.element
+			.uniqueId()
+			.attr( {
+				role: this.options.role,
+				tabIndex: 0
+			} );
+
+		this._addClass( "ui-menu", "ui-widget ui-widget-content" );
+		this._on( {
+
+			// Prevent focus from sticking to links inside menu after clicking
+			// them (focus should always stay on UL during navigation).
+			"mousedown .ui-menu-item": function( event ) {
+				event.preventDefault();
+			},
+			"click .ui-menu-item": function( event ) {
+				var target = $( event.target );
+				var active = $( $.ui.safeActiveElement( this.document[ 0 ] ) );
+				if ( !this.mouseHandled && target.not( ".ui-state-disabled" ).length ) {
+					this.select( event );
+
+					// Only set the mouseHandled flag if the event will bubble, see #9469.
+					if ( !event.isPropagationStopped() ) {
+						this.mouseHandled = true;
+					}
+
+					// Open submenu on click
+					if ( target.has( ".ui-menu" ).length ) {
+						this.expand( event );
+					} else if ( !this.element.is( ":focus" ) &&
+							active.closest( ".ui-menu" ).length ) {
+
+						// Redirect focus to the menu
+						this.element.trigger( "focus", [ true ] );
+
+						// If the active item is on the top level, let it stay active.
+						// Otherwise, blur the active item since it is no longer visible.
+						if ( this.active && this.active.parents( ".ui-menu" ).length === 1 ) {
+							clearTimeout( this.timer );
+						}
+					}
+				}
+			},
+			"mouseenter .ui-menu-item": function( event ) {
+
+				// Ignore mouse events while typeahead is active, see #10458.
+				// Prevents focusing the wrong item when typeahead causes a scroll while the mouse
+				// is over an item in the menu
+				if ( this.previousFilter ) {
+					return;
+				}
+
+				var actualTarget = $( event.target ).closest( ".ui-menu-item" ),
+					target = $( event.currentTarget );
+
+				// Ignore bubbled events on parent items, see #11641
+				if ( actualTarget[ 0 ] !== target[ 0 ] ) {
+					return;
+				}
+
+				// Remove ui-state-active class from siblings of the newly focused menu item
+				// to avoid a jump caused by adjacent elements both having a class with a border
+				this._removeClass( target.siblings().children( ".ui-state-active" ),
+					null, "ui-state-active" );
+				this.focus( event, target );
+			},
+			mouseleave: "collapseAll",
+			"mouseleave .ui-menu": "collapseAll",
+			focus: function( event, keepActiveItem ) {
+
+				// If there's already an active item, keep it active
+				// If not, activate the first item
+				var item = this.active || this.element.find( this.options.items ).eq( 0 );
+
+				if ( !keepActiveItem ) {
+					this.focus( event, item );
+				}
+			},
+			blur: function( event ) {
+				this._delay( function() {
+					var notContained = !$.contains(
+						this.element[ 0 ],
+						$.ui.safeActiveElement( this.document[ 0 ] )
+					);
+					if ( notContained ) {
+						this.collapseAll( event );
+					}
+				} );
+			},
+			keydown: "_keydown"
+		} );
+
+		this.refresh();
+
+		// Clicks outside of a menu collapse any open menus
+		this._on( this.document, {
+			click: function( event ) {
+				if ( this._closeOnDocumentClick( event ) ) {
+					this.collapseAll( event );
+				}
+
+				// Reset the mouseHandled flag
+				this.mouseHandled = false;
+			}
+		} );
+	},
+
+	_destroy: function() {
+		var items = this.element.find( ".ui-menu-item" )
+				.removeAttr( "role aria-disabled" ),
+			submenus = items.children( ".ui-menu-item-wrapper" )
+				.removeUniqueId()
+				.removeAttr( "tabIndex role aria-haspopup" );
+
+		// Destroy (sub)menus
+		this.element
+			.removeAttr( "aria-activedescendant" )
+			.find( ".ui-menu" ).addBack()
+				.removeAttr( "role aria-labelledby aria-expanded aria-hidden aria-disabled " +
+					"tabIndex" )
+				.removeUniqueId()
+				.show();
+
+		submenus.children().each( function() {
+			var elem = $( this );
+			if ( elem.data( "ui-menu-submenu-caret" ) ) {
+				elem.remove();
+			}
+		} );
+	},
+
+	_keydown: function( event ) {
+		var match, prev, character, skip,
+			preventDefault = true;
+
+		switch ( event.keyCode ) {
+		case $.ui.keyCode.PAGE_UP:
+			this.previousPage( event );
+			break;
+		case $.ui.keyCode.PAGE_DOWN:
+			this.nextPage( event );
+			break;
+		case $.ui.keyCode.HOME:
+			this._move( "first", "first", event );
+			break;
+		case $.ui.keyCode.END:
+			this._move( "last", "last", event );
+			break;
+		case $.ui.keyCode.UP:
+			this.previous( event );
+			break;
+		case $.ui.keyCode.DOWN:
+			this.next( event );
+			break;
+		case $.ui.keyCode.LEFT:
+			this.collapse( event );
+			break;
+		case $.ui.keyCode.RIGHT:
+			if ( this.active && !this.active.is( ".ui-state-disabled" ) ) {
+				this.expand( event );
+			}
+			break;
+		case $.ui.keyCode.ENTER:
+		case $.ui.keyCode.SPACE:
+			this._activate( event );
+			break;
+		case $.ui.keyCode.ESCAPE:
+			this.collapse( event );
+			break;
+		default:
+			preventDefault = false;
+			prev = this.previousFilter || "";
+			skip = false;
+
+			// Support number pad values
+			character = event.keyCode >= 96 && event.keyCode <= 105 ?
+				( event.keyCode - 96 ).toString() : String.fromCharCode( event.keyCode );
+
+			clearTimeout( this.filterTimer );
+
+			if ( character === prev ) {
+				skip = true;
+			} else {
+				character = prev + character;
+			}
+
+			match = this._filterMenuItems( character );
+			match = skip && match.index( this.active.next() ) !== -1 ?
+				this.active.nextAll( ".ui-menu-item" ) :
+				match;
+
+			// If no matches on the current filter, reset to the last character pressed
+			// to move down the menu to the first item that starts with that character
+			if ( !match.length ) {
+				character = String.fromCharCode( event.keyCode );
+				match = this._filterMenuItems( character );
+			}
+
+			if ( match.length ) {
+				this.focus( event, match );
+				this.previousFilter = character;
+				this.filterTimer = this._delay( function() {
+					delete this.previousFilter;
+				}, 1000 );
+			} else {
+				delete this.previousFilter;
+			}
+		}
+
+		if ( preventDefault ) {
+			event.preventDefault();
+		}
+	},
+
+	_activate: function( event ) {
+		if ( this.active && !this.active.is( ".ui-state-disabled" ) ) {
+			if ( this.active.children( "[aria-haspopup='true']" ).length ) {
+				this.expand( event );
+			} else {
+				this.select( event );
+			}
+		}
+	},
+
+	refresh: function() {
+		var menus, items, newSubmenus, newItems, newWrappers,
+			that = this,
+			icon = this.options.icons.submenu,
+			submenus = this.element.find( this.options.menus );
+
+		this._toggleClass( "ui-menu-icons", null, !!this.element.find( ".ui-icon" ).length );
+
+		// Initialize nested menus
+		newSubmenus = submenus.filter( ":not(.ui-menu)" )
+			.hide()
+			.attr( {
+				role: this.options.role,
+				"aria-hidden": "true",
+				"aria-expanded": "false"
+			} )
+			.each( function() {
+				var menu = $( this ),
+					item = menu.prev(),
+					submenuCaret = $( "<span>" ).data( "ui-menu-submenu-caret", true );
+
+				that._addClass( submenuCaret, "ui-menu-icon", "ui-icon " + icon );
+				item
+					.attr( "aria-haspopup", "true" )
+					.prepend( submenuCaret );
+				menu.attr( "aria-labelledby", item.attr( "id" ) );
+			} );
+
+		this._addClass( newSubmenus, "ui-menu", "ui-widget ui-widget-content ui-front" );
+
+		menus = submenus.add( this.element );
+		items = menus.find( this.options.items );
+
+		// Initialize menu-items containing spaces and/or dashes only as dividers
+		items.not( ".ui-menu-item" ).each( function() {
+			var item = $( this );
+			if ( that._isDivider( item ) ) {
+				that._addClass( item, "ui-menu-divider", "ui-widget-content" );
+			}
+		} );
+
+		// Don't refresh list items that are already adapted
+		newItems = items.not( ".ui-menu-item, .ui-menu-divider" );
+		newWrappers = newItems.children()
+			.not( ".ui-menu" )
+				.uniqueId()
+				.attr( {
+					tabIndex: -1,
+					role: this._itemRole()
+				} );
+		this._addClass( newItems, "ui-menu-item" )
+			._addClass( newWrappers, "ui-menu-item-wrapper" );
+
+		// Add aria-disabled attribute to any disabled menu item
+		items.filter( ".ui-state-disabled" ).attr( "aria-disabled", "true" );
+
+		// If the active item has been removed, blur the menu
+		if ( this.active && !$.contains( this.element[ 0 ], this.active[ 0 ] ) ) {
+			this.blur();
+		}
+	},
+
+	_itemRole: function() {
+		return {
+			menu: "menuitem",
+			listbox: "option"
+		}[ this.options.role ];
+	},
+
+	_setOption: function( key, value ) {
+		if ( key === "icons" ) {
+			var icons = this.element.find( ".ui-menu-icon" );
+			this._removeClass( icons, null, this.options.icons.submenu )
+				._addClass( icons, null, value.submenu );
+		}
+		this._super( key, value );
+	},
+
+	_setOptionDisabled: function( value ) {
+		this._super( value );
+
+		this.element.attr( "aria-disabled", String( value ) );
+		this._toggleClass( null, "ui-state-disabled", !!value );
+	},
+
+	focus: function( event, item ) {
+		var nested, focused, activeParent;
+		this.blur( event, event && event.type === "focus" );
+
+		this._scrollIntoView( item );
+
+		this.active = item.first();
+
+		focused = this.active.children( ".ui-menu-item-wrapper" );
+		this._addClass( focused, null, "ui-state-active" );
+
+		// Only update aria-activedescendant if there's a role
+		// otherwise we assume focus is managed elsewhere
+		if ( this.options.role ) {
+			this.element.attr( "aria-activedescendant", focused.attr( "id" ) );
+		}
+
+		// Highlight active parent menu item, if any
+		activeParent = this.active
+			.parent()
+				.closest( ".ui-menu-item" )
+					.children( ".ui-menu-item-wrapper" );
+		this._addClass( activeParent, null, "ui-state-active" );
+
+		if ( event && event.type === "keydown" ) {
+			this._close();
+		} else {
+			this.timer = this._delay( function() {
+				this._close();
+			}, this.delay );
+		}
+
+		nested = item.children( ".ui-menu" );
+		if ( nested.length && event && ( /^mouse/.test( event.type ) ) ) {
+			this._startOpening( nested );
+		}
+		this.activeMenu = item.parent();
+
+		this._trigger( "focus", event, { item: item } );
+	},
+
+	_scrollIntoView: function( item ) {
+		var borderTop, paddingTop, offset, scroll, elementHeight, itemHeight;
+		if ( this._hasScroll() ) {
+			borderTop = parseFloat( $.css( this.activeMenu[ 0 ], "borderTopWidth" ) ) || 0;
+			paddingTop = parseFloat( $.css( this.activeMenu[ 0 ], "paddingTop" ) ) || 0;
+			offset = item.offset().top - this.activeMenu.offset().top - borderTop - paddingTop;
+			scroll = this.activeMenu.scrollTop();
+			elementHeight = this.activeMenu.height();
+			itemHeight = item.outerHeight();
+
+			if ( offset < 0 ) {
+				this.activeMenu.scrollTop( scroll + offset );
+			} else if ( offset + itemHeight > elementHeight ) {
+				this.activeMenu.scrollTop( scroll + offset - elementHeight + itemHeight );
+			}
+		}
+	},
+
+	blur: function( event, fromFocus ) {
+		if ( !fromFocus ) {
+			clearTimeout( this.timer );
+		}
+
+		if ( !this.active ) {
+			return;
+		}
+
+		this._removeClass( this.active.children( ".ui-menu-item-wrapper" ),
+			null, "ui-state-active" );
+
+		this._trigger( "blur", event, { item: this.active } );
+		this.active = null;
+	},
+
+	_startOpening: function( submenu ) {
+		clearTimeout( this.timer );
+
+		// Don't open if already open fixes a Firefox bug that caused a .5 pixel
+		// shift in the submenu position when mousing over the caret icon
+		if ( submenu.attr( "aria-hidden" ) !== "true" ) {
+			return;
+		}
+
+		this.timer = this._delay( function() {
+			this._close();
+			this._open( submenu );
+		}, this.delay );
+	},
+
+	_open: function( submenu ) {
+		var position = $.extend( {
+			of: this.active
+		}, this.options.position );
+
+		clearTimeout( this.timer );
+		this.element.find( ".ui-menu" ).not( submenu.parents( ".ui-menu" ) )
+			.hide()
+			.attr( "aria-hidden", "true" );
+
+		submenu
+			.show()
+			.removeAttr( "aria-hidden" )
+			.attr( "aria-expanded", "true" )
+			.position( position );
+	},
+
+	collapseAll: function( event, all ) {
+		clearTimeout( this.timer );
+		this.timer = this._delay( function() {
+
+			// If we were passed an event, look for the submenu that contains the event
+			var currentMenu = all ? this.element :
+				$( event && event.target ).closest( this.element.find( ".ui-menu" ) );
+
+			// If we found no valid submenu ancestor, use the main menu to close all
+			// sub menus anyway
+			if ( !currentMenu.length ) {
+				currentMenu = this.element;
+			}
+
+			this._close( currentMenu );
+
+			this.blur( event );
+
+			// Work around active item staying active after menu is blurred
+			this._removeClass( currentMenu.find( ".ui-state-active" ), null, "ui-state-active" );
+
+			this.activeMenu = currentMenu;
+		}, this.delay );
+	},
+
+	// With no arguments, closes the currently active menu - if nothing is active
+	// it closes all menus.  If passed an argument, it will search for menus BELOW
+	_close: function( startMenu ) {
+		if ( !startMenu ) {
+			startMenu = this.active ? this.active.parent() : this.element;
+		}
+
+		startMenu.find( ".ui-menu" )
+			.hide()
+			.attr( "aria-hidden", "true" )
+			.attr( "aria-expanded", "false" );
+	},
+
+	_closeOnDocumentClick: function( event ) {
+		return !$( event.target ).closest( ".ui-menu" ).length;
+	},
+
+	_isDivider: function( item ) {
+
+		// Match hyphen, em dash, en dash
+		return !/[^\-\u2014\u2013\s]/.test( item.text() );
+	},
+
+	collapse: function( event ) {
+		var newItem = this.active &&
+			this.active.parent().closest( ".ui-menu-item", this.element );
+		if ( newItem && newItem.length ) {
+			this._close();
+			this.focus( event, newItem );
+		}
+	},
+
+	expand: function( event ) {
+		var newItem = this.active &&
+			this.active
+				.children( ".ui-menu " )
+					.find( this.options.items )
+						.first();
+
+		if ( newItem && newItem.length ) {
+			this._open( newItem.parent() );
+
+			// Delay so Firefox will not hide activedescendant change in expanding submenu from AT
+			this._delay( function() {
+				this.focus( event, newItem );
+			} );
+		}
+	},
+
+	next: function( event ) {
+		this._move( "next", "first", event );
+	},
+
+	previous: function( event ) {
+		this._move( "prev", "last", event );
+	},
+
+	isFirstItem: function() {
+		return this.active && !this.active.prevAll( ".ui-menu-item" ).length;
+	},
+
+	isLastItem: function() {
+		return this.active && !this.active.nextAll( ".ui-menu-item" ).length;
+	},
+
+	_move: function( direction, filter, event ) {
+		var next;
+		if ( this.active ) {
+			if ( direction === "first" || direction === "last" ) {
+				next = this.active
+					[ direction === "first" ? "prevAll" : "nextAll" ]( ".ui-menu-item" )
+					.eq( -1 );
+			} else {
+				next = this.active
+					[ direction + "All" ]( ".ui-menu-item" )
+					.eq( 0 );
+			}
+		}
+		if ( !next || !next.length || !this.active ) {
+			next = this.activeMenu.find( this.options.items )[ filter ]();
+		}
+
+		this.focus( event, next );
+	},
+
+	nextPage: function( event ) {
+		var item, base, height;
+
+		if ( !this.active ) {
+			this.next( event );
+			return;
+		}
+		if ( this.isLastItem() ) {
+			return;
+		}
+		if ( this._hasScroll() ) {
+			base = this.active.offset().top;
+			height = this.element.height();
+			this.active.nextAll( ".ui-menu-item" ).each( function() {
+				item = $( this );
+				return item.offset().top - base - height < 0;
+			} );
+
+			this.focus( event, item );
+		} else {
+			this.focus( event, this.activeMenu.find( this.options.items )
+				[ !this.active ? "first" : "last" ]() );
+		}
+	},
+
+	previousPage: function( event ) {
+		var item, base, height;
+		if ( !this.active ) {
+			this.next( event );
+			return;
+		}
+		if ( this.isFirstItem() ) {
+			return;
+		}
+		if ( this._hasScroll() ) {
+			base = this.active.offset().top;
+			height = this.element.height();
+			this.active.prevAll( ".ui-menu-item" ).each( function() {
+				item = $( this );
+				return item.offset().top - base + height > 0;
+			} );
+
+			this.focus( event, item );
+		} else {
+			this.focus( event, this.activeMenu.find( this.options.items ).first() );
+		}
+	},
+
+	_hasScroll: function() {
+		return this.element.outerHeight() < this.element.prop( "scrollHeight" );
+	},
+
+	select: function( event ) {
+
+		// TODO: It should never be possible to not have an active item at this
+		// point, but the tests don't trigger mouseenter before click.
+		this.active = this.active || $( event.target ).closest( ".ui-menu-item" );
+		var ui = { item: this.active };
+		if ( !this.active.has( ".ui-menu" ).length ) {
+			this.collapseAll( event, true );
+		}
+		this._trigger( "select", event, ui );
+	},
+
+	_filterMenuItems: function( character ) {
+		var escapedCharacter = character.replace( /[\-\[\]{}()*+?.,\\\^$|#\s]/g, "\\$&" ),
+			regex = new RegExp( "^" + escapedCharacter, "i" );
+
+		return this.activeMenu
+			.find( this.options.items )
+
+				// Only match on items, not dividers or other content (#10571)
+				.filter( ".ui-menu-item" )
+					.filter( function() {
+						return regex.test(
+							$.trim( $( this ).children( ".ui-menu-item-wrapper" ).text() ) );
+					} );
+	}
+} );
+
+} ) );
+
 /*! jQuery UI context menu plugin - v1.18.1 - 2017-08-28 |  https://github.com/mar10/jquery-ui-contextmenu |  Copyright (c) 2013 -2017 Martin Wendt; Licensed MIT */
 
 !function(a){"use strict";"function"==typeof define&&define.amd?define("contextmenu", ["jquery","jquery-ui/ui/widgets/menu"],a):a(jQuery)}(function(a){"use strict";var b="onselectstart"in document.createElement("div"),c=a.ui.menu.version.match(/^(\d)\.(\d+)/),d={major:parseInt(c[1],10),minor:parseInt(c[2],10)},e=d.major<2&&d.minor<=10,f=d.major<2&&d.minor<=11;a.widget("moogle.contextmenu",{version:"1.18.1",options:{addClass:"ui-contextmenu",closeOnWindowBlur:!0,autoFocus:!1,autoTrigger:!0,delegate:null,hide:{effect:"fadeOut",duration:"fast"},ignoreParentSelect:!0,menu:null,position:null,preventContextMenuForPopup:!1,preventSelect:!1,show:{effect:"slideDown",duration:"fast"},taphold:!1,uiMenuOptions:{},beforeOpen:a.noop,blur:a.noop,close:a.noop,create:a.noop,createMenu:a.noop,focus:a.noop,open:a.noop,select:a.noop},_create:function(){var c,d,e,f=this.options;if(this.$headStyle=null,this.$menu=null,this.menuIsTemp=!1,this.currentTarget=null,this.extraData={},this.previousFocus=null,null==f.delegate&&a.error("ui-contextmenu: Missing required option `delegate`."),f.preventSelect){e=(a(this.element).is(document)?a("body"):this.element).uniqueId().attr("id"),c="#"+e+" "+f.delegate+" { -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }",this.$headStyle=a("<style class='moogle-contextmenu-style' />").prop("type","text/css").appendTo("head");try{this.$headStyle.html(c)}catch(g){this.$headStyle[0].styleSheet.cssText=c}b&&this.element.on("selectstart"+this.eventNamespace,f.delegate,function(a){a.preventDefault()})}this._createUiMenu(f.menu),d="contextmenu"+this.eventNamespace,f.taphold&&(d+=" taphold"+this.eventNamespace),this.element.on(d,f.delegate,a.proxy(this._openMenu,this))},_destroy:function(){this.element.off(this.eventNamespace),this._createUiMenu(null),this.$headStyle&&(this.$headStyle.remove(),this.$headStyle=null)},_createUiMenu:function(b){var c,d,e=this.options;this.isOpen()&&(c=this.currentTarget,d=this.extraData,this._closeMenu(!0),this.currentTarget=c,this.extraData=d),this.menuIsTemp?this.$menu.remove():this.$menu&&this.$menu.menu("destroy").removeClass(this.options.addClass).hide(),this.$menu=null,this.menuIsTemp=!1,b&&(a.isArray(b)?(this.$menu=a.moogle.contextmenu.createMenuMarkup(b),this.menuIsTemp=!0):"string"==typeof b?this.$menu=a(b):this.$menu=b,this.$menu.hide().addClass(e.addClass).menu(a.extend(!0,{},e.uiMenuOptions,{items:"> :not(.ui-widget-header)",blur:a.proxy(e.blur,this),create:a.proxy(e.createMenu,this),focus:a.proxy(e.focus,this),select:a.proxy(function(b,c){var d,f=a.moogle.contextmenu.isMenu(c.item),g=c.item.data("actionHandler");c.cmd=c.item.attr("data-command"),c.target=a(this.currentTarget),c.extraData=this.extraData,f&&e.ignoreParentSelect||(d=this._trigger.call(this,"select",b,c),g&&(d=g.call(this,b,c)),d!==!1&&this._closeMenu.call(this),b.preventDefault())},this)})))},_openMenu:function(b,c){var d,e,f,g=this.options,h=g.position,i=this,j=!!b.isTrigger;if(g.autoTrigger||j){if(b.preventDefault(),this.currentTarget=b.target,this.extraData=b._extraData||{},f={menu:this.$menu,target:a(this.currentTarget),extraData:this.extraData,originalEvent:b,result:null},!c){if(d=this._trigger("beforeOpen",b,f),e=f.result&&a.isFunction(f.result.promise)?f.result:null,f.result=null,d===!1)return this.currentTarget=null,!1;if(e)return e.done(function(){i._openMenu(b,!0)}),this.currentTarget=null,!1;f.menu=this.$menu}a(document).on("keydown"+this.eventNamespace,function(b){b.which===a.ui.keyCode.ESCAPE&&i._closeMenu()}).on("mousedown"+this.eventNamespace+" touchstart"+this.eventNamespace,function(b){a(b.target).closest(".ui-menu-item").length||i._closeMenu()}),a(window).on("blur"+this.eventNamespace,function(a){g.closeOnWindowBlur&&i._closeMenu()}),a.isFunction(h)&&(h=h(b,f)),h=a.extend({my:"left top",at:"left bottom",of:void 0===b.pageX?b.target:b,collision:"fit"},h),this._updateEntries(this.$menu),this.$menu.show().css({position:"absolute",left:0,top:0}).position(h).hide(),g.preventContextMenuForPopup&&this.$menu.on("contextmenu"+this.eventNamespace,function(a){a.preventDefault()}),this._show(this.$menu,g.show,function(){var c;g.autoFocus&&(i.previousFocus=a(b.target),c=i.$menu.children("li.ui-menu-item").not(".ui-state-disabled").first(),i.$menu.menu("focus",null,c).focus()),i._trigger.call(i,"open",b,f)})}},_closeMenu:function(b){var c=this,d=!b&&this.options.hide,e={menu:this.$menu,target:a(this.currentTarget),extraData:this.extraData};a(document).off("mousedown"+this.eventNamespace).off("touchstart"+this.eventNamespace).off("keydown"+this.eventNamespace),a(window).off("blur"+this.eventNamespace),c.currentTarget=null,c.extraData={},this.$menu?(this.$menu.off("contextmenu"+this.eventNamespace),this._hide(this.$menu,d,function(){c.previousFocus&&(c.previousFocus.focus(),c.previousFocus=null),c._trigger("close",null,e)})):c._trigger("close",null,e)},_setOption:function(b,c){switch(b){case"menu":this.replaceMenu(c)}a.Widget.prototype._setOption.apply(this,arguments)},_getMenuEntry:function(a){return this.$menu.find("li[data-command="+a+"]")},close:function(){this.isOpen()&&this._closeMenu()},_updateEntries:function(){var b=this,c={menu:this.$menu,target:a(this.currentTarget),extraData:this.extraData};a.each(this.$menu.find(".ui-menu-item"),function(d,e){var f=a(e),g=f.data("disabledHandler"),h=g?g({type:"disabled"},c):null;c.item=f,c.cmd=f.attr("data-command"),null!=h&&(b.enableEntry(c.cmd,!h),b.showEntry(c.cmd,"hide"!==h)),g=f.data("titleHandler"),h=g?g({type:"title"},c):null,null!=h&&b.setTitle(c.cmd,""+h),g=f.data("tooltipHandler"),h=g?g({type:"tooltip"},c):null,null!=h&&f.attr("title",""+h)})},enableEntry:function(a,b){this._getMenuEntry(a).toggleClass("ui-state-disabled",b===!1)},getEntry:function(a){return this._getMenuEntry(a)},getEntryWrapper:function(a){return this._getMenuEntry(a).find(">[role=menuitem]").addBack("[role=menuitem]")},getMenu:function(){return this.$menu},isOpen:function(){return!!this.$menu&&!!this.currentTarget},open:function(b,c){c=c||{};var d=b&&b.type&&b.target,e=d?b:{},f=d?b.target:b,g=jQuery.Event("contextmenu",{target:a(f).get(0),pageX:e.pageX,pageY:e.pageY,originalEvent:d?b:void 0,_extraData:c});return this.element.trigger(g)},replaceMenu:function(a){this._createUiMenu(a)},setEntry:function(b,c){var d,e=this._getMenuEntry(b);return"string"==typeof c?(window.console&&window.console.warn("setEntry(cmd, t) with a plain string title is deprecated since v1.18.Use setTitle(cmd, '"+c+"') instead."),this.setTitle(b,c)):(e.empty(),c.cmd=c.cmd||b,a.moogle.contextmenu.createEntryMarkup(c,e),a.isArray(c.children)&&(d=a("<ul/>").appendTo(e),a.moogle.contextmenu.createMenuMarkup(c.children,d)),e.removeClass("ui-menu-item"),void this.getMenu().menu("refresh"))},setIcon:function(a,b){return this.updateEntry(a,{uiIcon:b})},setTitle:function(a,b){return this.updateEntry(a,{title:b})},showEntry:function(a,b){this._getMenuEntry(a).toggle(b!==!1)},updateEntry:function(b,c){var d,e,f=this._getMenuEntry(b);void 0!==c.title&&a.moogle.contextmenu.updateTitle(f,""+c.title),void 0!==c.tooltip&&(null===c.tooltip?f.removeAttr("title"):f.attr("title",c.tooltip)),void 0!==c.uiIcon&&(e=this.getEntryWrapper(b),d=e.find("span.ui-icon").not(".ui-menu-icon"),d.remove(),c.uiIcon&&e.append(a("<span class='ui-icon' />").addClass(c.uiIcon))),void 0!==c.hide?f.toggle(!c.hide):void 0!==c.show&&f.toggle(!!c.show),void 0!==c.data&&f.data(c.data),void 0===c.disabled&&(c.disabled=f.hasClass("ui-state-disabled")),c.setClass?(f.hasClass("ui-menu-item")&&(c.setClass+=" ui-menu-item"),f.removeClass(),f.addClass(c.setClass)):c.addClass&&f.addClass(c.addClass),f.toggleClass("ui-state-disabled",!!c.disabled)}}),a.extend(a.moogle.contextmenu,{createEntryMarkup:function(b,c){var d=null;c.attr("data-command",b.cmd),/[^\-\u2014\u2013\s]/.test(b.title)?(e?d=a("<a/>",{html:""+b.title,href:"#"}).appendTo(c):f?(c.html(""+b.title),d=c):d=a("<div/>",{html:""+b.title}).appendTo(c),b.uiIcon&&d.append(a("<span class='ui-icon' />").addClass(b.uiIcon)),a.each(["action","disabled","title","tooltip"],function(d,e){a.isFunction(b[e])&&c.data(e+"Handler",b[e])}),b.disabled===!0&&c.addClass("ui-state-disabled"),b.isHeader&&c.addClass("ui-widget-header"),b.addClass&&c.addClass(b.addClass),a.isPlainObject(b.data)&&c.data(b.data),"string"==typeof b.tooltip&&c.attr("title",b.tooltip)):c.text(b.title)},createMenuMarkup:function(b,c){var d,e,f,g;for(null==c&&(c=a("<ul class='ui-helper-hidden' />").appendTo("body")),d=0;d<b.length;d++)e=b[d],g=a("<li/>").appendTo(c),a.moogle.contextmenu.createEntryMarkup(e,g),a.isArray(e.children)&&(f=a("<ul/>").appendTo(g),a.moogle.contextmenu.createMenuMarkup(e.children,f));return c},isMenu:function(a){return e?a.has(">a[aria-haspopup='true']").length>0:f?a.is("[aria-haspopup='true']"):a.has(">div[aria-haspopup='true']").length>0},replaceFirstTextNodeChild:function(a,b){var c=a.find(">span.ui-icon,>ul.ui-menu").detach();a.empty().html(b).append(c)},updateTitle:function(b,c){e?a.moogle.contextmenu.replaceFirstTextNodeChild(a("a",b),c):f?a.moogle.contextmenu.replaceFirstTextNodeChild(b,c):a.moogle.contextmenu.replaceFirstTextNodeChild(a("div",b),c)}})});

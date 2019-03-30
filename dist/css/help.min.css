@@ -1,1 +1,106 @@
-undefined
+/* Squirrel icons */
+.squirrel-icon-add-folder {
+    background-image: url('../images/add-folder.svg')!important; }
+.squirrel-icon-copy {
+    background-image: url('../images/copy.svg')!important; }
+.squirrel-icon-gear {
+    background-image: url('../images/gear.svg')!important; }
+.squirrel-icon-add-value {
+    background-image: url('../images/add-value.svg')!important; }
+.squirrel-icon-undo {
+    background-image: url('../images/undo.svg')!important; }
+.squirrel-icon-save {
+    background-image: url('../images/save.svg')!important; }
+.squirrel-icon-copy {
+    background-image: url('../images/copy.svg')!important; }
+.tree-icon-alarm {
+    background-image: url('../images/alarm.svg')!important; }
+.tree-icon-rang {
+    background-image: url('../images/rang.svg')!important; }
+.squirrel-icon-delete {
+    background-image: url('../images/delete.svg')!important; }
+.squirrel-icon-paste {
+    background-image: url('../images/paste.svg')!important; }
+.squirrel-icon-edit {
+    background-image: url('../images/edit.svg')!important; }
+.squirrel-icon-pick {
+    background-image: url('../images/pick.svg')!important; }
+.squirrel-icon-search {
+    background-image: url('../images/search.svg')!important; }
+.squirrel-icon-key {
+    background-image: url('../images/key.svg')!important; }
+.squirrel-icon-folder-open {
+    background-image: url('../images/folder-open.svg')!important; }
+.squirrel-icon-folder-closed {
+    background-image: url('../images/folder-closed.svg')!important; }
+
+.inline-icon {
+/*    width: 1em;
+    height: 1em;*/
+    display: inline-block;
+}
+
+.squirrel-icon {
+    margin: 2px;
+    background-size: 100% 100%;
+    background-position: center;
+}
+
+button.ui-button-icon-only {
+    height: 1em;
+    width: 1em;
+    padding: 0;
+}
+
+.ui-button-text-only > .ui-button-text {
+    padding: 0.3em;
+}
+
+/*  Copyright (C) 2015-2017 Crawford Currie http://c-dot.co.uk / MIT */
+/**
+ * Generic UI dialog styling used by Dialogs.uncompressed.js
+ */
+.dlg-dialog {
+    display: none;
+}
+
+.dlg-pick-cell {
+    font-family: "Courier New", Courier, monospace;
+    border: 1px solid grey;
+}
+
+.dlg-picked {
+    background-color: blue;
+    color: white;
+}
+
+.dlg-error {
+    color: red;
+}
+
+.dlg-warning {
+    color: orangered;
+}
+
+.dlg-notice {
+    color: green;
+}
+
+.dlg-while {
+    color: midnightblue;
+}
+
+.dlg-disabled {
+    background-color: red;
+    color: white;
+}
+
+.twisted-button {
+    margin-right: 0.5em;
+    padding: 0;
+}
+
+.twisted {
+    background-color: #F0F0F0;
+    color: #0F0F0F;
+}

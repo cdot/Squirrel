@@ -117,6 +117,7 @@ define(["node-getopt", "jsdom", "js/Translator", "fs-extra", "request"], functio
 
             function getURL(url, tries) {
                 return new Promise((resolve, reject) => {
+                    console.log("GET",url);
                     request.get(url)
                     .on('response', function(response) {
                         if (response.statusCode === 429) {
@@ -147,6 +148,7 @@ define(["node-getopt", "jsdom", "js/Translator", "fs-extra", "request"], functio
                         });
                         response.on('end', () => {
                             let result = JSON.parse(body);
+                            console.log(result);
                             resolve({
                                 m: result.match,
                                 s: unprotect(result.translatedText)
