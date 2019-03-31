@@ -14,7 +14,7 @@ define("js/WebDAVStore", ["js/Utils", "js/HttpServerStore"], (Utils, HttpServerS
 
         constructor(p) {
             super(p);
-            this.option("type", "WebDAVStore");
+            this.type = "WebDAVStore";
         }
 
         /**

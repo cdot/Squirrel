@@ -27,7 +27,7 @@ define("js/LocalStorageStore", deps, function(Utils, Serror, AbstractStore, Stor
 
         constructor(p) {
             super(p);
-            this.option("type", "LocalStorageStore");
+            this.type = "LocalStorageStore";
         }
 
         init() {

@@ -11,6 +11,55 @@ define("dialogs/randomise", ["js/Dialog", "js/Utils", "js/Hoard"], function(Dial
     const DEFAULT_RANDOM_LEN = 30;
     const DEFAULT_RANDOM_CHS = "A-Za-z0-9!%^&*_$+-=;:@#~,./?";
 
+    /**
+     * Generate a new password subject to constraints:
+     * length: length of password
+     * charset: characters legal in the password. Ranges can be defined
+     * using A-Z syntax.
+     */
+    function generatePassword(constraints) {
+        let sor, eor;
+        if (!constraints)
+            constraints = {};
+
+        if (typeof constraints.length === "undefined")
+            constraints.length = 24;
+
+        if (typeof constraints.charset === "undefined")
+            constraints.charset = "A-Za-z0-9";
+
+        let cs = constraints.charset;
+        let legal = [];
+        while (cs.length > 0) {
+            if (cs.length >= 3 && cs.charAt(1) === "-") {
+                sor = cs.charCodeAt(0);
+                eor = cs.charCodeAt(2);
+                cs = cs.substring(3);
+                if (sor > eor)
+                    throw new Error("Inverted constraint range "
+                                    + cs.substr(0, 3));
+                while (sor <= eor) {
+                    legal.push(String.fromCharCode(sor++));
+                }
+            } else {
+                legal.push(cs.charAt(0));
+                cs = cs.substring(1);
+            }
+        }
+        let array = new Uint8Array(constraints.length);
+        if (typeof window !== "undefined")
+            window.crypto.getRandomValues(array);
+        else {
+            for (let i = 0; i < constraints.length; i++)
+                array[i] = Math.floor(Math.random() * 256);
+        }
+        let s = "";
+        for (let i = 0; i < constraints.length; i++) {
+            s += legal[array[i] % legal.length];
+        }
+        return s;
+    }
+
     class RandomiseDialog extends Dialog {
 
         constraints_changed() {
@@ -43,7 +92,7 @@ define("dialogs/randomise", ["js/Dialog", "js/Utils", "js/Hoard"], function(Dial
             this.control("again")
                 .on(Dialog.tapEvent(), function () {
                     self.control("idea")
-                        .text(Utils.generatePassword({
+                        .text(generatePassword({
                             length: self.control("len").val(),
                             charset: self.control("chs").val()
                         }));

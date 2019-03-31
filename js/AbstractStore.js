@@ -27,13 +27,12 @@ define("js/AbstractStore", ["js/Utils", "js/Serror"], function(Utils, Serror) {
                     if (options.hasOwnProperty(k))
                         this.options[k] = options[k];
             if (typeof this.options.debug === "function") {
-                this.debug = this.options.debug;
-//                let self = this;
-//                this.debug = function() {
-//                    let a = Array.from(arguments);
-//                    a.unshift(self.options.type);
-//                    self.options.debug.apply(null, a);
-//                };
+                let self = this;
+                this.debug = function() {
+                    let a = Array.from(arguments);
+                    a.unshift(self.type);
+                    self.options.debug.apply(null, a);
+                };
             }
         }
 
@@ -72,8 +71,7 @@ define("js/AbstractStore", ["js/Utils", "js/Serror"], function(Utils, Serror) {
          * @return an Serror object
          */
         error(path, status, message) {
-            if (this.debug) this.debug(this.option("type"), "error:",
-                                       path, status, message);
+            if (this.debug) this.debug("error:", path, status, message);
             return new Serror(path, status, message);
         }
 

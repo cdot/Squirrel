@@ -12,7 +12,7 @@ define("js/FileStore", ["fs-extra", "js/AbstractStore", "js/Serror"], function(f
 
         constructor(p) {
             super(p);
-            this.option("type", "FileStore");
+            this.type = "FileStore";
             this.option("needs_path", true);
         }
 

@@ -29,7 +29,7 @@ define("js/EncryptedStore", ["js/LayeredStore", "js/Utils", "js/AES"], function 
         constructor(p) {
             super(p);
             this.option("needs_pass", true);
-            this.option("type", "EncryptedStore/" + this.option("type"));
+            this.type = "EncryptedStore/" + this.understore.type;
         }
 
         // @Override

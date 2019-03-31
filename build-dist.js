@@ -234,11 +234,15 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
         .then((code) => {
             code.push("requirejs(['" + root + "']);");
             let codes = code.join("\n");
-            return (opts.release)
-            ? uglify.minify(codes, {
-                ie8: true
-            })
-            : codes;
+            return Promise.all([
+                locales.js(codes),
+                fs.writeFile("dist/" + root + ".js", codes),
+                fs.writeFile(
+                    "dist/" + root + ".min.js", 
+                    uglify.minify(codes, {
+                        ie8: true
+                    }).code)
+            ]);
         });
     }
     
@@ -324,24 +328,11 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
             })
         ])
 
-        // Generate monolithic JS for all dependencies
+        // Generate JS for all dependencies
         .then(() => {
             return Promise.all([
-                generateJS("js/help")
-                .then((js) => {
-                    return locales.js(js)
-                    .then(() => {
-                        return fs.writeFile("dist/js/help.js", js);
-                    });
-                }),
-                
+                generateJS("js/help"),
                 generateJS("js/main")
-                .then((js) => {
-                    return locales.js(js)
-                    .then(() => {
-                        return fs.writeFile("dist/js/main.js", js);
-                    });
-                })
             ]);
         });
     }
@@ -365,43 +356,43 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
 
     function processCSS(module, document) {
         // Merge and minify CSS
-        let i = 0;
-        let proms = [];
+        let proms = [], i = 0;
+        let fn = "css/" + module + ".css";
 
         let links = document.getElementsByTagName("link");
+        let remove = [];
         for (let link of links) {
             if (link.id || link.getAttribute("rel") != "stylesheet")
                 continue;
             let f = link.getAttribute("href");
-            if (i++ == 0)
-                link.setAttribute("href", "css/" + module + ".min.css");
+           if (i++ == 0)
+                link.setAttribute("href", fn);
             else
-                link.remove();
+                remove.push(link);
             proms.push(
                 fs.readFile(f)
                 .then((data) => {
                     return data.toString();
                 }));
         }
+        for (let link of remove)
+            link.remove();
         
         Promise.all(proms)
         .then((all) => {
             let allCss = all.join('\n');
-            if (opts.compress) {
-                return new MinifyCSS({
+            return Promise.all([
+                fs.writeFile("dist/" + fn, allCss),
+                new MinifyCSS({
                     compatibility: "ie8",
                     returnPromise: true
-                }).minify(allCss)
-                .then((css) => {
-                    return css.styles;
-                });
-            }
-            else
-                return allCss;
-        })
-        .then((css) => {
-            return fs.writeFile("dist/css/" + module + ".min.css",
-                                css);
+                })
+                .minify(allCss)
+                .then((mini) => {
+                    return fs.writeFile(
+                        "dist/css/" + module + ".min.css", mini.styles);
+                })
+            ]);
         });
     }
           
@@ -456,12 +447,15 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
             debug("Extracting strings from",module+".html");
             return locales.html(index)
             .then(() => {
-                if (opts.compress)
-                    index = MinifyHTML.minify(index, {
-                        collapseWhitespace: true,
-                        removeComments: true
-                    });
-                return fs.writeFile("dist/" + module + ".html", index);
+                let re = new RegExp("(href=([\"'])css/" + module + ")(\\.css\\2)");
+                let mindex = MinifyHTML.minify(index.replace(re, "$1.min$3"), {
+                    collapseWhitespace: true,
+                    removeComments: true
+                });
+                return Promise.all([
+                    fs.writeFile("dist/" + module + ".html", index),
+                    fs.writeFile("dist/" + module + ".min.html", mindex)
+                ]);
             });
             $("head").empty();
         });

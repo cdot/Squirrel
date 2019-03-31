@@ -17,7 +17,7 @@ define("js/StegaStore", ["js/LayeredStore", "js/Steganographer"], function(Layer
         constructor(p) {
             super(p);
             this.steg = new Steganographer({ debug: this.debug });
-            this.option("type", "StegaStore/" + this.option("type"));
+            this.type = "StegaStore/" + this.type;
             this.option("needs_image", true);
         }
 

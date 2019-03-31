@@ -93,7 +93,8 @@ define(["node-getopt", "jsdom", "js/Translator", "fs-extra", "request"], functio
          * @param improve true to re-translate existing known strings
          */
         updateTranslation(lang, improve) {
-            var protection = [];
+            let self = this;
+            let protection = [];
 
             function protect(os) {
                 return os.replace(/(\{|\}|\$\d*|<[^>]*>)/g, function(m, p) {
@@ -159,7 +160,6 @@ define(["node-getopt", "jsdom", "js/Translator", "fs-extra", "request"], functio
             }
 
             function _process(en, translated) {
-                let self = this;
                 let p;
                 if (improve) {
                     let s = protect(en);

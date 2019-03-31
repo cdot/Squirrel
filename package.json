@@ -18,7 +18,6 @@
     },
     "globals": {
       "define": false,
-      "utf8": true,
       "ArrayBuffer": false,
       "Buffer": false,
       "Uint8Array": false,
@@ -61,8 +60,7 @@
     "jquery": "^3.3.1",
     "jquery-ui": "^1.12.1",
     "js-cookie": "^2.2.0",
-    "requirejs": "^2.3.6",
-    "utf8": "^3.0.0"
+    "requirejs": "^2.3.6"
   },
   "devDependencies": {
     "axios": ">=0.17.1",

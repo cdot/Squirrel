@@ -65,27 +65,6 @@ requirejs(["js/Utils", "test/TestRunner"], function(Utils, TestRunner) {
         assert.deepEqual(ba, ab);
     });
 
-    tr.addTest("generatePassword", () => {
-        let pw = Utils.generatePassword();
-        assert(!/[^A-Za-z0-9]/.test(pw), pw);
-        assert.equal(pw.length, 24);
-
-        pw = Utils.generatePassword({
-            charset: "ABC\"'",
-            length:80
-        });
-        assert(!/[^ABC\"\']/.test(pw), pw);
-        assert.equal(pw.length, 80);
-
-        try {
-            pw = Utils.generatePassword({
-                charset: "Z-Q9-0"
-            });
-            assert(false, "Unexpected");
-        } catch (e) {
-        }
-    });
-
     tr.run();
 });
 

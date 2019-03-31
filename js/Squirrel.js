@@ -174,15 +174,11 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/Loc
             }
 
             if (self.cloud.status !== IS_LOADED) {
-                message.unshift(TX.tx("The $1 hoard $2",
-                                      self.cloud.store ?
-                                      self.cloud.store.option("type") :
-                                      TX.tx("Cloud"),
+                message.unshift(TX.tx("The cloud store $2",
                                       TX.tx(self.cloud.status)));
             }
             if (self.client.status !== IS_LOADED) {
-                message.unshift(TX.tx("The $1 hoard $2",
-                                      self.client.store.option("type"),
+                message.unshift(TX.tx("The client store $2",
                                       TX.tx(self.client.status)));
             }
 
@@ -263,8 +259,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/Loc
                     if (self.debug) self.debug("...client save failed " + e.stack);
                     if (progress) progress.add({
                         severity: "error",
-                        message: TX.tx("Failed to save in $1: $2",
-                                       self.client.store.option("type"), e)
+                        message: TX.tx("Failed to save in client store: $2", e)
                     });
                     self.client_ok = false;
                 });
@@ -300,8 +295,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/Loc
                 if (self.debug) self.debug("...cloud save failed " + e.stack);
                 if (progress) progress.add({
                     severity: "error",
-                    message: TX.tx("Failed to save in $1: $2",
-                                   self.cloud.store.option("type"), e)
+                    message: TX.tx("Failed to save in cloud store: $2", e)
                 });
                 self.cloud_ok = false;
             });
@@ -440,8 +434,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/Loc
                     if (self.debug) self.debug("...cloud refresh failed " + e.stack);
                     if (progress) progress.add({
                         severity: "error",
-                        message: TX.tx("Failed to refresh from $1: $2",
-                                       self.cloud.store.option("type"), e)
+                        message: TX.tx("Failed to refresh from cloud store: $2", e)
                     });
                     self.cloud_ok = false;
                     return Promise.resolve();
@@ -586,14 +579,12 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/Loc
             })
             .then((data) => {
                 if (data.length === 0) {
-                    if (self.debug) self.debug(
-                        cloud_store.option("type") + " is empty");
+                    if (cloud_store.debug) cloud_store.debug("is empty");
                     self.cloud.status = IS_EMPTY;
                     return Promise.resolve();
                 }
 
-                if (self.debug) self.debug(
-                    cloud_store.option("type") + " is ready to be read");
+                if (cloud_store.debug) cloud_store.debug("is ready to be read");
 
                 self.cloud.hoard = new Hoard({data: data});
 
@@ -889,8 +880,8 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/Loc
                         return Dialog.confirm("alert", {
                             alert: {
                                 severity: "error",
-                                message: TX.tx("A URL is required for $1",
-                                               store.option("type"))
+                                message: TX.tx("A URL is required for cloud $1 store",
+                                               store.type)
                             }
                         }).then(() => {
                             throw new Error("No URL given for store");
@@ -925,50 +916,6 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/Loc
                             + TX.tx("If you continue, only the client store will be available"),
                     }
                 });
-            });
-        }
-
-        /**
-         * Event handler for "init_application" event
-         * Promise to initialise application (new Squirrel(), effectively)
-         */
-        _handle_init_application() {
-            let self = this;
-            // Kick off by initialising the cloud store.
-
-            return self._init_cloud()
-            .then(() => {
-                return self._init_client();
-            })
-            .then(() =>{
-                return self._load_client();
-            })
-            .then(() =>{
-                return self._load_cloud();
-            })
-            .then(() => {
-                if (self.debug) self.debug('interacting');
-
-                $(window)
-                    .on("beforeunload", function () {
-                        let us = self._unsaved_changes(10);
-                        if (us !== null) {
-                            us = TX.tx("You have unsaved changes") +
-                                "\n" + us +
-                                "\n" + TX.tx("Are you really sure?");
-                            return us;
-                        }
-                    });
-
-                $(document).trigger("update_save");
-                $(document).trigger("check_alarms");
-
-                $("#whoami").text(self.client.store.option("user"));
-                $("#unauthenticated").hide();
-                $("#authenticated").show();
-
-                // Open the root node
-                $("#sites-node").tree("open");
             });
         }
 
@@ -1008,10 +955,10 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/Loc
             Tree.onCloseEditor = () => {
                 self.contextMenu.toggle(true);
             };
-            Tree.onHoverIn = () => {
+            Tree.onTitleHoverIn = () => {
                 $("body").contextmenu("close"); return false;
             };
-            Tree.onHoverOut = () => {
+            Tree.onTitleHoverOut = () => {
                 return $("body").contextmenu("isOpen");
             };
             Tree.hidingValues = () => {
@@ -1094,20 +1041,62 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/Loc
                 Dialog.load(DIALOGS[i]);
             }
 
-            // Set up event handlers
-            $(document)
-                .on("init_application", () => {
-                    self._handle_init_application();
-                })
-                .on("check_alarms", () => {
-                    self._handle_alarms();
-                })
-                .on("update_save", () => {
-                    self._handle_update_save();
-                });
-
             $.styling.reset();
 
+            // Set up event handlers.
+            $(document)
+            .on("check_alarms", () => {
+                self._handle_alarms();
+            })
+            .on("update_save", () => {
+                self._handle_update_save();
+            })
+            // Application startup is done using a sequence of events
+            // to give the event loop a look in.
+            .on("init_application", () => {
+                self._init_cloud()
+                .then(() => {
+                    $(document).trigger("init_client");
+                });
+            })
+            .on("init_client", () => {
+                self._init_client()
+                .then(() => {
+                    $(document).trigger("load_client");
+                });
+            })
+            .on("load_client", () => {
+                self._load_client()
+                .then(() => {
+                    $(document).trigger("load_cloud");
+                });
+            })
+            .on("load_cloud", () => {
+                self._load_cloud()
+                .then(() => {
+                    $(window)
+                    .on("beforeunload", function () {
+                        let us = self._unsaved_changes(10);
+                        if (us !== null) {
+                            us = TX.tx("You have unsaved changes") +
+                            "\n" + us +
+                            "\n" + TX.tx("Are you really sure?");
+                            return us;
+                        }
+                    });
+
+                    $(document).trigger("update_save");
+                    $(document).trigger("check_alarms");
+
+                    $("#whoami").text(self.client.store.option("user"));
+                    $("#unauthenticated").hide();
+                    $("#authenticated").show();
+
+                    // Open the root node
+                    $("#sites-node").tree("open");
+                });
+            });
+            
             $(document).trigger("init_application");
        }
 

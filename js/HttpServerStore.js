@@ -23,10 +23,9 @@ define("js/HttpServerStore", ["js/Serror", "js/AbstractStore"], function(Serror,
     class HttpServerStore extends AbstractStore {
 
         constructor(p) {
-            p = p || {};
-            p.needs_url = true;
-            p.type = "HttpServerStore";
             super(p);
+            this.option("needs_url", true);
+            this.type = "HttpServerStore";
         }
 
         /**
