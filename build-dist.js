@@ -15,14 +15,14 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
         .create([
             [ "d", "debug", "Debug dependencies" ],
             [ "h", "help", "Display this help" ],
-            [ "t", "translate", "Try to improve translations" ]
+            [ "l", "locales", "Try to improve translations" ]
         ])
         .bindHelp()
         .setHelp(DESCRIPTION + "[[OPTIONS]]")
         .parseSystem();
 
     opts = opts.options;
-    let debug = opts.debug ? console.debug : function() {};
+    let debug = opts.debug ? console.debug : false;
     
     function extend(a, b) {
         let join = {};
@@ -51,7 +51,7 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
         if (!d)
             depends_on[dependant] = d = {};
         if (dependee && !d[dependee]) {
-            debug(dependant, "depends on", dependee);
+            if (debug) debug(dependant, "depends on", dependee);
             d[dependee] = true;
         }
     }
@@ -152,7 +152,7 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
         .exec(js);
             
         if (!m) {
-            debug(module,"has no dependencies");
+            if (debug) debug(module,"has no dependencies");
             return Promise.resolve();
         }
             
@@ -197,7 +197,7 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
             if (!visited[d])
                 treeSort(d, stack, visited);
         }
-        //debug("Embed",key);
+        //if (debug) debug("Embed",key);
         stack.push(key);
         return stack;
     }          
@@ -222,7 +222,7 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
                         "(^|\\W)define\\s*\\(\\s*[\"']" + module + "[\"']", "m");
                     if (!check.test(codes)) {
                         // If not, add one
-                        //debug("Adding ID to", module);
+                        //if (debug) debug("Adding ID to", module);
                         codes = codes + "\ndefine(\"" + module
                         + "\",function(){});\n";
                     }
@@ -348,6 +348,23 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
         });
     }
 
+    function processLocales() {
+        // Copy images
+        return listDir("locale")
+        .then((files) => {
+            let proms = [];
+            for (let f of files) {
+                if (/\.json$/.test(f))
+                    proms.push(
+                        fs.readFile(f)
+                        .then((data) => {
+                            return fs.writeFile("dist/" + f, data);
+                        }));
+            }
+            return Promise.all(proms);
+        });
+    }
+
     function processCSS(module, document) {
         // Merge and minify CSS
         let proms = [], i = 0;
@@ -433,7 +450,7 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
             // Generate new HTML
             let index = "<!DOCTYPE html>\n" +
                 document.querySelector("html").innerHTML;
-            debug("Extracting strings from", module + ".html");
+            if (debug) debug("Extracting strings from", module + ".html");
             return locales.html(index)
             .then(() => {
                 let re = new RegExp("(href=([\"'])css/" + module + ")(\\.css\\2)");
@@ -447,44 +464,58 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
         });
     }
 
-    let locales = new Locales();
+    function target_release() {
 
-    locales.loadTranslations()
-
-    .then(() => {
         return Promise.all([
             mkpath("dist/js"),
             mkpath("dist/images"),
             mkpath("dist/css"),
             mkpath("dist/locale"),
-        ]);
-    })
-
-    .then(() => {
-        return Promise.all([
-            processImages(),
-            processJS("main"),
-            processJS("help"),
-            processHTML("index"),
-            processHTML("help")
-        ]);
-    })
-
-    .then(() => {
-        // Update translations
-        debug("Updating translations");
-        return locales.updateTranslations(opts.translate)
+        ])
+    
         .then(() => {
-            return locales.saveTranslations();
-        });
-    })
-    .then(() => {
-
-        debug("Saving translations");
-        return locales.saveTranslations("dist");
-    })
-    .catch((e) => {
+            return Promise.all([
+                processImages(),
+                processLocales(),
+                processJS("main"),
+                processJS("help"),
+                processHTML("index"),
+                processHTML("help")
+            ]);
+        })
         
-        console.error("Failure:", e);
-    });
+        .then(() => {
+            // The strings have been updated during the processing
+            if (debug) debug("Saving strings");
+            return locales.saveStrings();
+        });
+    }
+
+    function target_locales() {
+        // Update translations
+        if (debug) debug("Updating translations");
+        return locales.loadStrings()
+        .then(() => {
+            return locales.loadTranslations();
+        })
+        .then(() => {
+            return locales.updateTranslations(true);
+        })
+        .then(() => {
+            if (debug) debug("Saving translations");
+            return locales.saveTranslations("dist");
+        });
+    }
+
+    let locales = new Locales(debug);
+    let promise = locales.loadStrings();
+    
+    if (opts.locales)
+        promise = promise.then(() => {
+            return target_locales();
+        });
+    else
+        promise = promise.then(() => {
+            return target_release();
+        });
 })
