@@ -13,7 +13,6 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
 
     let opts = getopt
         .create([
-            [ "c", "compress", "Enable compression (for release)" ],
             [ "d", "debug", "Debug dependencies" ],
             [ "h", "help", "Display this help" ],
             [ "t", "translate", "Try to improve translations" ]
@@ -236,9 +235,7 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
             let codes = code.join("\n");
             return Promise.all([
                 locales.js(codes),
-                fs.writeFile("dist/" + root + ".js", codes),
-                fs.writeFile(
-                    "dist/" + root + ".min.js", 
+                fs.writeFile("dist/" + root + ".js",
                     uglify.minify(codes, {
                         ie8: true
                     }).code)
@@ -381,18 +378,14 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
         Promise.all(proms)
         .then((all) => {
             let allCss = all.join('\n');
-            return Promise.all([
-                fs.writeFile("dist/" + fn, allCss),
-                new MinifyCSS({
-                    compatibility: "ie8",
-                    returnPromise: true
-                })
-                .minify(allCss)
-                .then((mini) => {
-                    return fs.writeFile(
-                        "dist/css/" + module + ".min.css", mini.styles);
-                })
-            ]);
+            return new MinifyCSS({
+                compatibility: "ie8",
+                returnPromise: true
+            })
+            .minify(allCss)
+            .then((mini) => {
+                return fs.writeFile("dist/" + fn, mini.styles);
+            });
         });
     }
           
@@ -452,10 +445,7 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
                     collapseWhitespace: true,
                     removeComments: true
                 });
-                return Promise.all([
-                    fs.writeFile("dist/" + module + ".html", index),
-                    fs.writeFile("dist/" + module + ".min.html", mindex)
-                ]);
+                return fs.writeFile("dist/" + module + ".html", mindex);
             });
             $("head").empty();
         });
