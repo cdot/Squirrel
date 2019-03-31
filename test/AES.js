@@ -4,10 +4,7 @@
 if (typeof module !== "undefined") {
     requirejs = require('requirejs');
     requirejs.config({
-        baseUrl: "../src",
-        paths: {
-            test: "../test"
-        }
+        baseUrl: ".."
     });
 }
 

@@ -60,23 +60,25 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
     // the id, and the longest match is done first. Finally add
     // the baseUrl if the path is relative, and .js extension to
     // create the module path.
-    function resolveID(id, config) {
-        let path = id;
+    function getModulePath(module, config) {
+        let path = module;
         
-        if (config && config.paths) {
+        if (config && config.paths && !config.order) {
             let order = [];
             for (let i in config.paths)
                 order.push({ key: i, path: config.paths[i] });
-            order = order.sort((a,b) => {
+            config.order = order.sort((a,b) => {
                 return a.key.length > b.key.length ? -1
                 : a.key.length < b.key.length ? 1 : 0;
             });
+        }
 
-            for (let i in order) {
-                let re = new RegExp("^" + order[i].key + "(/|$)");
+        if (config.order) {
+            for (let o of config.order) {
+                let re = new RegExp("^" + o.key + "(/|$)");
                 let m = re.exec(path);
                 if (m) {
-                    path = path.replace(re, order[i].path + m[1]);
+                    path = path.replace(re, o.path + m[1]);
                 }
             }
         }
@@ -117,9 +119,9 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
             return fs.readFile(path);
     }
 
-    // Load the requirejhs.config from the given ID
-    function getConfig(path) {
-        return get(resolveID(path, {}))
+    // Load the requirejs.config from the given ID
+    function getConfig(module) {
+        return get(getModulePath(module, {}))
         .then((data) => {
             let m = /\nrequirejs\.config\((.*?)\);/s.exec(data);
             if (m) {
@@ -136,20 +138,21 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
     // Analyse the dependencies described in the given block of code. This
     // is npot a general solution - the code is not parsed, just
     // processed by regexps.
-    function analyseDependencies(id, config, js) {
-        addDependency(id);
+    function analyseDependencies(module, config, js) {
+        addDependency(module);
         let m = /\nrequirejs\.config\((.*?)\);/s.exec(js);
         if (m) {
             let cfg;
             eval("cfg=" + m[1]);
             config = extend(config, cfg);
+            delete config.order;
         }
 
         m = /(?:(?:requirejs|define)\s*\(\s*(?:"[^"]*"\s*,\s*)?|let\s*deps\s*=\s*)(\[.*?\])/s
         .exec(js);
             
         if (!m) {
-            debug(id,"has no dependencies");
+            debug(module,"has no dependencies");
             return Promise.resolve();
         }
             
@@ -159,29 +162,28 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
             deps = [deps];
             
         let promises = [];
-        for (let i in deps) {
-            let dep = deps[i];
+        for (let dep of deps) {
             // Deal with relative paths, as encountered in menu.js
             if (/^\.\.\//.test(dep))
-                dep = dep.replace("../", id.replace(/[^\/]*\/[^\/]*$/, ""));
+                dep = dep.replace("../", module.replace(/[^\/]*\/[^\/]*$/, ""));
             else if (/^\.\//.test(dep))
-                dep = dep.replace("./", id.replace(/\/[^\/]*$/, "/"));
-            addDependency(id, dep);
+                dep = dep.replace("./", module.replace(/\/[^\/]*$/, "/"));
+            addDependency(module, dep);
             promises.push(analyse(dep, config));
         }
         return Promise.all(promises);
     }
 
-    // Analyse the code in the module reference by the given id
-    function analyse(id, config) {
-        if (found_at[id])
+    // Analyse the code in the module
+    function analyse(module, config) {
+        if (found_at[module])
             return Promise.resolve();
 
-        let path = resolveID(id, config);
-        found_at[id] = path;
+        let path = getModulePath(module, config);
+        found_at[module] = path;
         return get(path)
         .then((js) => {
-            return analyseDependencies(id, config, js);
+            return analyseDependencies(module, config, js);
         })
         .then(() => config);
     }
@@ -206,23 +208,22 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
         let js = treeSort(root);
 
         let proms = [];
-        for (let k in js) {
-            let id = js[k];
+        for (let module of js) {
             proms.push(
-                get(found_at[id])
+                get(found_at[module])
                 .then((src) => {
                     let codes = src.toString();
-                    // Make sure all define's have a module id
+                    // Make sure all define's have an id
                     codes = codes.replace(
                         /((?:^|\W)define\s*\(\s*)([^"'\s])/,
-                        "$1\"" + id + "\", $2");
+                        "$1\"" + module + "\", $2");
                     // Make sure there's a define specifying this module
                     let check = new RegExp(
-                        "(^|\\W)define\\s*\\(\\s*[\"']" + id + "[\"']", "m");
+                        "(^|\\W)define\\s*\\(\\s*[\"']" + module + "[\"']", "m");
                     if (!check.test(codes)) {
                         // If not, add one
-                        //debug("Adding ID to", id);
-                        codes = codes + "\ndefine(\"" + id
+                        //debug("Adding ID to", module);
+                        codes = codes + "\ndefine(\"" + module
                         + "\",function(){});\n";
                     }
                     return codes;
@@ -249,8 +250,7 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
         return fs.readdir(dir)
         .then((entries) => {
             let files = [];
-            for (let i in entries) {
-                let entry = entries[i];
+            for (let entry of entries) {
                 if (re.test(entry))
                     files.push(dir + "/" + entry);
             }
@@ -295,12 +295,11 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
                     // loaded)
                     fs.readdir("dialogs")
                     .then((entries) => {
-                        for (let i in entries) {
-                            let entry = entries[i];
+                        for (let entry of entries) {
                             if (/\.js$/.test(entry)) {
-                                let id = "dialogs/" + entry.replace(".js", "");
-                                addDependency("js/main", id);
-                                deps.push(analyse(id, cfg));
+                                let module = "dialogs/" + entry.replace(".js", "");
+                                addDependency("js/main", module);
+                                deps.push(analyse(module, cfg));
                             }
                         }
                         
@@ -310,13 +309,12 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
                     // that are not marked as /* eslint-env browser */
                     fs.readdir("js")
                     .then((entries) => {
-                        for (let i in entries) {
-                            let entry = entries[i];
+                        for (let entry of entries) {
                             if (/Store\.js$/.test(entry)
                                 && entry !== "FileStore.js") {
-                                let id = "js/" + entry.replace(".js", "");
-                                addDependency("js/main", id);
-                                deps.push(analyse(id, cfg));
+                                let module = "js/" + entry.replace(".js", "");
+                                addDependency("js/main", module);
+                                deps.push(analyse(module, cfg));
                             }
                         }
                     })
@@ -339,8 +337,7 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
         return listDir("images")
         .then((files) => {
             let proms = [];
-            for (let i in files) {
-                let f = files[i];
+            for (let f of files) {
                 proms.push(
                     fs.readFile(f)
                     .then((data) => {
@@ -416,8 +413,7 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
             return listDir("dialogs", "html")
             .then((files) => {
                 let proms = [];
-                for (let i in files) {
-                    let f = files[i];
+                for (let f of files) {
                     proms.push(
                         fs.readFile(f)
                         .then((data) => {
@@ -437,11 +433,11 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
             // Generate new HTML
             let index = "<!DOCTYPE html>\n" +
                 document.querySelector("html").innerHTML;
-            debug("Extracting strings from",module+".html");
+            debug("Extracting strings from", module + ".html");
             return locales.html(index)
             .then(() => {
                 let re = new RegExp("(href=([\"'])css/" + module + ")(\\.css\\2)");
-                let mindex = MinifyHTML.minify(index.replace(re, "$1.min$3"), {
+                let mindex = MinifyHTML.minify(index, {
                     collapseWhitespace: true,
                     removeComments: true
                 });
