@@ -51,7 +51,7 @@ define("dialogs/extras", ["js/Dialog", "js/Translator", "js/Tree", "js-cookie", 
 
             this.control("chss")
             .on(Dialog.tapEvent(), function () {
-                self.options.app.get_store_settings(true);
+                self.options.app.get_store_settings();
             });
 
             this.control("theme")

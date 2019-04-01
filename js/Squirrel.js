@@ -174,11 +174,11 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/Loc
             }
 
             if (self.cloud.status !== IS_LOADED) {
-                message.unshift(TX.tx("The cloud store $2",
+                message.unshift(TX.tx("The cloud store $1",
                                       TX.tx(self.cloud.status)));
             }
             if (self.client.status !== IS_LOADED) {
-                message.unshift(TX.tx("The client store $2",
+                message.unshift(TX.tx("The client store $1",
                                       TX.tx(self.client.status)));
             }
 
@@ -259,7 +259,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/Loc
                     if (self.debug) self.debug("...client save failed " + e.stack);
                     if (progress) progress.add({
                         severity: "error",
-                        message: TX.tx("Failed to save in client store: $2", e)
+                        message: TX.tx("Failed to save in client store: $1", e)
                     });
                     self.client_ok = false;
                 });
@@ -295,7 +295,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/Loc
                 if (self.debug) self.debug("...cloud save failed " + e.stack);
                 if (progress) progress.add({
                     severity: "error",
-                    message: TX.tx("Failed to save in cloud store: $2", e)
+                    message: TX.tx("Failed to save in cloud store: $1", e)
                 });
                 self.cloud_ok = false;
             });
@@ -434,7 +434,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/Loc
                     if (self.debug) self.debug("...cloud refresh failed " + e.stack);
                     if (progress) progress.add({
                         severity: "error",
-                        message: TX.tx("Failed to refresh from cloud store: $2", e)
+                        message: TX.tx("Failed to refresh from cloud store: $1", e)
                     });
                     self.cloud_ok = false;
                     return Promise.resolve();
@@ -471,7 +471,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/Loc
         /**
          * Public as it's used from dialogs/extras.js
          */
-        get_store_settings() {
+        get_store_settings(check_cloud) {
             let self = this;
 
             let needs_image =
@@ -1200,7 +1200,8 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/Loc
             hits = hits || $(".search-hit");
             if (self.picked_hit < hits.length) {
                 $("#search_hits")
-                    .text(TX.tx("$1 of $2 found", self.picked_hit + 1, hits.length));
+                .text(TX.tx(
+                    "$1 of $2 found", self.picked_hit + 1, hits.length));
                 $(hits[self.picked_hit])
                     .addClass("picked-hit")
                     .parents(".tree-collection")
