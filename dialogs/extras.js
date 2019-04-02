@@ -93,8 +93,6 @@ define("dialogs/extras", ["js/Dialog", "js/Translator", "js/Tree", "js-cookie", 
         }
 
         open() {
-            let app = this.options.app;
-
             this.control("theme")
             .find("option:selected")
             .prop("selected", false);

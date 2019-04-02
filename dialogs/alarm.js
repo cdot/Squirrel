@@ -87,7 +87,6 @@ define("dialogs/alarm", ["js/Dialog", "js/Hoard", "js/jq/template", "jquery-ui"]
         // @Override
         open() {
             let $node = this.options.$node;
-            let lastmod;
 
             this.control("path").text($node.tree("getPath").join("↘"));
 

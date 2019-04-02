@@ -1,30 +1,31 @@
 /*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,node */
 /* global XMLHttpRequest:true */
-/* global Cookies: true */
 
 /**
  * Translations module. Guesses the language to use from cookies, or
- * from the browser locale.
+ * from the browser locale, or it can be changed using language()
  *
- * Translatable strings are declared in code using `TX.tx(string)`.
- * These are format strings that may be populated with expandable arguments
- * `$1..$N`, for example: `TX.text("$1 days of Christmas", 12)`
+ * Translatable strings are format strings that may be populated with
+ * expandable arguments `$1..$N`.
  *
- * Strings can also be reaped from HTML using classes:
- * `<... class="TX_title" title="string">` or
- * TX_title will translate the title= tag in that node.
- * `<... class="TX_text">content</...>`
- * TX_text will translate all text nodes and title attributes in the
- * HTML under the tagged node, recursively.  Individual text nodes are
- * translated individually, so "x<b>y</b>z" will require tranlations
- * of 3 strings, !x", "y" and "z".
- * `<... class="TX_html">content</...>`
- * TX_html will translate the entire HTML subtree under the tagged
- * node in one big block with embedded tags, so should not be used on
- * anything where handlers might be attached.
+ * Strings are picked up from code and from HTML. In code, a call to
+ * the tx() method of the singleton translator instance will return
+ * the (expanded) translation of the string.
+ *
+ * Strings can also be drawn from HTML using classes.
+ * 'TX_title' will automate the translation of the title= tag in that node.
+ * 'TX_text' will translate all text nodes and title attributes in the
+ * HTML under the tagged node, recursively.
+ * Individual text nodes are translated individually, so "x<b>y</b>z"
+ * will require tranlations of 3 strings, "x", "y" and "z".
+ * 'TX_html'
  * TX_text and TX_html should never be used together on the same node.
  * HTML reaping is done by the build/extractTX.js node.js script.
+ *
+ * Implementation requires a "locale" URL that has "strings" (a file of
+ * English strings) and <locale>.json URLS, one for each language, named
+ * using the language code.
  */
 if (typeof XMLHttpRequest === "undefined")
     XMLHttpRequest = require("xhr2");

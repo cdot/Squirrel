@@ -436,8 +436,6 @@ define("js/Hoard", ["js/Translator"], function(Translator) {
             if (!root)
                 return Promise.resolve();
 
-            let self = this;
-
             // Promise to handle a node
             function _visit_node(node, p, after) {
                 if (p.length === 0) {
@@ -601,16 +599,16 @@ define("js/Hoard", ["js/Translator"], function(Translator) {
                     // Old format alarms had one number, number of days from
                     // last node change. New format has two, repeat in MS
                     // and next ring. If repeat is 0, don't re-run the alarm.
-                    let alarm = node.alarm;
-                    let ding;
-                    if (typeof alarm === "number") {
+
+                    if (typeof node.alarm === "number") {
                         // Update to latest format
-                        alarm = { time: node.time + alarm * MSPERDAY };
-                        node.alarm = alarm;
+                        node.alarm = {
+                            time: node.time + node.alarm * MSPERDAY
+                        };
                     }
-                    if (Date.now() >= alarm.time) {
+                    if (Date.now() >= node.alarm.time) {
                         promise = promise.then(
-                            ringfn(item.path, new Date(alarm.time)));
+                            ringfn(item.path, new Date(node.alarm.time)));
                     }
                 }
             }

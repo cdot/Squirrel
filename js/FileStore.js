@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2017-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env node */
 
-define("js/FileStore", ["fs-extra", "js/AbstractStore", "js/Serror"], function(fs, AbstractStore, Serror) {
+define("js/FileStore", ["fs-extra", "js/AbstractStore"], function(fs, AbstractStore) {
 
     /**
      * A store engine using file store, used with node.js

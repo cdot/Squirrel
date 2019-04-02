@@ -7,7 +7,7 @@
  */
 define(["node-getopt", "jsdom", "js/Translator", "fs-extra", "request"], function(getopt, jsdom, Translator, Fs, request) {
 
-    TX = Translator.instance();
+    let TX = Translator.instance();
     
     class Locales {
 
@@ -99,9 +99,9 @@ define(["node-getopt", "jsdom", "js/Translator", "fs-extra", "request"], functio
          */
         js(data) {
             data.replace(
-                /\b(?:TX|Translator\.instance\(\))\.tx\((["'])(.+?[^\\])\1/g,
-                (m, q, s) => {
-                    this.strings[s] = true;
+                /\.tx\((["'])(.+?[^\\])\1/g,
+                (match, quote, str) => {
+                    this.strings[str] = true;
                     return "";
                 });
             return Promise.resolve();
@@ -136,12 +136,6 @@ define(["node-getopt", "jsdom", "js/Translator", "fs-extra", "request"], functio
                 return str.length + (m ? m.length : 0);
             }
 
-            function getURL(url) {
-                return new Promise((resolve, reject) => {
-                    _getURL(url, 3, resolve, reject);
-                })
-            }
-            
             function _getURL(url, tries, resolve, reject) {
                 request.get(url)
                 .on('response', function(response) {
@@ -180,6 +174,12 @@ define(["node-getopt", "jsdom", "js/Translator", "fs-extra", "request"], functio
                 });
             }
 
+            function getURL(url) {
+                return new Promise((resolve, reject) => {
+                    _getURL(url, 3, resolve, reject);
+                })
+            }
+            
             function _process(en, translated) {
                 let s = protect(en);
                 if (lengthInUtf8Bytes(s) > 500) {

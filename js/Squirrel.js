@@ -2,19 +2,21 @@
 /* eslint-env browser,jquery */
 
 define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/LocalStorageStore", "js/EncryptedStore", "js/Translator", "js/Tree", "js-cookie", "js/ContextMenu", "js/jq/simulated_password", "js/jq/scroll_into_view", "js/jq/icon_button", "js/jq/styling", "js/jq/template", "js/jq/twisted", "jquery", "jquery-ui", "mobile-events" ], function(Serror, Utils, Dialog, Hoard, LocalStorageStore, EncryptedStore, Translator, Tree, Cookies, ContextMenu) {
-    let TX = Translator.instance();
+
+    let TX = Translator.instance(); // Singleton
 
     /*
-     * The application startup process proceeds from "init_application" though
-     * a sequence of chained functions called 'step_*'. These functions are
-     * mostly run asynchronously. Once the final step is reached, control is
-     * handed off to the Tree module, which governs most interaction.
-     * reached
+     * The application startup process proceeds from
+     * "init_application" though a sequence of triggered events. Once
+     * the final step is reached, control is handed off to the Tree
+     * module, which governs most interaction.  reached
      */
 
     // Store statii
     // TX.tx("has new settings")
     const NEW_SETTINGS = "has new settings";
+    // TX.tx("needs saving")
+    const CONTENT_CHANGED = "has changed";
     // TX.tx("is loading")
     const IS_LOADING = "is loading";
     // TX.tx("is loaded")
@@ -71,7 +73,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/Loc
             self.cloud_path = null;
 
             // status may be one of IS_EMPTY, IS_LOADED or
-            // NEW_SETTINGS. If the status is anything but IS_LOADED
+            // CONTENT_CHANGED. If the status is anything but IS_LOADED
             // then it is a candidate for saving.
             self.client = {
                 store: null, // The store used actively
@@ -107,8 +109,11 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/Loc
         encryptionPass(p) {
             this.client.store.option("pass", p);
             this.client.status = NEW_SETTINGS;
+
             this.cloud.store.option("pass", p);
-            this.cloud.status = NEW_SETTINGS;
+            // Don't mark the cloud store as having changed, as the
+            // pass isn't saved in the cloud
+            
             this.trigger("update_save");
         }
 
@@ -199,12 +204,13 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/Loc
                 if (progress) {
                     if (Cookies.get("ui_autosave") === "on")
                         progress.close();
-                    else
+                    else {
                         // Otherwise leave alert open
                         progress.add({
                             severity: "notice",
                             message: TX.tx("Save complete")
                         });
+                    }
                 }
 
             } else {
@@ -223,16 +229,13 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/Loc
          */
         _save_client(progress) {
             let self = this;
-            if (self.debug) self.debug("...save to client");
 
-            if (self.client.status === IS_LOADED &&
-                $(".tree-modified")
-                .length === 0) {
-                self._finished_save(progress);
+            if (self.client.status === IS_LOADED) {
+                if (self.debug) self.debug("... client unchanged");
                 return Promise.resolve();
             }
 
-            self.client.status = self.PENDING_SAVE;
+            if (self.debug) self.debug("...save to client");
 
             // Make a serialisable data block
             let data = {
@@ -244,27 +247,24 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/Loc
                     data[f] = self.client[f];
             }
 
-            let p = self.client.store.writes(CLIENT_PATH, JSON.stringify(data))
-                .then(() => {
-                    if (self.debug) self.debug("...client save OK");
-                    $(".tree-modified")
-                        .removeClass("tree-modified");
-                    self.client.status = IS_LOADED;
-                    if (progress) progress.add({
-                        severity: "notice",
-                        message: TX.tx("Saved in browser")
-                    });
-                })
-                .catch((e) => {
-                    if (self.debug) self.debug("...client save failed " + e.stack);
-                    if (progress) progress.add({
-                        severity: "error",
-                        message: TX.tx("Failed to save in client store: $1", e)
-                    });
-                    self.client_ok = false;
+            return self.client.store.writes(CLIENT_PATH, JSON.stringify(data))
+            .then(() => {
+                if (self.debug) self.debug("...client write OK");
+                $(".tree-modified")
+                .removeClass("tree-modified");
+                self.client.status = IS_LOADED;
+                if (progress) progress.add({
+                    severity: "notice",
+                    message: TX.tx("Saved in browser")
                 });
-            return p.then(() => {
-                return self._finished_save(progress);
+            })
+            .catch((e) => {
+                if (self.debug) self.debug("...client save failed " + e.stack);
+                if (progress) progress.add({
+                    severity: "error",
+                    message: TX.tx("Failed to save in client store: $1", e)
+                });
+                self.client_ok = false;
             });
         }
 
@@ -272,10 +272,20 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/Loc
          * @private
          */
         _save_cloud(progress) {
-            // Cloud doesn't need the hoard tree. Could kill it, but it's
-            // small and there's not much advantage to doing so.
             let self = this;
 
+            if (!self.cloud.store) {
+                if (self.debug) self.debug("...no cloud store");
+                return Promise.resolve();
+            }
+            
+            if (self.client.status === IS_LOADED) {
+                if (self.debug) self.debug("...cloud doesn't need saving");
+                return Promise.resolve();
+            }
+
+            // Cloud doesn't need the hoard tree. Could kill it, but it's
+            // small and there's not much advantage to doing so.
             return self.cloud.store.writes(
                 self.cloud_path,
                 JSON.stringify(self.cloud.hoard))
@@ -301,29 +311,34 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/Loc
             });
         }
 
-        /**
-         * @private
-         */
-        _update_stores(progress) {
+        _save_stores(progress) {
             let self = this;
+            
+            if ($(".tree-modified").length > 0)
+                // SMELL: required?
+                self.client.status = CONTENT_CHANGED;
 
+            // Pull the latest changes form the cloud
+            return self._synch_from_cloud(progress)
+            
             // merge client actions into the cloud hoard
-            self.cloud.hoard.merge_actions(self.client.hoard.actions);
+            .then(() => {
+                if (self.cloud.hoard)
+                    self.cloud.hoard.merge_actions(self.client.hoard.actions);
+            })
 
-            if (!self.cloud.store) {
-                if (self.debug) self.debug("...no cloud store");
-                return Promise.resolve();
-            }
-
-            if (self.debug) self.debug("...save to cloud");
-
-            self.cloud.status = self.PENDING_SAVE;
-            return self._save_cloud(progress)
+            .then(() => {
+                return self._save_cloud(progress);
+            })
             .then(() => {
                 return self._save_client(progress);
+            })
+
+            .then(() => {
+                self._finished_save(progress);
             });
         }
-
+        
         /**
          * Public because it is used by the optimise dialog.
          * Promise to construct a new cloud hoard from data in the
@@ -338,16 +353,17 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/Loc
             .actions_from_tree(self.client.hoard.tree, (a) => {
                 // this:Hoard, a:Action, next:function
                 self.cloud.hoard.push_action(a, true);
+                self.cloud.status = CONTENT_CHANGED;
                 return Promise.resolve();
             })
             .then(() => {
-                return self._update_stores(progress);
+                return self._save_cloud(progress);
             });
         }
 
         /**
          * @private
-         * Promise to handle the cloud store being reloaded prior to a
+         * Promise to handle the cloud store being synched prior to a
          * save action.  The actions read from the cloud have to be
          * merged into the client before the save is completed. SMELL:
          * There's a risk of a race condition here if the cloud is
@@ -356,7 +372,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/Loc
          * @param data the data tree for the hoard
          * @param {Dialog} progress dialog
          */
-        _cloud_store_reloaded_ok(data, progress) {
+        __synch_from_cloud(data, progress) {
             let self = this;
             if (self.debug) self.debug("...cloud read OK ");
             let p;
@@ -383,7 +399,6 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/Loc
             return p.then(() => {
                 if (self.cloud.status === IS_LOADED) {
                     if (self.debug) self.debug("...merge cloud ");
-                    /*let conflicts = */
                     return self.client.hoard.play_actions(
                         self.cloud.hoard.actions,
                         function (e) {
@@ -392,54 +407,36 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/Loc
                             self.$DOMtree.tree("action", e);
                         });
                 }
-            })
-            .then(() => {
-                // Only save if there are actually some changes
-                if (self.cloud.status !== IS_LOADED ||
-                    self.client.hoard.actions.length !== 0) {
-                    if (self.debug) self.debug("...update from cloud: " + self.cloud.status);
-                    return self._update_stores(progress);
-                }
-                return Promise.resolve();
             });
         }
 
         /**
          * @private
+         * 
          */
-        _save_hoards(progress) {
+        _synch_from_cloud(progress) {
             let self = this;
 
-            self.client_ok = true;
-            self.cloud_ok = true;
-
-            if (self.debug) self.debug("Saving; client " + self.client.status +
-                                       "; cloud " + self.cloud.status);
-            if (self.cloud.status === NEW_SETTINGS ||
-                self.cloud.status === IS_EMPTY) {
-                // Don't attempt to resync out before saving, simply
-                // overwrite the cloud.
-                if (self.debug) self.debug("...constructing new cloud");
-                return self.construct_new_cloud(progress);
-            } else {
-                // Reload and save the cloud hoard
-                if (self.debug) self.debug("...reloading cloud");
-                return self.cloud.store
-                .reads(self.cloud_path)
-                .then((str) => {
-                    let data = JSON.parse(str);
-                    return self._cloud_store_reloaded_ok(data, progress);
-                })
-                .catch((e) => {
-                    if (self.debug) self.debug("...cloud refresh failed " + e.stack);
-                    if (progress) progress.add({
-                        severity: "error",
-                        message: TX.tx("Failed to refresh from cloud store: $1", e)
-                    });
-                    self.cloud_ok = false;
-                    return Promise.resolve();
+            if (self.debug) self.debug("Saving; client", self.client.status,
+                                       "cloud", self.cloud.status);
+            // Reload and save the cloud hoard
+            return self.cloud.store
+            .reads(self.cloud_path)
+            .then((str) => {
+                if (self.debug) self.debug("...synch from cloud");
+                let data = JSON.parse(str);
+                return self.__synch_from_cloud(data, progress);
+            })
+            .catch((e) => {
+                if (self.debug) self.debug("...cloud synch failed", e);
+                if (progress) progress.add({
+                    severity: "error",
+                    message: TX.tx("Failed to refresh from cloud store")
                 });
-            }
+                // There has been an error, but it's probably (!) OK
+                // SMELL: ask for permission to continue?
+                return Promise.resolve();
+            });
         }
 
         /**
@@ -457,9 +454,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/Loc
                 $sb.hide(); // nothing to save
             else if (autosave) {
                 $sb.hide();
-                self._save_hoards(false).then(() => {
-                    return self._save_client(false)
-                });
+                self._save_stores();
             } else {
                 $sb.attr(
                     "title",
@@ -471,7 +466,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/Loc
         /**
          * Public as it's used from dialogs/extras.js
          */
-        get_store_settings(check_cloud) {
+        get_store_settings() {
             let self = this;
 
             let needs_image =
@@ -502,11 +497,12 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/Loc
         /**
          * @private
          * Optional initialisation step, executed when both hoards are
-         * known to have loaded successfully.
+         * known to have loaded successfully. Merges cloud actions into the
+         * client.
          */
         _merge_from_cloud() {
             let self = this;
-            if (self.debug) self.debug('_merge_from_cloud');
+            if (self.debug) self.debug('...merge actions from cloud');
             return self.client.hoard.play_actions(
                 self.cloud.hoard.actions,
                 function (e) {
@@ -560,6 +556,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/Loc
                 return Promise.resolve(false);
 
             if (self.debug) self.debug('_load_cloud');
+            self.cloud.status = IS_LOADING;
 
             $("#stage").text(TX.tx("Reading from cloud"));
 
@@ -588,7 +585,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/Loc
 
                 self.cloud.hoard = new Hoard({data: data});
 
-                // Ready to merge from cloud hoard
+                // Ready to merge from cloud hoard to client
                 return self._merge_from_cloud();
             })
             .catch((e) => {
@@ -609,7 +606,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/Loc
                     mess.push(TX.tx("Continuing and saving will create a new cloud store."));
                 } else {
                     // Some other error
-                    if (self.debug) self.debug(e.stack);
+                    if (self.debug) self.debug(e);
                     self.cloud.status = IS_EMPTY;
                     mess.push({
                         severity: "error",
@@ -624,6 +621,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/Loc
                     alert: mess
                 })
                 .then(() => {
+                    self.cloud.status = IS_LOADED;
                     return Promise.resolve(false);
                 });
             });
@@ -640,7 +638,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/Loc
             let self = this;
 
             self.client.status = IS_LOADING;
-            if (self.debug) self.debug('_load_client');
+            if (self.debug) self.debug('... loading client');
 
             $("#stage").text(TX.tx("Reading from client"));
             return self.client.store.reads(CLIENT_PATH)
@@ -747,7 +745,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/Loc
          */
         _init_client() {
             let self = this;
-            if (self.debug) self.debug('_init_client');
+            if (self.debug) self.debug('...initialising client');
 
             self.client.store = new LocalStorageStore({
                 debug: self.debug
@@ -773,11 +771,10 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/Loc
                 }
             })
             .then(() => {
-                if (self.debug) self.debug("client store initialised");
-
                 if (self.client.store.option("needs_pass") ||
                     !self.client.store.option("user")) {
 
+                    if (self.debug) self.debug("...client needs auth");
                     let poss_user;
                     if (self.cloud.store) {
                         poss_user = self.cloud.store.option("user")
@@ -786,7 +783,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/Loc
                     if (!poss_user)
                         poss_user = self.client.store.option("user");
 
-                    if (self.debug) self.debug("store user may be", poss_user);
+                    if (self.debug) self.debug("...user may be", poss_user);
 
                     // Need to confirm user/pass, which may have been
                     // seeded from the store initialisation process
@@ -796,7 +793,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/Loc
                         user: poss_user
                     })
                     .then((dlg) => {
-                        if (self.debug) self.debug("Login confirmed");
+                        if (self.debug) self.debug("...login confirmed");
 
                         let user = dlg.control("user").val();
                         let pass = dlg.control("pass").val();
@@ -811,10 +808,8 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/Loc
                         }
                     });
                 }
+                if (self.debug) self.debug("...client initialised");
                 return Promise.resolve();
-            })
-            .then(() => {
-                if (self.debug) self.debug("Client store is ready");
             });
         }
 
@@ -829,7 +824,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/Loc
          */
         _init_cloud() {
             let self = this;
-            if (self.debug) self.debug('_init_cloud');
+            if (self.debug) self.debug('...initialising cloud');
             let store;
 
             let p = new Promise(function(res,rej) {
@@ -847,7 +842,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/Loc
             });
 
             if (typeof self.options.plaintext === "undefined") {
-                if (self.debug) self.debug('adding encryption to cloud');
+                if (self.debug) self.debug('...adding encryption to cloud');
                 p = p.then(() => {
                     store = new EncryptedStore({
                         debug: self.debug,
@@ -857,7 +852,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/Loc
             }
 
             if (typeof self.options.steg !== "undefined") {
-                if (self.debug) self.debug('adding steganography to cloud');
+                if (self.debug) self.debug('...adding steganography to cloud');
                 p = p.then(() => {
                     return new Promise((resolve) => {
                         requirejs(["js/StegaStore"], function(StegaStore) {
@@ -872,7 +867,6 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/Loc
             }
 
             return p.then(() => {
-                //console.log("cloud store type is", store);
                 if (store.option("needs_url")) {
                     if (self.options.url) {
                         store.option("url", self.options.url);
@@ -880,8 +874,9 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/Loc
                         return Dialog.confirm("alert", {
                             alert: {
                                 severity: "error",
-                                message: TX.tx("A URL is required for cloud $1 store",
-                                               store.type)
+                                message: TX.tx(
+                                    "A URL is required for cloud $1 store",
+                                    store.type)
                             }
                         }).then(() => {
                             throw new Error("No URL given for store");
@@ -900,10 +895,10 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/Loc
                 let cluser = self.cloud.store.option("user");
                 if (cluser) {
                     if (self.debug) self.debug(
-                        "cloud init has identified user", cluser);        
+                        "...cloud suggests user may be", cluser);        
                 } else {
                     if (self.debug)
-                        self.debug("cloud store initialised, no user known");
+                        self.debug("...cloud initialised, no user known");
                 }
             })
             .catch((e) => {
@@ -991,10 +986,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Hoard", "js/Loc
                         title: "Saving",
                         alert: ""
                     }).then((progress) => {
-                        self._save_hoards(progress)
-                        .then(() => {
-                            return self._save_client(progress);
-                        });
+                        return self._save_stores(progress);
                     });
                     return false;
                 });
