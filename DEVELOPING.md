@@ -32,7 +32,7 @@ point.
 
 ## Unit tests
 
-There is a directory of unit tests in `js/test'. These tests are written using the `Mocha' framework.
+There is a directory of unit tests in `js/test'. These tests are written using the `Mocha' framework. APIs are used so use of the `mocha' command is optional (you can just use `node')
 
 `make test'.
 
@@ -41,8 +41,8 @@ Browser tests - including those for the remote stores - are invoked in the brows
 ## Browser testing
 
 The easiest way to test Squirrel in the browser is to use a local server
-with `HttpServerStore'. See README.md for more on running `node.js.server.js',
-which was designed with this specific purpose in mind.
+with `HttpServerStore' or `WebDAVStore'. See README.md for more on running
+the stand-alone server, which was designed with this specific purpose in mind.
 
 # Debugging
 
@@ -63,6 +63,12 @@ To debug using a plaintext HttpServerStore:
 ## Debugging on Android
 
 Use remote debugging on your Android device. This is described in https://developers.google.com/web/tools/chrome-devtools/remote-debugging/
+
+## Coverage
+The `c8' coverage tool is specified as a development dependency.
+
+## npm-check
+Use `npm-check' to make sure npm modules are up to date.
 
 # Hosting Squirrel on other sites
 
