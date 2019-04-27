@@ -16,6 +16,12 @@
 /* Wrapper around the tree-open-close and tree-info */
 .tree-title {}
 
+.tree-change {
+    font-size: smaller;
+    margin-left: 2em;
+    vertical-align: middle;
+}
+
 /* Icon handle for dragging */
 .tree-draghandle {
     float: right;

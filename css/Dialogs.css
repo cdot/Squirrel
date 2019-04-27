@@ -6,6 +6,12 @@
     display: none;
 }
 
+.ui-dialog {
+    /* Without this the overlay - which uses .ui-front - appears above
+       the login dialog. Can't see why, so this is a hack. */
+    z-index: 101;
+}
+
 .dlg-pick-cell {
     font-family: "Courier New", Courier, monospace;
     border: 1px solid grey;
