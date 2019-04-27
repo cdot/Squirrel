@@ -36,23 +36,17 @@ requirejs(["js/Utils", "test/TestRunner"], function(Utils, TestRunner) {
     });
 
     tr.addTest("Uint8ArrayToPackedString 8 bit", () => {
-        let ab = new Uint8Array(256);
-        for (let i = 0; i < 256; i++)
-            ab[i] = i;
+        let ab = new Uint8Array(258);
+        let i = 0;
+        // High surrogate code point
+        ab[i++] = 0xD8;
+        ab[i++] = 0x00;
+        while (i < 256)
+            ab[i++] = i - 2;
         let ps = Utils.Uint8ArrayToPackedString(ab);
-        assert.equal(ps.length, 129);
+        assert.equal(ps.length, 130);
         let ba = new Uint8Array(Utils.PackedStringToUint8Array(ps));
         assert.deepEqual(ba, ab);
-    });
-
-    tr.addTest("Uint8ArrayToPackedString 16 bit", () => {
-            let ab = new Uint8Array(65536);
-            for (let i = 0; i < 65536; i++)
-                ab[i] = i;
-            let ps = Utils.Uint8ArrayToPackedString(ab);
-            assert.equal(ps.length, 32769);
-            let ba = new Uint8Array(Utils.PackedStringToUint8Array(ps));
-            assert.deepEqual(ba, ab);
     });
 
     tr.addTest("Uint8ArrayToBase64", () => {

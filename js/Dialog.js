@@ -198,7 +198,6 @@ define("js/Dialog", ["js/Translator", "jquery", "jquery-ui", "js/jq/icon_button"
          * the dialog is closed.
          */
         wait() {
-            let self = this;
             //this.$dlg.parent().find(".ui-dialog-titlebar>button").hide();
             return new Promise((resolve) => {
                 this._resolve = resolve;

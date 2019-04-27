@@ -2,8 +2,8 @@
 /* eslint-env browser,node */
 
 /**
- * A combined hierarchical data store with change log, designed to be
- * used in a client-cloud topology where a single cloud hoard is
+ * A combined hierarchical database with change log, designed to be
+ * used in a client-cloud topology where a single cloud database is
  * synched with multiple clients, each of which may change
  * asynchronously.
  *
@@ -14,22 +14,29 @@
  * in the tree, but are kept so they can be played into the cloud on
  * the next synch.
  *
- * On the cloud side the tree is ignored, and the list of actions
- * represents all changes since the hoard was established. These can
- * be replayed in full to regenerate the tree, though this is a
- * time-consuming business.
+ * The cloud stores a list of actions that record all changes since the
+ * hoard was established. When replayed in full these will regenerate the
+ * client tree, though this is a time-consuming business. These actions
+ * will usually (though not always!) be in the time order that they
+ * occurred.
  *
- * When a client requires synching with the cloud, actions from the cloud
- * that occurred since the last synch are merged into the client action
- * stream in time order. Duplicate actions are ignored.
+ * When a client requires synching with changes in the cloud, actions
+ * from the cloud that are timestamped since the last synch are played
+ * into the client tree in time order using `play_actions'. Duplicate
+ * actions are ignored. Conflicts - such as a data item that was modified
+ * locally also being
+ * modified by a cloud action - are detected.
  *
- * At any time the hoard can be optimised - basically blowing away all
- * the history - by reconstructing an action stream from the contents of
- * the tree cache. This should only be done if you are sure all clients
- * are up-to-date.
+ * When the cloud needs to be updated with changes from the client,
+ * the actions recorded in the client can simply be merged into the
+ * cloud action stream using `merge_actions'.
  *
- * Note that the tree here is *not* the same as the "Tree" object in
- * the UI.
+ * At any time you can reconstruct an action stream from the contents
+ * of the tree. This action stream will not have any of the history of
+ * the cloud, but will be a lot smaller.
+ *
+ * When an action is played into the tree, listeners can be used to
+ * reflect that action in the UI.
  *
  * @typedef Action
  * @type {object}
@@ -61,7 +68,7 @@
  */
 const VERSION = 2.0;
 
-define("js/Hoard", ["js/Translator"], function(Translator) {
+define("js/Hoard", ["js/Action", "js/Translator"], function(Action, Translator) {
     let TX = Translator.instance();
 
     const MSPERDAY = 24 * 60 * 60 * 1000;
@@ -70,28 +77,33 @@ define("js/Hoard", ["js/Translator"], function(Translator) {
      * @class
      * @member {object} tree root of tree
      * @member {Action[]} actions actions played since the last sync
-     * @member {number} last_sync integer date since the last sync, or null
      */
     class Hoard {
 
         /**
          * Constructor
-         * @param p parameters, including <ul>
-         * <li>data: an optional JSON string containing a serialised Hoard, or
+         * @param data: an optional JSON string containing a serialised
+         * Hoard, or
          * another Hoard object (tree and actions will be stolen, not copied)
-         * <li>debug: optional debugging function
-         * </ul>
+         * @param debug: optional debugging function
          */
-        constructor(p) {
-            p = p || {};
-            this.debug = p.debug;
-            let data = p.data;
+        constructor(data, debug) {
+            if (typeof data === "function" && typeof debug === "undefined") {
+                debug = data;
+                data = undefined;
+            }
+            if (typeof debug === "function")
+                this.debug = debug;
+
             if (data) {
                 if (typeof data !== "object")
                     data = JSON.parse(data);
 
-                this.last_sync = data.last_sync;
-                this.actions = data.actions || [];
+                if (data.actions)
+                    this.actions = data.actions.map(
+                        (x) => { return new Action(x); });
+                else
+                    this.actions = [];
                 this.tree = data.tree;
                 this.version = data.version || VERSION;
 
@@ -101,37 +113,10 @@ define("js/Hoard", ["js/Translator"], function(Translator) {
                                     " hoard with " + VERSION + " code");
 
             } else {
-                this.last_sync = null;
-                this.clear_actions();
+                this.actions = [];
                 this.tree = null;
                 this.version = VERSION;
             }
-        }
-
-        /**
-         * Generate a terse string version of an action for reporting
-         * @param action action to report on
-         * @return {string} human readable description of action
-         */
-        static stringify_action(action) {
-            return action.type + ":" +
-                action.path.join("↘") +
-                (typeof action.data !== "undefined" ?
-                 (" '" + action.data + "'") : "") +
-                " @" + new Date(action.time)
-                .toLocaleString();
-        }
-
-        /**
-         * Return a dump of the current state of the hoard for debugging
-         * @return a string with the JSON of the tree, and a list of the actions.
-         */
-        dump() {
-            let data = this.JSON() + "\n"; // get the tree
-            for (let i = 0; i < this.actions.length; i++) {
-                data = data + Hoard.stringify_action(this.actions[i]) + "\n";
-            }
-            return data;
         }
 
         /**
@@ -144,45 +129,16 @@ define("js/Hoard", ["js/Translator"], function(Translator) {
         }
 
         /**
-         * Construct a new action object.
-         * @param arguments This can be in the form of an existing
-         * action structure to clone, or arguments (type, path, time, data)
-         */
-        static new_action() {
-            let type, path, data, time;
-            if (typeof arguments[0] === "string") {
-                type = arguments[0];
-                path = arguments[1];
-                time = arguments[2];
-                data = arguments[3];
-            } else {
-                let e = arguments[0];
-                type = e.type;
-                path = e.path;
-                time = e.time;
-                data = e.data;
-            }
-            let n = {
-                type: type,
-                path: path.slice(),
-                time: time ? time : Date.now()
-            };
-            if (typeof data !== "undefined")
-                n.data = data;
-            return n;
-        }
-
-        /**
          * Push a new action on to the end of the action stream. The
          * tree is *not* updated. No checking is done on the action.
-         * @param arguments the action to push. This can be in the
-         * form of an existing action structure, or ordered arguments
-         * (type, path, time, data)
-         * @return a reference to the action object pushed (this may have
-         * defaulted fields)
+         * @param act the action to push. This can be in the
+         * form of an existing action structure, or a simple object with.
+         * This is always copied.
+         * fields  {type, path, time, data}
+         * @return a reference to the action object pushed
          */
-        push_action() {
-            let copy = Hoard.new_action.apply(this, arguments);
+        push_action(act) {
+            let copy = new Action(act);
             this.actions.push(copy);
             return copy;
         }
@@ -243,7 +199,7 @@ define("js/Hoard", ["js/Translator"], function(Translator) {
          * @param {Action} e the action record
          * @return a promise that resolves to an object thus:
          * {
-         *   event: the action being played
+         *   action: the action being played
          *   conflict: string message, only set if there is a problem.
          * }
          */
@@ -259,11 +215,12 @@ define("js/Hoard", ["js/Translator"], function(Translator) {
                     E: TX.tx("Cannot change value of"),
                     M: TX.tx("Cannot move"),
                     N: TX.tx("Cannot create"),
+                    P: TX.tx("Cannot play"),
                     R: TX.tx("Cannot rename"),
                     X: TX.tx("Cannot constrain")
                 }[e.type];
                 return Promise.resolve({
-                    event: e,
+                    action: e,
                     conflict: s + " '" + e.path.join("↘") + "': " + mess
                 });
             }
@@ -292,7 +249,7 @@ define("js/Hoard", ["js/Translator"], function(Translator) {
                     // easily enough
                     //return conflict(e, "It already exists" + " @" +
                     //                new Date(node.time));
-                    return Promise.resolve({ event: e });
+                    return Promise.resolve({ action: e });
 
                 parent.time = e.time; // collection is being modified
                 parent.data[name] = {
@@ -370,79 +327,82 @@ define("js/Hoard", ["js/Translator"], function(Translator) {
                 }
             }
 
-            return Promise.resolve({ event: e });
+            return Promise.resolve({ action: e });
         }
 
         /**
-         * Merge an action stream into the hoard. Duplicate actions
-         * are ignored. This is used to merge recent actions from a client
-         * hoard into a cloud hoard, so there is no tree management; the action
-         * streams are simply merged, with minimal checking.
-         * @param actions the actions to merge. They must be in time order.
-         * @return the number of actions added
+         * Merge two action streams in time order. Duplicate actions
+         * are merged. The input action streams will be irretrevably damaged.
+         * @param a the first action stream to merge
+         * @param b the second action stream to merge
+         * @return the merged action stream, sorted in time order. Note that
+         * the action objects in a and b are preserved for use here
          */
-        merge_actions(actions) {
-            let etop = 0;
-            let added = 0;
+        static merge_actions(a, b) {
 
-            actions.sort(function (a, b) {
-                return a.time < b.time ? -1 :
-                    a.time > b.time ? 1 : 0;
-            });
+            if (a.length === 0)
+                return b;
+            
+            if (b.length == 0)
+                return a;
 
-            for (let ntop = 0; ntop < actions.length; ntop++) {
-                let na = actions[ntop];
-                if (ntop > 0 && na.time < actions[ntop - 1].time)
-                    throw new Error("Internal: Merged action stream is out of order");
-                while (etop < this.actions.length &&
-                       this.actions[etop].time < na.time) {
-                    etop++;
-                }
-                if (etop < this.actions.length) {
-                    let ea = this.actions[etop];
-                    //this.debug("cmp " + Hoard.stringify_action(na) + " and " +
-                    //            Hoard.stringify_action(ea));
-                    if (na.time === ea.time &&
-                        na.type === ea.type &&
-                        na.path.join('/') === ea.path.join('/') &&
-                        na.data === ea.data) {
-                        // Duplicate
-                        //this.debug("already there");
-                        continue;
-                    }
-                }
-                //this.debug("Add " + Hoard.stringify_action(na));
-
-                this.actions.splice(etop, 0, Hoard.new_action(na));
-                added++;
+            function comp_act(a, b) {
+                return a.time < b.time ? -1 : a.time > b.time ? 1 : 0;
             }
-            return added;
+
+            // Sort streams into time order
+            a.sort(comp_act);
+            b.sort(comp_act);
+
+            let aact = a.shift(), bact = b.shift();
+            let c = [];
+            while (aact || bact) {
+                if (aact && bact) {
+                    if (aact.time === bact.time &&
+                        aact.type === bact.type &&
+                        aact.path.join('/') === bact.path.join('/') &&
+                        aact.data === bact.data) {
+                        // Duplicate, ignore one of them
+                        aact = a.shift();
+                    } else if (aact.time < bact.time) {
+                        c.push(aact);
+                        aact = a.shift();
+                    } else {
+                        c.push(bact);
+                        bact = b.shift();
+                    }
+                } else if (aact) {
+                    c.push(aact);
+                    aact = a.shift();
+                } else {
+                    c.push(bact);
+                    bact = b.shift();
+                }
+            }
+            return c;
         }
 
         /**
-         * Promise to visit nodes in a tree in dependency order and generate
-         * actions. Actions will all be 'N', 'A' and 'X' actions). Does not
-         * (directly) affect the actions stored in the hoard (though
-         * the reconstruct function might). Note that actions are visited
-         * in tree (dependency) order, and NOT in date order.
-         * @param root data structure, a simple hierarchical structure
+         * Recontruct the minimal action stream required to recreate the data.
+         * Visits nodes in the data in tail-recursive order and
+         * generate actions. Actions will all be 'N', 'A' and 'X'
+         * actions, and are passed to the 'reconstruct' method.
+         * @param tree data structure, a simple hierarchical structure
          * of keys and the data they contain e.g.
          * { "key1" : { data: { subkey1: { data: "string data" } } } }
          * Other fields (such as time) may be present and are used if they are.
          * @param {function} return promise to construct the action
          * function(action)
          */
-        actions_from_tree(root, reconstruct) {
-            if (!root)
-                return Promise.resolve();
-
-            let self = this;
+        static actions_from_tree(tree, reconstruct) {
+            if (!tree)
+                return;
 
             // Promise to handle a node
             function _visit_node(node, p, after) {
                 if (p.length === 0) {
                     // No action for the root
-                    return Promise.resolve();
+                    return;
                 }
                 let time = node.time;
 
@@ -454,7 +414,7 @@ define("js/Hoard", ["js/Translator"], function(Translator) {
                     time = after + 1;
                 }
 
-                let action = Hoard.new_action({
+                let action = new Action({
                     type: "N",
                     path: p,
                     time: time
@@ -464,87 +424,85 @@ define("js/Hoard", ["js/Translator"], function(Translator) {
                     action.data = node.data;
 
                 // Execute the 'N'
-                let promise = reconstruct(action);
+                reconstruct(action);
 
                 if (node.alarm) {
                     // Use the node construction time on alarms too
-                    promise = promise.then(() => {
-                        return reconstruct(Hoard.new_action({
-                            type: "A",
-                            path: p,
-                            time: time,
-                            data: node.alarm
-                        }));
-                    });
+                    reconstruct(new Action({
+                        type: "A",
+                        path: p,
+                        time: time,
+                        data: node.alarm
+                    }));
                 }
-
                 if (node.constraints) {
-                    promise = promise.then(() => {
-                        return reconstruct(Hoard.new_action({
-                            type: "X",
-                            path: p,
-                            time: time,
-                            data: node.constraints
-                        }));
-                    });
+                    reconstruct(new Action({
+                        type: "X",
+                        path: p,
+                        time: time,
+                        data: node.constraints
+                    }));
                 }
-                return promise;
             }
 
             // Recursively traverse nodes, starting at the root
             function _visit_nodes(node, pat, after) {
-                let promise = _visit_node(node, pat, after);
+                _visit_node(node, pat, after);
 
                 if (typeof node.data === "object") {
                     for (let key in node.data) {
                         let p = pat.slice();
                         p.push(key);
-                        promise = promise
-                        .then(_visit_nodes(node.data[key], p, node.time));
+                        _visit_nodes(node.data[key], p, node.time);
                     }
                 }
-                return promise;
             }
 
-            return _visit_nodes(root, []);
+            _visit_nodes(tree, []);
         }
 
         /**
-         * Promise to add the actions that are timestamped since the
-         * last sync into this hoard. Updates the sync time to now.
+         * Promise to add the actions that are timestamped since
+         * a given time into this hoard. Updates the sync time to now.
          * Actions are *not* appended to our local actions stream,
          * they are simply played into the tree.
          * @param new_actions actions to add
-         * @param {function} listener called to report events. Passed
-         * an object with fields <ul>
-         * <li>event: an Action object
+         * @param since (optional) threshold before which not to add
+         * actions (time in ms)
+         * If not specified, then all actions will be added.
+         * @param {function} (optional) listener called to report
+         * events. Passed an object with fields <ul>
+         * <li>action: an Action object
          * <li>conflict: a message, if there was a conflict
-         * </ul>
+         * </ul> and expected to return a Promise.
          */
-        play_actions(new_actions, listener) {
-            // Play in all actions since the last sync
-            if (!new_actions)
-                return;
-            if (this.debug) this.debug(
-                "Playing new actions since " + new Date(this.last_sync).toLocaleString());
-            let p = Promise.resolve();
-            for (let i = 0; i < new_actions.length; i++) {
-                if (new_actions[i].time > this.last_sync) {
-                    p = p.then(() => {
-                        if (this.debug) this.debug(
-                            "Play " + Hoard.stringify_action(new_actions[i]));
-                        return this
-                            .play_action(new_actions[i]).then((res) => {
-                                if (listener)
-                                    listener(res);
-                            });
-                    });
-                } else if (this.debug) this.debug(
-                    "Skip old " + Hoard.stringify_action(new_actions[i]));
-            }
+        play_actions(actions, since, listener) {
+            if (typeof since === "function") {
+                listener = since;
+                since = 0;
+            } else if (typeof since === "undefined")
+                since = 0;
 
-            this.last_sync = Date.now();
-            return p;
+            if (this.debug) this.debug(
+                "Playing", actions.length, "actions since", new Date(since));
+
+            let listen = listener ? (res) => {
+                return listener(res);
+            } : Promise.resolve();
+            let promise = Promise.resolve();
+        
+            // Actions are not necessarily in time order, but are known to be in
+            // dependency order
+            for (let act of actions) {
+                if (act.time > since) {
+                    if (this.debug) this.debug("Play", act);
+                    promise = promise.then(() => {
+                        return this.play_action(act).then(listen);
+                    });
+                } else if (this.debug)
+                    this.debug("Skip old", act);
+            }
+            return promise;
         }
 
         /**
@@ -567,7 +525,7 @@ define("js/Hoard", ["js/Translator"], function(Translator) {
         /**
          * Promise to check all alarms. Returns a promise to resolve all the
          * promises returned by 'ring'.
-         * @param ringfn function([], Date), return a promise
+         * @param ringfn function([], Date)
          * @return a promise
          */
         check_alarms(ringfn) {
@@ -601,16 +559,15 @@ define("js/Hoard", ["js/Translator"], function(Translator) {
                     // Old format alarms had one number, number of days from
                     // last node change. New format has two, repeat in MS
                     // and next ring. If repeat is 0, don't re-run the alarm.
-                    let alarm = node.alarm;
-                    let ding;
-                    if (typeof alarm === "number") {
+
+                    if (typeof node.alarm === "number") {
                         // Update to latest format
-                        alarm = { time: node.time + alarm * MSPERDAY };
-                        node.alarm = alarm;
+                        node.alarm = {
+                            time: node.time + node.alarm * MSPERDAY
+                        };
                     }
-                    if (Date.now() >= alarm.time) {
-                        promise = promise.then(
-                            ringfn(item.path, new Date(alarm.time)));
+                    if (Date.now() >= node.alarm.time) {
+                        ringfn(item.path, new Date(node.alarm.time));
                     }
                 }
             }
@@ -622,10 +579,10 @@ define("js/Hoard", ["js/Translator"], function(Translator) {
          * node as a map.
          * @return a string containing a formatted JSON dump
          */
-        JSON() {
+        treeJSON() {
             let data = "";
             if (this.tree)
-                data = JSON.stringify(this.tree.data, null, "\t");
+                data = JSON.stringify(this.tree.data, null, " ");
             return data;
         }
     }

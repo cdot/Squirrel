@@ -42,7 +42,7 @@
  * names to DOM nodes.
  */
 
-define("js/Tree", ["js/Hoard", "js/Dialog", "jquery", "js/jq/edit_in_place", "js/jq/scroll_into_view", "js/jq/icon_button", "jquery-ui"], function(Hoard, Dialog) {
+define("js/Tree", ["js/Action", "js/Hoard", "js/Dialog", "jquery", "js/jq/edit_in_place", "js/jq/scroll_into_view", "js/jq/icon_button", "jquery-ui"], function(Action, Hoard, Dialog) {
 
     // separator used in Path->node mapping index
     const PATHSEP = String.fromCharCode(1);
@@ -54,6 +54,13 @@ define("js/Tree", ["js/Hoard", "js/Dialog", "jquery", "js/jq/edit_in_place", "js
      * Static mapping paths to nodes
      */
     let path2$node = {};
+
+    function formatDate(time) {
+        let d = new Date(time);
+        return d.getFullYear() + "-"
+        + ("00" + (d.getMonth() + 1)).slice(-2) + "-"
+        + ("00" + d.getDate()).slice(-2);
+    }
 
     Tree = {
 
@@ -107,6 +114,12 @@ define("js/Tree", ["js/Hoard", "js/Dialog", "jquery", "js/jq/edit_in_place", "js
          * Override in calling context
          */
         hidingValues: () => false,
+
+        /**
+         * Are we to hide values when the tree is opened?
+         * Override in calling context
+         */
+        showingChanges: () => false,
 
         /**
          * Construct a new UI element for a tree node. The created element
@@ -186,11 +199,12 @@ define("js/Tree", ["js/Hoard", "js/Dialog", "jquery", "js/jq/edit_in_place", "js
         /**
          * Change the display of values
          */
-        showHideValues: function(on) {
+        showValues: function(on) {
             if (on && Tree.hidingValues() ||
                 !on && !Tree.hidingValues())
                 return;
 
+            Tree.hidingValues(on);
             $(".tree-leaf")
             .each(function() {
                 let v = $(this).data("value");
@@ -201,6 +215,18 @@ define("js/Tree", ["js/Hoard", "js/Dialog", "jquery", "js/jq/edit_in_place", "js
                         $(this).text(on ? v.replace(/./g, HIDE) : v);
                     });
             });
+        },
+
+        /**
+         * Change the display of changes
+         */
+        showChanges: function(on) {
+            if (on && Tree.showingChanges() ||
+                !on && !Tree.showingChanges())
+                return;
+            
+            Tree.showingChanges(on);
+            $(".tree-change").toggle(on);
         },
 
         /**
@@ -232,7 +258,7 @@ define("js/Tree", ["js/Hoard", "js/Dialog", "jquery", "js/jq/edit_in_place", "js
                 width: w,
                 text: text,
                 changed: function (s) {
-                    Tree.playAction(Hoard.new_action({
+                    Tree.playAction(new Action({
                         type: action,
                         path: nodepath,
                         data: s
@@ -313,7 +339,7 @@ define("js/Tree", ["js/Hoard", "js/Dialog", "jquery", "js/jq/edit_in_place", "js
                     $new_parent.removeClass("drop-target");
                     let oldpath = $node.tree("getPath");
                     let newpath = $new_parent.tree("getPath");
-                    Tree.playAction(Hoard.new_action({
+                    Tree.playAction(new Action({
                         type: "M",
                         path: oldpath,
                         data: newpath
@@ -422,6 +448,9 @@ define("js/Tree", ["js/Hoard", "js/Dialog", "jquery", "js/jq/edit_in_place", "js
          * @param time optional time in ms, if missing will use now
          */
         setModified: function(time) {
+            this.element.find(".tree-change").first()
+            .text(formatDate(time));
+            
             return this.element
             .addClass("tree-modified")
             .data("last-time-changed", time);
@@ -515,7 +544,7 @@ define("js/Tree", ["js/Hoard", "js/Dialog", "jquery", "js/jq/edit_in_place", "js
             // SMELL: only if screen is wide enough!
                 .hover(hoverIn, hoverOut)
                 .on("paste", function () {
-                    debugger;
+                    //debugger;
                 })
                 .prependTo($node);
 
@@ -569,6 +598,11 @@ define("js/Tree", ["js/Hoard", "js/Dialog", "jquery", "js/jq/edit_in_place", "js
                         $(e.target).closest(".tree-node").tree("editValue");
                     });
             }
+
+            $(" <span class='tree-change'></span>")
+            .appendTo($info)
+            .text(formatDate($node.data("last-time-changed")));
+
             this._makeDraggable($node);
             this._decorate_with_alarm($node);
         },
@@ -648,8 +682,10 @@ define("js/Tree", ["js/Hoard", "js/Dialog", "jquery", "js/jq/edit_in_place", "js
             let $node = this.element;
 
             if (undoable) {
-                // Not enough - all the subtree would need to be
-                // regenerated
+                // TODO: Not enough - all the subtree needs to be
+                // regenerated. We could serialise the subtree under
+                // this node and regenerate it using Hoard.actions_from_tree
+                // Currently we don't have any way to traverse that subtree.
                 undoable("N",
                          this.getPath(),
                          action.time,

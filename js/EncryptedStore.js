@@ -44,7 +44,7 @@ define("js/EncryptedStore", ["js/LayeredStore", "js/Utils", "js/AES"], function 
                 try {
                     data = AES.decrypt(a8, self.option("pass"), 256);
                 } catch (e) {
-                    // Decryption failure, assume wrong credentials
+                    // Decryption failure
                     throw self.error(path, 400, "Decryption failure " + e);
                 }
 
@@ -55,12 +55,18 @@ define("js/EncryptedStore", ["js/LayeredStore", "js/Utils", "js/AES"], function 
                     if (self.debug) self.debug("data version", data[1]);
                     data = new Uint8Array(data.buffer, 4);
                 }
-                else if ((data.length & 1) === 0 && self.option("v1")) {
+                else if ((data.length & 1) === 0) {
                     // If self is old format, the file contains a
                     // 16-bit-per-character string and therefore
-                    // must be an even length
+                    // must be an even length. Further it must be parseable
+                    // JSON - an expensive check, but no big deal.
                     let s = String.fromCharCode.apply(
                         null, new Uint16Array(data.buffer));
+                    try {
+                        JSON.parse(s);
+                    } catch (e) {
+                        throw self.error(path, 400, "Decryption failed - old format data is not valid JSON");
+                    }
                     data = Utils.StringToUint8Array(s);
                 }
                 else {
@@ -82,10 +88,8 @@ define("js/EncryptedStore", ["js/LayeredStore", "js/Utils", "js/AES"], function 
             a[2] = (cs & 0xFF00) >> 8;
             a[3] = (cs & 0xFF);
             a.set(a8, 4);
-            a8 = a;
             // And write
-            return super.write(
-                path, AES.encrypt(a8, this.option("pass"), 256));
+            return super.write(path, AES.encrypt(a, this.option("pass"), 256));
         }
     }
 

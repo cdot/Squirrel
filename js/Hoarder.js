@@ -5,7 +5,7 @@
  * Management of two hoards, client and cloud
  */
 
-define("js/Hoarder", ["js/Hoard"], function(Hoard) {
+define("js/Hoarder", ["js/Hoard", "js/Translator"], function(Hoard, Translator) {
 
     const CLIENT_PATH = "client";
 
@@ -92,7 +92,7 @@ define("js/Hoarder", ["js/Hoard"], function(Hoard) {
 
             let a = self.undos.pop();
             a.time = Date.now();
-            if (self.debug) self.debug("Undo " + Hoard.stringify_action(a));
+            if (self.debug) self.debug("Undo", a);
             // Discard the most recent action in the action stream
             this.hoard.pop_action();
 
@@ -103,8 +103,8 @@ define("js/Hoarder", ["js/Hoard"], function(Hoard) {
         /**
          * Push an undo
          */
-        push_undo() {
-            this.undos.push(Hoard.new_action.apply(null, arguments));
+        push_undo(act) {
+            this.undos.push(act);
         }
 
         /**
@@ -115,13 +115,6 @@ define("js/Hoarder", ["js/Hoard"], function(Hoard) {
             return self.undos.length !== 0;
         }
 
-        /** Setter/getter */
-        client_mods(inc) {
-            if (typeof inc === "number")
-                this.changes += inc;
-            return this.changes;
-        }
-        
         /** Setter/getter */
         cloud_path(path) {
             if (path !== this.cloudPath) {
@@ -140,14 +133,16 @@ define("js/Hoarder", ["js/Hoard"], function(Hoard) {
         }
         
         /**
-         * @param prompt promise to return { user, pass }
+         * Return null if no auth is required, or a structure that may
+         * optionally have a user field if one can be determined.
+         * @return null or { user }
          */
-        authenticate_client(prompt) {
+        auth_required() {
             
             if (!this.clientStore.option("needs_pass") &&
                 typeof this.clientStore.option("user") !== "undefined") {
                 if (this.debug) this.debug("...client doesn't need auth");
-                return Promise.resolve(); 
+                return null; 
             }
             
             if (this.debug) this.debug("...client needs auth");
@@ -161,19 +156,22 @@ define("js/Hoarder", ["js/Hoard"], function(Hoard) {
 
             if (this.debug) this.debug("...user may be", poss_user);
 
-            let self = this;
-            return prompt(poss_user).then((user, pass) => {
+            return { user: poss_user }
+        }
 
-                // Propagate to the stores
-                self.clientStore.option("user", user);
-                self.clientStore.option("pass", pass);
+        /**
+         * Propagate auth to the stores
+         * @param auth structure {user, pass} 
+         */
+        authenticate(auth) {
+            // Propagate to the stores
+            this.clientStore.option("user", auth.user);
+            this.clientStore.option("pass", auth.pass);
 
-                if (self.cloudStore) {
-                    self.cloudStore.option("user", user);
-                    self.cloudStore.option("pass", pass);
-                }
-                if (self.debug) self.debug("...client authenticated");
-            });
+            // Don't really need to propagate user, it's not used
+            // on the cloudStore side
+            this.cloudStore.option("user", auth.user);
+            this.cloudStore.option("pass", auth.pass);
         }
         
         /**
@@ -194,7 +192,7 @@ define("js/Hoarder", ["js/Hoard"], function(Hoard) {
             .then((str) => {
                 let data = JSON.parse(str);
                 self.cloudPath = data.cloud_path;
-                self.hoard = new Hoard(data.hoard);
+                self.hoard = new Hoard(data.hoard, self.debug);
 
                 // Reconstruct the actions and call on_action to
                 // construct a UI representation
@@ -231,7 +229,7 @@ define("js/Hoarder", ["js/Hoard"], function(Hoard) {
                 if (self.debug) self.debug("...client write OK");
                 if (progress) progress.push({
                     severity: "notice",
-                    message: TX.tx("Saved in browser")
+                    message: Translator.instance().tx("Saved in browser")
                 });
                 
                 // READBACK CHECK - debug FireFucks, make sure what we wrote is still
@@ -248,7 +246,7 @@ define("js/Hoarder", ["js/Hoard"], function(Hoard) {
                 if (self.debug) self.debug("...client save failed " + e.stack);
                 if (progress) progress.push({
                     severity: "error",
-                    message: TX.tx("Failed to save in client store: $1", e)
+                    message: Translator.instance().tx("Failed to save in client store: $1", e)
                 });
                 return Promise.resolve(false);
             });
@@ -265,7 +263,7 @@ define("js/Hoarder", ["js/Hoard"], function(Hoard) {
             return self.cloudStore.reads(self.cloudPath)
             .then((data) => {
                 let actions = [];
-                if (data.length > 0) {
+                if (data && data.length > 0) {
                     if (self.debug) self.debug("...parsing cloud actions");
                     try {
                         actions = JSON.parse(data);
@@ -293,13 +291,13 @@ define("js/Hoarder", ["js/Hoard"], function(Hoard) {
 
             return self.cloudStore.writes(
                 self.cloudPath,
-                JSON.stringify(self.cloud.actions))
+                JSON.stringify(actions))
             .then(() => {
                 if (self.debug) self.debug("...cloud save OK");
 
                 if (progress) progress.push({
                     severity: "notice",
-                    message: TX.tx("Saved in cloud")
+                    message: Translator.instance().tx("Saved in cloud")
                 });
                 return Promise.resolve(true);
             })
@@ -307,7 +305,7 @@ define("js/Hoarder", ["js/Hoard"], function(Hoard) {
                 if (self.debug) self.debug("...cloud save failed " + e.stack);
                 if (progress) progress.push({
                     severity: "error",
-                    message: TX.tx("Failed to save in cloud store: $1", e)
+                    message: Translator.instance().tx("Failed to save in cloud store: $1", e)
                 });
                 return Promise.resolve(false);
             });
@@ -339,7 +337,7 @@ define("js/Hoarder", ["js/Hoard"], function(Hoard) {
                 if (self.debug) self.debug("...cloud synch failed", e);
                 if (progress) progress.push({
                     severity: "error",
-                    message: TX.tx("Failed to refresh from cloud store")
+                    message: Translator.instance().tx("Failed to refresh from cloud store")
                 });
             });
         }
@@ -348,8 +346,10 @@ define("js/Hoarder", ["js/Hoard"], function(Hoard) {
          * Synchronise the client and cloud hoards so they reflect the same content.
          */
         synchronise_and_save(progress, on_action) {
+            let self = this;
+            
             // Pull the latest changes from the cloud
-            self.update_from_cloud(
+            return self.update_from_cloud(
                 progress,
                 (e) => {
                     // triggered on each event read from the cloud that is not already
@@ -359,11 +359,11 @@ define("js/Hoarder", ["js/Hoard"], function(Hoard) {
                         // change, but postdates last cloud read
                         progress.push({
                             severity: "warning",
-                            message: Hoard.stringify_action(e.event) +
+                            message: e.action +
                             ": " + e.conflict
                         });
                     } else {
-                        on_action(e.event);
+                        on_action(e.action);
                         self.changes++;
                     }
                 })
@@ -371,19 +371,21 @@ define("js/Hoarder", ["js/Hoard"], function(Hoard) {
                 return self.save_client(progress);
             })
             .finally(() => {
-                // merge client actions into the cloud
+                let actions;
                 if (self.cloud_actions)
-                    // Cloud has existing actions
-                    return self.save_cloud(Hoard.merge_actions(
-                        self.cloud.actions, self.hoard.actions));
+                    // Cloud has existing actions, merge them
+                    actions = Hoard.merge_actions(
+                        self.cloud_actions, self.hoard.actions);
                 else {
                     // Cloud has no actions; reconstruct the cloud from
                     // the tree
                     if (self.debug) self.debug("...reconstructing client actions for cloud");
-                    return self.save_cloud(
-                        Hoard.actions_from_tree(self.hoard.tree, on_action),
-                        progress);
+                    actions = [];
+                    Hoard.actions_from_tree(
+                        self.hoard.tree,
+                        (a) => { actions.push(a) });
                 }
+                return self.save_cloud(actions, progress);
             })
             .finally(() => true);
         }

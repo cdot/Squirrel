@@ -144,34 +144,37 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
 
             // Build a UI to capture required parameters in the browser
             return new Promise(function(resolve, reject) {
-                requirejs(["jquery"], resolve);
-            })
-            .then(() => {
-                let needs = 0;
-                for (let option in store.option()) {
-                    let v = config[option];
-                    if (/^needs_/.test(option)) {
-                        store.option(option, config[option]);
-                        let $div = $("<div>" + option + "</div>");
-                        let $input = $('<input/>');
-                        $input
-                        .val(config[option])
-                        .on("change", function() {
-                            store.option(option, $(this).val());
-                        });
-                        $("body").append($div);
-                        needs++;
+                requirejs(["jquery"], () => {
+                    let needs = 0;
+                    for (let option in store.option()) {
+                        let v = config[option];
+                        let m = /^needs_(.*)$/.exec(option);
+                        if (m) {
+                            let opt = m[1];
+                            self.store.option(opt, config[opt]);
+                            let $div = $("<div>" + opt + "</div>");
+                            let $input = $('<input/>');
+                            $div.append($input);
+                            $input
+                            .val(config[opt])
+                            .on("change", function() {
+                                console.log(opt, $(this).val());
+                                self.store.option(opt, $(this).val());
+                           });
+                            $("body").append($div);
+                            needs++;
+                        }
                     }
-                }
-
-                if (needs > 0) {
-                    let $run = $("<button>Run</button>");
-                    $button.on("click", function() {
+                    
+                    if (needs > 0) {
+                        let $run = $("<button>Run</button>");
+                        $run.on("click", function() {
+                            resolve();
+                        });
+                        $("body").append($run);
+                    } else
                         resolve();
-                    });
-                    $("body").append($run);
-                } else
-                    resolve();
+                });
             });
         }
 
@@ -181,6 +184,7 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
 
             this.addTest("Write/Read 1 byte", function() {
                 let store = self.store;
+                console.log("PISH",self.store.option("pass"));
                 let a = new Uint8Array(1);
                 a[0] = 69;
                 return store.write(test_path, a)

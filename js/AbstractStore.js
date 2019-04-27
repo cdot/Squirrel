@@ -106,11 +106,11 @@ define("js/AbstractStore", ["js/Utils", "js/Serror"], function(Utils, Serror) {
          * @param path pathname the data is stored under, a /
          * separated path string
          * @return a Promise that resolves to the content of the path
-         * as a Uint8Array. If the path is not found, throw an Serror
+         * as a Uint8Array. If the path is not found, reject with an Serror
          * with status 400. Other HTTP status codes may be handled by
          * the implementing store (e.g. 401). If the resource exists
-         * but is empty (has no content) return an zero-sized
-         * Unit8Array.
+         * but is empty (has no content) resolve to a zero-sized
+         * Uint8Array.
          * @throws Serror if anything goes wrong
          */
         read(path) {

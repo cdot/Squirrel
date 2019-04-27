@@ -115,15 +115,15 @@ requirejs(deps, function(Utils, Hoard, Translator, Tree, TestRunner) {
         Tree.cache = {};
     });
 
-    tr.addTest("should play_actions into empty hoard", function() {
-        // Reconstruct a cache from an actions list in an empty hoard
+    tr.addTest("should reconstruct cache", function() {
+        // Reconstruct a cache from an actions list
         let undi = 0;
-        for (let i in actions) {
-            let e = actions[i];
-
+        for (let e of actions) {
             $DOMtree.tree("action", e, function undo(action, path, time, data) {
-                assert.equal(action+":"+path.join('/')+" @"  + new Date(time)
-                             .toLocaleString() + (typeof data !== "undefined" ? " "+data:""), undos[undi++]);
+                assert.equal(
+                    action+":"+path.join('/')+" @"  + new Date(time)
+                    .toLocaleString() + (typeof data !== "undefined" ? " "+data:""),
+                    undos[undi++]);
             });
         }
         const empty_tree = '\

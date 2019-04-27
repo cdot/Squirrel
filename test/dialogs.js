@@ -119,7 +119,7 @@ define(["js/Dialog", "js/Translator", "js/LocalStorageStore", "js/Hoard", "js/Tr
                         message: "Message"
                     }
                 }).then((dlg) => {
-                    dlg.add([
+                    dlg.push([
                         {
                             severity: "error",
                             message: "An error"

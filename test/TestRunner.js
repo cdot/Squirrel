@@ -31,12 +31,15 @@ define(["mocha", "chai"], function(maybeMocha, chai) {
             this.after = after;
         }
 
+        deTest(title, fn) {
+        }
+
         addTest(title, fn) {
             let self = this;
             let test = new Mocha.Test(title, function() {
                 if (typeof self.before === "function")
                     self.before();
-                let res = fn();
+                let res = fn.call(this);
                 if (res instanceof Promise) {
                     return res.then(() => {
                         if (typeof self.after === "function")
@@ -51,7 +54,7 @@ define(["mocha", "chai"], function(maybeMocha, chai) {
 
         run() {
             return new Promise((resolve) => {
-                this.mocha.timeout(0);
+                this.mocha.timeout(10000);
                 this.mocha.run(resolve);
             });
         }

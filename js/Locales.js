@@ -7,16 +7,35 @@
  */
 define(["node-getopt", "jsdom", "js/Translator", "fs-extra", "request"], function(getopt, jsdom, Translator, Fs, request) {
 
-    TX = Translator.instance();
+    let TX = Translator.instance();
     
     class Locales {
 
         constructor(debug) {
-            this.strings = [];
+            this.strings = {};
             this.translations = {};
             this.debug = debug;
         }
 
+        loadStrings() {
+            return Fs.readFile("locale/strings")
+            .then((data) => {
+                this.strings = {};
+                for (let s of data.toString().split("\n"))
+                    this.strings[s] = true;
+            }).catch((e) => {
+                console.log("No strings extracted yet", e);
+                this.strings = [];
+            });
+        }
+
+        saveStrings() {
+            let data = [];
+            for (let s in this.strings)
+                data.push(s);
+            return Fs.writeFile("locale/strings", data.sort().join("\n"));
+        }
+        
         /**
          * Load reference translations from the "locale" subdir
          */
@@ -25,8 +44,9 @@ define(["node-getopt", "jsdom", "js/Translator", "fs-extra", "request"], functio
             return Fs.readdir("locale")
             .then((entries) => {
                 let proms = [];
-                for (let i in entries) {
-                    let entry = entries[i];
+                for (let entry of entries) {
+                    if (entry == "strings")
+                        continue;
                     if (/\.json$/.test(entry)) {
                         let lang = entry.replace(".json", "");
                         proms.push(
@@ -79,9 +99,9 @@ define(["node-getopt", "jsdom", "js/Translator", "fs-extra", "request"], functio
          */
         js(data) {
             data.replace(
-                /\b(?:TX|Translator\.instance\(\))\.tx\((["'])(.+?[^\\])\1/g,
-                (m, q, s) => {
-                    this.strings[s] = true;
+                /\.tx\((["'])(.+?[^\\])\1/g,
+                (match, quote, str) => {
+                    this.strings[str] = true;
                     return "";
                 });
             return Promise.resolve();
@@ -97,7 +117,7 @@ define(["node-getopt", "jsdom", "js/Translator", "fs-extra", "request"], functio
             let protection = [];
 
             function protect(os) {
-                return os.replace(/(\{|\}|\$\d*|<[^>]*>)/g, function(m, p) {
+                return os.replace(/(!=|\{|\}|\$\d*|<[^>]*>)/g, function(m, p) {
                     protection.push(p);
                     return "{" + protection.length + "}";
                 });
@@ -116,72 +136,68 @@ define(["node-getopt", "jsdom", "js/Translator", "fs-extra", "request"], functio
                 return str.length + (m ? m.length : 0);
             }
 
-            function getURL(url, tries) {
-                return new Promise((resolve, reject) => {
-                    console.log("GET",url);
-                    request.get(url)
-                    .on('response', function(response) {
-                        if (response.statusCode === 429) {
-                            if (tries === 0)
-                                reject("Too many retries, giving up on "
-                                       + url);
-                            let waitFor = response.headers["retry-after"];
-                            if (this.debug) this.debug(
-                                url, "try",tries,
-                                "is rate limited, waiting for",
-                                waitFor, "seconds");
-                            setTimeout(() => {
-                                getURL(url, --tries)
-                                .then((body) => { resolve(body); })
-                                .catch((e) => {
-                                    reject(e);
-                                });
-                            }, waitFor * 1000);
-                            return;           
-                        }
-                        if (response.statusCode !== 200) {
-                            reject(url + " error " + response.statusCode);
+            function _getURL(url, tries, resolve, reject) {
+                request.get(url)
+                .on('response', function(response) {
+                    if (response.statusCode === 429) {
+                        if (tries === 0) {
+                            if (self.debug) self.debug(
+                                "Too many retries, giving up on", url);
+                            reject("rate limited " + url);
                             return;
                         }
-                        let body = '';
-                        response.on('data', (chunk) => {
-                            body += chunk;
-                        });
-                        response.on('end', () => {
-                            let result = JSON.parse(body);
-                            console.log(result);
-                            resolve({
-                                m: result.match,
-                                s: unprotect(result.translatedText)
-                            });
+                        let waitFor = response.headers["retry-after"];
+                        if (self.debug) self.debug(
+                            url, "is rate limited, waiting for",
+                            waitFor, "seconds");
+                        setTimeout(() => {
+                            _getURL(url, --tries, resolve, reject);
+                        }, waitFor * 1000);
+                        return;           
+                    }
+                    else if (response.statusCode !== 200) {
+                        if (self.debug) self.debug("Bad response", response);
+                        reject(url + " error " + response.statusCode);
+                        return;
+                    }
+                    let body = '';
+                    response.on('data', (chunk) => {
+                        body += chunk;
+                    });
+                    response.on('end', () => {
+                        let result = JSON.parse(body).responseData;
+                        resolve({
+                            m: result.match,
+                            s: unprotect(result.translatedText)
                         });
                     });
                 });
             }
 
+            function getURL(url) {
+                return new Promise((resolve, reject) => {
+                    _getURL(url, 3, resolve, reject);
+                })
+            }
+            
             function _process(en, translated) {
-                let p;
-                if (improve) {
-                    let s = protect(en);
-                    if (lengthInUtf8Bytes(s) > 500) {
-                        throw "Cannot auto-translate " + s
-                        + " it's > 500 bytes";
-                    }
-                    let url = "http://api.mymemory.translated.net/get?q="
-                        + encodeURIComponent(s) + "&langpair="
-                        + encodeURIComponent("en|" + lang);
-                    p = getURL(url, 3);
-                } else
-                    // Keep the English string for manual processing
-                    p = Promise.resolve({ m: -1, s: en });
-
-                return p
+                let s = protect(en);
+                if (lengthInUtf8Bytes(s) > 500) {
+                    throw "Cannot auto-translate " + s
+                    + " it's > 500 bytes";
+                }
+                let url = "http://api.mymemory.translated.net/get?q="
+                    + encodeURIComponent(s) + "&langpair="
+                    + encodeURIComponent("en|" + lang);
+                return getURL(url)
                 .then((tx) => {
+                    if (self.debug) self.debug(
+                        "Translated", "'" + en +
+                        "'", "to", lang, "'" + tx.s +
+                        "'", "with confidence", tx.m);
                     if (!translated[en] || translated[en].m < tx.m) {
                         translated[en] = tx;
-                        if (self.debug) self.debug("Translated", "'" + en +
-                                    "'", "to", lang, "'" + tx.s +
-                                    "'", "with confidence", tx.m);
+                        if (self.debug) self.debug("Translation accepted");
                     }
                 });
             }
@@ -206,7 +222,8 @@ define(["node-getopt", "jsdom", "js/Translator", "fs-extra", "request"], functio
             for (en in this.strings) {
                 if (!translated[en] || improve) {
                     if (this.debug) this.debug("Must translate","'"+en+"'",'to',lang);
-                    promise = promise.then(_process(en, translated));
+                    let p = _process(en, translated);
+                    promise = promise.then(() => p);
                 }
             }
             

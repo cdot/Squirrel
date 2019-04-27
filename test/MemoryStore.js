@@ -3,8 +3,6 @@
 
 define("test/MemoryStore", ["js/Utils", "js/Serror", "js/AbstractStore"], function(Utils, Serror, AbstractStore, Storage) {
 
-    let data = {};
-
     /**
      * A store engine using memory. Used for testing only.
      * @implements AbstractStore
@@ -14,15 +12,15 @@ define("test/MemoryStore", ["js/Utils", "js/Serror", "js/AbstractStore"], functi
         constructor(p) {
             super(p);
             this.type = "MemoryStore";
+            this.data = {};
         }
 
         read(path) {
-            if (this.debug) this.debug("read", path);
-            return Promise.resolve(data[path]);
+            return Promise.resolve(this.data[path]);
         }
 
         write(path, a8) {
-            data[path] = a8;
+            this.data[path] = a8;
             return Promise.resolve(true);
         }
     }
