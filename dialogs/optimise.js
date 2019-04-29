@@ -9,8 +9,6 @@ define("dialogs/optimise", ["dialogs/alert", "js/jq/template"], function(AlertDi
     class OptimiseDialog extends AlertDialog {
 
         initialise() {
-            let self = this;
-
             this.control("existing").template();
             this.control("study").template();
         }
@@ -43,23 +41,21 @@ define("dialogs/optimise", ["dialogs/alert", "js/jq/template"], function(AlertDi
                 "A": 0,
                 "X": 0
             };
-            let self = this;
+
             hoard.actions_from_tree(hoard.tree, (e) => {
                 counts[e.type]++;
-                return Promise.resolve();
-            })
-            .then(() => {
-                this.control("calculating").hide();
-                this.control("study")
-                .template(
-                    "expand",
-                    counts.N, counts.A, counts.X,
-                    counts.N + counts.A + counts.X)
-                .show();
-                if (counts.N + counts.A + counts.X >=
-                    app.cloud.hoard.actions.length)
-                    this.add(self.tx("Optimisation will not improve performance"));
             });
+
+            this.control("calculating").hide();
+            this.control("study")
+            .template(
+                "expand",
+                counts.N, counts.A, counts.X,
+                counts.N + counts.A + counts.X)
+            .show();
+            if (counts.N + counts.A + counts.X >=
+                app.cloud.hoard.actions.length)
+                this.push(this.tx("Optimisation will not improve performance"));
         }
     }
     return OptimiseDialog;

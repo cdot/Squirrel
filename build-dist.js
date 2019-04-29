@@ -103,7 +103,9 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
                 .get(path)
                 .on('response', (response) => {
                     if (response.statusCode !== 200) {
-                        reject(new Error(path + ": " + response.statusCode));
+                        reject(new Serror(
+                            response.statusCode,
+                            path + ": " + response.statusCode));
                         return;
                     }
                     let body = '';

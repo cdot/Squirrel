@@ -34,8 +34,7 @@ define("js/StegaStore", ["js/LayeredStore", "js/Steganographer"], function(Layer
 
             // Get the source image
             let image = document.getElementById("stegamage");
-            if (!image)
-                throw new Error("no #stegamage");
+            Serror.assert(image, "no #stegamage");
 
             let imageData = this.steg.insert(data, image);
             return super.write(path, imageData);

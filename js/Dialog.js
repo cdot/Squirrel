@@ -145,7 +145,7 @@ define("js/Dialog", ["js/Translator", "jquery", "jquery-ui", "js/jq/icon_button"
                             },
                             function(/*err*/) {
                                 // Don't strictly need a .js
-                                throw new Error("Missing dialog " + id + ".js");
+                                Serror.assert("Missing dialog " + id + ".js");
                             });
                     });
                 }
@@ -206,15 +206,14 @@ define("js/Dialog", ["js/Translator", "jquery", "jquery-ui", "js/jq/icon_button"
 
         /**
          * Intended for use in promise resolutions, this indicates if
-         * the dialog was closed by an OK press, or cancelled.
+         * the dialog was closed by an OK press.
+         * @return boolean indicating if the dialog was OK'd (confirmed)
          */
         wasOked() {
             return this._oked;
         }
 
-        /**
-         * @private
-         */
+        // @private
         _initialise() {
             let self = this;
 
@@ -285,7 +284,7 @@ define("js/Dialog", ["js/Translator", "jquery", "jquery-ui", "js/jq/icon_button"
             let $el = this.$dlg.find("[data-id='" + key + "']");
             if (this.debug && $el.length === 0 && !mayBeMissing) {
                 this.debug("Unknown control", key);
-                throw new Error("Unknown control " + key);
+                throw new Serror(500, "Unknown control " + key);
             }
             return $el;
         }

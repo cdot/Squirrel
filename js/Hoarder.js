@@ -3,9 +3,12 @@
 
 /**
  * Management of two hoards, client and cloud
+ * Several methods support a `progress' parameter. This is an object that
+ * supports a method `push({severity, message})' (both parameters strings)
+ * See dialogs/alert.js for how it is used in a notification dialog.
  */
 
-define("js/Hoarder", ["js/Hoard", "js/Translator"], function(Hoard, Translator) {
+define("js/Hoarder", ["js/Hoard", "js/Serror", "js/Translator"], function(Hoard, Serror, Translator) {
 
     const CLIENT_PATH = "client";
 
@@ -70,7 +73,7 @@ define("js/Hoarder", ["js/Hoard", "js/Translator"], function(Hoard, Translator) 
         }
         
         check_alarms(handler) {
-            return self.hoard.check_alarms(handler);
+            return this.hoard.check_alarms(handler);
         }
 
         /**
@@ -87,9 +90,7 @@ define("js/Hoarder", ["js/Hoard", "js/Translator"], function(Hoard, Translator) 
         }
 
         undo() {
-            if (self.undos.length === 0)
-                throw new Error("Nothing to undo");
-
+            Serror.assert(self.undos.length > 0);
             let a = self.undos.pop();
             a.time = Date.now();
             if (self.debug) self.debug("Undo", a);
@@ -209,24 +210,24 @@ define("js/Hoarder", ["js/Hoard", "js/Translator"], function(Hoard, Translator) 
         }
 
         /**
-         * @param {Dialog} progress dialog
+         * @param progress object, see class def for details
          */
         save_client(progress) {
             let self = this;
 
-            if (self.changes === 0) {
-                if (self.debug) self.debug("... client unchanged");
-                return Promise.resolve(false);
+            if (this.changes === 0) {
+                if (this.debug) this.debug("... client unchanged");
+                return Promise.resolve();
             }
 
-            if (self.debug) self.debug("...save to client");
+            if (this.debug) this.debug("...save to client");
 
             // Make a serialisable data block
-            let data = { cloud_path: self.cloudPath, hoard: self.hoard };
+            let data = { cloud_path: this.cloudPath, hoard: this.hoard };
             let json = JSON.stringify(data);
-            self.clientStore.writes(CLIENT_PATH, json)
+            return this.clientStore.writes(CLIENT_PATH, json)
             .then(() => {
-                if (self.debug) self.debug("...client write OK");
+                if (this.debug) this.debug("...client write OK");
                 if (progress) progress.push({
                     severity: "notice",
                     message: Translator.instance().tx("Saved in browser")
@@ -234,21 +235,22 @@ define("js/Hoarder", ["js/Hoard", "js/Translator"], function(Hoard, Translator) 
                 
                 // READBACK CHECK - debug FireFucks, make sure what we wrote is still
                 // readable
-                return self.clientStore.reads(CLIENT_PATH)
+                return this.clientStore.reads(CLIENT_PATH)
                 .then((json2) => {
-                    if (json2 !== json)
-                        throw "Readback check failed";
-                    self.changes = 0;
-                    return Promise.resolve(true);
+                    if (json2 !== json) {
+                        throw new Serror(500, "Readback check failed");
+                    }
+                    this.changes = 0;
+                    return Promise.resolve();
                 });
             })
             .catch((e) => {
-                if (self.debug) self.debug("...client save failed " + e.stack);
+                if (this.debug) this.debug("...client save failed", e);
                 if (progress) progress.push({
                     severity: "error",
                     message: Translator.instance().tx("Failed to save in client store: $1", e)
                 });
-                return Promise.resolve(false);
+                return Promise.reject(e);
             });
         }
 
@@ -258,32 +260,30 @@ define("js/Hoarder", ["js/Hoard", "js/Translator"], function(Hoard, Translator) 
          * the cloud
          */
         load_cloud() {
-            let self = this;
-
-            return self.cloudStore.reads(self.cloudPath)
+            return this.cloudStore.reads(this.cloudPath)
             .then((data) => {
                 let actions = [];
                 if (data && data.length > 0) {
-                    if (self.debug) self.debug("...parsing cloud actions");
+                    if (this.debug) this.debug("...parsing cloud actions");
                     try {
                         actions = JSON.parse(data);
                     } catch (e) {
-                        if (self.debug)
-                            self.debug("...cloud hoard JSON parse failed:", e);
+                        if (this.debug)
+                            this.debug("...cloud hoard JSON parse failed:", e);
                         return Promise.reject(
-                            new Error("Cloud store could not be parsed"));
+                            new Serror(400, "Cloud store could not be parsed"));
                     }
                 }
-                else if (self.debug) self.debug("...cloud is empty");
+                else if (this.debug) this.debug("...cloud is empty");
                 
                 return Promise.resolve(actions);
-            })
+            });
         }
 
         /**
          * Promise to save the given actions list in the cloud
          * @param actions list of actions to save in the cloud
-         * @param {Dialog} progress dialog
+         * @param progress object, see class def for details
          * @return a promise that resolves to true if the save succeeded
          */
         save_cloud(actions, progress) {
@@ -315,23 +315,53 @@ define("js/Hoarder", ["js/Hoard", "js/Translator"], function(Hoard, Translator) 
          * Update (or load) the client hoard with actions from the cloud
          * that were applied since we last updated it. This is used both
          * when loading and when updating before saving.
-         * @param {Dialog} progress dialog
-         * @param {function} each_action called on each new action
-         * played into the hoard
+         * @param progress object, see class def for details
+         * @param {function} each_played called on each new action
+         * played into the hoard. Not called on conflicts or skipped
+         * actions.
+         * @return a Promise that resolves to the list of actions read
+         * from the cloud (and played into the hoard). Skipped actions are
+         * included, but conflicting actions are not.
          */
-        update_from_cloud(progress, each_action) {
+        update_from_cloud(progress, each_played) {
             let self = this;
             let since = self.last_sync;
             if (self.debug) self.debug("Updating client from cloud");
             let prepare;
             // Reload and save the cloud hoard
-            self.cloud_actions = null;
             return self.load_cloud()
             .then((actions) => {
                 self.last_sync = Date.now();
                 if (self.debug) self.debug("...play cloud actions into client");
-                self.cloud_actions = actions; // cache
-                return self.hoard.play_actions(actions, since, each_action);
+                let promise = Promise.resolve();
+                let clean = [];
+                for (let act of actions) {
+                    if (act.time > since) {
+                        promise = promise
+                        .then(() => {
+                            return self.hoard.play_action(act);
+                        })
+                        .then((ac) => {
+                            if (ac.conflict) {
+                                // Conflict can only arise if cloud change
+                                // predates client change, but postdates last
+                                // cloud read
+                                progress.push({
+                                    severity: "warning",
+                                    message: ac.conflict
+                                });
+                                return;
+                            }
+                            each_played(ac.action);
+                            clean.push(ac.action);
+                        });
+                    }
+                    else {
+                        // Skipped action
+                        clean.push(act);
+                    }
+                }
+                return promise.then(() => { return Promise.resolve(clean); });
             })
             .catch((e) => {
                 if (self.debug) self.debug("...cloud synch failed", e);
@@ -339,55 +369,56 @@ define("js/Hoarder", ["js/Hoard", "js/Translator"], function(Hoard, Translator) 
                     severity: "error",
                     message: Translator.instance().tx("Failed to refresh from cloud store")
                 });
+                return Promise.reject(e);
             });
         }
 
         /**
-         * Synchronise the client and cloud hoards so they reflect the same content.
+         * Construct a new cloud from the tree in the client
+         * @param progress object, see class def for details
+         * @return a Promise
          */
-        synchronise_and_save(progress, on_action) {
+        construct_new_cloud(progress) {
+            // Cloud has no actions; reconstruct the cloud from
+            // the client tree
+            if (self.debug) self.debug("...reconstructing cloud");
+            let actions = [];
+            Hoard.actions_from_tree(
+                self.hoard.tree,
+                (a) => { actions.push(a) });
+            return this.save_cloud(actions, progress);
+        }
+        
+        /**
+         * Synchronise the client and cloud so they reflect the
+         * same content.
+         * @param progress object, see class def for details
+         * @param on_action listener invoked on each action that is
+         * played into the client.
+         * @return a Promise that resolves to the merged list of actions
+         * that must be saved in the cloud.
+         */
+        synchronise(progress, on_action) {
             let self = this;
             
-            // Pull the latest changes from the cloud
-            return self.update_from_cloud(
+            // Pull the latest changes from the cloud. This will set
+            // set this.cloud_actions if the update succeeds
+            return this.update_from_cloud(
                 progress,
-                (e) => {
-                    // triggered on each event read from the cloud that is not already
-                    // reflected in the client.
-                    if (e.conflict) {
-                        // Conflict can only arise if cloud change predates client
-                        // change, but postdates last cloud read
-                        progress.push({
-                            severity: "warning",
-                            message: e.action +
-                            ": " + e.conflict
-                        });
-                    } else {
-                        on_action(e.action);
-                        self.changes++;
-                    }
+                (act) => {
+                    on_action(act);
+                    this.changes++;
                 })
-            .finally(() => {
-                return self.save_client(progress);
-            })
-            .finally(() => {
-                let actions;
-                if (self.cloud_actions)
-                    // Cloud has existing actions, merge them
-                    actions = Hoard.merge_actions(
-                        self.cloud_actions, self.hoard.actions);
-                else {
-                    // Cloud has no actions; reconstruct the cloud from
-                    // the tree
-                    if (self.debug) self.debug("...reconstructing client actions for cloud");
-                    actions = [];
-                    Hoard.actions_from_tree(
-                        self.hoard.tree,
-                        (a) => { actions.push(a) });
-                }
-                return self.save_cloud(actions, progress);
-            })
-            .finally(() => true);
+            .then((actions) => {
+                // 'actions' contains all actions form the cloud except
+                // conflicting and duplicate actions.
+                // Since these actions were already reflected in the tree
+                // BEFORE the cloud was merged, there should be no conflicts
+                // caused by these actions.
+                actions = Hoard.merge_actions(
+                    actions, this.hoard.actions);
+                return actions;
+            });
         }
     }
 

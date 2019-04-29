@@ -80,7 +80,7 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
                 mess += r.body;
             }
             if (this.debug) this.debug(mess);
-            return mess;
+            return " " + mess;
         }
 
         _init() {
@@ -89,7 +89,7 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
             // Timeout after 20 seconds of waiting for auth
             let tid = window.setTimeout(function () {
                 window.clearTimeout(tid);
-                throw new Error(
+                throw new Serror(408,
                     TX.tx("Timeout trying to authorise access to Google Drive.") +
                         " " + TX.tx("Are popups blocked in your browser?"));
             }, 20000);
@@ -105,9 +105,9 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
             .then((authResult) => {
                 window.clearTimeout(tid);
                 if (!authResult)
-                    throw new Error(TX.tx("Could not authorise access to Google Drive"));
+                    throw new Serror(403, TX.tx("Could not authorise access to Google Drive"));
                 else if (authResult.fail)
-                    throw new Error(authResult.fail);
+                    throw new Serror(403, authResult.fail);
                 // Access token has been retrieved, requests
                 // can be sent to the API.
                 if (this.debug) this.debug("auth OK");
@@ -124,8 +124,8 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
                 // We're done, fall through to resolve
             })
             .catch((r) => {
-                throw self.error(
-                    "", 500, self._gError(r, TX.tx("Google Drive load")));
+                throw new Serror(
+                    500, self._gError(r, TX.tx("Google Drive load")));
             });
         }
 
@@ -289,7 +289,7 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
                     return self._putfile(parentId, name, data, id);
                 })
                 .catch((r) => {
-                    throw self.error(path, 400, self._gError(r, TX.tx("Write")));
+                    throw new Serror(400, path + self._gError(r, TX.tx("Write")));
                 });
             });
         }
@@ -319,7 +319,7 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
                     if (items.length === 0) {
                         if (this.debug) this.debug(
                             "could not find " + name);
-                        throw self.error(path, 401, "Not found");
+                        throw new Serror(401, path + " not found");
                     }
                     let url = items[0].downloadUrl;
                     if (this.debug) this.debug(
@@ -331,7 +331,7 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
                     });
                 })
                 .catch((r) => {
-                    throw self.error(path, 400, self._gError(r, TX.tx("Read")));
+                    throw new Serror(400, path + self._gError(r, TX.tx("Read")));
                 });
             });
         }

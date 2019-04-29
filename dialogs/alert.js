@@ -10,13 +10,7 @@ define("dialogs/alert", ["js/Dialog"], function(Dialog) {
 
     class AlertDialog extends Dialog {
 
-        /**
-         * @param p map with following fields:
-         *  severity: one of "notice", "warning", "error"
-         *   message: the translated message text
-         *   transitory: if true, will delete the message on the next alert
-         * If p is undefined the dialog will be closed
-         */
+        // @Override
         open() {
             this.control("messages").empty();
 
@@ -24,13 +18,25 @@ define("dialogs/alert", ["js/Dialog"], function(Dialog) {
                 this.$dlg.dialog("option", "title", this.options.title);
 
             if (this.options.alert)
-                this.add(this.options.alert);
+                this.push(this.options.alert);
         }
 
-        add(lert) {
+        /**
+         * Add a message to the dialog
+         * @param lert object {severity, message}:
+         *  severity: one of "notice", "warning", "error"
+         *  message: the translated message text
+         * Can also be an array of these objects
+         * @param first if true, add to the start of the message list
+         */
+        add(lert, first) {
             if (lert instanceof Array) {
-                for (let i in lert)
-                    this.add(lert[i]);
+                if (first)
+                    for (let i = lert.length - 1; i >= 0; i--)
+                        this.add(lert[i], true);
+                else
+                    for (let i in lert)
+                        this.add(lert[i], false);
                 return;
             }
             if (typeof lert === "string")
@@ -45,7 +51,7 @@ define("dialogs/alert", ["js/Dialog"], function(Dialog) {
                         $http = $(html);
                         $("body").append($http);
                         self.translate($http);
-                        self.add(morlert);
+                        self.add(morlert, first);
                     });
                     return;
                 }
@@ -56,10 +62,26 @@ define("dialogs/alert", ["js/Dialog"], function(Dialog) {
                 lert.severity = "notice";
             let $mess = $("<div>" + lert.message + "</div>")
                 .addClass('dlg-' + lert.severity);
-            if (lert.first)
+            if (first)
                 this.control("messages").prepend($mess);
             else
                 this.control("messages").append($mess);
+        }
+
+        /**
+         * Add a message to the start of the message list.
+         * @param lert see `add()' for details
+         */
+        unshift(lert) {
+            this.add(lert, true);
+        }
+        
+        /**
+         * Add a message to the end of the message list.
+         * @param lert see `add()' for details
+         */
+        push(lert) {
+            this.add(lert, false);
         }
     }
     return AlertDialog;

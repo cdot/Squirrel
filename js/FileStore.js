@@ -21,7 +21,7 @@ define("js/FileStore", ["fs-extra", "js/AbstractStore"], function(fs, AbstractSt
             return fs.readFile(this.option("path") + "/" + path)
             .catch((e) => {
                 if (/ENOENT/.test(e.message))
-                    throw this.error(path, 404, e.message);
+                    throw new Serror(404, path + " " + e.message);
                 throw e;
             });
         }

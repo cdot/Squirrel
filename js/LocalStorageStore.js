@@ -71,8 +71,8 @@ define("js/LocalStorageStore", deps, function(Utils, Serror, AbstractStore, Stor
         _read(path) {
             let str = localStorage.getItem(this._makeKey(path));
             if (str === null) {
-                return Promise.reject(this.error(path, 404, path
-                                                 + " does not exist"));
+                return Promise.reject(new Serror(
+                    404, path + " does not exist"));
             }
 
             return Promise.resolve(str);

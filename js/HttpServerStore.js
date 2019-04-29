@@ -94,7 +94,8 @@ define("js/HttpServerStore", ["js/Serror", "js/AbstractStore"], function(Serror,
                         xhr.send(body);
                     }
                 } catch (e) {
-                    reject(self.error(turl, 500, "xhr.send error: " + e));
+                    reject(self.error(500, turl.split("/"),
+                                      "xhr.send error: " + e));
                 }
 
                 xhr.onload = function() {
@@ -119,7 +120,7 @@ define("js/HttpServerStore", ["js/Serror", "js/AbstractStore"], function(Serror,
                 };
 
                 xhr.ontimeout = function() {
-                    reject(new Error('Timeout exceeded'));
+                    reject(new Serror(408, 'Timeout exceeded'));
                 };
             });
         }
@@ -141,7 +142,7 @@ define("js/HttpServerStore", ["js/Serror", "js/AbstractStore"], function(Serror,
             .then((res) => {
                 if (200 <= res.status && res.status < 300)
                     return res.body;
-                throw this.error(path, res.status, "read failed");
+                throw new Serror(res.status, path + " read failed");
             });
         }
 
@@ -156,7 +157,7 @@ define("js/HttpServerStore", ["js/Serror", "js/AbstractStore"], function(Serror,
             })
             .then((res) => {
                 if (res.status < 200 || res.status >= 300)
-                    throw this.error(path, res.status, "write failed");
+                    throw new Serror(res.status, path + " write failed");
             });
         }
     }

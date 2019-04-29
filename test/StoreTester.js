@@ -184,7 +184,6 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
 
             this.addTest("Write/Read 1 byte", function() {
                 let store = self.store;
-                console.log("PISH",self.store.option("pass"));
                 let a = new Uint8Array(1);
                 a[0] = 69;
                 return store.write(test_path, a)

@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,node */
 
-define("js/EncryptedStore", ["js/LayeredStore", "js/Utils", "js/AES"], function (LayeredStore, Utils, AES) {
+define("js/EncryptedStore", ["js/Serror", "js/LayeredStore", "js/Utils", "js/AES"], function (Serror, LayeredStore, Utils, AES) {
 
     const SIGNATURE = 0x53;
     const VERSION = 1;
@@ -45,7 +45,7 @@ define("js/EncryptedStore", ["js/LayeredStore", "js/Utils", "js/AES"], function 
                     data = AES.decrypt(a8, self.option("pass"), 256);
                 } catch (e) {
                     // Decryption failure
-                    throw self.error(path, 400, "Decryption failure " + e);
+                    throw new Serror(400, path + " decryption failure " + e);
                 }
 
                 // Check signature and checksum
@@ -53,9 +53,9 @@ define("js/EncryptedStore", ["js/LayeredStore", "js/Utils", "js/AES"], function 
                 if (data[0] === SIGNATURE &&
                     ((data[2] << 8) | data[3]) === cs) {
                     if (self.debug) self.debug("data version", data[1]);
-                    data = new Uint8Array(data.buffer, 4);
+                    return Promise.resolve(new Uint8Array(data.buffer, 4));
                 }
-                else if ((data.length & 1) === 0) {
+                if ((data.length & 1) === 0) {
                     // If self is old format, the file contains a
                     // 16-bit-per-character string and therefore
                     // must be an even length. Further it must be parseable
@@ -64,16 +64,12 @@ define("js/EncryptedStore", ["js/LayeredStore", "js/Utils", "js/AES"], function 
                         null, new Uint16Array(data.buffer));
                     try {
                         JSON.parse(s);
+                        return Promise.resolve(Utils.StringToUint8Array(s));
                     } catch (e) {
-                        throw self.error(path, 400, "Decryption failed - old format data is not valid JSON");
+                        if (this.debug) this.debug("Invalid JSON " + e);
                     }
-                    data = Utils.StringToUint8Array(s);
                 }
-                else {
-                    throw self.error(path, 400, "Decryption failed");
-                }
-
-                return Promise.resolve(data);
+                return Promise.reject(new Serror(400, path + " decryption failed"));
             });
         }
 

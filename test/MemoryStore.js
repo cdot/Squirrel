@@ -16,6 +16,8 @@ define("test/MemoryStore", ["js/Utils", "js/Serror", "js/AbstractStore"], functi
         }
 
         read(path) {
+            if (!(path in this.data))
+                return Promise.reject(new Serror(400, path + " is not in store"));
             return Promise.resolve(this.data[path]);
         }
 

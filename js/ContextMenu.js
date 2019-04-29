@@ -271,7 +271,7 @@ define("js/ContextMenu", ["js/Translator", "clipboard", "js/Dialog", "jquery", "
                 break;
 
             default:
-                throw new Error("ERROR: unrecognised command " + ui.cmd);
+                Serror.assert("Unrecognised command " + ui.cmd);
             }
         }
     }

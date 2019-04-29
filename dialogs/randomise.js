@@ -7,7 +7,7 @@
  * $node (required)
  * app (required)
  */
-define("dialogs/randomise", ["js/Dialog", "js/Utils", "js/Hoard"], function(Dialog, Utils, Hoard) {
+define("dialogs/randomise", ["js/Dialog", "js/Utils", "js/Action", "js/Hoard"], function(Dialog, Utils, Action, Hoard) {
     const DEFAULT_RANDOM_LEN = 30;
     const DEFAULT_RANDOM_CHS = "A-Za-z0-9!%^&*_$+-=;:@#~,./?";
 
@@ -15,10 +15,10 @@ define("dialogs/randomise", ["js/Dialog", "js/Utils", "js/Hoard"], function(Dial
      * Generate a new password subject to constraints:
      * length: length of password
      * charset: characters legal in the password. Ranges can be defined
-     * using A-Z syntax.
+     * using A-Z syntax. - must be the last or first character for it
+     * to be included. Inverted ranges are supported e.g. Z-A
      */
     function generatePassword(constraints) {
-        let sor, eor;
         if (!constraints)
             constraints = {};
 
@@ -31,18 +31,20 @@ define("dialogs/randomise", ["js/Dialog", "js/Utils", "js/Hoard"], function(Dial
         let cs = constraints.charset;
         let legal = [];
         while (cs.length > 0) {
+            let sor = cs.charAt(0);
             if (cs.length >= 3 && cs.charAt(1) === "-") {
-                sor = cs.charCodeAt(0);
-                eor = cs.charCodeAt(2);
+                let eor = cs.charAt(2);
+                let sorc = sor.charCodeAt(0);
+                let eorc = eor.charCodeAt(0);
                 cs = cs.substring(3);
-                if (sor > eor)
-                    throw new Error("Inverted constraint range "
-                                    + cs.substr(0, 3));
-                while (sor <= eor) {
-                    legal.push(String.fromCharCode(sor++));
+                if (sorc > eorc) {
+                    let t = eorc; eorc = sorc; sorc = t;
+                }
+                while (sorc <= eorc) {
+                    legal.push(String.fromCharCode(sorc++));
                 }
             } else {
-                legal.push(cs.charAt(0));
+                legal.push(sor);
                 cs = cs.substring(1);
             }
         }
@@ -50,12 +52,12 @@ define("dialogs/randomise", ["js/Dialog", "js/Utils", "js/Hoard"], function(Dial
         if (typeof window !== "undefined")
             window.crypto.getRandomValues(array);
         else {
-            for (let i = 0; i < constraints.length; i++)
+            for (let i in array)
                 array[i] = Math.floor(Math.random() * 256);
         }
         let s = "";
-        for (let i = 0; i < constraints.length; i++) {
-            s += legal[array[i] % legal.length];
+        for (let rand of array) {
+            s += legal[rand % legal.length];
         }
         return s;
     }
@@ -110,7 +112,7 @@ define("dialogs/randomise", ["js/Dialog", "js/Utils", "js/Hoard"], function(Dial
                 .on(Dialog.tapEvent(), function () {
                     let c = self.control("len").val() + ";" +
                         self.control("chs").val();
-                    self.options.app.playAction(Hoard.new_action({
+                    self.options.app.playAction(new Action({
                         type: "X",
                         path: self.options.$node.tree("getPath"),
                         data: c
@@ -124,7 +126,7 @@ define("dialogs/randomise", ["js/Dialog", "js/Utils", "js/Hoard"], function(Dial
         }
 
         ok() {
-            return this.options.app.playAction(Hoard.new_action({
+            return this.options.app.playAction(new Action({
                 type: "E",
                 path: this.options.$node.tree("getPath"),
                 data: this.control("idea").text()

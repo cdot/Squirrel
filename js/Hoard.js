@@ -22,10 +22,9 @@
  *
  * When a client requires synching with changes in the cloud, actions
  * from the cloud that are timestamped since the last synch are played
- * into the client tree in time order using `play_actions'. Duplicate
- * actions are ignored. Conflicts - such as a data item that was modified
- * locally also being
- * modified by a cloud action - are detected.
+ * into the client tree in time order. Duplicate actions are ignored.
+ * Conflicts - such as a data item that was modified locally also
+ * being modified by a cloud action - are detected.
  *
  * When the cloud needs to be updated with changes from the client,
  * the actions recorded in the client can simply be merged into the
@@ -68,7 +67,7 @@
  */
 const VERSION = 2.0;
 
-define("js/Hoard", ["js/Action", "js/Translator"], function(Action, Translator) {
+define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action, Translator, Serror) {
     let TX = Translator.instance();
 
     const MSPERDAY = 24 * 60 * 60 * 1000;
@@ -108,7 +107,7 @@ define("js/Hoard", ["js/Action", "js/Translator"], function(Action, Translator) 
                 this.version = data.version || VERSION;
 
                 if (this.version > VERSION)
-                    throw new Error("Internal: cannot read a version "
+                    throw new Serror(400, "Cannot read a version "
                                     + data.version +
                                     " hoard with " + VERSION + " code");
 
@@ -149,8 +148,7 @@ define("js/Hoard", ["js/Action", "js/Translator"], function(Action, Translator) 
          * @return the action popped
          */
         pop_action() {
-            if (this.actions.length === 0)
-                throw new Error("Internal: Cannot pop from empty actions stream");
+            Serror.assert(this.actions.length > 0);
             return this.actions.pop();
         }
 
@@ -167,9 +165,8 @@ define("js/Hoard", ["js/Action", "js/Translator"], function(Action, Translator) 
 
             for (let i = 0; i < path.length - offset; i++) {
                 let name = path[i];
-                if (node && typeof node.data === "string") {
-                    throw new Error("Internal: Cannot recurse into leaf node");
-                } else if (node && node.data[name]) {
+                Serror.assert(node && typeof node.data !== "string");
+                if (node && node.data[name]) {
                     node = node.data[name];
                 } else {
                     return undefined;
@@ -237,7 +234,7 @@ define("js/Hoard", ["js/Action", "js/Translator"], function(Action, Translator) 
             // Path must always point to a valid parent pre-existing
             // in the tree. parent will never be null
             if (!parent)
-                return conflict(e, TX.tx("Node not found"));
+                return conflict(e, TX.tx("not found"));
 
             let name = e.path[e.path.length - 1];
             // Node may be undefined e.g. if we are creating
@@ -260,7 +257,7 @@ define("js/Hoard", ["js/Action", "js/Translator"], function(Action, Translator) 
             }
             else { // all other actions require an existing node
                 if (!node)
-                    return conflict(e, TX.tx("It does not exist"));
+                    return conflict(e, TX.tx("it does not exist"));
                 let new_parent;
 
                 switch (e.type) {
@@ -268,7 +265,7 @@ define("js/Hoard", ["js/Action", "js/Translator"], function(Action, Translator) 
                     // e.data is the path of the new parent
                     new_parent = this._locate_node(e.data);
                     if (!new_parent)
-                        return conflict(TX.tx("New folder '$1' does not exist",
+                        return conflict(TX.tx("new folder '$1' does not exist",
                                               e.data.join("↘")));
 
                     // collection is being modified
@@ -287,8 +284,7 @@ define("js/Hoard", ["js/Action", "js/Translator"], function(Action, Translator) 
 
                 case "R": // Rename
                     if (parent.data[e.data])
-                        return conflict(e, " '" + e.data + "': " +
-                                        TX.tx("It already exists"));
+                        return conflict(e, TX.tx("it already exists"));
                     parent.data[e.data] = node;
                     delete parent.data[name];
                     // collection is being modified, node is not
@@ -323,7 +319,8 @@ define("js/Hoard", ["js/Action", "js/Translator"], function(Action, Translator) 
                     break;
 
                 default:
-                    if (this.debug) throw new Error("Unrecognised action type (may be due to a version incompatibility?)");
+                    // Version incomptibility?
+                    Serror.assert(false, "Unrecognised action type");
                 }
             }
 
@@ -462,50 +459,6 @@ define("js/Hoard", ["js/Action", "js/Translator"], function(Action, Translator) 
         }
 
         /**
-         * Promise to add the actions that are timestamped since
-         * a given time into this hoard. Updates the sync time to now.
-         * Actions are *not* appended to our local actions stream,
-         * they are simply played into the tree.
-         * @param new_actions actions to add
-         * @param since (optional) threshold before which not to add
-         * actions (time in ms)
-         * If not specified, then all actions will be added.
-         * @param {function} (optional) listener called to report
-         * events. Passed an object with fields <ul>
-         * <li>action: an Action object
-         * <li>conflict: a message, if there was a conflict
-         * </ul> and expected to return a Promise.
-         */
-        play_actions(actions, since, listener) {
-            if (typeof since === "function") {
-                listener = since;
-                since = 0;
-            } else if (typeof since === "undefined")
-                since = 0;
-
-            if (this.debug) this.debug(
-                "Playing", actions.length, "actions since", new Date(since));
-
-            let listen = listener ? (res) => {
-                return listener(res);
-            } : Promise.resolve();
-            let promise = Promise.resolve();
-        
-            // Actions are not necessarily in time order, but are known to be in
-            // dependency order
-            for (let act of actions) {
-                if (act.time > since) {
-                    if (this.debug) this.debug("Play", act);
-                    promise = promise.then(() => {
-                        return this.play_action(act).then(listen);
-                    });
-                } else if (this.debug)
-                    this.debug("Skip old", act);
-            }
-            return promise;
-        }
-
-        /**
          * Return the tree node identified by the path.
          * @param path array of path elements, root first
          * @return a tree node, or null if not found.
@@ -567,7 +520,9 @@ define("js/Hoard", ["js/Action", "js/Translator"], function(Action, Translator) 
                         };
                     }
                     if (Date.now() >= node.alarm.time) {
-                        ringfn(item.path, new Date(node.alarm.time));
+                        promise = promise.then(() => {
+                            return ringfn(item.path, new Date(node.alarm.time));
+                        });
                     }
                 }
             }

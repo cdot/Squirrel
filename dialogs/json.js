@@ -38,7 +38,7 @@ define("dialogs/json", ["js/Dialog"], function(Dialog) {
         }
 
         open() {
-            let data = this.options.app.client.hoard.JSON();
+            let data = this.options.app.client.hoard.treeJSON();
             this.control("text")
                 .text(data)
                 .select();

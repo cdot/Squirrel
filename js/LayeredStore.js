@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,node */
 
-define("js/LayeredStore", ["js/AbstractStore"], function(AbstractStore) {
+define("js/LayeredStore", ["js/AbstractStore", "js/Serror"], function(AbstractStore, Serror) {
 
     /**
      * @class
@@ -18,8 +18,7 @@ define("js/LayeredStore", ["js/AbstractStore"], function(AbstractStore) {
         constructor(p) {
             let us = p.understore;
             super(p);
-            if (typeof us === "undefined")
-                throw new Error("LayeredStore requires an understore");
+            Serror.assert(us instanceof AbstractStore);
             this.understore = us;
         }
 

@@ -40,8 +40,13 @@ define("dialogs/extras", ["js/Dialog", "js/Translator", "js/Tree", "js-cookie", 
             this.control("hidevalues")
             .on("change", function () {
                 let checked = $(this).prop("checked");
-                Tree.showHideValues(checked);
-                Cookies.set("ui_hidevalues", checked ? "on" : null);
+                Tree.showValues(checked);
+            });
+
+            this.control("lastchange")
+            .on("change", function () {
+                let checked = $(this).prop("checked");
+                Tree.showChanges(checked);
             });
 
             this.control("chpw")
@@ -51,7 +56,7 @@ define("dialogs/extras", ["js/Dialog", "js/Translator", "js/Tree", "js-cookie", 
 
             this.control("chss")
             .on(Dialog.tapEvent(), function () {
-                self.options.app.get_store_settings(true);
+                self.options.app.get_store_settings();
             });
 
             this.control("theme")
@@ -90,11 +95,14 @@ define("dialogs/extras", ["js/Dialog", "js/Translator", "js/Tree", "js-cookie", 
                 let fresh = self.control("language").val();
                 TX.language(fresh, document);
             });
+
+            //this.control("dump-store").toggle(this.debug);
+            this.control("dump").on("click", function() {
+                self.options.app.dump_client_store();
+            });
         }
 
         open() {
-            let app = this.options.app;
-
             this.control("theme")
             .find("option:selected")
             .prop("selected", false);
@@ -105,9 +113,9 @@ define("dialogs/extras", ["js/Dialog", "js/Translator", "js/Tree", "js-cookie", 
 
             this.control("autosave").prop("checked", this._autosave());
 
-            this.control("hidevalues")
-            .prop("checked",
-                  Cookies.get("ui_hidevalues")  === "on");
+            this.control("hidevalues").prop("checked", Tree.hidingValues());
+
+            this.control("lastchange").prop("checked", Tree.showingChanges());
 
             Translator.instance().language().then((lingo) => {
                 this.control("language").val(lingo);

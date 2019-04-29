@@ -6,7 +6,7 @@
  * $node (rquired)
  * app (required)
  */
-define("dialogs/alarm", ["js/Dialog", "js/Hoard", "js/jq/template", "jquery-ui"], function(Dialog, Hoard) {
+define("dialogs/alarm", ["js/Dialog", "js/Action", "js/Hoard", "js/jq/template", "jquery-ui"], function(Dialog, Action, Hoard) {
 
     const MSPERDAY = 24 * 60 * 60 * 1000;
 
@@ -71,7 +71,7 @@ define("dialogs/alarm", ["js/Dialog", "js/Hoard", "js/jq/template", "jquery-ui"]
             let pat = this.options.$node.tree("getPath");
             let act;
             if (isEnabled)
-                act = Hoard.new_action({
+                act = new Action({
                     type: "A", path: pat,
                     data: {
                         time: this.control("date")
@@ -79,7 +79,7 @@ define("dialogs/alarm", ["js/Dialog", "js/Hoard", "js/jq/template", "jquery-ui"]
                     }
                 });
             else if (this.wasEnabled)
-                act = Hoard.new_action({ type: "C", path: pat });
+                act = new Action({ type: "C", path: pat });
             
             return this.options.app.playAction(act);
         }
@@ -87,7 +87,6 @@ define("dialogs/alarm", ["js/Dialog", "js/Hoard", "js/jq/template", "jquery-ui"]
         // @Override
         open() {
             let $node = this.options.$node;
-            let lastmod;
 
             this.control("path").text($node.tree("getPath").join("↘"));
 

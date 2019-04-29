@@ -42,7 +42,7 @@
  * names to DOM nodes.
  */
 
-define("js/Tree", ["js/Action", "js/Hoard", "js/Dialog", "jquery", "js/jq/edit_in_place", "js/jq/scroll_into_view", "js/jq/icon_button", "jquery-ui"], function(Action, Hoard, Dialog) {
+define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", "js/jq/edit_in_place", "js/jq/scroll_into_view", "js/jq/icon_button", "jquery-ui"], function(Action, Hoard, Serror, Dialog) {
 
     // separator used in Path->node mapping index
     const PATHSEP = String.fromCharCode(1);
@@ -379,8 +379,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Dialog", "jquery", "js/jq/edit_i
             let $node = this.element;
             if ($node.hasClass("tree-root"))
                 return [];
-            if (!$node.hasClass("tree-node"))
-                throw new Error("Assertion error");
+            Serror.assert($node.hasClass("tree-node"), "Missing class");
 
             // IMPORTANT: root node MUST NOT have data-path in HTML
 
@@ -402,8 +401,8 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Dialog", "jquery", "js/jq/edit_i
          */
         getNodeFromPath: function(path) {
             let $node = path2$node[path.join(PATHSEP)];
-            if ($node && $node.length === 0)
-                throw new Error("Not in the cache, was something not been through get_path?");
+            // Has something not been through get_path?
+            Serror.assert($node && $node.length === 1);
             return $node;
         },
 
@@ -412,8 +411,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Dialog", "jquery", "js/jq/edit_i
          * Insert-sort the given node as a child of the given parent node
          */
         _insertInto: function($parent) {
-            if ($parent.length == 0)
-                throw new Error("Assert: No parent to insert into", $parent);
+            Serror.assert($parent.length === 1);
             let $node = this.element;
 
             // First decouple from the old parent
@@ -424,10 +422,9 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Dialog", "jquery", "js/jq/edit_i
             let key = $node.data("key");
             let inserted = false;
 
-            let $ul = $parent.find("ul")
-                .first();
-            if ($ul.length === 0)
-                throw new Error("Assert: No ul in parent");
+            let $ul = $parent.find("ul").first();
+            Serror.assert($ul.length === 1);
+
             $ul.children(".tree-node")
             .each(function () {
                 if (Tree.compareKeys(
@@ -923,13 +920,9 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Dialog", "jquery", "js/jq/edit_i
             let $el = this.element;
 
             // Find the path to the parent of this node
-            let $parent = $el.parent();
-            if (!$parent || $parent.length == 0)
-                throw new Error("No immediate parent");
-            $parent = $parent
-            .closest(".tree-node")
-            if (!$parent || $parent.length == 0)
-                throw new Error("No containing treenode");
+            let $parent = $el.parent().closest(".tree-node");
+            Serror.assert($parent && $parent.length === 1);
+
             let pa = $parent.tree("getPath");
             recache($el, pa);
         },

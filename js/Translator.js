@@ -129,7 +129,7 @@ define("js/Translator", ["js/Utils", "js-cookie"], function(Utils, Cookies) {
                     };
 
                     xhr.ontimeout = function() {
-                        reject(new Error("Timeout exceeded"));
+                        reject(new Serror(408, "Timeout exceeded"));
                     };
                 });
             } else if (this.options.files) {

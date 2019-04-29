@@ -2,24 +2,50 @@
 /* eslint-env browser,node */
 
 define("js/Serror", function() {
+    
     /**
-     * Store error. Generic vehicle for exceptions thrown by a store.
+     * Squirrel error. Generic vehicle for errors that have a status code
+     * and optional path information.
      */
-    class Serror {
+    class Serror extends Error {
         /**
-         * @param path String path where it failed,
-         * @param status an HTTP status code describing the error
-         * @param message optional message describing the error
+         * @param status an optional HTTP status code describing the error
+         * (defaults to 400)
+         * @param path optional path array where it failed,
+         * @param message is passed to the Error constructor
+         * (filename and line number not supported)
          */
-        constructor(path, status, message) {
-            this.path = path;
+        constructor(...rest) {
+            let status = 400, path;
+            if (rest.length > 0 && typeof rest[0] === "number")
+                status = rest.shift();
+            if (rest.length > 1)
+                path = rest.shift();
+            super(...rest);
             this.status = status;
-            this.message = message;
+            this.path = path;
+                        
+            // Maintains proper stack trace for where our error
+            // was thrown (only available on V8)
+            if (Error.captureStackTrace) {
+                Error.captureStackTrace(this, Serror);
+            }
         }
 
+        /**
+         * Classic assert
+         */
+        static assert(cond, message) {
+            if (cond) return;
+            if (typeof message === "undefined")
+                message = "Assertion failed";
+            throw new Error(message);
+        }
+        
         toString() {
-            return "status " + this.status + " " + this.path + " "
-                + (this.message || "");
+            return this.status
+            + (this.path ? " " + this.path.join("/") : "")
+            + (this.message ? " " + this.message : "");
         }
     }
 

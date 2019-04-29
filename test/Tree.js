@@ -26,65 +26,66 @@ requirejs.config({
 const actions = [
     {
 	type: "N",
-	time: new Date("1 Jan 2000").getTime(),
+	time: Date.UTC(2000, 0),
 	path: ["Fine-dining"]
     },
     {
 	type: "N",
-	time: new Date("1 Jan 2001").getTime(),
+	time: Date.UTC(2001, 0),
 	path: [ "Fine-dining", "Caviare" ]
     },
     {
 	type: "N",
-	time: new Date("1 Jan 2002").getTime(),
+	time: Date.UTC(2002, 0),
 	path: [ "Fine-dining", "Caviare", "Beluga" ],
         data: "£6.70 per gram"
     },
     {
         type: "A",
 	path: [ "Fine-dining", "Caviare", "Beluga" ],
-	time: new Date("1 Jan 2003").getTime(),
-        data: new Date("1 Jan 2004").getTime(),
+	time: Date.UTC(2003, 0),
+        data: Date.UTC(2004, 0),
     },
     {
         type: "R",
 	path: [ "Fine-dining", "Caviare" ],
-	time: new Date("1 Jan 2005").getTime(),
+	time: Date.UTC(2005, 0),
         data: "Caviar"
     },
     {
         type: "E",
 	path: [ "Fine-dining", "Caviar", "Beluga" ],
-	time: new Date("1 Jan 2006").getTime(),
+	time: Date.UTC(2006, 0),
         data: "£6.70 per gramme"
     },
     {
         type: "X",
 	path: [ "Fine-dining", "Caviar", "Beluga" ],
-	time: new Date("1 Jan 2007").getTime(),
+	time: Date.UTC(2007,0),
         data: "If you have to ask, you can't afford it"
     }
 ];
 
 var undos = [
-    "D:Fine-dining @01/01/2000, 00:00:00",
-    "D:Fine-dining/Caviare @01/01/2001, 00:00:00",
-    "D:Fine-dining/Caviare/Beluga @01/01/2002, 00:00:00",
-    "C:Fine-dining/Caviare/Beluga @01/01/2003, 00:00:00",
-    "R:Fine-dining/Caviar @01/01/2005, 00:00:00 Caviare",
-    "E:Fine-dining/Caviar/Beluga @01/01/2006, 00:00:00 £6.70 per gram",
-    "X:Fine-dining/Caviar/Beluga @01/01/2007, 00:00:00"
+    "D:Fine-dining @1/1/2000, 12:00:00 AM",
+    "D:Fine-dining/Caviare @1/1/2001, 12:00:00 AM",
+    "D:Fine-dining/Caviare/Beluga @1/1/2002, 12:00:00 AM",
+    "C:Fine-dining/Caviare/Beluga @1/1/2003, 12:00:00 AM",
+    "R:Fine-dining/Caviar @1/1/2005, 12:00:00 AM Caviare",
+    "E:Fine-dining/Caviar/Beluga @1/1/2006, 12:00:00 AM £6.70 per gram",
+    "X:Fine-dining/Caviar/Beluga @1/1/2007, 12:00:00 AM"
 ];
 
 let deps = ["js/Utils",
             "js/Hoard",
+            "js/Serror",
             "js/Translator",
             "js/Tree",
             "test/TestRunner",
             "jquery",
             "jquery-ui"
            ];
-requirejs(deps, function(Utils, Hoard, Translator, Tree, TestRunner) {
+requirejs(deps, function(Utils, Hoard, Serror, Translator, Tree, TestRunner) {
 
     let tr = new TestRunner("Tree");
     let assert = tr.assert;
@@ -198,6 +199,7 @@ requirejs(deps, function(Utils, Hoard, Translator, Tree, TestRunner) {
                               </span>\
                               <span class="tree-value">£6.70 per gramme\
                               </span>\
+                              <span class="tree-change">2007-01-01</span>\
                             </div>\
                             <div class="tree-draghandle ui-button ui-corner-all ui-widget ui-button-icon-only ui-draggable-handle" role="button" style="display: none;">\
                               <span class="ui-button-icon ui-icon ui-icon-arrow-2-n-s">\
@@ -246,6 +248,7 @@ requirejs(deps, function(Utils, Hoard, Translator, Tree, TestRunner) {
                               </span>\
                               <span class="tree-value">£6.70 per gramme\
                               </span>\
+                              <span class="tree-change">2007-01-01</span>\
                             </div>\
                             <div class="tree-draghandle ui-button ui-corner-all ui-widget ui-button-icon-only ui-draggable-handle" role="button" style="display: none;">\
                               <span class="ui-button-icon ui-icon ui-icon-arrow-2-n-s">\

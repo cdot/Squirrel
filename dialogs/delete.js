@@ -7,11 +7,11 @@
  * app (required)
  * $node (required)
  */
-define("dialogs/delete", ["js/Dialog", "js/Hoard"], function(Dialog, Hoard) {
+define("dialogs/delete", ["js/Dialog", "js/Action", "js/Hoard"], function(Dialog, Action, Hoard) {
     class DeleteDialog extends Dialog {
 
         ok() {
-            return this.options.app.playAction(Hoard.new_action({
+            return this.options.app.playAction(new Action({
                 type: "D",
                 path: this.options.$node.tree("getPath")
             }));
@@ -19,9 +19,7 @@ define("dialogs/delete", ["js/Dialog", "js/Hoard"], function(Dialog, Hoard) {
 
         open() {
             this.control("path")
-                .text(
-                    !this.options.$node.tree("getPath")
-                        .join("↘"));
+                .text(this.options.$node.tree("getPath").join("↘"));
             this.control("coll")
                 .toggle(!this.options.$node.hasClass("tree-leaf"));
         }

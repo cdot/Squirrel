@@ -152,7 +152,7 @@ define(["js/Dialog", "js/Translator", "js/LocalStorageStore", "js/Hoard", "js/Tr
         .data("path", ["A", "B", "C" ])
         .tree({ path: ["A", "B", "C" ] });
 
-        $("#node").data("alarm", { time: new Date("2020-02-02").getTime() });
+        $("#node").data("alarm", { time: Date.UTC(2020,1,2) });
 
         for (let i in list) {
             let name = list[i];

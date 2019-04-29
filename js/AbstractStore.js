@@ -64,18 +64,6 @@ define("js/AbstractStore", ["js/Utils", "js/Serror"], function(Utils, Serror) {
         }
 
         /**
-         * Generate an exception object
-         * @param {string} the path used in the request (a / separated string)
-         * @param {integer} status HTTP status code
-         * @param {string} message optional additional message
-         * @return an Serror object
-         */
-        error(path, status, message) {
-            if (this.debug) this.debug("error:", path, status, message);
-            return new Serror(path, status, message);
-        }
-
-        /**
          * Write data. Pure virtual.
          * @param path pathname to store the data under, a / separated
          * path string
@@ -85,7 +73,7 @@ define("js/AbstractStore", ["js/Utils", "js/Serror"], function(Utils, Serror) {
          * @throws Serror if anything goes wrong
          */
         write(path, data) {
-            throw new this.error(path, 500, "Store has no write method");
+            Serror.assert(false, "Store has no write method");
         }
 
         /**
@@ -114,7 +102,7 @@ define("js/AbstractStore", ["js/Utils", "js/Serror"], function(Utils, Serror) {
          * @throws Serror if anything goes wrong
          */
         read(path) {
-            throw this.error(path, 500, "Store has no read method");
+            Serror.assert(false, "Store has no read method");
         }
 
         /**
@@ -131,7 +119,7 @@ define("js/AbstractStore", ["js/Utils", "js/Serror"], function(Utils, Serror) {
                     return Utils.Uint8ArrayToString(a8);
                 } catch (e) {
                     // UTF-8 decode error, most likely
-                    throw this.error(path, 400, e);
+                    throw new Serror(400, path + " " + e);
                 }
             });
         }
