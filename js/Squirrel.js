@@ -66,6 +66,11 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
             this.trigger("update_save");
         }
 
+        _stage(s, step) {
+            if (this.debug) this.debug(step + ": " + s);
+            $("#stage").text(s);
+        }
+        
         /**
          * @private
          * Event handler code for "check_alarms" event
@@ -107,7 +112,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
             let self = this;
             let message = [];
 
-            // Reverse-engineer change details
+            // Reverse-engineer browser change details
             $(".tree-modified")
                 .each(function () {
                     Serror.assert($(this).tree("getPath") ||
@@ -123,11 +128,10 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                 message.push(TX.tx("... and $1 more change$?($1!=1,s,)", l - max_changes));
             }
 
-            let client_mods = self.hoarder.changes;
-            if (client_mods > 0)
+            if (self.hoarder.changes > 0)
                 message.unshift(TX.tx(
                     "The browser has $1 change$?($1!=1,s,)",
-                    client_mods));
+                    self.hoarder.changes));
 
             if (message.length === 0)
                 return null;
@@ -205,8 +209,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
             })
             .then((dlg) => {
                 self.hoarder.cloud_path(dlg.control("path").val());
-                if (needs_image)
-                    self.hoarder.changes++;
+                // TODO: what about the image?
                 $(document).trigger("update_save");
             });
         }
@@ -261,7 +264,6 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
          */
         _1_init_cloud_store() {
             let self = this;
-            if (self.debug) self.debug('1: init cloud store');
             let store;
 
             let p = new Promise(function(res,rej) {
@@ -352,7 +354,6 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
          */
         _2_init_client_store() {
             let self = this;
-            if (self.debug) self.debug('2: initialise client store');
 
             let store = new LocalStorageStore({
                 debug: self.debug
@@ -381,7 +382,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
             .then(() => {
                 // Need to confirm user/pass, which may have been
                 // seeded from the store initialisation process
-                $("#stage").text(TX.tx("Authentication"));
+                this._stage(TX.tx("Authentication"), "2a");
                 let auth_req = self.hoarder.auth_required();
                 if (!auth_req)
                     return Promise.resolve();
@@ -433,18 +434,17 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                         }
                     })
                     return Promise.resolve();
-                } else {
-                    return Dialog.confirm("alert", {
-                        title: TX.tx("Client store read failed"),
-                        alert: [
-                            {
-                                severity: "error",
-                                message: TX.tx("Client store exists, but can't be read.")
-                            },
-                            TX.tx("Check that you have the correct password."),
-                            TX.tx("If you continue and save, the client store will be overwritten and you may lose data.")
-                        ]});
                 }
+                return Dialog.confirm("alert", {
+                    title: TX.tx("Client store read failed"),
+                    alert: [
+                        {
+                            severity: "error",
+                            message: TX.tx("Client store exists, but can't be read.")
+                        },
+                        TX.tx("Check that you have the correct password."),
+                        TX.tx("If you continue and save, the client store will be overwritten and you may lose data.")
+                    ]});
             });
         }
 
@@ -457,10 +457,10 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
         _4a_merge_from_cloud() {
             let self = this;
             let lerts = [];
-            self.hoarder.merge_from_cloud(
+            self.hoarder.update_from_cloud(
                 lerts,
-                function (e) {
-                    self.$DOMtree.tree("action", e.action);
+                function (act) {
+                    self.$DOMtree.tree("action", act);
                 });
 
             if (lerts.length === 0)
@@ -484,12 +484,10 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
          */
         _4_load_cloud() {
             let self = this;
-            let cloud_store = self.cloud_store;
+            let cloud_store = self.hoarder.cloud_store();
 
             if (!cloud_store)
                 return Promise.resolve(false);
-
-            if (self.debug) self.debug('4: load cloud');
 
             let p;
 
@@ -516,12 +514,12 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                 mess.push({
                     severity: "error",
                     message: TX.tx("Could not load cloud store '$1'",
-                                   self.cloud_path)
+                                   self.hoarder.cloud_path())
                 });
                 if (e instanceof Serror && e.status === 404) {
                     // Could not contact cloud; continue all the same
                     if (self.debug) self.debug(
-                        self.cloud_path + " not found in the cloud");
+                        self.hoarder.cloud_path(), "not found in the cloud");
                     if (e.status)
                         mess.push({ severity: "warning", http: e.status });
                     if (e.message)
@@ -556,7 +554,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
         begin() {
             let self = this;
 
-            $("#stage").text(TX.tx("Loading application"));
+            this._stage(TX.tx("Loading application"), 0);
             $.styling.init(self.options);
 
             // Special keys in sort ordering. Currently only works for
@@ -687,26 +685,28 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
             // Application startup is done using a sequence of events
             // to give the event loop a look in.
             .on("init_application", () => {
+                this._stage(TX.tx("Initialising cloud store"), 1);
                 self._1_init_cloud_store()
                 .then(() => {
                     $(document).trigger("init_2");
                 });
             })
             .on("init_2", () => {
+                this._stage(TX.tx("Initialising browser store"), 2);
                 self._2_init_client_store()
                 .then(() => {
                     $(document).trigger("init_3");
                 });
             })
             .on("init_3", () => {
-                $("#stage").text(TX.tx("Reading from client"));
+                this._stage(TX.tx("Reading from browser"), 3);
                 self._3_load_client()
                 .then(() => {
                     $(document).trigger("init_4");
                 });
             })
             .on("init_4", () => {
-                $("#stage").text(TX.tx("Reading from cloud"));
+                this._stage(TX.tx("Reading from cloud"), 4);
                 self._4_load_cloud()
                 .then(() => {
                     $(window)
@@ -729,6 +729,8 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                     $("#unauthenticated").hide();
                     $("#authenticated").show();
                     $("#sites-node").tree("open");
+
+                    this._stage(TX.tx("Ready"), 5);
                 });
             });
             

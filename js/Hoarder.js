@@ -118,7 +118,8 @@ define("js/Hoarder", ["js/Hoard", "js/Serror", "js/Translator"], function(Hoard,
 
         /** Setter/getter */
         cloud_path(path) {
-            if (path !== this.cloudPath) {
+            if (typeof path !== "undefined" && path !== this.cloudPath) {
+                if (this.debug) this.debug("Set cloud path", path);
                 this.cloudPath = path;
                 this.changes++;
             }
@@ -267,6 +268,10 @@ define("js/Hoarder", ["js/Hoard", "js/Serror", "js/Translator"], function(Hoard,
                     if (this.debug) this.debug("...parsing cloud actions");
                     try {
                         actions = JSON.parse(data);
+                        if ('actions' in actions) {
+                            // Old hoard format
+                            actions = actions.actions;
+                        }
                     } catch (e) {
                         if (this.debug)
                             this.debug("...cloud hoard JSON parse failed:", e);
@@ -275,7 +280,6 @@ define("js/Hoarder", ["js/Hoard", "js/Serror", "js/Translator"], function(Hoard,
                     }
                 }
                 else if (this.debug) this.debug("...cloud is empty");
-                
                 return Promise.resolve(actions);
             });
         }
@@ -354,6 +358,7 @@ define("js/Hoarder", ["js/Hoard", "js/Serror", "js/Translator"], function(Hoard,
                             }
                             each_played(ac.action);
                             clean.push(ac.action);
+                            self.changes++;
                         });
                     }
                     else {
