@@ -62,7 +62,7 @@ const actions = [
         type: "X",
 	path: [ "Fine-dining", "Caviar", "Beluga" ],
 	time: Date.UTC(2007,0),
-        data: "If you have to ask, you can't afford it"
+        data: { size: 10, chars: "If you have to ask, you can't afford it" }
     }
 ];
 
@@ -118,14 +118,8 @@ requirejs(deps, function(Utils, Hoard, Serror, Translator, Tree, TestRunner) {
 
     tr.addTest("should reconstruct cache", function() {
         // Reconstruct a cache from an actions list
-        let undi = 0;
         for (let e of actions) {
-            $DOMtree.tree("action", e, function undo(action, path, time, data) {
-                assert.equal(
-                    action+":"+path.join('/')+" @"  + new Date(time)
-                    .toLocaleString() + (typeof data !== "undefined" ? " "+data:""),
-                    undos[undi++]);
-            });
+            $DOMtree.tree("action", e);
         }
         const empty_tree = '\
             <div id="sites-node" class="tree-node tree-never-opened tree-root tree-collection tree-has-alarms">\

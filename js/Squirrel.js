@@ -16,7 +16,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
     // the order they are likely to be used, but the loads are supposed to
     // be asynchronous so the order shouldn't really matter.
     const DIALOGS = [ "alert", "login", "alarm", "insert", "pick", "add",
-                      "delete", "randomise", "extras", "about", "chpw",
+                      "delete", "randomise", "extras", "about",
                       "store_settings", "optimise", "json" ];
     
     class Squirrel {
@@ -139,18 +139,22 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
             return message.join("\n");
         }
 
-
         /**
          * @private
          */
         _save_stores(progress) {
             let self = this;
             
-            self.hoarder.synchronise_and_save(
-                progress,
-                (act) => {
+            self.hoarder.update_from_cloud(
+                (actions) => {
+                    selector, return a promise
+                },
+                (act) => { // player
                     self.$DOMtree.tree("action", act)
                 })
+            .then((new_cloud) => {
+                return self.hoarder.save_cloud(actions, progress);
+            })
             .then(() => {
                 $(".tree-modified")
                 .removeClass("tree-modified");
@@ -207,8 +211,8 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                 needs_image: needs_image,
                 path: this.hoarder.cloud_path()
             })
-            .then((dlg) => {
-                self.hoarder.cloud_path(dlg.control("path").val());
+            .then((path) => {
+                self.hoarder.cloud_path(path);
                 // TODO: what about the image?
                 $(document).trigger("update_save");
             });
@@ -243,13 +247,11 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                 // Copy default user from the stores if there
                 user: self.cloud_store.option("user")
                 || self.client_store.option("user")
-            }).then((dlg) => {
-                let user = dlg.control("user").val();
-                let pass = dlg.control("pass").val();
+            }).then((info) => {
                 if (self.debug)
-                    self.debug("Login prompt said user was " + user);
-                self[domain].store.option("net_user", user);
-                self[domain].store.option("net_pass", pass);
+                    self.debug("Login prompt said user was " + info.user);
+                self[domain].store.option("net_user", info.user);
+                self[domain].store.option("net_pass", info.pass);
             });
         }
 
@@ -390,13 +392,11 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                 return Dialog.confirm("login", {
                     title: "User details",
                     user: auth_req.user
-                }).then((dlg) => {
+                }).then((info) => {
                     if (self.debug) self.debug("...login confirmed");
 
-                    self.hoarder.authenticate(
-                        { user: dlg.control("user").val(),
-                          pass: dlg.control("pass").val() });
-                    });
+                    self.hoarder.authenticate(info);
+                });
             });
         }
 
@@ -649,7 +649,26 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
             $("#extras_button")
                 .icon_button()
                 .on(Dialog.tapEvent(), function ( /*evt*/ ) {
-                    Dialog.confirm("extras");
+                    Dialog.confirm("extras", {
+                        needs_image: needs_image,
+                        set_cloud_path: function(path) {
+                            self.hoarder.cloud_path(path);
+                            self.trigger("update_save");
+                        },
+                        set_encryption_pass: function(pass) {
+                            self.hoarder.set_encryption_pass(p);
+                            self.trigger("update_save");
+                        },
+                        json: this.hoarder.treeJSON()
+                    })
+                    .then((res) => {
+                        // replace the client tree with this data
+                        if (res.new_json)
+                            this.hoarder.insert_data([], res.new_json, self)
+                    })
+                    .catch((f) => {
+                        if (self.debug) self.debug("extras closed");
+                    });
                 });
 
             $("#search_input")
@@ -743,10 +762,10 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
         add_child_node($node, title, value) {
             let self = this;
             let path = $node.tree("getPath").concat(title);
-            self.hoarder.add_action(
-                new Action({
-                    type: "N", path: path, time: Date.now(),
-                    data: (typeof value === "string") ? value : undefined}))
+            self.hoarder.play_action(
+                { type: "N", path: path, time: Date.now(),
+                  data: (typeof value === "string") ? value : undefined },
+                true)
             .then((res) => {
                 if (res.conflict)
                     return Dialog.confirm("alert", {
@@ -758,20 +777,19 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
 
                 self.$DOMtree.tree(
                     "action",
-                    res.action,
-                    Hoarder.push_undo.bind(self.hoarder),
-                    ($newnode) => {
-                        Serror.assert($newnode);
+                    res.action)
+                .then(($newnode) => {
+                    Serror.assert($newnode);
 
-                        if (typeof value !== "string"
-                            && typeof value !== "undefined")
-                            self.insert_data($newnode.tree("getPath"), value);
-                        $newnode.tree("open", {
-                            decorate: true
-                        });
+                    if (typeof value !== "string"
+                        && typeof value !== "undefined")
+                        self.insert_data($newnode.tree("getPath"), value);
+                    $newnode.tree("open", {
+                        decorate: true
                     });
 
-                $(document).trigger("update_save");
+                    $(document).trigger("update_save");
+                });
             });
         }
 
@@ -855,28 +873,25 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
          */
         insert_data(path, data, progress) {
             let self = this;
-
-            Hoard.actions_from_tree(
-                {
-                    data: data
-                },
-                function (act) {
-                    // this:Hoard, e:Action, next:function
-                    //if (self.debug) self.debug(act);
-                    act.path = path.slice().concat(act.path);
-                    self.hoarder.add_action(new Action(act))
-                    .then((res) => {
-                        if (res.conflict) {
-                            if (progress) progress.push({
-                                severity: "notice",
-                                message: res.conflict
-                            });
-                        } else {
-                            // this:Hoard, e:Action
-                            self.$DOMtree.tree("action", res.action, null);
-                        }
-                    });
-                })
+            let th = new Hoard({tree: { data: data }});
+            let acts = th.actions_to_recreate();
+            for(let act of acts) {
+                // this:Hoard, e:Action, next:function
+                //if (self.debug) self.debug(act);
+                act.path = path.slice().concat(act.path);
+                self.hoarder.add_action(new Action(act))
+                .then((res) => {
+                    if (res.conflict) {
+                        if (progress) progress.push({
+                            severity: "notice",
+                            message: res.conflict
+                        });
+                    } else {
+                        // this:Hoard, e:Action
+                        self.$DOMtree.tree("action", res.action, null);
+                    }
+                });
+            })
 
             $(document).trigger("update_save");
             progress.push({

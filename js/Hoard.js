@@ -2,70 +2,18 @@
 /* eslint-env browser,node */
 
 /**
- * A combined hierarchical database with change log, designed to be
- * used in a client-cloud topology where a single cloud database is
- * synched with multiple clients, each of which may change
- * asynchronously.
- *
- * On the client side, the hoard contains a tree (called the 'cache')
- * that represents the current data in the hoard. It also has a list
- * of actions that record the actions performed on the client since
- * the last sync with the cloud. These actions are already reflected
- * in the tree, but are kept so they can be played into the cloud on
- * the next synch.
- *
- * The cloud stores a list of actions that record all changes since the
- * hoard was established. When replayed in full these will regenerate the
- * client tree, though this is a time-consuming business. These actions
- * will usually (though not always!) be in the time order that they
- * occurred.
- *
- * When a client requires synching with changes in the cloud, actions
- * from the cloud that are timestamped since the last synch are played
- * into the client tree in time order. Duplicate actions are ignored.
- * Conflicts - such as a data item that was modified locally also
- * being modified by a cloud action - are detected.
- *
- * When the cloud needs to be updated with changes from the client,
- * the actions recorded in the client can simply be merged into the
- * cloud action stream using `merge_actions'.
- *
- * At any time you can reconstruct an action stream from the contents
- * of the tree. This action stream will not have any of the history of
- * the cloud, but will be a lot smaller.
- *
- * When an action is played into the tree, listeners can be used to
- * reflect that action in the UI.
- *
- * @typedef Action
- * @type {object}
- * @property {string} type - single character type
- * @property {string[]} path - node path
- * @property {object} data - optional data object
- * @property {number} alarm - optional alarm object
- * @property {string} constraints - optional constraints on values
- *
  * @typedef Conflict
  * @type {object}
  * @property {Action} action
  * @property {string} message
  *
- * @typedef Data
+ * @typedef Node
  * @type {object}
- * @property {Data[]|string} colelction of subnodes, or leaf data if
- * this is string
+ * @property {Data[]|string} collection of subnodes, or leaf (non-object) data
  * @property time {integer} time of the last modification
- *
- * @callback Listener
- * @param {Action} action
- * @param {Function} chain
+ * @property alarm {string} time of next alarm, encode as "next ring;repeat"
+ * @property constraints {string} constraints, encoded as "length;chars"
  */
-
-/* Version of hoard. No version in the hoard implies it is version 1.0
- * Only increment this number when older code is no longer able to read
- * the hoard, as a version incompatibility will throw an error.
- */
-const VERSION = 2.0;
 
 define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action, Translator, Serror) {
     let TX = Translator.instance();
@@ -81,85 +29,124 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
 
         /**
          * Constructor
-         * @param data: an optional JSON string containing a serialised
-         * Hoard, or
-         * another Hoard object (tree and actions will be stolen, not copied)
-         * @param debug: optional debugging function
+         * @param options structure with: <dl>
+         * <dt>hoard</dt><dd>optional hoard to copy (silently overrides
+         * tree and actions)</dd>
+         * <dt>tree</dt><dd>optional tree to copy (if hoard: not set)</dd>
+         * <dt>actions</dt><dd>optional array of actions to play into the
+         * hoard after the tree has been copied (if hoard: not set)</dd>
+         * <dt>debug</dt><dd>optional debugging function</dd></dl>
          */
-        constructor(data, debug) {
-            if (typeof data === "function" && typeof debug === "undefined") {
-                debug = data;
-                data = undefined;
+        constructor(options) {
+            options = options || {};
+            
+            if (typeof options.debug === "function")
+                this.debug = options.debug;
+
+            // Actions played into this hoard and the
+            // corresponding undos required to undo the actions played.
+            // Each entry is { redo:, undo: }
+            this.actions = [];
+            
+            if (options.hoard) {
+                // hoard: overrides tree: and actions:
+                this.tree = options.hoard.tree;
+                this.actions = options.hoard.actions;
             }
-            if (typeof debug === "function")
-                this.debug = debug;
-
-            if (data) {
-                if (typeof data !== "object")
-                    data = JSON.parse(data);
-
-                if (data.actions)
-                    this.actions = data.actions.map(
-                        (x) => { return new Action(x); });
+            else {
+                if (options.tree)
+                    this.tree = Hoard._copy_tree(options.tree);
                 else
-                    this.actions = [];
-                this.tree = data.tree;
-                this.version = data.version || VERSION;
+                    // Root will be time-stamped when a subnode is added
+                    this.tree = { data: {} };
 
-                if (this.version > VERSION)
-                    throw new Serror(400, "Cannot read a version "
-                                    + data.version +
-                                    " hoard with " + VERSION + " code");
-
-            } else {
-                this.actions = [];
-                this.tree = null;
-                this.version = VERSION;
+                if (options.actions)
+                    // Play actions without adding to [actions]
+                    for (let act of options.actions)
+                        this.play_action(act, false);
             }
         }
 
         /**
-         * Clear down the actions in the hoard. The tree is left untouched.
-         * This is used when the client hoard has been synched with the cloud
-         * and the local actions list is no longer needed.
+         * Clear the action record
+         * @return the existing action record
          */
         clear_actions() {
+            let acts = this.actions;
             this.actions = [];
+            return acts;
         }
-
+        
         /**
-         * Push a new action on to the end of the action stream. The
-         * tree is *not* updated. No checking is done on the action.
-         * @param act the action to push. This can be in the
-         * form of an existing action structure, or a simple object with.
-         * This is always copied.
-         * fields  {type, path, time, data}
-         * @return a reference to the action object pushed
+         * @private
+         * Deep copy a hoard tree
          */
-        push_action(act) {
-            let copy = new Action(act);
-            this.actions.push(copy);
-            return copy;
+        static _copy_tree(tree) {
+            let node = {
+                time: tree.time
+            };
+            if (tree.alarm)
+                node.alarm = tree.alarm;
+            if (tree.constraints)
+                node.constraints = tree.constraints;
+            if (typeof tree.data === "object") {
+                node.data = {};
+                for (let sub in tree.data) {
+                    node.data[sub] = Hoard._copy_tree(tree.data[sub]);
+                }
+            } else if (tree.data)
+                node.data = tree.data;
+            return node;
         }
-
+        
         /**
-         * Pop the most recently pushed action off the actions stream and
-         * return it.
-         * @return the action popped
+         * @private
+         * Get the path of the given node. Depth-first search for the
+         * node object.
          */
-        pop_action() {
-            Serror.assert(this.actions.length > 0);
-            return this.actions.pop();
+        _get_path(node) {
+            function _dfe(node, path, tgt) {
+                if (node == tgt)
+                    return path;
+                if (typeof node.data === "object")
+                    for (let snn in node.data) {
+                        let sr = _dfe(node.data[snn], path.concat(snn), tgt);
+                        if (sr)
+                            return sr;
+                    }
+                return undefined;
+            }
+
+            return _dfe(this.tree, [], node);
         }
 
         /**
          * @private
+         * Record an action and its undo
+         * @param type action type
+         * @param path the path for the undo
+         * @param time the time for the undo
+         * @param act template for the undo (e.g. for data:, alarm: etc)
+         */
+        _push_action(redo, type, path, time, act) {
+            if (!act)
+                act = {};
+            act.type = type;
+            act.path = path.slice();
+            act.time = time || Date.now();
+            this.actions.push({ redo: new Action(redo), undo: act });
+        }
+        
+        /**
+         * @private
          * Locate the node referenced by the given path in the tree
-         * @param path array of path elements
+         * @param path path string, or path array
          * @param offset optional offset from the leaf e.g. 1 will
          * find the parent of the node identified by the path
          */
         _locate_node(path, offset) {
+            if (typeof path === "string")
+                path = path.split("↘");
             let node = this.tree;
             offset = offset || 0;
 
@@ -176,15 +163,38 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
         }
 
         /**
-         * Promise to play a single action into the tree. The tree
-         * is updated, but the action is <em>not</em> added to the
-         * action stream.
+         * Undo the action most recently played
+         * @return a promise that resolves to an object thus:
+         * {
+         *   action: the action being played
+         *   conflict: string message, only set if there is a problem.
+         * }
+         */
+        undo() {
+            Serror.assert(this.actions.length > 0);
+            let a = this.actions.pop();
+            if (this.debug) this.debug("Undo", a);
+            
+            // Replay the reverse of the action
+            return this.play_action(a.undo, false);
+        }
+        
+        /**
+         * Return true if there is at least one undoable operation
+         */
+        can_undo() {
+            return this.actions.length > 0;
+        }
+        
+        /**
+         * Promise to play a single action into the tree.
          *
          * Action types:
          * <ul>
          * <li>'N' with no data - create collection</li>
          * <li>'N' with data - create leaf</li>
          * <li>'D' delete node, no data. Will delete the entire node tree.</li>
+         * <li>'I' insert node, insert an entire node tree at a named node.</li>
          * <li>'E' edit node - modify the leaf data in a node</li>
          * <li>'R' rename node - data contains new name</li>
          * <li>'A' add alarm to node - data is the alarm time</li>
@@ -193,129 +203,190 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
          * </ul>
          * Returns a conflict object if there was an error. This has two fields,
          * 'action' for the action record and 'message'.
-         * @param {Action} e the action record
+         * @param {Action} action the action record
+         * @param {boolean} undoable if true and action that undos this action
+         * will be added to the undo history. Default is true.
          * @return a promise that resolves to an object thus:
          * {
          *   action: the action being played
          *   conflict: string message, only set if there is a problem.
          * }
          */
-        play_action(e) {
-            if (!e.time)
-                e.time = Date.now();
+        play_action(action, undoable) {
+            if (typeof undoable === "undefined")
+                undoable = true;
+            if (!action.time)
+                action.time = Date.now();
 
-            function conflict(e, mess) {
+            if (this.debug) this.debug("Play", action);
+
+            function conflict(action, mess) {
                 let s = {
                     A: TX.tx("Cannot add reminder to"),
                     C: TX.tx("Cannot cancel reminder"),
                     D: TX.tx("Cannot delete"),
                     E: TX.tx("Cannot change value of"),
+                    I: TX.tx("Cannot insert"),
                     M: TX.tx("Cannot move"),
                     N: TX.tx("Cannot create"),
                     P: TX.tx("Cannot play"),
                     R: TX.tx("Cannot rename"),
                     X: TX.tx("Cannot constrain")
-                }[e.type];
+                }[action.type];
                 return Promise.resolve({
-                    action: e,
-                    conflict: s + " '" + e.path.join("↘") + "': " + mess
+                    action: action,
+                    conflict: s + " '" + action.path.join("↘") + "': " + mess
                 });
             }
 
-            if (e.path.length === 0)
-                return conflict(e, "Zero length path");
+            if (action.path.length === 0)
+                return conflict(action, "Zero length path");
 
-            if (!this.tree) {
-                this.tree = {
-                    data: {}
-                };
-            }
-            let parent = this._locate_node(e.path, 1);
+            let parent = this._locate_node(action.path, 1);
             // Path must always point to a valid parent pre-existing
             // in the tree. parent will never be null
             if (!parent)
-                return conflict(e, TX.tx("not found"));
+                return conflict(action, TX.tx("not found"));
 
-            let name = e.path[e.path.length - 1];
+            let name = action.path[action.path.length - 1];
             // Node may be undefined e.g. if we are creating
             let node = parent.data[name];
 
-            if (e.type === "N") { // New
+            if (action.type === "N") { // New
+                if (typeof parent.data !== "object")
+                    return conflict(action,
+                        TX.tx("cannot add subnode to leaf node '$1'",
+                              action.path.join("↘")));
+
                 if (node)
                     // This is not really an error, we can survive it
                     // easily enough
-                    //return conflict(e, "It already exists" + " @" +
+                    //return conflict(action, "It already exists" + " @" +
                     //                new Date(node.time));
-                    return Promise.resolve({ action: e });
+                    return Promise.resolve({ action: action });
 
-                parent.time = e.time; // collection is being modified
+                if (undoable)
+                    this._push_action(action, "D", action.path, action.time);
+
+                parent.time = action.time; // collection is being modified
                 parent.data[name] = {
-                    time: e.time,
-                    data: (typeof e.data === "string") ?
-                        e.data : {}
+                    time: action.time,
+                    data: (typeof action.data === "string") ?
+                    action.data : {}
                 };
             }
             else { // all other actions require an existing node
                 if (!node)
-                    return conflict(e, TX.tx("it does not exist"));
+                    return conflict(action, TX.tx("it does not exist"));
                 let new_parent;
 
-                switch (e.type) {
+                switch (action.type) {
                 case "M": // Move to another parent
-                    // e.data is the path of the new parent
-                    new_parent = this._locate_node(e.data);
+                    // action.data is the path of the new parent
+                    new_parent = this._locate_node(action.data);
                     if (!new_parent)
-                        return conflict(TX.tx("new folder '$1' does not exist",
-                                              e.data.join("↘")));
+                        return conflict(
+                            TX.tx("target folder '$1' does not exist",
+                                  action.data.join("↘")));
 
+                    if (undoable)
+                        undoable("M", node, { data: action.path.slice() });
                     // collection is being modified
-                    new_parent.time = parent.time = e.time
-                    = Math.max(new_parent.time, parent.time, e.time);
+                    new_parent.time = parent.time = action.time;
 
                     delete parent.data[name];
                     new_parent.data[name] = node;
                     break;
 
                 case "D": // Delete
+                    if (undoable) {
+                        let p = action.path.slice();
+                        p.pop();
+                        this._push_action(action,
+                            "I", p, parent.time,
+                            { data: JSON.stringify({name: name, node: node}) });
+                    }
                     delete parent.data[name];
                     // collection is being modified
-                    parent.time = e.time = Math.max(parent.time, e.time);
+                    parent.time = action.time;
+                    break;
+
+                case "I": // Insert
+                    if (typeof node.data !== "object")
+                        return conflict(TX.tx("Cannot insert into a value"));
+                    let json = JSON.parse(action.data);
+                    if (undoable)
+                        this._push_action(action, "D", action.path, node.time);
+
+                    node.data[json.name] = json.node;
+                    // collection is being modified
+                    node.time = action.time;
                     break;
 
                 case "R": // Rename
-                    if (parent.data[e.data])
-                        return conflict(e, TX.tx("it already exists"));
-                    parent.data[e.data] = node;
+                    if (parent.data[action.data])
+                        return conflict(action, TX.tx("it already exists"));
+                    if (undoable) {
+                        let p = action.path.slice();
+                        p[p.length - 1] = action.data;
+                        this._push_action(action, "R", p,
+                                          parent.time, { data: name });
+                    }
+                    parent.data[action.data] = node;
                     delete parent.data[name];
                     // collection is being modified, node is not
-                    parent.time = e.time = Math.max(parent.time, e.time);
+                    parent.time = action.time;
                     break;
 
                 case "E": // Edit
-                    node.data = e.data;
-                    node.time = e.time = Math.max(node.time, e.time);
+                    if (undoable)
+                        this._push_action(action, "E", action.path,
+                                          node.time, { data: node.data });
+                    node.data = action.data;
+                    node.time = action.time;
                     break;
 
                 case "A": // Alarm
-                    if (!e.data)
+                    if (undoable) {
+                        if (typeof node.alarm === "undefined")
+                            // Undo by cancelling the new alarm
+                            this._push_action(action, "C", action.path,
+                                              node.time);
+                        else
+                            this._push_action(action, "A", action.path,
+                                              node.time, { alarm: node.alarm });
+                    }
+                    if (!action.data)
                         delete node.alarm;
                     else
-                        node.alarm = e.data;
-                    node.time = e.time = Math.max(node.time, e.time);
+                        node.alarm = action.data;
+                    node.time = action.time;
                     break;
 
                 case "C": // Cancel alarm
+                    if (undoable)
+                        this._push_action(action, "A", action.path,
+                                          node.time, { alarm: node.alarm });
                     delete node.alarm;
-                    node.time = e.time = Math.max(node.time, e.time);
+                    node.time = action.time;
                     break;
 
                 case "X": // Constrain. Introduced in 2.0, however 1.0 code
                     // will simply ignore this action.
-                    if (!e.data)
+                    if (undoable) {
+                        if (node.constraints)
+                            this._push_action(
+                                action, "X", action.path, node.time,
+                                { data: node.constraints });
+                        else
+                            this._push_action(
+                                action, "X", action.path, node.time);
+                    }
+                    if (!action.data)
                         delete node.constraints;
                     else
-                        node.constraints = e.data;
-                    node.time = e.time = Math.max(node.time, e.time);
+                        node.constraints = action.data;
+                    node.time = action.time;
                     break;
 
                 default:
@@ -324,7 +395,7 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
                 }
             }
 
-            return Promise.resolve({ action: e });
+            return Promise.resolve({ action: action });
         }
 
         /**
@@ -381,81 +452,114 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
 
         /**
          * Recontruct the minimal action stream required to recreate the data.
-         * Visits nodes in the data in tail-recursive order and
-         * generate actions. Actions will all be 'N', 'A' and 'X'
-         * actions, and are passed to the 'reconstruct' method.
-         * @param tree data structure, a simple hierarchical structure
-         * of keys and the data they contain e.g.
-         * { "key1" : { data: { subkey1: { data: "string data" } } } }
-         * Other fields (such as time) may be present and are used if they are.
-         * @param {function} return promise to construct the action
-         * function(action)
+         * Actions will be 'N', 'A' and 'X'.
+         * @return an array of actions
          */
-        static actions_from_tree(tree, reconstruct) {
-            if (!tree)
-                return;
+        actions_to_recreate() {
 
-            // Promise to handle a node
-            function _visit_node(node, p, after) {
-                if (p.length === 0) {
-                    // No action for the root
-                    return;
-                }
+            let actions = [];
+            
+            function _visit(node, path) {
                 let time = node.time;
 
                 if (typeof time === "undefined")
                     time = Date.now();
 
-                if (typeof after !== "undefined" && time < after) {
-                    // This should never happen, but just in case...
-                    time = after + 1;
-                }
-
                 let action = new Action({
                     type: "N",
-                    path: p,
+                    path: path,
                     time: time
                 });
 
-                if (typeof node.data === "string")
-                    action.data = node.data;
-
-                // Execute the 'N'
-                reconstruct(action);
+                actions.push(action);
 
                 if (node.alarm) {
                     // Use the node construction time on alarms too
-                    reconstruct(new Action({
+                    actions.push(new Action({
                         type: "A",
-                        path: p,
+                        path: path.slice(),
                         time: time,
                         data: node.alarm
                     }));
                 }
+                
                 if (node.constraints) {
-                    reconstruct(new Action({
+                    actions.push(new Action({
                         type: "X",
-                        path: p,
+                        path: path.slice(),
                         time: time,
                         data: node.constraints
                     }));
                 }
-            }
-
-            // Recursively traverse nodes, starting at the root
-            function _visit_nodes(node, pat, after) {
-                _visit_node(node, pat, after);
 
                 if (typeof node.data === "object") {
-                    for (let key in node.data) {
-                        let p = pat.slice();
-                        p.push(key);
-                        _visit_nodes(node.data[key], p, node.time);
-                    }
+                    for (let key in node.data)
+                        _visit(node.data[key], path.concat([key]), node.time);
                 }
+                else if (typeof node.data !== "undefined")
+                    action.data = node.data;
             }
 
-            _visit_nodes(tree, []);
+            for (let key in this.tree.data)
+                _visit(this.tree.data[key], [key]);
+
+            return actions;
+        }
+
+        /**
+         * Simple search for differences between two hoards.  No
+         * attempt is made to resolve complex changes, such as nodes
+         * being moved. Each difference detected is reported using:
+         * difference(action, a, b) where 'action' is the action required
+         * to transform from the tree containing a to the tree with b, and
+         * a and b are the tree nodes being compared. Actions used are
+         * 'A', 'C', 'D', 'E', 'I' and 'X'
+         */
+        diff(b, difference) {
+        
+            function _diff(path, a, b, difference) {
+                if (b.alarm !== a.alarm) {
+                    if (!b.alarm)
+                        difference({ type: "C", path: path }, a, b);
+                    else
+                        difference({ type: "A", path: path,
+                                     alarm: b.alarm }, a, b);
+                }
+                if (b.constraints !== a.constraints)
+                    difference({ type: "X", path: path,
+                                 constraints: b.constraints }, a, b);
+                if (typeof b.data === "object" && typeof a.data === "object") {
+                    let matched = {}, subnode;
+                    for (subnode in a.data) {
+                        let subpath = path.concat([subnode]);
+                        if (b.data[subnode]) {
+                            matched[subnode] = true;
+                            _diff(
+                                subpath, a.data[subnode], b.data[subnode],
+                                difference);
+                        } else {
+                            // TODO: look for the node elsewhere in b,
+                            // it might have been moved or renamed
+                            difference({ type: "D", path: subpath }, a, b);
+                        }
+                    }
+                    for (subnode in b.data) {
+                        if (!matched[subnode]) {
+                            // TODO: look for the node elsewhere in a,
+                            // it might have been moved or renamed
+                            let subpath = path.concat([subnode]);
+                            difference({type: "I", path: path,
+                                        data: JSON.stringify({
+                                            name: subnode,
+                                            node: b.data[subnode] }) }, a, b);
+                        }
+                    }
+                }
+                else if (b.data !== a.data)
+                    difference({ type: "E", path: path, data: b.data }, a, b);
+            }
+
+            _diff([], this.tree, b.tree, difference);
         }
 
         /**
@@ -509,36 +613,34 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
                 }
 
                 if (typeof node.alarm !== "undefined") {
-                    // Old format alarms had one number, number of days from
-                    // last node change. New format has two, repeat in MS
-                    // and next ring. If repeat is 0, don't re-run the alarm.
+                    // Old format alarms had one number, number of
+                    // days from last node change. New format has two,
+                    // next ring in epoch MS, and repeat in MS. If
+                    // repeat is 0, don't re-run the alarm.
 
-                    if (typeof node.alarm === "number") {
+                    if (typeof node.alarm === "number"
+                        || typeof node.alarm === "string"
+                        && node.alarm.indexOf(";") === -1) {
+                        
                         // Update to latest format
-                        node.alarm = {
-                            time: node.time + node.alarm * MSPERDAY
-                        };
+                        node.alarm = node.time + (node.alarm * MSPERDAY)
+                        + ";" + (node.alarm * MSPERDAY);
                     }
-                    if (Date.now() >= node.alarm.time) {
-                        promise = promise.then(() => {
-                            return ringfn(item.path, new Date(node.alarm.time));
+                    let a = node.alarm.split(";", 2).map(
+                        (a) => {
+                            return parseInt(a);
                         });
+                    if (Date.now() >= a[0]) {
+                        let ding = new Date(a[0]);
+                        promise = promise.then(() => {
+                            return ringfn(item.path, ding);
+                        });
+                        a[0] = Date.now() + a[1];
+                        node.alarm = a[0] + ";" + a[1];
                     }
                 }
             }
             return promise;
-        }
-
-        /**
-         * Generate a JSON dump of the tree. Dumps the children of the root
-         * node as a map.
-         * @return a string containing a formatted JSON dump
-         */
-        treeJSON() {
-            let data = "";
-            if (this.tree)
-                data = JSON.stringify(this.tree.data, null, " ");
-            return data;
         }
     }
 

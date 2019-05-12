@@ -135,8 +135,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
 
             let is_leaf = false;
             let is_root = !this.options.path;
-            let parent, key = "",
-                $parent;
+            let parent, key = "", $parent;
 
             $node.addClass("tree-node");
             // Flag that it hasn't been opened yet, so its child nodes
@@ -656,12 +655,8 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
          * @private
          * Action handler for node edit
          */
-        _action_E: function(action, undoable) {
+        _action_E: function(action) {
             let $node = this.element;
-            if (undoable)
-                undoable("E", this.getPath(),
-                         action.time, $node.data("value"));
-
             $node
             .data("value", action.data)
             .find(".tree-value")
@@ -675,19 +670,8 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
          * @private
          * Action handler for node delete
          */
-        _action_D: function(action, undoable) {
+        _action_D: function(action) {
             let $node = this.element;
-
-            if (undoable) {
-                // TODO: Not enough - all the subtree needs to be
-                // regenerated. We could serialise the subtree under
-                // this node and regenerate it using Hoard.actions_from_tree
-                // Currently we don't have any way to traverse that subtree.
-                undoable("N",
-                         this.getPath(),
-                         action.time,
-                         $node.data("value"));
-            }
 
             this._removeFromCaches();
 
@@ -702,7 +686,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
          * @private
          * Action handler for alarm add
          */
-        _action_A: function(action, undoable) {
+        _action_A: function(action) {
             let $node = this.element;
             // Check there's an alarm already
             let alarm = $node.data("alarm");
@@ -725,15 +709,6 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
                     $(this)
                     .addClass("tree-has-alarms");
                 });
-
-                // Undo by cancelling the new alarm
-                if (undoable)
-                    undoable("C", this.getPath(), action.time);
-            } else {
-                // Existing alarm, parts already exist.
-                // Undo by rewriting the old alarm.
-                if (undoable)
-                    undoable("A", this.getPath(), action.time, alarm);
             }
 
             this.setModified(action.time);
@@ -742,15 +717,12 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
         /**
          * Action handler for cancelling an alarm
          */
-        _action_C: function(action, undoable) {
+        _action_C: function(action) {
             let $node = this.element;
 
             let alarm = $node.data("alarm");
             if (!alarm)
                 return;
-
-            if (undoable)
-                undoable("A", this.getPath(), action.time, alarm);
 
             // run up the tree decrementing the alarm count
             $node.parents(".tree-node")
@@ -777,12 +749,10 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
         /**
          * Action handler for modifying constraints
          */
-        _action_X: function(action, undoable) {
+        _action_X: function(action) {
             let constraints = this.element.data("constraints");
             if (constraints === action.data)
                 return; // same constraints already
-            if (undoable)
-                undoable("X", this.getPath(), action.time, constraints);
 
             this.element.data("constraints", action.data);
             this.setModified(action.time);
@@ -791,7 +761,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
         /**
          * Action handler for moving a node
          */
-        _action_M: function(action, undoable) {
+        _action_M: function(action) {
             let $node = this.element;
             let oldpath = this.getPath();
             let newpath = action.data.slice();
@@ -806,15 +776,12 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
             this.setModified(action.time);
 
             newpath.push(oldpath.pop());
-
-            if (undoable)
-                undoable("M", newpath, action.time, oldpath);
         },
 
         /**
          * Action handler for node rename
          */
-        _action_R: function(action, undoable) {
+        _action_R: function(action) {
             // Detach the li from the DOM
             let $node = this.element;
             let key = action.path[action.path.length - 1]; // record old node name
@@ -833,21 +800,16 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
 
             if (typeof $node.scroll_into_view !== "undefined")
                 $node.scroll_into_view();
-
-            if (undoable) {
-                undoable("R", $node.tree("getPath"), action.time, key);
-            }
         },
 
         /**
          * Callback for use when managing hoards; plays an action that is being
          * played into the hoard into the DOM as well.
          * @param e action to play
-         * @param {function}, undoable passed the inverse of this action
          * @param chain function to call once the action has been
          * played. Passed the modified node.
          */
-        action: function(action, undoable, chain) {
+        action: function(action) {
             if (action.type === "N") {
                 // Create the new node. Automatically adds it to the right parent.
                 $("<li></li>")
@@ -859,10 +821,8 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
                         value: action.data,
                         time: action.time,
                         onCreate: function () {
-                            // get_path will update the caches on the fly with the
-                            // new node
-                            if (undoable)
-                                undoable("D", this.tree("getPath"), action.time);
+                            // get_path will update the caches on the fly
+                            // with the new node
                             if (chain) chain(this);
                         }
                     }));
@@ -871,8 +831,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
                 let widget = $node.tree("instance");
                 widget["_action_" + action.type].call(
                     widget,
-                    action,
-                    undoable);
+                    action);
                 if (chain) chain(this);
             }
         },

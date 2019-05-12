@@ -32,6 +32,15 @@ if (typeof XMLHttpRequest === "undefined")
 
 define("js/Translator", ["js/Utils", "js-cookie"], function(Utils, Cookies) {
 
+    const TIMEUNITS = {
+        // TX.tx("$1 year$?($1!=1,s,)")
+        y: "$1 year$?($1!=1,s,)",
+        // TX.tx("$1 month$?($1!=1,s,)")
+        m: "$1 month$?($1!=1,s,)",
+        // TX.tx("$1 day$?($1!=1,s,)")
+        d: "$1 day$?($1!=1,s,)"
+    };
+
     class Translator {
 
         /**
@@ -292,38 +301,43 @@ define("js/Translator", ["js/Utils", "js-cookie"], function(Utils, Cookies) {
         }
 
         /**
-         * Given a time value, return a breakdown of the period between now
-         * and that time. For example, "1 years 6 months 4 days". Resolution is
-         * days. Any time less than a day will be reported as 0 days.
-         * @param time either a Date object specifying an absolute time or
-         * a number of ms until the time/
-         * @return array of structures each containing `id`
-         * (one of `d`, `w`, `m`, `y`),
-         * `number` of those, and `name` translated pluralised name e.g. `months`
+         * Given a time value, return a string describing the period
+         * between a given time and that time. For example, "1 year
+         * 6 months 4 days 3 hours 2 minutes 5 seconds".
+         * @param from absolute start date, as a number of ms since the epoch.
+         * @param to end of the perion, as a number of ms since the epoch
+         * @param hms if true, add hours, minutes and seconds. Defualt is
+         * days.
+         * @return string describing the period in the current language
          */
-        deltaTimeString(date) {
-            date = new Date(date.getTime() - Date.now());
+        deltaTimeString(from, to, hms) {
+            let deltaDate = new Date(to - from);
 
             let s = [];
 
-            let delta = date.getUTCFullYear() - 1970;
+            let delta = deltaDate.getUTCFullYear() - 1970;
             if (delta > 0)
-                s.push(this.tx(Translator.TIMEUNITS.y.format, delta));
+                s.push(this.tx(TIMEUNITS.y, delta));
 
             // Normalise to year zero
-            date.setUTCFullYear(1970);
+            deltaDate.setUTCFullYear(1970);
 
-            delta = date.getUTCMonth();
+            delta = deltaDate.getUTCMonth();
             if (delta > 0)
-                s.push(this.tx(Translator.TIMEUNITS.m.format, delta));
+                s.push(this.tx(TIMEUNITS.m, delta));
 
             // Normalise to the same month (January)
-            date.setUTCMonth(0);
+            deltaDate.setUTCMonth(0);
 
-            delta = date.getUTCDate();
+            delta = deltaDate.getUTCDate();
             if (delta > 0 || s.length === 0)
-                s.push(this.tx(Translator.TIMEUNITS.d.format, delta));
+                s.push(this.tx(TIMEUNITS.d, delta));
 
+            if (hms)
+                s.push(("00" + deltaDate.getUTCHours()).slice(-2)
+                       + ":" + ("00" + deltaDate.getUTCMinutes()).slice(-2)
+                       + ":" + ("00" + deltaDate.getUTCSeconds()).slice(-2));
+ 
             return s.join(" ");
         }
 
@@ -343,27 +357,6 @@ define("js/Translator", ["js/Utils", "js-cookie"], function(Utils, Cookies) {
     }
 
     Translator.inst = undefined;
-
-    Translator.TIMEUNITS = {
-        y: {
-            days: 360,
-            ms: 364 * 24 * 60 * 60 * 1000,
-            // TX.tx("$1 year$?($1!=1,s,)")
-            format: "$1 year$?($1!=1,s,)"
-        },
-        m: {
-            days: 30,
-            ms: 30 * 24 * 60 * 60 * 1000,
-            // TX.tx("$1 month$?($1!=1,s,)")
-            format: "$1 month$?($1!=1,s,)"
-        },
-        d: {
-            days: 1,
-            ms: 24 * 60 * 60 * 1000,
-            // TX.tx("$1 day$?($1!=1,s,)")
-            format: "$1 day$?($1!=1,s,)"
-        }
-    };
 
     return Translator;
 });

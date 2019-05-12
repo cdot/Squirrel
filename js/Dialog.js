@@ -8,7 +8,7 @@
  * from a file found using requirejs, and (2) a JS subclass of
  * "Dialog" again loaded by requirejs.
  */
-define("js/Dialog", ["js/Translator", "jquery", "jquery-ui", "js/jq/icon_button", "js/jq/twisted"], function(Translator) {
+define("js/Dialog", ["js/Translator", "js/Serror", "jquery", "jquery-ui", "js/jq/icon_button", "js/jq/twisted"], function(Translator, Serror) {
 
     // Default options
     let default_dialog_options = {};
@@ -56,12 +56,16 @@ define("js/Dialog", ["js/Translator", "jquery", "jquery-ui", "js/jq/icon_button"
                         self._initialise();
 
                     self._oked = false;
+                    self._result = false;
                     self._resolve = undefined;
+                    self._reject = undefined;
                     self.open();
                 },
                 beforeClose: function() {
-                    if (self._resolve)
-                        self._resolve(self);
+                    if (self._oked && self._resolve)
+                        self._resolve(self._result);
+                    else if (!self.oked && self._reject)
+                        self._reject(self);
                     return true;
                 }
             }, options);
@@ -172,7 +176,7 @@ define("js/Dialog", ["js/Translator", "jquery", "jquery-ui", "js/jq/icon_button"
         }
 
         /**
-         * Return a promise to load (if necessary) and open a blocking
+         * Return a promise to open a blocking
          * dialog. The promise returned will not resolve until the dialog
          * is explicitly closed. Most dialogs are of this type.
          * @return a promise that will resolve to the Dialog object when
@@ -198,19 +202,12 @@ define("js/Dialog", ["js/Translator", "jquery", "jquery-ui", "js/jq/icon_button"
          * the dialog is closed.
          */
         wait() {
+            let self = this;
             //this.$dlg.parent().find(".ui-dialog-titlebar>button").hide();
-            return new Promise((resolve) => {
-                this._resolve = resolve;
+            return new Promise((resolve, reject) => {
+                self._resolve = resolve;
+                self._reject = reject;
             });
-        }
-
-        /**
-         * Intended for use in promise resolutions, this indicates if
-         * the dialog was closed by an OK press.
-         * @return boolean indicating if the dialog was OK'd (confirmed)
-         */
-        wasOked() {
-            return this._oked;
         }
 
         // @private
@@ -226,19 +223,19 @@ define("js/Dialog", ["js/Translator", "jquery", "jquery-ui", "js/jq/icon_button"
             let $ok = this.control("ok", true);
             if ($ok) {
                 $ok.on(Dialog.tapEvent(), function () {
-                    if (self.ok) {
-                        self.ok()
-                        .then(() => {
-                            self._oked = true;
-                            self.close();
-                        });
-                    }
+                    self._result = true;
+                    self._oked = true;
+                    if (self.ok)
+                        self._result = self.ok();
+                    self.close();
                 });
             }
 
             let $cancel = this.control("cancel", true);
             if ($cancel)
                 $cancel.on(Dialog.tapEvent(), () => {
+                    self._result = false;
+                    self._oked = false;
                     self.close();
                 });
 
@@ -264,7 +261,7 @@ define("js/Dialog", ["js/Translator", "jquery", "jquery-ui", "js/jq/icon_button"
          * @return false to cancel the close.
          */
         ok() {
-            return Promise.resolve(true);
+            return true;
         }
 
         /**

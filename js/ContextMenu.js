@@ -190,6 +190,20 @@ define("js/ContextMenu", ["js/Translator", "clipboard", "js/Dialog", "jquery", "
             let self = this;
             let $node = self.$menuTarget;
 
+            function validate_unique_key(val) {
+                let ok = true;
+                let $ul = $node.find("ul").first();
+                $ul.children(".tree-node")
+                .each(function () {
+                    if (val === $(this).data("key")) {
+                        // Key not unique
+                        ok = false;
+                        return false; // stop iterator
+                    }
+                });
+                return ok;
+            }
+            
             if (!$node) {
                 if (self.debug) self.debug("No node for contextmenu>" + ui.cmd);
                 return;
@@ -225,6 +239,10 @@ define("js/ContextMenu", ["js/Translator", "clipboard", "js/Dialog", "jquery", "
                     Dialog.confirm("insert", {
                         $node: $node,
                         data: data
+                    })
+                    .catch((f) => {
+                        // Silent abort
+                        if (self.debug) self.debug("insert aborted");
                     });
                 }
                 break;
@@ -238,36 +256,83 @@ define("js/ContextMenu", ["js/Translator", "clipboard", "js/Dialog", "jquery", "
                 break;
 
             case "add_value":
-                Dialog.confirm("add", { $node: $node, is_value: true })
-                .then((dlg) => {
-                    self.app.add_child_node(
-                        $node,
-                        dlg.control("key").val(),
-                        dlg.control("value").val());
+                Dialog.confirm("add", {
+                    path: $node.tree("getPath"),
+                    validate: validate_unique_key,
+                    is_value: true
+                })
+                .then((res) => {
+                    self.app.add_child_node($node, res.key, res.value);
                 });
                 break;
 
             case "add_subtree":
-                Dialog.confirm("add", { $node: $node, is_value: false })
-                .then((dlg) => {
-                    self.app.add_child_node($node, dlg.control("key").val());
+                Dialog.confirm("add", {
+                    path: $node.tree("getPath"),
+                    validate: validate_unique_key,
+                    is_value: false
+                })
+                .then((res) => {
+                    self.app.add_child_node($node, res.key);
                 });
                 break;
 
             case "randomise":
-                Dialog.confirm("randomise", { $node: $node });
+                let nc = $node.data("constraints");
+                Dialog.confirm("randomise", {
+                    key: $node.data("key"),
+                    constraints: nc
+                })
+                .then((result) => {
+                    self.app.playAction(new Action({
+                        type: "E",
+                        path: $node.tree("getPath"),
+                        data: result.text
+                    }));
+                    if (typeof result.constraints !== "undefined")
+                        self.app.playAction(new Action({
+                            type: "X",
+                            path: $node.tree("getPath"),
+                            data: result.constraints
+                        }));
+
+                });
                 break;
 
             case "add_alarm":
-                Dialog.confirm("alarm", { $node: $node });
+                Dialog.confirm("alarm", {
+                    path: $node.tree("getPath"),
+                    alarm: $node.data("alarm"),
+                    last_change: $node.data("last-time-changed")
+                })
+                .then((act) => {
+                    act.path = $node.tree("getPath").slice();
+                    self.app.playAction(act);
+                })
+                .catch((fail) => {
+                    if (self.debug) self.debug(fail);
+                });
                 break;
 
             case "delete":
-                Dialog.confirm("delete", { $node: $node });
+                Dialog.confirm("delete", {
+                    path: $node.tree("getPath"),
+                    is_leaf: $node.hasClass("tree-leaf")
+                })
+                .then(() => {
+                    self.app.playAction(new Action({
+                        type: "D",
+                        path: $node.tree("getPath")
+                    }));
+                })
+                .catch((fail) => {
+                    if (self.debug) self.debug(fail);
+                });
                 break;
 
             case "pick_from":
-                Dialog.confirm("pick", { $node: $node });
+                Dialog.confirm(
+                    "pick", { pick_from: $node.data("value") || "" });
                 break;
 
             default:

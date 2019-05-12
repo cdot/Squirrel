@@ -25,6 +25,10 @@ define("test/MemoryStore", ["js/Utils", "js/Serror", "js/AbstractStore"], functi
             this.data[path] = a8;
             return Promise.resolve(true);
         }
+
+        dump(path) {
+            console.log(Utils.Uint8ArrayToString(this.data[path]));
+        }
     }
     return MemoryStore;
 });
