@@ -17,19 +17,7 @@ requirejs.config({
     }
 });
 
-define(["js/Dialog", "js/Translator", "js/LocalStorageStore", "js/Hoard", "js/Tree", "jquery", "js/jq/simulated_password", "js/jq/icon_button"], function(Dialog, Translator, LocalStorageStore, Hoard) {
-
-    let list = [
-        "add",
-        "alarm",
-        "alert",
-        "delete",
-        "extras",
-        "insert",
-        "login",
-        "pick",
-        "randomise"
-    ];
+define(["js/Dialog", "js/Translator", "js/LocalStorageStore", "js/Action", "js/Hoard", "js/Tree", "jquery", "js/jq/simulated_password", "js/jq/icon_button"], function(Dialog, Translator, LocalStorageStore, Action, Hoard) {
 
     let debug = console.debug;
 
@@ -39,6 +27,7 @@ define(["js/Dialog", "js/Translator", "js/LocalStorageStore", "js/Hoard", "js/Tr
     });
     const TESTR = "1234567普通话/普通話العَرَبِيَّة";
 
+    // Test application (do we need this any more?)
     let test_app = {
         client: {
             store: new LocalStorageStore(),
@@ -60,7 +49,6 @@ define(["js/Dialog", "js/Translator", "js/LocalStorageStore", "js/Hoard", "js/Tr
             debug("playAction", arguments);
             return Promise.resolve();
         },
-        encryptionPass: function() { debug("encryptionPass", arguments); },
         get_store_settings: function() {
             return Dialog.confirm("store_settings", {
                 needs_image: true,
@@ -70,33 +58,49 @@ define(["js/Dialog", "js/Translator", "js/LocalStorageStore", "js/Hoard", "js/Tr
     };
 
     let login_title = "Login";
-    let specials = {
-        login: function() {
-            Dialog.confirm("login", {
-                title: login_title,
-                user: "Jaffar",
-                pass: "Cayke"
-            }).then((dlg) => {
-                let user = dlg.control("user").val();
-                let pass = dlg.control("pass").val();
-                login_title = "Login " + user + ":" + pass;
-                Dialog.confirm("alert", {
-                    alert: login_title
-                });
-            }).catch((dlg) => {
-                console.log("login aborted");
+
+    function lert() {
+        var args = Array.prototype.slice.call(arguments);
+        Dialog.confirm("alert", {
+            alert: args.join(" ")
+        });
+    }
+    
+    let tests = {
+        add_node: function() {
+            return Dialog.confirm("add", {
+                path: [ "New", "Node", "Not", "x" ],
+                validate: (key) => {
+                    return key !== "x";
+                },
+                is_value: false
+            }).then((result) => {
+                lert(name, "OK", result);
             });
         },
-        store_settings: function() {
-            Dialog.confirm("store_settings", {
-                needs_image: true,
-                path: "/this/is/a/path"
-            }).then((dlg) => {
-                console.debug("store_settings", dlg.wasOked());
+        add_leaf: function() {
+            return Dialog.confirm("add", {
+                path: [ "Leaf", "Value", "Not", "x" ],
+                validate: (key) => {
+                    return key !== "x";
+                },
+                is_value: true
+            }).then((result) => {
+                lert(name, "OK", result);
+            });
+        },
+        alarm: function() {
+            return Dialog.confirm("alarm", {
+                path: ["Squirrel", "Nut", "Kin"],
+                alarm: { time: Date.UTC(2002,0,02), repeat: 12345678910 },
+                last_change: Date.UTC(1998,3,01)
+            })
+            .then((act) => {
+                lert("Alarm", act);
             });
         },
         alert: function() {
-            Dialog.confirm("alert", {
+            return Dialog.confirm("alert", {
                 alert: [
                     {
                         severity: "notice",
@@ -131,12 +135,161 @@ define(["js/Dialog", "js/Translator", "js/LocalStorageStore", "js/Hoard", "js/Tr
                     return dlg;
                 })
                 .then((dlg) => {
-                    console.debug("Waiting for confirmation or cancel");
+                    lert("Waiting for confirmation or cancel");
                     return dlg.wait();
                 })
-                .then((dlg) => {
-                    console.debug("Closed", dlg.wasOked());
+                .then(() => {
+                    lert("OKed");
                 });
+            });
+        },
+        choose_changes: function() {
+            return Dialog.confirm("choose_changes", {
+                changes: [
+                    new Action({
+	                type: "N",
+	                time: Date.UTC(2000,0,01),
+	                path: ["A"]
+                    }),
+                    new Action({
+	                type: "A",
+	                time: Date.UTC(2001,6,01),
+	                data: { time: Date.UTC(2001,6,01),
+                                repeat: (1000 * 60 * 60 * 24 * 100) },
+	                path: [ "A" ]
+                    }),
+                    new Action({
+	                type: "C",
+	                time: Date.UTC(2001,6,01),
+	                path: [ "A" ]
+                    }),
+                    new Action({
+	                type: "N",
+	                time: Date.UTC(2002,0,01),
+	                path: [ "A", "B" ]
+                    }),
+                    new Action({
+	                type: "N",
+	                time: Date.UTC(2002,0,01),
+	                path: [ "A", "C" ]
+                    }),
+                    new Action({
+	                type: "D",
+	                time: Date.UTC(2002,0,01),
+	                path: [ "A", "C" ]
+                    }),
+                    new Action({
+                        type: "N",
+	                path: [ "A", "B", "C" ],
+	                time: Date.UTC(2003,0,01)
+                    }),
+                    new Action({
+	                type: "E",
+	                time: Date.UTC(2002,0,02),
+	                path: ["A", "B", "C"],
+                        data: "Nuts"
+                    }),
+                    new Action({
+	                type: "M",
+	                time: Date.UTC(2002,0,02),
+	                path: ["A", "B", "C"],
+                        data: ["A", "Nuts"]
+                    }),
+                ]
+            })
+            .then((changes) => {
+                lert("ok choose_changes", changes);
+            });
+        },
+        change_pass: function() {
+            return Dialog.confirm("change_password")
+            .then((pw) => {
+                lert("new pw", pw);
+            });
+        },
+        delete: function() {
+            return Dialog.confirm("delete", {
+                path: [ "Woggle", "Niblick" ],
+                is_leaf: true
+            })
+            .then((path) => {
+                lert("Confirmed delete of", path);
+            });
+        },
+        extras: function() {
+            return Dialog.confirm("extras", {
+                needs_image: false,
+                set_encryption_pass: function(pass) {
+                    lert("encryptionPass", pass);
+                },
+                cloud_path: function(path) {
+                    if (typeof path !== "undefined")
+                        lert("Cloud path", path);
+                    return "/a/bogus/path";
+                },
+                json: JSON.stringify({ A: 1, C: 2 }, null, " ")
+            })
+            .then((options) => {
+                lert("Confirmed extras", options);
+            });
+        },
+        insert: function() {
+            return Dialog.confirm("insert", {
+                $node: $("#node"),
+                data: { "fruit": "bat" }
+            })
+            .then((options) => {
+                lert("insert", options);
+            });
+        },
+        login: function() {
+            return Dialog.confirm("login", {
+                title: login_title,
+                user: "Jaffar",
+                pass: "Cayke"
+            })
+            .then((info) => {
+                lert("Login", info.user, info.pass);
+            });
+        },
+        pick: function() {
+            return Dialog.confirm("pick", {
+                pick_from: "0123456789"
+            });
+        },
+        store_settings_image: function() {
+            return Dialog.confirm("store_settings", {
+                needs_image: true,
+                cloud_path: function(path) {
+                    if (typeof path !== "undefined")
+                        lert("Cloud path", path);
+                    return "/a/bogus/path";
+                }
+            })
+            .then((path) => {
+                lert("store_settings OK", path);
+            });
+        },
+        store_settings_noimage: function() {
+            return Dialog.confirm("store_settings", {
+                needs_image: false,
+                cloud_path: function(path) {
+                    if (typeof path !== "undefined")
+                        lert("Cloud path", path);
+                    return "/a/bogus/path";
+                }
+            })
+            .then((path) => {
+                lert("store_settings OK", path);
+            });
+        },
+        randomise: function() {
+            return Dialog.confirm("randomise", {
+                key: "TEST",
+                constraints: { size: 16, chars: "AB-D" }
+            })
+            .then((res) => {
+                lert("randomise OK", res);
             });
         }
     };
@@ -145,31 +298,23 @@ define(["js/Dialog", "js/Translator", "js/LocalStorageStore", "js/Hoard", "js/Tr
         Translator.instance({ url: "locale" }).language("en");
         // Fake the need for store_settings
         test_app.cloud.store.option("needs_image", true);
-
-        $("#node")
-        .data("key", "spoon")
-        .data("value",TESTR)
-        .data("path", ["A", "B", "C" ])
-        .tree({ path: ["A", "B", "C" ] });
+        $("#node").data("key", "spoon");
+        $("#node").data("value",TESTR);
+        $("#node").data("path", []);
+        $("#node").tree({});
 
         $("#node").data("alarm", { time: Date.UTC(2020,1,2) });
 
-        for (let i in list) {
-            let name = list[i];
+        for (let name in tests) {
             let $button = $("<button>" + name + " </button>");
             $button.on("click", () => {
-                if (specials[name])
-                    specials[name]();
-                else {
-                    Dialog.confirm(name, {
-                        app: test_app,
-                        $node: $("#node")
-                    }).then((dlg) => {
-                        console.debug(name,dlg.wasOked());
-                    });
-                }
+                tests[name]()
+                .catch((f) => {
+                    lert("Aborted", f);
+                });
             });
             $("#buttons").append($button);
+            $("#buttons").append("<br/>");
         }
     };
 });

@@ -1,0 +1,17 @@
+<div id="choose_changes_dlg" class="dlg-dialog TX_title" title="Select changes">
+  <div class="TX_text">
+    The following changes were added in the cloud since you last synchronised.
+    Deselect any you don't want to apply (they will be lost!)
+  </div>
+  <table data-id="changes">
+  </table>
+  <button data-id="ok" class="TX_text">Apply selected changes</button>
+  <table style="display:none">
+    <tbody data-id="row-template">
+      <tr>
+        <td><input data-id="act$N" type="checkbox" checked></td>
+        <td>$A</td>
+      </tr>
+    </tbody>
+  </table>
+</div>

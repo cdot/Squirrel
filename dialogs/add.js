@@ -1,12 +1,6 @@
 /*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser */
 
-/**
- * Options:
- * $node (required)
- * is_value (optional)
- */
-
 define("dialogs/add", ["js/Dialog"], function(Dialog) {
 
     class AddDialog extends Dialog {
@@ -23,19 +17,8 @@ define("dialogs/add", ["js/Dialog"], function(Dialog) {
 
             if (!/\S/.test(val)) // empty?
                 enabled = false;
-            else {
-                let $ul = this.options.$node
-                    .find("ul")
-                    .first();
-                $ul.children(".tree-node")
-                .each(function () {
-                    if (val === $(this).data("key")) {
-                        // Key not unique
-                        enabled = false;
-                        return false;
-                    }
-                });
-            }
+            else if (typeof this.options.validate === "function")
+                enabled = this.options.validate(val);
 
             if (enabled) {
                 this.control("ok").icon_button("enable");
@@ -64,9 +47,7 @@ define("dialogs/add", ["js/Dialog"], function(Dialog) {
         }
 
         open() {
-            this.control("path")
-            .text(this.options.$node.tree("getPath")
-                  .join("↘") + "↘");
+            this.control("path").text(this.options.path.join("↘") + "↘");
             let isV = this.options.is_value;
             this.control("value_help").toggle(isV);
             this.control("folder_help").toggle(!isV);
@@ -76,6 +57,13 @@ define("dialogs/add", ["js/Dialog"], function(Dialog) {
             this.control("value").val("");
 
             this.validateUniqueKey();
+        }
+
+        ok() {
+            return {
+                key: this.control("key").val(),
+                value: this.control("value").val()
+            };
         }
     }
     return AddDialog;

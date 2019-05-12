@@ -14,13 +14,11 @@ define("dialogs/json", ["js/Dialog"], function(Dialog) {
             try {
                 this.parsed = JSON.parse(this.control("text").val());
                 this.control("messages").text("");
-                this.control("ok").icon_button("enable");
-                return true;
+                this.control("ok").show();
             } catch (e) {
-                this.control("messages").html(
+                this.control("messages").text(
                     this.tx("JSON could not be parsed:") + " " + e);
-                this.control("ok").icon_button("disable");
-                return false;
+                this.control("ok").hide();
             }
         }
         
@@ -29,21 +27,22 @@ define("dialogs/json", ["js/Dialog"], function(Dialog) {
 
             this.control("text")
             .on("input", function () {
+                self.changed = true;
                 self._parse();
             });
         }
 
-        ok() {
-            return this.options.app.insert_data([], self.parsed, self);
+        open() {
+            this.control("text").text(this.options.json).select();
+            this.parsed = undefined;
+            this.changed = false;
+            this._parse();
         }
 
-        open() {
-            let data = this.options.app.client.hoard.treeJSON();
-            this.control("text")
-                .text(data)
-                .select();
-            this.control("ok").icon_button("disable");
+        ok() {
+            return (this.parsed != this.options.json) ? this.parsed : undefined;
         }
+
     }
     return JSONDialog;
 });

@@ -55,6 +55,13 @@ define("dialogs/login", ["js/Dialog", "js/jq/simulated_password"], function(Dial
             if (typeof this.options.pass !== "undefined")
                 $pass.val(this.options.pass);
         }
+
+        ok() {
+            return {
+                user: this.control("user").val(),
+                pass: this.control("pass").val()
+            };
+        }
     }
     return LoginDialog;
 });

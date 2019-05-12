@@ -2,8 +2,8 @@
 /* eslint-env browser */
 
 /**
-* Store optimisiation control dialog
-*/
+ * Store optimisiation control dialog
+ */
 define("dialogs/optimise", ["dialogs/alert", "js/jq/template"], function(AlertDialog) {
 
     class OptimiseDialog extends AlertDialog {
@@ -42,9 +42,10 @@ define("dialogs/optimise", ["dialogs/alert", "js/jq/template"], function(AlertDi
                 "X": 0
             };
 
-            hoard.actions_from_tree(hoard.tree, (e) => {
-                counts[e.type]++;
-            });
+            let acts = hoard.actions_to_recreate();
+            for (let act of acts) {
+                counts[act.type]++;
+            }
 
             this.control("calculating").hide();
             this.control("study")

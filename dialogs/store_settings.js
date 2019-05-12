@@ -72,6 +72,18 @@ define("dialogs/store_settings", ["js/Dialog", "js/Utils", "js/jq/template"], fu
             });
         }
 
+        check_path() {
+            if (this.control("path").val() === "") {
+                this.control("path").prop(
+                    "title", this.tx("Cloud store path may not be empty"));
+                this.control("ok").hide();
+            } else {
+                this.control("path").prop(
+                    "title", this.tx("Path to your cloud store"));
+                this.control("ok").show();
+            }
+        }
+
         initialise() {
             let self = this;
 
@@ -93,23 +105,19 @@ define("dialogs/store_settings", ["js/Dialog", "js/Utils", "js/jq/template"], fu
                 return true;
             })
             .on("change", function () {
-                self.control("ok").trigger(Dialog.tapEvent());
+                self.check_path();
             });
-        }
-
-        ok() {
-            if (this.control("path").val() === "") {
-                this.control("mnbe").show();
-                return Promise.resolve(false);
-            }
-            return Promise.resolve(true);
         }
 
         open() {
             this.control("image_message").hide();
             this.control("get_image").toggle(this.options.needs_image);
-            this.control("path").focus().val(this.options.path);
-            this.control("mnbe").toggle(!this.options.path || this.options.path === "");
+            this.control("path").focus().val(this.options.cloud_path());
+            this.check_path();
+        }
+
+        ok() {
+            return this.control("path").val();
         }
     }
     return StoreSettingsDialog;

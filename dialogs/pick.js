@@ -2,8 +2,7 @@
 /* eslint-env browser */
 
 /*
- * Options:
- * $node (required)
+ * Pick characters from a string value
  */
 define("dialogs/pick", ["js/Dialog"], function(Dialog) {
     class PickDialog extends Dialog {
@@ -19,7 +18,7 @@ define("dialogs/pick", ["js/Dialog"], function(Dialog) {
         open() {
             let self = this;
 
-            let val = this.options.$node.data("value") || "";
+            let val = this.options.pick_from;
             let $which = this.control("which");
             let $from = this.control("from");
             let i, $f;

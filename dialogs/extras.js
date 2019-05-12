@@ -23,6 +23,16 @@ define("dialogs/extras", ["js/Dialog", "js/Translator", "js/Tree", "js-cookie", 
             return Cookies.get("ui_autosave") === "on";
         }
 
+        _checkSamePass() {
+            let p = this.control("pass").val(),
+                c = this.control("conf").val();
+            let ok = (p !== "" && p === c);
+            this.control("nonull").toggle(p === "");
+            this.control("nomatch").toggle(p !== c);
+            this.control("ok").toggle(ok);
+            return ok;
+        }
+
         initialise() {
             let self = this;
 
@@ -49,14 +59,26 @@ define("dialogs/extras", ["js/Dialog", "js/Translator", "js/Tree", "js-cookie", 
                 Tree.showChanges(checked);
             });
 
-            this.control("chpw")
-            .on(Dialog.tapEvent(), function () {
-                Dialog.confirm("chpw", self.options);
-            });
-
             this.control("chss")
             .on(Dialog.tapEvent(), function () {
-                self.options.app.get_store_settings();
+                Dialog.confirm("store_settings", self.options)
+                .then((path) => {
+                    self.options.cloud_path(path);
+                })
+                .catch((f) => {
+                    if (self.debug) self.debug("Store settings aborted");
+                });
+            });
+
+            this.control("chpw")
+            .on(Dialog.tapEvent(), function () {
+                Dialog.confirm("change_password", self.options)
+                .then((pass) => {
+                    self.options.set_encryption_pass(pass);
+                })
+                .catch((f) => {
+                    if (self.debug) self.debug("Store settings aborted");
+                });
             });
 
             this.control("theme")
@@ -66,7 +88,11 @@ define("dialogs/extras", ["js/Dialog", "js/Translator", "js/Tree", "js-cookie", 
 
             this.control("json")
             .on(Dialog.tapEvent(), function () {
-                Dialog.confirm("json", self.options);
+                Dialog.confirm("json", self.options)
+                .then((js) => {
+                    if (typeof js !== "undefined")
+                        self.options.new_json = js;
+                });
             });
 
             this.control("optimise")
@@ -95,14 +121,11 @@ define("dialogs/extras", ["js/Dialog", "js/Translator", "js/Tree", "js-cookie", 
                 let fresh = self.control("language").val();
                 TX.language(fresh, document);
             });
-
-            //this.control("dump-store").toggle(this.debug);
-            this.control("dump").on("click", function() {
-                self.options.app.dump_client_store();
-            });
         }
 
         open() {
+            // needs_image and cloud_path options are passed straight on
+            // to store_settings
             this.control("theme")
             .find("option:selected")
             .prop("selected", false);
@@ -120,6 +143,10 @@ define("dialogs/extras", ["js/Dialog", "js/Translator", "js/Tree", "js-cookie", 
             Translator.instance().language().then((lingo) => {
                 this.control("language").val(lingo);
             });
+        }
+
+        ok() {
+            return this.options;
         }
     }
     return ExtrasDialog;

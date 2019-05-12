@@ -3,8 +3,6 @@
 /**
  * Reminder setting dialog
  * Options:
- * $node (rquired)
- * app (required)
  */
 define("dialogs/alarm", ["js/Dialog", "js/Action", "js/Hoard", "js/jq/template", "jquery-ui"], function(Dialog, Action, Hoard) {
 
@@ -68,53 +66,57 @@ define("dialogs/alarm", ["js/Dialog", "js/Action", "js/Hoard", "js/jq/template",
 
         ok() {
             let isEnabled = this.control("enabled").prop("checked");
-            let pat = this.options.$node.tree("getPath");
             let act;
             if (isEnabled)
                 act = new Action({
-                    type: "A", path: pat,
+                    type: "A",
+                    path: this.options.path,
                     data: {
                         time: this.control("date")
-                        .datepicker("getDate").getTime()
+                        .datepicker("getDate").getTime(),
+                        repeat: 0 // TODO: grab this
                     }
                 });
             else if (this.wasEnabled)
-                act = new Action({ type: "C", path: pat });
+                act = new Action({
+                    type: "C",
+                    path: this.options.path
+                });
             
-            return this.options.app.playAction(act);
+            return act;
         }
 
         // @Override
         open() {
-            let $node = this.options.$node;
+            this.control("path").text(this.options.path.join("↘"));
+            this.wasEnabled = (this.options.alarm !== "undefined");
 
-            this.control("path").text($node.tree("getPath").join("↘"));
+            this.control("enabled").prop("checked", this.wasEnabled);
+            this.control("settings").find(":input").prop("disabled", !this.wasEnabled);
+            let now = new Date().getTime();
 
-            let enabled = (typeof $node.data("alarm") !== "undefined");
-            this.wasEnabled = enabled;
-
-            this.control("enabled").prop("checked", enabled);
-            this.control("settings").find(":input").prop("disabled", !enabled);
-            let now = new Date();
-
-            if (enabled) {
+            if (this.wasEnabled) {
                 // Old format alarms had one number, number of days from
                 // last node change.
-                let alarm = $node.data("alarm");
-                if (typeof alarm === "number") {
-                    // Update format
+                if (typeof this.options.alarm === "number") {
                     alarm = {
-                        time: $node.data("last-time-changed")
-                        + alarm * MSPERDAY };
-                    $node.data("alarm", alarm);
+                        time: this.options.last_change
+                        + this.options.alarm * MSPERDAY
+                    };
                 }
-                this.alarmTime = new Date(alarm.time);
+                this.alarmTime = new Date(this.options.alarm.time);
             } else
                 this.alarmTime = now;
 
+            if (this.alarmTime < now) {
+                if (this.options.alarm.repeat > 0)
+                    this.alarmTime = now + this.options.alarm.repeat;
+                else
+                    this.alarmTime = now + 180 * MSPERDAY;
+            }
             this.control("unit").val("d");
             this.control("number").val(Math.floor((this.alarmTime - now) / MSPERDAY));
-            this.control("date").datepicker("setDate", this.alarmTime);
+            this.control("date").datepicker("setDate", new Date(this.alarmTime));
             this.control("ok").hide()
         }
     }

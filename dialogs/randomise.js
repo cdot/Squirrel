@@ -3,9 +3,6 @@
 
 /**
  * Password generation for the given leaf node
- * Options:
- * $node (required)
- * app (required)
  */
 define("dialogs/randomise", ["js/Dialog", "js/Utils", "js/Action", "js/Hoard"], function(Dialog, Utils, Action, Hoard) {
     const DEFAULT_RANDOM_LEN = 30;
@@ -65,21 +62,16 @@ define("dialogs/randomise", ["js/Dialog", "js/Utils", "js/Action", "js/Hoard"], 
     class RandomiseDialog extends Dialog {
 
         constraints_changed() {
-            let $node = this.options.$node;
-            let nc = $node.data("constraints");
-            if (typeof nc !== "undefined")
-                nc = nc.split(/;/, 2);
-            else
-                nc = [DEFAULT_RANDOM_LEN, DEFAULT_RANDOM_CHS];
-            let dlg_l = this.control("len").val();
+            let dlg_l = parseInt(this.control("len").val());
             let dlg_c = this.control("chs").val();
+            let memorable = (dlg_l !== this.init_size || dlg_c !== this.init_chars);
+            this.control("remember-label").toggle(memorable);
+            this.control("remember").toggle(memorable);
 
-            this.control("remember").toggle(dlg_l !== nc[0] || dlg_c !== nc[1]);
+            this.control("reset").toggle(
+                dlg_l !== DEFAULT_RANDOM_LEN || dlg_c !== DEFAULT_RANDOM_CHS);
 
-            this.control("reset").toggle(dlg_l !== DEFAULT_RANDOM_LEN || dlg_c !== DEFAULT_RANDOM_CHS);
-
-            this.control("again")
-                .trigger(Dialog.tapEvent());
+            this.control("again").trigger(Dialog.tapEvent());
         }
 
         reset_constraints() {
@@ -108,17 +100,6 @@ define("dialogs/randomise", ["js/Dialog", "js/Utils", "js/Action", "js/Hoard"], 
                 .on("change", function () {
                     self.constraints_changed();
                 });
-            this.control("remember")
-                .on(Dialog.tapEvent(), function () {
-                    let c = self.control("len").val() + ";" +
-                        self.control("chs").val();
-                    self.options.app.playAction(new Action({
-                        type: "X",
-                        path: self.options.$node.tree("getPath"),
-                        data: c
-                    }));
-                    self.constraints_changed();
-                });
             this.control("reset")
                 .on(Dialog.tapEvent(), function () {
                     self.reset_constraints();
@@ -126,26 +107,25 @@ define("dialogs/randomise", ["js/Dialog", "js/Utils", "js/Action", "js/Hoard"], 
         }
 
         ok() {
-            return this.options.app.playAction(new Action({
-                type: "E",
-                path: this.options.$node.tree("getPath"),
-                data: this.control("idea").text()
-            }));
-        }
-
-        open() {
-            let $node = this.options.$node;
-            let my_key = $node.data("key");
-            let c = $node.data("constraints");
-
-            if (c) {
-                c = c.split(";", 2);
-                this.control("len").val(c[0]);
-                this.control("chs").val(c[1]);
+            let res = { text: this.control("idea").text() };
+            if (this.control("remember").prop("checked")) {
+                res.constraints = {
+                    size: this.control("len").val(),
+                    chars: this.control("chs").val()
+                }
             }
+            return res;
+        }
+        
+        open() {
+            this.init_size = this.options.constraints.size;
+            this.init_chars = this.options.constraints.chars;
+            
+            this.control("len").val(this.init_size);
+            this.control("chs").val(this.init_chars);
 
             //this.control("path").text(path.join("↘"));
-            this.control("key").text(my_key);
+            this.control("key").text(this.options.key);
             this.control("again").trigger(Dialog.tapEvent());
             this.control("remember").hide();
 
