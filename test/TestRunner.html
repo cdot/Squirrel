@@ -1,23 +1,12 @@
 <html>
-  <!-- Test stores -->
   <head>
     <meta charset="utf-8">
-    <title>LocalStorageStore Tests</title>
+    <title>TestRunner</title>
     <link rel="icon" href="favicon.ico" type="image/x-icon" />
     <link href="//cdnjs.cloudflare.com/ajax/libs/mocha/6.0.2/mocha.css" rel="stylesheet" />
     <script src="//cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.js"></script>
   </head>
   <body>
-    <div id="needs_user" class="needs">
-      <label for="user">Store User</label>
-      <input type="text" value="" id="user" />
-    </div>
-    <div id="needs_pass" class="needs">
-      <label for="pass">Store Pass</label>
-      <input type="text" value="" id="pass" />
-    </div>
-    <button id="run">Run</button>
-
     <div id="mocha"></div>
     <div id="container"><div id="sites-node"></div></div>
     <script>
@@ -26,10 +15,12 @@
         paths: {
           jquery: "//code.jquery.com/jquery-3.3.1.min",
           mocha: "//cdnjs.cloudflare.com/ajax/libs/mocha/6.0.2/mocha",
-          chai: "//cdnjs.cloudflare.com/ajax/libs/chai/4.2.0/chai"
+          chai: "//cdnjs.cloudflare.com/ajax/libs/chai/4.2.0/chai",
+          "js-cookie": "//cdnjs.cloudflare.com/ajax/libs/js-cookie/2.2.0/js.cookie.min",
         }
       });
-      requirejs(["EncryptedStore"], function() {
+      let m = /module=([^&;]+)/.exec(window.location.search.substring(1));
+      requirejs([m[1]], function() {
       });
     </script>
   </body>
