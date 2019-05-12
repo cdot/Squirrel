@@ -8,7 +8,9 @@
 define("js/jq/simulated_password", ["jquery"], function() {
 
     const SPOT = "•";
-
+    let debug; // global for all instances
+    let selectionStart = 0, selectionEnd = 0, keyDown = -1;
+    
     function getCursorPosition(input) {
         if ('selectionStart' in input) {
             // Standards-compliant browsers
@@ -90,7 +92,12 @@ define("js/jq/simulated_password", ["jquery"], function() {
     $.fn.simulated_password = function (dopts) {
         dopts = dopts || {};
 
-        $(this).each(function () {
+        if (typeof dopts.debug === "function")
+            debug = dopts.debug;
+        
+        $(this)
+        .addClass("simulated_password")
+        .each(function () {
             let self = this;
             let $this = $(this);
             let options = $.extend([], dopts);
@@ -119,38 +126,72 @@ define("js/jq/simulated_password", ["jquery"], function() {
 
             // Handle input rather than keydown, as it's more friendly to
             // mobile devices
-            $this.on("input", function (e) {
-                //console.log("widget.input");
+            $this
+            // Because selectionchange event doesn't get fired on firefox
+            // (unknown reason) we instead trap paste and keydown events
+            // so we know what the selection was (for overtyping) and also
+            // what the keycode was
+            .on("paste", function(e) {
+                let el = document.activeElement;
+                selectionStart = el.selectionStart;
+                selectionEnd = el.selectionEnd;
+                if (debug) debug("paste:", selectionStart,
+                                 "-", selectionEnd);
+                keyDown = -1;
+            })
+            .on("keydown", function(e) {
+                // Because selectionchange event doesn't get
+                // fired on firefox
+                let el = document.activeElement;
+                selectionStart = el.selectionStart;
+                selectionEnd = el.selectionEnd;
+                keyDown = e.keyCode; 
+                if (debug) debug("keydown:", selectionStart,
+                                 "-", selectionEnd, "key", keyDown);
+            })
+            .on("input", function (e) {
+                let el = document.activeElement;
+                if (debug) debug("input:", el.selectionStart,
+                                 "selEnd:", el.selectionEnd);
                 if ($this.hasClass("pass_hidden")) {
                     let cPos = getCursorPosition(self);
                     let hv = $this.data("hidden_pass");
                     let dv = $.fn.raw_val.call($this);
-                    if (dv.length > hv.length) {
-                        // Character added
-                        hv = hv.substring(0, cPos - 1) +
-                        dv.substring(cPos - 1, cPos) +
-                        hv.substring(cPos - 1);
-                        $this.data("hidden_pass", hv);
-                        $.fn.raw_val.call($this, hv.replace(/./g, SPOT));
-                        setCursorPosition(self, cPos);
-                    } else {
-                        // Could be a forward delete or a
-                        // backspace. Some browsers may help.
-                        //console.log(e.keyCode);
-                        if (e.originalEvent
-                            && e.originalEvent.inputType === "deleteContentForward") {
-                            // Chrome. Deleted character is the one
-                            // *after* cPos
-                            hv = hv.substring(0, cPos) + hv.substring(cPos + 1);
-                        } else {
-                            // Otherwise treat as a backspace. This is
-                            // the most likely; and anyone editing
-                            // within a hidden password is asking for
-                            // trouble anyway.
-                            hv = hv.substring(0, cPos) + hv.substring(cPos + 1);
-                        }
-                        $this.data("hidden_pass", hv);
+                    if (debug)
+                        debug("at:", cPos, "actual:", hv, "displayed:", dv);
+
+                    if (selectionStart !== selectionEnd) {
+                        // A selection was typed (or pasted) over
+                        hv = hv.substring(0, selectionStart)
+                        + dv.substring(selectionStart, cPos)
+                        + hv.substring(selectionEnd);
+                        if (debug)
+                            debug("sel cut:", selectionStart, selectionEnd,
+                                  "actual:", hv, "at:", cPos);
+                    }                    
+                    else if (dv.length >= hv.length) {
+                        // No select to replace, all hv chars retained
+                        // Characters added before cPos
+                        let count = (dv.length - hv.length);
+                        hv = hv.substring(0, cPos - count)
+                        + dv.substring(cPos - count, cPos)
+                        + hv.substring(cPos - count);
                     }
+                    else if (keyDown === 46){
+                        if (debug) debug("delete");
+                        hv = hv.substring(0, cPos) + hv.substring(cPos + 1);
+                    }
+                    else if (keyDown === 8) {
+                        if (debug) debug("backspace");
+                        hv = hv.substring(0, cPos) + hv.substring(cPos + 1);
+                    }
+                    else {
+                        debugger; // WTF?
+                    }
+                    $this.data("hidden_pass", hv);
+                    $.fn.raw_val.call($this, hv.replace(/./g, SPOT));
+                    setCursorPosition(self, cPos);
+                    if (debug) debug("final:", hv, "cursor", cPos)
                 }
                 return true;
             });
