@@ -17,7 +17,7 @@ define("dialogs/optimise", ["dialogs/alert", "js/jq/template"], function(AlertDi
             let app = this.options.app;
             // Local actions will now be fully reflected in the cloud,
             // so we can clear them
-            app.client.hoard.clear_actions();
+            app.client.hoard.clear_history();
             return app.construct_new_cloud(this);
         }
 
@@ -34,7 +34,7 @@ define("dialogs/optimise", ["dialogs/alert", "js/jq/template"], function(AlertDi
             this.control("existing")
             .template(
                 "expand",
-                app.cloud.hoard.actions.length);
+                app.cloud.hoard.history.length);
             let hoard = app.client.hoard;
             let counts = {
                 "N": 0,
@@ -55,7 +55,7 @@ define("dialogs/optimise", ["dialogs/alert", "js/jq/template"], function(AlertDi
                 counts.N + counts.A + counts.X)
             .show();
             if (counts.N + counts.A + counts.X >=
-                app.cloud.hoard.actions.length)
+                app.cloud.hoard.history.length)
                 this.push(this.tx("Optimisation will not improve performance"));
         }
     }

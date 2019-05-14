@@ -7,7 +7,7 @@
 define("dialogs/change_password", ["js/Dialog"], function(Dialog) {
 
     class ChangePasswordDialog extends Dialog {
-        }
+
         _checkSamePass() {
             let $pass = this.control("pass");
             let $conf = this.control("conf");
@@ -41,6 +41,7 @@ define("dialogs/change_password", ["js/Dialog"], function(Dialog) {
         }
 
         open() {
+            this.control("pass").val(this.options.encryption_pass());
             this._checkSamePass();
         }
     }

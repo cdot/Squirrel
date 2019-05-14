@@ -72,7 +72,7 @@ define("dialogs/alarm", ["js/Dialog", "js/Action", "js/Hoard", "js/jq/template",
                     type: "A",
                     path: this.options.path,
                     data: {
-                        time: this.control("date")
+                        due: this.control("date")
                         .datepicker("getDate").getTime(),
                         repeat: 0 // TODO: grab this
                     }
@@ -89,7 +89,7 @@ define("dialogs/alarm", ["js/Dialog", "js/Action", "js/Hoard", "js/jq/template",
         // @Override
         open() {
             this.control("path").text(this.options.path.join("↘"));
-            this.wasEnabled = (this.options.alarm !== "undefined");
+            this.wasEnabled = (typeof this.options.alarm !== "undefined");
 
             this.control("enabled").prop("checked", this.wasEnabled);
             this.control("settings").find(":input").prop("disabled", !this.wasEnabled);

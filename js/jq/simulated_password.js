@@ -186,7 +186,8 @@ define("js/jq/simulated_password", ["jquery"], function() {
                         hv = hv.substring(0, cPos) + hv.substring(cPos + 1);
                     }
                     else {
-                        debugger; // WTF?
+                        debugger; // WTF? input event raised but not in
+                        // response to a key event...?
                     }
                     $this.data("hidden_pass", hv);
                     $.fn.raw_val.call($this, hv.replace(/./g, SPOT));

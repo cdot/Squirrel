@@ -111,8 +111,10 @@ define("dialogs/store_settings", ["js/Dialog", "js/Utils", "js/jq/template"], fu
 
         open() {
             this.control("image_message").hide();
-            this.control("get_image").toggle(this.options.needs_image);
-            this.control("path").focus().val(this.options.cloud_path());
+            this.control("get_image").toggle(
+                this.options.needs_image ? true : false);
+            let pat = this.options.cloud_path();
+            this.control("path").val(pat).focus();
             this.check_path();
         }
 

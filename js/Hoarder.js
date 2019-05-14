@@ -22,9 +22,8 @@ define("js/Hoarder", ["js/Hoard", "js/Serror", "js/Translator"], function(Hoard,
             this.cloudStore = null;
             this.last_sync = 0;
             this.hoard = null;
-            this.changes = 0;
-            // Baseline hoard
-            this.baseline = null;
+            this.clientChanges = 0;
+            this.cloudChanges = 0;
 
             for (let k in p) {
                 if (p.hasOwnProperty(k))
@@ -55,15 +54,46 @@ define("js/Hoarder", ["js/Hoard", "js/Serror", "js/Translator"], function(Hoard,
             return this.clientStore;
         }
 
+        /**
+         * Setter/getter for cloud store path
+         */
+        cloud_path(path) {
+            if (typeof path !== "undefined" && path !== this.cloudPath) {
+                if (this.debug) this.debug("Set cloud path", path);
+                this.cloudPath = path;
+                this.cloudChanges++;
+                this.clientChanges++; // path is saved in the client
+            }
+            return this.cloudPath;
+        }
+
+        /**
+         * Getter/setter for encryption password
+         */
         encryption_pass(pass) {
             if (typeof pass !== "undefined") {
                 this.clientStore.option("pass", pass);
-                this.changes++;
+                this.clientChanges++;
                 this.cloudStore.option("pass", pass);
+                this.cloudChanges++;
             }
             return this.clientStore.option("pass");
         }
 
+        /**
+         * Getter/setter for client hoard editable JSON text
+         */
+        tree_json(json) {
+            if (json) {
+                let parsed = JSON.parse(json);
+                this.hoard.clear_history();
+                this.hoard.tree = parsed;
+                this.clientChanges++;
+                this.cloudChanges++;
+            }
+            return JSON.stringify(this.hoard.tree, null, " ");
+        }
+        
         /** Getter */
         user(u) {
             if (typeof u !== "undefined")
@@ -72,7 +102,11 @@ define("js/Hoarder", ["js/Hoard", "js/Serror", "js/Translator"], function(Hoard,
         }
         
         check_alarms(handler) {
-            return this.hoard.check_alarms(handler);
+            return this.hoard.check_alarms(handler)
+            .then((changes) => {
+                this.cloudChanges += changes;
+                this.clientChanges += changes;
+            });
         }
 
         /**
@@ -82,20 +116,13 @@ define("js/Hoarder", ["js/Hoard", "js/Serror", "js/Translator"], function(Hoard,
          * @param undo optional action to undo the one being added
          */
         play_action(action, undoable) {
-            this.changes++;
             return this.hoard.play_action(action, undoable);
         }
 
-        /** Setter/getter */
-        cloud_path(path) {
-            if (typeof path !== "undefined" && path !== this.cloudPath) {
-                if (this.debug) this.debug("Set cloud path", path);
-                this.cloudPath = path;
-                this.changes++;
-            }
-            return this.cloudPath;
+        needs_image() {
+            return this.cloudStore.option("needs_image");
         }
-
+        
         /**
          * Return null if no auth is required, or a structure that may
          * optionally have a user field if one can be determined.
@@ -149,7 +176,6 @@ define("js/Hoarder", ["js/Hoard", "js/Serror", "js/Translator"], function(Hoard,
             let self = this;
             if (self.debug) self.debug('...load client');
 
-            self.changes = 0;
             return self.clientStore.reads(CLIENT_PATH)
             .then((str) => {
                 let data = JSON.parse(str);
@@ -167,6 +193,18 @@ define("js/Hoarder", ["js/Hoard", "js/Serror", "js/Translator"], function(Hoard,
             });
         }
 
+        cloudNeedsSaving() {
+            // No need to save the cloud unless there are actions in
+            // the local history
+            return this.cloudChanges > 0 || this.hoard.history.length > 0;
+        }
+        
+        clientNeedsSaving() {
+            // No need to save the client unless there are actions in
+            // the local history
+            return this.clientChanges > 0 || this.hoard.history.length > 0;
+        }
+        
         /**
          * @param progress object, see class def for details
          */
@@ -185,10 +223,6 @@ define("js/Hoarder", ["js/Hoard", "js/Serror", "js/Translator"], function(Hoard,
             return this.clientStore.writes(CLIENT_PATH, json)
             .then(() => {
                 if (this.debug) this.debug("...client write OK");
-                if (progress) progress.push({
-                    severity: "notice",
-                    message: Translator.instance().tx("Saved in browser")
-                });
                 
                 // READBACK CHECK - debug FireFucks, make sure what we
                 // wrote is still readable
@@ -197,6 +231,12 @@ define("js/Hoarder", ["js/Hoard", "js/Serror", "js/Translator"], function(Hoard,
                     if (json2 !== json) {
                         throw new Serror(500, "Readback check failed");
                     }
+                    if (progress) progress.push({
+                        severity: "notice",
+                        message: Translator.instance().tx("Saved in browser")
+                    });
+                    self.hoard.clear_history();
+                    self.clientChanges = 0;
                     return Promise.resolve();
                 });
             })
@@ -246,28 +286,40 @@ define("js/Hoarder", ["js/Hoard", "js/Serror", "js/Translator"], function(Hoard,
          * interactively selecting those that are to be applied. last_sync is
          * update to reflect the changes.
          * @param selector function that, when given a list of actions
-         * to play, returns a promise that resolves to the subeset of
-         * that list that is selected to be player
+         * to play, returns a promise that resolves to the subset of
+         * that list that is selected to be played
          * @param player UI action player
+         * @param actions optional list of preloaded actions read from
+         * the cloud, saves reloading the cloud
          * @return a Promise that resolves to the proposed new contents
          * of the cloud
          */
-        update_from_cloud(selector, player) {
+        update_from_cloud(selector, player, actions) {
             let accepted = [];
-            return load_cloud()
-            .then((actions) => {
-                for (let act in actions) {
+            let prom = actions ? Promise.resolve(actions) : this.load_cloud();
+            return prom.then((actions) => {
+                let new_acts = [];
+                for (let act of actions) {
                     if (act.time > this.last_sync)
                         new_acts.push(act);
                     else
                         accepted.push(act);
                 }
-                return selector(new_acts);
+                // Push local actions into the cloud set
+                for (let record of this.hoard.clear_history())
+                    accepted.push(record.redo);
+
+                if (new_acts.length > 0)
+                    // Interactively select cloud changes to apply
+                    return selector(new_acts);
+                else
+                    return Promise.resolve([]);
             })
             .then((selected) => {
+                let act;
                 this.last_sync = Date.now();
                 let promise = Promise.resolve();
-                for (let act in selected) {
+                for (let act of selected) {
                     promise = promise.then(
                         // Note that the cloud actions are pushed
                         // to the undo queue, so they can be undone
@@ -278,9 +330,10 @@ define("js/Hoarder", ["js/Hoard", "js/Serror", "js/Translator"], function(Hoard,
                                     severity: "warning",
                                     message: e.conflict
                                 });
+                                return Promise.resolve();
                             } else {
                                 accepted.push(act);
-                                player(act);
+                                return player(act);
                             }
                         }));
                 }
@@ -313,6 +366,7 @@ define("js/Hoarder", ["js/Hoard", "js/Serror", "js/Translator"], function(Hoard,
                     severity: "notice",
                     message: Translator.instance().tx("Saved in cloud")
                 });
+                self.cloudChanges = 0;
                 return Promise.resolve(true);
             })
             .catch((e) => {
@@ -380,7 +434,7 @@ define("js/Hoarder", ["js/Hoard", "js/Serror", "js/Translator"], function(Hoard,
                     "new actions into client");
 
                 // Undo client actions performed since last sync
-                let history = this.hoard.clear_actions();
+                let history = this.hoard.clear_history();
                 let undos = [], redos = [];
                 for (act of history) {
                     // First undo
@@ -430,8 +484,7 @@ define("js/Hoarder", ["js/Hoard", "js/Serror", "js/Translator"], function(Hoard,
             // Cloud has no actions; reconstruct the cloud from
             // the client tree
             if (self.debug) self.debug("...reconstructing cloud");
-            let actions =
-                self.hoard.actions_to_recreate();
+            let actions = self.hoard.actions_to_recreate();
             return this.save_cloud(actions, progress);
         }
         

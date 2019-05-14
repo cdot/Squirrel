@@ -400,7 +400,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
          */
         getNodeFromPath: function(path) {
             let $node = path2$node[path.join(PATHSEP)];
-            // Has something not been through get_path?
+            // Has something not been added to the cache?
             Serror.assert($node && $node.length === 1);
             return $node;
         },
@@ -469,7 +469,20 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
                     icon: "tree-icon-alarm"
                 })
                 .on(Dialog.tapEvent(), function () {
-                    Dialog.confirm("alarm", { $node: $node });
+                    Dialog.confirm("alarm", {
+                        path: $node.tree("getPath"),
+                        alarm: $node.data("alarm")
+                    })
+                    .then((act) => {
+                        if (act.type === "C") {
+                            $node.data("alarm", null);
+                        } else {
+                            $node.data("alarm", {
+                                due: act.data.due,
+                                repeat:act.data.repeat
+                            });
+                        }
+                    });
                     return false;
                 });
                 return $button;
@@ -681,7 +694,30 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
 
             $node.remove();
         },
-
+        
+        _action_I: function(action) {
+            let tree = JSON.parse(action.data);
+            let react = new Action({
+                type: "N",
+                path: action.path.concat(tree.name),
+                time: tree.node.time
+            });
+            if (typeof tree.node.data === "object") {
+                this.action(react);
+                let h = new Hoard({ tree: tree.node });
+                let acts = h.actions_to_recreate();
+                for (let act of acts) {
+                    act.path = action.path.concat(tree.name, act.path);
+                    this.action(act);
+                }
+            }
+            else {
+                react.data = tree.node.data;
+                this.action(react);
+            }
+            this.getNodeFromPath(react.path).tree("instance")._decorate_node();
+        },
+        
         /**
          * @private
          * Action handler for alarm add
@@ -801,39 +837,41 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
             if (typeof $node.scroll_into_view !== "undefined")
                 $node.scroll_into_view();
         },
-
+        
         /**
-         * Callback for use when managing hoards; plays an action that is being
+         * Plays an action that is being
          * played into the hoard into the DOM as well.
          * @param e action to play
-         * @param chain function to call once the action has been
-         * played. Passed the modified node.
+         * @return a promise that resolveswhen the UI has been updated.
          */
         action: function(action) {
-            if (action.type === "N") {
-                // Create the new node. Automatically adds it to the right parent.
-                $("<li></li>")
-                .tree($.extend(
-                    {},
-                    this.options,
-                    {
-                        path: action.path,
-                        value: action.data,
-                        time: action.time,
-                        onCreate: function () {
-                            // get_path will update the caches on the fly
-                            // with the new node
-                            if (chain) chain(this);
-                        }
-                    }));
-            } else {
-                let $node = this.getNodeFromPath(action.path);
-                let widget = $node.tree("instance");
-                widget["_action_" + action.type].call(
-                    widget,
-                    action);
-                if (chain) chain(this);
-            }
+            return new Promise((resolve, reject) => {
+                if (action.type === "N") {
+                    // Create the new node. Automatically adds it to
+                    // the right parent.
+                    let $node = $("<li></li>");
+                    $node.tree($.extend(
+                        {},
+                        this.options,
+                        {
+                            path: action.path,
+                            value: action.data,
+                            time: action.time,
+                            onCreate: function () {
+                                // getPath will update the caches on the fly
+                                // with the new node
+                                resolve();
+                            }
+                        }));
+                } else {
+                    let $node = this.getNodeFromPath(action.path);
+                    let widget = $node.tree("instance");
+                    widget["_action_" + action.type].call(
+                        widget,
+                        action);
+                    resolve();
+                }
+            });
         },
 
         /**

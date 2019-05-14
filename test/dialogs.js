@@ -219,15 +219,22 @@ define(["js/Dialog", "js/Translator", "js/LocalStorageStore", "js/Action", "js/H
         extras: function() {
             return Dialog.confirm("extras", {
                 needs_image: false,
-                set_encryption_pass: function(pass) {
-                    lert("encryptionPass", pass);
+                encryption_pass: function(pass) {
+                    lert("encryption pass", pass);
+                    return pass;
                 },
                 cloud_path: function(path) {
                     if (typeof path !== "undefined")
                         lert("Cloud path", path);
-                    return "/a/bogus/path";
+                    else path = "/a/bogus/path";
+                    return path;
                 },
-                json: JSON.stringify({ A: 1, C: 2 }, null, " ")
+                tree_json: function(json) {
+                    if (typeof json !== "undefined")
+                        lert("JSON", json);
+                    else json = JSON.stringify({ A: 1, C: 2 }, null, " ");
+                    return json;
+                }
             })
             .then((options) => {
                 lert("Confirmed extras", options);

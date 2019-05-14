@@ -46,35 +46,39 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
             // Actions played into this hoard and the
             // corresponding undos required to undo the actions played.
             // Each entry is { redo:, undo: }
-            this.actions = [];
+            this.history = [];
             
             if (options.hoard) {
                 // hoard: overrides tree: and actions:
                 this.tree = options.hoard.tree;
-                this.actions = options.hoard.actions;
+                if (options.hoard.actions)
+                    this.history = options.hoard.actions.map((a) => {
+                        return { redo: a };
+                    });
+                else
+                    this.history = options.hoard.history;
             }
             else {
                 if (options.tree)
                     this.tree = Hoard._copy_tree(options.tree);
                 else
-                    // Root will be time-stamped when a subnode is added
-                    this.tree = { data: {} };
+                    this.tree = { data: {}, time: Date.now() };
 
                 if (options.actions)
-                    // Play actions without adding to [actions]
+                    // Play actions without adding to history
                     for (let act of options.actions)
                         this.play_action(act, false);
             }
         }
 
         /**
-         * Clear the action record
-         * @return the existing action record
+         * Clear the history
+         * @return the events removed
          */
-        clear_actions() {
-            let acts = this.actions;
-            this.actions = [];
-            return acts;
+        clear_history() {
+            let events = this.history;
+            this.history = [];
+            return events;
         }
         
         /**
@@ -128,13 +132,13 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
          * @param time the time for the undo
          * @param act template for the undo (e.g. for data:, alarm: etc)
          */
-        _push_action(redo, type, path, time, act) {
+        _record_event(redo, type, path, time, act) {
             if (!act)
                 act = {};
             act.type = type;
             act.path = path.slice();
             act.time = time || Date.now();
-            this.actions.push({ redo: new Action(redo), undo: act });
+            this.history.push({ redo: new Action(redo), undo: act });
         }
         
         /**
@@ -171,8 +175,8 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
          * }
          */
         undo() {
-            Serror.assert(this.actions.length > 0);
-            let a = this.actions.pop();
+            Serror.assert(this.history.length > 0);
+            let a = this.history.pop();
             if (this.debug) this.debug("Undo", a);
             
             // Replay the reverse of the action
@@ -183,7 +187,7 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
          * Return true if there is at least one undoable operation
          */
         can_undo() {
-            return this.actions.length > 0;
+            return this.history.length > 0;
         }
         
         /**
@@ -266,7 +270,7 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
                     return Promise.resolve({ action: action });
 
                 if (undoable)
-                    this._push_action(action, "D", action.path, action.time);
+                    this._record_event(action, "D", action.path, parent.time);
 
                 parent.time = action.time; // collection is being modified
                 parent.data[name] = {
@@ -281,28 +285,48 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
                 let new_parent;
 
                 switch (action.type) {
-                case "M": // Move to another parent
-                    // action.data is the path of the new parent
-                    new_parent = this._locate_node(action.data);
-                    if (!new_parent)
-                        return conflict(
-                            TX.tx("target folder '$1' does not exist",
-                                  action.data.join("↘")));
+                    
+                case "A": // Alarm
+                    if (undoable) {
+                        if (typeof node.alarm === "undefined")
+                            // Undo by cancelling the new alarm
+                            this._record_event(action, "C", action.path,
+                                              node.time);
+                        else
+                            this._record_event(action, "A", action.path,
+                                              node.time, { alarm: node.alarm });
+                    }
+                    if (!action.data)
+                        delete node.alarm;
+                    else if (typeof action.data === "number"
+                             || typeof action.data === "string") {
+                        // Old format alarms had one number, number of
+                        // days from last node change. New format has two,
+                        // next ring in epoch MS, and repeat in MS.
+                        
+                        // Update to latest format
+                        node.alarm = {
+                            due: action.time + (action.data * MSPERDAY),
+                            repeat: action.data * MSPERDAY };
+                    }
+                    else
+                        node.alarm = action.data;
+                    node.time = action.time;
+                    break;
 
+                case "C": // Cancel alarm
                     if (undoable)
-                        undoable("M", node, { data: action.path.slice() });
-                    // collection is being modified
-                    new_parent.time = parent.time = action.time;
-
-                    delete parent.data[name];
-                    new_parent.data[name] = node;
+                        this._record_event(action, "A", action.path,
+                                          node.time, { alarm: node.alarm });
+                    delete node.alarm;
+                    node.time = action.time;
                     break;
 
                 case "D": // Delete
                     if (undoable) {
                         let p = action.path.slice();
                         p.pop();
-                        this._push_action(action,
+                        this._record_event(action,
                             "I", p, parent.time,
                             { data: JSON.stringify({name: name, node: node}) });
                     }
@@ -311,16 +335,52 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
                     parent.time = action.time;
                     break;
 
+                case "E": // Edit
+                    if (undoable)
+                        this._record_event(action, "E", action.path,
+                                          node.time, { data: node.data });
+                    node.data = action.data;
+                    node.time = action.time;
+                    break;
+
                 case "I": // Insert
                     if (typeof node.data !== "object")
                         return conflict(TX.tx("Cannot insert into a value"));
                     let json = JSON.parse(action.data);
                     if (undoable)
-                        this._push_action(action, "D", action.path, node.time);
+                        this._record_event(action, "D", action.path, node.time);
 
                     node.data[json.name] = json.node;
                     // collection is being modified
                     node.time = action.time;
+                    break;
+
+                case "M": // Move to another parent
+                    // action.data is the path of the new parent
+                    new_parent = this._locate_node(action.data);
+                    if (!new_parent)
+                        return conflict(
+                            TX.tx("target folder '$1' does not exist",
+                                  action.data.join("↘")));
+
+                    if (new_parent.data[name])
+                        return conflict(action, TX.tx("it already exists"));
+                    
+                    if (undoable) {
+                        let from_parent = action.path.slice();
+                        from_parent.pop();
+                        this._record_event(
+                            action,
+                            "M", action.data.slice().concat([name]),
+                            parent.time,
+                            { data: from_parent });
+                    }
+                    
+                    // collection is being modified
+                    new_parent.time = parent.time = action.time;
+
+                    delete parent.data[name];
+                    new_parent.data[name] = node;
                     break;
 
                 case "R": // Rename
@@ -329,8 +389,8 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
                     if (undoable) {
                         let p = action.path.slice();
                         p[p.length - 1] = action.data;
-                        this._push_action(action, "R", p,
-                                          parent.time, { data: name });
+                        this._record_event(
+                            action, "R", p, parent.time, { data: name });
                     }
                     parent.data[action.data] = node;
                     delete parent.data[name];
@@ -338,48 +398,15 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
                     parent.time = action.time;
                     break;
 
-                case "E": // Edit
-                    if (undoable)
-                        this._push_action(action, "E", action.path,
-                                          node.time, { data: node.data });
-                    node.data = action.data;
-                    node.time = action.time;
-                    break;
-
-                case "A": // Alarm
-                    if (undoable) {
-                        if (typeof node.alarm === "undefined")
-                            // Undo by cancelling the new alarm
-                            this._push_action(action, "C", action.path,
-                                              node.time);
-                        else
-                            this._push_action(action, "A", action.path,
-                                              node.time, { alarm: node.alarm });
-                    }
-                    if (!action.data)
-                        delete node.alarm;
-                    else
-                        node.alarm = action.data;
-                    node.time = action.time;
-                    break;
-
-                case "C": // Cancel alarm
-                    if (undoable)
-                        this._push_action(action, "A", action.path,
-                                          node.time, { alarm: node.alarm });
-                    delete node.alarm;
-                    node.time = action.time;
-                    break;
-
                 case "X": // Constrain. Introduced in 2.0, however 1.0 code
                     // will simply ignore this action.
                     if (undoable) {
                         if (node.constraints)
-                            this._push_action(
+                            this._record_event(
                                 action, "X", action.path, node.time,
                                 { data: node.constraints });
                         else
-                            this._push_action(
+                            this._record_event(
                                 action, "X", action.path, node.time);
                     }
                     if (!action.data)
@@ -583,14 +610,13 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
          * Promise to check all alarms. Returns a promise to resolve all the
          * promises returned by 'ring'.
          * @param ringfn function([], Date)
-         * @return a promise
+         * @return a promise that resolves to the number of changes that need
+         * to be saved
          */
         check_alarms(ringfn) {
 
-            if (!this.tree) {
-                //console.log("Empty tree");
+            if (!this.tree)
                 return Promise.resolve();
-            }
 
             let checkAlarms = [{
                 path: [],
@@ -598,7 +624,8 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
             }];
 
             let promise = Promise.resolve();
-
+            let changes = 0;
+            
             while (checkAlarms.length > 0) {
                 let item = checkAlarms.pop();
                 let node = item.node;
@@ -615,32 +642,32 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
                 if (typeof node.alarm !== "undefined") {
                     // Old format alarms had one number, number of
                     // days from last node change. New format has two,
-                    // next ring in epoch MS, and repeat in MS. If
-                    // repeat is 0, don't re-run the alarm.
-
+                    // next ring in epoch MS, and repeat in MS.
                     if (typeof node.alarm === "number"
-                        || typeof node.alarm === "string"
-                        && node.alarm.indexOf(";") === -1) {
+                        || typeof node.alarm === "string") {
                         
                         // Update to latest format
-                        node.alarm = node.time + (node.alarm * MSPERDAY)
-                        + ";" + (node.alarm * MSPERDAY);
+                        node.alarm = {
+                            due: node.time + (node.alarm * MSPERDAY),
+                            repeat: node.alarm * MSPERDAY
+                        };
+                        changes++;
                     }
-                    let a = node.alarm.split(";", 2).map(
-                        (a) => {
-                            return parseInt(a);
-                        });
-                    if (Date.now() >= a[0]) {
-                        let ding = new Date(a[0]);
-                        promise = promise.then(() => {
-                            return ringfn(item.path, ding);
-                        });
-                        a[0] = Date.now() + a[1];
-                        node.alarm = a[0] + ";" + a[1];
+                    
+                    if (node.alarm.due > 0 && Date.now() >= node.alarm.due) {
+                        let ding = new Date(node.alarm.due);
+                        promise = promise.then(ringfn(item.path, ding));
+                        if (node.alarm.repeat > 0)
+                            // Update the alarm for the next ring
+                            node.alarm.due = Date.now() + node.alarm.repeat;
+                        else
+                            // Disable the alarm (no repeat)
+                            node.alarm.due = 0;
+                        changes++;
                     }
                 }
             }
-            return promise;
+            return promise.then(() => changes);
         }
     }
 

@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,jquery */
 
-define("js/ContextMenu", ["js/Translator", "clipboard", "js/Dialog", "jquery", "jquery-ui", "contextmenu" ], function(Translator, ClipboardJS, Dialog) {
+define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "clipboard", "jquery", "jquery-ui", "contextmenu" ], function(Translator, Dialog, Action, ClipboardJS) {
 
         let TX = Translator.instance();
 
@@ -117,7 +117,7 @@ define("js/ContextMenu", ["js/Translator", "clipboard", "js/Dialog", "jquery", "
                     let p = self.$menuTarget.tree("getPath");
                     if (self.debug) self.debug("clip tree from", p);
                     // SMELL
-                    let n = self.app.client.hoard.get_node(p);
+                    let n = self.app.hoarder.hoard.get_node(p);
                     return JSON.stringify(n);
                 }
             });
@@ -209,16 +209,21 @@ define("js/ContextMenu", ["js/Translator", "clipboard", "js/Dialog", "jquery", "
                 return;
             }
 
+            let promise;
+
+            // Items with no dialog simply return. Items that open a
+            // dialog set a promise and break to a generic catch
+            // handler after the switch.
             switch (ui.cmd) {
             case "copy_value":
                 self.clipboard = $node.data("value");
-                break;
+                return;
 
             case "make_copy":
                 self.clipboard = JSON.stringify(
                     // SMELL
-                    self.app.client.hoard.get_node($node.tree("getPath")));
-                break;
+                    self.app.hoarder.hoard.get_node($node.tree("getPath")));
+                return;
 
                 /* Can't get it to work like this - would need an intermediate
                    element that a Ctrl+V event happens on.
@@ -234,29 +239,26 @@ define("js/ContextMenu", ["js/Translator", "clipboard", "js/Dialog", "jquery", "
                    /**/
 
             case "insert_copy":
-                if (self.clipboard) {
-                    let data = JSON.parse(self.clipboard);
-                    Dialog.confirm("insert", {
-                        $node: $node,
-                        data: data
-                    })
-                    .catch((f) => {
-                        // Silent abort
-                        if (self.debug) self.debug("insert aborted");
-                    });
-                }
+                if (!self.clipboard)
+                    return;
+                
+                let data = JSON.parse(self.clipboard);
+                promise = Dialog.confirm("insert", {
+                    $node: $node,
+                    data: data
+                });
                 break;
 
             case "rename":
                 $node.tree("editKey");
-                break;
+                return;
 
             case "edit":
                 $node.tree("editValue");
-                break;
+                return;
 
             case "add_value":
-                Dialog.confirm("add", {
+                promise = Dialog.confirm("add", {
                     path: $node.tree("getPath"),
                     validate: validate_unique_key,
                     is_value: true
@@ -267,7 +269,7 @@ define("js/ContextMenu", ["js/Translator", "clipboard", "js/Dialog", "jquery", "
                 break;
 
             case "add_subtree":
-                Dialog.confirm("add", {
+                promise = Dialog.confirm("add", {
                     path: $node.tree("getPath"),
                     validate: validate_unique_key,
                     is_value: false
@@ -279,7 +281,7 @@ define("js/ContextMenu", ["js/Translator", "clipboard", "js/Dialog", "jquery", "
 
             case "randomise":
                 let nc = $node.data("constraints");
-                Dialog.confirm("randomise", {
+                promise = Dialog.confirm("randomise", {
                     key: $node.data("key"),
                     constraints: nc
                 })
@@ -300,7 +302,7 @@ define("js/ContextMenu", ["js/Translator", "clipboard", "js/Dialog", "jquery", "
                 break;
 
             case "add_alarm":
-                Dialog.confirm("alarm", {
+                promise = Dialog.confirm("alarm", {
                     path: $node.tree("getPath"),
                     alarm: $node.data("alarm"),
                     last_change: $node.data("last-time-changed")
@@ -308,14 +310,11 @@ define("js/ContextMenu", ["js/Translator", "clipboard", "js/Dialog", "jquery", "
                 .then((act) => {
                     act.path = $node.tree("getPath").slice();
                     self.app.playAction(act);
-                })
-                .catch((fail) => {
-                    if (self.debug) self.debug(fail);
                 });
                 break;
 
             case "delete":
-                Dialog.confirm("delete", {
+                promise = Dialog.confirm("delete", {
                     path: $node.tree("getPath"),
                     is_leaf: $node.hasClass("tree-leaf")
                 })
@@ -324,20 +323,26 @@ define("js/ContextMenu", ["js/Translator", "clipboard", "js/Dialog", "jquery", "
                         type: "D",
                         path: $node.tree("getPath")
                     }));
-                })
-                .catch((fail) => {
-                    if (self.debug) self.debug(fail);
                 });
                 break;
 
             case "pick_from":
-                Dialog.confirm(
+                promise = Dialog.confirm(
                     "pick", { pick_from: $node.data("value") || "" });
                 break;
 
             default:
                 Serror.assert("Unrecognised command " + ui.cmd);
+                return;
             }
+            
+            return promise
+            .then(() => {
+                $(document).trigger("update_save");
+            })
+            .catch((fail) => {
+                if (self.debug) self.debug(fail);
+            });
         }
     }
     return ContextMenu;

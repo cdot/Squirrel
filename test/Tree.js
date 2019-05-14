@@ -27,53 +27,53 @@ const actions = [
     {
 	type: "N",
 	time: Date.UTC(2000, 0),
-	path: ["Fine-dining"]
+	path: ["FineDining"]
     },
     {
 	type: "N",
 	time: Date.UTC(2001, 0),
-	path: [ "Fine-dining", "Caviare" ]
+	path: [ "FineDining", "Caviare" ]
     },
     {
 	type: "N",
 	time: Date.UTC(2002, 0),
-	path: [ "Fine-dining", "Caviare", "Beluga" ],
+	path: [ "FineDining", "Caviare", "Beluga" ],
         data: "£6.70 per gram"
     },
     {
         type: "A",
-	path: [ "Fine-dining", "Caviare", "Beluga" ],
+	path: [ "FineDining", "Caviare", "Beluga" ],
 	time: Date.UTC(2003, 0),
         data: Date.UTC(2004, 0),
     },
     {
         type: "R",
-	path: [ "Fine-dining", "Caviare" ],
+	path: [ "FineDining", "Caviare" ],
 	time: Date.UTC(2005, 0),
         data: "Caviar"
     },
     {
         type: "E",
-	path: [ "Fine-dining", "Caviar", "Beluga" ],
+	path: [ "FineDining", "Caviar", "Beluga" ],
 	time: Date.UTC(2006, 0),
         data: "£6.70 per gramme"
     },
     {
         type: "X",
-	path: [ "Fine-dining", "Caviar", "Beluga" ],
+	path: [ "FineDining", "Caviar", "Beluga" ],
 	time: Date.UTC(2007,0),
         data: { size: 10, chars: "If you have to ask, you can't afford it" }
     }
 ];
 
 var undos = [
-    "D:Fine-dining @1/1/2000, 12:00:00 AM",
-    "D:Fine-dining/Caviare @1/1/2001, 12:00:00 AM",
-    "D:Fine-dining/Caviare/Beluga @1/1/2002, 12:00:00 AM",
-    "C:Fine-dining/Caviare/Beluga @1/1/2003, 12:00:00 AM",
-    "R:Fine-dining/Caviar @1/1/2005, 12:00:00 AM Caviare",
-    "E:Fine-dining/Caviar/Beluga @1/1/2006, 12:00:00 AM £6.70 per gram",
-    "X:Fine-dining/Caviar/Beluga @1/1/2007, 12:00:00 AM"
+    "D:FineDining @1/1/2000, 12:00:00 AM",
+    "D:FineDining/Caviare @1/1/2001, 12:00:00 AM",
+    "D:FineDining/Caviare/Beluga @1/1/2002, 12:00:00 AM",
+    "C:FineDining/Caviare/Beluga @1/1/2003, 12:00:00 AM",
+    "R:FineDining/Caviar @1/1/2005, 12:00:00 AM Caviare",
+    "E:FineDining/Caviar/Beluga @1/1/2006, 12:00:00 AM £6.70 per gram",
+    "X:FineDining/Caviar/Beluga @1/1/2007, 12:00:00 AM"
 ];
 
 let deps = ["js/Utils",
@@ -117,9 +117,9 @@ requirejs(deps, function(Utils, Hoard, Serror, Translator, Tree, TestRunner) {
     });
 
     tr.addTest("should reconstruct cache", function() {
-        // Reconstruct a cache from an actions list
-        for (let e of actions) {
-            $DOMtree.tree("action", e);
+        let promise = Promise.resolve();
+        for (let act of actions) {
+            promise = promise.then($DOMtree.tree("action", act));
         }
         const empty_tree = '\
             <div id="sites-node" class="tree-node tree-never-opened tree-root tree-collection tree-has-alarms">\
@@ -136,17 +136,21 @@ requirejs(deps, function(Utils, Hoard, Serror, Translator, Tree, TestRunner) {
                 </li>\
               </ul>\
             </div>';
-        expect_html(empty_tree);
+        promise.then(() => {
+            expect_html(empty_tree);
+        });
     });
 
     tr.addTest("should open undecorated", function() {
-        for (let i in actions) {
-            $DOMtree.tree("action", actions[i]);
+        let promise = Promise.resolve();
+        for (let act of actions) {
+            promise = promise.then($DOMtree.tree("action", act));
         }
-        // open a leaf node
-        let $node = $DOMtree.tree("getNodeFromPath", ["Fine-dining", "Caviar", "Beluga"]);
-        $node.tree("open");
-        const open_tree = '\
+        promise.then(() => {
+            // open a leaf node
+            let $node = $DOMtree.tree("getNodeFromPath", ["FineDining", "Caviar", "Beluga"]);
+            $node.tree("open");
+            const open_tree = '\
             <div id="sites-node" class="tree-node tree-never-opened tree-root tree-collection tree-has-alarms">\
                 <ul class="sortable tree-subnodes" style="display: none;">\
                   <li class="tree-node tree-never-opened tree-collection tree-modified tree-has-alarms">\
@@ -161,17 +165,20 @@ requirejs(deps, function(Utils, Hoard, Serror, Translator, Tree, TestRunner) {
                   </li>\
                 </ul>\
               </div>';
-        expect_html(open_tree);
+            expect_html(open_tree);
+        });
     });
 
     tr.addTest("should open decorated", function() {
-        for (let i in actions) {
-            $DOMtree.tree("action", actions[i]);
+        let promise = Promise.resolve();
+        for (let act of actions) {
+            promise = promise.then($DOMtree.tree("action", act));
         }
-        // open a leaf node
-        let $node = $DOMtree.tree("getNodeFromPath", ["Fine-dining", "Caviar", "Beluga"]);
-        $node.tree("open", {decorate:true});
-        const open_tree = '\
+        promise.then(() => {
+            // open a leaf node
+            let $node = $DOMtree.tree("getNodeFromPath", ["FineDining", "Caviar", "Beluga"]);
+            $node.tree("open", {decorate:true});
+            const open_tree = '\
             <div id="sites-node" class="tree-node tree-never-opened tree-root tree-collection tree-has-alarms">\
               <ul class="sortable tree-subnodes" style="display: none;">\
                 <li class="tree-node tree-never-opened tree-collection tree-modified tree-has-alarms">\
@@ -209,18 +216,21 @@ requirejs(deps, function(Utils, Hoard, Serror, Translator, Tree, TestRunner) {
                 </li>\
               </ul>\
             </div>';
-        expect_html(open_tree);
+            expect_html(open_tree);
+        });
     });
 
     tr.addTest("should close decorated", function() {
-        for (let i in actions) {
-            $DOMtree.tree("action", actions[i]);
+        let promise = Promise.resolve();
+        for (let act of actions) {
+            promise = promise.then($DOMtree.tree("action", act));
         }
-        // open a leaf node
-        let $node = $DOMtree.tree("getNodeFromPath", ["Fine-dining", "Caviar", "Beluga"]);
-        $node.tree("open", {decorate:true});
-        $node.tree("close");
-        const open_tree = '\
+        promise.then(() => {
+            // open a leaf node
+            let $node = $DOMtree.tree("getNodeFromPath", ["FineDining", "Caviar", "Beluga"]);
+            $node.tree("open", {decorate:true});
+            $node.tree("close");
+            const open_tree = '\
             <div id="sites-node" class="tree-node tree-never-opened tree-root tree-collection tree-has-alarms">\
               <ul class="sortable tree-subnodes" style="display: none;">\
                 <li class="tree-node tree-never-opened tree-collection tree-modified tree-has-alarms">\
@@ -258,7 +268,8 @@ requirejs(deps, function(Utils, Hoard, Serror, Translator, Tree, TestRunner) {
                 </li>\
               </ul>\
             </div>';
-        expect_html(open_tree);
+            expect_html(open_tree);
+        });
     });
 
     tr.run();

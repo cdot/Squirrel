@@ -11,7 +11,8 @@ requirejs.config({
 requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/EncryptedStore", "js/Utils", "js/Serror", "test/MemoryStore", "test/TestRunner"], function(Hoarder, Action, Hoard, LocalStorageStore, EncryptedStore, Utils, Serror, MemoryStore, TestRunner) {
     let tr = new TestRunner("Hoarder");
     let assert = tr.assert;
-
+    const MSPERDAY = 24 * 60 * 60 * 1000;
+    
     tr.addTest("constructor", function() {
         let h = new Hoarder();
         h.cloud_store(new LocalStorageStore({ debug: console.debug,
@@ -82,7 +83,7 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/En
             let h = new Hoarder({ debug: debug, clientStore: store });
             return h.load_client()
             .then(() => {
-                assert.deepEqual(h.hoard.actions, clierd.actions);
+                assert.deepEqual(h.hoard.history, clierd.history);
                 assert.deepEqual(h.hoard.tree, clierd.tree);
             });
         })
@@ -202,36 +203,48 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/En
         .then((actions) => {
             assert.equal(actions.length, 9);
             assert.deepEqual(ui_acts, [
-                { type: 'D', path: [ 'One', 'Five' ], time: 950 },
+                { type: 'D', path: [ 'One', 'Five' ], time: 300 },
                 { type: 'N', path: [ 'One', 'From Cloud' ], time: 900, data: '4' },
                 { type: 'N', path: [ 'One', 'Five' ], time: 950, data: '5' }
             ]);
             assert.deepEqual(h.hoard.tree.data, {
-                "One": {
-                    "time": 950,
-                    "data": {
-                        "Two": {
-                            "time": 600,
-                            "data": {
-                                "Three": {
-                                    "time": 500,
-                                    "data": "£6.70 per gram",
-                                    "alarm": 100,
-                                    "constraints": "32;A-Z;0-9"
+                One: {
+                    time: 950,
+                    data: {
+                        Two: {
+                            time: 600,
+                            data: {
+                                Three: {
+                                    time: 500,
+                                    data: "£6.70 per gram",
+                                    alarm: {
+                                        due: 500 + 100 * MSPERDAY,
+                                        repeat: 100 * MSPERDAY
+                                    },
+                                    constraints: {
+                                        chars: "A-Z;0-9",
+                                        size: 32
+                                    }
                                 }
                             },
-                            "alarm": 11111
+                            alarm: {
+                                due: 600 + 11111 * MSPERDAY,
+                                repeat: 11111 * MSPERDAY
+                            }
                         },
                         "From Cloud": {
-                            "time": 900, // synch time
+                            time: 900, // synch time
                             data: "4"
                         },
                         "Five": {
-                            "time": 950,
+                            time: 950,
                             data: "5"
                         }
                     },
-                    "alarm": 100000
+                    alarm: {
+                        due: 200 + 100000 * MSPERDAY,
+                        repeat: 100000 * MSPERDAY
+                    }
                 }
             });
         });
@@ -296,10 +309,10 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/En
                            path: [ 'One', 'Two' ],
                            time: 900 },
                          {
-                             "data": "In Client",
-                             "path": [ "One", "Two" ],
-                             "time": 950,
-                             "type": "R"
+                             data: "In Client",
+                             path: [ "One", "Two" ],
+                             time: 950,
+                             type: "R"
                          }]));
                 assert.equal(progress.length, 1);
                 assert.equal(progress[0].severity, "warning");

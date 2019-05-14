@@ -4,9 +4,11 @@
 /**
  * Password generation for the given leaf node
  */
-define("dialogs/randomise", ["js/Dialog", "js/Utils", "js/Action", "js/Hoard"], function(Dialog, Utils, Action, Hoard) {
-    const DEFAULT_RANDOM_LEN = 30;
-    const DEFAULT_RANDOM_CHS = "A-Za-z0-9!%^&*_$+-=;:@#~,./?";
+define("dialogs/randomise", ["js/Dialog", "js-cookie"], function(Dialog, Cookies) {
+    const DEFAULT_CONSTRAINTS = {
+        size: 30,
+        chars: "A-Za-z0-9!%^&*_$+-=;:@#~,./?"
+    };
 
     /**
      * Generate a new password subject to constraints:
@@ -59,58 +61,79 @@ define("dialogs/randomise", ["js/Dialog", "js/Utils", "js/Action", "js/Hoard"], 
         return s;
     }
 
+    function sameCons(a, b) {
+        return a.size === b.size && a.chars === b.chars;
+    }
+    
     class RandomiseDialog extends Dialog {
 
         constraints_changed() {
-            let dlg_l = parseInt(this.control("len").val());
-            let dlg_c = this.control("chs").val();
-            let memorable = (dlg_l !== this.init_size || dlg_c !== this.init_chars);
+            let cons = {
+                size: parseInt(this.control("len").val()),
+                chars: this.control("chs").val()
+            };
+            let memorable = !sameCons(cons, this.revert);
             this.control("remember-label").toggle(memorable);
             this.control("remember").toggle(memorable);
 
+            // Revert to default
             this.control("reset").toggle(
-                dlg_l !== DEFAULT_RANDOM_LEN || dlg_c !== DEFAULT_RANDOM_CHS);
+                !sameCons(cons, this.defaults));
+
+            // Revert to starting condition, only if starting condition
+            // if not default
+            this.control("revert").toggle(
+                !sameCons(this.revert, this.defaults)
+                && !sameCons(cons, this.revert));
 
             this.control("again").trigger(Dialog.tapEvent());
         }
 
-        reset_constraints() {
-            this.control("len").val(DEFAULT_RANDOM_LEN);
-            this.control("chs").val(DEFAULT_RANDOM_CHS);
-            this.constraints_changed();
-        }
-
         initialise() {
             let self = this;
+            
+            this.defaults = DEFAULT_CONSTRAINTS;
 
             this.control("again")
-                .on(Dialog.tapEvent(), function () {
-                    self.control("idea")
-                        .text(generatePassword({
-                            length: self.control("len").val(),
-                            charset: self.control("chs").val()
-                        }));
-                    return false;
-                });
+            .on(Dialog.tapEvent(), function () {
+                self.control("idea")
+                .text(generatePassword({
+                    length: self.control("len").val(),
+                    charset: self.control("chs").val()
+                }));
+                return false;
+            });
+            
             this.control("len")
-                .on("change", function () {
-                    self.constraints_changed();
-                });
+            .on("change", function () {
+                self.constraints_changed();
+            });
+            
             this.control("chs")
-                .on("change", function () {
-                    self.constraints_changed();
-                });
+            .on("change", function () {
+                self.constraints_changed();
+            });
+            
             this.control("reset")
-                .on(Dialog.tapEvent(), function () {
-                    self.reset_constraints();
-                });
+            .on(Dialog.tapEvent(), function () {
+                self.control("len").val(this.defaults.size);
+                self.control("chs").val(this.defaults.chars);
+                self.constraints_changed();
+            });
+            
+            this.control("revert")
+            .on(Dialog.tapEvent(), function () {
+                self.control("len").val(self.revert.size);
+                self.control("chs").val(self.revert.chars);
+                self.constraints_changed();
+            });
         }
 
         ok() {
             let res = { text: this.control("idea").text() };
             if (this.control("remember").prop("checked")) {
                 res.constraints = {
-                    size: this.control("len").val(),
+                    size: parseInt(this.control("len").val()),
                     chars: this.control("chs").val()
                 }
             }
@@ -118,11 +141,19 @@ define("dialogs/randomise", ["js/Dialog", "js/Utils", "js/Action", "js/Hoard"], 
         }
         
         open() {
-            this.init_size = this.options.constraints.size;
-            this.init_chars = this.options.constraints.chars;
-            
-            this.control("len").val(this.init_size);
-            this.control("chs").val(this.init_chars);
+            this.defaults = DEFAULT_CONSTRAINTS;
+            let glob_cons = Cookies.get("ui_randomise");
+            if (typeof glob_cons !== "undefined") {
+                try {
+                    this.defaults = JSON.parse(glob_cons);
+                } catch {
+                }
+            }
+            this.revert = $.extend(
+                {}, this.defaults, this.options.constraints);
+                
+            this.control("len").val(this.revert.size);
+            this.control("chs").val(this.revert.chars);
 
             //this.control("path").text(path.join("↘"));
             this.control("key").text(this.options.key);

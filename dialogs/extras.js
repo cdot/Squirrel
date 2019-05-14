@@ -64,9 +64,10 @@ define("dialogs/extras", ["js/Dialog", "js/Translator", "js/Tree", "js-cookie", 
                 Dialog.confirm("store_settings", self.options)
                 .then((path) => {
                     self.options.cloud_path(path);
-                })
+                     $(document).trigger("update_save");
+               })
                 .catch((f) => {
-                    if (self.debug) self.debug("Store settings aborted");
+                    if (self.debug) self.debug("Store settings aborted", f);
                 });
             });
 
@@ -74,12 +75,15 @@ define("dialogs/extras", ["js/Dialog", "js/Translator", "js/Tree", "js-cookie", 
             .on(Dialog.tapEvent(), function () {
                 Dialog.confirm("change_password", self.options)
                 .then((pass) => {
-                    self.options.set_encryption_pass(pass);
+                    self.options.encryption_pass(pass);
                 })
                 .catch((f) => {
-                    if (self.debug) self.debug("Store settings aborted");
+                    if (self.debug) self.debug("Change password aborted", f);
                 });
             });
+
+            // TODO: add password constraints
+            // Cookie ui_randomise contains a JSON { size:, chars: }
 
             this.control("theme")
             .on(Dialog.tapEvent(), function () {
