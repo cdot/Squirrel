@@ -31,10 +31,10 @@ define("js/Action", ["js/Translator"], function(Translator) {
             switch (this.type) {
             case "A":
                 s = TX.tx("Add reminder on $1$2 to $3",
-                          new Date(this.data.time).toLocaleString(),
+                          new Date(this.data.due).toLocaleString(),
                           (this.data.repeat === 0)
                               ? ""
-                          : TX.tx(" (repeat every $1)",
+                              : TX.tx(" (repeat every $1)",
                                   TX.deltaTimeString(0, this.data.repeat)),
                           p);
                 break;
