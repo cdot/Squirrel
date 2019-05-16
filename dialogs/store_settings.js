@@ -80,7 +80,7 @@ define("dialogs/store_settings", ["js/Dialog", "js/Utils", "js/jq/template"], fu
             } else {
                 this.control("path").prop(
                     "title", this.tx("Path to your cloud store"));
-                this.control("ok").show();
+                this.control("ok").show().focus();
             }
         }
 
@@ -98,11 +98,7 @@ define("dialogs/store_settings", ["js/Dialog", "js/Utils", "js/jq/template"], fu
 
             this.control("path")
             .on("keyup", function () {
-                if (self.control("path").val() === "") {
-                    self.control("mnbe").show();
-                    return false;
-                }
-                return true;
+                return (self.control("path").val() !== "");
             })
             .on("change", function () {
                 self.check_path();

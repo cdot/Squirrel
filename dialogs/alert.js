@@ -60,7 +60,11 @@ define("dialogs/alert", ["js/Dialog"], function(Dialog) {
             }
             if (!lert.severity)
                 lert.severity = "notice";
-            let $mess = $("<div>" + lert.message + "</div>")
+            let mess = lert.message;
+            if (mess instanceof Array)
+                mess = mess.join("<br />");
+
+            let $mess = $("<div>" + mess + "</div>")
                 .addClass('dlg-' + lert.severity);
             if (first)
                 this.control("messages").prepend($mess);

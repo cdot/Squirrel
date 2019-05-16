@@ -141,7 +141,7 @@ requirejs(deps, function(Utils, Hoard, Serror, Translator, Tree, TestRunner) {
         });
     });
 
-    tr.addTest("should open undecorated", function() {
+    tr.deTest("should open undecorated", function() {
         let promise = Promise.resolve();
         for (let act of actions) {
             promise = promise.then($DOMtree.tree("action", act));
@@ -169,7 +169,7 @@ requirejs(deps, function(Utils, Hoard, Serror, Translator, Tree, TestRunner) {
         });
     });
 
-    tr.addTest("should open decorated", function() {
+    tr.deTest("should open decorated", function() {
         let promise = Promise.resolve();
         for (let act of actions) {
             promise = promise.then($DOMtree.tree("action", act));
@@ -220,7 +220,7 @@ requirejs(deps, function(Utils, Hoard, Serror, Translator, Tree, TestRunner) {
         });
     });
 
-    tr.addTest("should close decorated", function() {
+    tr.deTest("should close decorated", function() {
         let promise = Promise.resolve();
         for (let act of actions) {
             promise = promise.then($DOMtree.tree("action", act));

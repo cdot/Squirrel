@@ -8,23 +8,31 @@
  * See dialogs/alert.js for how it is used in a notification dialog.
  */
 
-define("js/Hoarder", ["js/Hoard", "js/Serror", "js/Translator"], function(Hoard, Serror, Translator) {
+define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], function(Hoard, Action, Serror, Translator) {
 
     const CLIENT_PATH = "client";
-
+    const TX = Translator.instance();
+    
     class Hoarder {
 
         constructor(p) {
             p = p || {};
-            
-            this.cloudPath = null;  // pathname of the cloud store
+
+            // pathname of the cloud store
+            this.cloudPath = null;
+            // store interfaces
             this.clientStore = null;
             this.cloudStore = null;
+            // When was the last sync?
             this.last_sync = 0;
+            // The client Hoard
             this.hoard = null;
+            // Record of non-action changes, such as paths and settings
             this.clientChanges = 0;
             this.cloudChanges = 0;
-
+            // Flag that indicates if the hoard was just created
+            this.clientIsEmpty;
+            
             for (let k in p) {
                 if (p.hasOwnProperty(k))
                     this[k] = p[k];
@@ -61,7 +69,8 @@ define("js/Hoarder", ["js/Hoard", "js/Serror", "js/Translator"], function(Hoard,
             if (typeof path !== "undefined" && path !== this.cloudPath) {
                 if (this.debug) this.debug("Set cloud path", path);
                 this.cloudPath = path;
-                this.cloudChanges++;
+                if (!this.clientIsEmpty)
+                    this.cloudChanges++;
                 this.clientChanges++; // path is saved in the client
             }
             return this.cloudPath;
@@ -106,6 +115,8 @@ define("js/Hoarder", ["js/Hoard", "js/Serror", "js/Translator"], function(Hoard,
             .then((changes) => {
                 this.cloudChanges += changes;
                 this.clientChanges += changes;
+                if (changes > 0)
+                    this.clientIsEmpty = false;
             });
         }
 
@@ -170,39 +181,99 @@ define("js/Hoarder", ["js/Hoard", "js/Serror", "js/Translator"], function(Hoard,
          * store, but does not play the actions; it is left up to the caller
          * to call actions_to_recreate to build the UI. 
          * @return Promise that resolves to undefined if the load succeeded,
-         * or a string reason otherwise
+         * or an array of alert messages otherwise
          */
         load_client() {
             let self = this;
             if (self.debug) self.debug('...load client');
-
+            self.clientIsEmpty = true;
             return self.clientStore.reads(CLIENT_PATH)
-            .then((str) => {
-                let data = JSON.parse(str);
-                self.cloudPath = data.cloud_path;
-                self.last_sync = data.last_sync;
-                self.hoard = new Hoard({
-                    debug: this.debug,
-                    hoard: data.hoard
-                });
-            })
             .catch((e) => {
-                if (self.debug) self.debug("...client load failed", e);
+                if (self.debug)
+                    self.debug("...client store could not be read", e);
+                // probably doesn't exist
                 self.hoard = new Hoard({debug: self.debug});
-                return Promise.resolve(e);
+                throw [
+                    {
+                        severity: "error",
+                        message: TX.tx("Browser store does not exist.")
+                    },
+                    TX.tx("A new browser store will be created.")];
+            })
+            .then((str) => {
+                try {
+                    let data = JSON.parse(str);
+                    self.cloudPath = data.cloud_path;
+                    self.last_sync = data.last_sync;
+                    self.hoard = new Hoard({
+                        debug: this.debug,
+                        hoard: data.hoard
+                    });
+                    self.clientIsEmpty = false;
+                } catch (e) {
+                    if (self.debug) self.debug("...client parse failed", e);
+                    self.hoard = new Hoard({debug: self.debug});
+                    throw [
+                        {
+                            severity: "error",
+                            message: TX.tx("Client store exists, but can't be read.")
+                        },
+                        TX.tx("Check that you have the correct password."),
+                        TX.tx("If you continue and save, a new browser store will be created.")
+                    ];
+                }
             });
         }
 
-        cloudNeedsSaving() {
+        /**
+         * Determine if the cloud has changes that need saving
+         * @return true if changes need to be saved
+         */
+        cloudHasChanges() {
             // No need to save the cloud unless there are actions in
             // the local history
             return this.cloudChanges > 0 || this.hoard.history.length > 0;
         }
         
-        clientNeedsSaving() {
+        /**
+         * Determine if the client has changes that need saving
+         * @return true if changes need to be saved
+         */
+        clientHasChanges() {
             // No need to save the client unless there are actions in
             // the local history
             return this.clientChanges > 0 || this.hoard.history.length > 0;
+        }
+
+        /**
+         * Get a list of changes reflected in the client history. Note that
+         * we only need one of these, because the same data is saved in
+         * the cloud as in the client, but the client has more because it
+         * also carries settings (such as the cloud path)
+         * @param max_changes the maximum number of changes to reflect
+         * in the list 
+         */
+        getChanges(max_changes) {
+            let message = [];
+            
+            for (let act of this.hoard.history)
+                message.push(TX.tx("$1 has changed", act.redo.path.join("↘")));
+
+            // the client may have settings changes
+            if (this.clientChanges > message.length)
+                message.unshift(TX.tx(
+                    "The browser has $1 change$?($1!=1,s,) to settings",
+                    this.clientChanges - message.length));
+
+            // Cap the return length at max_changes
+            if (max_changes > 0 && message.length > max_changes) {
+                let l = message.length;
+                message = message.slice(0, max_changes);
+                message.push(TX.tx("... and $1 more change$?($1!=1,s,)",
+                                   l - max_changes));
+            }
+
+            return message;
         }
         
         /**
@@ -233,10 +304,8 @@ define("js/Hoarder", ["js/Hoard", "js/Serror", "js/Translator"], function(Hoard,
                     }
                     if (progress) progress.push({
                         severity: "notice",
-                        message: Translator.instance().tx("Saved in browser")
+                        message: TX.tx("Saved in browser")
                     });
-                    self.hoard.clear_history();
-                    self.clientChanges = 0;
                     return Promise.resolve();
                 });
             })
@@ -244,7 +313,7 @@ define("js/Hoarder", ["js/Hoard", "js/Serror", "js/Translator"], function(Hoard,
                 if (this.debug) this.debug("...client save failed", e);
                 if (progress) progress.push({
                     severity: "error",
-                    message: Translator.instance().tx(
+                    message: TX.tx(
                         "Failed to save in client store: $1", e)
                 });
                 return Promise.reject(e);
@@ -276,7 +345,7 @@ define("js/Hoarder", ["js/Hoard", "js/Serror", "js/Translator"], function(Hoard,
                     }
                 }
                 else if (this.debug) this.debug("...cloud is empty");
-                return Promise.resolve(actions);
+                return Promise.resolve(actions.map((act) => new Action(act)));
             });
         }
 
@@ -306,24 +375,28 @@ define("js/Hoarder", ["js/Hoard", "js/Serror", "js/Translator"], function(Hoard,
                         accepted.push(act);
                 }
                 // Push local actions into the cloud set
-                for (let record of this.hoard.clear_history())
+                let client_has_changes = false;
+                for (let record of this.hoard.clear_history()) {
+                    client_has_changes = true;
                     accepted.push(record.redo);
-
-                if (new_acts.length > 0)
+                }
+                if (new_acts.length > 0 && client_has_changes)
                     // Interactively select cloud changes to apply
                     return selector(new_acts);
                 else
-                    return Promise.resolve([]);
+                    return Promise.resolve(new_acts);
             })
             .then((selected) => {
-                let act;
                 this.last_sync = Date.now();
                 let promise = Promise.resolve();
                 for (let act of selected) {
                     promise = promise.then(
                         // Note that the cloud actions are pushed
-                        // to the undo queue, so they can be undone
-                        this.hoard.play_action(act, true)
+                        // to the undo queue, so they can be undone, but
+                        // not if the client was initially empty (otherwise
+                        // this would force a cloud save, which we don't
+                        // want)
+                        this.hoard.play_action(act, !this.clientIsEmpty)
                         .then((e) => {
                             if (e.conflict) {
                                 if (progress) progress.push({
@@ -364,7 +437,7 @@ define("js/Hoarder", ["js/Hoard", "js/Serror", "js/Translator"], function(Hoard,
 
                 if (progress) progress.push({
                     severity: "notice",
-                    message: Translator.instance().tx("Saved in cloud")
+                    message: TX.tx("Saved in cloud")
                 });
                 self.cloudChanges = 0;
                 return Promise.resolve(true);
@@ -373,7 +446,7 @@ define("js/Hoarder", ["js/Hoard", "js/Serror", "js/Translator"], function(Hoard,
                 if (self.debug) self.debug("...cloud save failed " + e.stack);
                 if (progress) progress.push({
                     severity: "error",
-                    message: Translator.instance().tx("Failed to save in cloud store: $1", e)
+                    message: TX.tx("Failed to save in cloud store: $1", e)
                 });
                 return Promise.resolve(false);
             });
@@ -469,7 +542,7 @@ define("js/Hoarder", ["js/Hoard", "js/Serror", "js/Translator"], function(Hoard,
                 if (self.debug) self.debug("...cloud synch failed", e);
                 if (progress) progress.push({
                     severity: "error",
-                    message: Translator.instance().tx("Failed to refresh from cloud store")
+                    message: TX.tx("Failed to refresh from cloud store")
                 });
                 return Promise.reject(e);
             });

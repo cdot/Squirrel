@@ -3,7 +3,7 @@
 
 define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "clipboard", "jquery", "jquery-ui", "contextmenu" ], function(Translator, Dialog, Action, ClipboardJS) {
 
-        let TX = Translator.instance();
+    let TX = Translator.instance();
 
     class ContextMenu {
 

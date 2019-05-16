@@ -3,7 +3,7 @@
 
 define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Hoarder", "js/LocalStorageStore", "js/EncryptedStore", "js/Translator", "js/Tree", "js-cookie", "js/ContextMenu", "js/jq/simulated_password", "js/jq/scroll_into_view", "js/jq/icon_button", "js/jq/styling", "js/jq/template", "js/jq/twisted", "jquery", "jquery-ui", "mobile-events" ], function(Serror, Utils, Dialog, Action, Hoarder, LocalStorageStore, EncryptedStore, Translator, Tree, Cookies, ContextMenu) {
 
-    let TX = Translator.instance(); // Singleton
+    let TX;
 
     /*
      * The application startup process proceeds from
@@ -15,9 +15,10 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
     // Dialogs for loading in the background. These are loaded in roughly
     // the order they are likely to be used, but the loads are supposed to
     // be asynchronous so the order shouldn't really matter.
-    const DIALOGS = [ "alert", "login", "alarm", "insert", "pick", "add",
+    const DIALOGS = [ "alert", "login", "alarm", "store_settings",
+                      "choose_changes", "insert", "pick", "add",
                       "delete", "randomise", "extras", "about",
-                      "store_settings", "optimise", "json" ];
+                      "optimise", "json" ];
     
     class Squirrel {
 
@@ -31,6 +32,9 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
          */
         constructor(options) {
             let self = this;
+
+            if (!TX)
+                TX = Translator.instance();
 
             self.options = options || {};
 
@@ -97,52 +101,18 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
 
         /**
          * @private
-         * Determine if there are unsaved changes, and generate a warning
-         * message for the caller to use.
-         */
-        _unsaved_changes(max_changes) {
-            let self = this;
-            let message = [];
-
-            // Reverse-engineer browser change details
-            $(".tree-modified")
-                .each(function () {
-                    Serror.assert($(this).tree("getPath") ||
-                                  $(this).hasClass("tree-root"))
-                    let path = $(this).data("path") || [];
-                    message.push(TX.tx("$1 has changed",
-                                       path.join("↘")));
-                });
-
-            if (message.length > max_changes) {
-                let l = message.length;
-                message = message.slice(0, max_changes);
-                message.push(TX.tx("... and $1 more change$?($1!=1,s,)", l - max_changes));
-            }
-
-            if (self.hoarder.changes > 0)
-                message.unshift(TX.tx(
-                    "The browser has $1 change$?($1!=1,s,)",
-                    self.hoarder.changes));
-
-            if (message.length === 0)
-                return null;
-
-            return message.join("\n");
-        }
-
-        /**
-         * @private
          */
         _save_stores(progress) {
             let self = this;
-            let saveClient = this.hoarder.clientNeedsSaving();
-            let saveCloud = this.hoarder.cloudNeedsSaving();
+            let saveClient = this.hoarder.clientHasChanges();
+            let saveCloud = this.hoarder.cloudHasChanges();
             let promise;
-
+            let cloud_saved = false;
+            let client_saved = false;
+            
             if (saveCloud) {
                 promise = self.hoarder.update_from_cloud(
-                    (actions) => {
+                    (actions) => { // selector
                         return Dialog.confirm("choose_changes", {
                             changes: actions
                         });
@@ -153,16 +123,51 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                 .then((new_cloud) => {
                     return self.hoarder.save_cloud(new_cloud, progress);
                 })
-                .catch(() => {
-                    if (self.debug) self.debug("choose_changes aborted");
+                .then(() => {
+                    cloud_saved = true;
+                })
+                .catch((e) => {
+                    if (self.debug) self.debug("cloud update failed", e);
+                    progress.push({
+                        severity: "error",
+                        message: [
+                            TX.tx(
+                                "Could not update from cloud store '$1'",
+                                self.hoarder.cloud_path()),
+                            TX.tx("Cloud store could not be saved")
+                        ]
+                    });
+                    if (e instanceof Serror) {
+                        if (e.status)
+                            progress.push({ severity: "error", http: e.status });
+                        if (e.message)
+                            progress.push(e.message);
+                    }
+                    // Resolve, not reject!
                     return Promise.resolve();
                 });
             } else
                 promise = Promise.resolve();
 
-            if (saveClient)
-                promise = promise.then(
-                    () => self.hoarder.save_client(progress));
+            if (saveClient) {
+                promise = promise
+                .then(() => {
+                    return self.hoarder.save_client(progress);
+                })
+                .then(() => {
+                    client_saved = true;
+                })
+                .catch((e) => {
+                    if (self.debug) self.debug("Client save failed", e);
+                    progress.push({
+                        severity: "error",
+                        message: [
+                            TX.tx("Browser store could not be saved"),
+                            e
+                        ]
+                    });
+                });
+            }
 
             if (!(saveCloud || saveClient))
                 if (progress) progress.push({
@@ -173,8 +178,16 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
             // No need to save the client unless there are changes
             promise
             .then(() => {
-                $(".tree-modified")
-                .removeClass("tree-modified");
+                if ((!saveCloud || cloud_saved)
+                    && (!saveClient || client_saved)) {
+                    self.hoarder.hoard.clear_history();
+                    self.clientChanges = 0;
+                    self.cloudChanges = 0;
+                    // otherwise if cloud or client save failed, we have to
+                    // try again
+                    $(".tree-modified")
+                    .removeClass("tree-modified");
+                }
                 $(document).trigger("update_save");
             });
         }
@@ -198,9 +211,9 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
             $("#undo_button").toggle(self.hoarder.hoard.can_undo());
             let $sb = $("#save_button");
             let autosave = (Cookies.get("ui_autosave") === "on");
-            let us = self._unsaved_changes(3);
+            let us = self.hoarder.getChanges(10);
 
-            if (us === null)
+            if (us.length === 0)
                 $sb.hide(); // nothing to save
             else if (autosave) {
                 $sb.hide();
@@ -208,9 +221,58 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
             } else {
                 $sb.attr(
                     "title",
-                    TX.tx("Save is required because") + ":<br/>" + us);
+                    TX.tx("Save is required because") + ":\n" + us.join("\n"));
                 $sb.show();
             }
+        }
+
+        /**
+         * Use classes to mark modifications in the UI tree
+         */
+        reset_modified() {
+            let self = this;
+            
+            // Reset the UI modification list
+            $(".tree-modified").removeClass("tree-modified");
+            
+            // Re-mark all the nodes mentioned in the pending
+            // actions list as modified. If a node isn't found,
+            // back up the tree until we find a parent that does
+            // exist and mark it.
+            let paths = {};
+
+            // Add a path to the modified paths tree
+            function add(path, offset, node) {
+                if (offset === path.length)
+                    return;
+                if (!node[path[offset]])
+                    node[path[offset]] = {};
+                add(path, offset + 1, node[path[offset]]);
+            }
+
+            // Walk the modified paths tree, marking modified nodes
+            function mark(path, node) {
+                if (Object.keys(node).length === 0) {
+                    while (path.length > 0 && self.hoarder.hoard.get_node(path)) {
+                        let $node = self.$DOMtree.tree("getNodeFromPath", path);
+                        if ($node) {
+                            $node.addClass("tree-modified");
+                            return;
+                        }
+                        path.pop(); // try parent
+                    }
+                } else {
+                    for (let sn in node)
+                        mark(path.concat(sn), node[sn]);
+                }
+            }
+            
+            for (let record of this.hoarder.hoard.history) {
+                add(record.redo.path, 0, paths);
+                add(record.undo.path, 0, paths);
+            }
+
+            mark([], paths);
         }
 
         dump_client_store() {
@@ -334,9 +396,10 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                     title: TX.tx("Warning"),
                     alert: {
                         severity: "warning",
-                        message: TX.tx("Could not open cloud store: $1", e)
-                            + "<br>"
-                            + TX.tx("If you continue, only the client store will be available"),
+                        message: [
+                            TX.tx("Could not open cloud store: $1", e),
+                            TX.tx("If you continue, only the client store will be available"),
+                        ]
                     }
                 });
             });
@@ -404,85 +467,25 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
          */
         _3_load_client() {
             let self = this;
-
+            
             return self.hoarder.load_client()
+            .catch((lerts) => {
+                return Dialog.confirm("alert", {
+                    title: TX.tx("Browser store read failed"),
+                    alert: lerts});
+            })
             .then(() => {
-                let act;
-                
                 // Load the tree into the UI by replaying actions
                 let promise = Promise.resolve();
                 for (let act of self.hoarder.hoard.actions_to_recreate()) {
                     let prom = self.$DOMtree.tree("action", act);
                     promise = promise.then(prom);
                 }
-                return promise;
-            })
-            .then(() => {
-                // Reset the UI modification list; we just loaded the
-                // client hoard
-                $(".tree-modified").removeClass("tree-modified");
-                // Re-mark all the nodes mentioned in the pending
-                // actions list as modified. If a node isn't found,
-                // back up the tree until we find a parent that does
-                // exist and mark it.
-                for (let record of self.hoarder.hoard.history) {
-                    let act = record.redo;
-                    let pat = act.path.slice();
-                    while (pat.length > 0) {
-                        let $node = self.$DOMtree.tree("getNodeFromPath", pat);
-                        if ($node) {
-                            $node.addClass("tree-modified");
-                            break;
-                        }
-                        pat.pop(); // try parent
-                    }
-                }
-            })
-            .catch((e) => {
-                if (self.debug) self.debug("client read failed", e);
-                return Dialog.confirm("alert", {
-                    title: TX.tx("Client store read failed"),
-                    alert: [
-                        {
-                            severity: "error",
-                            message: TX.tx("Client store exists, but can't be read.")
-                        },
-                        TX.tx("Check that you have the correct password."),
-                        TX.tx("If you continue and save, the client store will be overwritten and you may lose data.")
-                    ]});
+                return promise
+                .then(() => {
+                    self.reset_modified();
+                })
             });
-        }
-
-        /**
-         * @private
-         * Optional initialisation step, executed when cloud hoard is
-         * known to have loaded successfully. Promise to merge cloud actions into the
-         * client.
-         */
-        _4a_merge_from_cloud(actions) {
-            let self = this;
-            let lerts = [];
-            self.hoarder.update_from_cloud(
-                (actions) => {
-                    return Dialog.confirm("choose_changes", {
-                        changes: actions
-                    });
-                },
-                function (act) {
-                    return self.$DOMtree.tree("action", act);
-                },
-                actions);
-
-            if (lerts.length === 0)
-                return Promise.resolve();
-            lerts.unshift(
-                TX.tx("Conflicts were detected while merging actions from the cloud"));
-            lerts.unshift(
-                TX.tx("Please review these rejected actions, and make sure the data displayed is correct before saving"));
-            return Dialog.confirm("alert", {
-                title: TX.tx("Conflicts Detected"),
-                alert: lerts
-            })
         }
 
         /**
@@ -504,7 +507,8 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
             // Make sure we have a cloud path. The client
             // store records the path, which is used to load
             // the cloud store/
-            if (self.hoarder.cloud_path())
+            let clop = self.hoarder.cloud_path();
+            if (typeof clop === "string" && clop !== "")
                 p = Promise.resolve();
             else {
                 // Use the settings dlg to initialise the cloud store path
@@ -513,8 +517,12 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                     this.cloud_store.option("needs_image");
 
                 p = Dialog.confirm("store_settings", {
-                    needs_image: needs_image,
-                    path: this.hoarder.cloud_path()
+                    needs_image: self.hoarder.needs_image(),
+                    cloud_path: function(path) {
+                        path = self.hoarder.cloud_path(path);
+                        $(document).trigger("update_save");
+                        return path;
+                    }
                 })
                 .then((path) => {
                     self.hoarder.cloud_path(path);
@@ -529,7 +537,16 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
             .then((actions) => {
 
                 // Merge updates from cloud hoard to client
-                return self._4a_merge_from_cloud(actions);
+                return self.hoarder.update_from_cloud(
+                    (actions) => { // selector
+                        return Dialog.confirm("choose_changes", {
+                            changes: actions
+                        });
+                    },
+                    (act) => { // player
+                        return self.$DOMtree.tree("action", act);
+                    },
+                    actions);
             })
             .catch((e) => {
                 if (self.debug) self.debug(e);
@@ -759,10 +776,10 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                 .then(() => {
                     $(window)
                     .on("beforeunload", function () {
-                        let us = self._unsaved_changes(10);
-                        if (us !== null) {
+                        let us = self.hoarder.getChanges(10);
+                        if (us.length > 0) {
                             us = TX.tx("You have unsaved changes") +
-                            "\n" + us +
+                            "\n" + us.join("\n") +
                             "\n" + TX.tx("Are you really sure?");
                             return us;
                         }
@@ -964,7 +981,10 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                     if (self.debug) self.debug("undo had conflict", e.conflict);
                 } else {
                     self.$DOMtree.tree("action", e.action)
-                    .then(() => { $(document).trigger("update_save"); });
+                    .then(() => {
+                        self.reset_modified();
+                        $(document).trigger("update_save");
+                    });
                 }
             })
             .catch((e) => {

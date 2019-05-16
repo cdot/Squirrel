@@ -279,6 +279,17 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
                     action.data : {}
                 };
             }
+            else if (action.type === "I") { // Insert
+                if (typeof parent.data !== "object")
+                    return conflict(TX.tx("Cannot insert into a value"));
+                let json = JSON.parse(action.data);
+                if (undoable)
+                    this._record_event(action, "D", action.path, node.time);
+                
+                parent.data[name] = json;
+                // collection is being modified
+                parent.time = action.time;
+            }
             else { // all other actions require an existing node
                 if (!node)
                     return conflict(action, TX.tx("it does not exist"));
@@ -324,11 +335,9 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
 
                 case "D": // Delete
                     if (undoable) {
-                        let p = action.path.slice();
-                        p.pop();
                         this._record_event(action,
-                            "I", p, parent.time,
-                            { data: JSON.stringify({name: name, node: node}) });
+                            "I", action.path, parent.time,
+                            { data: JSON.stringify(node) });
                     }
                     delete parent.data[name];
                     // collection is being modified
@@ -340,18 +349,6 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
                         this._record_event(action, "E", action.path,
                                           node.time, { data: node.data });
                     node.data = action.data;
-                    node.time = action.time;
-                    break;
-
-                case "I": // Insert
-                    if (typeof node.data !== "object")
-                        return conflict(TX.tx("Cannot insert into a value"));
-                    let json = JSON.parse(action.data);
-                    if (undoable)
-                        this._record_event(action, "D", action.path, node.time);
-
-                    node.data[json.name] = json.node;
-                    // collection is being modified
                     node.time = action.time;
                     break;
 
