@@ -1,9 +1,6 @@
 /*@preserve Copyright (C) 2016-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /*eslint-env node */
 
-const getopt = require("node-getopt");
-const Server = require("../src/Server.js");
-
 const DESCRIPTION = [
     "A super-lightweight HTTP(S) server supporting GET and POST.",
     "Designed for the sole purpose of simple read/write of binary files.\n",
@@ -11,7 +8,7 @@ const DESCRIPTION = [
     "This will start a HTTPS server on port 3000 to serve files in /var/www/html, and allowing new files to be POSTed to the data subdirectory.\n",
     ""].join("\n");
 
-let cliopt = getopt.create([
+const OPTIONS = [
     ["", "docroot=ARG", "absolute path the to document root. Defaults to the current directory when the server was started"],
     ["", "writable=ARG", "relative path to writable files. If this option is given, then only files below this subdirectory will be writable; all other files will not"],
     ["", "port=ARG", "Port to run the server on"],
@@ -26,41 +23,51 @@ let cliopt = getopt.create([
 
     ["d", "debug", "Extra debug info to console"],
     ["h", "help", "Show this help"]
-])
-    .bindHelp()
-    .setHelp(DESCRIPTION + "[[OPTIONS]]")
-    .parseSystem()
-    .options;
+];
 
-let params = {
-    port: cliopt.port || 3000,
-    docroot: cliopt.docroot,
-    writable: cliopt.writable
-};
+let requirejs = require("requirejs");
 
-if (cliopt.log)
-    params.log_requests = true;
+requirejs.config({
+    baseUrl: ".."
+});
 
-if (cliopt.debug)
-    params.debug = true;
+requirejs(["node-getopt", "js/Server"], (getopt, Server) => {
 
+    let cliopt = getopt.create(OPTIONS)
+        .bindHelp()
+        .setHelp(DESCRIPTION + "[[OPTIONS]]")
+        .parseSystem()
+        .options;
 
-if (cliopt.cert) {
-    if (!cliopt.key)
-        throw "No SSL key";
-    params.ssl = {
-        cert: cliopt.cert,
-        key: cliopt.key
+    let params = {
+        port: cliopt.port || 3000,
+        docroot: cliopt.docroot,
+        writable: cliopt.writable
     };
-} else if (cliopt.key)
-    throw "No SSL cert";
 
-if (cliopt.user) {
-    params.auth = {
-        user: cliopt.user || "",
-        pass: cliopt.pass || "",
-        realm: cliopt.realm || ""
+    if (cliopt.log)
+        params.log_requests = true;
+
+    if (cliopt.debug)
+        params.debug = console.debug;
+
+    if (cliopt.cert) {
+        if (!cliopt.key)
+            throw "No SSL key";
+        params.ssl = {
+            cert: cliopt.cert,
+            key: cliopt.key
+        };
+    } else if (cliopt.key)
+        throw "No SSL cert";
+
+    if (cliopt.user) {
+        params.auth = {
+            user: cliopt.user || "",
+            pass: cliopt.pass || "",
+            realm: cliopt.realm || ""
+        }
     }
-}
 
-new Server(params).start();
+    new Server(params).start();
+});

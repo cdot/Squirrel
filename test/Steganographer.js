@@ -1,7 +1,20 @@
 /*@preserve Copyright (C) 2019 Crawford Currie http://c-dot.co.uk license MIT*//*eslint-env node, mocha */
 
-if (typeof module !== "undefined")
+if (typeof module !== "undefined") {
+/*    requirejs = require('requirejs');
+    // node.js
+    const { JSDOM } = require('jsdom');
+    document = new JSDOM('<!doctype html><html><body id="working"></body></html>');
+    const { window } = document;
+    global.window = window;
+    global.document = window.document;
+    global.navigator = { userAgent: "node.js" };
+    let jQuery = require('jquery');
+    global.jQuery = jQuery;
+    global.$ = jQuery;
+*/
     throw new Error("This test is not runnable from node.js");
+}
 
 requirejs.config({
     baseUrl: ".."
@@ -17,13 +30,6 @@ requirejs(["test/TestRunner", "js/Steganographer", "js/Utils", "jquery"], functi
         let a = Utils.StringToUint8Array(TESTR);
         let id = steg.insert(a, $("#source")[0]);
 
-        // Write the image to the canvas
-        let canvas = $("#dest")[0];
-        canvas.width = id.width;
-        canvas.height = id.height;
-        let cxt = canvas.getContext("2d");
-        cxt.putImageData(id, 0, 0);
-
         let gets = new Steganographer({ debug: console.debug });
         console.log("Extracting");
         let b = gets.extract(id);
@@ -32,23 +38,17 @@ requirejs(["test/TestRunner", "js/Steganographer", "js/Utils", "jquery"], functi
 
     tr.addTest("insert.extract large", function() {
         let steg = new Steganographer({ debug: console.debug });
-        let a = new Uint8Array(100000);
-        for (let i = 0; i < 100000; i++)
-            a[i] = i;
+        const len = 14760; // bytes
+        let a = new Uint8Array(len);
+        for (let i = 0; i < len; i++)
+            a[i] = (i & 0xFF);
         let id = steg.insert(a, $("#source")[0]);
-
-        // Write the image to the canvas
-        let canvas = $("#dest")[0];
-        canvas.width = id.width;
-        canvas.height = id.height;
-        let cxt = canvas.getContext("2d");
-        cxt.putImageData(id, 0, 0);
 
         let gets = new Steganographer({ debug: console.debug });
         console.log("Extracting");
         let b = gets.extract(id);
-        for (let i = 0; i < 100000; i++)
-             assert.equal(b[i], i);
+        for (let i = 0; i < len; i++)
+            assert.equal(b[i], (i & 0xFF));
     });
 
     tr.run();

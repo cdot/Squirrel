@@ -20,6 +20,8 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
 
             // pathname of the cloud store
             this.cloudPath = null;
+            // URL of steganography image
+            this.imageURL = null;
             // store interfaces
             this.clientStore = null;
             this.cloudStore = null;
@@ -39,6 +41,15 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
             }
         }
 
+        /**
+         * Return whatever we know about the current user from the
+         * stores
+         */
+        probableUser() {
+            return this.cloudStore.option("user")
+            || this.clientStore.option("user");
+        }
+        
         /**
          * @param store an AbstractStore subclass
          */
@@ -74,6 +85,28 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
                 this.clientChanges++; // path is saved in the client
             }
             return this.cloudPath;
+        }
+
+        /**
+         * Is an image required by the store?
+         */
+        needs_image() {
+            return this.cloudStore.option("needs_image");
+        }
+
+        /**
+         * Setter/getter for image URL. This is only used for saving;
+         * the #stegamage element is used to actually load the image
+         */
+        image_url(path) {
+            if (typeof path !== "undefined" && path !== this.imageURL) {
+                if (this.debug) this.debug("Set image url", path);
+                this.imageURL = path;
+                if (!this.clientIsEmpty)
+                    this.cloudChanges++;
+                this.clientChanges++; // path is saved in the client
+            }
+            return this.imageURL || 'images/GCHQ.png'; // default;
         }
 
         /**
@@ -128,10 +161,6 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
          */
         play_action(action, undoable) {
             return this.hoard.play_action(action, undoable);
-        }
-
-        needs_image() {
-            return this.cloudStore.option("needs_image");
         }
         
         /**
@@ -204,6 +233,7 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
                 try {
                     let data = JSON.parse(str);
                     self.cloudPath = data.cloud_path;
+                    self.imageURL = data.image_url;
                     self.last_sync = data.last_sync;
                     self.hoard = new Hoard({
                         debug: this.debug,
@@ -255,10 +285,20 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
          */
         getChanges(max_changes) {
             let message = [];
+            let seen = {};
             
-            for (let act of this.hoard.history)
-                message.push(TX.tx("$1 has changed", act.redo.path.join("↘")));
+            for (let act of this.hoard.history) {
+                let changed = act.redo.path.join("↘");
+                if (!seen[changed]) {
+                    message.push(changed);
+                    seen[changed] = true;
+                    if (max_changes > 0 && message.length > max_changes)
+                        break;
+                }
+            }
 
+            message = message.map((p) => TX.tx("$1 has changed", p));
+                
             // the client may have settings changes
             if (this.clientChanges > message.length)
                 message.unshift(TX.tx(
@@ -287,6 +327,7 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
             // Make a serialisable data block
             let data = {
                 cloud_path: this.cloudPath,
+                image_url: this.imageURL,
                 last_sync: this.last_sync,
                 hoard: this.hoard
             };
@@ -360,32 +401,41 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
          * @param player UI action player
          * @param actions optional list of preloaded actions read from
          * the cloud, saves reloading the cloud
+         * @param progress object, see class def for details
          * @return a Promise that resolves to the proposed new contents
          * of the cloud
          */
-        update_from_cloud(selector, player, actions) {
-            let accepted = [];
+        update_from_cloud(progress, selector, player, actions) {
+            let new_cloud = [];
             let prom = actions ? Promise.resolve(actions) : this.load_cloud();
-            return prom.then((actions) => {
-                let new_acts = [];
-                for (let act of actions) {
+            return prom.then((cloud_actions) => {
+
+                // Split the actions read from the cloud into "known" and
+                // "unknown"
+                let new_client = [];
+                for (let act of cloud_actions) {
                     if (act.time > this.last_sync)
-                        new_acts.push(act);
+                        // This is new, not reflected in the local tree
+                        new_client.push(act);
                     else
-                        accepted.push(act);
+                        // This is old, already reflected in local tree
+                        new_cloud.push(act);
                 }
-                // Push local actions into the cloud set
-                let client_has_changes = false;
-                for (let record of this.hoard.clear_history()) {
-                    client_has_changes = true;
-                    accepted.push(record.redo);
-                }
-                if (new_acts.length > 0 && client_has_changes)
-                    // Interactively select cloud changes to apply
-                    return selector(new_acts);
+
+                // Push local actions into the cloud change set *before*
+                // the changes we just pulled from the cloud. These changes
+                // are already reflected in the local tree, and are part of
+                // the context the cloud changes will be applied to.
+                for (let record of this.hoard.history)
+                    new_cloud.push(record.redo);
+
+                // Select the cloud changes to apply, interactively if
+                // the client actions list isn't initially empty
+                if (new_client.length > 0 && this.hoard.history.length > 0)
+                    return selector(new_client);
                 else
-                    return Promise.resolve(new_acts);
-            })
+                    return Promise.resolve(new_client);
+             })
             .then((selected) => {
                 this.last_sync = Date.now();
                 let promise = Promise.resolve();
@@ -405,7 +455,7 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
                                 });
                                 return Promise.resolve();
                             } else {
-                                accepted.push(act);
+                                new_cloud.push(act);
                                 return player(act);
                             }
                         }));
@@ -413,10 +463,10 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
                 return promise;
             })
             .then(() => {
-                // accepted contains the right set of actions to
+                // new_cloud contains the right set of actions to
                 // rebuild a cloud by taking the cloud actions before
                 // the sync and appending the local actions.
-                return accepted;
+                return new_cloud;
             });
         }
         

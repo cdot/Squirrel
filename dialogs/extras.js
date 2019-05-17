@@ -62,8 +62,9 @@ define("dialogs/extras", ["js/Dialog", "js/Translator", "js/Tree", "js-cookie", 
             this.control("chss")
             .on(Dialog.tapEvent(), function () {
                 Dialog.confirm("store_settings", self.options)
-                .then((path) => {
-                    self.options.cloud_path(path);
+                .then((paths) => {
+                    self.options.cloud_path(paths.cloud_path);
+                    self.options.image_url(paths.image_url);
                      $(document).trigger("update_save");
                })
                 .catch((f) => {
@@ -128,8 +129,8 @@ define("dialogs/extras", ["js/Dialog", "js/Translator", "js/Tree", "js-cookie", 
         }
 
         open() {
-            // needs_image and cloud_path options are passed straight on
-            // to store_settings
+            // needs_image, image_url and cloud_path options are passed
+            // straight on to store_settings
             this.control("theme")
             .find("option:selected")
             .prop("selected", false);

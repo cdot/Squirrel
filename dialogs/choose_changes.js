@@ -24,8 +24,9 @@ define("dialogs/choose_changes", ["js/Dialog", "js/Action"], function(Dialog, Ac
             $table.empty();
             this.control("changes").empty();
             let template = this.control("row-template").html();
+            let n = 0;
             for (let act of this.options.changes) {
-                let row = template.replace(/\$N/g, n)
+                let row = template.replace(/\$N/g, n++)
                     .replace(/\$A/g, act.verbose());
                 $table.append(row);
             }

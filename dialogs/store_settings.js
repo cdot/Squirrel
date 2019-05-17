@@ -5,32 +5,10 @@
 
 define("dialogs/store_settings", ["js/Dialog", "js/Utils", "js/jq/template"], function(Dialog, Utils) {
 
-    /**
-     * Promise to read a file object. The promise is resolved with
-     * the file contents.
-     * @param file File object to read
-     * @param mode optional read mode, one of "arraybuffer", "binarystring",
-     * "datauri" or "text". The default is "text".
-     */
-    function readFile(file) {
-        return new Promise((resolve, reject) => {
-            let reader = new FileReader();
-            reader.onload = function ( /*evt*/ ) {
-                // SMELL: use readAsDataURL?
-                let data = new Uint8Array(reader.result);
-                resolve("data:" + file.type + ";base64," +
-                        Utils.Uint8ArrayToBase64(data));
-            };
-            reader.onerror = function () {
-                reject(file.name + " read failed");
-            };
-            reader.onabort = reader.onerror;
-            reader.readAsArrayBuffer(file);
-        });
-    }
-
     class StoreSettingsDialog extends Dialog {
 
+        /*
+        // Local file support
         newImage(img) {
             let self = this;
 
@@ -53,7 +31,20 @@ define("dialogs/store_settings", ["js/Dialog", "js/Utils", "js/jq/template"], fu
             let self = this;
 
             let file = this.control("image_file")[0].files[0];
-            readFile(file)
+            new Promise((resolve, reject) => {
+                let reader = new FileReader();
+                reader.onload = function (e) {
+                    // SMELL: use readAsDataURL?
+                    let data = new Uint8Array(reader.result);
+                    resolve("data:" + file.type + ";base64," +
+                            Utils.Uint8ArrayToBase64(data));
+                };
+                reader.onerror = function () {
+                    reject(file.name + " read failed");
+                };
+                reader.onabort = reader.onerror;
+                reader.readAsArrayBuffer(file);
+            })
             .then((data) => {
                 if (data === this.control("steg_image").attr("src", data))
                     return;
@@ -71,17 +62,36 @@ define("dialogs/store_settings", ["js/Dialog", "js/Utils", "js/jq/template"], fu
                 .template("expand", e);
             });
         }
-
-        check_path() {
-            if (this.control("path").val() === "") {
-                this.control("path").prop(
+        */
+        
+        _check_paths() {
+            let ok = true;
+            
+            let $ctl = this.control("cloud_path");
+            if ($ctl.val() === "") {
+                $ctl.prop(
                     "title", this.tx("Cloud store path may not be empty"));
-                this.control("ok").hide();
-            } else {
-                this.control("path").prop(
-                    "title", this.tx("Path to your cloud store"));
-                this.control("ok").show().focus();
+                ok = false;
+            } else
+                $ctl.prop("title", this.tx("Path to your cloud store"));
+
+            if (this.options.needs_image) {
+                $ctl = this.control("image_url");
+                if ($ctl.val() === "") {
+                    $ctl.prop(
+                        "title",
+                        this.tx("Steganography image path may not be empty"));
+                    ok = false;
+                } else {
+                    $ctl.prop(
+                        "title", this.tx("Path to your steganography image"));
+                    this.control("steg_image").attr("src", $ctl.val());
+                }
             }
+                
+            this.control("ok").toggle(ok);
+            
+            return ok;
         }
 
         initialise() {
@@ -89,33 +99,43 @@ define("dialogs/store_settings", ["js/Dialog", "js/Utils", "js/jq/template"], fu
 
             this.find(".template").template();
 
-            this.control("image_file").on("change", function () {
-                self.changeImage();
+            this.control("image_url")
+            //Local file
+            //.on("change", function () {
+            //    self.changeImage();
+            //})
+            .on("input", function () {
+                self._check_paths();
             });
 
-            this.control("steg_image").attr(
-                "src", requirejs.toUrl("images/GCHQ.png"));
-
-            this.control("path")
-            .on("keyup", function () {
-                return (self.control("path").val() !== "");
+            this.control("cloud_path")
+            .on("input", function () {
+                self._check_paths();
             })
-            .on("change", function () {
-                self.check_path();
+            .on("change", function() {
+                self.control("ok").focus();
             });
         }
 
         open() {
             this.control("image_message").hide();
-            this.control("get_image").toggle(
-                this.options.needs_image ? true : false);
-            let pat = this.options.cloud_path();
-            this.control("path").val(pat).focus();
-            this.check_path();
+            if (this.options.needs_image) {
+                this.control("get_image").show();
+                this.control("image_url").val(this.options.image_url());
+                this.control("steg_image").attr(
+                    "src", this.options.image_url());
+            } else
+                this.control("get_image").hide();
+
+            this.control("cloud_path").val(this.options.cloud_path()).focus();
+            this._check_paths();
         }
 
         ok() {
-            return this.control("path").val();
+            return {
+                cloud_path: this.control("cloud_path").val(),
+                image_url: this.control("image_url").val()
+            }
         }
     }
     return StoreSettingsDialog;

@@ -29,15 +29,16 @@ define("js/HttpServerStore", ["js/Serror", "js/AbstractStore"], function(Serror,
         }
 
         /**
-         * Overridable method to set auth headers for requests
+         * Overridable method to set Basic auth headers for requests
          */
         addAuth(headers) {
             // Override auth if credentials are set
-            let user = this.option("net_user");
-            let pass = this.option("net_pass");
-            if (typeof user !== "undefined") {
-                if (this.debug) this.debug("addAuth: Using BasicAuth", user);
-                headers.Authorization = 'Basic ' + btoa(user + ':' + pass);
+            if (this.auth) {
+                if (this.debug)
+                    this.debug("addAuth: Using BasicAuth", this.auth.user);
+                // Not happy about caching this
+                headers.Authorization = 'Basic '
+                + btoa(this.auth.user + ':' + this.auth.pass);
             } else if (this.debug)
                 this.debug("addAuth: No auth header");
         }
@@ -105,7 +106,8 @@ define("js/HttpServerStore", ["js/Serror", "js/AbstractStore"], function(Serror,
                         let handler = self.option("network_login");
                         if (typeof handler === "function") {
                             handler()
-                            .then(() => {
+                            .then((login) => {
+                                self.auth = login;
                                 resolve(self.request(method, url, headers, body));
                             });
                             return;

@@ -41,7 +41,7 @@ define("js/Steganographer", ["js/Utils"], function(Utils) {
          * data-uri, or any of the types accepted by Context.drawImage.
          * @return a Uint8Array containing the image data
          */
-        getImageData(image) {
+        _getRawBytes(image) {
             if (image instanceof Uint8Array ||
                 image instanceof Uint8ClampedArray)
                 return image;
@@ -82,14 +82,16 @@ define("js/Steganographer", ["js/Utils"], function(Utils) {
 
         /**
          * Convert an image represented by an array of bytes into
-         * an array of bytes encoded in a given image format.
-         * @param bytes the raw image data
+         * an array of Base64 encoded bytes encoding the image
+         * in a given format (default image/png)
+         * @param bytes the raw image data (a Uint8Array)
          * @param width
          * @param height
          * @param type the default format type is image/png.
-         * @return a Uint8Array of encoded image data
+         * @return a Uint8Array of Base 64 encoded image data
          */
         bytesToImageFormat(bytes, width, height, type) {
+            // Unused and untested
             let canvas = document.createElement("canvas");
             canvas.style.display = "none";
             canvas.width = width;
@@ -142,12 +144,12 @@ define("js/Steganographer", ["js/Utils"], function(Utils) {
         }
 
         /**
-         * Insert some content into the given image
-         * @param a8 the content, in a Uint8Array. Size must be <= (2^32-1)
-         * @param image An Image. Uses getImageData to get the image data
-         * from a range of different types.
-         * @return {ImageData} an ImageData object containing the resulting
-         * image
+         * Insert a message into the given image
+         * @param a8 the message, in a Uint8Array. Size must be <= (2^32-1)
+         * @param image An Image, HTMLImageElement, Uint8*Array or String
+         * data-uri, or any of the types accepted by Context.drawImage.
+         * @return a Uint8Array containing the resulting raw image data with
+         * the embedded message
          * @throws Error if the image doesn't have enough capacity for
          * all the data given the current parameters.
          */
@@ -157,7 +159,7 @@ define("js/Steganographer", ["js/Utils"], function(Utils) {
                 "Embedding " + a8.length + " bytes ("
                     + (a8.length * 8) + " bits)");
 
-            let iData = this.getImageData(image);
+            let iData = this._getRawBytes(image);
 
             // Irrespective of the source of the image, by the time we
             // get here the imageData.data consists of width*height
@@ -258,13 +260,13 @@ define("js/Steganographer", ["js/Utils"], function(Utils) {
 
         /**
          * Extract the content hidden in the given image
-         * @param image An Image. Uses getImageData to get the image data
-         * from a range of different types.
+         * @param image An Image, HTMLImageElement, Uint8*Array or String
+         * data-uri, or any of the types accepted by Context.drawImage.
          * @return a Uint8Array containing the content
          * @throws Error if the image doesn't seem to have anything embedded
          */
         extract(image) {
-            let iData = this.getImageData(image);
+            let iData = this._getRawBytes(image);
 
             // Extract data length and chunkSize
             // chunkSize = 4, prime = 17

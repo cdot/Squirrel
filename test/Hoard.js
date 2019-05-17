@@ -464,7 +464,7 @@ requirejs(["js/Hoard", "js/Action", "test/TestRunner"], function(Hoard, Action, 
             assert.deepEqual(h.history[0].redo, act);
             assert.equal(h.history[0].undo.type, "I");
             assert(h.history[0].undo.data);
-            assert.deepEqual(h.history[0].undo.path, ["FineDining"]);
+            assert.deepEqual(h.history[0].undo.path, ["FineDining", "Truffles"]);
             assert.equal(h.history[0].undo.time, Date.UTC(2003,0,1));
             return h.undo();
         })

@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2015 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser */
 
-define("js/StegaStore", ["js/LayeredStore", "js/Steganographer"], function(LayeredStore, Steganographer) {
+define("js/StegaStore", ["js/LayeredStore", "js/Serror", "js/Steganographer"], function(LayeredStore, Serror, Steganographer) {
 
     /**
      * Store engine for data embedded in the alpha channel of an image. Uses

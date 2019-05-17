@@ -112,6 +112,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
             
             if (saveCloud) {
                 promise = self.hoarder.update_from_cloud(
+                    progress,
                     (actions) => { // selector
                         return Dialog.confirm("choose_changes", {
                             changes: actions
@@ -293,6 +294,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
          * @private
          * 401 network login handler. Normally a 401 will be handled by
          * the browser. This is a "just in case".
+         * @param domain what we are logging in to (cloud or client)
          */
         _network_login(domain) {
             let self = this;
@@ -300,15 +302,9 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
             if (self.debug) self.debug(domain, "network login");
 
             return Dialog.confirm("login", {
-                title: TX.tx("Network login for $1", TX.tx(domain)),
+                title: TX.tx("Network login for $1", domain),
                 // Copy default user from the stores if there
-                user: self.cloud_store.option("user")
-                || self.client_store.option("user")
-            }).then((info) => {
-                if (self.debug)
-                    self.debug("Login prompt said user was " + info.user);
-                self[domain].store.option("net_user", info.user);
-                self[domain].store.option("net_pass", info.pass);
+                user: this.hoarder.probableUser()
             });
         }
 
@@ -330,7 +326,10 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                     ["js/" + self.options.store],
                     function(module) {
                         store = new module({
-                            debug: self.debug
+                            debug: self.debug,
+                            network_login: () => {
+                                return self._network_login(TX.tx("cloud"));
+                            }
                         });
                         res(store);
                     },
@@ -381,12 +380,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                         });
                     }
                 }
-                return store.init({
-                    network_login: () => {
-                        // TX.tx("cloud")
-                        return self._network_login("cloud");
-                    }
-                })
+                return store.init()
             })
             .then(() => {
                 self.hoarder.cloud_store(store);
@@ -433,12 +427,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
             // initial user information, either from a network login
             // or from a service login. Seed the login dialog with one
             // of them.
-            return self.hoarder.client_store().init({
-                network_login: () => {
-                    // TX.tx("client")
-                    return self._network_login("client");
-                }
-            })
+            return self.hoarder.client_store().init()
             .then(() => {
                 // Need to confirm user/pass, which may have been
                 // seeded from the store initialisation process
@@ -475,6 +464,13 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                     alert: lerts});
             })
             .then(() => {
+                // Add steganography image, if required
+                if (self.hoarder.needs_image()) {
+                    let $img = $("<img id='stegamage' src='"
+                                 + self.hoarder.image_url() + "'>");
+                    $img.hide();
+                    $("body").append($img);
+                }
                 // Load the tree into the UI by replaying actions
                 let promise = Promise.resolve();
                 for (let act of self.hoarder.hoard.actions_to_recreate()) {
@@ -492,8 +488,6 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
          * @private
          * Called when we have a (possibly empty) client hoard.
          * Try and synch it from the cloud.
-         * Resolve to true if the cloud hoard is ready to be merged from,
-         * false otherwise.
          */
         _4_load_cloud() {
             let self = this;
@@ -511,22 +505,23 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
             if (typeof clop === "string" && clop !== "")
                 p = Promise.resolve();
             else {
-                // Use the settings dlg to initialise the cloud store path
-                let needs_image =
-                    this.cloud_store &&
-                    this.cloud_store.option("needs_image");
-
+                // Use the store_settings dlg to initialise the cloud store
+                // path and optional steganography image
                 p = Dialog.confirm("store_settings", {
-                    needs_image: self.hoarder.needs_image(),
-                    cloud_path: function(path) {
+                    cloud_path: (path) => {
                         path = self.hoarder.cloud_path(path);
-                        $(document).trigger("update_save");
+                        return path;
+                    },
+                    needs_image: self.hoarder.needs_image(),
+                    image_url: (path) => {
+                        path = self.hoarder.image_url(path);
+                        $("#stegamage").attr("src", path);
                         return path;
                     }
                 })
-                .then((path) => {
-                    self.hoarder.cloud_path(path);
-                    // TODO: what about the image?
+                .then((paths) => {
+                    self.hoarder.cloud_path(paths.cloud_path);
+                    self.hoarder.image_url(paths.image_url);
                     $(document).trigger("update_save");
                 });
             }
@@ -535,9 +530,11 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                 return self.hoarder.load_cloud();
             })
             .then((actions) => {
-
+                let conflicts = [];
+                
                 // Merge updates from cloud hoard to client
                 return self.hoarder.update_from_cloud(
+                    conflicts,
                     (actions) => { // selector
                         return Dialog.confirm("choose_changes", {
                             changes: actions
@@ -546,7 +543,17 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                     (act) => { // player
                         return self.$DOMtree.tree("action", act);
                     },
-                    actions);
+                    actions)
+
+                // Resolves to list of actions required to update
+                // the cloud, which we can't use at this point.
+                .then((actions) => {
+                    if (conflicts.length > 0)
+                        return Dialog.confirm("alert", {
+                            title: TX.tx("Conflicts"),
+                            alert: conflicts
+                        });
+                });
             })
             .catch((e) => {
                 if (self.debug) self.debug(e);
@@ -578,12 +585,6 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                 return Dialog.confirm("alert", {
                     title: TX.tx("Cloud store read failed"),
                     alert: mess
-                })
-                .then(() => {
-                    return self.hoarder.construct_new_cloud()
-                    .then(() => {
-                        return Promise.resolve(false);
-                    });
                 });
             });
         }
@@ -691,17 +692,22 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                 .on(Dialog.tapEvent(), function ( /*evt*/ ) {
                     Dialog.confirm("extras", {
                         needs_image: self.hoarder.needs_image(),
-                        cloud_path: function(path) {
+                        image_url: (path) => {
+                            path = self.hoarder.image_url(path);
+                            $(document).trigger("update_save");
+                            return path;
+                        },
+                        cloud_path: (path) => {
                             path = self.hoarder.cloud_path(path);
                             $(document).trigger("update_save");
                             return path;
                         },
-                        encryption_pass: function(pass) {
+                        encryption_pass: (pass) => {
                             pass = self.hoarder.encryption_pass(pass);
                             $(document).trigger("update_save");
                             return pass;
                         },
-                        tree_json: function(json) {
+                        tree_json: (json) => {
                             json = self.hoarder.JSON();
                             $(document).trigger("update_save");
                             return json;

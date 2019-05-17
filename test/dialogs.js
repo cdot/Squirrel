@@ -48,12 +48,6 @@ define(["js/Dialog", "js/Translator", "js/LocalStorageStore", "js/Action", "js/H
         playAction: function() {
             debug("playAction", arguments);
             return Promise.resolve();
-        },
-        get_store_settings: function() {
-            return Dialog.confirm("store_settings", {
-                needs_image: true,
-                path: "/path/to/cloud"
-            })
         }
     };
 
@@ -267,6 +261,11 @@ define(["js/Dialog", "js/Translator", "js/LocalStorageStore", "js/Action", "js/H
         store_settings_image: function() {
             return Dialog.confirm("store_settings", {
                 needs_image: true,
+                image_url: function(path) {
+                    if (typeof path !== "undefined")
+                        lert("Steg image", path);
+                    return requirejs.toUrl("images/GCHQ.png")
+                },
                 cloud_path: function(path) {
                     if (typeof path !== "undefined")
                         lert("Cloud path", path);
@@ -279,7 +278,6 @@ define(["js/Dialog", "js/Translator", "js/LocalStorageStore", "js/Action", "js/H
         },
         store_settings_noimage: function() {
             return Dialog.confirm("store_settings", {
-                needs_image: false,
                 cloud_path: function(path) {
                     if (typeof path !== "undefined")
                         lert("Cloud path", path);

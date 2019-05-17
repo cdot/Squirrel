@@ -22,10 +22,10 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/En
                                                user: "Stratus",
                                                pass: "Alto"}));
         h.cloud_path("CLOUD");
-        assert.equal(h.changes, 1);
+        assert(h.cloudHasChanges());
+        assert(h.clientHasChanges());
         assert.equal(h.user(), "Stratus");
         assert.equal(h.encryption_pass(), "Alto");
-        assert.equal(h.changes, 1);
     });
 
     const full_tree_actions = [

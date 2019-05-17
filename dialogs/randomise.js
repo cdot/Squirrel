@@ -146,7 +146,8 @@ define("dialogs/randomise", ["js/Dialog", "js-cookie"], function(Dialog, Cookies
             if (typeof glob_cons !== "undefined") {
                 try {
                     this.defaults = JSON.parse(glob_cons);
-                } catch {
+                } catch (e) {
+                    if (this.debug) this.debug(e);
                 }
             }
             this.revert = $.extend(

@@ -236,12 +236,16 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
         .then((code) => {
             code.push("requirejs(['" + root + "']);");
             let codes = code.join("\n");
+            let cod = uglify.minify(codes, {
+                        ie8: true
+            });
+            if (cod.error) {
+                console.error("Error:", cod.error);
+                return fs.writeFile("dist/" + root + ".bad_js", codes);
+            }
             return Promise.all([
                 locales.js(codes),
-                fs.writeFile("dist/" + root + ".js",
-                    uglify.minify(codes, {
-                        ie8: true
-                    }).code)
+                fs.writeFile("dist/" + root + ".js", cod.code)
             ]);
         });
     }
