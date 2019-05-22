@@ -182,8 +182,6 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                 if ((!saveCloud || cloud_saved)
                     && (!saveClient || client_saved)) {
                     self.hoarder.hoard.clear_history();
-                    self.clientChanges = 0;
-                    self.cloudChanges = 0;
                     // otherwise if cloud or client save failed, we have to
                     // try again
                     $(".tree-modified")
@@ -194,16 +192,6 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
         }
         
         /**
-         * Public because it is used by the optimise dialog.
-         * Promise to construct a new cloud hoard from data in the
-         * client.
-         * @return a promise that resolves to true if the construction succeeded
-         */
-        construct_new_cloud(progress) {
-            return this.hoarder.construct_new_cloud(progress);
-        }
-
-        /**
          * @private
          * Event handler for "update_save" event
          */
@@ -212,7 +200,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
             $("#undo_button").toggle(self.hoarder.hoard.can_undo());
             let $sb = $("#save_button");
             let autosave = (Cookies.get("ui_autosave") === "on");
-            let us = self.hoarder.getChanges(10);
+            let us = self.hoarder.get_changes(10);
 
             if (us.length === 0)
                 $sb.hide(); // nothing to save
@@ -222,7 +210,8 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
             } else {
                 $sb.attr(
                     "title",
-                    TX.tx("Save is required because") + ":\n" + us.join("\n"));
+                    TX.tx("These changes need to be saved:\n$1",
+                          us.join("\n")));
                 $sb.show();
             }
         }
@@ -531,7 +520,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
             })
             .then((actions) => {
                 let conflicts = [];
-                
+
                 // Merge updates from cloud hoard to client
                 return self.hoarder.update_from_cloud(
                     conflicts,
@@ -711,6 +700,27 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                             json = self.hoarder.JSON();
                             $(document).trigger("update_save");
                             return json;
+                        },
+                        analyse: () => {
+                            let counts = {
+                                cloud: self.hoarder.cloudLength,
+                                N: 0,
+                                A: 0,
+                                X: 0
+                            };
+                            let acts = self.hoarder.hoard.actions_to_recreate();
+                            for (let act of acts)
+                                counts[act.type]++;
+                            return counts;
+                        },
+                        optimise: () => {
+                            let acts = self.hoarder.hoard.actions_to_recreate();
+                            return Dialog.open("alert", {
+                                title: "Saving",
+                                alert: ""
+                            }).then((progress) => {
+                                return self.hoarder.save_cloud(acts, progress)
+                            });
                         }
                     })
                     .then((res) => {
@@ -782,7 +792,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                 .then(() => {
                     $(window)
                     .on("beforeunload", function () {
-                        let us = self.hoarder.getChanges(10);
+                        let us = self.hoarder.get_changes(10);
                         if (us.length > 0) {
                             us = TX.tx("You have unsaved changes") +
                             "\n" + us.join("\n") +
@@ -962,7 +972,10 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                 if (self.debug && e.conflict)
                     self.debug("interactive", action,
                                "had conflict", e.conflict);
-                self.$DOMtree.tree("action", e.action);
+                self.$DOMtree.tree("action", e.action)
+                .then(() => {
+                    $(document).trigger("update_save");
+                });
             })
             .catch((e) => {
                 return Dialog.confirm("alert", {

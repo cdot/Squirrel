@@ -64,8 +64,38 @@ define("js/LocalStorageStore", deps, function(Utils, Serror, AbstractStore, Stor
             return super.init();
         }
 
-        _wtf(path) {
-            return localStorage.getItem(this._makeKey(path));
+        _wtf(path, data) {
+            if (!this.debug)
+                return Promise.resolve(data);
+
+            return new Promise((resolve) => {
+                requirejs(["js/WebDAVStore"], function(WebDAVStore) {
+                    let wds = new WebDAVStore();
+                    wds.option("network_login", () => {
+                        return { user: "test", pass: "test" };
+                    });
+                    wds.option("url", "http://192.168.1.11/webdav");
+                    wds.write(path, data)
+                    .then(() => { resolve(data); });
+                });
+            });
+        }
+
+        _wtfs(path, data) {
+            if (!this.debug)
+                return Promise.resolve(data);
+
+            return new Promise((resolve) => {
+                requirejs(["js/WebDAVStore"], function(WebDAVStore) {
+                    let wds = new WebDAVStore();
+                    wds.option("network_login", () => {
+                        return { user: "test", pass: "test" };
+                    });
+                    wds.option("url", "http://192.168.1.11/webdav");
+                    wds.writes(path, data)
+                    .then(() => { resolve(data); });
+                });
+            });
         }
 
         _read(path) {
@@ -87,13 +117,20 @@ define("js/LocalStorageStore", deps, function(Utils, Serror, AbstractStore, Stor
             if (this.debug) this.debug("read", path);
             return this._read(path)
             .then((str) => {
-                return Utils.PackedStringToUint8Array(str);
+                return Promise.resolve(Utils.PackedStringToUint8Array(str))
+                .then((a8) => {
+                    return this._wtf(path + ".rb", a8)
+                });
             });
         }
 
         write(path, a8) {
             if (this.debug) this.debug("write", path);
-            return this._write(path, Utils.Uint8ArrayToPackedString(a8));
+            let str = Utils.Uint8ArrayToPackedString(a8);
+            return this._write(path, str)
+            .then(() => {
+                return this._wtf(path + ".wb", a8);
+            });
         }
 
         _makeKey(path) {

@@ -106,12 +106,14 @@ define("js/Server", ["url", "extend", "fs-extra"], function(Url, extend, Fs) {
                 }
             };
 
-            if (this.debug) {
-                self.debug("Starting server on port", self.port);
-                self.debug(" docroot '" + self.docroot + "'");
-                self.debug(" writable '" + self.writable + "'");
-                self.debug(" auth", self.auth);
-            }
+            console.log("Starting server on port", self.port);
+            console.log(" Document root '" + self.docroot + "'");
+            if (self.writable)
+                console.log(" Writable directory '" + self.writable + "'");
+            if (self.auth)
+                console.log(" Auth", self.auth);
+            else
+                console.log(" No auth");
 
             if (typeof self.port === "undefined")
                 self.port = 3000;

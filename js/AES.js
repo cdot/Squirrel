@@ -59,7 +59,8 @@ define("js/AES", ["libs/aes"], function(Aes) {
             let nonceMs = nonce % 1000;
             let nonceSec = (nonce / 1000) >> 0;
             let nonceRnd = (Math.random() * 0xffff) >> 0;
-            // for debugging: nonce = nonceMs = nonceSec = nonceRnd = 0;
+            // for debugging:
+            nonce = nonceMs = nonceSec = nonceRnd = 0;
 
             for (i = 0; i < 2; i++)
                 counterBlock[i] = (nonceMs >>> i * 8) & 0xff;

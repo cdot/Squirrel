@@ -25,13 +25,15 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
             // store interfaces
             this.clientStore = null;
             this.cloudStore = null;
+            // Number of actions last read from cloud
+            this.cloudLength = 0;
             // When was the last sync?
             this.last_sync = 0;
             // The client Hoard
             this.hoard = null;
             // Record of non-action changes, such as paths and settings
-            this.clientChanges = 0;
-            this.cloudChanges = 0;
+            this.clientChanges = [];
+            this.cloudChanged = false;
             // Flag that indicates if the hoard was just created
             this.clientIsEmpty;
             
@@ -80,9 +82,8 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
             if (typeof path !== "undefined" && path !== this.cloudPath) {
                 if (this.debug) this.debug("Set cloud path", path);
                 this.cloudPath = path;
-                if (!this.clientIsEmpty)
-                    this.cloudChanges++;
-                this.clientChanges++; // path is saved in the client
+                this.cloudChanged = !this.clientIsEmpty;
+                this.clientChanges.push(TX.tx("Cloud path changed"));
             }
             return this.cloudPath;
         }
@@ -102,9 +103,8 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
             if (typeof path !== "undefined" && path !== this.imageURL) {
                 if (this.debug) this.debug("Set image url", path);
                 this.imageURL = path;
-                if (!this.clientIsEmpty)
-                    this.cloudChanges++;
-                this.clientChanges++; // path is saved in the client
+                this.cloudChanged = !this.clientIsEmpty;
+                this.clientChanges.push(TX.tx("Image URL changed"));
             }
             return this.imageURL || 'images/GCHQ.png'; // default;
         }
@@ -115,9 +115,9 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
         encryption_pass(pass) {
             if (typeof pass !== "undefined") {
                 this.clientStore.option("pass", pass);
-                this.clientChanges++;
+                this.clientChanges.push(TX.tx("New encryption details"));
                 this.cloudStore.option("pass", pass);
-                this.cloudChanges++;
+                this.cloudChanged = true;
             }
             return this.clientStore.option("pass");
         }
@@ -130,8 +130,8 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
                 let parsed = JSON.parse(json);
                 this.hoard.clear_history();
                 this.hoard.tree = parsed;
-                this.clientChanges++;
-                this.cloudChanges++;
+                this.clientChanges.push(TX.tx("Bulk content change"));
+                this.cloudChanged = truel
             }
             return JSON.stringify(this.hoard.tree, null, " ");
         }
@@ -146,10 +146,12 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
         check_alarms(handler) {
             return this.hoard.check_alarms(handler)
             .then((changes) => {
-                this.cloudChanges += changes;
-                this.clientChanges += changes;
-                if (changes > 0)
+                if (changes > 0) {
+                    this.clientChanges.push(
+                        TX.tx("$1 alarm change$?($1=1,,s)", changes));
+                    this.cloudChanged = true;
                     this.clientIsEmpty = false;
+                }
             });
         }
 
@@ -262,7 +264,7 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
         cloudHasChanges() {
             // No need to save the cloud unless there are actions in
             // the local history
-            return this.cloudChanges > 0 || this.hoard.history.length > 0;
+            return this.cloudChanged || this.hoard.history.length > 0;
         }
         
         /**
@@ -272,48 +274,30 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
         clientHasChanges() {
             // No need to save the client unless there are actions in
             // the local history
-            return this.clientChanges > 0 || this.hoard.history.length > 0;
+            return this.clientChanges.length > 0 || this.hoard.history.length > 0;
         }
 
         /**
-         * Get a list of changes reflected in the client history. Note that
-         * we only need one of these, because the same data is saved in
-         * the cloud as in the client, but the client has more because it
-         * also carries settings (such as the cloud path)
+         * Get a list of changes reflected in the client history.
          * @param max_changes the maximum number of changes to reflect
          * in the list 
          */
-        getChanges(max_changes) {
-            let message = [];
-            let seen = {};
-            
-            for (let act of this.hoard.history) {
-                let changed = act.redo.path.join("↘");
-                if (!seen[changed]) {
-                    message.push(changed);
-                    seen[changed] = true;
-                    if (max_changes > 0 && message.length > max_changes)
-                        break;
-                }
-            }
-
-            message = message.map((p) => TX.tx("$1 has changed", p));
+        get_changes(max_changes) {
+            let messages = this.hoard.get_changes(max_changes);
                 
             // the client may have settings changes
-            if (this.clientChanges > message.length)
-                message.unshift(TX.tx(
-                    "The browser has $1 change$?($1!=1,s,) to settings",
-                    this.clientChanges - message.length));
+            if (this.clientChanges.length > 0)
+                messages = messages.concat(this.clientChanges);
 
             // Cap the return length at max_changes
-            if (max_changes > 0 && message.length > max_changes) {
-                let l = message.length;
-                message = message.slice(0, max_changes);
-                message.push(TX.tx("... and $1 more change$?($1!=1,s,)",
+            if (max_changes > 0 && messages.length > max_changes) {
+                let l = messages.length;
+                messages = messages.slice(0, max_changes);
+                messages.push(TX.tx("... and $1 more change$?($1!=1,s,)",
                                    l - max_changes));
             }
 
-            return message;
+            return messages;
         }
         
         /**
@@ -384,6 +368,7 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
                         return Promise.reject(
                             new Serror(400, "Cloud store could not be parsed"));
                     }
+                    this.cloudLength = actions.length;
                 }
                 else if (this.debug) this.debug("...cloud is empty");
                 return Promise.resolve(actions.map((act) => new Action(act)));
@@ -484,12 +469,12 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
                 JSON.stringify(actions))
             .then(() => {
                 if (self.debug) self.debug("...cloud save OK");
-
+                self.cloudLength = actions.length;
                 if (progress) progress.push({
                     severity: "notice",
                     message: TX.tx("Saved in cloud")
                 });
-                self.cloudChanges = 0;
+                self.cloudChanged = false;
                 return Promise.resolve(true);
             })
             .catch((e) => {
@@ -597,20 +582,6 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
                 return Promise.reject(e);
             });
         }
-
-        /**
-         * Construct a new cloud from the tree in the client
-         * @param progress object, see class def for details
-         * @return a Promise
-         */
-        construct_new_cloud(progress) {
-            // Cloud has no actions; reconstruct the cloud from
-            // the client tree
-            if (self.debug) self.debug("...reconstructing cloud");
-            let actions = self.hoard.actions_to_recreate();
-            return this.save_cloud(actions, progress);
-        }
-        
     }
 
     return Hoarder;

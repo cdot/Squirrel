@@ -21,7 +21,8 @@ define("js/AbstractStore", ["js/Utils", "js/Serror"], function(Utils, Serror) {
          * Subclasses are expected to define 'type'
          */
         constructor(options) {
-            this.options = { type: "AbstractStore" };
+            this.type = "AbstractStore";
+            this.options = {};
             if (options)
                 for (let k in options)
                     if (options.hasOwnProperty(k))

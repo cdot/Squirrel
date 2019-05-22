@@ -305,6 +305,15 @@ define("js/Dialog", ["js/Translator", "js/Serror", "jquery", "jquery-ui", "js/jq
 
         /**
          * Service for subclasses.
+         * Get the double-tap event
+         */
+        static doubleTapEvent() {
+            return $.isTouchCapable && $.isTouchCapable() ?
+            "doubletap" : "dblclick"
+        }
+
+        /**
+         * Service for subclasses.
          * Close the dialog
          */
         close() {

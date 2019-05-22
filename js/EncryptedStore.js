@@ -5,7 +5,7 @@ define("js/EncryptedStore", ["js/Serror", "js/LayeredStore", "js/Utils", "js/AES
 
     const SIGNATURE = 0x53;
     const VERSION = 1;
-
+   
     /**
      * Store engine for encrypted data. Uses 256-bit AES and an
      * underlying engine to actually store the encrypted data. The
@@ -14,12 +14,6 @@ define("js/EncryptedStore", ["js/Serror", "js/LayeredStore", "js/Utils", "js/AES
      * The option "needs_pass" is set by the store to indicate that
      * this store requires option("pass") to be set to an encryption
      * password.
-     *
-     * The option "format" can be set to a sepcific store format
-     * version number. At the moment there are two versions; Version 1
-     * stores strings as Uint16 character codes, and has no content
-     * verification. Version 2 stores them as UTF-8 encoded and adds
-     * a check byte to check decryption.
      *
      * @param params: Standard for LayeredStore
      * @implements LayeredStore
@@ -77,15 +71,19 @@ define("js/EncryptedStore", ["js/Serror", "js/LayeredStore", "js/Utils", "js/AES
         write(path, a8) {
             if (this.debug) this.debug("write", path);
             // Add signature and checksum
-            let a = new Uint8Array(a8.length + 4);
-            let cs = a.length % 255;
-            a[0] = SIGNATURE;
-            a[1] = VERSION;
-            a[2] = (cs & 0xFF00) >> 8;
-            a[3] = (cs & 0xFF);
-            a.set(a8, 4);
-            // And write
-            return super.write(path, AES.encrypt(a, this.option("pass"), 256));
+            let signed = new Uint8Array(a8.length + 4);
+            let cs = signed.length % 255;
+            signed[0] = SIGNATURE;
+            signed[1] = VERSION;
+            signed[2] = (cs & 0xFF00) >> 8;
+            signed[3] = (cs & 0xFF);
+            signed.set(a8, 4);
+            
+            let encrypted = AES.encrypt(signed, this.option("pass"), 256);
+
+            // Encoding check. If this lot passes but the read still fails,
+            // there's something wrong on the read side.
+            return super.write(path, encrypted);
         }
     }
 

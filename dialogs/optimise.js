@@ -14,13 +14,9 @@ define("dialogs/optimise", ["dialogs/alert", "js/jq/template"], function(AlertDi
         }
 
         ok() {
-            let app = this.options.app;
-            // Local actions will now be fully reflected in the cloud,
-            // so we can clear them
-            app.client.hoard.clear_history();
-            return app.construct_new_cloud(this);
+            return this.options.optimise();
         }
-
+        
         open() {
             super.open();
 
@@ -29,33 +25,18 @@ define("dialogs/optimise", ["dialogs/alert", "js/jq/template"], function(AlertDi
             .show()
             .toggle("pulsate", 101);
 
-            let app = this.options.app;
-
-            this.control("existing")
-            .template(
-                "expand",
-                app.cloud.hoard.history.length);
-            let hoard = app.client.hoard;
-            let counts = {
-                "N": 0,
-                "A": 0,
-                "X": 0
-            };
-
-            let acts = hoard.actions_to_recreate();
-            for (let act of acts) {
-                counts[act.type]++;
-            }
+            let analysis = this.options.analyse();
+            
+            this.control("existing").template("expand", analysis.cloud);
 
             this.control("calculating").hide();
             this.control("study")
             .template(
                 "expand",
-                counts.N, counts.A, counts.X,
-                counts.N + counts.A + counts.X)
+                analysis.N, analysis.A, analysis.X,
+                analysis.N + analysis.A + analysis.X)
             .show();
-            if (counts.N + counts.A + counts.X >=
-                app.cloud.hoard.history.length)
+            if (analysis.N + analysis.A + analysis.X >= analysis.cloud)
                 this.push(this.tx("Optimisation will not improve performance"));
         }
     }

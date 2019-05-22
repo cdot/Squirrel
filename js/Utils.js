@@ -39,40 +39,69 @@ define("js/Utils", ["libs/utf8"], function() {
         }
 
         /**
-         * Pack arbitrary binary byte data into a String as efficiently
-         * as possible. We limit ourselves to using only 16 bits per character
-         * location, so that strings created this way can be further manipulated.
+         * Pack arbitrary 16-bit data into a String.
+         * @param data arbitrary 16-bit data to be packed
+         * @return a String containing the data
+         */
+        static Uint16ArrayToPackedString(a16) {
+            let ps = "";
+            for (let cp of a16) {
+                // Avoid getting into trouble on Firefox by avoiding
+                // codepoints which are reserved as surrogates in UTF16
+                //console.log("Pack",cp);
+                if (cp >= 0xD7FF && cp <= 0xDFFF) {
+                    ps += String.fromCodePoint(0xD7FF);
+                    ps += String.fromCodePoint(cp - 0xD7FF);
+                } else
+                    ps += String.fromCodePoint(cp);
+            }
+            return ps;
+        }
+        
+        /**
+         * Unpack arbitrary 16-bit data into a String.
+         * @param data arbitrary 16-bit data to be packed
+         * @return a String containing the data
+         */
+        static PackedStringToUint16Array(s) {
+            let a16 = [];
+            for (let i = 0; i < s.length; i++) {
+                let cp = s.codePointAt(i);
+                if (cp === 0xD7FF) {
+                    cp = 0xD7FF + s.codePointAt(++i);
+                }
+                //console.log("UnPack",cp);
+                a16.push(cp);
+            }
+            return Uint16Array.from(a16);
+        }
+        
+        /**
+         * Pack arbitrary binary byte data into a String.
          * @param data arbitrary byte data to be packed
-         * @return a String of 16-bit code points containing the packed data
+         * @return a String containing the data
          */
         static Uint8ArrayToPackedString(a8) {
-            // Pack 8-bit data into strings using the high and low bytes for
-            // successive data. The usb of the first character is reserved
-            // for a flag that indicates if the least significant byte of
-            // the last character is part of the string or not.
+            // Pack bytes into a 16-bit array. The usb of the first
+            // character is reserved for a flag that indicates if the
+            // lsb of the last character is part of the array or not.
             let cc = ((a8.length & 1) !== 0) ? 0x100 : 0;
-            // a8.length == 0, string length = 1, usb = 0
-            // a8.length == 1, string length = 1, usb = 1
-            // a8.length == 2, string length = 2, usb = 0
-            // a8.length == 3, string length = 2, usb = 1
-            // a8.length == 4, string length = 3, usb = 0 etc.
-            let high = true; // have we just packed the high byte?
+            let low = true; // have we just packed the high byte?
             let ps = "";
-            let a8_len = a8.length;
-            for (let i = 0; i < a8_len; i++) {
-                if (high) {
-                    ps += String.fromCharCode(cc | a8[i]);
-                    high = false;
+            let a16 = [];
+            let j = 0;
+            for (let c of a8) {
+                if (low) {
+                    a16.push(cc | c);
+                    low = false;
                 } else {
-                    cc = a8[i] << 8;
-                    high = true;
+                    cc = c << 8;
+                    low = true;
                 }
             }
-            // Strings are 16-bit data, so the LSB of the last character may have to
-            // be left as 0
-            if (high)
-                ps += String.fromCharCode(cc);
-            return ps;
+            if (low)
+                a16.push(cc);
+            return Utils.Uint16ArrayToPackedString(a16);
         }
 
         /**
@@ -80,23 +109,22 @@ define("js/Utils", ["libs/utf8"], function() {
          * into a Uint8Array containing the unpacked array.
          */
         static PackedStringToUint8Array(str) {
-            let datalen = 2 * str.length - 1;
-            if ((str.charCodeAt(0) & 0x100) === 0)
+            let a16 = Utils.PackedStringToUint16Array(str);
+            let datalen = 2 * a16.length - 1;
+            if ((a16[0] & 0x100) === 0)
                 datalen--;
-            let high = true;
-            let a8 = new Uint8Array(datalen);
-            let i = 0;
-            let j = 0;
-            while (j < datalen) {
+            let a8 = [];
+            let high = false;
+            for (let i = 0, j = 0; i < datalen; i++) {
                 if (high) {
-                    a8[j++] |= str.charCodeAt(i++) & 0xFF;
+                    a8.push((a16[j] >> 8) & 0xFF);
                     high = false;
                 } else {
-                    a8[j++] = (str.charCodeAt(i) >> 8) & 0xFF;
+                    a8.push(a16[j++] & 0xFF);
                     high = true;
                 }
             }
-            return a8;
+            return Uint8Array.from(a8);
         }
 
         /**

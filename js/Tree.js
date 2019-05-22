@@ -582,8 +582,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
             .appendTo($info)
             .addClass("tree-key")
             .text($node.data("key"))
-            .on($.isTouchCapable && $.isTouchCapable() ?
-                "doubletap" : "dblclick",
+            .on(Dialog.doubleTapEvent(),
                 function (e) {
                     if (this.debug) this.debug("Double-click 1");
                     e.preventDefault();
@@ -599,8 +598,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
                 .appendTo($info)
                 .addClass("tree-value")
                 .text(this._displayedValue())
-                .on($.isTouchCapable && $.isTouchCapable() ?
-                    "doubletap" : "dblclick",
+                .on(Dialog.doubleTapEvent(),
                     function (e) {
                         if (this.debug) this.debug("Double-click 2");
                         e.preventDefault();

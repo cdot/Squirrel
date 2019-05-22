@@ -25,7 +25,7 @@ requirejs(["js/Utils", "test/TestRunner"], function(Utils, TestRunner) {
 
     tr.addTest("Bad encoding", () => {
         let ab = new Uint8Array(512);
-        for (let i = 0; i < 512; i++)
+        for (let i = 0; i < ab.length; i++)
             ab[i] = i;
         try {
             Utils.Uint8ArrayToString(ab);
@@ -35,18 +35,38 @@ requirejs(["js/Utils", "test/TestRunner"], function(Utils, TestRunner) {
         }
     });
 
-    tr.addTest("Uint8ArrayToPackedString 8 bit", () => {
-        let ab = new Uint8Array(258);
+    tr.addTest("Uint16ArrayToPackedString and back", () => {
+        let ab = new Uint8Array(65536);
+        let i;
+        for (i = 0; i < ab.length; i++)
+            ab[i] = i;
+        let ps = Utils.Uint16ArrayToPackedString(ab);
+        let ba = Utils.PackedStringToUint16Array(ps);
+        assert.equal(ba.length, ab.length);
+        for (i = 0; i < ab.length; i++)
+            assert.equal(ba[i], ab[i]);
+    });
+    
+    tr.addTest("Uint8ArrayToPackedString 8 bit and back", () => {
+        let ab = new Uint8Array(513);
         let i = 0;
-        // High surrogate code point
+        ab[i++] = 0xFF; // msb of first 16-bit word is used for flag
+        // High surrogate code points to try and force an error
         ab[i++] = 0xD8;
         ab[i++] = 0x00;
-        while (i < 256)
-            ab[i++] = i - 2;
+        ab[i++] = 0xDB;
+        ab[i++] = 0x54;
+        ab[i++] = 0x80;
+        ab[i++] = 0x00;
+        while (i < ab.length)
+            ab[i++] = i;
         let ps = Utils.Uint8ArrayToPackedString(ab);
-        assert.equal(ps.length, 130);
-        let ba = new Uint8Array(Utils.PackedStringToUint8Array(ps));
-        assert.deepEqual(ba, ab);
+        assert.equal(ps.codePointAt(0), 0x1ff);
+        
+        let ba = Utils.PackedStringToUint8Array(ps);
+        assert.equal(ba.length, ab.length);
+        for (i = 0; i < ab.length; i++)
+            assert.equal(ba[i], ab[i], "at " + i + " " + ba[i] + "!= " + ab[i]);
     });
 
     tr.addTest("Uint8ArrayToBase64", () => {

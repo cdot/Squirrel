@@ -53,10 +53,13 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
                 this.tree = options.hoard.tree;
                 if (options.hoard.actions)
                     this.history = options.hoard.actions.map((a) => {
-                        return { redo: a };
+                        return { redo: new Action(a) };
                     });
                 else
-                    this.history = options.hoard.history;
+                    this.history = options.hoard.history.map((a) => {
+                        return { redo: new Action(a.redo),
+                                 undo: new Action(a.undo) };
+                    });;
             }
             else {
                 if (options.tree)
@@ -138,7 +141,8 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
             act.type = type;
             act.path = path.slice();
             act.time = time || Date.now();
-            this.history.push({ redo: new Action(redo), undo: act });
+            this.history.push({ redo: new Action(redo),
+                                undo: new Action(act) });
         }
         
         /**
@@ -217,6 +221,7 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
          * }
          */
         play_action(action, undoable) {
+            action = new Action(action);
             if (typeof undoable === "undefined")
                 undoable = true;
             if (!action.time)
@@ -225,21 +230,9 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
             if (this.debug) this.debug("Play", action);
 
             function conflict(action, mess) {
-                let s = {
-                    A: TX.tx("Cannot add reminder to"),
-                    C: TX.tx("Cannot cancel reminder"),
-                    D: TX.tx("Cannot delete"),
-                    E: TX.tx("Cannot change value of"),
-                    I: TX.tx("Cannot insert"),
-                    M: TX.tx("Cannot move"),
-                    N: TX.tx("Cannot create"),
-                    P: TX.tx("Cannot play"),
-                    R: TX.tx("Cannot rename"),
-                    X: TX.tx("Cannot constrain")
-                }[action.type];
                 return Promise.resolve({
                     action: action,
-                    conflict: s + " '" + action.path.join("↘") + "': " + mess
+                    conflict: TX.tx("$1 failed: $2", action.verbose(), mess)
                 });
             }
 
@@ -603,6 +596,28 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
             return node;
         }
 
+        /**
+         * Get a list of changes reflected in the hoard history. Changes
+         * are returned as a pre-formatted string describing the change.
+         * @param max_changes the maximum number of changes to reflect
+         * in the list 
+         */
+        get_changes(max_changes) {
+            let message = [];
+            let seen = {};
+            
+            for (let act of this.history) {
+                let changed = act.redo.path.join("↘");
+                if (!seen[changed]) {
+                    message.push(act.redo.verbose());
+                    seen[changed] = true;
+                    if (max_changes > 0 && message.length > max_changes)
+                        break;
+                }
+            }
+            return message;
+        }
+        
         /**
          * Promise to check all alarms. Returns a promise to resolve all the
          * promises returned by 'ring'.
