@@ -198,7 +198,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
         /**
          * Change the display of values
          */
-        showValues: function(on) {
+        hideValues: function(on) {
             if (on && Tree.hidingValues() ||
                 !on && !Tree.hidingValues())
                 return;
@@ -224,8 +224,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
                 !on && !Tree.showingChanges())
                 return;
             
-            Tree.showingChanges(on);
-            $(".tree-change").toggle(on);
+            $(".tree-change").toggle(Tree.showingChanges(on));
         },
 
         /**
@@ -606,9 +605,11 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
                     });
             }
 
-            $(" <span class='tree-change'></span>")
+            $info.append(" ");
+            $("<span class='tree-change'></span>")
             .appendTo($info)
-            .text(formatDate($node.data("last-time-changed")));
+            .text(formatDate($node.data("last-time-changed")))
+            .toggle(Tree.showingChanges());
 
             this._makeDraggable($node);
             this._decorate_with_alarm($node);

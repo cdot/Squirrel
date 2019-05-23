@@ -8,7 +8,7 @@ define("dialogs/delete", ["js/Dialog", "js/Action"], function(Dialog, Action) {
     class DeleteDialog extends Dialog {
 
         open() {
-            this.control("path").text(this.options.path.join("↘"));
+            this.control("path").text(Action.pathS(this.options.path));
             this.control("coll").toggle(!this.options.is_leaf);
         }
 

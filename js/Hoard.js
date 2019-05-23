@@ -153,8 +153,10 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
          * find the parent of the node identified by the path
          */
         _locate_node(path, offset) {
-            if (typeof path === "string")
+            if (typeof path === "string") {
+                debugger;
                 path = path.split("↘");
+            }
             let node = this.tree;
             offset = offset || 0;
 
@@ -253,7 +255,7 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
                 if (typeof parent.data !== "object")
                     return conflict(action,
                         TX.tx("cannot add subnode to leaf node '$1'",
-                              action.path.join("↘")));
+                              Action.pathS(action.path)));
 
                 if (node)
                     // This is not really an error, we can survive it
@@ -351,7 +353,7 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
                     if (!new_parent)
                         return conflict(
                             TX.tx("target folder '$1' does not exist",
-                                  action.data.join("↘")));
+                                  Action.pathS(action.data)));
 
                     if (new_parent.data[name])
                         return conflict(action, TX.tx("it already exists"));
@@ -468,7 +470,7 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
         }
 
         /**
-         * Recontruct the minimal action stream required to recreate the data.
+         * Reconstruct the minimal action stream required to recreate the data.
          * Actions will be 'N', 'A' and 'X'.
          * @return an array of actions
          */
@@ -596,28 +598,6 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
             return node;
         }
 
-        /**
-         * Get a list of changes reflected in the hoard history. Changes
-         * are returned as a pre-formatted string describing the change.
-         * @param max_changes the maximum number of changes to reflect
-         * in the list 
-         */
-        get_changes(max_changes) {
-            let message = [];
-            let seen = {};
-            
-            for (let act of this.history) {
-                let changed = act.redo.path.join("↘");
-                if (!seen[changed]) {
-                    message.push(act.redo.verbose());
-                    seen[changed] = true;
-                    if (max_changes > 0 && message.length > max_changes)
-                        break;
-                }
-            }
-            return message;
-        }
-        
         /**
          * Promise to check all alarms. Returns a promise to resolve all the
          * promises returned by 'ring'.

@@ -559,7 +559,7 @@ requirejs(["js/Hoard", "js/Action", "test/TestRunner"], function(Hoard, Action, 
 	    path: []
 	});
 	return h.play_action(act).then((c) => {
-	    assert.equal(c.conflict, "Cannot create '': Zero length path");
+	    assert.equal(c.conflict, "Create  failed: Zero length path");
             assert.deepEqual(c.action, act);
         });
     });
@@ -578,7 +578,7 @@ requirejs(["js/Hoard", "js/Action", "test/TestRunner"], function(Hoard, Action, 
         return h.play_action(act)
         .then((r) => {
 	    assert.equal(r.conflict,
-                         "Cannot create 'Junk↘Burger': not found");
+                         "Create Junk↘Burger failed: not found");
             assert.deepEqual(r.action, act);
         });
     });
@@ -594,7 +594,7 @@ requirejs(["js/Hoard", "js/Action", "test/TestRunner"], function(Hoard, Action, 
         }).then((c) => {
             assert.equal(
                 c.conflict,
-                "Cannot delete 'FineDining↘La Gavroche': not found");
+                "Delete FineDining↘La Gavroche failed: not found");
         });
     });
 
@@ -605,19 +605,22 @@ requirejs(["js/Hoard", "js/Action", "test/TestRunner"], function(Hoard, Action, 
         let kfc = {
 	    type: "E",
 	    time: Date.UTC(2004,0),
-	    path: ["FineDining", "Doner"]
+	    path: ["FineDining", "Doner"],
+            data: "Sausages"
 	};
 
 	return h.play_action(cloud_actions[0])
 	.then((e) => {
-		assert.equal(cloud_actions[0], e.action);
-	        return h.play_action(kfc);
-            }).then((e) => {
-                let c = e.conflict;
-	        assert.equal(c,
-                             "Cannot change value of 'FineDining↘Doner': it does not exist");
-                assert.equal(e.action, kfc);
-            });
+	    assert.deepEqual(cloud_actions[0], e.action);
+	    return h.play_action(kfc);
+        }).then((e) => {
+            return h.play_action(kfc);
+        }).then((e) => {
+	    assert.equal(
+                e.conflict,
+                "Change value of FineDining↘Doner to 'Sausages' failed: it does not exist");
+            assert.deepEqual(e.action, kfc);
+        });
     });
 
     tr.addTest('should merge action streams', function() {

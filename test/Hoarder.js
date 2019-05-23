@@ -22,8 +22,9 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/En
                                                user: "Stratus",
                                                pass: "Alto"}));
         h.cloud_path("CLOUD");
-        assert(h.cloudHasChanges());
-        assert(h.clientHasChanges());
+        assert(h.cloudChanged);
+        assert.equal(h.clientChanges.length, 1);
+
         assert.equal(h.user(), "Stratus");
         assert.equal(h.encryption_pass(), "Alto");
     });
@@ -171,7 +172,8 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/En
         let h;
         acts.push(cloud_act);
 
-        let ui_acts = [];
+        let eact = new Action({
+                type:"N", path:["One", "Five"], time:950, data:"5"});
         return make_cloud(acts, cloust)
         .then(() => {
             // Populate the client with the base tree
@@ -189,27 +191,25 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/En
         })
         .then(() => {
             // Add a local action in the client
-            let act = new Action({
-                type:"N", path:["One", "Five"], time:950, data:"5"});
-            return h.hoard.play_action(act, true);
+            return h.hoard.play_action(eact, true);
         })
         .then((e) => {
-            return h.synchronise(
+            return h.update_from_cloud(
                 [],
-                (c) => {
-                    ui_acts.push(c);
-                });
+                (choose) => {
+                    return Promise.resolve(choose);
+                } // no player
+            );
         })
         .then((actions) => {
             assert.equal(actions.length, 9);
-            assert.deepEqual(ui_acts, [
-                { type: 'D', path: [ 'One', 'Five' ], time: 300 },
-                { type: 'N', path: [ 'One', 'From Cloud' ], time: 900, data: '4' },
-                { type: 'N', path: [ 'One', 'Five' ], time: 950, data: '5' }
-            ]);
+            assert.deepEqual(actions, full_tree_actions.concat(
+                [eact], [
+                { type: 'N', path: [ 'One', 'From Cloud' ], time: 960, data: '4' }
+            ]));
             assert.deepEqual(h.hoard.tree.data, {
                 One: {
-                    time: 950,
+                    time: 960,
                     data: {
                         Two: {
                             time: 600,
@@ -233,7 +233,7 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/En
                             }
                         },
                         "From Cloud": {
-                            time: 900, // synch time
+                            time: 960, // synch time
                             data: "4"
                         },
                         "Five": {
@@ -262,7 +262,8 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/En
         let h;
         acts.push(cloud_act);
 
-        let ui_acts = [];
+        let eact = new Action({
+                type:"R", path:["One", "Two"], time:950, data:"In Client"});
         return make_cloud(acts, cloust)
         .then(() => {
             // Populate the client with the base tree
@@ -281,42 +282,23 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/En
         .then(() => {
             // Add a local action in the client renaming a different node to
             // the same name as the cloud action
-            let act = new Action({
-                type:"R", path:["One", "Two"], time:950, data:"In Client"});
-            return h.hoard.play_action(act, true);
+            
+            return h.hoard.play_action(eact, true);
         })
         .then(() => {
             let progress = [];
-            return h.synchronise(
+            return h.update_from_cloud(
                 progress,
                 (a) => {
-                    ui_acts.push(a);
+                    return Promise.resolve(a);
                 })
             .then((actions) => {
-                assert.equal(actions.length, 9);
-                assert.deepEqual(ui_acts, [
-                    // Undo client, do cloud, client is conflicted
-                    { data: 'Two',
-                      type: 'R',
-                      path: [ 'One', 'In Client' ],
-                      time: 300 },
-                    { type: 'D',
-                      path: [ 'One', 'Two' ],
-                      time: 900 } ]);
-                assert.deepEqual(actions,
-                    full_tree_actions.concat(
-                        [{ type: 'D',
-                           path: [ 'One', 'Two' ],
-                           time: 900 },
-                         {
-                             data: "In Client",
-                             path: [ "One", "Two" ],
-                             time: 950,
-                             type: "R"
-                         }]));
+                assert.equal(actions.length, 8);
+                assert.deepEqual(actions, full_tree_actions.concat(
+                    [eact]));
                 assert.equal(progress.length, 1);
                 assert.equal(progress[0].severity, "warning");
-                assert.equal(progress[0].message, "Cannot rename 'One↘Two': it does not exist");
+                assert.equal(progress[0].message, "Delete One↘Two failed: it does not exist");
             });
         });
     });
@@ -354,7 +336,7 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/En
             return h.hoard.play_action(act);
         }).then((c) => {
             assert(!c.conflict);
-            return h.synchronise(progress);
+            return h.update_from_cloud(progress);
         })
         .then((actions) => {
             assert.equal(actions.length, 9);
@@ -416,7 +398,7 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/En
         }).then((c) => {
             assert(!c.conflict);
             let acted = 0, progress = [];
-            return h.synchronise(progress);
+            return h.update_from_cloud(progress);
         })
         .then((actions) => {
             assert.equal(actions.length, 9);
@@ -456,14 +438,11 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/En
                 let act = new Action({type:"N", path:["One", "Five"], time:950, data:"5"});
                 h.hoard.play_action(act);
                 let progress = [];
-                return h.synchronise(progress)
+                return h.update_from_cloud(progress)
                 .then(() => {
                     assert(false);
                 })
                 .catch((e) => {
-                    assert.equal(progress.length, 1);
-                    assert.equal(progress[0].severity, "error");
-                    assert.equal(progress[0].message, "Failed to refresh from cloud store");
                     assert(e instanceof Serror);
                     assert.equal(e.message, "Cloud store could not be parsed");
                     assert.equal(e.status, 400);

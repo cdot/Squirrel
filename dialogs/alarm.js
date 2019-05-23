@@ -88,7 +88,7 @@ define("dialogs/alarm", ["js/Dialog", "js/Action", "js/Hoard", "js/jq/template",
 
         // @Override
         open() {
-            this.control("path").text(this.options.path.join("↘"));
+            this.control("path").text(Action.pathS(this.options.path));
             this.wasEnabled = (typeof this.options.alarm !== "undefined");
 
             this.control("enabled").prop("checked", this.wasEnabled);

@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser */
 
-define("dialogs/add", ["js/Dialog"], function(Dialog) {
+define("dialogs/add", ["js/Dialog", "js/Action"], function(Dialog, Action) {
 
     class AddDialog extends Dialog {
 
@@ -47,7 +47,7 @@ define("dialogs/add", ["js/Dialog"], function(Dialog) {
         }
 
         open() {
-            this.control("path").text(this.options.path.join("↘") + "↘");
+            this.control("path").text(Action.pathS(this.options.path, true));
             let isV = this.options.is_value;
             this.control("value_help").toggle(isV);
             this.control("folder_help").toggle(!isV);

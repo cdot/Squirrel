@@ -5,11 +5,15 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
 
     let TX;
 
-    /*
+    /**
+     * This is the top level application singleton. It is primarily
+     * concerned with UI management; database handling is done by the
+     * Hoarder object created here.
+     *
      * The application startup process proceeds from
      * "init_application" though a sequence of triggered events. Once
      * the final step is reached, control is handed off to the Tree
-     * module, which governs most interaction.  reached
+     * module, which governs most interaction.
      */
 
     // Dialogs for loading in the background. These are loaded in roughly
@@ -27,7 +31,6 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
          * debug - boolean
          * store - string name of the cloud store type
          * url - store URL, if it requires one
-         * plaintext - boolean, enable plaintext store
          * steg - boolean, enable steganography
          */
         constructor(options) {
@@ -41,12 +44,9 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
             if (self.options.debug) {
                 self.debug = console.debug;
                 self.debug("Debug enabled");
-                // Option to dump the JSON for the cloud database on load.
-                // Requires debug.
-                self.dumpCloud = options.dump_cloud;
             }
 
-            self.hoarder = new Hoarder(self.debug);
+            self.hoarder = new Hoarder({debug: self.debug});
 
             if (!self.options.store) {
                 if (self.debug) self.debug("Defaulting to LocalStorageStore");
@@ -62,6 +62,10 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
             self.picked_hit = 0;
         }
 
+        /**
+         * @private
+         * Report current stage of startup process
+         */
         _stage(s, step) {
             if (this.debug) this.debug(step + ": " + s);
             $("#stage").text(s);
@@ -76,7 +80,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
             let lerts = [];
 
             self.hoarder.check_alarms(
-                function (path, expired) {
+                (path, expired) => {
                     let $node = self.$DOMtree.tree("getNodeFromPath", path);
                     $node.tree("ringAlarm");
                     lerts.push(
@@ -85,7 +89,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                             message:
                             "<div class='ui-icon squirrel-icon tree-icon-rang'></div>" +
                             TX.tx("Reminder on '$1' was due on $2",
-                                  path.join("↘"),
+                                  Action.pathS(path),
                                   expired.toLocaleDateString())
                         });
                 })
@@ -104,84 +108,19 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
          */
         _save_stores(progress) {
             let self = this;
-            let saveClient = this.hoarder.clientHasChanges();
-            let saveCloud = this.hoarder.cloudHasChanges();
-            let promise;
-            let cloud_saved = false;
-            let client_saved = false;
-            
-            if (saveCloud) {
-                promise = self.hoarder.update_from_cloud(
-                    progress,
-                    (actions) => { // selector
-                        return Dialog.confirm("choose_changes", {
-                            changes: actions
-                        });
-                    },
-                    (act) => { // player
-                        return self.$DOMtree.tree("action", act);
-                    })
-                .then((new_cloud) => {
-                    return self.hoarder.save_cloud(new_cloud, progress);
-                })
-                .then(() => {
-                    cloud_saved = true;
-                })
-                .catch((e) => {
-                    if (self.debug) self.debug("cloud update failed", e);
-                    progress.push({
-                        severity: "error",
-                        message: [
-                            TX.tx(
-                                "Could not update from cloud store '$1'",
-                                self.hoarder.cloud_path()),
-                            TX.tx("Cloud store could not be saved")
-                        ]
-                    });
-                    if (e instanceof Serror) {
-                        if (e.status)
-                            progress.push({ severity: "error", http: e.status });
-                        if (e.message)
-                            progress.push(e.message);
-                    }
-                    // Resolve, not reject!
-                    return Promise.resolve();
-                });
-            } else
-                promise = Promise.resolve();
 
-            if (saveClient) {
-                promise = promise
-                .then(() => {
-                    return self.hoarder.save_client(progress);
-                })
-                .then(() => {
-                    client_saved = true;
-                })
-                .catch((e) => {
-                    if (self.debug) self.debug("Client save failed", e);
-                    progress.push({
-                        severity: "error",
-                        message: [
-                            TX.tx("Browser store could not be saved"),
-                            e
-                        ]
+            this.hoarder.save_stores(
+                progress,
+                (actions) => { // selector
+                    return Dialog.confirm("choose_changes", {
+                        changes: actions
                     });
-                });
-            }
-
-            if (!(saveCloud || saveClient))
-                if (progress) progress.push({
-                    severity: "notice",
-                    message: TX.tx("No changes needed to be saved")
-                });
-            
-            // No need to save the client unless there are changes
-            promise
-            .then(() => {
-                if ((!saveCloud || cloud_saved)
-                    && (!saveClient || client_saved)) {
-                    self.hoarder.hoard.clear_history();
+                },
+                (act) => { // player
+                    return self.$DOMtree.tree("action", act);
+                })
+            .then((saved) => {
+                if (saved) {
                     // otherwise if cloud or client save failed, we have to
                     // try again
                     $(".tree-modified")
@@ -197,7 +136,12 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
          */
         _handle_update_save( /*event*/ ) {
             let self = this;
-            $("#undo_button").toggle(self.hoarder.hoard.can_undo());
+
+            if (self.hoarder.can_undo())
+                $("#undo_button")
+                .show().attr("title", self.hoarder.next_undo());
+            else
+                $("#undo_button").hide();
             let $sb = $("#save_button");
             let autosave = (Cookies.get("ui_autosave") === "on");
             let us = self.hoarder.get_changes(10);
@@ -243,7 +187,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
             // Walk the modified paths tree, marking modified nodes
             function mark(path, node) {
                 if (Object.keys(node).length === 0) {
-                    while (path.length > 0 && self.hoarder.hoard.get_node(path)) {
+                    while (path.length > 0 && self.hoarder.node_exists(path)) {
                         let $node = self.$DOMtree.tree("getNodeFromPath", path);
                         if ($node) {
                             $node.addClass("tree-modified");
@@ -257,7 +201,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                 }
             }
             
-            for (let record of this.hoarder.hoard.history) {
+            for (let record of this.hoarder.history()) {
                 add(record.redo.path, 0, paths);
                 add(record.undo.path, 0, paths);
             }
@@ -372,6 +316,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                 return store.init()
             })
             .then(() => {
+                // Tell the hoarder to use this store
                 self.hoarder.cloud_store(store);
             })
             .catch((e) => {
@@ -410,17 +355,19 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                     understore: store
                 });
             }
+            
+            // Tell the hoarder to use this store
             self.hoarder.client_store(store);
 
             // Initialisation of the cloud store may have provided
             // initial user information, either from a network login
             // or from a service login. Seed the login dialog with one
             // of them.
-            return self.hoarder.client_store().init()
+            return store.init()
             .then(() => {
                 // Need to confirm user/pass, which may have been
                 // seeded from the store initialisation process
-                this._stage(TX.tx("Authentication"), "2a");
+                this._stage(TX.tx("Authentication"), 2.1);
                 let auth_req = self.hoarder.auth_required();
                 if (!auth_req)
                     return Promise.resolve();
@@ -430,7 +377,6 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                     user: auth_req.user
                 }).then((info) => {
                     if (self.debug) self.debug("...login confirmed");
-
                     self.hoarder.authenticate(info);
                 });
             });
@@ -462,7 +408,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                 }
                 // Load the tree into the UI by replaying actions
                 let promise = Promise.resolve();
-                for (let act of self.hoarder.hoard.actions_to_recreate()) {
+                for (let act of self.hoarder.tree_actions()) {
                     let prom = self.$DOMtree.tree("action", act);
                     promise = promise.then(prom);
                 }
@@ -619,7 +565,10 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
             Tree.onTitleHoverOut = () => {
                 return $("body").contextmenu("isOpen");
             };
-            Tree.hidingValues = () => {
+            Tree.hidingValues = (tf) => {
+                if (typeof tf !== "undefined") {
+                    Cookies.set("ui_hidevalues", tf ? "on" : null);
+                }
                 return (Cookies.get("ui_hidevalues") === "on");
             };
             Tree.showingChanges = (tf) => {
@@ -664,12 +613,21 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                 .icon_button()
                 .hide()
                 .on(Dialog.tapEvent(), function ( /*evt*/ ) {
-                    self.undo(function (mess) {
+                    self.hoarder.undo()
+                    .then((act) => {
+                        self.$DOMtree.tree("action", act)
+                        .then(() => {
+                            self.reset_modified();
+                            $(document).trigger("update_save");
+                        });
+                    })
+                    .catch((e) => {
+                        if (self.debug) self.debug("undo failed", e);
                         Dialog.confirm("alert", {
-                            title: "Undo",
+                            title: TX.tx("Error"),
                             alert: {
                                 severity: "error",
-                                message: mess
+                                message: e.message
                             }
                         });
                     });
@@ -708,13 +666,13 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                                 A: 0,
                                 X: 0
                             };
-                            let acts = self.hoarder.hoard.actions_to_recreate();
+                            let acts = self.hoarder.tree_actions();
                             for (let act of acts)
                                 counts[act.type]++;
                             return counts;
                         },
                         optimise: () => {
-                            let acts = self.hoarder.hoard.actions_to_recreate();
+                            let acts = self.hoarder.tree_actions();
                             return Dialog.open("alert", {
                                 title: "Saving",
                                 alert: ""
@@ -940,7 +898,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                 // this:Hoard, e:Action, next:function
                 //if (self.debug) self.debug(act);
                 act.path = path.slice().concat(act.path);
-                self.hoarder.hoard.play_action(new Action(act))
+                self.hoarder.play_action(new Action(act))
                 .then((res) => {
                     if (res.conflict) {
                         if (progress) progress.push({
@@ -967,7 +925,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
          */
         playAction(action) {
             let self = this;
-            self.hoarder.hoard.play_action(new Action(action))
+            self.hoarder.play_action(new Action(action))
             .then((e) => {
                 if (self.debug && e.conflict)
                     self.debug("interactive", action,
@@ -979,36 +937,6 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
             })
             .catch((e) => {
                 return Dialog.confirm("alert", {
-                    title: TX.tx("Error"),
-                    alert: {
-                        severity: "error",
-                        message: e.message
-                    }
-                });
-            });
-        }
-
-        /**
-         * Undo the most recent action
-         */
-        undo() {
-            let self = this;
-
-            this.hoarder.hoard.undo()
-            .then((e) => {
-                if (e.conflict) {
-                    if (self.debug) self.debug("undo had conflict", e.conflict);
-                } else {
-                    self.$DOMtree.tree("action", e.action)
-                    .then(() => {
-                        self.reset_modified();
-                        $(document).trigger("update_save");
-                    });
-                }
-            })
-            .catch((e) => {
-                if (self.debug) self.debug("undo failed", e);
-                Dialog.confirm("alert", {
                     title: TX.tx("Error"),
                     alert: {
                         severity: "error",

@@ -2,8 +2,9 @@
 /* eslint-env browser,node */
 
 define("js/Action", ["js/Translator"], function(Translator) {
+    const PATH_SEPARATOR = "↘";
     let TX = Translator.instance();
-
+    
     class Action {
         
         /**
@@ -22,11 +23,19 @@ define("js/Action", ["js/Translator"], function(Translator) {
         }
 
         /**
+         * Generate a path string from an array of path elements
+         * @param terminate boolean true to append separator to end of path
+         */
+        static pathS(p, terminate) {
+            return p.join(PATH_SEPARATOR) + (terminate ? PATH_SEPARATOR : "");
+        }
+        
+        /**
          * Generate a florid description of the action for using in dialogs
          * @return {string} human readable description of action
          */
         verbose() {
-            let p = this.path.join("↘");
+            let p = Action.pathS(this.path);
             let s;
             switch (this.type) {
             case "A":
@@ -48,10 +57,10 @@ define("js/Action", ["js/Translator"], function(Translator) {
                 s = TX.tx("Change value of $1 to '$2'", p, this.data);
                 break;
             case "I":
-                s = TX.tx("Insert $1 = $2", p, p.data);
+                s = TX.tx("Insert $1 = $2", p, this.data);
                 break;
             case "M":
-                s = TX.tx("Move $1 to $2", p, this.data.join("↘"));
+                s = TX.tx("Move $1 to $2", p, Action.pathS(this.data));
                 break;
             case "N":
                 s = TX.tx("Create $1", p);
@@ -66,14 +75,14 @@ define("js/Action", ["js/Translator"], function(Translator) {
             }
             return s;
         }
-        
+
         /**
          * Generate a terse string version of the action for reporting
          * @return {string} human readable description of action
          */
         toString() {
             return this.type + ":" +
-            this.path.join("↘") +
+            Action.pathS(this.path) +
             (typeof this.data !== "undefined" ?
              (" '" + this.data + "'") : "") +
             " @" + new Date(this.time)

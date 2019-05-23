@@ -50,7 +50,7 @@ define("dialogs/extras", ["js/Dialog", "js/Translator", "js/Tree", "js-cookie", 
             this.control("hidevalues")
             .on("change", function () {
                 let checked = $(this).prop("checked");
-                Tree.showValues(checked);
+                Tree.hideValues(checked);
             });
 
             this.control("lastchange")

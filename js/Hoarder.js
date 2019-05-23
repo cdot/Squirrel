@@ -2,7 +2,7 @@
 /* eslint-env browser,node */
 
 /**
- * Management of client and cloud
+ * Management of client and cloud data stores.
  * Several methods support a `progress' parameter. This is an object that
  * supports a method `push({severity, message})' (both parameters strings)
  * See dialogs/alert.js for how it is used in a notification dialog.
@@ -29,6 +29,8 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
             this.cloudLength = 0;
             // When was the last sync?
             this.last_sync = 0;
+            // When was the client last saved?
+            this.last_save = 0;
             // The client Hoard
             this.hoard = null;
             // Record of non-action changes, such as paths and settings
@@ -131,7 +133,7 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
                 this.hoard.clear_history();
                 this.hoard.tree = parsed;
                 this.clientChanges.push(TX.tx("Bulk content change"));
-                this.cloudChanged = truel
+                this.cloudChanged = true;
             }
             return JSON.stringify(this.hoard.tree, null, " ");
         }
@@ -148,7 +150,7 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
             .then((changes) => {
                 if (changes > 0) {
                     this.clientChanges.push(
-                        TX.tx("$1 alarm change$?($1=1,,s)", changes));
+                        TX.tx("$1 alarm change$?($1!=1,s,)", changes));
                     this.cloudChanged = true;
                     this.clientIsEmpty = false;
                 }
@@ -159,10 +161,72 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
          * Promise to add an action to the client hoard. This will play
          * the action into the client tree, and add the undo
          * @param action the action to play
-         * @param undo optional action to undo the one being added
+         * @param {boolean} undoable if true and action that undos this action
+         * will be added to the undo history. Default is true.
+         * @return a promise that resolves to an object thus:
+         * {
+         *   action: the action being played
+         *   conflict: string message, only set if there is a problem.
+         * }
          */
         play_action(action, undoable) {
             return this.hoard.play_action(action, undoable);
+        }
+
+        /**
+         * Get the minimal action stream required to recreate the
+         * client tree.
+         * @return an array of actions
+         */
+        tree_actions() {
+            return this.hoard.actions_to_recreate();
+        }
+
+        /**
+         * Return true if there is at least one undoable operation
+         * in the client
+         */
+        can_undo() {
+            return this.hoard.can_undo();
+        }
+
+        /**
+         * Return a message describing the next undo that would be applied.
+         */
+        next_undo() {
+            return this.hoard.history[this.hoard.history.length - 1]
+            .undo.verbose();
+        }
+        
+        /**
+         * Return true if there is a node in the tree at the given path
+         * @param path array of path components
+         */
+        node_exists(path) {
+            return this.hoard.get_node(path) ? true : false;
+        }
+
+        /**
+         * Get the local action history
+         */
+        history() {
+            return this.hoard.history;
+        }
+        
+        /**
+         * Undo the action most recently played
+         * @return a Promise that resolves to the action replayed, or rejects
+         * to a { message: } object
+         */
+        undo() {
+            return this.hoard.undo()
+            .then((e) => {
+                if (e.conflict) {
+                    if (self.debug) self.debug("undo had conflict", e.conflict);
+                    return Promise.reject({ message: e.conflict });
+                }
+                return Promise.resolve(e.action);
+            });
         }
         
         /**
@@ -237,6 +301,7 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
                     self.cloudPath = data.cloud_path;
                     self.imageURL = data.image_url;
                     self.last_sync = data.last_sync;
+                    self.last_save = Date.now();
                     self.hoard = new Hoard({
                         debug: this.debug,
                         hoard: data.hoard
@@ -258,33 +323,20 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
         }
 
         /**
-         * Determine if the cloud has changes that need saving
-         * @return true if changes need to be saved
-         */
-        cloudHasChanges() {
-            // No need to save the cloud unless there are actions in
-            // the local history
-            return this.cloudChanged || this.hoard.history.length > 0;
-        }
-        
-        /**
-         * Determine if the client has changes that need saving
-         * @return true if changes need to be saved
-         */
-        clientHasChanges() {
-            // No need to save the client unless there are actions in
-            // the local history
-            return this.clientChanges.length > 0 || this.hoard.history.length > 0;
-        }
-
-        /**
-         * Get a list of changes reflected in the client history.
+         * Get a list of changes reflected in the history. Only changes since
+         * the last sync or the last client save are returned.
          * @param max_changes the maximum number of changes to reflect
          * in the list 
          */
         get_changes(max_changes) {
-            let messages = this.hoard.get_changes(max_changes);
-                
+            let messages = [];
+            
+            for (let record of this.hoard.history) {
+                if (record.redo.time > this.last_sync
+                    || record.redo.time > this.last_save)
+                    messages.push(record.redo.verbose());
+            }
+
             // the client may have settings changes
             if (this.clientChanges.length > 0)
                 messages = messages.concat(this.clientChanges);
@@ -292,11 +344,12 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
             // Cap the return length at max_changes
             if (max_changes > 0 && messages.length > max_changes) {
                 let l = messages.length;
-                messages = messages.slice(0, max_changes);
+                messages = messages.slice(-max_changes);
                 messages.push(TX.tx("... and $1 more change$?($1!=1,s,)",
                                    l - max_changes));
             }
-
+            if (this.debug) this.debug(messages);
+            
             return messages;
         }
         
@@ -331,6 +384,7 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
                         severity: "notice",
                         message: TX.tx("Saved in browser")
                     });
+                    self.last_save = Date.now();
                     return Promise.resolve();
                 });
             })
@@ -395,14 +449,18 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
             let prom = actions ? Promise.resolve(actions) : this.load_cloud();
             return prom.then((cloud_actions) => {
 
+                if (this.debug) this.debug("Last sync was at", this.last_sync);
+                
                 // Split the actions read from the cloud into "known" and
                 // "unknown"
                 let new_client = [];
                 for (let act of cloud_actions) {
-                    if (act.time > this.last_sync)
+                    if (act.time > this.last_sync) {
                         // This is new, not reflected in the local tree
                         new_client.push(act);
-                    else
+                        if (this.debug) this.debug("...new action from cloud",
+                                                   act);
+                    } else
                         // This is old, already reflected in local tree
                         new_cloud.push(act);
                 }
@@ -411,18 +469,25 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
                 // the changes we just pulled from the cloud. These changes
                 // are already reflected in the local tree, and are part of
                 // the context the cloud changes will be applied to.
-                for (let record of this.hoard.history)
-                    new_cloud.push(record.redo);
+                for (let record of this.hoard.history) {
+                    if (record.redo.time > this.last_sync) {
+                        new_cloud.push(record.redo);
+                        if (this.debug) this.debug("...action from history",
+                                                   record.redo);
+                    }
+                }
 
                 // Select the cloud changes to apply, interactively if
                 // the client actions list isn't initially empty
-                if (new_client.length > 0 && this.hoard.history.length > 0)
+                if (new_client.length > 0 && this.hoard.history.length > 0
+                    && selector)
                     return selector(new_client);
                 else
                     return Promise.resolve(new_client);
              })
-            .then((selected) => {
+            .then((selected) => {              
                 this.last_sync = Date.now();
+                if (this.debug) this.debug("...synced at", this.last_sync);
                 let promise = Promise.resolve();
                 for (let act of selected) {
                     promise = promise.then(
@@ -440,8 +505,12 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
                                 });
                                 return Promise.resolve();
                             } else {
+                                if (this.debug) this.debug("...played", act);
                                 new_cloud.push(act);
-                                return player(act);
+                                if (player)
+                                    return player(act);
+                                else
+                                    return Promise.resolve();
                             }
                         }));
                 }
@@ -452,6 +521,94 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
                 // rebuild a cloud by taking the cloud actions before
                 // the sync and appending the local actions.
                 return new_cloud;
+            });
+        }
+
+        save_stores(progress, selector, player) {
+            let saveClient = this.clientChanges.length > 0;
+            let saveCloud = this.cloudChanged;
+
+            // See if there's anything new in the history since
+            // we last synched/saved
+            for (let record of this.hoard.history) {
+                if (record.redo.time > this.last_sync)
+                    saveCloud = true;
+                if (record.redo.time > this.last_save)
+                    saveClient = true;
+            }
+
+            if (!(saveCloud || saveClient)) {
+                if (progress) progress.push({
+                    severity: "notice",
+                    message: TX.tx("No changes needed to be saved")
+                });
+                return Promise.resolve(false);
+            }
+            
+            let promise;
+            let self = this;
+            let cloud_saved = false;
+            let client_saved = false;
+            if (saveCloud) {
+                promise = this.update_from_cloud(
+                    progress, selector, player)
+                .then((new_cloud) => {
+                    return self.save_cloud(new_cloud, progress)
+                    .then(() => {
+                        cloud_saved = true;
+                    });
+                })
+                .catch((e) => {
+                    if (self.debug) self.debug("cloud update failed", e);
+                    progress.push({
+                        severity: "error",
+                        message: [
+                            TX.tx(
+                                "Could not update from cloud store '$1'",
+                                self.cloudPath),
+                            TX.tx("Cloud store could not be saved")
+                        ]
+                    });
+                    if (e instanceof Serror) {
+                        if (e.status)
+                            progress.push({ severity: "error", http: e.status });
+                        if (e.message)
+                            progress.push(e.message);
+                    }
+                    // Resolve, not reject!
+                    return Promise.resolve();
+                });
+            } else
+                promise = Promise.resolve();
+
+            if (saveClient) {
+                promise = promise
+                .then(() => {
+                    return self.save_client(progress);
+                })
+                .then(() => {
+                    client_saved = true;
+                })
+                .catch((e) => {
+                    if (self.debug) self.debug("Client save failed", e);
+                    progress.push({
+                        severity: "error",
+                        message: [
+                            TX.tx("Browser store could not be saved"), e
+                        ]
+                    });
+                });
+            }
+
+            return promise
+            .then(() => {               
+                if ((!saveCloud || cloud_saved)
+                    && (!saveClient || client_saved)) {
+                    self.hoard.clear_history();
+                    return true;
+                }
+                else
+                    return false;
             });
         }
         
@@ -484,102 +641,6 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
                     message: TX.tx("Failed to save in cloud store: $1", e)
                 });
                 return Promise.resolve(false);
-            });
-        }
-
-        /**
-         * Automatic synchronisation.
-         *
-         * Update (or load) the client hoard with actions from the cloud
-         * that were applied since we last updated it. This is used both
-         * when loading and when updating before saving.
-         * The update algorithm is as follows:
-         * Download the lastest cloud
-         * If the cloud has changes since the last synch:
-         *    unwind the local changes in the client (if any)
-         *    play the cloud changes
-         *    rewind the client changes
-         * The new cloud is then the existing cloud actions with the local
-         * actions appended.
-         * @param progress object, see class def for details
-         * @param {function} player called for all actions that do not generate
-         * conflicts.
-         * @return a Promise that resolves to the list of actions that make
-         * up the updated the cloud.
-         */
-        synchronise(progress, player) {
-            let since = this.last_sync;
-            if (this.debug) this.debug("Synchronise since", since);
-            let self = this;
-            let prepare;
-            // Reload the cloud hoard to detect any recent changes
-            return this.load_cloud()
-            .then((cloud_actions) => {
-                self.last_sync = Date.now();
-                if (self.debug) self.debug("...read", cloud_actions.length,
-                                           "actions from cloud");
-
-                let promise = Promise.resolve();
-                
-                // Determine cloud actions since the last sync
-                let act, new_cloud_actions = [], old_cloud_actions;
-                while (true) {
-                    act = cloud_actions.pop();
-                    if (act.time > since) {
-                        act.time = since;
-                        new_cloud_actions.push(act);
-                    } else {
-                        cloud_actions.push(act);
-                        break;
-                    }
-                }
-                
-                if (new_cloud_actions.length === 0)
-                    return promise;
-                
-                if (self.debug) self.debug(
-                    "...playing", new_cloud_actions.length,
-                    "new actions into client");
-
-                // Undo client actions performed since last sync
-                let history = this.hoard.clear_history();
-                let undos = [], redos = [];
-                for (act of history) {
-                    // First undo
-                    undos.unshift(act.undo);
-                    // Then do cloud actions
-                    // Finally redo client action
-                    redos.push(act.redo);
-                }
-
-                let acts = undos.concat(new_cloud_actions, redos);
-                for (act of acts) {
-                    let prom = this.hoard.play_action(act, false)
-                        .then((e) => {
-                            if (e.conflict) {
-                                if (this.debug) this.debug("...conflict", e);
-                                if (progress) progress.push({
-                                    severity: "warning",
-                                    message: e.conflict
-                                });
-                            }
-                            else if (player)
-                                return player(e.action);
-                        });
-                    promise = promise.then(prom);
-                }
-                    
-                return promise.then(() => {
-                    return cloud_actions.concat(new_cloud_actions, redos);
-                });
-            })
-            .catch((e) => {
-                if (self.debug) self.debug("...cloud synch failed", e);
-                if (progress) progress.push({
-                    severity: "error",
-                    message: TX.tx("Failed to refresh from cloud store")
-                });
-                return Promise.reject(e);
             });
         }
     }

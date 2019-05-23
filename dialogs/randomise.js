@@ -156,7 +156,6 @@ define("dialogs/randomise", ["js/Dialog", "js-cookie"], function(Dialog, Cookies
             this.control("len").val(this.revert.size);
             this.control("chs").val(this.revert.chars);
 
-            //this.control("path").text(path.join("↘"));
             this.control("key").text(this.options.key);
             this.control("again").trigger(Dialog.tapEvent());
             this.control("remember").hide();
