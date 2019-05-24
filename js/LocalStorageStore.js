@@ -97,7 +97,7 @@ define("js/LocalStorageStore", deps, function(Utils, Serror, AbstractStore, Stor
                 });
             });
         }
-
+        
         _read(path) {
             let str = localStorage.getItem(this._makeKey(path));
             if (str === null) {
@@ -118,9 +118,9 @@ define("js/LocalStorageStore", deps, function(Utils, Serror, AbstractStore, Stor
             return this._read(path)
             .then((str) => {
                 return Promise.resolve(Utils.PackedStringToUint8Array(str))
-                .then((a8) => {
+                /*.then((a8) => {
                     return this._wtf(path + ".rb", a8)
-                });
+                })*/;
             });
         }
 
@@ -128,9 +128,9 @@ define("js/LocalStorageStore", deps, function(Utils, Serror, AbstractStore, Stor
             if (this.debug) this.debug("write", path);
             let str = Utils.Uint8ArrayToPackedString(a8);
             return this._write(path, str)
-            .then(() => {
+            /*.then(() => {
                 return this._wtf(path + ".wb", a8);
-            });
+            })*/;
         }
 
         _makeKey(path) {
