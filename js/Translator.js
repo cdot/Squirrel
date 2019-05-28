@@ -177,8 +177,8 @@ define("js/Translator", ["js/Utils", "js-cookie"], function(Utils, Cookies) {
             this._translateDOM(dom, function (s) {
                 let tx = this.translations[Translator._clean(s)];
                 if (typeof tx !== "undefined")
-                    return tx.s;
-                return s;
+                    s = tx.s;
+                return s + (this.debug ? " (debug)" : "");
             })
         }
 
@@ -294,10 +294,12 @@ define("js/Translator", ["js/Utils", "js-cookie"], function(Utils, Cookies) {
                 // else use English
             }
 
+            let s;
             if (/\$/.test(arguments[0]))
-                return Utils.expandTemplate.apply(null, arguments);
-
-            return arguments[0];
+                s = Utils.expandTemplate.apply(null, arguments);
+            else
+                s = arguments[0];
+            return s + (this.debug ? " (debug)" : "");
         }
 
         /**

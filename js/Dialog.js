@@ -216,9 +216,58 @@ define("js/Dialog", ["js/Translator", "js/Serror", "jquery", "jquery-ui", "js/jq
 
             this.initialise();
 
+            // On devices with touch capability, hovering over an element
+            // to see the tooltip doesn't work. So on these devices we
+            // open the title in a dialog.
+            
+            if (true/*$.isTouchCapable()*/) {
+                this.find(".tooltip-twisty").each(function() {
+                    //if (!$.isTouchCapable())
+                    //    return;
+                    let $this = $(this);
+                    let $div = $("<div data-open='ui-icon-info'></div>");
+                    $div.addClass("twisted");
+                    $div.addClass("TX_text");
+                    $div.text($this.attr("title"));
+                    $this.after($div);
+                });
+
+                this.find(".tooltip-tr").each(function() {
+                });
+
+                // If a TR has the the dialog attr, transfer it
+                // down to the first element in the first cell in the table
+                this.find("tr.tooltip-dialog").each(function() {
+                    let $tr = $(this);
+                    let text = $tr.attr("title");
+                    $tr.removeClass("tooltip-dialog");
+                    $tr.children("td,th")
+                    .first().children().first().each(function() {
+                        $(this)
+                        .attr("title", text)
+                        .addClass("tooltip-dialog TX_title");
+                    });
+                });
+                
+                this.find(".tooltip-dialog").each(function() {
+                    let $this = $(this);
+                    let $button =
+                        $("<button data-icon='ui-icon-info'></button>")
+                        .insertAfter($this)
+                        .icon_button()
+                        .on(Dialog.tapEvent(), function() {
+                            Dialog.confirm("alert", {
+                                title: self.tx("Information"),
+                                alert: $this.attr("title")
+                            });
+                        });
+                });
+            }
+            
             this.find(".twisted").twisted();
             this.find("button").icon_button();
 
+            
             // Add handler to default OK control
             let $ok = this.control("ok", true);
             if ($ok) {
@@ -300,7 +349,7 @@ define("js/Dialog", ["js/Translator", "js/Serror", "jquery", "jquery-ui", "js/jq
          * Get the tap event
          */
         static tapEvent() {
-            return $.getTapEvent ? $.getTapEvent() : "click";
+            return $.getTapEvent();
         }
 
         /**

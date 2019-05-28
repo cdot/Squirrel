@@ -122,6 +122,11 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
         showingChanges: () => false,
 
         /**
+         * Set to a debug function
+         */
+        debug: null,
+        
+        /**
          * Construct a new UI element for a tree node. The created element
          * is a placeholder only until the parent is opened, at which time the
          * element is populated with controls.
@@ -583,7 +588,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
             .text($node.data("key"))
             .on(Dialog.doubleTapEvent(),
                 function (e) {
-                    if (this.debug) this.debug("Double-click 1");
+                    if (Tree.debug) Tree.debug("Double-click 1");
                     e.preventDefault();
                     $(e.target).closest(".tree-node").tree("editKey");
                 });
@@ -599,7 +604,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
                 .text(this._displayedValue())
                 .on(Dialog.doubleTapEvent(),
                     function (e) {
-                        if (this.debug) this.debug("Double-click 2");
+                        if (Tree.debug) Tree.debug("Double-click 2");
                         e.preventDefault();
                         $(e.target).closest(".tree-node").tree("editValue");
                     });
@@ -882,6 +887,8 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
          * @return a promise that resolves when the UI has been updated.
          */
         action: function(action) {
+            if (Tree.debug) Tree.debug("$action",action);
+            
             // "N" and "I" require construction of a new node.
             if (action.type === "N")
                 return this._action_N(action);
@@ -910,7 +917,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
             function recache($node, pa) {
                 let path = pa.concat($node.data("key"));
 
-                if (this.debug) {
+                if (Tree.debug) {
                     if (!pa)
                         throw "recache outside tree";
                     if (path2$node[path.join(PATHSEP)]) {

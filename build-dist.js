@@ -13,7 +13,8 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
 
     let opts = getopt
         .create([
-            [ "d", "debug", "Debug dependencies" ],
+            [ "d", "debug", "Debug" ],
+            [ "D", "deps", "Show dependencies" ],
             [ "h", "help", "Display this help" ],
             [ "l", "locales", "Try to improve translations" ]
         ])
@@ -23,6 +24,7 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
 
     opts = opts.options;
     let debug = opts.debug ? console.debug : false;
+    let dependencies = opts.deps;
     
     function extend(a, b) {
         let join = {};
@@ -51,7 +53,7 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
         if (!d)
             depends_on[dependant] = d = {};
         if (dependee && !d[dependee]) {
-            if (debug) debug(dependant, "depends on", dependee);
+            if (dependencies) console.debug(dependant, "depends on", dependee);
             d[dependee] = true;
         }
     }
@@ -154,7 +156,7 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
         .exec(js);
             
         if (!m) {
-            if (debug) debug(module,"has no dependencies");
+            if (dependencies) console.debug(module,"has no dependencies");
             return Promise.resolve();
         }
             
@@ -244,7 +246,10 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
                 return fs.writeFile("dist/" + root + ".bad_js", codes);
             }
             return Promise.all([
-                locales.js(codes),
+                locales.js(codes).then((c) => {
+                    if (debug)
+                        debug("Extracted",c,"new strings from",root + ".js");
+                }),
                 fs.writeFile("dist/" + root + ".js", cod.code)
             ]);
         });
@@ -456,9 +461,10 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
             // Generate new HTML
             let index = "<!DOCTYPE html>\n" +
                 document.querySelector("html").innerHTML;
-            if (debug) debug("Extracting strings from", module + ".html");
             return locales.html(index)
-            .then(() => {
+            .then((c) => {
+                if (debug)
+                    debug("Extracted",c,"new strings from", module + ".html");
                 let re = new RegExp("(href=([\"'])css/" + module + ")(\\.css\\2)");
                 let mindex = MinifyHTML.minify(index, {
                     collapseWhitespace: true,

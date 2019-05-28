@@ -118,7 +118,7 @@ define("js/jq/simulated_password", ["jquery"], function() {
                 let $showpass = $('<input type="checkbox"/>');
                 $this.after($showpass);
                 $showpass
-                .on($.getTapEvent ? $.getTapEvent() : "click", function () {
+                .on($.getTapEvent(), function () {
                     showPass($this, $this.hasClass("pass_hidden"));
                 })
                 .prop("checked", !options.hidden);

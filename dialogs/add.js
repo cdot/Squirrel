@@ -49,12 +49,12 @@ define("dialogs/add", ["js/Dialog", "js/Action"], function(Dialog, Action) {
         open() {
             this.control("path").text(Action.pathS(this.options.path, true));
             let isV = this.options.is_value;
-            this.control("value_help").toggle(isV);
-            this.control("folder_help").toggle(!isV);
-            this.control("value_parts").toggle(isV);
+            this.control("value_help", true).toggle(isV);
+            this.control("folder_help", true).toggle(!isV);
+            this.control("value_parts", true).toggle(isV);
             this.control("key")
             .autocomplete(isV ? "enable" : "disable").select();
-            this.control("value").val("");
+            this.control("value", true).val(this.options.value || "");
 
             this.validateUniqueKey();
         }
@@ -62,7 +62,7 @@ define("dialogs/add", ["js/Dialog", "js/Action"], function(Dialog, Action) {
         ok() {
             return {
                 key: this.control("key").val(),
-                value: this.control("value").val()
+                value: this.control("value", true).val()
             };
         }
     }

@@ -279,7 +279,7 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
                     return conflict(TX.tx("Cannot insert into a value"));
                 let json = JSON.parse(action.data);
                 if (undoable)
-                    this._record_event(action, "D", action.path, node.time);
+                    this._record_event(action, "D", action.path, action.time);
                 
                 parent.data[name] = json;
                 // collection is being modified
@@ -470,8 +470,8 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
         }
 
         /**
-         * Reconstruct the minimal action stream required to recreate the data.
-         * Actions will be 'N', 'A' and 'X'.
+         * Reconstruct the minimal action stream required to recreate
+         * the data.  Actions will be 'N', 'A' and 'X'.
          * @return an array of actions
          */
         actions_to_recreate() {
@@ -484,13 +484,18 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
                 if (typeof time === "undefined")
                     time = Date.now();
 
-                let action = new Action({
-                    type: "N",
-                    path: path,
-                    time: time
-                });
+                if (path.length > 0) {
+                    let action = new Action({
+                        type: "N",
+                        path: path,
+                        time: time
+                    });
+                    
+                    if (typeof node.data !== "object")
+                        action.data = node.data;
 
-                actions.push(action);
+                    actions.push(action);
+                }
 
                 if (node.alarm) {
                     // Use the node construction time on alarms too
@@ -513,14 +518,11 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
 
                 if (typeof node.data === "object") {
                     for (let key in node.data)
-                        _visit(node.data[key], path.concat([key]), node.time);
+                        _visit(node.data[key], path.concat([key]));
                 }
-                else if (typeof node.data !== "undefined")
-                    action.data = node.data;
             }
 
-            for (let key in this.tree.data)
-                _visit(this.tree.data[key], [key]);
+            _visit(this.tree, []);
 
             return actions;
         }

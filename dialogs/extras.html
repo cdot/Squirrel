@@ -1,73 +1,69 @@
 <div id="extras_dlg" class="dlg-dialog TX_title" title="Settings">
   <table>
-    <tr>
+    <tr class="TX_title tooltip-dialog" title="These preferences will be saved in cookies in your browser">
       <th colspan="2">
-        <span class="TX_text">User interface</span>
-        <div class="TX_text twisted" data-open="ui-icon-info">
-          These preferences will be saved in cookies in your browser
-        </div>
+        <span class="TX_text TX_title">
+          User interface
+        </span>
       </th>
     </tr>
-    <tr>
-      <td class="TX_text">Autosave</td>
+    <tr class="TX_title tooltip-dialog" title="Enable to automatically save whenever anything changes">
+      <td>
+        <span class="TX_text">
+          Autosave
+        </span>
+      </td>
       <td>
         <input type="checkbox" data-id="autosave" />
-        <div class="twisted" data-open="ui-icon-info">
-          <span class="TX_text">
-            Automatically save whenever anything changes
-          </span>
-
-        </div>
       </td>
     </tr>
-    <tr>
-      <td class="TX_text">Hide Values</td>
+    <tr class="TX_title tooltip-dialog" title="Hide values until they are hovered over. Use if someone might be looking over your shoulder">
+      <td>
+        <span class="TX_text">
+          Hide Values
+        </span>
+      </td>
       <td>
         <input type="checkbox" data-id="hidevalues" />
-        <div class="twisted" data-open="ui-icon-info">
-          <span class="TX_text">
-            Hide values until they are hovered over. Use if someone
-            might be looking over your shoulder
-          </span>
-        </div>
       </td>
     </tr>
-    <tr>
-      <td class="TX_text">Last Change</td>
+    <tr class="TX_title tooltip-dialog" title="Show when the last change happened">
+      <td>
+        <span class="TX_text">
+          Last Change
+        </span>
+      </td>
       <td>
         <input type="checkbox" data-id="lastchange" />
-        <div class="twisted" data-open="ui-icon-info">
-          <span class="TX_text">
-            Show when the last change was
-          </span>
-        </div>
       </td>
     </tr>
-    <tr>
-      <td class="TX_text">Language</td>
+    <tr class="TX_title tooltip-dialog" title="Enter the language code for a supported language">
+      <td>
+        <span class="TX_text">
+          Language
+        </span>
+      </td>
       <td>
         <input type="text" data-id="language" />
-        <div class="twisted TX_text" data-open="ui-icon-info">
-          <span class="TX_text">
-            Enter the language code for a supported language
-          </span>
-        </div>
       </td>
     </tr>
-    <tr>
-      <td class="TX_text">Text size</td>
+    <tr class=" TX_title tooltip-dialog" title="Increase/decrease text size">
+      <td>
+        <span class="TX_text">
+          Text size
+        </span>
+      </td>
       <td>
         <button data-id="bigger" style="font-size:larger" title="Larger">Aa</button>
         <button data-id="smaller" style="font-size:smaller" title="Smaller">Aa</button>
-        <span class="twisted TX_text" data-open="ui-icon-info">
-          <span class="TX_text">
-            Increase/decrease text size
-          </span>
-        </span>
       </td>
     </tr>
-    <tr>
-      <td class="TX_text">Colour scheme</td>
+    <tr class="TX_title tooltip-dialog" title="Select your preferred colour scheme">
+      <td>
+        <span class="TX_text">
+          Colour scheme
+        </span>
+      </td>
       <td>
         <select data-id="theme">
           <option value="base">Base</option>
@@ -96,81 +92,37 @@
           <option value="trontastic">Trontastic</option>
           <option value="swanky-purse">Swanky Purse</option>
         </select>
-        <div class="twisted" data-open="ui-icon-info">
-          <span class="TX_text">
-            Select your preferred colour scheme.
-          </span>
-          <span class="TX_text">
-            This preference will be saved in a cookie in this browser
-          </span>
-        </div>
       </td>
     </tr>
     <tr><th class="TX_text" colspan="2">Database</th></tr>
-    <tr>
-      <td class="TX_text">Cloud Store</td>
+    <tr class="TX_title tooltip-dialog" title="Open the store settings dialog">
+      <td>
+        <span class="TX_text">
+          Cloud Store
+        </span>
+      </td>
       <td>
         <button data-id="chss" class="TX_text">Settings</button>
       </td>
     </tr>
-    <tr>
-      <td class="TX_title">Encryption password</td>
+    <tr class="TX_title tooltip-dialog" title="Change the encryption password for the store. This should be different to the password you use to log in to your cloud storage provider (e.g. Google). You should ensure that all clients up to date and you are safely connected to the internet before changing the password, or you may lose data. The encryption password is never saved, and there is no way to recover it if you lose it!">
       <td>
-        <button data-id="chpw" class="TX_text">Change</button>
-        <div class="twisted" data-open="ui-icon-info">
-          <span class="TX_text">
-            Change the encryption password for the store.
-          </span>
-          <p class="dlg-warning TX_text">
-            This may be different to the password you use to log in to
-            your cloud data store. You must ensure that all clients up
-            to date and you
-            are safely connected to the internet before doing this,
-            or you will lose data. Changing the encryption password will
-            overwrite all data in
-            the cloud with what you can currently see in the browser.
-          </p>
-        </div>
+        <span class="TX_text">
+          Encryption password
+        </span>
+      </td>
+      <td>
+        <button data-id="chpw" class="TX_text TX_title" title="Change the encryption password for the store">Change</button>
       </td>
     </tr>
-    <tr>
-      <td class="TX_text">Optimise</td>
+    <tr class="TX_title tooltip-dialog" title="Optimise the store by removing old actions. The cloud keeps a history of all changes from all clients, so that every client has a chance to see every change. This history can get quite long, so you may want to optimise it by removing the history. You should only do this if you are 100% certain that no client has local changes that may need to be saved to the cloud">
+      <td>
+        <span class="TX_text">
+          Optimise
+        </span>
+      </td>
       <td>
         <button data-id="optimise" class="TX_text">Optimise</button>
-        <div class="twisted" data-open="ui-icon-info">
-          <span class="TX_text">
-            Optimise the store by removing old actions.
-          </span>
-          <span class="TX_text">
-            The cloud store keeps a history of all changes from all clients,
-            so that every client has a chance to see every change, however
-            long it ihas been since it last updated. This history can get
-            quite long, so you may want to optimise it by removing this
-            history. You should only do this if you are 100% certain that
-            no client has local changes that may need to be saved to the
-            cloud.
-          </span>
-        </div>
-      </td>
-    </tr>
-    <tr>
-      <td class="TX_text">Raw JSON</td>
-      <td>
-        <button data-id="json" class="TX_text">View/Edit</button>
-        <div class="twisted" data-open="ui-icon-info">
-          <span class="TX_text">
-            View/Edit raw JSON for the entire store
-          </span>
-          <span class="TX_text">
-            Be very careful!
-          </span>
-        </div>
-      </td>
-    </tr>
-    <tr data-id="dump-store">
-      <td>Dump client store</td>
-      <td>
-        <button data-id="dump">Dump</button>
       </td>
     </tr>
     <tr>

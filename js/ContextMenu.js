@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,jquery */
 
-define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "clipboard", "jquery", "jquery-ui", "contextmenu" ], function(Translator, Dialog, Action, ClipboardJS) {
+define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror", "clipboard", "jquery", "jquery-ui", "contextmenu" ], function(Translator, Dialog, Action, Serror, ClipboardJS) {
 
     let TX = Translator.instance();
 
@@ -16,6 +16,7 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "clipboard"
             this.$menuTarget;
 
             this.clipboard = null;
+            this.clipboardContents = null;
 
             // For unknown reasons, we get a taphold event on mobile devices
             // even when a taphold hasn't happened. So we have to selectively
@@ -27,18 +28,6 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "clipboard"
             let menu = {
                 delegate: ".tree-title",
                 menu: [
-                    {
-                        title: TX.tx("Copy value"),
-                        cmd: "copy_value",
-                        uiIcon: "squirrel-icon-copy squirrel-icon"
-                    },
-                    /* Can't get it to work
-                       {
-                       title: TX.tx("Paste"),
-                       cmd: "paste",
-                       uiIcon: "squirrel-icon-paste squirrel-icon"
-                       },
-                       /**/
                     {
                         title: TX.tx("Pick characters"),
                         cmd: "pick_from",
@@ -75,13 +64,13 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "clipboard"
                         uiIcon: "squirrel-icon-add-folder squirrel-icon"
                     },
                     {
-                        title: TX.tx("Copy folder"),
-                        cmd: "make_copy",
+                        title: TX.tx("Copy"),
+                        cmd: "copy",
                         uiIcon: "squirrel-icon-copy squirrel-icon"
                     },
                     {
-                        title: TX.tx("Insert copy of folder"),
-                        cmd: "insert_copy",
+                        title: TX.tx("Paste"),
+                        cmd: "paste",
                         uiIcon: "squirrel-icon-paste squirrel-icon"
                     },
                     {
@@ -100,28 +89,57 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "clipboard"
             $("body")
             .contextmenu(menu);
 
-            self.valueCopyClipboard =
-            new ClipboardJS(".ui-contextmenu li[data-command='copy_value']", {
-                text: function () {
-                    if (this.debug) {
-                        let p = self.$menuTarget.tree("getPath");
-                        this.debug("clip val from", p);
-                    }
-                    return self.$menuTarget.data("value");
-                }
-            });
-            
-            self.treeCopyClipboard =
-            new ClipboardJS(".ui-contextmenu li[data-command='make_copy']", {
+            // The clipboard works by setting the text of the clipboard
+            // action based on the content of the node. This both sets
+            // the system clipboard to this text. We then remember what
+            // was copied in the clipboardContents. Of course this means
+            // we can't paste the system clipboard as it was before the
+            // app started.
+            let clipboard =
+            new ClipboardJS(".ui-contextmenu li[data-command='copy']", {
                 text: function () {
                     let p = self.$menuTarget.tree("getPath");
-                    if (self.debug) self.debug("clip tree from", p);
-                    // SMELL
+                    if (self.debug) self.debug("copy tree from", p);
                     let n = self.app.hoarder.hoard.get_node(p);
                     return JSON.stringify(n);
                 }
             });
+
+            /* Try to get existing clipboard per the Mozilla API
+               - doesn't work on either Chrome or Firefox
+            navigator.permissions.query({name:'clipboard-read'})
+            .then(function(result) {
+                if (result.state == 'granted') {
+                    navigator.clipboard.readText().then(
+                        clipText => self.clipboardContents = clipText);
+                }
+            });*/
+
+            // Initialise the clipboard to get "paste" enabled, in case
+            // we are copy-pasting external content
+            this.clipboardContents = '{"data":"' + TX.tx("Add new value")
+            + '"}';
+            clipboard.on("success", function(e) {
+                self.clipboardContents = e.text;
+            });
         }
+
+        /**
+         * Check if the clipboard contains useable data
+         * @return boolean
+         */
+        _clipboardReady() {
+            if (typeof this.clipboardContents !== "string")
+                return false;
+            try {
+                JSON.parse(this.clipboardContents);
+                return true;
+            } catch(e) {
+                if (this.debug) this.debug("Clipboard", e);
+                return false;
+            }
+        }
+        
 
         /**
          * Handle context menu enable/disable
@@ -147,8 +165,7 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "clipboard"
          * Handle context menu open on a node
          */
         _before_menu_open(ui) {
-            let self = this;
-            if (self.contextMenuDisables > 0)
+            if (this.contextMenuDisables > 0)
                 return false;
 
             let $node = (ui.target.is(".tree-node")) ?
@@ -161,7 +178,7 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "clipboard"
                 .hasClass("tree-root");
             let is_open = $node.hasClass("tree-node-is-open");
 
-            if (self.debug) self.debug("beforeOpen contextmenu on",
+            if (this.debug) this.debug("beforeOpen contextmenu on",
                                        $node.data("key"), is_leaf);
 
             $("body")
@@ -170,16 +187,16 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "clipboard"
                          is_open && !is_leaf)
             .contextmenu("showEntry", "add_value",
                          is_open && !is_leaf && !is_root)
-            .contextmenu("showEntry", "copy_value", is_leaf)
+            .contextmenu("showEntry", "copy", true)
             .contextmenu("showEntry", "delete", !is_root)
             .contextmenu("showEntry", "edit", is_leaf)
-            .contextmenu("showEntry", "insert_copy", !is_leaf && (typeof self.clipboard !== "undefined"))
-            .contextmenu("showEntry", "make_copy", !is_root && !is_leaf)
+            .contextmenu("showEntry", "paste",
+                         is_open && !is_leaf && this._clipboardReady())
             .contextmenu("showEntry", "pick_from", is_leaf)
             .contextmenu("showEntry", "randomise", is_leaf)
             .contextmenu("showEntry", "rename", !is_root);
 
-            self.$menuTarget = $node;
+            this.$menuTarget = $node;
         }
 
         /**
@@ -209,43 +226,28 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "clipboard"
                 return;
             }
 
-            let promise;
+            let promise, data;
 
             // Items with no dialog simply return. Items that open a
             // dialog set a promise and break to a generic catch
             // handler after the switch.
             switch (ui.cmd) {
-            case "copy_value":
-                self.clipboard = $node.data("value");
-                return;
 
-            case "make_copy":
-                self.clipboard = JSON.stringify(
-                    // SMELL
-                    self.app.hoarder.hoard.get_node($node.tree("getPath")));
-                return;
-
-                /* Can't get it to work like this - would need an intermediate
-                   element that a Ctrl+V event happens on.
-                   case "paste":
-                   document.designMode = "on";
-                   $(window).on("paste", function(e) {
-	           let   systemPasteContent =
-                   e.clipboardData.getData("text/plain");
-                   });
-                   $("#pasteboard").focus();
-                   document.execCommand("Paste");
-                   break;
-                   /**/
-
-            case "insert_copy":
-                if (!self.clipboard)
-                    return;
+            case "paste":
                 
-                let data = JSON.parse(self.clipboard);
-                promise = Dialog.confirm("insert", {
-                    $node: $node,
-                    data: data
+                return Dialog.confirm("insert", {
+                    path: $node.tree("getPath"),
+                    validate: validate_unique_key,
+                    value: self.clipboardContents,
+                    is_value: true
+                })
+                .then((kv) => {
+                    self.clipboardContents = kv.value;
+                    return self.app.playAction(new Action({
+                        type: "I",
+                        path: $node.tree("getPath").concat(kv.key),
+                        data: kv.value
+                    }));
                 });
                 break;
 
@@ -264,7 +266,17 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "clipboard"
                     is_value: true
                 })
                 .then((res) => {
-                    self.app.add_child_node($node, res.key, res.value);
+                    let progress = [];
+                    return self.app.playAction(new Action({
+                        type: "N",
+                        path: $node.tree("getPath").concat(res.key),
+                        data: res.value
+                    }))
+                    .catch(() => {
+                        return Dialog.confirm("alert", {
+                            alert: progress
+                        });
+                    });
                 });
                 break;
 
@@ -275,7 +287,14 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "clipboard"
                     is_value: false
                 })
                 .then((res) => {
-                    self.app.add_child_node($node, res.key);
+                    let progress = [];
+                    return self.app.add_child_node(
+                        $node, res.key, undefined, progress)
+                    .catch(() => {
+                        return Dialog.confirm("alert", {
+                            alert: progress
+                        });
+                    });
                 });
                 break;
 

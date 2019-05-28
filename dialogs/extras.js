@@ -91,15 +91,6 @@ define("dialogs/extras", ["js/Dialog", "js/Translator", "js/Tree", "js-cookie", 
                 Dialog.confirm("theme", self.options);
             });
 
-            this.control("json")
-            .on(Dialog.tapEvent(), function () {
-                Dialog.confirm("json", self.options)
-                .then((js) => {
-                    if (typeof js !== "undefined")
-                        self.options.new_json = js;
-                });
-            });
-
             this.control("optimise")
             .on(Dialog.tapEvent(), function () {
                 Dialog.confirm("optimise", self.options);
@@ -117,7 +108,9 @@ define("dialogs/extras", ["js/Dialog", "js/Translator", "js/Tree", "js-cookie", 
 
             this.control("about")
             .on(Dialog.tapEvent(), function () {
-                Dialog.confirm("about", self.options);
+                Dialog.confirm("about", self.options)
+                .catch(() => {
+                });
             });
 
             this.control("language")
@@ -148,10 +141,6 @@ define("dialogs/extras", ["js/Dialog", "js/Translator", "js/Tree", "js-cookie", 
             Translator.instance().language().then((lingo) => {
                 this.control("language").val(lingo);
             });
-        }
-
-        ok() {
-            return this.options;
         }
     }
     return ExtrasDialog;

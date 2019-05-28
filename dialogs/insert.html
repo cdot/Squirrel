@@ -1,9 +1,18 @@
-<div id="insert_dlg" class="dlg-dialog TX_title" title="Insert copy">
-  <p class="TX_text">Paste from clipboard</p>
+<div id="insert_dlg" class="dlg-dialog TX_title" title="Paste">
   <p>
-    <span class="TX_text">New name:</span>
-    <input data-id="key" type="text" value="" />
+    <span class="TX_text">
+      Enter a name for the pasted folder or value
+    </span>
   </p>
-  <button data-id="ok" class="TX_text TX_title" title="Insert copy" >Insert</button>
-  <input style="display:none" data-id="value" value="placeholder"/>
+  <table>
+    <tbody>
+      <tr>
+        <td data-id="path"></td>
+        <td>
+          <input data-id="key" type="text" value="" />
+        </td>
+      </tr>
+  </table>
+  <textarea data-id="value" style="width:100%;" />
+  <button data-id="ok" class="TX_text TX_title" title="Insert copy" >OK</button>
 </div>

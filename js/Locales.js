@@ -70,6 +70,7 @@ define(["node-getopt", "jsdom", "js/Translator", "fs-extra", "request"], functio
             let proms = [];
             for (let lang in this.translations) {
                 let tx = this.translations[lang];
+                if (this.debug) this.debug("Writing",dir + lang + ".json");
                 proms.push(Fs.writeFile(
                     dir + lang + ".json", JSON.stringify(tx)));
             }
@@ -86,11 +87,15 @@ define(["node-getopt", "jsdom", "js/Translator", "fs-extra", "request"], functio
                 dom = new jsdom.JSDOM(data);
             else
                 dom = data;
+            let count = 0;
             let strings = TX.findAllStrings(dom.window.document.body);
-            for (let i in strings) {
-                this.strings[strings[i]] = true;
+            for (let s of strings) {
+                if (!this.strings[s]) {
+                    count++;
+                    this.strings[s] = true;
+                }
             }
-            return Promise.resolve();
+            return Promise.resolve(count);
         }
 
         /**
@@ -98,13 +103,17 @@ define(["node-getopt", "jsdom", "js/Translator", "fs-extra", "request"], functio
          * @param data string of JS
          */
         js(data) {
+            let count = 0;
             data.replace(
                 /\.tx\((["'])(.+?[^\\])\1/g,
                 (match, quote, str) => {
-                    this.strings[str] = true;
+                    if (!this.strings[str]) {
+                        this.strings[str] = true;
+                        count++;
+                    }
                     return "";
                 });
-            return Promise.resolve();
+            return Promise.resolve(count);
         }
 
         /**
@@ -176,7 +185,7 @@ define(["node-getopt", "jsdom", "js/Translator", "fs-extra", "request"], functio
 
             function getURL(url) {
                 return new Promise((resolve, reject) => {
-                    _getURL(url, 3, resolve, reject);
+                    _getURL(url, 0, resolve, reject);
                 })
             }
             
@@ -199,6 +208,9 @@ define(["node-getopt", "jsdom", "js/Translator", "fs-extra", "request"], functio
                         translated[en] = tx;
                         if (self.debug) self.debug("Translation accepted");
                     }
+                })
+                .catch((e) => {
+                    console.debug("Gave up on", url);
                 });
             }
             

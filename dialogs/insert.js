@@ -7,31 +7,40 @@
  * $node (required)
  * data: data value to insert
  */
-define("dialogs/insert", ["dialogs/add"], function(AddDialog) {
+define("dialogs/insert", ["dialogs/add", "js/Action"], function(AddDialog, Action) {
     class InsertDialog extends AddDialog {
+        validateValue() {
+            let $ta = this.control("value");
+            let text = $ta.val();
+            let enabled = true;
+            
+            try {
+                JSON.parse(text);
+                this.control("ok").icon_button("enable");
+                $ta
+                .removeClass("dlg-disabled")
+                .attr("title", this.tx("Edit valid JSON"));
+            } catch (e) {
+                enabled = false;
+                this.control("ok").icon_button("disable");
+                $ta
+                .addClass("dlg-disabled")
+                .attr("title", e);
+            }
+        }
 
         initialise() {
             let self = this;
-            self.control("key")
-                .on("input", function () {
-                    self.validateUniqueKey();
-                });
+            super.initialise();
+            this.control("value")
+            .on("input", function () {
+                self.validateValue();
+            })
         }
-
+        
         open() {
-            let base = this.tx("A copy");
-            let name = new RegExp("^" + base + " ?(\\d*)$");
-            let i = -1;
-
-            this.options.$node.find("ul")
-                .first()
-                .children(".tree-node")
-                .each(function () {
-                    let m = name.exec($(this).data("key"));
-                    if (m)
-                        i = Math.max(i, m[1] ? parseInt(m[1]) : 0);
-                });
-            this.control("key").val(base + (i >= 0 ? (" " + (i + 1)) : ""));
+            super.open();
+            this.validateValue();
         }
     }
     return InsertDialog;

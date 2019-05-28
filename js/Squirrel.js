@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,jquery */
 
-define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Hoarder", "js/LocalStorageStore", "js/EncryptedStore", "js/Translator", "js/Tree", "js-cookie", "js/ContextMenu", "js/jq/simulated_password", "js/jq/scroll_into_view", "js/jq/icon_button", "js/jq/styling", "js/jq/template", "js/jq/twisted", "jquery", "jquery-ui", "mobile-events" ], function(Serror, Utils, Dialog, Action, Hoarder, LocalStorageStore, EncryptedStore, Translator, Tree, Cookies, ContextMenu) {
+define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Hoarder", "js/Hoard", "js/LocalStorageStore", "js/EncryptedStore", "js/Translator", "js/Tree", "js-cookie", "js/ContextMenu", "js/jq/simulated_password", "js/jq/scroll_into_view", "js/jq/icon_button", "js/jq/styling", "js/jq/template", "js/jq/twisted", "jquery", "jquery-ui", "mobile-events" ], function(Serror, Utils, Dialog, Action, Hoarder, Hoard, LocalStorageStore, EncryptedStore, Translator, Tree, Cookies, ContextMenu) {
 
     let TX;
 
@@ -538,6 +538,8 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
             // TODO: translation
             let sort_prio = ["User", "Pass", "Email"];
 
+            Tree.debug = this.debug;
+            
             Tree.compareKeys = (a, b) => {
                 if (a === b)
                     return 0;
@@ -585,7 +587,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
             Dialog.set_default_options({
                 autoOpen: false,
                 app: this,
-                debug: self.debug
+                debug: this.debug
             });
             $("#sites-node button.tree-open-close").icon_button();
             $("#help_button")
@@ -681,11 +683,6 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                             });
                         }
                     })
-                    .then((res) => {
-                        // replace the client tree with this data
-                        if (res.new_json)
-                            this.hoarder.insert_data([], res.new_json, self)
-                    })
                     .catch((f) => {
                         if (self.debug) self.debug("extras closed");
                     });
@@ -772,43 +769,52 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                     this._stage(TX.tx("Ready"), 5);
                 });
             });
-            
+
+            //$(document).tooltip(); // nasty
             $(document).trigger("init_application");
        }
 
         /**
          * Promise to perform a (manual) new tree node action
+         * @param $node parent node to add the ney key to
+         * @param title name of the new key
+         * @param value undefined if this is a folder, or the new
+         * value otherwise
+         * @param progress progress reporter
          */
-        add_child_node($node, title, value) {
+        add_child_node($node, title, value, progress) {
             let self = this;
             let path = $node.tree("getPath").concat(title);
-            self.hoarder.play_action(
+            return self.hoarder.play_action(
                 { type: "N", path: path, time: Date.now(),
-                  data: (typeof value === "string") ? value : undefined },
-                true)
+                  data: (typeof value === "object") ? undefined: value })
             .then((res) => {
-                if (res.conflict)
-                    return Dialog.confirm("alert", {
-                        alert: {
+                if (res.conflict) {
+                    if (progress)
+                        progress.push({
                             severity: "warning",
                             message: res.conflict
-                        }
-                    });
-
-                self.$DOMtree.tree("action", res.action)
+                        });
+                    return Promise.reject(progress);
+                }
+                
+                return self.$DOMtree.tree("action", res.action)
                 .then(() => {
                     let $newnode = self.$DOMtree.tree("getNodeFromPath",
                                                       res.action.path);
                     Serror.assert($newnode);
 
-                    if (typeof value !== "string"
-                        && typeof value !== "undefined")
-                        self.insert_data($newnode.tree("getPath"), value);
-                    $newnode.tree("open", {
-                        decorate: true
+                    let promise = (typeof value !== "string"
+                                   && typeof value !== "undefined")
+                        ? self.insert_data(
+                            $newnode.tree("getPath"), value, progress)
+                        : Promise.resolve();
+                    
+                    return promise.then(() => {
+                        $newnode.tree("open", {
+                            decorate: true
+                        });
                     });
-
-                    $(document).trigger("update_save");
                 });
             });
         }
@@ -893,28 +899,27 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
          */
         insert_data(path, data, progress) {
             let self = this;
-            let th = new Hoard({tree: { data: data }});
+            let promise = Promise.resolve();
+            
+            let th = new Hoard({tree: data});
             for (let act of th.actions_to_recreate()) {
                 // this:Hoard, e:Action, next:function
                 //if (self.debug) self.debug(act);
                 act.path = path.slice().concat(act.path);
-                self.hoarder.play_action(new Action(act))
-                .then((res) => {
-                    if (res.conflict) {
-                        if (progress) progress.push({
-                            severity: "notice",
-                            message: res.conflict
-                        });
-                    } else
-                        self.$DOMtree.tree("action", res.action);
-                });
+                promise = promise.then(
+                    self.hoarder.play_action(new Action(act))
+                    .then((res) => {
+                        if (res.conflict) {
+                            if (progress) progress.push({
+                                severity: "notice",
+                                message: res.conflict
+                            });
+                        } else
+                            self.$DOMtree.tree("action", res.action);
+                    }))
             }
-
-            $(document).trigger("update_save");
-            progress.push({
-                severity: "notice",
-                message: TX.tx("JSON has been loaded")
-            });
+            
+            return promise;
         }
 
         /**
