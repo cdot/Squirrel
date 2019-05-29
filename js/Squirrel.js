@@ -22,7 +22,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
     const DIALOGS = [ "alert", "login", "alarm", "store_settings",
                       "choose_changes", "insert", "pick", "add",
                       "delete", "randomise", "extras", "about",
-                      "optimise", "json" ];
+                      "optimise" ];
     
     class Squirrel {
 
@@ -159,11 +159,12 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                 $sb.show();
             }
         }
-
+        
         /**
+         * @private
          * Use classes to mark modifications in the UI tree
          */
-        reset_modified() {
+        _reset_modified() {
             let self = this;
             
             // Reset the UI modification list
@@ -201,7 +202,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                 }
             }
             
-            for (let record of this.hoarder.history()) {
+            for (let record of this.hoarder.get_recent_actions()) {
                 add(record.redo.path, 0, paths);
                 add(record.undo.path, 0, paths);
             }
@@ -209,20 +210,6 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
             mark([], paths);
         }
 
-        dump_client_store() {
-            let store = new LocalStorageStore();
-            store.option("user", this.hoarder.user());
-            let s = store._wtf("client");
-            let i = 0;
-            while (i < s.length) {
-                let buffer = [];
-                for (let j = 0; j < 40 && i < s.length; j++) {
-                    buffer.push(s.charCodeAt(i++));
-                }
-                console.log(buffer.join(",") + ",");
-            }
-        }
-        
         /**
          * @private
          * 401 network login handler. Normally a 401 will be handled by
@@ -414,7 +401,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                 }
                 return promise
                 .then(() => {
-                    self.reset_modified();
+                    self._reset_modified();
                 })
             });
         }
@@ -525,6 +512,78 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
         }
 
         /**
+         * @private
+         * Perform a text search for a new search expression
+         */
+        _search(s) {
+            let self = this;
+            let hits;
+            $(".picked-hit")
+                .removeClass("picked-hit");
+            if (s !== self.last_search) {
+                $("#search_hits")
+                    .text(TX.tx("Searching..."));
+
+                let re;
+                try {
+                    re = new RegExp(s, "i");
+                } catch (e) {
+                    Dialog.confirm("alert", {
+                        alert: {
+                            severity: "error",
+                            message: TX.tx("Error in search expression") +
+                                " '" + s + "': " + e
+                        }
+                    });
+                    return;
+                }
+
+                self.last_search = s;
+
+                $(".search-hit")
+                    .removeClass("search-hit");
+
+                $(".tree-node")
+                    .not(".tree-root")
+                    .each(function () {
+                        let $node = $(this);
+                        if ($node.data("key")
+                            .match(re) ||
+                            ($node.hasClass("tree-leaf") &&
+                             $node.data("value")
+                             .match(re)))
+                            $node.addClass("search-hit");
+                    });
+
+                hits = $(".search-hit");
+                if (hits.length === 0) {
+                    $("#search_hits")
+                        .text(TX.tx("Not found"));
+                    return;
+                }
+
+                self.picked_hit = 0;
+            }
+
+            hits = hits || $(".search-hit");
+            if (self.picked_hit < hits.length) {
+                $("#search_hits")
+                .text(TX.tx(
+                    "$1 of $2 found", self.picked_hit + 1, hits.length));
+                $(hits[self.picked_hit])
+                    .addClass("picked-hit")
+                    .parents(".tree-collection")
+                    .each(function () {
+                        $(this)
+                            .tree("open");
+                    });
+                $(hits[self.picked_hit])
+                    .scroll_into_view();
+                self.picked_hit = (self.picked_hit + 1) % hits.length;
+            }
+        }
+
+        /**
          * Main entry point for the application, invoked from main.js
          */
         begin() {
@@ -552,27 +611,25 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                 return (a < b) ? -1 : 1;
             };
 
-            Tree.playAction = (action) => {
-                return self.playAction(action);
+            Tree.playAction = (action, open) => {
+                return self.playAction(action, open);
             };
-            Tree.onOpenEditor = () => {
-                self.contextMenu.toggle(false);
-            };
-            Tree.onCloseEditor = () => {
-                self.contextMenu.toggle(true);
-            };
+            
             Tree.onTitleHoverIn = () => {
                 $("body").contextmenu("close"); return false;
             };
+            
             Tree.onTitleHoverOut = () => {
                 return $("body").contextmenu("isOpen");
             };
+            
             Tree.hidingValues = (tf) => {
                 if (typeof tf !== "undefined") {
                     Cookies.set("ui_hidevalues", tf ? "on" : null);
                 }
                 return (Cookies.get("ui_hidevalues") === "on");
             };
+            
             Tree.showingChanges = (tf) => {
                 if (typeof tf !== "undefined") {
                     Cookies.set("ui_showchanges", tf ? "on" : null);
@@ -619,7 +676,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                     .then((act) => {
                         self.$DOMtree.tree("action", act)
                         .then(() => {
-                            self.reset_modified();
+                            self._reset_modified();
                             $(document).trigger("update_save");
                         });
                     })
@@ -690,14 +747,14 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
 
             $("#search_input")
                 .on("change", function ( /*evt*/ ) {
-                    self.search($(this)
+                    self._search($(this)
                                 .val());
                 });
 
             $("#search_button")
                 .icon_button()
                 .on(Dialog.tapEvent(), function ( /*evt*/ ) {
-                    self.search($("#search_input")
+                    self._search($("#search_input")
                                 .val());
                 });
 
@@ -772,154 +829,6 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
 
             //$(document).tooltip(); // nasty
             $(document).trigger("init_application");
-       }
-
-        /**
-         * Promise to perform a (manual) new tree node action
-         * @param $node parent node to add the ney key to
-         * @param title name of the new key
-         * @param value undefined if this is a folder, or the new
-         * value otherwise
-         * @param progress progress reporter
-         */
-        add_child_node($node, title, value, progress) {
-            let self = this;
-            let path = $node.tree("getPath").concat(title);
-            return self.hoarder.play_action(
-                { type: "N", path: path, time: Date.now(),
-                  data: (typeof value === "object") ? undefined: value })
-            .then((res) => {
-                if (res.conflict) {
-                    if (progress)
-                        progress.push({
-                            severity: "warning",
-                            message: res.conflict
-                        });
-                    return Promise.reject(progress);
-                }
-                
-                return self.$DOMtree.tree("action", res.action)
-                .then(() => {
-                    let $newnode = self.$DOMtree.tree("getNodeFromPath",
-                                                      res.action.path);
-                    Serror.assert($newnode);
-
-                    let promise = (typeof value !== "string"
-                                   && typeof value !== "undefined")
-                        ? self.insert_data(
-                            $newnode.tree("getPath"), value, progress)
-                        : Promise.resolve();
-                    
-                    return promise.then(() => {
-                        $newnode.tree("open", {
-                            decorate: true
-                        });
-                    });
-                });
-            });
-        }
-
-        /**
-         * Perform a text search for a new search expression
-         */
-        search(s) {
-            let self = this;
-            let hits;
-            $(".picked-hit")
-                .removeClass("picked-hit");
-            if (s !== self.last_search) {
-                $("#search_hits")
-                    .text(TX.tx("Searching..."));
-
-                let re;
-                try {
-                    re = new RegExp(s, "i");
-                } catch (e) {
-                    Dialog.confirm("alert", {
-                        alert: {
-                            severity: "error",
-                            message: TX.tx("Error in search expression") +
-                                " '" + s + "': " + e
-                        }
-                    });
-                    return;
-                }
-
-                self.last_search = s;
-
-                $(".search-hit")
-                    .removeClass("search-hit");
-
-                $(".tree-node")
-                    .not(".tree-root")
-                    .each(function () {
-                        let $node = $(this);
-                        if ($node.data("key")
-                            .match(re) ||
-                            ($node.hasClass("tree-leaf") &&
-                             $node.data("value")
-                             .match(re)))
-                            $node.addClass("search-hit");
-                    });
-
-                hits = $(".search-hit");
-                if (hits.length === 0) {
-                    $("#search_hits")
-                        .text(TX.tx("Not found"));
-                    return;
-                }
-
-                self.picked_hit = 0;
-            }
-
-            hits = hits || $(".search-hit");
-            if (self.picked_hit < hits.length) {
-                $("#search_hits")
-                .text(TX.tx(
-                    "$1 of $2 found", self.picked_hit + 1, hits.length));
-                $(hits[self.picked_hit])
-                    .addClass("picked-hit")
-                    .parents(".tree-collection")
-                    .each(function () {
-                        $(this)
-                            .tree("open");
-                    });
-                $(hits[self.picked_hit])
-                    .scroll_into_view();
-                self.picked_hit = (self.picked_hit + 1) % hits.length;
-            }
-        }
-
-        /**
-         * Promise to insert data from a structure under the given
-         * path. Public because it is used by dialogs/json.js
-         * @param path path to the parent below which this data will be inserted
-         * @param data hoard tree format data
-         * @param progress dialog to add messages to
-         */
-        insert_data(path, data, progress) {
-            let self = this;
-            let promise = Promise.resolve();
-            
-            let th = new Hoard({tree: data});
-            for (let act of th.actions_to_recreate()) {
-                // this:Hoard, e:Action, next:function
-                //if (self.debug) self.debug(act);
-                act.path = path.slice().concat(act.path);
-                promise = promise.then(
-                    self.hoarder.play_action(new Action(act))
-                    .then((res) => {
-                        if (res.conflict) {
-                            if (progress) progress.push({
-                                severity: "notice",
-                                message: res.conflict
-                            });
-                        } else
-                            self.$DOMtree.tree("action", res.action);
-                    }))
-            }
-            
-            return promise;
         }
 
         /**
@@ -927,18 +836,19 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
          * This will play a single action into the client hoard, and
          * update the UI to reflect that action.
          * @param action the action to play, in Hoard action format
+         * @param open boolean to open the node after a N or I
          */
-        playAction(action) {
+        playAction(action, open) {
             let self = this;
-            self.hoarder.play_action(new Action(action))
+            return self.hoarder.play_action(new Action(action))
             .then((e) => {
                 if (self.debug && e.conflict)
                     self.debug("interactive", action,
                                "had conflict", e.conflict);
-                self.$DOMtree.tree("action", e.action)
-                .then(() => {
-                    $(document).trigger("update_save");
-                });
+                return self.$DOMtree.tree("action", e.action, open);
+            })
+            .then(() => {
+                $(document).trigger("update_save");
             })
             .catch((e) => {
                 return Dialog.confirm("alert", {

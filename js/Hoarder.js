@@ -323,6 +323,20 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
         }
 
         /**
+         * Get a list of actions that have occured since the last
+         * sync or save
+         */
+        get_recent_actions() {
+            let list = [];
+            for (let record of this.hoard.history) {
+                if (record.redo.time > this.last_sync
+                    || record.redo.time > this.last_save)
+                    list.push(record);
+            }
+            return list;
+        }
+        
+        /**
          * Get a list of changes reflected in the history. Only changes since
          * the last sync or the last client save are returned.
          * @param max_changes the maximum number of changes to reflect
@@ -331,11 +345,8 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
         get_changes(max_changes) {
             let messages = [];
             
-            for (let record of this.hoard.history) {
-                if (record.redo.time > this.last_sync
-                    || record.redo.time > this.last_save)
-                    messages.push(record.redo.verbose());
-            }
+            for (let record of this.get_recent_actions())
+                messages.push(record.redo.verbose());
 
             // the client may have settings changes
             if (this.clientChanges.length > 0)

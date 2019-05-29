@@ -219,8 +219,7 @@ define("js/Dialog", ["js/Translator", "js/Serror", "jquery", "jquery-ui", "js/jq
             // On devices with touch capability, hovering over an element
             // to see the tooltip doesn't work. So on these devices we
             // open the title in a dialog.
-            
-            if (true/*$.isTouchCapable()*/) {
+            if ($.isTouchCapable()) {
                 this.find(".tooltip-twisty").each(function() {
                     //if (!$.isTouchCapable())
                     //    return;

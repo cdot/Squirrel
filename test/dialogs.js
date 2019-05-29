@@ -37,14 +37,6 @@ define(["js/Dialog", "js/Translator", "js/LocalStorageStore", "js/Action", "js/H
             store: new LocalStorageStore(),
             hoard: new Hoard()
         },
-        add_child_node: function() {
-            debug("add_child_node", arguments);
-            return Promise.resolve();
-        },
-        insert_data: function() {
-            debug("insert_data", arguments);
-            return Promise.resolve();
-        },
         playAction: function() {
             debug("playAction", arguments);
             return Promise.resolve();

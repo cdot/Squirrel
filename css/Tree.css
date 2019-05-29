@@ -51,7 +51,7 @@
 
 /* Applied to tree-title when a node is being hovered over */
 .tree-hover {
-    background-color: rgb(170, 170, 170);
+    border: 1px solid;
 }
 
 .tree-alarm {

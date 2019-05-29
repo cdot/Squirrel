@@ -35,121 +35,90 @@ define("js/jq/styling", ["js/RGBA", "js-cookie", "jquery", "jquery-ui"], functio
          * same look.
          */
         reset: function () {
+            let styles = [];
+            let $picker = $("<div></div>");
+            $("body").append($picker);
 
-            // Copy subset of ui-widget styling into base by instantiating
-            // a widget element then creating a new <style> with the required
-            // attributes applied to body{}
-            let $body = $("body");
-            // See if the body is currently light
-            let bgcol = $body.css("background-color");
-            let is_light; // are we using light colours
+            // In theory only local stylesheets can be
+            // found this way. Stylesheets loading from other domains
+            // (i.e. CDNs) are not local. However that's not always
+            // the case....
+            for (let sheet of document.styleSheets) {
+                if (!sheet)
+                    continue;
+                let rules;
+                try {
+                    rules = sheet.rules || sheet.cssRules;
+                } catch (e) {
+                    // Probably a SecurityException on a CDN stylesheet.
+                    // Ignore it and continue
+                }
+                if (!rules)
+                    continue;
+                for (let rule of rules) {
+                    let m = /(.*)\.inherits-(.*)$/.exec(rule.selectorText);
+                    if (m) {
+                        let subclass = m[1];
+                        let superclass = m[2];
 
-            if (!bgcol || bgcol === "transparent" ||
-                bgcol === "inherit" || bgcol === "initial")
-                // Really there's no way to determine, but make a guess
-                is_light = true;
-            else
-                is_light = (new RGBA(bgcol).luma() > 0.65);
-
-            // Make a div with UI widget styles
-            let $el = $(document.createElement("div"))
-                .addClass("ui-widget")
-                .addClass("ui-widget-content")
-                .hide();
-            $body.append($el);
-
-            // Extract the key elements of the theme in the widget
-            bgcol = $el.css("background-color");
-            let style = "body {";
-            for (let attr in {
-                "font": 0,
-                "color": 0,
-                "background-color": 0
-            }) {
-                let av = $el.css(attr);
-                style += attr + ": " + av + ";\n";
-            }
-            style += "}";
-            $el.remove();
-
-            // Do we need light highlights in user classes?
-            let need_light;
-            if (!bgcol || bgcol === "transparent" || bgcol === "initial" ||
-                bgcol === "inherit")
-                need_light = is_light;
-            else
-                need_light = (new RGBA(bgcol).luma() < 0.65);
-
-            if (is_light && !need_light || !is_light && need_light) {
-                // Invert colours. In theory only local stylesheets can be
-                // found this way. Stylesheets loading from other domains
-                // (i.e. CDNs) are not local. However that's not always
-                // the case....
-                for (let i = 0; i < document.styleSheets.length; i++) {
-                    let sheet = document.styleSheets[i];
-                    if (!sheet)
-                        continue;
-                    let rules;
-                    try {
-                        rules = sheet.rules || sheet.cssRules;
-                    } catch (e) {
-                        // Probably a SecurityException on a CDN stylesheet.
-                        // Ignore it and continue
-                    }
-                    if (!rules)
-                        continue;
-                    for (let j = 0; j < rules.length; j++) {
-                        let rule = rules[j];
-                        if (/\.[-:a-z0-9]*$/i.test(rule.selectorText)) {
-                            // Class definition
-                            let s = "",
-                                a;
-                            if (rule.style.color) {
-                                try {
-                                    a = new RGBA(rule.style.color);
-                                    s += "color: " +
-                                        a.inverse()
-                                        .toString() + ";\n"
-                                } catch (e) {
-                                    //console.debug(e);
-                                }
-                            }
-                            if (rule.style.backgroundColor) {
-                                try {
-                                    a = new RGBA(
-                                        rule.style.backgroundColor);
-                                    s += "background-color: " +
-                                        a.inverse()
-                                        .toString() + ";\n"
-                                } catch (e) {
-                                    //console.debug(e + ":" + rule.style.backgroundColor);
-                                }
-                            }
-                            if (s.length > 0)
-                                style += rule.selectorText + "{" + s + "}\n";
+                        $picker.addClass(superclass);
+                        let s = "";
+                        for (let attr of rule.style) {
+                            let v;
+                            if (rule.style[attr] === "inherit")
+                                v = $picker.css(attr);
+                            else
+                                v = rule.style[attr];
+                            s += attr + ":" + v + ";";
+                            $(subclass).css(attr, v);
                         }
+                        $picker.removeClass(superclass);
+                        
+                        if (s.length > 0)
+                            styles.push(subclass + "{" + s + "}");
                     }
                 }
             }
 
-            $("#computed-styles")
-                .remove();
-            let $style = $(document.createElement("style"))
+            $picker.remove();
+            $("#computed-styles").remove();
+            if (styles.length === 0)
+                return;
+            let $style = $("style")
                 .attr("id", "computed-styles")
-                .text(style);
-            $body.append($style);
+                .text(styles.join("\n"));
+            console.log("Restyling",styles.join("\n"));
+            $("body").prepend($style);
         },
 
         theme: function(theme) {
             if (typeof theme !== "undefined") {
+                let promises = [];
                 $("#jQueryTheme")
-                    .each(function () {
-                        this.href = this.href.replace(
-                                /\/themes\/[^/]+/, "/themes/" + theme);
-                        $(this)
-                            .replaceWith($(this));
-                    });
-                $.styling.reset();
+                .each(function () {
+                    this.href = this.href.replace(
+                        /\/themes\/[^/]+/, "/themes/" + theme);
+                    $(this).replaceWith($(this));
+                    // Use the loading of the CSS as an image (which will
+                    // trigger an error) to tell us when we can reset the
+                    // styling
+                    let $img = $("<img />");
+                    $img.attr("src", this.href).hide();
+                    $("body").append($img);
+                    promises.push(new Promise((resolve) => {
+                        $img.on("error", () => {
+                            resolve();
+                            $img.remove();
+                        });
+                    }));
+                });
+                // Allow time for the new style to kick in before
+                // resetting the styling
+                Promise.all(promises)
+                .then(() => {
+                    $.styling.reset();
+                });
+
                 if (theme === "base") {
                     Cookies.remove("ui_theme");
                 } else {

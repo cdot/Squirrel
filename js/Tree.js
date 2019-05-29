@@ -85,18 +85,6 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
         playAction: () => {},
 
         /**
-         * An editor is about to be opened.
-         * Override in calling context
-         */
-        onOpenEditor: () => {},
-
-        /**
-         * An editor is about to be opened.
-         * Override in calling context
-         */
-        onCloseEditor: () => {},
-
-        /**
          * Invoked when the mouse hovers over a node title.
          * Override in calling context
          * @returns {Boolean} true to terminate the hover-in action.
@@ -238,6 +226,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
          * @param $span child node to edit
          * ~para, text text to present in the editor
          * @param action 'R'ename or 'E'dit
+         * @return a Promise that resolves to the changed value
          */
         _edit: function($span, text, action) {
             let $node = this.element;
@@ -254,36 +243,35 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
                 .left;
             });
 
-            Tree.onOpenEditor();
-
             let nodepath = this.getPath();
-            $span.edit_in_place({
-                width: w,
-                text: text,
-                changed: function (s) {
-                    Tree.playAction(new Action({
-                        type: action,
-                        path: nodepath,
-                        data: s
-                    }));
-                    return s;
-                },
-                closed: function () {
-                    Tree.onCloseEditor();
-                }
+            return new Promise((resolve, reject) => {
+                $span.edit_in_place({
+                    width: w,
+                    text: text,
+                    onClose: function (s) {
+                        if (s !== text)
+                            resolve(new Action({
+                                type: action,
+                                path: nodepath,
+                                data: s
+                            }));
+                        else
+                            reject();
+                    }
+                });
             });
         },
 
         editKey: function() {
             let $node = this.element;
-            this._edit(
+            return this._edit(
                 $node.find(".tree-key")
                 .first(), $node.data("key"), "R");
         },
 
         editValue: function() {
             let $node = this.element;
-            this._edit(
+            return this._edit(
                 $node.find(".tree-value")
                 .first(), $node.data("value"), "E");
         },
@@ -590,7 +578,11 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
                 function (e) {
                     if (Tree.debug) Tree.debug("Double-click 1");
                     e.preventDefault();
-                    $(e.target).closest(".tree-node").tree("editKey");
+                    $(e.target).closest(".tree-node").tree("editKey")
+                    .then((a) => {
+                        Tree.playAction(a);
+                    })
+                    .catch((e) => {});
                 });
 
             if ($node.hasClass("tree-leaf")) {
@@ -606,7 +598,11 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
                     function (e) {
                         if (Tree.debug) Tree.debug("Double-click 2");
                         e.preventDefault();
-                        $(e.target).closest(".tree-node").tree("editValue");
+                        $(e.target).closest(".tree-node").tree("editValue")
+                        .then((a) => {
+                            Tree.playAction(a);
+                        })
+                        .catch((e) => {});
                     });
             }
 
@@ -703,7 +699,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
          * @private
          * Action handler for node create
          */
-        _action_N: function(action) {
+        _action_N: function(action, open) {
             return new Promise((resolve) => {
                 let $node = $("<li></li>");
                 // _create automatically adds it to the right parent.
@@ -721,6 +717,10 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
                         }
                     }));
                 $node.tree("getPath");
+                if (open)
+                    $node.tree("open", {
+                        decorate: true
+                    });
             });
         },
         
@@ -728,7 +728,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
          * @private
          * Action handler for node insert
          */
-        _action_I: function(action) {
+        _action_I: function(action, open) {
             let content = JSON.parse(action.data);
             let val;
             let acts = [];
@@ -746,7 +746,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
                 path: action.path,
                 time: content.time,
                 data: content.data
-            }))
+            }), open)
             .then(() => {
                 for (let act of acts) {
                     // Paths recorded in the action are relative
@@ -884,22 +884,24 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
          * Plays an action that is being
          * played into the hoard into the DOM as well.
          * @param e action to play
+         * @param open whether to open the node after the action is applied
+         * (only relevant on N and I actions)
          * @return a promise that resolves when the UI has been updated.
          */
-        action: function(action) {
+        action: function(action, open) {
             if (Tree.debug) Tree.debug("$action",action);
             
             // "N" and "I" require construction of a new node.
             if (action.type === "N")
-                return this._action_N(action);
+                return this._action_N(action, open);
             
             if (action.type === "I")
-                return this._action_I(action);
+                return this._action_I(action, open);
 
             // All else requires a pre-existing node
             let $node = this.getNodeFromPath(action.path);
             let widget = $node.tree("instance");
-            widget["_action_" + action.type].call(widget, action);
+            widget["_action_" + action.type].call(widget, action, open);
             return Promise.resolve();
         },
 

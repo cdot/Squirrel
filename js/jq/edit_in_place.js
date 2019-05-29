@@ -11,19 +11,15 @@ define("js/jq/edit_in_place", ["jquery", "jquery-ui"], function () {
         let $this = $(this);
         let h = options.height || $this.height() || "1em";
         let w = options.width || $this.width() || "1em";
-        let changed = options.changed ||
-            function ( /*text*/ ) {
-                return $this.text();
-            };
-        let closed = options.closed || function () {};
         let $input = $(document.createElement("input"));
         let text = options.text || $this.text();
 
-        // Action on blur
-        function blurb() {
+        function close() {
+            let v = $input.val();
             $input.remove();
             $this.show();
-            closed();
+            if (options.onClose)
+                options.onClose.call($this, v);
         }
 
         $this.hide();
@@ -34,39 +30,17 @@ define("js/jq/edit_in_place", ["jquery", "jquery-ui"], function () {
             .val(text)
             .css("height", h)
             .css("width", w)
-
-            .on("change", function () {
-                let val = $(this)
-                    .val();
-                blurb();
-                if (val !== text)
-                    text = changed.call($this, val);
-            })
-            /*
-                        .on($.getEndEvent(), function(e) {
-                            // Override the parent click handler
-                            e.stopPropagation();
-                            // e.preventDefault(); Kills mouse events on desktop input
-                        })
-
-                        .on($.getStartEvent(), function(e) {
-                            // Override the parent click handler
-                            e.stopPropagation();
-                            // e.preventDefault(); Kills mouse events on desktop input
-                        })
-            */
+            .on("change", close)
+            .blur(close)
             .on("keydown", function (e) { // Escape means cancel
                 if (e.keyCode === 27 ||
-                    (e.keyCode === 13 &&
-                        $(this)
-                        .val() === text)) {
-                    blurb();
+                    (e.keyCode === 13 && $(this).val() === text)) {
+                    close();
                     return false;
                 } else
                     return true;
             })
 
-            .blur(blurb)
             .select();
     };
 });

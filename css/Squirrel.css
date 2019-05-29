@@ -72,11 +72,12 @@ https://stackoverflow.com/questions/826782/how-to-disable-text-selection-highlig
     height: 15em;
 }
 
-body {
+body .inherits-ui-widget ui-widget-content {
     /* Defaults from UI dialog base theme */
     font: 16px Arial, Helvetica, sans-serif;
-    color: rgb(51, 51, 51);
-    background-color: rgb(255, 255, 255);
+    color: inherit;
+    background-color: inherit;
+    background: inherit;
 }
 
 .search-hit {

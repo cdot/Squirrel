@@ -44,7 +44,7 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
                         uiIcon: "squirrel-icon-edit squirrel-icon"
                     },
                     {
-                        title: TX.tx("Add reminder"),
+                        title: TX.tx("Set/Change Reminder"),
                         cmd: "add_alarm",
                         uiIcon: "squirrel-icon-alarm squirrel-icon"
                     },
@@ -182,7 +182,7 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
                                        $node.data("key"), is_leaf);
 
             $("body")
-            .contextmenu("showEntry", "add_alarm", !has_alarm && !is_root)
+            .contextmenu("showEntry", "add_alarm", !is_root)
             .contextmenu("showEntry", "add_subtree",
                          is_open && !is_leaf)
             .contextmenu("showEntry", "add_value",
@@ -231,6 +231,7 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
             // Items with no dialog simply return. Items that open a
             // dialog set a promise and break to a generic catch
             // handler after the switch.
+            
             switch (ui.cmd) {
 
             case "paste":
@@ -247,17 +248,23 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
                         type: "I",
                         path: $node.tree("getPath").concat(kv.key),
                         data: kv.value
-                    }));
+                    }), true);
                 });
                 break;
 
             case "rename":
-                $node.tree("editKey");
-                return;
+                promise = $node.tree("editKey")
+                .then((a) => {
+                    return self.app.playAction(a);
+                });
+                break;
 
             case "edit":
-                $node.tree("editValue");
-                return;
+                promise = $node.tree("editValue")
+                .then((a) => {
+                    return self.app.playAction(a);
+                });
+                break;
 
             case "add_value":
                 promise = Dialog.confirm("add", {
@@ -266,17 +273,11 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
                     is_value: true
                 })
                 .then((res) => {
-                    let progress = [];
                     return self.app.playAction(new Action({
                         type: "N",
                         path: $node.tree("getPath").concat(res.key),
                         data: res.value
-                    }))
-                    .catch(() => {
-                        return Dialog.confirm("alert", {
-                            alert: progress
-                        });
-                    });
+                    }), true);
                 });
                 break;
 
@@ -287,14 +288,10 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
                     is_value: false
                 })
                 .then((res) => {
-                    let progress = [];
-                    return self.app.add_child_node(
-                        $node, res.key, undefined, progress)
-                    .catch(() => {
-                        return Dialog.confirm("alert", {
-                            alert: progress
-                        });
-                    });
+                    return self.app.playAction(new Action({
+                        type: "N",
+                        path: $node.tree("getPath").concat(res.key)
+                    }), true);
                 });
                 break;
 
@@ -305,18 +302,20 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
                     constraints: nc
                 })
                 .then((result) => {
-                    self.app.playAction(new Action({
+                    let prom = self.app.playAction(new Action({
                         type: "E",
                         path: $node.tree("getPath"),
                         data: result.text
                     }));
                     if (typeof result.constraints !== "undefined")
-                        self.app.playAction(new Action({
-                            type: "X",
-                            path: $node.tree("getPath"),
-                            data: result.constraints
-                        }));
-
+                        prom = prom.then(() => {
+                            return self.app.playAction(new Action({
+                                type: "X",
+                                path: $node.tree("getPath"),
+                                data: result.constraints
+                            }));
+                        });
+                    return prom;
                 });
                 break;
 
@@ -328,7 +327,7 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
                 })
                 .then((act) => {
                     act.path = $node.tree("getPath").slice();
-                    self.app.playAction(act);
+                    return self.app.playAction(act);
                 });
                 break;
 
@@ -338,7 +337,7 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
                     is_leaf: $node.hasClass("tree-leaf")
                 })
                 .then(() => {
-                    self.app.playAction(new Action({
+                    return self.app.playAction(new Action({
                         type: "D",
                         path: $node.tree("getPath")
                     }));
@@ -355,12 +354,15 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
                 return;
             }
             
+            this.toggle(false);
+            if (self.debug)
+                promise = promise.catch((fail) => {
+                    if (fail) self.debug(fail);
+                });
+            
             return promise
-            .then(() => {
-                $(document).trigger("update_save");
-            })
-            .catch((fail) => {
-                if (self.debug) self.debug(fail);
+            .finally(() => {
+                this.toggle(true);
             });
         }
     }
