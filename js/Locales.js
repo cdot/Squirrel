@@ -36,7 +36,7 @@ function auto_translate(en, lang) {
     let url = "http://api.mymemory.translated.net/get?q="
         + encodeURIComponent(s) + "&langpair="
         + encodeURIComponent("en|" + lang);
-    console.log("Sending",url);
+    
     let response = request('GET', url);
     let tx;
     if (response.statusCode !== 200)
