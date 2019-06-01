@@ -326,11 +326,10 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
          * Get a list of actions that have occured since the last
          * sync or save
          */
-        get_recent_actions() {
+        get_unsaved_actions() {
             let list = [];
             for (let record of this.hoard.history) {
-                if (record.redo.time > this.last_sync
-                    || record.redo.time > this.last_save)
+                if (record.redo.time > this.last_save)
                     list.push(record);
             }
             return list;
@@ -345,7 +344,7 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
         get_changes(max_changes) {
             let messages = [];
             
-            for (let record of this.get_recent_actions())
+            for (let record of this.get_unsaved_actions())
                 messages.push(record.redo.verbose());
 
             // the client may have settings changes
@@ -497,8 +496,6 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
                     return Promise.resolve(new_client);
              })
             .then((selected) => {              
-                this.last_sync = Date.now();
-                if (this.debug) this.debug("...synced at", this.last_sync);
                 let promise = Promise.resolve();
                 for (let act of selected) {
                     promise = promise.then(
@@ -514,16 +511,20 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
                                     severity: "warning",
                                     message: e.conflict
                                 });
-                                return Promise.resolve();
                             } else {
                                 if (this.debug) this.debug("...played", act);
                                 new_cloud.push(act);
                                 if (player)
                                     return player(act);
-                                else
-                                    return Promise.resolve();
                             }
+                            return Promise.resolve();
                         }));
+                }
+                if (selected.length > 0) {
+                    // If we saw changes, we need to save
+                    this.last_sync = Date.now();
+                    this.clientChanges.push(TX.tx("Cloud store changed"));
+                    if (this.debug) this.debug("...synced at", this.last_sync);
                 }
                 return promise;
             })
