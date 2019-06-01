@@ -59,25 +59,25 @@ https://stackoverflow.com/questions/826782/how-to-disable-text-selection-highlig
     display: none;
 }
 
-#help {
-    display: none;
-}
-
 #stegimage {
     height: 8em;
 }
 
-.json_text {
-    width: 98%;
-    height: 15em;
+body {
+    font: 16px Arial, Helvetica, sans-serif;
+    background-size: cover;
 }
 
-body .inherits-ui-widget ui-widget-content {
-    /* Defaults from UI dialog base theme */
-    font: 16px Arial, Helvetica, sans-serif;
+body .inherit_ui-widget_ui-widget-content {
     color: inherit;
     background-color: inherit;
-    background: inherit;
+    background-color: inherit;
+    background-image: inherit;
+    background-position: inherit;
+    background-attachment: inherit;
+    background-origin: inherit;
+    background-clip: inherit;
+    background-color: inherit;
 }
 
 .search-hit {
@@ -97,6 +97,10 @@ body .inherits-ui-widget ui-widget-content {
 
 #sites-node {
     margin-top: 2em; /* Avoid the topbar */
+}
+
+.help-menu {
+    margin-right: 0.5em;
 }
 
 /*
