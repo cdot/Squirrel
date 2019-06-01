@@ -18,10 +18,10 @@
    xml:space="preserve"
    id="svg5"
    sodipodi:docname="search.svg"
-   inkscape:version="0.92.2 (5c3e80d, 2017-08-06)"><metadata
+   inkscape:version="0.92.3 (2405546, 2018-03-11)"><metadata
      id="metadata11"><rdf:RDF><cc:Work
          rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type
-           rdf:resource="http://purl.org/dc/dcmitype/StillImage" /><dc:title></dc:title></cc:Work></rdf:RDF></metadata><defs
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" /><dc:title /></cc:Work></rdf:RDF></metadata><defs
      id="defs9" /><sodipodi:namedview
      pagecolor="#ffffff"
      bordercolor="#666666"
@@ -39,7 +39,7 @@
      fit-margin-left="0"
      fit-margin-right="0"
      fit-margin-bottom="0"
-     inkscape:zoom="9.8333333"
+     inkscape:zoom="27.812867"
      inkscape:cx="4.834"
      inkscape:cy="4.9713166"
      inkscape:window-x="59"
@@ -51,6 +51,7 @@
      transform="translate(-7.166,-8)"><path
        id="search"
        d="m 16.021,15.96 -2.374,-2.375 c -0.048,-0.047 -0.105,-0.079 -0.169,-0.099 0.403,-0.566 0.643,-1.26 0.643,-2.009 C 14.12,9.557 12.563,8 10.644,8 8.723,8 7.166,9.557 7.166,11.478 c 0,1.92 1.557,3.477 3.478,3.477 0.749,0 1.442,-0.239 2.01,-0.643 0.019,0.063 0.051,0.121 0.098,0.169 l 2.375,2.374 c 0.19,0.189 0.543,0.143 0.79,-0.104 0.247,-0.247 0.293,-0.601 0.104,-0.791 z m -5.377,-2.27 c -1.221,0 -2.213,-0.991 -2.213,-2.213 0,-1.221 0.992,-2.213 2.213,-2.213 1.222,0 2.213,0.992 2.213,2.213 -10e-4,1.222 -0.992,2.213 -2.213,2.213 z"
-       inkscape:connector-curvature="0" /></g><g
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="ccccssscccscssscs" /></g><g
      id="Guides"
      transform="translate(-7.166,-8)" /></svg>
