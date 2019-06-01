@@ -62,7 +62,9 @@
     "jquery-ui": "^1.12.1",
     "js-cookie": "^2.2.0",
     "mime-types": "^2.1.22",
-    "requirejs": "^2.3.6"
+    "readline-sync": "^1.4.9",
+    "requirejs": "^2.3.6",
+    "sync-request": "^6.1.0"
   },
   "devDependencies": {
     "axios": ">=0.17.1",

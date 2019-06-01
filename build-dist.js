@@ -16,7 +16,8 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
             [ "d", "debug", "Debug" ],
             [ "D", "deps", "Show dependencies" ],
             [ "h", "help", "Display this help" ],
-            [ "l", "locales", "Try to improve translations" ]
+            [ "l", "language=ARG", "Language for translation" ],
+            [ "t", "translate=ARG", "Re-translate strings below this confidence level (1 for all strings, 0 for untranslated only)" ]
         ])
         .bindHelp()
         .setHelp(DESCRIPTION + "[[OPTIONS]]")
@@ -246,7 +247,7 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
                 return fs.writeFile("dist/" + root + ".bad_js", codes);
             }
             return Promise.all([
-                locales.js(codes).then((c) => {
+                locales.js(codes, root + ".js").then((c) => {
                     if (debug)
                         debug("Extracted",c,"new strings from",root + ".js");
                 }),
@@ -343,29 +344,13 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
         });
     }
 
-    function processImages() {
+    function processDir(dir, regex) {
         // Copy images
         return listDir("images")
         .then((files) => {
             let proms = [];
             for (let f of files) {
-                proms.push(
-                    fs.readFile(f)
-                    .then((data) => {
-                        return fs.writeFile("dist/" + f, data);
-                    }));
-            }
-            return Promise.all(proms);
-        });
-    }
-
-    function processLocales() {
-        // Copy images
-        return listDir("locale")
-        .then((files) => {
-            let proms = [];
-            for (let f of files) {
-                if (/\.json$/.test(f))
+                if (regex.test(f))
                     proms.push(
                         fs.readFile(f)
                         .then((data) => {
@@ -461,7 +446,7 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
             // Generate new HTML
             let index = "<!DOCTYPE html>\n" +
                 document.querySelector("html").innerHTML;
-            return locales.html(index)
+            return locales.html(index, module + ".html")
             .then((c) => {
                 if (debug)
                     debug("Extracted",c,"new strings from", module + ".html");
@@ -487,8 +472,8 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
     
         .then(() => {
             return Promise.all([
-                processImages(),
-                processLocales(),
+                processDir("images", /\.(svg|png|icon|gif)$/),
+                processDir("locale", /\.json$/),
                 processJS("main"),
                 processJS("help"),
                 processHTML("index"),
@@ -503,7 +488,7 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
         });
     }
 
-    function target_locales() {
+    function target_translate(improve, lang) {
         // Update translations
         if (debug) debug("Updating translations");
         return locales.loadStrings()
@@ -511,23 +496,22 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
             return locales.loadTranslations();
         })
         .then(() => {
-            return locales.updateTranslations(true);
+            if (lang)
+                locales.updateTranslation(lang, improve);
+            else
+                locales.updateTranslations(improve);
         })
         .then(() => {
             if (debug) debug("Saving translations");
-            return locales.saveTranslations("dist");
+            return locales.saveTranslations();
         });
     }
 
     let locales = new Locales(debug);
     let promise = locales.loadStrings();
     
-    if (opts.locales)
-        promise = promise.then(() => {
-            return target_locales();
-        });
+    if (typeof opts.translate !== "undefined")
+        promise = promise.then(target_translate(opts.translate, opts.language));
     else
-        promise = promise.then(() => {
-            return target_release();
-        });
+        promise = promise.then(target_release());
 })
