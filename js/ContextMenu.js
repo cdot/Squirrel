@@ -101,7 +101,10 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
                     let p = self.$menuTarget.tree("getPath");
                     if (self.debug) self.debug("copy tree from", p);
                     let n = self.app.hoarder.hoard.get_node(p);
-                    return JSON.stringify(n);
+                    if (typeof n.data === "object")
+                        return JSON.stringify(n);
+                    else
+                        return n.data;
                 }
             });
 
@@ -196,6 +199,10 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
             .contextmenu("showEntry", "randomise", is_leaf)
             .contextmenu("showEntry", "rename", !is_root);
 
+            $("body").contextmenu("setTitle", "copy",
+                                  is_leaf ? TX.tx("Copy Value")
+                                  : TX.tx("Copy Folder"));
+
             this.$menuTarget = $node;
         }
 
@@ -233,6 +240,9 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
             // handler after the switch.
             
             switch (ui.cmd) {
+
+            case "copy": // NOOP - handled by clipboard
+                return Promise.resolve();
 
             case "paste":
                 
