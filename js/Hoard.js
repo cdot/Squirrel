@@ -254,7 +254,7 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
             if (action.type === "N") { // New
                 if (typeof parent.data !== "object")
                     return conflict(action,
-                        TX.tx("cannot add subnode to leaf node '$1'",
+                        TX.tx("Cannot add child to leaf node '$1'",
                               Action.pathS(action.path)));
 
                 if (node)

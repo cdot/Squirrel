@@ -80,11 +80,11 @@ define("dialogs/store_settings", ["js/Dialog", "js/Utils", "js/jq/template"], fu
                 if ($ctl.val() === "") {
                     $ctl.prop(
                         "title",
-                        this.tx("Steganography image path may not be empty"));
+                        this.tx("Steganography image URL may not be empty"));
                     ok = false;
                 } else {
                     $ctl.prop(
-                        "title", this.tx("Path to your steganography image"));
+                        "title", this.tx("URL of your steganography image"));
                     this.control("steg_image").attr("src", $ctl.val());
                 }
             }
