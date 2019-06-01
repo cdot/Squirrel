@@ -42,7 +42,8 @@ define("js/jq/twisted", ["jquery", "jquery-ui", "js/jq/icon_button"], function()
                 .detach()
                 .insertBefore($container)
                 .prepend($button)
-                .on($.getTapEvent(), handleTap);
+            // getTapEvent not available in help
+                .on($.getTapEvent ? $.getTapEvent() : "click", handleTap);
 
             if ($title.length === 0) {
                 $button
