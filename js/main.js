@@ -14,10 +14,13 @@ requirejs.config({
     }
 });
 
-define(["js/Utils", "js/Squirrel", "js/Translator", "jquery"], function (Utils, Squirrel, Translator) {
+requirejs(["js/Utils", "js/Translator", "js/Squirrel", "jquery"], function (Utils, Translator, Squirrel) {
     // Parse URL parameters
     let qs = Utils.parseURLParams(window.location.search.substring(1));
 
+    Translator.instance().debug = qs.debug ? console.debug : false;
+    Translator.instance().options.url = "locale";
+    
     if (typeof qs.debug !== "undefined") {
         requirejs.config({
             urlArgs: "nocache=" + Date.now() // suppress cache
@@ -38,8 +41,6 @@ define(["js/Utils", "js/Squirrel", "js/Translator", "jquery"], function (Utils, 
             cache: true
         });
     }
-
-    Translator.instance({debug: qs.debug ? console.debug : false});
 
     // Initialise UI components
     $(function() {
