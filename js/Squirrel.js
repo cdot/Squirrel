@@ -202,7 +202,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                 }
             }
             
-            for (let record of this.hoarder.get_recent_actions()) {
+            for (let record of this.hoarder.get_unsaved_actions()) {
                 add(record.redo.path, 0, paths);
                 add(record.undo.path, 0, paths);
             }
@@ -292,7 +292,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                             alert: {
                                 severity: "error",
                                 message: TX.tx(
-                                    "A URL is required for cloud $1 store",
+                                    "A URL is required for a $1 store",
                                     store.type)
                             }
                         }).then(() => {
@@ -399,10 +399,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                     let prom = self.$DOMtree.tree("action", act);
                     promise = promise.then(prom);
                 }
-                return promise
-                .then(() => {
-                    self._reset_modified();
-                })
+                return promise;
             });
         }
 
@@ -813,15 +810,16 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                         }
                     });
 
-                    $(document).trigger("update_save");
-                    $(document).trigger("check_alarms");
-
                     $("#whoami").text(self.hoarder.user());
 
                     // Ready to rock
                     $("#unauthenticated").hide();
                     $("#authenticated").show();
                     $("#sites-node").tree("open");
+
+                    self._reset_modified();
+                    $(document).trigger("update_save");
+                    $(document).trigger("check_alarms");
 
                     this._stage(TX.tx("Ready"), 5);
                 });
