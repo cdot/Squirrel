@@ -313,7 +313,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                         severity: "warning",
                         message: [
                             TX.tx("Could not open cloud store: $1", e),
-                            TX.tx("If you continue, only the client store will be available"),
+                            TX.tx("If you continue, only the local store will be available"),
                         ]
                     }
                 });
@@ -382,7 +382,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
             return self.hoarder.load_client()
             .catch((lerts) => {
                 return Dialog.confirm("alert", {
-                    title: TX.tx("Browser store read failed"),
+                    title: TX.tx("Local store read failed"),
                     alert: lerts});
             })
             .then(() => {
@@ -782,14 +782,14 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                 });
             })
             .on("init_2", () => {
-                this._stage(TX.tx("Initialising browser store"), 2);
+                this._stage(TX.tx("Initialising local store"), 2);
                 self._2_init_client_store()
                 .then(() => {
                     $(document).trigger("init_3");
                 });
             })
             .on("init_3", () => {
-                this._stage(TX.tx("Reading from browser"), 3);
+                this._stage(TX.tx("Reading from local store"), 3);
                 self._3_load_client()
                 .then(() => {
                     $(document).trigger("init_4");

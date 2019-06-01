@@ -285,15 +285,15 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
             return self.clientStore.reads(CLIENT_PATH)
             .catch((e) => {
                 if (self.debug)
-                    self.debug("...client store could not be read", e);
+                    self.debug("...local store could not be read", e);
                 // probably doesn't exist
                 self.hoard = new Hoard({debug: self.debug});
                 throw [
                     {
                         severity: "error",
-                        message: TX.tx("Browser store does not exist.")
+                        message: TX.tx("Local store does not exist.")
                     },
-                    TX.tx("A new browser store will be created.")];
+                    TX.tx("A new local store will be created.")];
             })
             .then((str) => {
                 try {
@@ -313,10 +313,10 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
                     throw [
                         {
                             severity: "error",
-                            message: TX.tx("Client store exists, but can't be read.")
+                            message: TX.tx("Local store exists, but can't be read.")
                         },
                         TX.tx("Check that you have the correct password."),
-                        TX.tx("If you continue and save, a new browser store will be created.")
+                        TX.tx("If you continue and save, a new local store will be created.")
                     ];
                 }
             });
@@ -392,7 +392,7 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
                     }
                     if (progress) progress.push({
                         severity: "notice",
-                        message: TX.tx("Saved in browser")
+                        message: TX.tx("Saved in local store")
                     });
                     self.last_save = Date.now();
                     return Promise.resolve();
@@ -403,7 +403,7 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
                 if (progress) progress.push({
                     severity: "error",
                     message: TX.tx(
-                        "Failed to save in client store: $1", e)
+                        "Failed to save in local store: $1", e)
                 });
                 return Promise.reject(e);
             });
@@ -606,7 +606,7 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
                     progress.push({
                         severity: "error",
                         message: [
-                            TX.tx("Browser store could not be saved"), e
+                            TX.tx("Local store could not be saved"), e
                         ]
                     });
                 });

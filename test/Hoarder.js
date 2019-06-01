@@ -348,7 +348,7 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/En
         .then(() => {
             assert.equal(progress.length, 2);
             assert.equal(progress[0].message, "Saved in cloud");
-            assert.equal(progress[1].message, "Saved in browser");
+            assert.equal(progress[1].message, "Saved in local store");
             let clieh = new Hoard({ debug: debug,
                 hoard: JSON.parse(Utils.Uint8ArrayToString(cliest.data.client)).hoard });
             let clouh = new Hoard({ debug: debug});
