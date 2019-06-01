@@ -56,10 +56,10 @@ define("js/jq/styling", ["js/RGBA", "js-cookie", "jquery", "jquery-ui"], functio
                 if (!rules)
                     continue;
                 for (let rule of rules) {
-                    let m = /(.*)\.inherits-(.*)$/.exec(rule.selectorText);
+                    let m = /(.*)\.inherit_(.*)$/.exec(rule.selectorText);
                     if (m) {
-                        let subclass = m[1];
-                        let superclass = m[2];
+                        let selector = m[1];
+                        let superclass = m[2].split('_').join(' ');
 
                         $picker.addClass(superclass);
                         let s = "";
@@ -70,12 +70,12 @@ define("js/jq/styling", ["js/RGBA", "js-cookie", "jquery", "jquery-ui"], functio
                             else
                                 v = rule.style[attr];
                             s += attr + ":" + v + ";";
-                            $(subclass).css(attr, v);
+                            $(selector).css(attr, v);
                         }
                         $picker.removeClass(superclass);
                         
                         if (s.length > 0)
-                            styles.push(subclass + "{" + s + "}");
+                            styles.push(selector + "{" + s + "}");
                     }
                 }
             }
@@ -87,7 +87,6 @@ define("js/jq/styling", ["js/RGBA", "js-cookie", "jquery", "jquery-ui"], functio
             let $style = $("style")
                 .attr("id", "computed-styles")
                 .text(styles.join("\n"));
-            console.log("Restyling",styles.join("\n"));
             $("body").prepend($style);
         },
 
