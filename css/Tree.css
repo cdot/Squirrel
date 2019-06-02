@@ -1,34 +1,68 @@
-/* All nodes in a tree */
-.tree-node {}
+/*
+ * Naming convention
+ *
+ * An immediate child is separated with _ e.g. tree_title means a "title"
+ * element under a ".tree" element
+ *
+ * A descendant is separated with __ e.g. tree__info is a descendant of .tree
+ * (shorthand for .tree_title_info)
+ *
+ * Markers on a node are separated with - e.g. tree-isRoot means an isRoot
+ * attribute of a tree node
+ */
+
+/* Nodes in a tree. This is be an li for a collection node and should be a
+ * div for the root (though it could be some other block node) */
+.tree {}
+
+/* Wrapper around the tree__toggle and tree__info */
+.tree_title {}
+
+/* full path tree_title_info */
+.tree__info {
+    display: inline-block !important;
+}
 
 /* Just the root node */
-.tree-root {}
+.tree-isRoot {}
 
-.tree-root > .tree-info {
+.tree-isRoot > .tree_title > .tree__info {
     margin: 0.3em 0 0 0;
 }
-/* On a tree-node, if it's a folder */
-.tree-collection {}
 
-/* On a tree-node, if it's a value */
-.tree-leaf {}
+/* On a tree, if it's a folder */
+.tree-isColl {}
 
-/* Wrapper around the tree-open-close and tree-info */
-.tree-title {}
+/* On a tree, if it's a value */
+.tree-isLeaf {}
 
-.tree-change {
+.tree-hasAlarms:not(.tree-isOpen) {
+    border-left: 1px solid magenta;
+}
+
+.tree-isDropTarget {
+    border: 1px solid green;
+}
+
+/* span that contains change info - full path tree_title_info_change */
+.tree__change {
     font-size: smaller;
     margin-left: 2em;
     vertical-align: middle;
 }
 
-/* Icon handle for dragging */
-.tree-draghandle {
+/* Open/close button, full path tree_title_toggle */
+.tree__toggle {
+    margin-right: 1em;
+}
+
+/* Icon handle for dragging - full path tree_title_draghandle */
+.tree__draghandle {
     float: right;
 }
 
-/* The UL that contains all the child nodes under a collection */
-.tree-subnodes {
+/* The UL that contains all the child nodes under a tree node */
+.tree > ul {
     list-style-type: none;
     -webkit-padding-start: 0;
     -webkit-margin-start: 0;
@@ -36,57 +70,35 @@
     padding-left: 0;
 }
 
-/* One entry in that list */
-.tree-subnodes li {
+/* A child node */
+li.tree {
     padding-left: 1em;
 }
 
-/* text that shows when node was last modified */
-.tree-lastmod {
-    margin-left: 4em;
-    float: right;
-}
-
 /* Applied when a node is open */
-.tree-node-is-open {}
+.tree-isOpen {}
 
-/* Applied to tree-title when a node is being hovered over */
+/* Applied to tree_title when a node is being hovered over */
 .tree-hover {
     border: 1px solid;
 }
 
-.tree-alarm {
+/* An alarm button, full path tree_title_info_alarm */
+.tree__alarm {
     float: left;
-}
-
-button .tree-alarm {
     margin: 0.2em;
 }
 
-.tree-modified {
+.tree-isModified {
     color: rgb(0, 89, 255); /* may be complemented in code */
 }
 
-.tree-value {
+/* full path tree_title_info_value */
+.tree__value {
     font-family: "Courier New", Courier, monospace;
 }
 
-.tree-separator {
+/* full path tree_title_info_separator */
+.tree__separator {
     color: rgb(0, 100, 105); /* may be complemented in code */
-}
-
-.tree-info {
-    display: inline-block !important;
-}
-
-.tree-open-close {
-    margin-right: 1em;
-}
-
-.tree-has-alarms:not(.tree-open) {
-    border-left: 1px solid magenta;
-}
-
-.drop-target {
-    border: 1px solid green;
 }

@@ -93,7 +93,24 @@ define("dialogs/extras", ["js/Dialog", "js/Translator", "js/Tree", "js-cookie", 
 
             this.control("optimise")
             .on(Dialog.tapEvent(), function () {
-                Dialog.confirm("optimise", self.options);
+                Dialog.confirm("optimise", self.options)
+                .catch(() => {});
+            });
+
+            this.control("reset_local")
+            .on(Dialog.tapEvent(), function () {
+                Dialog.confirm("alert", {
+                    title: self.tx("Reset Local Store"),
+                    alert: {
+                        severity: "warning",
+                        message: self.tx("Please confirm you want to reset your local store. Changes not saved in the cloud will be lost!")
+                    }
+                })
+                .then(() => {
+                    if (self.debug) self.debug("Resetting....");
+                    self.options.reset_local_store();
+                })
+                .catch(() => {});
             });
 
             this.control("bigger")

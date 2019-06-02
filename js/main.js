@@ -14,7 +14,7 @@ requirejs.config({
     }
 });
 
-requirejs(["js/Utils", "js/Translator", "js/Squirrel", "jquery"], function (Utils, Translator, Squirrel) {
+requirejs(["jquery", "jquery-ui", "js/Utils", "js/Translator", "js/Squirrel"], function (jq, jqui, Utils, Translator, Squirrel) {
     // Parse URL parameters
     let qs = Utils.parseURLParams(window.location.search.substring(1));
 
@@ -44,7 +44,11 @@ requirejs(["js/Utils", "js/Translator", "js/Squirrel", "jquery"], function (Util
 
     // Initialise UI components
     $(function() {
-        new Squirrel(qs).begin();
+        // Have to do this as a two-step process because mobile-events has
+        // a clumsy dependency on jQuery
+        requirejs(["mobile-events"], function(jqme) {
+            new Squirrel(qs).begin();
+        });
     });
 });
 

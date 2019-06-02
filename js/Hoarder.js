@@ -270,6 +270,16 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
             this.cloudStore.option("user", auth.user);
             this.cloudStore.option("pass", auth.pass);
         }
+
+        reset_local() {
+            this.hoard = new Hoard({debug: this.debug});
+            this.history = [];
+            this.clientChanges = [ TX.tx("Local store has been reset") ];
+            this.clientIsEmpty = true;
+            this.last_sync = 0;
+            this.last_save = 0;
+            return this.update_from_cloud();
+        }
         
         /**
          * Promise to load the client hoard. This reads the hoard from
@@ -279,10 +289,10 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
          * or an array of alert messages otherwise
          */
         load_client() {
+            if (this.debug) this.debug('...load client');
+            this.clientIsEmpty = true;
             let self = this;
-            if (self.debug) self.debug('...load client');
-            self.clientIsEmpty = true;
-            return self.clientStore.reads(CLIENT_PATH)
+            return this.clientStore.reads(CLIENT_PATH)
             .catch((e) => {
                 if (self.debug)
                     self.debug("...local store could not be read", e);
@@ -301,7 +311,7 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
                     self.cloudPath = data.cloud_path;
                     self.imageURL = data.image_url;
                     self.last_sync = data.last_sync;
-                    self.last_save = Date.now();
+                    self.last_save = data.last_save;
                     self.hoard = new Hoard({
                         debug: this.debug,
                         hoard: data.hoard
@@ -376,6 +386,7 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
                 cloud_path: this.cloudPath,
                 image_url: this.imageURL,
                 last_sync: this.last_sync,
+                last_save: Date.now(),
                 hoard: this.hoard
             };
             let json = JSON.stringify(data);
@@ -383,20 +394,20 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
             .then(() => {
                 if (this.debug) this.debug("...client write OK");
                 
-                // READBACK CHECK - debug FireFucks, make sure what we
+                // READBACK CHECK - debug, make sure what we
                 // wrote is still readable
-                return this.clientStore.reads(CLIENT_PATH)
-                .then((json2) => {
-                    if (json2 !== json) {
-                        throw new Serror(500, "Readback check failed");
-                    }
+                //return this.clientStore.reads(CLIENT_PATH)
+                //.then((json2) => {
+                //    if (json2 !== json) {
+                //        throw new Serror(500, "Readback check failed");
+                //    }
                     if (progress) progress.push({
                         severity: "notice",
                         message: TX.tx("Saved in local store")
                     });
-                    self.last_save = Date.now();
+                    self.last_save = data.last_save;
                     return Promise.resolve();
-                });
+                //});
             })
             .catch((e) => {
                 if (this.debug) this.debug("...client save failed", e);
@@ -521,10 +532,13 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
                         }));
                 }
                 if (selected.length > 0) {
-                    // If we saw changes, we need to save
+                    // If we saw changes, and we didn't start from an empty
+                    // hoard, then we need to save
                     this.last_sync = Date.now();
-                    this.clientChanges.push(TX.tx("Cloud store changed"));
+                    if (!this.clientIsEmpty)
+                        this.clientChanges.push(TX.tx("Cloud store changed"));
                     if (this.debug) this.debug("...synced at", this.last_sync);
+                    this.clientIsEmpty = false;
                 }
                 return promise;
             })

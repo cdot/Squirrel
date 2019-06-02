@@ -26,7 +26,7 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
             this.app = app;
 
             let menu = {
-                delegate: ".tree-title",
+                delegate: ".tree_title",
                 menu: [
                     {
                         title: TX.tx("Pick characters"),
@@ -171,15 +171,15 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
             if (this.contextMenuDisables > 0)
                 return false;
 
-            let $node = (ui.target.is(".tree-node")) ?
+            let $node = (ui.target.is(".tree")) ?
                 ui.target :
-                ui.target.closest(".tree-node");
+                ui.target.closest(".tree");
 
             let has_alarm = typeof $node.data("alarm") !== "undefined";
-            let is_leaf = $node.hasClass("tree-leaf");
-            let is_root = ui.target.closest(".tree-node")
-                .hasClass("tree-root");
-            let is_open = $node.hasClass("tree-node-is-open");
+            let is_leaf = $node.hasClass("tree-isLeaf");
+            let is_root = ui.target.closest(".tree")
+                .hasClass("tree-isRoot");
+            let is_open = $node.hasClass("tree-isOpen");
 
             if (this.debug) this.debug("beforeOpen contextmenu on",
                                        $node.data("key"), is_leaf);
@@ -217,7 +217,7 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
             function validate_unique_key(val) {
                 let ok = true;
                 let $ul = $node.find("ul").first();
-                $ul.children(".tree-node")
+                $ul.children(".tree")
                 .each(function () {
                     if (val === $(this).data("key")) {
                         // Key not unique
@@ -344,7 +344,7 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
             case "delete":
                 promise = Dialog.confirm("delete", {
                     path: $node.tree("getPath"),
-                    is_leaf: $node.hasClass("tree-leaf")
+                    is_leaf: $node.hasClass("tree-isLeaf")
                 })
                 .then(() => {
                     return self.app.playAction(new Action({

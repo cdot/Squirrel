@@ -122,13 +122,13 @@ requirejs(deps, function(Utils, Hoard, Serror, Translator, Tree, TestRunner) {
             promise = promise.then($DOMtree.tree("action", act));
         }
         const empty_tree = '\
-            <div id="sites-node" class="tree-node tree-never-opened tree-root tree-collection tree-has-alarms">\
-              <ul class="sortable tree-subnodes" style="display: none;">\
-                <li class="tree-node tree-never-opened tree-collection tree-modified tree-has-alarms">\
-                  <ul class="sortable tree-subnodes" style="display: none;">\
-                    <li class="tree-node tree-never-opened tree-collection tree-modified tree-has-alarms">\
-                      <ul class="sortable tree-subnodes" style="display: none;">\
-                        <li class="tree-node tree-never-opened tree-leaf tree-modified">\
+            <div id="sites-node" class="tree tree-never_opened tree-isRoot tree-isColl tree-hasAlarms">\
+              <ul class="sortable" style="display: none;">\
+                <li class="tree tree-never_opened tree-isColl tree-isModified tree-hasAlarms">\
+                  <ul class="sortable" style="display: none;">\
+                    <li class="tree tree-never_opened tree-isColl tree-isModified tree-hasAlarms">\
+                      <ul class="sortable" style="display: none;">\
+                        <li class="tree tree-never_opened tree-isLeaf tree-isModified">\
                         </li>\
                       </ul>\
                     </li>\
@@ -151,13 +151,13 @@ requirejs(deps, function(Utils, Hoard, Serror, Translator, Tree, TestRunner) {
             let $node = $DOMtree.tree("getNodeFromPath", ["FineDining", "Caviar", "Beluga"]);
             $node.tree("open");
             const open_tree = '\
-            <div id="sites-node" class="tree-node tree-never-opened tree-root tree-collection tree-has-alarms">\
-                <ul class="sortable tree-subnodes" style="display: none;">\
-                  <li class="tree-node tree-never-opened tree-collection tree-modified tree-has-alarms">\
-                    <ul class="sortable tree-subnodes" style="display: none;">\
-                      <li class="tree-node tree-never-opened tree-collection tree-modified tree-has-alarms">\
-                        <ul class="sortable tree-subnodes" style="display: none;">\
-                          <li class="tree-node tree-leaf tree-modified tree-node-is-open">\
+            <div id="sites-node" class="tree tree-never_opened tree-isRoot tree-isColl tree-hasAlarms">\
+                <ul class="sortable" style="display: none;">\
+                  <li class="tree tree-never_opened tree-isColl tree-isModified tree-hasAlarms">\
+                    <ul class="sortable" style="display: none;">\
+                      <li class="tree tree-never_opened tree-isColl tree-isModified tree-hasAlarms">\
+                        <ul class="sortable" style="display: none;">\
+                          <li class="tree tree-isLeaf tree-isModified tree-isOpen">\
                           </li>\
                         </ul>\
                       </li>\
@@ -179,30 +179,30 @@ requirejs(deps, function(Utils, Hoard, Serror, Translator, Tree, TestRunner) {
             let $node = $DOMtree.tree("getNodeFromPath", ["FineDining", "Caviar", "Beluga"]);
             $node.tree("open", {decorate:true});
             const open_tree = '\
-            <div id="sites-node" class="tree-node tree-never-opened tree-root tree-collection tree-has-alarms">\
-              <ul class="sortable tree-subnodes" style="display: none;">\
-                <li class="tree-node tree-never-opened tree-collection tree-modified tree-has-alarms">\
-                  <ul class="sortable tree-subnodes" style="display: none;">\
-                    <li class="tree-node tree-never-opened tree-collection tree-modified tree-has-alarms">\
-                      <ul class="sortable tree-subnodes" style="display: none;">\
-                        <li class="tree-node tree-leaf tree-modified ui-draggable tree-node-is-open" style="position: relative;">\
-                          <div class="tree-title">\
-                            <div class="tree-info">\
-                              <button class="tree-alarm ui-button ui-widget ui-button-icon-only">\
+            <div id="sites-node" class="tree tree-never_opened tree-isRoot tree-isColl tree-hasAlarms">\
+              <ul class="sortable" style="display: none;">\
+                <li class="tree tree-never_opened tree-isColl tree-isModified tree-hasAlarms">\
+                  <ul class="sortable" style="display: none;">\
+                    <li class="tree tree-never_opened tree-isColl tree-isModified tree-hasAlarms">\
+                      <ul class="sortable" style="display: none;">\
+                        <li class="tree tree-isLeaf tree-isModified ui-draggable tree-isOpen" style="position: relative;">\
+                          <div class="tree_title">\
+                            <div class="tree__info">\
+                              <button class="tree__alarm ui-button ui-widget ui-button-icon-only">\
                                 <span class="ui-button-icon squirrel-icon ui-icon tree-icon-alarm">\
                                 </span>\
                                 <span class="ui-button-icon-space">\
                                 </span>\
                               </button>\
-                              <span class="tree-key">Beluga\
+                              <span class="tree__key">Beluga\
                               </span>\
-                              <span class="tree-separator"> :\
+                              <span class="tree__separator"> :\
                               </span>\
-                              <span class="tree-value">£6.70 per gramme\
+                              <span class="tree__value">£6.70 per gramme\
                               </span>\
-                              <span class="tree-change">2007-01-01</span>\
+                              <span class="tree__change">2007-01-01</span>\
                             </div>\
-                            <div class="tree-draghandle ui-button ui-corner-all ui-widget ui-button-icon-only ui-draggable-handle" role="button" style="display: none;">\
+                            <div class="tree__draghandle ui-button ui-corner-all ui-widget ui-button-icon-only ui-draggable-handle" role="button" style="display: none;">\
                               <span class="ui-button-icon ui-icon ui-icon-arrow-2-n-s">\
                               </span>\
                               <span class="ui-button-icon-space">\
@@ -231,30 +231,30 @@ requirejs(deps, function(Utils, Hoard, Serror, Translator, Tree, TestRunner) {
             $node.tree("open", {decorate:true});
             $node.tree("close");
             const open_tree = '\
-            <div id="sites-node" class="tree-node tree-never-opened tree-root tree-collection tree-has-alarms">\
-              <ul class="sortable tree-subnodes" style="display: none;">\
-                <li class="tree-node tree-never-opened tree-collection tree-modified tree-has-alarms">\
-                  <ul class="sortable tree-subnodes" style="display: none;">\
-                    <li class="tree-node tree-never-opened tree-collection tree-modified tree-has-alarms">\
-                      <ul class="sortable tree-subnodes" style="display: none;">\
-                        <li class="tree-node tree-leaf tree-modified ui-draggable" style="position: relative;">\
-                          <div class="tree-title">\
-                            <div class="tree-info">\
-                              <button class="tree-alarm ui-button ui-widget ui-button-icon-only">\
+            <div id="sites-node" class="tree tree-never_opened tree-isRoot tree-isColl tree-hasAlarms">\
+              <ul class="sortable" style="display: none;">\
+                <li class="tree tree-never_opened tree-isColl tree-isModified tree-hasAlarms">\
+                  <ul class="sortable" style="display: none;">\
+                    <li class="tree tree-never_opened tree-isColl tree-isModified tree-hasAlarms">\
+                      <ul class="sortable" style="display: none;">\
+                        <li class="tree tree-isLeaf tree-isModified ui-draggable" style="position: relative;">\
+                          <div class="tree_title">\
+                            <div class="tree__info">\
+                              <button class="tree__alarm ui-button ui-widget ui-button-icon-only">\
                                 <span class="ui-button-icon squirrel-icon ui-icon tree-icon-alarm">\
                                 </span>\
                                 <span class="ui-button-icon-space">\
                                 </span>\
                               </button>\
-                              <span class="tree-key">Beluga\
+                              <span class="tree__key">Beluga\
                               </span>\
                               <span class="tree-separator"> :\
                               </span>\
-                              <span class="tree-value">£6.70 per gramme\
+                              <span class="tree__value">£6.70 per gramme\
                               </span>\
-                              <span class="tree-change">2007-01-01</span>\
+                              <span class="tree__change">2007-01-01</span>\
                             </div>\
-                            <div class="tree-draghandle ui-button ui-corner-all ui-widget ui-button-icon-only ui-draggable-handle" role="button" style="display: none;">\
+                            <div class="tree__draghandle ui-button ui-corner-all ui-widget ui-button-icon-only ui-draggable-handle" role="button" style="display: none;">\
                               <span class="ui-button-icon ui-icon ui-icon-arrow-2-n-s">\
                               </span>\
                               <span class="ui-button-icon-space">\

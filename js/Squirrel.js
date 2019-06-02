@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,jquery */
 
-define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Hoarder", "js/Hoard", "js/LocalStorageStore", "js/EncryptedStore", "js/Translator", "js/Tree", "js-cookie", "js/ContextMenu", "js/jq/simulated_password", "js/jq/scroll_into_view", "js/jq/icon_button", "js/jq/styling", "js/jq/template", "js/jq/twisted", "jquery", "jquery-ui", "mobile-events" ], function(Serror, Utils, Dialog, Action, Hoarder, Hoard, LocalStorageStore, EncryptedStore, Translator, Tree, Cookies, ContextMenu) {
+define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Hoarder", "js/Hoard", "js/LocalStorageStore", "js/EncryptedStore", "js/Translator", "js/Tree", "js-cookie", "js/ContextMenu", "js/jq/simulated_password", "js/jq/scroll_into_view", "js/jq/icon_button", "js/jq/styling", "js/jq/template", "js/jq/twisted" ], function(Serror, Utils, Dialog, Action, Hoarder, Hoard, LocalStorageStore, EncryptedStore, Translator, Tree, Cookies, ContextMenu) {
 
     let TX;
 
@@ -123,8 +123,8 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                 if (saved) {
                     // otherwise if cloud or client save failed, we have to
                     // try again
-                    $(".tree-modified")
-                    .removeClass("tree-modified");
+                    $(".tree-isModified")
+                    .removeClass("tree-isModified");
                 }
                 $(document).trigger("update_save");
             });
@@ -168,7 +168,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
             let self = this;
             
             // Reset the UI modification list
-            $(".tree-modified").removeClass("tree-modified");
+            $(".tree-isModified").removeClass("tree-isModified");
             
             // Re-mark all the nodes mentioned in the pending
             // actions list as modified. If a node isn't found,
@@ -191,7 +191,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                     while (path.length > 0 && self.hoarder.node_exists(path)) {
                         let $node = self.$DOMtree.tree("getNodeFromPath", path);
                         if ($node) {
-                            $node.addClass("tree-modified");
+                            $node.addClass("tree-isModified");
                             return;
                         }
                         path.pop(); // try parent
@@ -540,13 +540,13 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                 $(".search-hit")
                     .removeClass("search-hit");
 
-                $(".tree-node")
-                    .not(".tree-root")
+                $(".tree")
+                    .not(".tree-isRoot")
                     .each(function () {
                         let $node = $(this);
                         if ($node.data("key")
                             .match(re) ||
-                            ($node.hasClass("tree-leaf") &&
+                            ($node.hasClass("tree-isLeaf") &&
                              $node.data("value")
                              .match(re)))
                             $node.addClass("search-hit");
@@ -569,7 +569,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                     "$1 of $2 found", self.picked_hit + 1, hits.length));
                 $(hits[self.picked_hit])
                     .addClass("picked-hit")
-                    .parents(".tree-collection")
+                    .parents(".tree-isColl")
                     .each(function () {
                         $(this)
                             .tree("open");
@@ -580,6 +580,26 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
             }
         }
 
+        _reset_local_store() {
+            let self = this;
+            
+            return self.hoarder.reset_local()
+            .then(() => {
+                // Reset UI
+                self.$DOMtree.tree("destroy");
+                self.$DOMtree.tree({});
+                let promise = Promise.resolve();
+                for (let act of self.hoarder.tree_actions()) {
+                    promise = promise.then(self.$DOMtree.tree("action", act));
+                }
+                $("#sites-node").tree("open");
+                
+                self._reset_modified();
+                $(document).trigger("update_save");
+                $(document).trigger("check_alarms");
+            });
+        }
+        
         /**
          * Main entry point for the application, invoked from main.js
          */
@@ -643,7 +663,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                 app: this,
                 debug: this.debug
             });
-            $("#sites-node button.tree-open-close").icon_button();
+            $("#sites-node button.tree__toggle").icon_button();
             $("#help_button")
                 .icon_button()
                 .on(Dialog.tapEvent(), function() {
@@ -735,6 +755,9 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                             }).then((progress) => {
                                 return self.hoarder.save_cloud(acts, progress)
                             });
+                        },
+                        reset_local_store: () => {
+                            return self._reset_local_store();
                         }
                     })
                     .catch((f) => {
@@ -825,7 +848,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                 });
             });
 
-            //$(document).tooltip(); // nasty
+            //$(document).tooltip(); // looks nasty
             $(document).trigger("init_application");
         }
 

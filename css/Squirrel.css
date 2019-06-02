@@ -99,6 +99,10 @@ body .inherit_ui-widget_ui-widget-content {
     margin-top: 2em; /* Avoid the topbar */
 }
 
+#whoami {
+    font-weight: bold;
+}
+
 .help-menu {
     margin-right: 0.5em;
 }
