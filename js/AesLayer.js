@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,node */
 
-define("js/EncryptedStore", ["js/Serror", "js/LayeredStore", "js/Utils", "js/AES"], function (Serror, LayeredStore, Utils, AES) {
+define("js/AesLayer", ["js/Serror", "js/LayeredStore", "js/Utils", "js/AES"], function (Serror, LayeredStore, Utils, AES) {
 
     const SIGNATURE = 0x53;
     const VERSION = 1;
@@ -18,12 +18,12 @@ define("js/EncryptedStore", ["js/Serror", "js/LayeredStore", "js/Utils", "js/AES
      * @param params: Standard for LayeredStore
      * @implements LayeredStore
      */
-    class EncryptedStore extends LayeredStore {
+    class AesLayer extends LayeredStore {
 
         constructor(p) {
             super(p);
             this.option("needs_pass", true);
-            this.type = "EncryptedStore/" + this.understore.type;
+            this.type = "AesLayer/" + this.understore.type;
         }
 
         // @Override
@@ -87,5 +87,5 @@ define("js/EncryptedStore", ["js/Serror", "js/LayeredStore", "js/Utils", "js/AES
         }
     }
 
-    return EncryptedStore;
+    return AesLayer;
 });

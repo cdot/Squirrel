@@ -5,7 +5,7 @@ requirejs.config({
     baseUrl: ".."
 });
 
-const DESCRIPTION = "Encode/decode a file encrypted using EncryptedStore. If the input file has a .json extension, will encrypt it to a file of the same name without the extension. If there is no .json extension, will decrypt to a file of the same name with a .json extension.";
+const DESCRIPTION = "Encode/decode a file encrypted using AesLayer. If the input file has a .json extension, will encrypt it to a file of the same name without the extension. If there is no .json extension, will decrypt to a file of the same name with a .json extension.";
 
 const OPTIONS = [
     ["e", "encrypt", "encrypt file (default is decrypt)"],
@@ -14,7 +14,7 @@ const OPTIONS = [
     ["h", "help", "show this help"]
 ];
 
-requirejs(["node-getopt","js/FileStore", "js/EncryptedStore", "js/Utils"], function(Getopt, FileStore, EncryptedStore, Utils) {
+requirejs(["node-getopt","js/FileStore", "js/AesLayer", "js/Utils"], function(Getopt, FileStore, AesLayer, Utils) {
 
     let parse = new Getopt(OPTIONS)
         .bindHelp()
@@ -31,7 +31,7 @@ requirejs(["node-getopt","js/FileStore", "js/EncryptedStore", "js/Utils"], funct
     let debug = typeof opt.debug === "undefined" ? () => {} : console.debug;
 
     let plainstore = new FileStore({ debug: debug });
-    let cipherstore = new EncryptedStore({
+    let cipherstore = new AesLayer({
         debug: debug,
         understore: new FileStore({ debug: debug })
     });

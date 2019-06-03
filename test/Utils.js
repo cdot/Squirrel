@@ -17,6 +17,38 @@ requirejs(["js/Utils", "test/TestRunner"], function(Utils, TestRunner) {
     let tr = new TestRunner("Utils");
     let assert = tr.assert;
 
+    tr.addTest("parseURLParams", function() {
+        let spec = {
+            strings: { array: true, type: "string" },
+            bools: { array: true, type: "boolean" },
+            nums: { array: true, type: "number" },
+            ints: { array: true, type: "int" },
+            string: { type: "string" },
+            bool: { type: "bool" },
+            num: { type: "float" },
+            "int": { type: "integer" }
+        };
+
+        assert.deepEqual(Utils.parseURLParams("strings=1,2,3&string=123", spec), {
+            string: "123",
+            strings: [ "1", "2", "3" ]
+        });
+        assert.deepEqual(Utils.parseURLParams("nums=1.1,2&num=99", spec), {
+            num: 99,
+            nums: [ 1.1, 2 ]
+        });
+        assert.deepEqual(Utils.parseURLParams("bools=true,,1&bool", spec), {
+            bool: true,
+            bools: [ true, false, true ]});
+
+        spec = {
+            str: { type: "string", "default": "DEFAULT" },
+            boo: { type: "boolean", "default": true }
+        }; 
+        assert.deepEqual(Utils.parseURLParams("", spec), {
+            str: "DEFAULT", boo: true });
+    });
+    
     tr.addTest("StringToUint8Array and Uint8ArrayToString", () => {
         let a8 = Utils.StringToUint8Array(TESTR);
         assert.equal(a8.length, 53);

@@ -8,7 +8,7 @@ requirejs.config({
     baseUrl: ".."
 });
 
-requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/EncryptedStore", "js/Utils", "js/Serror", "test/MemoryStore", "test/TestRunner"], function(Hoarder, Action, Hoard, LocalStorageStore, EncryptedStore, Utils, Serror, MemoryStore, TestRunner) {
+requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/AesLayer", "js/Utils", "js/Serror", "test/MemoryStore", "test/TestRunner"], function(Hoarder, Action, Hoard, LocalStorageStore, AesLayer, Utils, Serror, MemoryStore, TestRunner) {
     let tr = new TestRunner("Hoarder");
     let assert = tr.assert;
     const MSPERDAY = 24 * 60 * 60 * 1000;
@@ -365,8 +365,8 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/En
 
     tr.addTest("encrypted synchronise", function() {
         let debug;// = console.debug;
-        let cliest = new EncryptedStore({ understore: new MemoryStore() });
-        let cloust = new EncryptedStore({ understore: new MemoryStore() });
+        let cliest = new AesLayer({ understore: new MemoryStore() });
+        let cloust = new AesLayer({ understore: new MemoryStore() });
 
         // Add an action to the cloud
         let acts = full_tree_actions.slice();

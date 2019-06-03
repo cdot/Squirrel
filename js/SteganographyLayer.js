@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2015 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser */
 
-define("js/StegaStore", ["js/LayeredStore", "js/Serror", "js/Steganographer"], function(LayeredStore, Serror, Steganographer) {
+define("js/SteganographyLayer", ["js/LayeredStore", "js/Serror", "js/Steganographer"], function(LayeredStore, Serror, Steganographer) {
 
     /**
      * Store engine for data embedded in the alpha channel of an image. Uses
@@ -12,12 +12,12 @@ define("js/StegaStore", ["js/LayeredStore", "js/Serror", "js/Steganographer"], f
      * @param params: Standard for LayeredStore
      * @implements LayeredStore
      */
-    class StegaStore extends LayeredStore {
+    class SteganographyLayer extends LayeredStore {
 
         constructor(p) {
             super(p);
             this.steg = new Steganographer({ debug: this.debug });
-            this.type = "StegaStore/" + this.type;
+            this.type = "SteganographyLayer/" + this.type;
             this.option("needs_image", true);
         }
 
@@ -41,5 +41,5 @@ define("js/StegaStore", ["js/LayeredStore", "js/Serror", "js/Steganographer"], f
         }
     }
 
-    return StegaStore;
+    return SteganographyLayer;
 });

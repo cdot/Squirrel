@@ -14,43 +14,56 @@ requirejs.config({
     }
 });
 
-requirejs(["jquery", "jquery-ui", "js/Utils", "js/Translator", "js/Squirrel"], function (jq, jqui, Utils, Translator, Squirrel) {
+requirejs(["js/Utils"], function (Utils) {
     // Parse URL parameters
-    let qs = Utils.parseURLParams(window.location.search.substring(1));
+    let qs = Utils.parseURLParams(
+        window.location.search.substring(1),
+        {
+            store: { type: "string", "default": "LocalStorageStore" },
+            use: { array: true, type: "string", "default": ["aes"] },
+            debug: { type: "boolean" },
+            url: { type: "string" }
+        });
 
-    Translator.instance().debug = qs.debug ? console.debug : false;
-    Translator.instance().options.url = "locale";
-    
-    if (typeof qs.debug !== "undefined") {
+    if (qs.debug) {
         requirejs.config({
             urlArgs: "nocache=" + Date.now() // suppress cache
         });
-        if ($.isTouchCapable && $.isTouchCapable())
-            console.debug("Device is touch-capable");
-        console.debug("Device is " + window.screen.width + " X " +
-            window.screen.height + " Body is " +
-            $("body")
-            .width() + " X " + $("body")
-            .height());
-    } else {
-        // By default, jQuery timestamps datatype 'script' and 'jsonp'
-        // requests to avoid them being cached by the browser.
-        // Disable this functionality by default so that as much as
-        // possible is cached locally
-        $.ajaxSetup({
-            cache: true
-        });
     }
 
-    // Initialise UI components
-    $(function() {
-        // Have to do this as a two-step process because mobile-events has
-        // a clumsy dependency on jQuery
-        requirejs(["mobile-events"], function(jqme) {
-            new Squirrel(qs).begin();
+    requirejs(["jquery", "jquery-ui", "js/Translator", "js/Squirrel"], function (jq, jqui, Translator, Squirrel) {
+
+        Translator.instance().debug = qs.debug ? console.debug : false;
+        Translator.instance().options.url = "locale";
+        
+        if (qs.debug) {
+            if ($.isTouchCapable && $.isTouchCapable())
+                console.debug("Device is touch-capable");
+            console.debug("Device is " + window.screen.width + " X " +
+                          window.screen.height + " Body is " +
+                          $("body")
+                          .width() + " X " + $("body")
+                          .height());
+        } else {
+            // By default, jQuery timestamps datatype 'script' and 'jsonp'
+            // requests to avoid them being cached by the browser.
+            // Disable this functionality by default so that as much as
+            // possible is cached locally
+            $.ajaxSetup({
+                cache: true
+            });
+        }
+
+        // Initialise UI components
+        $(function() {
+            // Have to do this as a two-step process because mobile-events has
+            // a clumsy dependency on jQuery
+            requirejs(["mobile-events"], function(jqme) {
+                new Squirrel(qs).begin();
+            });
         });
     });
 });
+    
 
-
-
+    

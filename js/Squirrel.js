@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,jquery */
 
-define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Hoarder", "js/Hoard", "js/LocalStorageStore", "js/EncryptedStore", "js/Translator", "js/Tree", "js-cookie", "js/ContextMenu", "js/jq/simulated_password", "js/jq/scroll_into_view", "js/jq/icon_button", "js/jq/styling", "js/jq/template", "js/jq/twisted" ], function(Serror, Utils, Dialog, Action, Hoarder, Hoard, LocalStorageStore, EncryptedStore, Translator, Tree, Cookies, ContextMenu) {
+define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Hoarder", "js/Hoard", "js/LocalStorageStore", "js/Translator", "js/Tree", "js-cookie", "js/ContextMenu", "js/jq/simulated_password", "js/jq/scroll_into_view", "js/jq/icon_button", "js/jq/styling", "js/jq/template", "js/jq/twisted" ], function(Serror, Utils, Dialog, Action, Hoarder, Hoard, LocalStorageStore, Translator, Tree, Cookies, ContextMenu) {
 
     let TX;
 
@@ -14,6 +14,8 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
      * "init_application" though a sequence of triggered events. Once
      * the final step is reached, control is handed off to the Tree
      * module, which governs most interaction.
+     * To help testing, as much as possible is delegated to a
+     * paired "Hoarder" singleton.
      */
 
     // Dialogs for loading in the background. These are loaded in roughly
@@ -48,10 +50,6 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
 
             self.hoarder = new Hoarder({debug: self.debug});
 
-            if (!self.options.store) {
-                if (self.debug) self.debug("Defaulting to LocalStorageStore");
-                self.options.store = "LocalStorageStore";
-            }
 
             self.$DOMtree = null;
 
@@ -228,6 +226,34 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
             });
         }
 
+        _add_layers(to, store) {
+            let self = this;
+            let p = Promise.resolve(store);
+            
+            for (let algo of this.options.use) {
+                if (algo.length === 0)
+                    continue;
+                let layer = algo.replace(/^([a-z])/, (m) => m.toUpperCase())
+                    + "Layer";
+                
+                p = p.then((store) => {
+                    return new Promise((resolve) => {
+                        requirejs(
+                            ["js/" + layer],
+                            function(module) {
+                                if (self.debug)
+                                    self.debug('...adding', layer, 'to', to);
+                                resolve(new module({
+                                    debug: self.debug,
+                                    understore: store
+                                }));
+                            });
+                    });
+                });
+            }
+            return p;
+        }
+        
         /**
          * @private
          * Initialisation of the cloud store *may* provide user
@@ -239,51 +265,27 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
          */
         _1_init_cloud_store() {
             let self = this;
-            let store;
 
-            let p = new Promise(function(res,rej) {
+            let p = new Promise(function(resolve) {
                 requirejs(
                     ["js/" + self.options.store],
                     function(module) {
-                        store = new module({
+                        let store = new module({
                             debug: self.debug,
                             network_login: () => {
                                 return self._network_login(TX.tx("cloud"));
                             }
                         });
-                        res(store);
-                    },
-                    function(e) {
-                        rej(e);
+                        resolve(store);
                     });
             });
 
-            if (typeof self.options.plaintext === "undefined") {
-                if (self.debug) self.debug('...adding encryption to cloud');
-                p = p.then(() => {
-                    store = new EncryptedStore({
-                        debug: self.debug,
-                        understore: store
-                    })
-                });
-            }
+            return p
+            .then((store) => self._add_layers("cloud", store))
+            .then((store) => {
+                // Tell the hoarder to use this store
+                self.hoarder.cloud_store(store);
 
-            if (typeof self.options.steg !== "undefined") {
-                if (self.debug) self.debug('...adding steganography to cloud');
-                p = p.then(() => {
-                    return new Promise((resolve) => {
-                        requirejs(["js/StegaStore"], function(StegaStore) {
-                            store = new StegaStore({
-                                debug: self.debug,
-                                understore: store
-                            });
-                            resolve();
-                        });
-                    });
-                });
-            }
-
-            return p.then(() => {
                 if (store.option("needs_url")) {
                     if (self.options.url) {
                         store.option("url", self.options.url);
@@ -302,10 +304,6 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                 }
                 return store.init()
             })
-            .then(() => {
-                // Tell the hoarder to use this store
-                self.hoarder.cloud_store(store);
-            })
             .catch((e) => {
                 return Dialog.confirm("alert", {
                     title: TX.tx("Warning"),
@@ -321,7 +319,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
         }
 
         /**
-         * @private
+         @private
          * This sets up the store but doesn't read anything
          * yet. Initialisation of the client store *may* provide user
          * information, but it will be overridden by any user
@@ -330,27 +328,22 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
         _2_init_client_store() {
             let self = this;
 
-            let store = new LocalStorageStore({
-                debug: self.debug
-            });
+            let p = Promise.resolve(
+                new LocalStorageStore({
+                    debug: self.debug
+                }));
 
-            // Add encryption layer unless we have been requested not to
-            // (probably for debugging)
-            if (typeof self.options.plaintext === "undefined") {
-                if (self.debug) self.debug('adding encryption to client');
-                store = new EncryptedStore({
-                    understore: store
-                });
-            }
-            
-            // Tell the hoarder to use this store
-            self.hoarder.client_store(store);
-
-            // Initialisation of the cloud store may have provided
-            // initial user information, either from a network login
-            // or from a service login. Seed the login dialog with one
-            // of them.
-            return store.init()
+            return p
+            .then((store) => self._add_layers("client", store))
+            .then((store) => {
+                // Tell the hoarder to use this store
+                self.hoarder.client_store(store);
+                // Initialisation of the cloud store may have provided
+                // initial user information, either from a network login
+                // or from a service login. Seed the login dialog with one
+                // of them.
+                return store.init();
+            })
             .then(() => {
                 // Need to confirm user/pass, which may have been
                 // seeded from the store initialisation process
@@ -365,6 +358,19 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                 }).then((info) => {
                     if (self.debug) self.debug("...login confirmed");
                     self.hoarder.authenticate(info);
+                });
+            })
+            .catch((e) => {
+                this._stage(TX.tx("Error"), 2.2);
+                return Dialog.confirm("alert", {
+                    title: TX.tx("Error"),
+                    alert: {
+                        severity: "error",
+                        message: [
+                            TX.tx("Could not open client store: $1", e),
+                            TX.tx("Unable to continue"),
+                        ]
+                    }
                 });
             });
         }

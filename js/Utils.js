@@ -213,23 +213,64 @@ define("js/Utils", ["libs/utf8"], function() {
             return ta8;
         }
 
-        static parseURLParams(s) {
+        /**
+         * Parse a URL parameter string according to the given spec
+         * @param s the URLparameters string (undecoded)
+         * @param spec optional parameter spec object. Fields are parameter
+         * names and map to an object that can have array:true for array values
+         * and must have type: for the parameter type. type: is one of the
+         * standard JS object types e.g. String, Number, Date and uses the
+         * constructor of that object type to create the value.
+         * @throw Error if there is a problem
+         */
+        static parseURLParams(s, specs) {
+            function parse(v, t) {
+                switch (t) {
+                case "number": case "float":
+                    return parseFloat(v);
+                case "int": case "integer":
+                    return parseInt(v);
+                case "bool": case "boolean":
+                    if (!v) return false;
+                    if (/^(false|no)$/i.test(v)) return false;
+                    if (/^[0-9]+$/.test(v)) return parseInt(v) != 0;
+                    return true;
+                }
+                return v;
+            }
+            
+            if (!specs) specs = {};
             let lets = s.split(/[&;]+/);
             let query = {};
             for (let i = 0; i < lets.length; i++) {
                 if (lets[i] === "")
                     continue;
-                let ass = lets[i].split("=");
-                if (typeof query[ass[0]] === "undefined") {
-                    // If first entry with this name, assign simple string
-                    query[ass[0]] = decodeURIComponent(ass[1]);
-                } else if (typeof query[ass[0]] === "string") {
-                    // If second entry with this name, make an array
-                    let arr = [query[ass[0]], decodeURIComponent(ass[1])];
-                    query[ass[0]] = arr;
-                } else {
-                    // If third or later entry with this name, push it
-                    query[ass[0]].push(decodeURIComponent(ass[1]));
+                let ass = lets[i].split("=", 2);
+                let key, value;
+                if (ass.length > 1) // value option
+                    key = ass[0], value = decodeURIComponent(ass[1]);
+                else
+                    key = ass, value = "1"; // boolean option
+                
+                let spec = specs[key];
+                if (!spec)
+                    query[key] = value;
+                else {
+                    if (spec.array) {
+                        query[key] = value.split(",").map((v) => {
+                            return parse(v, spec.type);
+                        });
+                    }
+                    else
+                        query[key] = parse(value, spec.type);
+                }
+            }
+
+            for (let key in specs) {
+                if (!(key in query)) {
+                    if ("default" in specs[key]) {
+                        query[key] = specs[key]["default"];
+                    }
                 }
             }
             return query;

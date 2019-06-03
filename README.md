@@ -15,7 +15,7 @@ ever share any personal information with a site. Instead, you should
 prefer fake information that has been generated specifically for use
 with that one site, and never used elsewhere.
 
-All this secret information! How can we be expected to remember it
+That's a lot of secret information! How can we be expected to remember it
 all? Answer - we can't. So most people have a place - electronic or
 physical - where they write down their passwords. An unencrypted
 electronic document is a really, really, bad idea. A physical book is
@@ -57,10 +57,10 @@ Run it from 'github pages' by loading the following URL into your browser (using
 https://cdot.github.io/Squirrel/release/Squirrel.html?store=GoogleDriveStore
 
 The following URL parameters are available:
-- `steg=1' to enable image steganography
-- `store=<store name>' to set the file store to use (default is `LocalStorageStore', the example above uses `GoogleDriveStore`)
-- 'plaintext=1' to disable encryption, for debugging
-- 'debug=1' to enable verbose debug output to the console
+- `store=<store name>' required to set the file store to use (default is `LocalStorageStore', the example above uses `GoogleDriveStore`)
+- 'use=' to specify the encryption algorithm. The default is `use=aes`, and you can disable encryption entirely (for debugging) by passing `use` with no value. You can layer multiple algorithms by separating them with commas e.g. `use=aes,steganography`. Note that the same algorithms are used for both cloud and local stores.
+- 'debug' to enable verbose debug output to the console
+- 'url=<store url>' is required by some stores
 
 ## Choosing a File Store
 
@@ -69,10 +69,10 @@ to you which file store you use. We recommend:
 * If you have your own web server:
  * If it supports WebDAV, use `WebDAVStore`
  * If you have a web server (e.g. Apache, nginx, lighttpd etc) with CGI and a back-end script that supports PUT requests, you can use `HttpServerStore`
-* If you want your own web server but don't want to bother installing Apache/nginx etc:
- * If you have `node.js` on your server host, you can use `HttpServerStore` withthe included `node.js.server.js`
+* If you want your own internet-accessible machine but don't want to bother installing Apache/nginx etc:
+ * If you have `node.js` on your server host, you can use `HttpServerStore` withthe included `web_server.js`
 * If you prefer to use a publicly available service, use `GoogleDriveStore` (not available in China)
-* If you don't want to use an online store, you can use `LocalStorageStore`, which simulates the online store in the browser. Howver you won't be able to share your store with other devices.
+* If you don't want to use an online store, you can use `LocalStorageStore`, which simulates the online store in the browser. However you won't be able to share your store with other devices.
 
 ### GoogleDriveStore
 You must be logged in to Google in the browser for this to work. The
@@ -103,7 +103,7 @@ you would use:
 Note that it uses Basic Authentication and should only ever be used with
 an `HTTPS` server.
 
-#### node.js.server.js
+#### web_server.js
 
 A suitable super-lightweight server is provided as part of the Squirrel
 release package.
@@ -125,7 +125,32 @@ you will not be able to share the database with other machines.
 ### WebDAVStore
 
 If you have access to a web server that supports the WebDAV protocol, you
-can use it with Squirrel.
+can use it with Squirrel. You will need to pass the URL of a WebDAV-accessible
+folder using the `url` parameter.
+
+## Choosing an Encryption Algorithm
+The encryption algorithm is selected using the `use' parameter. There are two algorithms available. These algorithms can be used individually, or can be combined e.g. `use=aes,steganography'. You can also switch off encryption completely using `use=' with no value.
+
+### AES
+This is the default if no `use' parameter is given, It uses a customised 256-bit Rijndael algorithm for a very good level of encryption.
+
+### Steganography
+
+This is not encryption per se, it is data-hiding. Your data is embedded into
+extra bits in an image such that the image appears normal to the naked eye, but has your secret message embedded within it. You can use it alongside another algorithm e.g. `use=aes,steganography'
+
+Steganography is expensive, but may be a viable alternative to encryption
+in regions where encryption is illegal. If you run with steganography enabled
+(`use=steganography'), you will need to choose an image URL for Squirrel to use.
+Your password safe will be embedded into this image, so it needs to be large
+enough to store
+all the data without degrading the image too much. For an average
+sized password store, a 1024x768 RGB colour image will usually
+suffice. If you are changing the content of your database regularly,
+it's a good idea to change the image you use on a regular basis as you
+may otherwise leave traceable usage patterns (e.g. by updating the
+same image frequently with different binary content but no obvious visual
+change).
 
 ### Once you have chosen a store
 
@@ -187,9 +212,7 @@ most of us this isn't a problem, but there are areas of the world
 where the use of encryption is frowned upon. For this reason, Squirrel
 can use image steganography to mask the use of encryption. The
 algorithm used is proprietary, and we believe it is difficult to
-detect its use, given a sufficiently complex image. Even if the image
-steganography is decoded, the underlying data is AES encrypted and
-just looks like random data.
+detect its use, given a sufficiently complex image.
 
 ## Some tips on passwords
 
@@ -237,40 +260,6 @@ Further reading can be found in a series of blog posts from the UK's NCSC unit:
 https://www.ncsc.gov.uk/guidance/password-guidance-simplifying-your-approach
 https://www.ncsc.gov.uk/blog-post/what-does-ncsc-think-password-managers
 
-## Using Squirrel
-
-To run Squirrel visit `Squirrel.html` and pass the name of the store you want to use.
-For example,
-```
-https://cdn.rawgit.com/cdot/Squirrel/release/Squirrel.html?store=GoogleDriveStore
-```
-If you want to use image steganography, pass the `steg` parameter as well:
-```
-https://cdn.rawgit.com/cdot/Squirrel/release/Squirrel.html?steg&store=DropboxStore
-```
-If you run with steganography enabled, you need to choose an image
-from your local drive before running Squirrel. Your password safe will
-be embedded into this image, so it needs to be large enough to store
-all the data without degrading the image too much. For an average
-sized password store, a 1024x768 RGB colour image will usually
-suffice. If you are changing the content of your database regularly,
-it's a good idea to change the image you use on a regular basis as you
-may otherwise leave traceable usage patterns (e.g. by updating the
-same image frequently with no obvious visual change).
-
-You will be prompted for the encryption username and password you want
-to use. The first time you run you will be asked for the image you
-want to use (if using steganography), and the path to your store in the cloud.
-
-You are then presented with a simple interface where you can create
-keys (and keys within keys), and add data associated with those
-keys. Double-click a key to edit it, or use right click (or long
-tap/long hold) to pull down a menu of options. The cog wheel button
-can be used to access a menu of less-frequently used commands.
-
-After your first run, Squirrel will not ask you for the image
-again. You can change what image is used at any time using the cog
-wheel menu (Change Store Settings).
 
 Note that Squirrel uses state-of-the-art Javascript and HTML5, and
 requires the latest browsers to run. If you are stuck with IE8, don't
@@ -278,14 +267,14 @@ even think about it :-(
 
 ## About Squirrel
 
-Squirrel was written by Crawford Currie http://c-dot.co.uk while standing
-on the shoulders of others, and uses the following 3rd party libraries:
+Squirrel was written by Crawford Currie http://c-dot.co.uk, and uses the
+following 3rd party libraries:
 
 - JQuery & JQuery UI, from the JQuery Foundation, https://jquery.org
 - AES implementation in JavaScript, Copyright Chris Veness 2005-2014, http://www.movable-type.co.uk/scripts/aes.html
-- jQuery UI contextmenu, by Martin Wendt
-- jQuery touch events, by Ben Major
+- jQuery UI contextmenu, by Martin Wendt, https://github.com/mar10/jquery-ui-contextmenu
+- jQuery touch events, by Ben Major, https://github.com/benmajor/jQuery-Touch-Events
 - Clipboard.js, by Zeno Rocha, https://clipboardjs.com/
-- js-cookie, Copyright 2014 Klaus Hartl
+- js-cookie, Copyright 2014 Klaus Hartl, https://github.com/js-cookie/js-cookie
 - Dropbox API, Copyright 2012 Dropbox, Inc., http://www.dropbox.com
 - Google Drive API
