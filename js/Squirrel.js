@@ -3,7 +3,7 @@
 
 define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Hoarder", "js/Hoard", "js/LocalStorageStore", "js/Translator", "js/Tree", "js-cookie", "js/ContextMenu", "js/jq/simulated_password", "js/jq/scroll_into_view", "js/jq/icon_button", "js/jq/styling", "js/jq/template", "js/jq/twisted" ], function(Serror, Utils, Dialog, Action, Hoarder, Hoard, LocalStorageStore, Translator, Tree, Cookies, ContextMenu) {
 
-    let TX;
+    let TX = Translator.instance();
 
     /**
      * This is the top level application singleton. It is primarily
@@ -11,7 +11,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
      * Hoarder object created here.
      *
      * The application startup process proceeds from
-     * "init_application" though a sequence of triggered events. Once
+     * "begin()" though a sequence of triggered events. Once
      * the final step is reached, control is handed off to the Tree
      * module, which governs most interaction.
      * To help testing, as much as possible is delegated to a
@@ -38,9 +38,6 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
         constructor(options) {
             let self = this;
 
-            if (!TX)
-                TX = Translator.instance();
-
             self.options = options || {};
 
             if (self.options.debug) {
@@ -49,7 +46,6 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
             }
 
             self.hoarder = new Hoarder({debug: self.debug});
-
 
             self.$DOMtree = null;
 
@@ -345,7 +341,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                 return store.init();
             })
             .then(() => {
-                // Need to confirm user/pass, which may have been
+                // Need to confirm encryption user/pass, which may have been
                 // seeded from the store initialisation process
                 this._stage(TX.tx("Authentication"), 2.1);
                 let auth_req = self.hoarder.auth_required();
@@ -353,7 +349,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                     return Promise.resolve();
                 
                 return Dialog.confirm("login", {
-                    title: "User details",
+                    title: TX.tx("User details"),
                     user: auth_req.user
                 }).then((info) => {
                     if (self.debug) self.debug("...login confirmed");
@@ -516,7 +512,8 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
 
         /**
          * @private
-         * Perform a text search for a new search expression
+         * Perform a text search for a new search expression. The search is done
+         * entirely within the DOM.
          */
         _search(s) {
             let self = this;
@@ -612,6 +609,16 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
         begin() {
             let self = this;
 
+            let lingo = Cookies.get("tx_lang");
+            if (!lingo && window && window.navigator)
+                lingo = (window.navigator.userLanguage
+                         || window.navigator.language);
+
+            if (!lingo)
+                lingo = "en";
+            
+            Translator.instance().language(lingo, document);
+            
             this._stage(TX.tx("Loading application"), 0);
             $.styling.init(self.options);
 
@@ -669,6 +676,16 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                 app: this,
                 debug: this.debug
             });
+
+            // Load dialogs
+            Promise.all(DIALOGS.map((dn) => {
+                // Don't wait, let these load in the background
+                return Dialog.load(dn);
+            }))
+            .then(() => {
+                if (self.debug) self.debug("All dialogs loaded");
+            });
+
             $("#sites-node button.tree__toggle").icon_button();
             $("#help_button")
                 .icon_button()
@@ -683,7 +700,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                 .hide()
                 .on(Dialog.tapEvent(), ( /*evt*/ ) => {
                     Dialog.open("alert", {
-                        title: "Saving",
+                        title: TX.tx("Saving"),
                         alert: ""
                     }).then((progress) => {
                         return self._save_stores(progress);
@@ -756,7 +773,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                         optimise: () => {
                             let acts = self.hoarder.tree_actions();
                             return Dialog.open("alert", {
-                                title: "Saving",
+                                title: TX.tx("Saving"),
                                 alert: ""
                             }).then((progress) => {
                                 return self.hoarder.save_cloud(acts, progress)
@@ -764,6 +781,13 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                         },
                         reset_local_store: () => {
                             return self._reset_local_store();
+                        },
+                        set_language: (lingo) => {
+                            // Won't apply until we clear caches and restart
+                            Cookies.set("tx_lang", lingo, {
+                                expires: 365
+                            });
+                            TX.language(lingo, document);
                         }
                     })
                     .catch((f) => {
@@ -786,11 +810,6 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
 
             self.contextMenu = new ContextMenu(self);
 
-            for (let i in DIALOGS) {
-                // Don't wait, let these load in the background
-                Dialog.load(DIALOGS[i]);
-            }
-
             $.styling.reset();
 
             // Set up event handlers.
@@ -800,62 +819,50 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
             })
             .on("update_save", () => {
                 self._handle_update_save();
-            })
-            // Application startup is done using a sequence of events
-            // to give the event loop a look in.
-            .on("init_application", () => {
-                this._stage(TX.tx("Initialising cloud store"), 1);
-                self._1_init_cloud_store()
-                .then(() => {
-                    $(document).trigger("init_2");
-                });
-            })
-            .on("init_2", () => {
-                this._stage(TX.tx("Initialising local store"), 2);
-                self._2_init_client_store()
-                .then(() => {
-                    $(document).trigger("init_3");
-                });
-            })
-            .on("init_3", () => {
-                this._stage(TX.tx("Reading from local store"), 3);
-                self._3_load_client()
-                .then(() => {
-                    $(document).trigger("init_4");
-                });
-            })
-            .on("init_4", () => {
-                this._stage(TX.tx("Reading from cloud"), 4);
-                self._4_load_cloud()
-                .then(() => {
-                    $(window)
-                    .on("beforeunload", function () {
-                        let us = self.hoarder.get_changes(10);
-                        if (us.length > 0) {
-                            us = TX.tx("You have unsaved changes") +
-                            "\n" + us.join("\n") +
-                            "\n" + TX.tx("Are you really sure?");
-                            return us;
-                        }
-                    });
-
-                    $("#whoami").text(self.hoarder.user());
-
-                    // Ready to rock
-                    $("#unauthenticated").hide();
-                    $("#authenticated").show();
-                    $("#sites-node").tree("open");
-
-                    self._reset_modified();
-                    $(document).trigger("update_save");
-                    $(document).trigger("check_alarms");
-
-                    this._stage(TX.tx("Ready"), 5);
-                });
             });
 
-            //$(document).tooltip(); // looks nasty
-            $(document).trigger("init_application");
+            // Promises work through the Javascript event loop, which should
+            // get a look in between each step of the following chain.
+            this._stage(TX.tx("Initialising cloud store"), 1);
+            self._1_init_cloud_store()
+            .then(() => {
+                this._stage(TX.tx("Initialising local store"), 2);
+                return self._2_init_client_store();
+            })
+            .then(() => {
+                this._stage(TX.tx("Reading from local store"), 3);
+                return self._3_load_client();
+            })
+            .then(() => {
+                this._stage(TX.tx("Reading from cloud"), 4);
+                return self._4_load_cloud();
+            })
+            .then(() => {
+                this._stage(TX.tx("Preparing UI"), 5);
+                
+                $(window)
+                .on("beforeunload", function () {
+                    let us = self.hoarder.get_changes(10);
+                    if (us.length > 0) {
+                        us = TX.tx("You have unsaved changes") +
+                        "\n" + us.join("\n") +
+                        "\n" + TX.tx("Are you really sure?");
+                        return us;
+                    }
+                });
+
+                //Initialise translation?
+                
+                // Ready to rock
+                self._reset_modified();
+                $("#whoami").text(self.hoarder.user());
+                $("#unauthenticated").hide();
+                $("#authenticated").show();
+                $("#sites-node").tree("open");
+
+                $(document).trigger("update_save");
+                $(document).trigger("check_alarms");
+            });
         }
 
         /**

@@ -80,16 +80,6 @@ define("js/Translator", ["js/Utils", "js-cookie"], function(Utils, Cookies) {
          * @param document optional DOM
          */
         language(lingo, document) {
-            if (!this.lingo)
-                this.lingo = Cookies.get("tx_lang");
-            if (!this.lingo && window && window.navigator)
-                this.lingo = (window.navigator.userLanguage
-                              || window.navigator.language);
-            if (!this.lingo)
-                this.lingo = "en";
-
-            if (typeof lingo === "undefined")
-                return Promise.resolve(this.lingo);
 
             if (this.originals) {
                 if (this.debug) this.debug("Untranslating");
@@ -106,17 +96,11 @@ define("js/Translator", ["js/Utils", "js-cookie"], function(Utils, Cookies) {
                 this.originals = undefined;
             }
 
-            if (typeof Cookies !== "undefined") {
-                // Won't apply until we clear caches and restart
-                Cookies.set("tx_lang", lingo, {
-                    expires: 365
-                });
-            }
             this.lingo = lingo;
-            if (this.debug) this.debug("Using language '" + lingo + "'");
 
-            if (/^en(\b|$)/i.test(lingo)) {
+            if (lingo === "en") {
                 // English, so no need to translate the DOM
+                if (this.debug) this.debug("Using English");
                 return Promise.resolve();
             }
 
@@ -158,10 +142,11 @@ define("js/Translator", ["js/Utils", "js-cookie"], function(Utils, Cookies) {
                 this.translations = data;
                 if (document) {
                     // Translate the DOM
+                    if (this.debug) this.debug("Translating body to", lingo);
                     let bod = document.getElementsByTagName("body");
                     this.translate(bod[0]);
                 }
-                if (this.debug) this.debug("Using language '" + lingo + "'");
+                if (this.debug) this.debug("Using language", lingo);
             });
         }
 
@@ -178,7 +163,7 @@ define("js/Translator", ["js/Utils", "js-cookie"], function(Utils, Cookies) {
                 let tx = this.translations[Translator._clean(s)];
                 if (typeof tx !== "undefined")
                     s = tx.s;
-                return s + (this.debug ? " (debug)" : "");
+                return s;
             })
         }
 
@@ -294,12 +279,10 @@ define("js/Translator", ["js/Utils", "js-cookie"], function(Utils, Cookies) {
                 // else use English
             }
 
-            let s;
             if (/\$/.test(arguments[0]))
-                s = Utils.expandTemplate.apply(null, arguments);
-            else
-                s = arguments[0];
-            return s + (this.debug ? " (debug)" : "");
+                return Utils.expandTemplate.apply(null, arguments);
+
+            return arguments[0];
         }
 
         /**

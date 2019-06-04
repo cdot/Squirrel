@@ -127,6 +127,9 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
     // Load the requirejs.config from the given ID
     function getConfig(module) {
         return get(getModulePath(module, {}))
+        .catch((e) => {
+            console.log("Failed to load config", e);
+        })
         .then((data) => {
             let m = /\nrequirejs\.config\((.*?)\);/s.exec(data);
             if (m) {
@@ -145,6 +148,8 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
     // processed by regexps.
     function analyseDependencies(module, config, js) {
         addDependency(module);
+        
+        // Look for config
         let m = /\nrequirejs\.config\((.*?)\);/s.exec(js);
         if (m) {
             let cfg;
@@ -153,28 +158,25 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
             delete config.order;
         }
 
-        m = /(?:(?:requirejs|define)\s*\(\s*(?:"[^"]*"\s*,\s*)?|let\s*deps\s*=\s*)(\[.*?\])/s
-        .exec(js);
-            
-        if (!m) {
-            if (dependencies) console.debug(module,"has no dependencies");
-            return Promise.resolve();
-        }
-            
-        let deps;
-        eval("deps=" + m[1]);
-        if (typeof deps === "string")
-            deps = [deps];
-            
         let promises = [];
-        for (let dep of deps) {
-            // Deal with relative paths, as encountered in menu.js
-            if (/^\.\.\//.test(dep))
-                dep = dep.replace("../", module.replace(/[^\/]*\/[^\/]*$/, ""));
-            else if (/^\.\//.test(dep))
-                dep = dep.replace("./", module.replace(/\/[^\/]*$/, "/"));
-            addDependency(module, dep);
-            promises.push(analyse(dep, config));
+        // Look for require or define in a format we can analyse
+        let re = /(?:(?:requirejs|define)\s*\(\s*(?:"[^"]*"\s*,\s*)?|let\s*deps\s*=\s*)\[\s*(.*?)\s*\]/gs;
+        while ((m = re.exec(js)) !== null) {
+            
+            let deps = m[1].split(/\s*,\s*/);
+            for (let dep of deps) {
+                let m2 = /^(["'])(.+)\1$/.exec(dep);
+                if (m2) {
+                    dep = m2[2];
+                    // Deal with relative paths, as encountered in menu.js
+                    if (/^\.\.\//.test(dep))
+                        dep = dep.replace("../", module.replace(/[^\/]*\/[^\/]*$/, ""));
+                    else if (/^\.\//.test(dep))
+                        dep = dep.replace("./", module.replace(/\/[^\/]*$/, "/"));
+                    addDependency(module, dep);
+                    promises.push(analyse(dep, config));
+                }
+            }
         }
         return Promise.all(promises);
     }
@@ -185,12 +187,18 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
             return Promise.resolve();
 
         let path = getModulePath(module, config);
+        if (dependencies) console.debug("Analysing dependencies for", module, "at", path);
         found_at[module] = path;
         return get(path)
+        .catch((e) => {
+            console.log("Failed to load", path, e);
+        })
         .then((js) => {
             return analyseDependencies(module, config, js);
         })
-        .then(() => config);
+        .then(() => {
+            return config;
+        });
     }
 
     // Support for partial ordering
@@ -216,6 +224,9 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
         for (let module of js) {
             proms.push(
                 get(found_at[module])
+                .catch((e) => {
+                    console.log("Failed to load", module,"from",found_at[module], e);
+                })
                 .then((src) => {
                     let codes = src.toString();
                     // Make sure all define's have an id
@@ -317,12 +328,12 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
                         
                     }),
                     
-                    // Analyse dependencies for *Store modules, except those
+                    // Analyse dependencies for *Store and *Layer modules, except those
                     // that are not marked as /* eslint-env browser */
                     fs.readdir("js")
                     .then((entries) => {
                         for (let entry of entries) {
-                            if (/Store\.js$/.test(entry)
+                            if (/(Store|Layer)\.js$/.test(entry)
                                 && entry !== "FileStore.js") {
                                 let module = "js/" + entry.replace(".js", "");
                                 addDependency("js/main", module);

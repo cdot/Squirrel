@@ -55,7 +55,7 @@ requirejs(["js/Utils"], function (Utils) {
         }
 
         // Initialise UI components
-        $(function() {
+        $(function() {          
             // Have to do this as a two-step process because mobile-events has
             // a clumsy dependency on jQuery
             requirejs(["mobile-events"], function(jqme) {

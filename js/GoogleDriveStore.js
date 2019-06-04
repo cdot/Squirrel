@@ -84,8 +84,6 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
         }
 
         _init() {
-            let self = this;
-
             // Timeout after 20 seconds of waiting for auth
             let tid = window.setTimeout(function () {
                 window.clearTimeout(tid);
@@ -120,12 +118,12 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
             .then((result) => {
                 if (result.status !== 200)
                     throw result;
-                self.option("user", result.result.user.displayName);
+                this.option("user", result.result.user.displayName);
                 // We're done, fall through to resolve
             })
             .catch((r) => {
                 throw new Serror(
-                    500, self._gError(r, TX.tx("Google Drive load")));
+                    500, this._gError(r, TX.tx("Google Drive load")));
             });
         }
 
@@ -142,8 +140,6 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
          * Any errors thrown will be from Google
          */
         _follow_path(parentid, path, create) {
-            let self = this;
-
             if (path.length === 0)
                 return Promise.resolve(parentid);
 
@@ -164,7 +160,7 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
                 return gapi.client.drive.files
                 .insert(metadata)
                 .then((response) => {
-                    return self._follow_path(response.result.id, p, true);
+                    return this._follow_path(response.result.id, p, true);
                 });
             }
 
@@ -182,12 +178,12 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
                 if (items.length > 0) {
                     let id = items[0].id;
                     if (this.debug) this.debug("found " + query + " at " + id);
-                    return self._follow_path(id, p, create);
+                    return this._follow_path(id, p, create);
                 }
                 if (this.debug) this.debug("could not find " + query);
                 if (create)
                     return create_folder();
-                self.status(404);
+                this.status(404);
                 return undefined;
             });
         }
@@ -200,7 +196,6 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
          */
         // id is a (string) id or a { parentid: name: structure }
         _putfile(parentid, name, data, id) {
-            let self = this;
             let url = "/upload/drive/v2/files";
             let method = "POST";
             let params = {
@@ -250,7 +245,7 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
                 return true;
             })
             .catch((e) => {
-                self.status(e.code);
+                this.status(e.code);
                 return false;
             });
         }
@@ -258,7 +253,6 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
         // @Override
         write(path, data) {
             if (this.debug) this.debug("write", path);
-            let self = this;
 
             let p = path.split("/");
             let name = p.pop();
@@ -278,19 +272,19 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
                 .list({
                     q: query
                 })
-                .then((response) => {
-                    let items = response.result.items;
-                    let id;
-                    if (items.length > 0) {
-                        id = items[0].id;
-                        if (this.debug) this.debug("updating " + name + " id " + id);
-                    } else
-                        if (this.debug) this.debug("creating " + name + " in " + parentId);
-                    return self._putfile(parentId, name, data, id);
-                })
-                .catch((r) => {
-                    throw new Serror(400, path + self._gError(r, TX.tx("Write")));
-                });
+            })
+            .then((response) => {
+                let items = response.result.items;
+                let id;
+                if (items.length > 0) {
+                    id = items[0].id;
+                    if (this.debug) this.debug("updating " + name + " id " + id);
+                } else
+                    if (this.debug) this.debug("creating " + name + " in " + parentId);
+                return this._putfile(parentId, name, data, id);
+            })
+            .catch((r) => {
+                throw new Serror(400, path + this._gError(r, TX.tx("Write")));
             });
         }
 
@@ -300,7 +294,6 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
 
             let p = path.split("/");
             let name = p.pop();
-            let self = this;
 
             return this
             ._follow_path("root", p, false)
@@ -313,26 +306,26 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
                 return gapi.client.drive.files
                 .list({
                     q: query
-                })
-                .then((response) => {
-                    let items = response.result.items;
-                    if (items.length === 0) {
-                        if (this.debug) this.debug(
-                            "could not find " + name);
-                        throw new Serror(401, path + " not found");
-                    }
-                    let url = items[0].downloadUrl;
-                    if (this.debug) this.debug(
-                        "found '" + name + "' at " + url);
-                    // use HttpServerStore.request
-                    return self.request("GET", url)
-                    .then((r) => {
-                        return r.body;
-                    });
-                })
-                .catch((r) => {
-                    throw new Serror(400, path + self._gError(r, TX.tx("Read")));
                 });
+            })
+            .then((response) => {
+                let items = response.result.items;
+                if (items.length === 0) {
+                    if (this.debug) this.debug(
+                        "could not find " + name);
+                    throw new Serror(401, path + " not found");
+                }
+                let url = items[0].downloadUrl;
+                if (this.debug) this.debug(
+                    "found '" + name + "' at " + url);
+                // use HttpServerStore.request
+                return this.request("GET", url)
+                .then((r) => {
+                    return r.body;
+                });
+            })
+            .catch((r) => {
+                throw new Serror(400, path + this._gError(r, TX.tx("Read")));
             });
         }
     }

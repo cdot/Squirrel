@@ -122,9 +122,11 @@ define("js/Dialog", ["js/Translator", "js/Serror", "jquery", "jquery-ui", "js/jq
                 if (!htmls[html_url]) {
                     htmls[html_url] = $.get(html_url)
                     .then((html) => {
-                        //if (options.debug) options.debug("HTML was loaded");
+                        if (options.debug) options.debug("HTML for",id,"was loaded");
                         let $dlg = $(html);
-                        Translator.instance().translate($dlg);
+                        if (options.debug) options.debug("Translating", id, "to",
+                                                    Translator.instance().lingo);
+                        Translator.instance().translate($dlg[0]);
                         // force the id so we can find it again
                         $dlg.attr("id", id + "_dlg");
                         // force the CSS class - should be hidden
