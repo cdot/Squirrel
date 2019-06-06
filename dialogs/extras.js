@@ -141,13 +141,10 @@ define("dialogs/extras", ["js/Dialog", "js/Translator", "js/Tree", "js-cookie", 
         open() {
             // needs_image, image_url and cloud_path options are passed
             // straight on to store_settings
-            this.control("theme")
-            .find("option:selected")
-            .prop("selected", false);
 
             this.control("theme")
-            .find("option[value='" + $.styling.theme() + "']")
-            .prop("selected", true);
+            .val($.styling.theme())
+            .selectmenu("refresh");
 
             this.control("autosave").prop("checked", this._autosave());
 

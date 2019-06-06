@@ -885,6 +885,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                 $(document).trigger("update_save");
             })
             .catch((e) => {
+                if (self.debug) self.debug("Error", e);
                 return Dialog.confirm("alert", {
                     title: TX.tx("Error"),
                     alert: {

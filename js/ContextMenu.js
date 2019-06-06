@@ -367,7 +367,7 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
             this.toggle(false);
             if (self.debug)
                 promise = promise.catch((fail) => {
-                    if (fail) self.debug(fail);
+                    if (fail) self.debug("Dialog catch", fail);
                 });
             
             return promise

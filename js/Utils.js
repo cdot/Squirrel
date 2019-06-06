@@ -306,7 +306,13 @@ define("js/Utils", ["libs/utf8"], function() {
                     /\$\?\((.*?),(.*?),(.*?)\)/g,
                 function (m, test, pass, fail) {
                     let result = false;
-                    eval("result=(" + test + ")");
+                    try {
+                        eval("result=(" + test + ")");
+                    } catch (e) {
+                        throw new Error("Problem evaluating '" + test
+                                        + "' in template '"
+                                        + arguments[0] + ": " + e)
+                    }
                     return result ? pass : fail;
                 });
             return tmpl;

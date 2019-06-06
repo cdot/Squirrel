@@ -81,7 +81,9 @@ body .inherit_ui-widget_ui-widget-content {
 }
 
 .search-hit {
-    background-color: rgba(150,0,0,0.5);
+    /*    background-color: rgba(150,0,0,0.5);
+    filter: invert(1);*/
+    filter: drop-shadow(6px 6px 20px yellow) invert(5%);
 }
 
 .picked-hit {

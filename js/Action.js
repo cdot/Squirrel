@@ -69,8 +69,11 @@ define("js/Action", ["js/Translator"], function(Translator) {
                 s = TX.tx("Rename $1 to '$2'", p, this.data);
                 break;
             case "X":
-                s = TX.tx("Constrain $1 to $2 character$?($2=1,,s) from $3",
-                          p, this.data.size, this.data.chars);
+                if (this.data)
+                    s = TX.tx("Constrain $1 to $2 character$?($2=1,s,) from $3",
+                              p, this.data.size, this.data.chars);
+                else
+                    s = TX.tx("Clear constraints");
                 break;
             }
             return s;
