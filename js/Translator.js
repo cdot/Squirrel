@@ -30,7 +30,7 @@
 if (typeof XMLHttpRequest === "undefined")
     XMLHttpRequest = require("xhr2");
 
-define("js/Translator", ["js/Utils", "js-cookie"], function(Utils, Cookies) {
+define("js/Translator", ["js/Utils", "js/Serror", "js-cookie"], function(Utils, Serror, Cookies) {
 
     const TIMEUNITS = {
         // TX.tx("$1 year$?($1!=1,s,)")
@@ -117,8 +117,14 @@ define("js/Translator", ["js/Utils", "js-cookie"], function(Utils, Cookies) {
 
                 getter = new Promise((resolve, reject) => {
                     xhr.onreadystatechange = function() {
-                        if (xhr.readyState === 4)
-                            resolve(JSON.parse(xhr.response));
+                        if (xhr.readyState === 4) {
+                            debugger;
+                            if (xhr.status === 200)
+                                resolve(JSON.parse(xhr.response));
+                            else
+                                reject(new Serror(xhr.status, [ url ],
+                                                  xhr.statusText));
+                       }
                     };
 
                     xhr.ontimeout = function() {
@@ -137,8 +143,6 @@ define("js/Translator", ["js/Utils", "js-cookie"], function(Utils, Cookies) {
             }
 
             return getter.then((data) => {
-                if (!data)
-                    throw "No TX for "+lingo;
                 this.translations = data;
                 if (document) {
                     // Translate the DOM
@@ -147,6 +151,9 @@ define("js/Translator", ["js/Utils", "js-cookie"], function(Utils, Cookies) {
                     this.translate(bod[0]);
                 }
                 if (this.debug) this.debug("Using language", lingo);
+            })
+            .catch((e) => {
+                if (this.debug) this.debug("Could not load language", lingo);
             });
         }
 
