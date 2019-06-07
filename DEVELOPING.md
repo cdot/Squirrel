@@ -1,17 +1,11 @@
 ## Developers
 
-Developers must be able to run the following:
-- GNU `make`
-- `uglifyJS` (requires node.js)
-- `perl`
-
-You are welcome to push proposals for changes/fixes to github.
+You are welcome to submit pull requests with proposals for changes/fixes.
 
 # Translations
 
 Squirrel incorporates support for translation of all user messages to
-languages other than English. The configured language in your browser
-is used to determine which translation to use (if available).
+languages other than English.
 
 Translations are simply mappings from the English string to the equivalent
 in the other language, using the symbols $1, $2 etc to indicate parameters
@@ -21,22 +15,15 @@ http://api.mymemory.translated.net
 To generate (or update) a translation for a language, for example German
 (language code de):
 - clone the repository
-- `make locale/de.json`
-- manually edit the `locale/de.json` file if necessary
-
-Making a translation will also generate a file called `strings.txt`
-which is convenient for pasting into Google Translate as a crude starting
-point.
+- idenitfy the ISO-639-1 https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes code for the required language e.g. 'fr`, `ab'. You can optionally use a localisation e.g. `zh-cn`
+- node build-dist.js -l xx -t 0
+to generate initial translations or provide missing translations. To correct an existing translation, use a text editor to edit the `locale/xx.json' file. If a string is not present in a translation, Squirrel will fall back to English.
 
 # Testing
 
 ## Unit tests
 
-There is a directory of unit tests in `js/test'. These tests are written using the `Mocha' framework. APIs are used so use of the `mocha' command is optional (you can just use `node')
-
-`make test'.
-
-Browser tests - including those for the remote stores - are invoked in the browser via HTML files. Load the files into the browser (note that Dropbox and Google Drive tests require valid redirects to be set up in the application.)
+There is a directory of unit tests in `js/test'. These tests are written using the `Mocha' framework. Use `node' to run the tests.
 
 ## Browser testing
 
@@ -49,11 +36,11 @@ the stand-alone server, which was designed with this specific purpose in mind.
 The easiest way to debug is to use a local server with a plain text
 (unencrypted) store:
 
-`http://192.168.1.11/Squirrel/Squirrel.html?debug=1&plaintext=1`
+`http://192.168.1.11/Squirrel/Squirrel.html?debug;use
 
-To debug using a plaintext HttpServerStore:
+To debug using a plain text HttpServerStore:
 
-`http://192.168.1.11/Squirrel/Squirrel.html?debug=1&plaintext=1&store=HttpServerStore&store_url=http://192.168.1.11:3000/remote_data`
+`http://192.168.1.11/Squirrel/Squirrel.html?debug&use=&store=HttpServerStore&store_url=http://192.168.1.11:3000/remote_data`
 
 ## Debug URL parameters
 - `debug=1` sets `global.DEBUG' to enable detailed console messages

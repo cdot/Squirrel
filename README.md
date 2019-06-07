@@ -265,6 +265,9 @@ Note that Squirrel uses state-of-the-art Javascript and HTML5, and
 requires the latest browsers to run. If you are stuck with IE8, don't
 even think about it :-(
 
+## Developers
+See https://github.com/cdot/Squirrel/blob/master/DEVELOPING.md
+
 ## About Squirrel
 
 Squirrel was written by Crawford Currie http://c-dot.co.uk, and uses the

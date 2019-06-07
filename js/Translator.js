@@ -117,14 +117,18 @@ define("js/Translator", ["js/Utils", "js/Serror", "js-cookie"], function(Utils, 
 
                 getter = new Promise((resolve, reject) => {
                     xhr.onreadystatechange = function() {
-                        if (xhr.readyState === 4) {
-                            debugger;
-                            if (xhr.status === 200)
+                        if (xhr.readyState != 4)
+                            return;
+                        if (xhr.status === 200) {
+                            try {
                                 resolve(JSON.parse(xhr.response));
-                            else
-                                reject(new Serror(xhr.status, [ url ],
-                                                  xhr.statusText));
-                       }
+                                return;
+                            } catch (e) {
+                                reject(new Serror(400, [ url ], e));
+                            }
+                        }
+                        reject(new Serror(xhr.status, [ url ],
+                                          xhr.statusText));
                     };
 
                     xhr.ontimeout = function() {
@@ -154,6 +158,11 @@ define("js/Translator", ["js/Utils", "js/Serror", "js-cookie"], function(Utils, 
             })
             .catch((e) => {
                 if (this.debug) this.debug("Could not load language", lingo);
+                let generic = lingo.replace(/-.*/, "");
+                if (generic !== lingo) {
+                    if (this.debug) this.debug("Trying fallback", generic);
+                    return this.language(generic, document);
+                }
             });
         }
 
