@@ -20,7 +20,7 @@ define("dialogs/alarm", ["js/Dialog", "js/Action", "js/Hoard", "js/jq/template",
             let oldd = this.alarmTime / MSPERDAY;
             //console.log(curd, oldd);
             this.control("ok").toggle(
-                isEnabled !== this.wasEnabled || Math.abs(curd - oldd) > 1);
+                isEnabled !== this.wasEnabled || Math.abs(curd - oldd) >= 1);
         }
 
         _updateFromDelta() {

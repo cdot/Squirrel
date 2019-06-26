@@ -256,13 +256,14 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
 
             let p = path.split("/");
             let name = p.pop();
-
+            let parentId;
+            
             return this
             ._follow_path("root", p, true)
-            .then((parentId) => {
-                if (typeof parentId === "undefined")
+            .then((pid) => {
+                if (typeof pid === "undefined")
                     return false;
-
+                parentId = pid;
                 // See if the file already exists, if it does then use it's id
                 let query = "title='" + name + "'" +
                     " and '" + parentId + "' in parents" +

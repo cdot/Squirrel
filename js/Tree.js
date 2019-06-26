@@ -472,7 +472,8 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
                                 repeat:act.data.repeat
                             });
                         }
-                    });
+                    })
+                    .catch((e) => {});
                     return false;
                 });
                 return $button;

@@ -310,8 +310,8 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
                     let data = JSON.parse(str);
                     self.cloudPath = data.cloud_path;
                     self.imageURL = data.image_url;
-                    self.last_sync = data.last_sync;
-                    self.last_save = data.last_save;
+                    self.last_sync = data.last_sync || 0;
+                    self.last_save = data.last_save || 0;
                     self.hoard = new Hoard({
                         debug: this.debug,
                         hoard: data.hoard
