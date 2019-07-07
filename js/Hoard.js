@@ -259,10 +259,13 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
 
                 if (node)
                     // This is not really an error, we can survive it
-                    // easily enough
-                    //return conflict(action, "It already exists" + " @" +
-                    //                new Date(node.time));
-                    return Promise.resolve({ action: action });
+                    // easily enough. However if we don't signal a
+                    // conflict, the tree will be told to create a duplicate
+                    // node, which it mustn't do.
+                    return conflict(
+                        action,
+                        TX.tx("It was already created @ $1",
+                              new Date(node.time)));
 
                 if (undoable)
                     this._record_event(action, "D", action.path, parent.time);

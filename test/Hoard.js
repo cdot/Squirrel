@@ -86,8 +86,10 @@ requirejs(["js/Hoard", "js/Action", "test/TestRunner"], function(Hoard, Action, 
 	    h.play_action(act, true)
             .then((r) => {
                 assert.deepEqual(r.action, act);
-                // There should be no conflict for the duplicate "N"
-                assert(!r.conflict);
+                if (act.path.length === 1) {
+                    assert(r.conflict);
+                    assert.equal(r.conflict, "Create FineDining failed: It was already created @ Wed Jan 01 2003 00:00:00 GMT+0000 (Greenwich Mean Time)");
+                }
             });
         }
 	assert.deepEqual(h.tree, {

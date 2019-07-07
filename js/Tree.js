@@ -390,7 +390,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
         getNodeFromPath: function(path) {
             let $node = Tree.path2$node[path.join(PATHSEP)];
             // Has something not been added to the cache?
-            Serror.assert($node && $node.length === 1);
+            Serror.assert($node && $node.length === 1, path, $node);
             return $node;
         },
 

@@ -12,6 +12,8 @@ if (typeof module !== "undefined") {
     let jQuery = require('jquery');
     global.jQuery = jQuery;
     global.$ = jQuery;
+
+    $.getTapEvent = function() { return "click"; }
 }
 
 // This all works fine in the browser, but not in node.js. So the fix
@@ -93,23 +95,35 @@ requirejs(deps, function(Utils, Hoard, Serror, Translator, Tree, TestRunner) {
 
     function normalise_html(html) {
         return html
-            .replace(/\n/g, " ")
-            .replace(/ +</g,"<")
-            .replace(/> +/g,">")
-            .replace(/ +/g," ")
-            .replace(/^ /, "")
-            .replace(/ $/, "");
+        .replace(/class="([^"]+)"/, function(m, c) {
+            let cns = c.split(" ").sort().join(" ");
+            return 'class="' + cns + '"';
+        })
+        .replace(/\n/g, " ")
+        .replace(/ +</g,"<")
+        .replace(/</g,"\n<")
+        .replace(/> +/g,">")
+        .replace(/ +/g," ")
+        .replace(/^ /, "")
+        .replace(/ $/, "");
     }
 
     function expect_html(expected_html) {
         let actual = normalise_html($("#container").html());
         let expected = normalise_html(expected_html)
-        assert.equal(actual, expected);
+        if (actual !== expected) {
+            let a = actual.split("\n");
+            let e = expected.split("\n");
+            for (let i = 0; i < a.length; a++) {
+                assert.equal(a[i], e[i]);
+            }
+        }
     }
 
     tr.beforeEach(function() {
         $DOMtree.tree({});
     });
+    
     tr.afterEach(function() {
         $DOMtree.tree("destroy");
         $DOMtree.find("ul").remove();
@@ -136,17 +150,20 @@ requirejs(deps, function(Utils, Hoard, Serror, Translator, Tree, TestRunner) {
                 </li>\
               </ul>\
             </div>';
-        promise.then(() => {
+        return promise.then(() => {
             expect_html(empty_tree);
         });
     });
 
-    tr.deTest("should open undecorated", function() {
+    tr.addTest("should open undecorated", function() {
         let promise = Promise.resolve();
+        let c = 0;
         for (let act of actions) {
+            //console.log("Play",act);
             promise = promise.then($DOMtree.tree("action", act));
+            $DOMtree.tree("getNodeFromPath", ["FineDining"]);
         }
-        promise.then(() => {
+        return promise.then(() => {
             // open a leaf node
             let $node = $DOMtree.tree("getNodeFromPath", ["FineDining", "Caviar", "Beluga"]);
             $node.tree("open");
@@ -169,12 +186,12 @@ requirejs(deps, function(Utils, Hoard, Serror, Translator, Tree, TestRunner) {
         });
     });
 
-    tr.deTest("should open decorated", function() {
+    tr.addTest("should open decorated", function() {
         let promise = Promise.resolve();
         for (let act of actions) {
             promise = promise.then($DOMtree.tree("action", act));
         }
-        promise.then(() => {
+        return promise.then(() => {
             // open a leaf node
             let $node = $DOMtree.tree("getNodeFromPath", ["FineDining", "Caviar", "Beluga"]);
             $node.tree("open", {decorate:true});
@@ -200,7 +217,7 @@ requirejs(deps, function(Utils, Hoard, Serror, Translator, Tree, TestRunner) {
                               </span>\
                               <span class="tree__value">£6.70 per gramme\
                               </span>\
-                              <span class="tree__change">2007-01-01</span>\
+                              <span class="tree__change" style="display: none;">2007-01-01</span>\
                             </div>\
                             <div class="tree__draghandle ui-button ui-corner-all ui-widget ui-button-icon-only ui-draggable-handle" role="button" style="display: none;">\
                               <span class="ui-button-icon ui-icon ui-icon-arrow-2-n-s">\
@@ -220,12 +237,12 @@ requirejs(deps, function(Utils, Hoard, Serror, Translator, Tree, TestRunner) {
         });
     });
 
-    tr.deTest("should close decorated", function() {
+    tr.addTest("should close decorated", function() {
         let promise = Promise.resolve();
         for (let act of actions) {
             promise = promise.then($DOMtree.tree("action", act));
         }
-        promise.then(() => {
+        return promise.then(() => {
             // open a leaf node
             let $node = $DOMtree.tree("getNodeFromPath", ["FineDining", "Caviar", "Beluga"]);
             $node.tree("open", {decorate:true});
