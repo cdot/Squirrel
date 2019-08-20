@@ -70,7 +70,7 @@ define("js/Action", ["js/Translator"], function(Translator) {
                 break;
             case "X":
                 if (this.data)
-                    s = TX.tx("Constrain $1 to $2 character$?($2=1,s,) from $3",
+                    s = TX.tx("Constrain $1 to $2 character$?($2!=1,s,) from $3",
                               p, this.data.size, this.data.chars);
                 else
                     s = TX.tx("Clear constraints");
