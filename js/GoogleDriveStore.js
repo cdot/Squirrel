@@ -5,6 +5,7 @@
 var gapi_is_loaded = false;
 var gapi_loader;
 
+// Redirect target after gapi loading
 function gapi_on_load() {
     if (this.debug) this.debug("gapi is loaded");
     gapi_is_loaded = true;
@@ -20,6 +21,7 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
      * @implements AbstractStore
      */
 
+	// Client ID from 
     const CLIENT_ID = "985219699584-mt1do7j28ifm2vt821d498emarmdukbt.apps.googleusercontent.com";
 
     // While the appfolder would seem to make sense for Squirrel, it does make
@@ -29,9 +31,16 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
     const SCOPE = "https://www.googleapis.com/auth/drive";
 
     const BOUNDARY = "-------314159265358979323846";
-    const DELIMITER = "\r\n--" + BOUNDARY + "\r\n";
-    const RETIMILED = "\r\n--" + BOUNDARY + "--";
+    const DELIMITER = `\r\n--${BOUNDARY}\r\n`;
+    const RETIMILED = `\r\n--${BOUNDARY}--`;
+	const DISCOVERY_DOCS = ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"];
 
+	let isSignedIn = false;
+	
+	function updateSigninStatus(signedIn) {
+		isSignedIn = signedIn;
+	}
+	
     class GoogleDriveStore extends HttpServerStore {
 
         constructor(p) {
@@ -94,37 +103,63 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
 
             if (this.debug) this.debug("authorising");
 
-            return gapi.auth
-                .authorize({
-                    //immediate: true,
-                    client_id: CLIENT_ID,
-                    scope: SCOPE
-                })
-            .then((authResult) => {
-                window.clearTimeout(tid);
-                if (!authResult)
-                    throw new Serror(403, TX.tx("Could not authorise access to Google Drive"));
-                else if (authResult.fail)
-                    throw new Serror(403, authResult.fail);
-                // Access token has been retrieved, requests
-                // can be sent to the API.
-                if (this.debug) this.debug("auth OK");
-                return gapi.client.load("drive", "v2");
-            })
-            .then(() => {
-                if (this.debug) this.debug("drive/v2 loaded");
-                return gapi.client.drive.about.get("name");
-            })
-            .then((result) => {
-                if (result.status !== 200)
-                    throw result;
-                this.option("user", result.result.user.displayName);
-                // We're done, fall through to resolve
-            })
-            .catch((r) => {
-                throw new Serror(
-                    500, this._gError(r, TX.tx("Google Drive load")));
-            });
+			let self = this;
+            return new Promise((resolve, reject) => {
+				gapi.load("client:auth2", function() {
+					let gauth;
+					gapi.client.init({
+						//immediate: true,
+						client_id: CLIENT_ID,
+						discoveryDocs: DISCOVERY_DOCS,
+						scope: SCOPE
+					})
+					.then(
+						() => {
+							window.clearTimeout(tid);
+							
+							gauth = gapi.auth2.getAuthInstance();
+							let promise;
+							if (gauth.isSignedIn.get()) {
+								// User is signed in, requests can be sent to
+								// the API.
+								promise = Promise.resolve();
+							} else {
+								// User is not signed in. Promise to auth.
+								promise = new Promise((resolve) => {
+									gauth.isSignedIn.listen(function(sin) {
+										if (sin)
+											resolve();
+										else
+											reject();
+									});
+									gauth.signIn();
+								});
+							}
+							return promise.then(() => {
+								let guser = gauth.currentUser.get();
+								let gprofile = guser.getBasicProfile();
+								let name = gprofile.getName()
+								if (self.debug) self.debug(`auth OK, user ${name}`);
+								self.option("user", name);
+								return gapi.client.load("drive", "v3");
+							});
+						},
+						(gerror) => {
+							debugger;
+							throw new Serror(403, gerror);
+						}
+					)
+					.then(() => {
+						if (self.debug) self.debug("drive/v3 loaded");
+						resolve();
+					})
+					.catch((r) => {
+						debugger;
+						throw new Serror(
+							500, self._gError(r, TX.tx("Google Drive load")));
+					});
+				});				
+			});
         }
 
         // @Override
@@ -265,23 +300,20 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
                     return false;
                 parentId = pid;
                 // See if the file already exists, if it does then use it's id
-                let query = "title='" + name + "'" +
-                    " and '" + parentId + "' in parents" +
-                    " and trashed=false";
                 if (this.debug) this.debug("checking existance of " + name);
                 return gapi.client.drive.files
                 .list({
-                    q: query
+                    q:  `name='${name}' and '${parentId}' in parents and trashed=false`
                 })
             })
             .then((response) => {
-                let items = response.result.items;
+                let items = response.result.files;
                 let id;
                 if (items.length > 0) {
                     id = items[0].id;
-                    if (this.debug) this.debug("updating " + name + " id " + id);
+                    if (this.debug) this.debug(`updating ${name} ${id}`);
                 } else
-                    if (this.debug) this.debug("creating " + name + " in " + parentId);
+                    if (this.debug) this.debug(`creating ${name} in ${parentId}`);
                 return this._putfile(parentId, name, data, id);
             })
             .catch((r) => {
@@ -295,37 +327,46 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
 
             let p = path.split("/");
             let name = p.pop();
-
             return this
             ._follow_path("root", p, false)
             .then((parentId) => {
                 if (typeof parentId === "undefined")
                     return undefined;
-                let query = "title='" + name + "'" +
-                    " and '" + parentId + "' in parents" +
-                    " and trashed=false";
+				if (this.debug) this.debug(
+					`listing files called ${name} in ${parentId}`);
                 return gapi.client.drive.files
                 .list({
-                    q: query
+                    q: `name='${name}' and '${parentId}' in parents and trashed=false`,
+					// "*" shows all fields. We only need the id for matched files.
+					fields: "files/id"
                 });
             })
             .then((response) => {
-                let items = response.result.items;
-                if (items.length === 0) {
+                let files = response.result.files;
+                if (files === null || files.length === 0) {
                     if (this.debug) this.debug(
                         "could not find " + name);
                     throw new Serror(401, path + " not found");
                 }
-                let url = items[0].downloadUrl;
-                if (this.debug) this.debug(
-                    "found '" + name + "' at " + url);
-                // use HttpServerStore.request
-                return this.request("GET", url)
-                .then((r) => {
-                    return r.body;
-                });
+                let id = files[0].id;
+                if (this.debug) this.debug(`found '${name}' id ${id}`);
+				return gapi.client.drive.files.get(
+					{
+						fileId: id,
+						alt: "media"
+					})
+				.then((res) => {
+					// alt=media requests content-type=text/plain. AFAICT the
+					// file comes in base64-encoded, and is simply converted
+					// to a "string" by concatenating the bytes,
+					// one per code point, without any decoding (thankfully!)
+					let a = new Uint8Array(res.body.length);
+					for (let i = 0; i < a.length; i++)
+						a[i] = res.body.codePointAt(i);
+					return a;
+				});
             })
-            .catch((r) => {
+			.catch((r) => {
                 throw new Serror(400, path + this._gError(r, TX.tx("Read")));
             });
         }

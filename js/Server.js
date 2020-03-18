@@ -121,44 +121,46 @@ define("js/Server", ["url", "extend", "fs-extra"], function(Url, extend, Fs) {
             if (typeof self.auth !== "undefined" && self.debug)
                 self.debug("- requires authentication");
 
-            let promise = Promise.resolve();
-
+			let promise;
             if (typeof this.ssl !== "undefined") {
                 let options = {};
+				let promises = [
+					Fs.pathExists(self.ssl.key)
+					.then((exists) => {
+						if (exists)
+							return Fs.readFile(self.ssl.key);
+						else
+							return self.ssl.key;
+					})
+					.then(function (k) {
+						options.key = k.toString();
+						if (self.debug) self.debug("SSL key loaded");
+					}),
+					Fs.pathExists(self.ssl.cert)
+					.then((exists) => {
+						if (exists)
+							return Fs.readFile(self.ssl.cert);
+						else
+							return self.ssl.cert;
+					})
+					.then(function (c) {
+						options.cert = c.toString();
+						if (self.debug) self.debug("SSL certificate loaded");
+					})
+				];
 
-                promise = promise
+				promise = Promise.all(promises)
                 .then(function () {
-                    return self.ssl.key.read();
-                })
-
-                .then(function (k) {
-                    options.key = k;
-                    if (self.debug) self.debug("SSL key loaded");
-                })
-
-                .then(function () {
-                    return self.ssl.cert.read();
-                })
-
-                .then(function (c) {
-                    options.cert = c;
-                    if (self.debug) self.debug("SSL certificate loaded");
-                    if (self.log) self.log("HTTPS starting on port", self.port);
-                })
-
-                .then(function () {
+					if (self.log) self.log("HTTPS starting on port", self.port);
                     return require("https").createServer(options, handler);
                 });
             } else {
                 if (self.log) self.log("HTTP starting on port", self.port);
-                promise = promise
-                .then(function () {
-                    return require("http").createServer(handler);
-                });
+                promise = require("http").createServer(handler);
             }
 
             return promise
-            .then(function (httpot) {
+            .then((httpot) => {
                 self.ready = true;
                 self.http = httpot;
                 httpot.listen(self.port);

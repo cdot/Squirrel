@@ -349,7 +349,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                     return Promise.resolve();
                 
                 return Dialog.confirm("login", {
-                    title: TX.tx("User details"),
+                    title: TX.tx("Client user"),
                     user: auth_req.user
                 }).then((info) => {
                     if (self.debug) self.debug("...login confirmed");
