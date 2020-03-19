@@ -38,7 +38,7 @@ define("js/LocalStorageStore", deps, function(Utils, Serror, AbstractStore, Stor
                 let i = 0;
                 let key;
                 let poss_user = null;
-                let re = new RegExp( "^(.*)\\." + ROOT_PATH);
+                let re = new RegExp(`^(.*)\\.${ROOT_PATH}`);
                 while ((key = localStorage.key(i)) != null) {
                     let m = re.exec(key);
                     if (m) {

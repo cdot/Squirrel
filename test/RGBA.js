@@ -162,7 +162,7 @@ requirejs(["js/Utils", "js/RGBA", "test/TestRunner"], function(Utils, RGBA, Test
             let rgb = new RGBA(tm.rgb[0], tm.rgb[1], tm.rgb[2]);
             assert.equal(tm.hash, rgb.toString());
 
-            let hrgb = new RGBA(tm.hash);
+            //let hrgb = new RGBA(tm.hash);
             assert.equal(tm.rgb.r, rgb[0]);
             assert.equal(tm.rgb.g, rgb[1]);
             assert.equal(tm.rgb.b, rgb[2]);

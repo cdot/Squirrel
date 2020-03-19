@@ -1,9 +1,11 @@
-/*eslint-env node, mocha */
+/* eslint-env node, mocha */
+/* global Cookies:writable, document:writable */
 
 if (typeof module !== "undefined") {
     requirejs = require('requirejs');
     let jsdom = require('jsdom');
-    let document = new jsdom.JSDOM('<!doctype html><html><body></body></html>');
+	/*eslint-disable no-global-assign*/
+    document = new jsdom.JSDOM('<!doctype html><html><body></body></html>');
     let window = document.window;
     global.document = window.document;
     global.window = window;
@@ -23,6 +25,7 @@ if (typeof module !== "undefined") {
             delete Cookies.vals[k];
         }
     };
+	/*eslint-enable no-global-assign*/
 }
 
 requirejs.config({
@@ -39,8 +42,6 @@ const TRANSLATIONS = {
         "<em>Stupid</em>": { m: 1, s: "<a name='silly'>Twit</a>" }
     }
 };
-
-var Translator;
 
 requirejs(["js/Translator", "test/TestRunner"], function(Translator, TestRunner) {
     let tr = new TestRunner("Translator");

@@ -69,13 +69,13 @@ define("js/jq/styling", ["js/RGBA", "js-cookie", "jquery", "jquery-ui"], functio
                                 v = $picker.css(attr);
                             else
                                 v = rule.style[attr];
-                            s += attr + ":" + v + ";";
+                            s += `${attr}: ${v};`;
                             $(selector).css(attr, v);
                         }
                         $picker.removeClass(superclass);
                         
                         if (s.length > 0)
-                            styles.push(selector + "{" + s + "}");
+                            styles.push(`${selector}{${s}}`);
                     }
                 }
             }
@@ -96,7 +96,7 @@ define("js/jq/styling", ["js/RGBA", "js-cookie", "jquery", "jquery-ui"], functio
                 $("#jQueryTheme")
                 .each(function () {
                     this.href = this.href.replace(
-                        /\/themes\/[^/]+/, "/themes/" + theme);
+                        /\/themes\/[^/]+/, `/themes/${theme}`);
                     $(this).replaceWith($(this));
                     // Use the loading of the CSS as an image (which will
                     // trigger an error) to tell us when we can reset the

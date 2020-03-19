@@ -1,4 +1,6 @@
 /*@preserve Copyright (C) 2019 Crawford Currie http://c-dot.co.uk license MIT*/
+/*eslint-env browser*/
+/*global __filename*/
 
 if (typeof requirejs === "undefined")
     throw new Error(__filename + " is not runnable stand-alone");
@@ -21,17 +23,17 @@ define(["js/Translator", "jquery", "js/jq/simulated_password", "js/jq/icon_butto
 
     let TX = Translator.instance({ url: "locale", debug: console.debug});
 
-    function assert(v, m) {
+    /*function assert(v, m) {
         if (!v) {
             if (typeof m !== "undefined")
                 throw "Assert failed: " + m;
             else
                 throw "Assret failed";
         }
-    }
+    }*/
 
     function simulated_password() {
-        let res = $("#hidden_pw")
+        $("#hidden_pw")
             .simulated_password()
             .on("change", function() {
                 let info = $(this).val() + " (on change)";

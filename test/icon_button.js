@@ -1,5 +1,6 @@
 /*@preserve Copyright (C) 2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /*eslint-env node, mocha */
+/*global document:writable*/
 
 /**
  * Note this may not run correctly under node.js, due to the lack of event
@@ -9,7 +10,9 @@ if (typeof module !== "undefined") {
     requirejs = require('requirejs');
    // node.js
     const { JSDOM } = require('jsdom');
+	/* eslint-disable no-global-assign */
     document = new JSDOM('<!doctype html><html><body id="working"></body></html>');
+	/* eslint-enable no-global-assign */
     const { window } = document;
     global.window = window;
     global.document = window.document;

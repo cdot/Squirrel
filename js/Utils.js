@@ -87,9 +87,7 @@ define("js/Utils", ["libs/utf8"], function() {
             // lsb of the last character is part of the array or not.
             let cc = ((a8.length & 1) !== 0) ? 0x100 : 0;
             let low = true; // have we just packed the high byte?
-            let ps = "";
             let a16 = [];
-            let j = 0;
             for (let c of a8) {
                 if (low) {
                     a16.push(cc | c);
@@ -269,7 +267,7 @@ define("js/Utils", ["libs/utf8"], function() {
             for (let key in specs) {
                 if (!(key in query)) {
                     if ("default" in specs[key]) {
-                        query[key] = specs[key]["default"];
+                        query[key] = specs[key].default;
                     }
                 }
             }
@@ -307,11 +305,12 @@ define("js/Utils", ["libs/utf8"], function() {
                 function (m, test, pass, fail) {
                     let result = false;
                     try {
-                        eval("result=(" + test + ")");
+						/* eslint-disable no-eval */
+                        eval(`result=(${test})`);
+						/* eslint-enable no-eval */
                     } catch (e) {
-                        throw new Error("Problem evaluating '" + test
-                                        + "' in template '"
-                                        + arguments[0] + ": " + e)
+                        throw new Error(
+							`Problem evaluating '${test}' in template '${arguments[0]}: ${e}`)
                     }
                     return result ? pass : fail;
                 });

@@ -1,4 +1,6 @@
 /*@preserve Copyright (C) 2019 Crawford Currie http://c-dot.co.uk license MIT*/
+/* eslint-env browser */
+/* global __filename */
 
 if (typeof requirejs === "undefined")
     throw new Error(__filename + " is not runnable stand-alone");
@@ -78,8 +80,8 @@ define(["js/Dialog", "js/Translator", "js/LocalStorageStore", "js/Action", "js/H
         alarm: function() {
             return Dialog.confirm("alarm", {
                 path: ["Squirrel", "Nut", "Kin"],
-                alarm: { time: Date.UTC(2002,0,02), repeat: 12345678910 },
-                last_change: Date.UTC(1998,3,01)
+                alarm: { time: Date.UTC(2002,0,2), repeat: 12345678910 },
+                last_change: Date.UTC(1998,3,1)
             })
             .then((act) => {
                 lert("Alarm", act);
@@ -102,7 +104,7 @@ define(["js/Dialog", "js/Translator", "js/LocalStorageStore", "js/Action", "js/H
                     },
                     "Plain text"
                 ]
-            }).then((dlg) => {
+            }).then((/*dlg*/) => {
                 Dialog.open("alert", {
                     alert: {
                         severity: "warning",
@@ -133,52 +135,52 @@ define(["js/Dialog", "js/Translator", "js/LocalStorageStore", "js/Action", "js/H
             return Dialog.confirm("choose_changes", {
                 changes: [
                     new Action({
-	                type: "N",
-	                time: Date.UTC(2000,0,01),
-	                path: ["A"]
+						type: "N",
+						time: Date.UTC(2000,0,1),
+						path: ["A"]
                     }),
                     new Action({
-	                type: "A",
-	                time: Date.UTC(2001,6,01),
-	                data: { time: Date.UTC(2001,6,01),
+						type: "A",
+						time: Date.UTC(2001,6,1),
+						data: { time: Date.UTC(2001,6,1),
                                 repeat: (1000 * 60 * 60 * 24 * 100) },
-	                path: [ "A" ]
+						path: [ "A" ]
                     }),
                     new Action({
-	                type: "C",
-	                time: Date.UTC(2001,6,01),
-	                path: [ "A" ]
+						type: "C",
+						time: Date.UTC(2001,6,1),
+						path: [ "A" ]
                     }),
                     new Action({
-	                type: "N",
-	                time: Date.UTC(2002,0,01),
-	                path: [ "A", "B" ]
+						type: "N",
+						time: Date.UTC(2002,0,1),
+						path: [ "A", "B" ]
                     }),
                     new Action({
-	                type: "N",
-	                time: Date.UTC(2002,0,01),
-	                path: [ "A", "C" ]
+						type: "N",
+						time: Date.UTC(2002,0,1),
+						path: [ "A", "C" ]
                     }),
                     new Action({
-	                type: "D",
-	                time: Date.UTC(2002,0,01),
-	                path: [ "A", "C" ]
+						type: "D",
+						time: Date.UTC(2002,0,1),
+						path: [ "A", "C" ]
                     }),
                     new Action({
                         type: "N",
-	                path: [ "A", "B", "C" ],
-	                time: Date.UTC(2003,0,01)
+						path: [ "A", "B", "C" ],
+						time: Date.UTC(2003,0,1)
                     }),
                     new Action({
-	                type: "E",
-	                time: Date.UTC(2002,0,02),
-	                path: ["A", "B", "C"],
+						type: "E",
+						time: Date.UTC(2002,0,2),
+						path: ["A", "B", "C"],
                         data: "Nuts"
                     }),
                     new Action({
-	                type: "M",
-	                time: Date.UTC(2002,0,02),
-	                path: ["A", "B", "C"],
+						type: "M",
+						time: Date.UTC(2002,0,2),
+						path: ["A", "B", "C"],
                         data: ["A", "Nuts"]
                     }),
                 ]

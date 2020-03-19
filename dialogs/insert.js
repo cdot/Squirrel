@@ -7,12 +7,11 @@
  * $node (required)
  * data: data value to insert
  */
-define("dialogs/insert", ["dialogs/add", "js/Action"], function(AddDialog, Action) {
+define("dialogs/insert", ["dialogs/add"], function(AddDialog) {
     class InsertDialog extends AddDialog {
         validateValue() {
             let $ta = this.control("value");
             let text = $ta.val();
-            let enabled = true;
             
             try {
                 JSON.parse(text);
@@ -21,7 +20,6 @@ define("dialogs/insert", ["dialogs/add", "js/Action"], function(AddDialog, Actio
                 .removeClass("dlg-disabled")
                 .attr("title", this.tx("Edit valid JSON"));
             } catch (e) {
-                enabled = false;
                 this.control("ok").icon_button("disable");
                 $ta
                 .addClass("dlg-disabled")

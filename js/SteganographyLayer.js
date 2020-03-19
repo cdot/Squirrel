@@ -17,7 +17,7 @@ define("js/SteganographyLayer", ["js/LayeredStore", "js/Serror", "js/Steganograp
         constructor(p) {
             super(p);
             this.steg = new Steganographer({ debug: this.debug });
-            this.type = "SteganographyLayer/" + this.type;
+            this.type = `SteganographyLayer/${this.type}`;
             this.option("needs_image", true);
         }
 

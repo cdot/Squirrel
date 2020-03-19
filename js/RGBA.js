@@ -247,7 +247,7 @@ define("js/RGBA", function() {
             if (typeof r === "object" && r.constructor.name === "RGBA")
                 jQuery.extend(this, r);
 
-            throw "Cannot construct from " + (typeof r);
+            throw `Cannot construct from ${typeof r}`;
         }
 
         /**
@@ -286,12 +286,12 @@ define("js/RGBA", function() {
 
             if (typeof this.a !== "undefined") {
                 tuple.push(this.a);
-                return "rgba(" + tuple.join(",") + ")";
+                return `rgba(${tuple.join(",")})`;
             } else {
                 let s = "#";
                 for (let i = 0; i < 3; i++) {
                     let v = tuple[i].toString(16);
-                    s += v.length == 1 ? "0" + v : v;
+                    s += v.length == 1 ? `0${v}` : v;
                 }
                 return s.toUpperCase();
             }

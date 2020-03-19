@@ -1,4 +1,6 @@
 /*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
+/*eslint-env browser,node,mocha*/
+/*global Mocha:writable*/
 
 if (typeof requirejs === "undefined") {
     throw new Error(__filename + " is not runnable stand-alone");
@@ -8,8 +10,10 @@ if (typeof requirejs === "undefined") {
 * Common code for running mocha tests
 */
 define(["mocha", "chai"], function(maybeMocha, chai) {
+	/*eslint-disable no-global-assign*/
     if (typeof Mocha === "undefined")
         Mocha = maybeMocha; // node.js
+	/*eslint-enable no-global-assign*/
 
     class TestRunner {
         constructor(title, debug) {
@@ -39,7 +43,7 @@ define(["mocha", "chai"], function(maybeMocha, chai) {
             this.after = after;
         }
 
-        deTest(title, fn) {
+        deTest(/*title, fn*/) {
         }
 
         addTest(title, fn) {

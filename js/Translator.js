@@ -30,7 +30,7 @@
 if (typeof XMLHttpRequest === "undefined")
     XMLHttpRequest = require("xhr2");
 
-define("js/Translator", ["js/Utils", "js/Serror", "js-cookie"], function(Utils, Serror, Cookies) {
+define("js/Translator", ["js/Utils", "js/Serror"], function(Utils, Serror) {
 
     const TIMEUNITS = {
         // TX.tx("$1 year$?($1!=1,s,)")
@@ -108,14 +108,18 @@ define("js/Translator", ["js/Utils", "js/Serror", "js-cookie"], function(Utils, 
             let getter;
             if (this.options.url) {
                 let xhr = new XMLHttpRequest();
-                let url = this.options.url + "/" + lingo + ".json";
+                let url = `${this.options.url}/${lingo}.json`;
                 if (this.debug) this.debug("Get language from", url);
                 if (this.debug)
-                    url = url + "?nocache=" + Date.now();
+                    url = `${url}?nocache=${Date.now()}`;
                 xhr.open("GET", url, true);
-                xhr.send();
-
                 getter = new Promise((resolve, reject) => {
+					try {
+						xhr.send();
+					} catch (e) {
+						reject(new Serror(400, [ url ], e));
+					}
+				
                     xhr.onreadystatechange = function() {
                         if (xhr.readyState != 4)
                             return;
@@ -138,7 +142,7 @@ define("js/Translator", ["js/Utils", "js/Serror", "js-cookie"], function(Utils, 
             } else if (this.options.files) {
                 // Specific to node.js - no browser support!
                 const fs = require("fs-extra");
-                getter = fs.readFile(this.options.files + lingo + ".json")
+                getter = fs.readFile(`${this.options.files}${lingo}.json`)
                 .then((json) => {
                     return JSON.parse(json);
                 });
@@ -157,7 +161,7 @@ define("js/Translator", ["js/Utils", "js/Serror", "js-cookie"], function(Utils, 
                 if (this.debug) this.debug("Using language", lingo);
             })
             .catch((e) => {
-                if (this.debug) this.debug("Could not load language", lingo);
+                if (this.debug) this.debug("Could not load language", lingo, e);
                 let generic = lingo.replace(/-.*/, "");
                 if (generic !== lingo) {
                     if (this.debug) this.debug("Trying fallback", generic);
@@ -198,10 +202,10 @@ define("js/Translator", ["js/Utils", "js/Serror", "js-cookie"], function(Utils, 
          */
         _translateDOM(node, translate, translating) {
             function hasClass(element, thatClass) {
-                return ((" " + element.className + " ")
+                return (` ${element.className} `
                         .replace(
                                 /\s+/g, " ")
-                        .indexOf(" " + thatClass + " ") >= 0);
+                        .indexOf(` ${thatClass} `) >= 0);
             }
 
             let t, attrs;
@@ -335,9 +339,9 @@ define("js/Translator", ["js/Utils", "js/Serror", "js-cookie"], function(Utils, 
                 s.push(this.tx(TIMEUNITS.d, delta));
 
             if (hms)
-                s.push(("00" + deltaDate.getUTCHours()).slice(-2)
-                       + ":" + ("00" + deltaDate.getUTCMinutes()).slice(-2)
-                       + ":" + ("00" + deltaDate.getUTCSeconds()).slice(-2));
+                s.push(`00${deltaDate.getUTCHours()}`.slice(-2)
+                       + ":" + `00${deltaDate.getUTCMinutes()}`.slice(-2)
+                       + ":" + `00${deltaDate.getUTCSeconds()}`.slice(-2));
  
             return s.join(" ");
         }

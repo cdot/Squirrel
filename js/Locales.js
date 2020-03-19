@@ -7,7 +7,7 @@ let protection = [];
 function protect(os) {
     return os.replace(/(!=|\{|\}|\$\d*|<[^>]*>)/g, function(m, p) {
         protection.push(p);
-        return "{" + protection.length + "}";
+        return `{${protection.length}}`;
     });
 }
 
@@ -30,12 +30,11 @@ function lengthInUtf8Bytes(str) {
 function auto_translate(en, lang) {
     let s = protect(en);
     if (lengthInUtf8Bytes(s) > 500) {
-        throw "Cannot auto-translate " + s
-        + " it's > 500 bytes";
+        throw `Cannot auto-translate '${s}' it's > 500 bytes`;
     }
     let url = "http://api.mymemory.translated.net/get?q="
         + encodeURIComponent(s) + "&langpair="
-        + encodeURIComponent("en|" + lang);
+        + encodeURIComponent(`en|${lang}`);
     
     let response = request('GET', url);
     let tx;
@@ -48,9 +47,8 @@ function auto_translate(en, lang) {
             s: unprotect(result.translatedText)
         };
         console.log(
-            "Auto-translated", "'" + en +
-            "'", "to", lang, "'" + tx.s +
-            "'", "with confidence", tx.m);
+            `Auto-translated '${en}' to ${lang}`,
+			`as '${tx.s}' with confidence ${tx.m}`);
     }
     return tx;
 }
@@ -62,7 +60,6 @@ function auto_translate(en, lang) {
 define(["node-getopt", "jsdom", "js/Translator", "fs-extra", "readline-sync"], function(getopt, jsdom, Translator, Fs, rl) {
 
     let TX = Translator.instance();
-    let readline;
     
     class Locales {
 
@@ -107,7 +104,7 @@ define(["node-getopt", "jsdom", "js/Translator", "fs-extra", "readline-sync"], f
                     if (/^[-a-zA-Z]+\.json$/.test(entry)) {
                         let lang = entry.replace(".json", "");
                         proms.push(
-                            Fs.readFile("locale/" + entry, 'utf8')
+                            Fs.readFile(`locale/${entry}`, 'utf8')
                             .then(function(data) {
                                 self.translations[lang] = JSON.parse(data);
                                 if (self.debug) self.debug(
@@ -178,8 +175,6 @@ define(["node-getopt", "jsdom", "js/Translator", "fs-extra", "readline-sync"], f
          * below this confidence level
          */
         updateTranslation(lang, improve) {
-            let self = this;
-
             function _translate(en, translated) {
                 let finished = false;
                 let prompt = "> ";
@@ -231,8 +226,7 @@ define(["node-getopt", "jsdom", "js/Translator", "fs-extra", "readline-sync"], f
 
             for (en in translated) {
                 if (!this.strings[en]) {
-                    if (this.debug) this.debug("Removed", "'" + en + "'",
-                                "from", lang);
+                    if (this.debug) this.debug(`Removed '${en}' from ${lang}`);
                     delete translated[en];
                 }
             }

@@ -1,12 +1,20 @@
 /*@preserve Copyright (C) 2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env node */
+/* eslint-disable no-eval */
+/* eslint-disable no-use-before-define */
 
-const DESCRIPTION =
-      "DESCRIPTION\nBuild script for Squirrel.\n";
+const DESCRIPTION = [
+    "DESCRIPTION",
+	"Build script for Squirrel.",
+	"Default behaviour is to build a release in the dist/ directory.",
+	"With the -t option, updates translations using the js/Locales module to auto-translate new strings.",
+	"",
+	"USAGE",
+	"node build-dist.js <options>",
+	"",
+	"OPTIONS",
+	"[[OPTIONS]]" ];
 
-// This basically duplicates many of the functions * of r.js,
-// but in a more manageable way. I wrote it while trying to work
-// out what r.js was doing!
 let requirejs = require("requirejs");
 
 requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html-minifier", "jsdom", "js/Locales"], function(request, getopt, fs, uglify, MinifyCSS, MinifyHTML, jsdom, Locales) {
@@ -16,19 +24,22 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
             [ "d", "debug", "Debug" ],
             [ "D", "deps", "Show dependencies" ],
             [ "h", "help", "Display this help" ],
-            [ "l", "language=ARG", "Language for translation" ],
-            [ "t", "translate=ARG", "Re-translate strings below this confidence level (1 for all strings, 0 for untranslated only)" ]
+            [ "l", "language=ARG", "Target language for translation" ],
+            [ "t", "translate=ARG", "Just re-translate strings below this confidence level (1 for all strings, 0 for untranslated only)" ]
         ])
         .bindHelp()
-        .setHelp(DESCRIPTION + "[[OPTIONS]]")
+        .setHelp(DESCRIPTION.join("\n"))
         .parseSystem();
 
     opts = opts.options;
     let debug = opts.debug ? console.debug : false;
     let dependencies = opts.deps;
-    
+
+	/**
+	 * Like jquery extend
+	 */
     function extend(a, b) {
-        let join = {};
+        let join = {}, k;
         if (!a)
             return b;
         if (!b)
@@ -44,6 +55,10 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
         }
         return join;
     }
+
+	// The dependency analysis duplicates many of the functions of r.js,
+	// but in a more manageable way. I wrote it while trying to work
+	// out what r.js was doing!
 
     // Map of module id to a set of module id's that it depends on
     let depends_on = {};
@@ -78,7 +93,7 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
 
         if (config.order) {
             for (let o of config.order) {
-                let re = new RegExp("^" + o.key + "(/|$)");
+                let re = new RegExp(`^${o.key}(/|$)`);
                 let m = re.exec(path);
                 if (m) {
                     path = path.replace(re, o.path + m[1]);
@@ -87,7 +102,7 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
         }
 
         if (config.baseUrl && !/^\//.test(path))
-            path = config.baseUrl + "/" + path;
+            path = `${config.baseUrl}/${path}`;
         if (!/\.js$/.test(path))
             path = path + ".js";
         
@@ -99,16 +114,14 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
     function get(path) {
         if (/^(https?:)?\/\//.test(path)) {
             if (!/^http/.test(path))
-                path = "https:" + path;
+                path = `https:${path}`;
 
             return new Promise((resolve, reject) => {
                 request
                 .get(path)
                 .on('response', (response) => {
                     if (response.statusCode !== 200) {
-                        reject(new Serror(
-                            response.statusCode,
-                            path + ": " + response.statusCode));
+                        reject(`${path}: ${response.statusCode}`);
                         return;
                     }
                     let body = '';
@@ -134,17 +147,17 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
             let m = /\nrequirejs\.config\((.*?)\);/s.exec(data);
             if (m) {
                 let cfg;
-                eval("cfg="+m[1]);
+                eval(`cfg=${m[1]}`);
                 return cfg;
-            }
-            return {};
+            } else
+				throw `No requirejs found in ${module}`;
         });
     }
 
     let found_at = {};
 
     // Analyse the dependencies described in the given block of code. This
-    // is npot a general solution - the code is not parsed, just
+    // is not a general solution - the code is not parsed, just
     // processed by regexps.
     function analyseDependencies(module, config, js) {
         addDependency(module);
@@ -153,14 +166,14 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
         let m = /\nrequirejs\.config\((.*?)\);/s.exec(js);
         if (m) {
             let cfg;
-            eval("cfg=" + m[1]);
+            eval(`cfg=${m[1]}`);
             config = extend(config, cfg);
             delete config.order;
         }
 
         let promises = [];
         // Look for require or define in a format we can analyse
-        let re = /(?:(?:requirejs|define)\s*\(\s*(?:"[^"]*"\s*,\s*)?|let\s*deps\s*=\s*)\[\s*(.*?)\s*\]/gs;
+        let re = /(?:(?:requirejs|define)\s*\(\s*(?:"[^"]*"\s*,\s*)?|let\s*deps\s*=\s*)\[\s*(.*?)\s*\]/g;
         while ((m = re.exec(js)) !== null) {
             
             let deps = m[1].split(/\s*,\s*/);
@@ -170,9 +183,9 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
                     dep = m2[2];
                     // Deal with relative paths, as encountered in menu.js
                     if (/^\.\.\//.test(dep))
-                        dep = dep.replace("../", module.replace(/[^\/]*\/[^\/]*$/, ""));
+                        dep = dep.replace("../", module.replace(/[^/]*\/[^/]*$/, ""));
                     else if (/^\.\//.test(dep))
-                        dep = dep.replace("./", module.replace(/\/[^\/]*$/, "/"));
+                        dep = dep.replace("./", module.replace(/\/[^/]*$/, "/"));
                     addDependency(module, dep);
                     promises.push(analyse(dep, config));
                 }
@@ -206,7 +219,7 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
         if (!stack) stack = [];
         if (!visited) visited = {};
         visited[key] = true;
-        for (d in depends_on[key]) {
+        for (let d in depends_on[key]) {
             if (!visited[d])
                 treeSort(d, stack, visited);
         }
@@ -228,11 +241,13 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
                     console.log("Failed to load", module,"from",found_at[module], e);
                 })
                 .then((src) => {
+					if (!src)
+						return "";
                     let codes = src.toString();
                     // Make sure all define's have an id
                     codes = codes.replace(
                         /((?:^|\W)define\s*\(\s*)([^"'\s])/,
-                        "$1\"" + module + "\", $2");
+                        `$1"${module}", $2`);
                     // Make sure there's a define specifying this module
                     let check = new RegExp(
                         "(^|\\W)define\\s*\\(\\s*[\"']" + module + "[\"']", "m");
@@ -248,34 +263,35 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
         
         return Promise.all(proms)
         .then((code) => {
-            code.push("requirejs(['" + root + "']);");
+            code.push(`requirejs(['${root}']);`);
             let codes = code.join("\n");
+			//console.log("Uglify",codes);
             let cod = uglify.minify(codes, {
                         ie8: true
             });
             if (cod.error) {
                 console.error("Error:", cod.error);
-                return fs.writeFile("dist/" + root + ".bad_js", codes);
+                return fs.writeFile(`dist/${root}.bad_js`, codes);
             }
             return Promise.all([
                 locales.js(codes, root + ".js").then((c) => {
                     if (debug)
-                        debug("Extracted",c,"new strings from",root + ".js");
+                        debug(`Extracted ${c} new strings from ${root}.js`);
                 }),
-                fs.writeFile("dist/" + root + ".js", cod.code)
+                fs.writeFile(`dist/${root}.js`, cod.code)
             ]);
         });
     }
     
     function listDir(dir, ext) {
         ext = ext || "[^.]*";
-        let re = new RegExp("\." + ext + "$");
+        let re = new RegExp(`\\.${ext}$`);
         return fs.readdir(dir)
         .then((entries) => {
             let files = [];
             for (let entry of entries) {
                 if (re.test(entry))
-                    files.push(dir + "/" + entry);
+                    files.push(`${dir}/${entry}`);
             }
             return files;
         });
@@ -320,7 +336,7 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
                     .then((entries) => {
                         for (let entry of entries) {
                             if (/\.js$/.test(entry)) {
-                                let module = "dialogs/" + entry.replace(".js", "");
+                                let module = `dialogs/${entry.replace(".js", "")}`;
                                 addDependency("js/main", module);
                                 deps.push(analyse(module, cfg));
                             }
@@ -335,7 +351,7 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
                         for (let entry of entries) {
                             if (/(Store|Layer)\.js$/.test(entry)
                                 && entry !== "FileStore.js") {
-                                let module = "js/" + entry.replace(".js", "");
+                                let module = `js/${entry.replace(".js", "")}`;
                                 addDependency("js/main", module);
                                 deps.push(analyse(module, cfg));
                             }
@@ -365,7 +381,7 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
                     proms.push(
                         fs.readFile(f)
                         .then((data) => {
-                            return fs.writeFile("dist/" + f, data);
+                            return fs.writeFile(`dist/${f}`, data);
                         }));
             }
             return Promise.all(proms);
@@ -375,7 +391,7 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
     function processCSS(module, document) {
         // Merge and minify CSS
         let proms = [], i = 0;
-        let fn = "css/" + module + ".css";
+        let fn = `css/${module}.css`;
 
         let links = document.getElementsByTagName("link");
         let remove = [];
@@ -405,7 +421,7 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
             })
             .minify(allCss)
             .then((mini) => {
-                return fs.writeFile("dist/" + fn, mini.styles);
+                return fs.writeFile(`dist/${fn}`, mini.styles);
             });
         });
     }
@@ -414,7 +430,7 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
         let window, document;
         // Load and parse the root HTML. We know this is in index.html. We
         // further know this loads js/main.js as the main module.
-        return jsdom.JSDOM.fromFile(module + ".html")
+        return jsdom.JSDOM.fromFile(`${module}.html`)
         .then((dom) => {
             window = dom.window;
             document = window.document;
@@ -437,6 +453,7 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
             return listDir("dialogs", "html")
             .then((files) => {
                 let proms = [];
+				/*eslint-disable no-loop-func*/
                 for (let f of files) {
                     proms.push(
                         fs.readFile(f)
@@ -446,6 +463,7 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
                             document.body.append(div.firstChild);
                         }));
                 }
+				/*eslint-enable no-loop-func*/
                 return Promise.all(proms);
             })
         })
@@ -455,20 +473,18 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
         })
         .then(() => {
             // Generate new HTML
-            let index = "<!DOCTYPE html>\n" +
-                document.querySelector("html").innerHTML;
-            return locales.html(index, module + ".html")
+            let index = `<!DOCTYPE html>\n${document.querySelector("html").innerHTML}`;
+            return locales.html(index, `${module}.html`)
             .then((c) => {
                 if (debug)
-                    debug("Extracted",c,"new strings from", module + ".html");
-                let re = new RegExp("(href=([\"'])css/" + module + ")(\\.css\\2)");
+                    debug(`Extracted ${c} new strings from ${module}.html`);
+                //let re = new RegExp(`(href=(["'])css/${module})(\\.css\\2)`);
                 let mindex = MinifyHTML.minify(index, {
                     collapseWhitespace: true,
                     removeComments: true
                 });
-                return fs.writeFile("dist/" + module + ".html", mindex);
+                return fs.writeFile(`dist/${module}.html`, mindex);
             });
-            $("head").empty();
         });
     }
 
@@ -522,7 +538,7 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
     let promise = locales.loadStrings();
     
     if (typeof opts.translate !== "undefined")
-        promise = promise.then(target_translate(opts.translate, opts.language));
+        promise.then(target_translate(opts.translate, opts.language));
     else
-        promise = promise.then(target_release());
+        promise.then(target_release());
 })

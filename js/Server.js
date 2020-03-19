@@ -48,7 +48,7 @@ define("js/Server", ["url", "extend", "fs-extra"], function(Url, extend, Fs) {
 
             if (typeof self.writable === "string") {
                 if (self.writable.indexOf("/") !== 0)
-                    self.writable = self.docroot + "/" + self.writable;
+                    self.writable = `${self.docroot}/${self.writable}`;
                 self.writable = Fs.realpathSync(self.writable);
             }
 
@@ -60,10 +60,12 @@ define("js/Server", ["url", "extend", "fs-extra"], function(Url, extend, Fs) {
                         credentials.name !== self.auth.user ||
                         credentials.pass !== self.auth.pass) {
                         if (self.debug) {
-                            if (credentials)
-                                self.debug("User ", credentials.name,
-                                            " is trying to log in with password '" +
-                                            credentials.pass + "'");
+                            if (credentials) {
+                                self.debug(
+									`User ${credentials.name}`,
+                                    "is trying to log in with password",
+									`'${credentials.pass}'`);
+							}
                         } else if (self.log)
                             self.log("No credentials in request");
                         if (self.log)
@@ -75,8 +77,7 @@ define("js/Server", ["url", "extend", "fs-extra"], function(Url, extend, Fs) {
                         return false;
                     }
                     if (self.debug)
-                        self.debug("User '" + credentials.name +
-                                    "' is authenticated");
+                        self.debug(`User '${credentials.name}' is authenticated`);
                     return true;
                 };
             } else
@@ -101,15 +102,15 @@ define("js/Server", ["url", "extend", "fs-extra"], function(Url, extend, Fs) {
                     self[request.method].call(self, request, response);
                 } else {
                     response.statusCode = 405;
-                    response.write("No support for " + request.method);
+                    response.write(`No support for ${request.method}`);
                     response.end();
                 }
             };
 
             console.log("Starting server on port", self.port);
-            console.log(" Document root '" + self.docroot + "'");
+            console.log(` Document root '${self.docroot}'`);
             if (self.writable)
-                console.log(" Writable directory '" + self.writable + "'");
+                console.log(` Writable directory '${self.writable}'`);
             if (self.auth)
                 console.log(" Auth", self.auth);
             else
@@ -239,7 +240,7 @@ define("js/Server", ["url", "extend", "fs-extra"], function(Url, extend, Fs) {
                 return;
             }
 
-            let req = Url.parse("" + request.url, true);
+            let req = Url.parse(`${request.url}`, true);
 
             // Get file path
             let spath = req.pathname;
@@ -262,9 +263,8 @@ define("js/Server", ["url", "extend", "fs-extra"], function(Url, extend, Fs) {
             } else if (request.method === "PUT") {
                 if (this.writable && spath.indexOf(this.writable) !== 0) {
                     if (self.debug)
-                        self.debug("Trying to write '" + spath +
-                                    "' in read-only area. Expected /^" +
-                                    this.writable + "/");
+                        self.debug(
+							`Trying to write '${spath}' in read-only area. Expected /^${this.writable}/`);
                     response.statusCode = 403;
                     response.end();
                     return;
@@ -279,7 +279,7 @@ define("js/Server", ["url", "extend", "fs-extra"], function(Url, extend, Fs) {
             } catch (e) {
                 if (self.debug) self.debug(e, " in ", request.url, "\n",
                               typeof e.stack !== "undefined" ? e.stack : e);
-                response.write(e + " in " + request.url + "\n");
+                response.write(`${e} in ${request.url}\n`);
                 response.statusCode = 400;
                 response.end();
             }

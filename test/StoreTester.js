@@ -1,4 +1,6 @@
 /*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
+/*eslint-env node,mocha,browser*/
+/*eslint-disable no-eval*/
 
 if (typeof requirejs === "undefined") {
     throw new Error(__filename + " is not runnable on its own");
@@ -143,11 +145,10 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
                 return Promise.resolve();
 
             // Build a UI to capture required parameters in the browser
-            return new Promise(function(resolve, reject) {
+            return new Promise(function(resolve) {
                 requirejs(["jquery"], () => {
                     let needs = 0;
                     for (let option in store.option()) {
-                        let v = config[option];
                         let m = /^needs_(.*)$/.exec(option);
                         if (m) {
                             let opt = m[1];
@@ -212,7 +213,7 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
             this.addTest("Read non-existant", function() {
                 let store = self.store;
                 return store.read("not/a/known/resource.dat")
-                .then(function(ab) {
+                .then(function() {
                     assert(false, "Non existant should not resolve");
                 })
                 .catch(function(se) {
@@ -264,7 +265,7 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
                         let nu = store.option("net_user");
                         store.option("net_user", Date.now());
                         return store.reads(test_path)
-                        .then(function(data) {
+                        .then(function() {
                             assert(false, "Expected an error");
                         })
                         .catch(function(e) {
@@ -291,7 +292,7 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
                         let np = store.option("net_pass");
                         store.option("net_pass", Date.now());
                         return store.reads(test_path, TESTR)
-                        .then(function(data) {
+                        .then(function() {
                             assert(false, "Unexpected");
                         })
                         .catch(function(e) {
@@ -315,7 +316,7 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
                     .then(function () {
                         store.option("user", Date.now());
                         return store.reads(test_path)
-                        .then(function(data) {
+                        .then(function() {
                             assert(false, "Unexpected");
                         })
                         .catch(function(e) {

@@ -4,7 +4,7 @@
  * Reminder setting dialog
  * Options:
  */
-define("dialogs/alarm", ["js/Dialog", "js/Action", "js/Hoard", "js/jq/template", "jquery-ui"], function(Dialog, Action, Hoard) {
+define("dialogs/alarm", ["js/Dialog", "js/Action", "js/jq/template", "jquery-ui"], function(Dialog, Action) {
 
     const MSPERDAY = 24 * 60 * 60 * 1000;
 
@@ -99,7 +99,7 @@ define("dialogs/alarm", ["js/Dialog", "js/Action", "js/Hoard", "js/jq/template",
                 // Old format alarms had one number, number of days from
                 // last node change.
                 if (typeof this.options.alarm === "number") {
-                    alarm = {
+                    this.options.alarm = {
                         time: this.options.last_change
                         + this.options.alarm * MSPERDAY
                     };

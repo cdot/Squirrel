@@ -61,7 +61,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
          * Report current stage of startup process
          */
         _stage(s, step) {
-            if (this.debug) this.debug(step + ": " + s);
+            if (this.debug) this.debug(`${step}: ${s}`);
             $("#stage").text(s);
         }
         
@@ -235,7 +235,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                 p = p.then((store) => {
                     return new Promise((resolve) => {
                         requirejs(
-                            ["js/" + layer],
+                            [`js/${layer}`],
                             function(module) {
                                 if (self.debug)
                                     self.debug('...adding', layer, 'to', to);
@@ -264,7 +264,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
 
             let p = new Promise(function(resolve) {
                 requirejs(
-                    ["js/" + self.options.store],
+                    [`js/${self.options.store}`],
                     function(module) {
                         let store = new module({
                             debug: self.debug,
@@ -468,7 +468,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
 
                 // Resolves to list of actions required to update
                 // the cloud, which we can't use at this point.
-                .then((actions) => {
+                .then((/*actions*/) => {
                     if (conflicts.length > 0)
                         return Dialog.confirm("alert", {
                             title: TX.tx("Conflicts"),
@@ -532,7 +532,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                         alert: {
                             severity: "error",
                             message: TX.tx("Error in search expression") +
-                                " '" + s + "': " + e
+                                ` '${s}': ${e}`
                         }
                     });
                     return;
@@ -790,7 +790,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                             TX.language(lingo, document);
                         }
                     })
-                    .catch((f) => {
+                    .catch((/*f*/) => {
                         if (self.debug) self.debug("extras closed");
                     });
                 });
@@ -844,9 +844,9 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                 .on("beforeunload", function () {
                     let us = self.hoarder.get_changes(10);
                     if (us.length > 0) {
-                        us = TX.tx("You have unsaved changes") +
-                        "\n" + us.join("\n") +
-                        "\n" + TX.tx("Are you really sure?");
+                        us = TX.tx("You have unsaved changes")
+                        + `\n${us.join("\n")}\n`
+                        + TX.tx("Are you really sure?");
                         return us;
                     }
                 });

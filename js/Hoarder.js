@@ -353,7 +353,6 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
          */
         get_changes(max_changes) {
             let messages = [];
-            
             for (let record of this.get_unsaved_actions())
                 messages.push(record.redo.verbose());
 
@@ -533,10 +532,10 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
                 }
                 if (selected.length > 0) {
                     // If we saw changes, and we didn't start from an empty
-                    // hoard, then we need to save
+                    // hoard, then we need to save the client
                     this.last_sync = Date.now();
                     if (!this.clientIsEmpty)
-                        this.clientChanges.push(TX.tx("Cloud store changed"));
+                        this.clientChanges.push(TX.tx("Changes merged from cloud store"));
                     if (this.debug) this.debug("...synced at", this.last_sync);
                     this.clientIsEmpty = false;
                 }
@@ -614,6 +613,7 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
                 })
                 .then(() => {
                     client_saved = true;
+					self.clientChanges = [];
                 })
                 .catch((e) => {
                     if (self.debug) self.debug("Client save failed", e);
@@ -661,7 +661,7 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
                 return Promise.resolve(true);
             })
             .catch((e) => {
-                if (self.debug) self.debug("...cloud save failed " + e.stack);
+                if (self.debug) self.debug("...cloud save failed", e.stack);
                 if (progress) progress.push({
                     severity: "error",
                     message: TX.tx("Failed to save in cloud store: $1", e)

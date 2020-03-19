@@ -37,7 +37,7 @@ requirejs(["node-getopt","js/FileStore", "js/AesLayer", "js/Utils"], function(Ge
     });
     cipherstore.option("pass", opt.pass || '');
     
-    let path = /\//.test(fname) ? fname.replace(/\/[^\/]*$/, "") : "";
+    let path = /\//.test(fname) ? fname.replace(/\/[^/]*$/, "") : "";
 
     cipherstore.option("path", path);
     plainstore.option("path", path);

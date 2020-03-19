@@ -20,7 +20,6 @@ if (typeof module !== "undefined") {
 requirejs(deps, function(StoreTester, express, basicAuth) {
     let config = Promise.resolve();
 
-    let p;
     if (express) {
         // node.js, express is available, make a simple server
         let app = express();
@@ -60,7 +59,7 @@ requirejs(deps, function(StoreTester, express, basicAuth) {
             res.sendStatus(404);
         });
 
-        config = new Promise((resolve, reject) => {
+        config = new Promise((resolve) => {
             server = app.listen(function() {
                 let url = "http://localhost:" + server.address().port;
                 console.debug("Express server listening on " + url);
@@ -70,10 +69,12 @@ requirejs(deps, function(StoreTester, express, basicAuth) {
     }
 
     config.then((cfg) => {
-        new StoreTester(["HttpServerStore"]).run(cfg)
+        new StoreTester(["HttpServerStore"])
+		.run(cfg)
         .then(() => {
                 server.close();
-            });
+        })
+		.catch((e) => { console.log("Run failed", e); });
     });
 });
 

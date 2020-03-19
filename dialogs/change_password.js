@@ -10,7 +10,6 @@ define("dialogs/change_password", ["js/Dialog"], function(Dialog) {
 
         _checkSamePass() {
             let $pass = this.control("pass");
-            let $conf = this.control("conf");
             let $problem = this.control("problem");
             let p = $pass.val(),
                 c = this.control("conf").val();

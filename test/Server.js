@@ -65,7 +65,7 @@ requirejs(["js/Utils", "js/AES", "js/Server", "fs", "request-promise-any", "test
         });
     });
 
-    tr.addTest("bad-root-get", (resolve) => {
+    tr.addTest("bad-root-get", () => {
         return new Promise((resolve) => {
             request.get(serverUrl + '/', {
                 auth: {
@@ -133,7 +133,9 @@ requirejs(["js/Utils", "js/AES", "js/Server", "fs", "request-promise-any", "test
         let ef = workingDir + "/transitory8";
         try {
             Fs.unlinkSync(ef);
-        } catch (e) {};
+        } catch (e) {
+			console.debug(e);
+		}
 
         return request.put(workingUrl + '/transitory8', {
             auth: { user: server_config.auth.user,
@@ -159,7 +161,9 @@ requirejs(["js/Utils", "js/AES", "js/Server", "fs", "request-promise-any", "test
         let ef = workingDir + "/transitory16";
         try {
             Fs.unlinkSync(ef);
-        } catch (e) {}
+        } catch (e) {
+			console.debug(e);
+		}
         let text = "\0S\0o\0m\0e\0 \0" + "1\0" + "6\0 \0b\0i\0t\0 \0t\0e\0x\0t";
 
         return request.put(workingUrl + '/transitory16', {
@@ -167,7 +171,7 @@ requirejs(["js/Utils", "js/AES", "js/Server", "fs", "request-promise-any", "test
                     pass: server_config.auth.pass },
             encoding: null,
             body: text,
-        },  function(err, res, body) {
+        },  function(err, res/*, body*/) {
             assert.equal(res.statusCode, 200);
             assert(Fs.existsSync(ef));
             request.get(workingUrl + '/transitory16', {
@@ -207,7 +211,9 @@ requirejs(["js/Utils", "js/AES", "js/Server", "fs", "request-promise-any", "test
         let ef = workingDir + "/encrypted";
         try {
             Fs.unlinkSync(ef);
-        } catch (e) {}
+        } catch (e) {
+			console.debug(e);
+		}
         let text = "Alice, Bob, Charlie, and Doug";
         let pass = "password";
         let xa = AES.encrypt(Utils.StringToUint8Array(text), pass, 256);

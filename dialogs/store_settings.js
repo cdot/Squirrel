@@ -3,7 +3,7 @@
 
 /* global FileReader */
 
-define("dialogs/store_settings", ["js/Dialog", "js/Utils", "js/jq/template"], function(Dialog, Utils) {
+define("dialogs/store_settings", ["js/Dialog", "js/jq/template"], function(Dialog) {
 
     class StoreSettingsDialog extends Dialog {
 

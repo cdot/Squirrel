@@ -31,43 +31,43 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/Ae
 
     const full_tree_actions = [
         {
-	    type: "N",
-	    time: 100,
-	    path: ["One"]
+			type: "N",
+			time: 100,
+			path: ["One"]
         },
         {
-	    type: "A",
-	    time: 200,
+			type: "A",
+			time: 200,
             data: 100000,
-	    path: ["One"]
+			path: ["One"]
         },
         {
-	    type: "N",
-	    time: 300,
-	    path: [ "One", "Two" ]
+			type: "N",
+			time: 300,
+			path: [ "One", "Two" ]
         },
         {
-	    type: "N",
-	    time: 400,
-	    path: [ "One", "Two", "Three" ],
+			type: "N",
+			time: 400,
+			path: [ "One", "Two", "Three" ],
             data: "£6.70 per gram"
         },
         {
             type: "A",
-	    path: [ "One", "Two", "Three" ],
-	    time: 500,
+			path: [ "One", "Two", "Three" ],
+			time: 500,
             data: 100
         },
         {
             type: "A",
-	    path: [ "One", "Two" ],
-	    time: 600,
+			path: [ "One", "Two" ],
+			time: 600,
             data: 11111
         },
         {
-	    type: "X",
-	    time: 500,
-	    path: [ "One", "Two", "Three" ],
+			type: "X",
+			time: 500,
+			path: [ "One", "Two", "Three" ],
             data: { size: 32, chars: "A-Z;0-9" }
         }
     ];
@@ -137,7 +137,7 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/Ae
         });
     });
 
-    function make_cloud(actions, store, debug) {
+    function make_cloud(actions, store) {
         let s = JSON.stringify(actions);
         store.option("pass", "pass");
         return store.writes("blah", s);
@@ -193,7 +193,7 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/Ae
             // Add a local action in the client
             return h.hoard.play_action(eact, true);
         })
-        .then((e) => {
+        .then((/*e*/) => {
             return h.update_from_cloud(
                 [],
                 (choose) => {
@@ -397,7 +397,7 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/Ae
             return h.hoard.play_action(act);
         }).then((c) => {
             assert(!c.conflict);
-            let acted = 0, progress = [];
+            let progress = [];
             return h.update_from_cloud(progress);
         })
         .then((actions) => {
@@ -476,7 +476,7 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/Ae
             });
             return h.load_client()
             .then(() => {
-                return h.check_alarms(function(path, rang_at) {
+                return h.check_alarms(function(path/*, rang_at*/) {
                     for (let a of full_tree_actions) {
                         if (a.type === "A" && TestRunner.samePath(a.path, path)) {
                             assert(!a.rung);

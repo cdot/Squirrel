@@ -151,13 +151,13 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
             if (enable) {
                 if (this.contextMenuDisables > 0)
                     this.contextMenuDisables--;
-                if (this.debug) this.debug("Context menu disables " +
+                if (this.debug) this.debug("Context menu disables",
                                            this.contextMenuDisables);
                 if (this.contextMenuDisables <= 0)
                     $("body").contextmenu("option", "autoTrigger", true);
             } else {
                 this.contextMenuDisables++;
-                if (this.debug) this.debug("Context menu disables " +
+                if (this.debug) this.debug("Context menu disables",
                                            this.contextMenuDisables);
                 $("body").contextmenu("option", "autoTrigger", false);
             }
@@ -175,7 +175,7 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
                 ui.target :
                 ui.target.closest(".tree");
 
-            let has_alarm = typeof $node.data("alarm") !== "undefined";
+            //let has_alarm = typeof $node.data("alarm") !== "undefined";
             let is_leaf = $node.hasClass("tree-isLeaf");
             let is_root = ui.target.closest(".tree")
                 .hasClass("tree-isRoot");
@@ -229,11 +229,11 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
             }
             
             if (!$node) {
-                if (self.debug) self.debug("No node for contextmenu>" + ui.cmd);
+                if (self.debug) self.debug("No node for contextmenu>", ui.cmd);
                 return;
             }
 
-            let promise, data;
+            let promise;
 
             // Items with no dialog simply return. Items that open a
             // dialog set a promise and break to a generic catch
@@ -260,7 +260,7 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
                         data: kv.value
                     }), true);
                 });
-                break;
+                //break;
 
             case "rename":
                 promise = $node.tree("editKey")
@@ -306,10 +306,9 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
                 break;
 
             case "randomise":
-                let nc = $node.data("constraints");
                 promise = Dialog.confirm("randomise", {
                     key: $node.data("key"),
-                    constraints: nc
+                    constraints: $node.data("constraints")
                 })
                 .then((result) => {
                     let prom = self.app.playAction(new Action({
@@ -360,7 +359,7 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
                 break;
 
             default:
-                Serror.assert("Unrecognised command " + ui.cmd);
+                Serror.assert("Unrecognised command", ui.cmd);
                 return;
             }
             

@@ -40,9 +40,10 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
 
     function formatDate(time) {
         let d = new Date(time);
-        return d.getFullYear() + "-"
-        + ("00" + (d.getMonth() + 1)).slice(-2) + "-"
-        + ("00" + d.getDate()).slice(-2);
+        return `${d.getFullYear()}-`
+        + `00${d.getMonth() + 1}`.slice(-2)
+		+ "-"
+        + `00${d.getDate()}`.slice(-2);
     }
 
     Tree = {
@@ -473,7 +474,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
                             });
                         }
                     })
-                    .catch((e) => {});
+                    .catch((/*e*/) => {});
                     return false;
                 });
                 return $button;
@@ -580,7 +581,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
                     .then((a) => {
                         Tree.playAction(a);
                     })
-                    .catch((e) => {});
+                    .catch((/*e*/) => {});
                 });
 
             if ($node.hasClass("tree-isLeaf")) {
@@ -600,7 +601,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
                         .then((a) => {
                             Tree.playAction(a);
                         })
-                        .catch((e) => {});
+                        .catch((/*e*/) => {});
                     });
             }
 
@@ -726,14 +727,12 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
          */
         _action_I: function(action, open) {
             let content = JSON.parse(action.data);
-            let val;
             let acts = [];
             if (typeof content.data === "object") {               
                 let h = new Hoard({ tree: content });
                 acts = h.actions_to_recreate();
                 content.data = undefined;
-            } else
-                val = content.data;
+            }
 
             // Create the node at the root of the insert
             let self = this;
@@ -852,7 +851,6 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
         _action_R: function(action) {
             // Detach the li from the DOM
             let $node = this.element;
-            let key = action.path[action.path.length - 1]; // record old node name
 
             $node
             .data("key", action.data)
@@ -891,7 +889,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
             // All else requires a pre-existing node
             let $node = this.getNodeFromPath(action.path);
             let widget = $node.tree("instance");
-            widget["_action_" + action.type].call(widget, action, open);
+            widget[`_action_${action.type}`].call(widget, action, open);
             return Promise.resolve();
         },
 

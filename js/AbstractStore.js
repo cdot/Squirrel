@@ -65,19 +65,6 @@ define("js/AbstractStore", ["js/Utils", "js/Serror"], function(Utils, Serror) {
         }
 
         /**
-         * Write data. Pure virtual.
-         * @param path pathname to store the data under, a / separated
-         * path string
-         * @param data a Uint8Array
-         * @return a Promise that resolves to boolean true if the write
-         * succeeded.
-         * @throws Serror if anything goes wrong
-         */
-        write(path, data) {
-            Serror.assert(false, "Store has no write method");
-        }
-
-        /**
          * Promise to write a string.
          * @param path pathname the data is stored under, a /
          * separated path string
@@ -88,22 +75,6 @@ define("js/AbstractStore", ["js/Utils", "js/Serror"], function(Utils, Serror) {
          */
         writes(path, str) {
             return this.write(path, Utils.StringToUint8Array(str));
-        }
-
-        /**
-         * Read from the store. Pure virtual.
-         * @param path pathname the data is stored under, a /
-         * separated path string
-         * @return a Promise that resolves to the content of the path
-         * as a Uint8Array. If the path is not found, reject with an Serror
-         * with status 400. Other HTTP status codes may be handled by
-         * the implementing store (e.g. 401). If the resource exists
-         * but is empty (has no content) resolve to a zero-sized
-         * Uint8Array.
-         * @throws Serror if anything goes wrong
-         */
-        read(path) {
-            Serror.assert(false, "Store has no read method");
         }
 
         /**
@@ -120,9 +91,42 @@ define("js/AbstractStore", ["js/Utils", "js/Serror"], function(Utils, Serror) {
                     return Utils.Uint8ArrayToString(a8);
                 } catch (e) {
                     // UTF-8 decode error, most likely
-                    throw new Serror(400, path + " " + e);
+                    throw new Serror(400, `${path} ${e}`);
                 }
             });
+        }
+		
+		/* eslint-disable no-unused-vars */
+
+        /**
+         * Write data. Pure virtual.
+         * @param path pathname to store the data under, a / separated
+         * path string
+         * @param data a Uint8Array
+         * @return a Promise that resolves to boolean true if the write
+         * succeeded.
+         * @throws Serror if anything goes wrong
+		 * @abstract
+         */
+        write(path, data) {
+            Serror.assert(false, "Store has no write method");
+        }
+
+        /**
+         * Read from the store. Pure virtual.
+         * @param path pathname the data is stored under, a /
+         * separated path string
+         * @return a Promise that resolves to the content of the path
+         * as a Uint8Array. If the path is not found, reject with an Serror
+         * with status 400. Other HTTP status codes may be handled by
+         * the implementing store (e.g. 401). If the resource exists
+         * but is empty (has no content) resolve to a zero-sized
+         * Uint8Array.
+         * @throws Serror if anything goes wrong
+		 * @abstract
+         */
+        read(path) {
+            Serror.assert(false, "Store has no read method");
         }
     }
 

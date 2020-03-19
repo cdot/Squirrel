@@ -132,7 +132,6 @@ define("dialogs/extras", ["js/Dialog", "js/Translator", "js/Tree", "js-cookie", 
 
             this.control("language")
             .on("change", function () {
-                let TX = Translator.instance();
                 let fresh = self.control("language").val();
                 self.options.set_language(fresh);
             });

@@ -97,7 +97,7 @@ define("js/Dialog", ["js/Translator", "js/Serror", "jquery", "jquery-ui", "js/jq
          */
         static load(id, options) {
             options = $.extend({}, default_dialog_options, options);
-            let $dlg = $("#" + id + "_dlg");
+            let $dlg = $(`#${id}_dlg`);
             let p;
 
             // Load HTML first (if we need to), then js. We don't use
@@ -109,11 +109,11 @@ define("js/Dialog", ["js/Translator", "js/Serror", "jquery", "jquery-ui", "js/jq
                 //    options.debug("HTML for dialog", id, "is already loaded");
                 p = Promise.resolve($dlg);
             } else {
-                let html_url = requirejs.toUrl("dialogs" + "/" + id + ".html");
+                let html_url = requirejs.toUrl(`dialogs/${id}.html`);
 
                 // testing only
                 if (options.htmlRoot)
-                    html_url = options.htmlRoot + "dialogs/" + id + ".html";
+                    html_url = `${options.htmlRoot}dialogs/${id}.html`;
 
                 //if (options.debug)
                 //    options.debug(
@@ -143,14 +143,14 @@ define("js/Dialog", ["js/Translator", "js/Serror", "jquery", "jquery-ui", "js/jq
                 if (typeof classes[id] === "undefined") {
                     classes[id] = new Promise((resolve) => {
                         requirejs(
-                            ["dialogs/" + id],
+                            [`dialogs/${id}`],
                             function(dlgClass) {
                                 classes[id] = new dlgClass($dlg, options);
                                 resolve(classes[id]);
                             },
                             function(/*err*/) {
                                 // Don't strictly need a .js
-                                Serror.assert("Missing dialog " + id + ".js");
+                                Serror.assert(`Missing dialog ${id}.js`);
                             });
                     });
                 }
@@ -251,16 +251,15 @@ define("js/Dialog", ["js/Translator", "js/Serror", "jquery", "jquery-ui", "js/jq
                 
                 this.find(".tooltip-dialog").each(function() {
                     let $this = $(this);
-                    let $button =
-                        $("<button data-icon='ui-icon-info'></button>")
-                        .insertAfter($this)
-                        .icon_button()
-                        .on(Dialog.tapEvent(), function() {
-                            Dialog.confirm("alert", {
-                                title: self.tx("Information"),
-                                alert: $this.attr("title")
-                            });
+                    $("<button data-icon='ui-icon-info'></button>")
+                    .insertAfter($this)
+                    .icon_button()
+                    .on(Dialog.tapEvent(), function() {
+                        Dialog.confirm("alert", {
+                            title: self.tx("Information"),
+                            alert: $this.attr("title")
                         });
+                    });
                 });
             }
             
@@ -327,10 +326,10 @@ define("js/Dialog", ["js/Translator", "js/Serror", "jquery", "jquery-ui", "js/jq
          * @param optional, true if it's OK if the key is missing
          */
         control(key, mayBeMissing) {
-            let $el = this.$dlg.find("[data-id='" + key + "']");
+            let $el = this.$dlg.find(`[data-id='${key}']`);
             if (this.debug && $el.length === 0 && !mayBeMissing) {
                 this.debug("Unknown control", key);
-                throw new Serror(500, "Unknown control " + key);
+                throw new Serror(500,`Unknown control ${key}`);
             }
             return $el;
         }

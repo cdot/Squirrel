@@ -121,24 +121,19 @@ define("js/Steganographer", ["js/Utils"], function(Utils) {
 
             let chunkSize = (bits / slots + 1) >> 0;
             if (this.debug) this.debug(
-                "Storage required " + bits + " bits, " + size + " bytes"
-                    + " Max image capacity "
-                    + this.maxChunk * slots + " bits, "
-                    + this.maxChunk * slots / 8 + " bytes");
+                `Storage required ${bits} bits, ${size} bytes`
+                    + ` Max image capacity ${this.maxChunk * slots} bits, `
+                    + `${this.maxChunk * slots / 8} bytes`);
 
             if (chunkSize > this.maxChunk) {
                 if (this.debug) this.debug(
-                    "Computed chunk size " + chunkSize
-                        + " is > " + this.maxChunk
-                        + ", oversized by " + (-slots * (this.maxChunk - chunkSize))
-                        + " bits");
-                throw new Error((slots * (chunkSize - this.maxChunk))
-                                + " bits too many to hide in this image");
+                    `Computed chunk size ${chunkSize} is > ${this.maxChunk}`
+                        + `, oversized by ${-slots * (this.maxChunk - chunkSize)} bits`);
+                throw new Error(`${slots * (chunkSize - this.maxChunk)} bits too many to hide in this image`);
             }
 
             if (this.debug) this.debug(
-                "Computed chunk size " + chunkSize
-                    + " (" + slots + " slots)");
+                `Computed chunk size ${chunkSize} (${slots} slots)`);
 
             return chunkSize;
         }
@@ -156,8 +151,7 @@ define("js/Steganographer", ["js/Utils"], function(Utils) {
         insert(a8, image) {
 
             if (this.debug) this.debug(
-                "Embedding " + a8.length + " bytes ("
-                    + (a8.length * 8) + " bits)");
+                `Embedding ${a8.length} bytes (${a8.length * 8} bits)`);
 
             let iData = this._getRawBytes(image);
 
@@ -251,10 +245,10 @@ define("js/Steganographer", ["js/Utils"], function(Utils) {
             byte_i += 2; // blue + alpha
 
             if (this.debug) this.debug(
-                "Embedded " + numChunks + " chunks of "
-                    + chunkSize + " bits, " + (numChunks * chunkSize) + " bits / "
-                    + (numChunks * chunkSize / 8) + " bytes of data");
-
+                `Embedded ${numChunks} chunks of `
+                + `${chunkSize} bits, ${numChunks * chunkSize} bits / `
+                + `${numChunks * chunkSize / 8} bytes of data`);
+			
             return iData;
         }
 
@@ -289,10 +283,9 @@ define("js/Steganographer", ["js/Utils"], function(Utils) {
 
             let message = new Uint8Array((numChunks * chunkSize) >> 3);
             if (this.debug) this.debug(
-                "Extracting " + numChunks + " chunks of "
-                    + chunkSize + " bits, "
-                    + (numChunks * chunkSize) + " bits / "
-                    + (numChunks * chunkSize / 8) + " bytes of data");
+                `Extracting ${numChunks} chunks of `
+                + `${chunkSize} bits, ${numChunks * chunkSize} bits / `
+                + `${numChunks * chunkSize / 8} bytes of data`);
 
             let charCode = 0;
             let bitCount = 0;
@@ -315,7 +308,7 @@ define("js/Steganographer", ["js/Utils"], function(Utils) {
                 message[mi++] = charCode & 0xFF;
             }
             if (this.debug) this.debug(
-                "Extracted " + message.length + " bytes");
+                `Extracted ${message.length} bytes`);
 
             return message;
         }

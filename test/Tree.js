@@ -1,9 +1,12 @@
 /*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
+/* eslint-env node, mocha */
+/* global document:writable */
 
 if (typeof module !== "undefined") {
     requirejs = require('requirejs');
     // node.js
     const { JSDOM } = require('jsdom');
+	/*eslint-disable no-global-assign */
     document = new JSDOM('<!doctype html><html><body><div id="container"><div id="sites-node"></div></div></body></html>');
     const { window } = document;
     global.window = window;
@@ -14,6 +17,7 @@ if (typeof module !== "undefined") {
     global.$ = jQuery;
 
     $.getTapEvent = function() { return "click"; }
+	/*eslint-enable no-global-assign */
 }
 
 // This all works fine in the browser, but not in node.js. So the fix
@@ -68,7 +72,7 @@ const actions = [
     }
 ];
 
-var undos = [
+/*var undos = [
     "D:FineDining @1/1/2000, 12:00:00 AM",
     "D:FineDining/Caviare @1/1/2001, 12:00:00 AM",
     "D:FineDining/Caviare/Beluga @1/1/2002, 12:00:00 AM",
@@ -76,7 +80,7 @@ var undos = [
     "R:FineDining/Caviar @1/1/2005, 12:00:00 AM Caviare",
     "E:FineDining/Caviar/Beluga @1/1/2006, 12:00:00 AM £6.70 per gram",
     "X:FineDining/Caviar/Beluga @1/1/2007, 12:00:00 AM"
-];
+];*/
 
 let deps = ["js/Utils",
             "js/Hoard",
@@ -157,7 +161,6 @@ requirejs(deps, function(Utils, Hoard, Serror, Translator, Tree, TestRunner) {
 
     tr.addTest("should open undecorated", function() {
         let promise = Promise.resolve();
-        let c = 0;
         for (let act of actions) {
             //console.log("Play",act);
             promise = promise.then($DOMtree.tree("action", act));

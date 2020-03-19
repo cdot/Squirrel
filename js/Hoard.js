@@ -59,7 +59,7 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
                     this.history = options.hoard.history.map((a) => {
                         return { redo: new Action(a.redo),
                                  undo: new Action(a.undo) };
-                    });;
+                    });
             }
             else {
                 if (options.tree)
@@ -571,7 +571,6 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
                         if (!matched[subnode]) {
                             // TODO: look for the node elsewhere in a,
                             // it might have been moved or renamed
-                            let subpath = path.concat([subnode]);
                             difference({type: "I", path: path,
                                         data: JSON.stringify({
                                             name: subnode,

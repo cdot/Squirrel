@@ -84,12 +84,9 @@ define("js/Action", ["js/Translator"], function(Translator) {
          * @return {string} human readable description of action
          */
         toString() {
-            return this.type + ":" +
-            Action.pathS(this.path) +
-            (typeof this.data !== "undefined" ?
-             (" '" + this.data + "'") : "") +
-            " @" + new Date(this.time)
-            .toLocaleString();
+            return `${this.type}:${Action.pathS(this.path)}`
+            + (this.data ? ` '${this.data}'` : "")
+            + ` @${new Date(this.time).toLocaleString()}`;
         }
     }
     

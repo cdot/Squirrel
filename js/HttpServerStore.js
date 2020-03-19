@@ -96,7 +96,7 @@ define("js/HttpServerStore", ["js/Serror", "js/AbstractStore"], function(Serror,
                     }
                 } catch (e) {
                     reject(self.error(500, turl.split("/"),
-                                      "xhr.send error: " + e));
+                                      `xhr.send error: ${e}`));
                 }
 
                 xhr.onload = function() {

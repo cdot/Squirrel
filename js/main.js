@@ -27,7 +27,7 @@ requirejs(["js/Utils"], function (Utils) {
 
     if (qs.debug) {
         requirejs.config({
-            urlArgs: "nocache=" + Date.now() // suppress cache
+            urlArgs: `nocache=${Date.now()}` // suppress cache
         });
     }
 
@@ -39,11 +39,10 @@ requirejs(["js/Utils"], function (Utils) {
         if (qs.debug) {
             if ($.isTouchCapable && $.isTouchCapable())
                 console.debug("Device is touch-capable");
-            console.debug("Device is " + window.screen.width + " X " +
-                          window.screen.height + " Body is " +
-                          $("body")
-                          .width() + " X " + $("body")
-                          .height());
+            console.debug(
+				"Device is", window.screen.width, "X",
+                window.screen.height, "Body is",
+                $("body").width(), "X", $("body").height());
         } else {
             // By default, jQuery timestamps datatype 'script' and 'jsonp'
             // requests to avoid them being cached by the browser.
@@ -58,7 +57,7 @@ requirejs(["js/Utils"], function (Utils) {
         $(function() {          
             // Have to do this as a two-step process because mobile-events has
             // a clumsy dependency on jQuery
-            requirejs(["mobile-events"], function(jqme) {
+            requirejs(["mobile-events"], function() {
                 new Squirrel(qs).begin();
             });
         });

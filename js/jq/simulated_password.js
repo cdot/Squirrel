@@ -131,7 +131,7 @@ define("js/jq/simulated_password", ["jquery"], function() {
             // (unknown reason) we instead trap paste and keydown events
             // so we know what the selection was (for overtyping) and also
             // what the keycode was
-            .on("paste", function(e) {
+            .on("paste", function(/*e*/) {
                 let el = document.activeElement;
                 selectionStart = el.selectionStart;
                 selectionEnd = el.selectionEnd;
@@ -149,7 +149,7 @@ define("js/jq/simulated_password", ["jquery"], function() {
                 if (debug) debug("keydown:", selectionStart,
                                  "-", selectionEnd, "key", keyDown);
             })
-            .on("input", function (e) {
+            .on("input", function (/*e*/) {
                 let el = document.activeElement;
                 if (debug) debug("input:", el.selectionStart,
                                  "selEnd:", el.selectionEnd);

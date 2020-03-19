@@ -6,12 +6,14 @@ var gapi_is_loaded = false;
 var gapi_loader;
 
 // Redirect target after gapi loading
+/* eslint-disable no-unused-vars */
 function gapi_on_load() {
     if (this.debug) this.debug("gapi is loaded");
     gapi_is_loaded = true;
     if (gapi_loader)
         gapi_loader();
 }
+/* eslint-enable no-unused-vars */
 
 define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore', 'js/Serror'], function(Utils, Translator, HttpServerStore, Serror) {
     let TX = Translator.instance();
@@ -35,12 +37,6 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
     const RETIMILED = `\r\n--${BOUNDARY}--`;
 	const DISCOVERY_DOCS = ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"];
 
-	let isSignedIn = false;
-	
-	function updateSigninStatus(signedIn) {
-		isSignedIn = signedIn;
-	}
-	
     class GoogleDriveStore extends HttpServerStore {
 
         constructor(p) {
@@ -89,16 +85,18 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
                 mess += r.body;
             }
             if (this.debug) this.debug(mess);
-            return " " + mess;
+            return ` ${mess}`;
         }
 
         _init() {
             // Timeout after 20 seconds of waiting for auth
             let tid = window.setTimeout(function () {
                 window.clearTimeout(tid);
-                throw new Serror(408,
-                    TX.tx("Timeout trying to authorise access to Google Drive.") +
-                        " " + TX.tx("Are popups blocked in your browser?"));
+                throw new Serror(
+					408,
+					TX.tx("Timeout trying to authorise access to Google Drive.")
+					+ " "
+					+ TX.tx("Are popups blocked in your browser?"));
             }, 20000);
 
             if (this.debug) this.debug("authorising");
@@ -145,7 +143,6 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
 							});
 						},
 						(gerror) => {
-							debugger;
 							throw new Serror(403, gerror);
 						}
 					)
@@ -154,7 +151,6 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
 						resolve();
 					})
 					.catch((r) => {
-						debugger;
 						throw new Serror(
 							500, self._gError(r, TX.tx("Google Drive load")));
 					});
@@ -164,8 +160,7 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
 
         // @Override
         addAuth(headers) {
-            headers["Authorization"] =
-            "Bearer " + gapi.auth.getToken().access_token;
+            headers.Authorization = `Bearer ${gapi.auth2.getToken().access_token}`;
         }
 
         /**
@@ -191,7 +186,7 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
                     metadata.parents = [{
                         id: parentid
                     }];
-                if (this.debug) this.debug("Creating folder " + pathel + " under " + parentid);
+                if (this.debug) this.debug(`Creating folder ${pathel} under ${parentid}`);
                 return gapi.client.drive.files
                 .insert(metadata)
                 .then((response) => {
@@ -199,23 +194,22 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
                 });
             }
 
-            let query = "title='" + pathel + "'" +
-                " and '" + parentid + "' in parents" +
-                " and mimeType='application/vnd.google-apps.folder'" +
-                " and trashed=false";
+            let query = `title='${pathel}' and '${parentid}' in parents` +
+                " and mimeType='application/vnd.google-apps.folder' and trashed=false";
 
             return gapi.client.drive.files
             .list({
-                q: query
+                q: query,
+				fields: "files/id"
             })
             .then((response) => {
-                let items = response.result.items;
-                if (items.length > 0) {
-                    let id = items[0].id;
-                    if (this.debug) this.debug("found " + query + " at " + id);
+                let files = response.result.files;
+                if (files.length > 0) {
+                    let id = files[0].id;
+                    if (this.debug) this.debug(`found ${query} at ${id}`);
                     return this._follow_path(id, p, create);
                 }
-                if (this.debug) this.debug("could not find " + query);
+                if (this.debug) this.debug(`could not find ${query}`);
                 if (create)
                     return create_folder();
                 this.status(404);
@@ -250,7 +244,7 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
 
             if (typeof id !== "undefined") {
                 // Known fileId, we're updating an existing file
-                url += "/" + id;
+                url += `/${id}`;
                 method = "PUT";
             }
 
@@ -271,8 +265,7 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
                 method: method,
                 params: params,
                 headers: {
-                    "Content-Type": "multipart/related; boundary=\""
-                    + BOUNDARY + "\""
+                    "Content-Type": `multipart/related; boundary="${BOUNDARY}"`
                 },
                 body: multipartRequestBody
             })
@@ -300,17 +293,18 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
                     return false;
                 parentId = pid;
                 // See if the file already exists, if it does then use it's id
-                if (this.debug) this.debug("checking existance of " + name);
+                if (this.debug) this.debug(`checking existance of ${name}`);
                 return gapi.client.drive.files
                 .list({
-                    q:  `name='${name}' and '${parentId}' in parents and trashed=false`
+                    q:  `name='${name}' and '${parentId}' in parents and trashed=false`,
+					fields: "files/id"
                 })
             })
             .then((response) => {
-                let items = response.result.files;
+                let files = response.result.files;
                 let id;
-                if (items.length > 0) {
-                    id = items[0].id;
+                if (files.length > 0) {
+                    id = files[0].id;
                     if (this.debug) this.debug(`updating ${name} ${id}`);
                 } else
                     if (this.debug) this.debug(`creating ${name} in ${parentId}`);
@@ -344,9 +338,8 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
             .then((response) => {
                 let files = response.result.files;
                 if (files === null || files.length === 0) {
-                    if (this.debug) this.debug(
-                        "could not find " + name);
-                    throw new Serror(401, path + " not found");
+                    if (this.debug) this.debug(`could not find ${name}`);
+                    throw new Serror(401, `${path} not found`);
                 }
                 let id = files[0].id;
                 if (this.debug) this.debug(`found '${name}' id ${id}`);

@@ -23,7 +23,7 @@ define("js/AesLayer", ["js/Serror", "js/LayeredStore", "js/Utils", "js/AES"], fu
         constructor(p) {
             super(p);
             this.option("needs_pass", true);
-            this.type = "AesLayer/" + this.understore.type;
+            this.type = `AesLayer/${this.understore.type}`;
         }
 
         // @Override
@@ -39,7 +39,7 @@ define("js/AesLayer", ["js/Serror", "js/LayeredStore", "js/Utils", "js/AES"], fu
                     data = AES.decrypt(a8, self.option("pass"), 256);
                 } catch (e) {
                     // Decryption failure
-                    throw new Serror(400, path + " decryption failure " + e);
+                    throw new Serror(400, `${path} decryption failure ${e}`);
                 }
 
                 // Check signature and checksum
@@ -60,10 +60,10 @@ define("js/AesLayer", ["js/Serror", "js/LayeredStore", "js/Utils", "js/AES"], fu
                         JSON.parse(s);
                         return Promise.resolve(Utils.StringToUint8Array(s));
                     } catch (e) {
-                        if (this.debug) this.debug("Invalid JSON " + e);
+                        if (this.debug) this.debug("Invalid JSON", e);
                     }
                 }
-                return Promise.reject(new Serror(400, path + " decryption failed"));
+                return Promise.reject(new Serror(400, `${path} decryption failed`));
             });
         }
 
