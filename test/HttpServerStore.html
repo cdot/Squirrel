@@ -25,14 +25,16 @@
     <div id="mocha"></div>
     <script>
       requirejs.config({
-        urlArgs: "nocache=" + Date.now(),
-        paths: {
-          jquery: "//code.jquery.com/jquery-3.3.1.min",
-          mocha: "//cdnjs.cloudflare.com/ajax/libs/mocha/6.0.2/mocha",
-          chai: "//cdnjs.cloudflare.com/ajax/libs/chai/4.2.0/chai"
-        }
+          urlArgs: "nocache=" + Date.now(),
+		  baseUrl: "..",
+          paths: {
+			  jquery: "//code.jquery.com/jquery-3.3.1.min",
+			  mocha: "//cdnjs.cloudflare.com/ajax/libs/mocha/6.0.2/mocha",
+			  chai: "//cdnjs.cloudflare.com/ajax/libs/chai/4.2.0/chai",
+			  unitTest: "test/HttpServerStore.ut?no="
+          }
       });
-      requirejs(["HttpServerStore"], function() {
+      requirejs(["unitTest"], function() {
       });
     </script>
   </body>

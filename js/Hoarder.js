@@ -1,46 +1,83 @@
 /*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,node */
 
-/**
- * Management of client and cloud data stores.
- * Several methods support a `progress' parameter. This is an object that
- * supports a method `push({severity, message})' (both parameters strings)
- * See dialogs/alert.js for how it is used in a notification dialog.
- */
-
 define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], function(Hoard, Action, Serror, Translator) {
 
     const CLIENT_PATH = "client";
     const TX = Translator.instance();
     
+	/**
+	 * Management of client and cloud data stores.
+	 * Several methods support a `progress` parameter. This is an object that
+	 * supports a method `push({severity:string, message:string})'.
+	 * See `dialogs/alert.js` for how it is used in a notification dialog.
+	 */
     class Hoarder {
 
+		/**
+		 * @param {object} p can override any of the members
+		 */
         constructor(p) {
             p = p || {};
 
-            // pathname of the cloud store
+            /**
+			 * pathname of the cloud store
+			 * @member {string}
+			 */
             this.cloudPath = null;
-            // URL of steganography image
+            /**
+			 * URL of steganography image
+			 * @member {string}
+			 */
             this.imageURL = null;
-            // store interfaces
+            /**
+			 * Client store interface
+			 * @member {AbstractStore}
+			 */
             this.clientStore = null;
+            /**
+			 * Cloud store interface
+			 * @member {AbstractStore}
+			 */
             this.cloudStore = null;
-            // Number of actions last read from cloud
+            /**
+			 * Number of actions last read from cloud
+			 * @member {number}
+			 */
             this.cloudLength = 0;
-            // When was the last sync?
+            /**
+			 * When was the last sync?
+			 * @member {number}
+			 */
             this.last_sync = 0;
-            // When was the client last saved?
+            /**
+			 * When was the client last saved?
+			 * @member {number}
+			 */
             this.last_save = 0;
-            // The client Hoard
+            /**
+			 * The client Hoard
+			 * @member {Hoard}
+			 */
             this.hoard = null;
-            // Record of non-action changes, such as paths and settings
+            /**
+			 * Record of non-action changes, such as paths and settings
+			 * @member {}
+			 */
             this.clientChanges = [];
+            /**
+			 * Flag that indicates if the cloud was changed
+			 * @member {boolean}
+			 */
             this.cloudChanged = false;
-            // Flag that indicates if the hoard was just created
-            this.clientIsEmpty;
+            /**
+			 * Flag that indicates if the hoard was just created
+			 * @member {boolean}
+			 */
+            this.clientIsEmpty = true;
             
             for (let k in p) {
-                if (p.hasOwnProperty(k))
+                if (Object.prototype.hasOwnProperty.call(p, k))
                     this[k] = p[k];
             }
         }
@@ -160,14 +197,10 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
         /**
          * Promise to add an action to the client hoard. This will play
          * the action into the client tree, and add the undo
-         * @param action the action to play
+         * @param {Action} action the action to play
          * @param {boolean} undoable if true and action that undos this action
          * will be added to the undo history. Default is true.
-         * @return a promise that resolves to an object thus:
-         * {
-         *   action: the action being played
-         *   conflict: string message, only set if there is a problem.
-         * }
+         * @return {Promise} Promise that resolves to a {@link Hoard.Conflict}
          */
         play_action(action, undoable) {
             return this.hoard.play_action(action, undoable);
@@ -215,7 +248,7 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
         
         /**
          * Undo the action most recently played
-         * @return a Promise that resolves to the action replayed, or rejects
+         * @return {Promise} Promise that resolves to the {@link Action} replayed, or rejects
          * to a { message: } object
          */
         undo() {
@@ -258,7 +291,7 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
 
         /**
          * Propagate auth to the stores
-         * @param auth structure {user, pass} 
+         * @param {object} auth structure {user, pass} 
          */
         authenticate(auth) {
             // Propagate to the stores

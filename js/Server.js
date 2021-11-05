@@ -12,29 +12,35 @@ define("js/Server", ["url", "extend", "fs-extra"], function(Url, extend, Fs) {
 
     /**
      * Lightweight HTTP(S) server object (singleton) with very few
-     * dependencies. Only supports PUT and GET and Basic auth
-     * The server sits on the selected port and processes GET and PUT
+     * dependencies. Only supports PUT and GET and Basic auth The
+     * server sits on the selected port and processes GET and PUT
      * requests.
-     * @param proto Parameter hash. Legal params are:
-     *    port: Port to run the server on, defaults to 3000
-     *    docroot: absolute path to the document root. Defaults to the
-     *             current directory when the server is run.
-     *    writable: path to subdirectory of the document root that is writable.
-     *              If this is set, only the writable directory can be PUT to.
-     *              if it is not set, anywhere under the docroot can be written to.
-     *    ssl: SSL configuration
-     *        cert: SSL certificate (filename or text, required for SSL)
-     *        key: SSL key (filename or text, required for SSL)
-     *    auth: Basic auth to access the server
-     *        user: Username (required for Basic Auth)
-     *        pass: Password (required for Basic Auth)
-     *        realm: Authentication realm (required for Basic Auth)
-     *    debug: function for verbose debugging
-     *    log: function for request reporting
-     * @class
      */
     class Server {
 
+		/**
+		 * @param {object} proto Parameter hash.
+		 * @param {number} proto.port Port to run the server on,
+		 * defaults to 3000
+		 * @param {string} proto.docroot absolute path to the document
+		 * root. Defaults to the current directory when the server is run.
+		 * @param {string} proto.writable path to subdirectory of the
+		 * document root that is writable.  If this is set, only the
+		 * writable directory can be PUT to.  if it is not set, anywhere
+		 * under the docroot can be written to.
+		 * @param {object} proto.ssl SSL configuration
+		 * @param {string} proto.ssl.cert SSL certificate (filename or
+		 * text, required for SSL)
+		 * @param {string} proto.ssl.key SSL key (filename or text,
+		 * required for SSL)
+		 * @param {object} proto.auth Basic auth to access the server
+		 * @param {string} proto.auth.user Username (required for Basic Auth)
+		 * @param {string} proto.auth.pass Password (required for Basic Auth)
+		 * @param {string} proto.auth.realm Authentication realm (required
+		 * for Basic Auth)
+		 * @param {function} proto.debug function for verbose debugging
+		 * @param {function} proto.log function for request reporting
+		 */
         constructor(p) {
             let self = this;
 

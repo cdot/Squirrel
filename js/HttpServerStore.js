@@ -1,15 +1,14 @@
 /*@preserve Copyright (C) 2018-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env shared-node-browser */
 
-define("js/HttpServerStore", ["js/Serror", "js/AbstractStore"], function(Serror, AbstractStore) {
+define("js/HttpServerStore", [
+	"js/Serror", "js/Utils", "js/AbstractStore"
+], (Serror,      Utils,      AbstractStore) => {
     if (typeof XMLHttpRequest === "undefined") {
         // node.js
-        /* global XMLHttpRequest: true */
         XMLHttpRequest = require("xhr2");
-        /* global btoa: true */
-        btoa = require('btoa');
-        /* global URL: true */
-        URL = require('url-parse');
+        ///* global URL: true */
+        //URL = require('url-parse');
     }
 
     /**
@@ -18,10 +17,15 @@ define("js/HttpServerStore", ["js/Serror", "js/AbstractStore"], function(Serror,
      * distribution. Or node simple-server python -m SimpleHTTPServer 3000
      * Or lighttpd nginx apache server etc. Or a simple server built using
      * express.
+	 * @extends AbstractStore
      */
 
     class HttpServerStore extends AbstractStore {
 
+		/**
+		 * {@link AbstractStore} for an explanation of parameters.
+		 * Sets `options.needs_url`
+		 */
         constructor(p) {
             super(p);
             this.option("needs_url", true);
@@ -29,31 +33,32 @@ define("js/HttpServerStore", ["js/Serror", "js/AbstractStore"], function(Serror,
         }
 
         /**
-         * Overridable method to set Basic auth headers for requests
+         * Set Basic auth headers for {@link HttpServerStore#request}
+		 * @param {object} headers headers for BasicAuth
          */
         addAuth(headers) {
             // Override auth if credentials are set
-            if (this.auth) {
+            if (this.option('net_user')) { // populated by login
                 if (this.debug)
-                    this.debug("addAuth: Using BasicAuth", this.auth.user);
+                    this.debug("addAuth: Using BasicAuth", this.option('net_user'));
                 // Not happy about caching this
                 headers.Authorization = 'Basic '
-                + btoa(this.auth.user + ':' + this.auth.pass);
+                + btoa(this.option('net_user') + ':' + this.option('net_pass'));
             } else if (this.debug)
                 this.debug("addAuth: No auth header");
         }
 
         /**
-         * @protected
          * Performs a HTTP request, and returns a Promise. Note that the
          * response is handled as an Uint8Array, it is up to the caller
          * to transform that to any other type.
          * @param {string} method HTTP method e.g. GET
          * @param {string} url Relative or absolute url
          * @param {Object} headers HTTP headers
-         * @param {string or Uint8Array} body request body
+         * @param {string|Uint8Array} body request body
          * @return {Promise} a promise which will be resolved with
          * {status:, xhr:, body:}
+		 * @protected
          */
         request(method, url, headers, body) {
             let self = this;
@@ -87,7 +92,7 @@ define("js/HttpServerStore", ["js/Serror", "js/AbstractStore"], function(Serror,
                     xhr.setRequestHeader(ii, headers[ii]);
                 }
 
-                // Workaround for edge
+                // Workaround for Edge
                 try {
                     if (body === undefined)
                         xhr.send();
@@ -102,16 +107,15 @@ define("js/HttpServerStore", ["js/Serror", "js/AbstractStore"], function(Serror,
                 xhr.onload = function() {
                     if (self.debug) self.debug("response",xhr.status);
                     if (xhr.status === 401) {
-                        if (self.debug) self.debug("handling 401");
                         let handler = self.option("network_login");
                         if (typeof handler === "function") {
+							if (self.debug) self.debug("handling 401");
                             handler()
                             .then((login) => {
-                                self.auth = login;
                                 resolve(self.request(method, url, headers, body));
                             });
                             return;
-                        }
+                        } else if (self.debug) self.debug("No 401 handler");
                     }
 
                     resolve({
@@ -129,15 +133,18 @@ define("js/HttpServerStore", ["js/Serror", "js/AbstractStore"], function(Serror,
 
         /**
          * Return a promise to make a folder.
-         * Subclasses can override to provide specific path creation steps.
+         * Subclasses override to provide specific path creation steps.
          * @param path {String} Relative or absolute path to folder
          * @throws Serror if anything goes wrong
+		 * @return {Promise} resolves if all went well
          */
         mkpath(/*path*/) {
             return Promise.resolve();
         }
 
-        // @Override
+        /**
+		 * @Override
+		 */
         read(path) {
             if (this.debug) this.debug("read", path);
             return this.request("GET", path)
@@ -148,20 +155,35 @@ define("js/HttpServerStore", ["js/Serror", "js/AbstractStore"], function(Serror,
             });
         }
 
-        // @Override
+        /**
+		 * @Override
+		 */
+        reads(path) {
+			return this.read(path)
+			.then(buff => Utils.Uint8ArrayToString(buff));
+		}
+
+        /**
+		 * @Override
+		 */
         write(path, data) {
             if (this.debug) this.debug("write", path);
             let pathbits = path.split('/');
             let folder = pathbits.slice(0, pathbits.length - 1);
             return this.mkpath(folder.join('/'))
-            .then(() => {
-                return this.request('PUT', path, {}, data)
-            })
+            .then(() => this.request('PUT', path, {}, data))
             .then((res) => {
                 if (res.status < 200 || res.status >= 300)
                     throw new Serror(res.status, path + " write failed");
             });
         }
+
+        /**
+		 * @Override
+		 */
+        writes(path, data) {
+			return this.write(path, Utils.StringToUint8Array(data));
+		}
     }
 
     return HttpServerStore;

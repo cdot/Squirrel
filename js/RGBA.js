@@ -3,11 +3,6 @@
 
 define("js/RGBA", function() {
 
-    /**
-     * Class to represent an RGBA colour, and convert to/from other
-     * representations
-     */
-
     /* Table of HTMl colour names and their RGB values */
     const CSSColours = {
         aliceblue: "#F0F8FF",
@@ -161,14 +156,19 @@ define("js/RGBA", function() {
     };
 
     /**
-     * Parse a colour string (colour name, #, rgb, rgba, hsl or hsla value)
-     * to an RGBA tuple.
-     * @param r a number (requires g and b if it is) or a CSS colour string
-     * @param g a number (if r is defined and is a number)
-     * @param b a number (if r is defined and is a number)
-     * @param a a number (if r is defined and is a number)
+     * Class to represent an RGBA colour, and convert to/from other
+     * representations
      */
     class RGBA {
+		/**
+		 * Initialise a colour, or parse a colour string (colour name, #, rgb, rgba, hsl or hsla value)
+		 * to an RGBA tuple.
+		 * @param {number|string} r a number (requires g and b if it is)
+		 * or a CSS colour string
+		 * @param {number=} g if r is defined and is a number
+		 * @param {number=} b if r is defined and is a number
+		 * @param {number=} a if r is defined and is a number
+		 */
         constructor(r, g, b, a) {
             function parseComponent(value, max) {
                 if (/%\s*$/.test(value)) {
@@ -252,6 +252,7 @@ define("js/RGBA", function() {
 
         /**
          * Crude RGB inversion - simply invert the colour components
+		 * @return {RGBA}
          */
         inverse() {
             return new RGBA(1 - this.r, 1 - this.g, 1 - this.b, this.a);
@@ -259,6 +260,7 @@ define("js/RGBA", function() {
 
         /**
          * More sophisticated HSV complement
+		 * @return {RGBA}
          */
         complement() {
             let hsv = this.toHSV();
@@ -269,6 +271,7 @@ define("js/RGBA", function() {
          * Find the approximate brightness of an RGBA colour in the range 0..1
          * Anything above 0.65 is closer to white, below that to black
          * @see https://en.wikipedia.org/wiki/HSL_and_HSV
+		 * @return {number}
          */
         luma() {
             // SMPTE C, Rec. 709 weightings
@@ -278,6 +281,7 @@ define("js/RGBA", function() {
         /**
          * Generate a CSS string for the colour. CSS colour string is
          * used if there is no A, a css rgba() otherwise.
+		 * @return {string}
          */
         toString() {
             let tuple = [Math.round(255 * this.r),
@@ -301,7 +305,7 @@ define("js/RGBA", function() {
          * Generate an HSV[A] value as a [ H, S, V, A ]
          * e.g. let hsv = new RGBA("blue").toHSV()
          * @see https://en.wikipedia.org/wiki/HSL_and_HSV
-         * @return [ hue (0..360), saturation (0..1), value (0..1) ]
+         * @return {number[]} [ hue, saturation, value ]
          */
         toHSV() {
             let M = Math.max(this.r, this.g, this.b);
@@ -336,7 +340,7 @@ define("js/RGBA", function() {
          * Generate an HSL[A] value as a [ H, S, L, A ]
          * e.g. let hsl = new RGBA("blue").toHSL()
          * @see https://en.wikipedia.org/wiki/HSL_and_HSV
-         * @return [ hue (0..360), saturation (0..1), lightness (0..1) ]
+         * @return {number[]} [ hue (0..360), saturation (0..1), lightness (0..1) ]
          */
         toHSL() {
             let M = Math.max(this.r, this.g, this.b);
@@ -376,6 +380,10 @@ define("js/RGBA", function() {
         /**
          * Generate a new Colour from HSV[A]. H, S, V [, A] can be passed directly
          * or H will be assumed to be a tuple if S is undefined.
+		 * @param {number|number[]} H hue 
+		 * @param {number} S saturation
+		 * @param {number} V value
+		 * @param {number} A transparency
          */
         static fromHSV(H, S, V, A) {
             let R, G, B;
@@ -436,6 +444,10 @@ define("js/RGBA", function() {
         /**
          * Generate a new Colour from HSL. H, S, L [, A] can be passed directly
          * or H can be a tuple.
+		 * @param {number|number[]} H hue 
+		 * @param {number} S saturation
+		 * @param {number} L lightness
+		 * @param {number} A transparency
          */
         static fromHSL(H, S, L, A) {
 

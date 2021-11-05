@@ -9,10 +9,10 @@ define("js/Serror", function() {
      */
     class Serror extends Error {
         /**
-         * @param status an optional HTTP status code describing the error
+         * @param {number} status an optional HTTP status code describing the error
          * (defaults to 400)
-         * @param path optional path array where it failed,
-         * @param message is passed to the Error constructor
+         * @param {string} path optional path array where it failed,
+         * @param {string} message is passed to the Error constructor
          * (filename and line number not supported)
          */
         constructor(...rest) {
@@ -34,6 +34,8 @@ define("js/Serror", function() {
 
         /**
          * Classic assert
+		 * @param {boolean} cond condition to assert result
+		 * @param {string} message failed message
          */
         static assert(cond, message) {
             if (cond) return;

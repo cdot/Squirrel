@@ -21,10 +21,18 @@ define("test/MemoryStore", ["js/Utils", "js/Serror", "js/AbstractStore"], functi
             return Promise.resolve(this.data[path]);
         }
 
+		reads(path) {
+			return this.read(path);
+		}
+
         write(path, a8) {
             this.data[path] = a8;
-            return Promise.resolve(true);
+            return Promise.resolve();
         }
+
+		writes(path, data) {
+			return this.write(path, data);
+		}
 
         dump(path) {
             console.log(Utils.Uint8ArrayToString(this.data[path]));

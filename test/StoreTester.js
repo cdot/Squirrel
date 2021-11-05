@@ -30,6 +30,7 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
 
             this.storeClasses = storeClasses;
             this.store = undefined;
+			//this.debug = console.log;
         }
 
         // Return a promise to construct self.store
@@ -138,6 +139,7 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
                 }
                 store.option("net_user", four01.net_user);
                 store.option("net_pass", four01.net_pass);
+				store.auth = { user: store.option("net_user"), pass: store.option("net_pass") };
                 return Promise.resolve();
             });
 
@@ -183,13 +185,13 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
             let self = this;
             let assert = this.assert;
 
-            this.addTest("Write/Read 1 byte", function() {
+			this.addTest("Write/Read 1 byte", function() {
                 let store = self.store;
                 let a = new Uint8Array(1);
                 a[0] = 69;
-                return store.write(test_path, a)
+				return store.write(test_path, a)
                 .then(function() {
-                    return store.read(test_path);
+					return store.read(test_path);
                 })
                 .then(function(ab) {
                     assert.equal(ab.length, 1);
@@ -200,8 +202,7 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
 
             this.addTest("Write/Read 0 bytes", function() {
                 let store = self.store;
-                let a = new Uint8Array(0);
-                return store.write(test_path, a)
+                return store.write(test_path, new Uint8Array(0))
                 .then(function () {
                     return store.read(test_path);
                 })
@@ -210,7 +211,18 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
                 });
             });
 
-            this.addTest("Read non-existant", function() {
+            this.addTest("Write/Read empty string", function() {
+                let store = self.store;
+                return store.writes(test_path, "")
+                .then(function () {
+                    return store.reads(test_path);
+                })
+                .then(function(ab) {
+                    assert.equal(ab.length, 0);
+                });
+            });
+
+            this.addTest("Read non-existant byte data", function() {
                 let store = self.store;
                 return store.read("not/a/known/resource.dat")
                 .then(function() {
@@ -222,18 +234,19 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
                 });
             });
 
-            this.addTest("Write/Read string", function() {
+            this.addTest("Read non-existant string", function() {
                 let store = self.store;
-                return store.writes(test_path, TESTR)
-                .then(function () {
-                    return store.reads(test_path);
+                return store.reads("not/a/known/resource.dat")
+                .then(function() {
+                    assert(false, "Non existant should not resolve");
                 })
-                .then(function(str) {
-                    assert.equal(str, TESTR);
+                .catch(function(se) {
+                    assert(se instanceof Serror, "" + se);
+                    assert(se.status === 404, "" + se);
                 });
             });
 
-            this.addTest("Write/read binary", function() {
+            this.addTest("Write/read binary data", function() {
                 let store = self.store;
                 let a = new Uint8Array(DATASIZE);
 
@@ -249,6 +262,17 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
                     //if (debug) debug("R:",block(a,214,220));
                     for (let i = 0; i < DATASIZE; i++)
                         assert.equal(a[i], ((i + 1) & 255), "Position " + i);
+                });
+            });
+
+            this.addTest("Write/Read string", function() {
+                let store = self.store;
+                return store.writes(test_path, TESTR)
+                .then(function () {
+                    return store.reads(test_path);
+                })
+                .then(function(str) {
+                    assert.equal(str, TESTR);
                 });
             });
 

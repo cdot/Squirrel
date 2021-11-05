@@ -10,7 +10,9 @@ define("dialogs/alert", ["js/Dialog"], function(Dialog) {
 
     class AlertDialog extends Dialog {
 
-        // @Override
+        /**
+		 * @Override
+		 */
         open() {
             this.control("messages").empty();
 
@@ -23,9 +25,9 @@ define("dialogs/alert", ["js/Dialog"], function(Dialog) {
 
         /**
          * Add a message to the dialog
-         * @param lert object {severity, message}:
-         *  severity: one of "notice", "warning", "error"
-         *  message: the translated message text
+         * @param {object} lert
+         * @param {string} lert.severity one of "notice", "warning", "error"
+         * @param {string} lert.message the translated message text
          * Can also be an array of these objects
          * @param first if true, add to the start of the message list
          */
@@ -74,7 +76,7 @@ define("dialogs/alert", ["js/Dialog"], function(Dialog) {
 
         /**
          * Add a message to the start of the message list.
-         * @param lert see `add()' for details
+         * @param {object} lert see `add()' for details
          */
         unshift(lert) {
             this.add(lert, true);
@@ -82,7 +84,7 @@ define("dialogs/alert", ["js/Dialog"], function(Dialog) {
         
         /**
          * Add a message to the end of the message list.
-         * @param lert see `add()' for details
+         * @param {object} lert see `add()' for details
          */
         push(lert) {
             this.add(lert, false);

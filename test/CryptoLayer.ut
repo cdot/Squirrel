@@ -1,0 +1,18 @@
+/*@preserve Copyright (C) 2019 Crawford Currie http://c-dot.co.uk license MIT*//*eslint-env node, mocha */
+
+if (typeof requirejs === "undefined") {
+    requirejs = require('requirejs');
+	requirejs.config({
+		baseUrl: `${__dirname}/..`
+	});
+} else {
+	requirejs.config({
+		baseUrl: ".."
+	});
+}
+
+// Must be run with pass=pass on URL in browser
+requirejs(["test/StoreTester"], function(StoreTester) {
+    new StoreTester([ "CryptoLayer", "LocalStorageStore" ])
+	.run({ user: "test", pass: "pass" });
+});

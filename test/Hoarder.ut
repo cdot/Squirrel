@@ -1,32 +1,36 @@
 /*@preserve Copyright (C) 2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /*eslint-env shared-node-browser, mocha */
 
-if (typeof requirejs == "undefined")
+if (typeof requirejs === "undefined") {
     requirejs = require('requirejs');
+	requirejs.config({
+		baseUrl: `${__dirname}/..`
+	});
+}
 
-requirejs.config({
-    baseUrl: ".."
-});
-
-requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/AesLayer", "js/Utils", "js/Serror", "test/MemoryStore", "test/TestRunner"], function(Hoarder, Action, Hoard, LocalStorageStore, AesLayer, Utils, Serror, MemoryStore, TestRunner) {
+requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/CryptoLayer", "js/Utils", "js/Serror", "test/MemoryStore", "test/TestRunner"], function(Hoarder, Action, Hoard, LocalStorageStore, CryptoLayer, Utils, Serror, MemoryStore, TestRunner) {
     let tr = new TestRunner("Hoarder");
     let assert = tr.assert;
     const MSPERDAY = 24 * 60 * 60 * 1000;
     
     tr.addTest("constructor", function() {
         let h = new Hoarder();
+        assert.equal(h.cloudChanged, false);
         h.cloud_store(new LocalStorageStore({ debug: console.debug,
-                                              user: "Cumulus",
+                                              user: "Cumulo",
                                               pass: "Nimbus" }));
+        assert.equal(h.cloudChanged, false);
         h.client_store(new LocalStorageStore({ debug: console.debug,
                                                user: "Stratus",
                                                pass: "Alto"}));
+        assert.equal(h.cloudChanged, false);
         h.cloud_path("CLOUD");
-        assert(h.cloudChanged);
+        assert.equal(h.cloudChanged, false);
         assert.equal(h.clientChanges.length, 1);
 
         assert.equal(h.user(), "Stratus");
         assert.equal(h.encryption_pass(), "Alto");
+        assert.equal(h.cloudChanged, false);
     });
 
     const full_tree_actions = [
@@ -314,7 +318,8 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/Ae
         acts.push(cloud_act);
         let h;
         let progress = [];
-        
+        let clieh;
+		
         return make_cloud(acts, cloust)
         .then(() => {
             // Populate the client with the base tree
@@ -340,7 +345,7 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/Ae
         })
         .then((actions) => {
             assert.equal(actions.length, 9);
-            return h.save_cloud(actions, progress)
+            return h.save_cloud(actions, progress);
         })
         .then(() => {
             return h.save_client(progress);
@@ -349,11 +354,16 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/Ae
             assert.equal(progress.length, 2);
             assert.equal(progress[0].message, "Saved in cloud");
             assert.equal(progress[1].message, "Saved in local store");
-            let clieh = new Hoard({ debug: debug,
-                hoard: JSON.parse(Utils.Uint8ArrayToString(cliest.data.client)).hoard });
+            return cliest.reads("client");
+		})
+		.then(clied => {
+			clieh = new Hoard({ debug: debug, hoard: JSON.parse(clied).hoard });
+			return cloust.reads("blah");
+		})
+		.then(cloud => {
             let clouh = new Hoard({ debug: debug});
-            //console.log(Utils.Uint8ArrayToString(cloust.data.blah));
-            let acts = JSON.parse(Utils.Uint8ArrayToString(cloust.data.blah));
+            //console.log(cloud));
+            let acts = JSON.parse(cloud);
             for (let act of acts) {
                 clouh.play_action(act);
             }
@@ -365,8 +375,8 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/Ae
 
     tr.addTest("encrypted synchronise", function() {
         let debug;// = console.debug;
-        let cliest = new AesLayer({ understore: new MemoryStore() });
-        let cloust = new AesLayer({ understore: new MemoryStore() });
+        let cliest = new CryptoLayer({ understore: new MemoryStore() });
+        let cloust = new CryptoLayer({ understore: new MemoryStore() });
 
         // Add an action to the cloud
         let acts = full_tree_actions.slice();

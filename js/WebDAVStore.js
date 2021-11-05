@@ -9,19 +9,22 @@ define("js/WebDAVStore", ["js/Utils", "js/HttpServerStore"], (Utils, HttpServerS
 
     /**
      * Store on a remote WebDAV server
+	 * @extends HttpServerStore
      */
     class WebDAVStore extends HttpServerStore {
 
-        constructor(p) {
-            super(p);
+		/**
+		 * See {@link HttpServerStore} for other constructor options
+		 */
+        constructor(options) {
+            super(options);
             this.type = "WebDAVStore";
         }
 
         /**
-         * Override HttpServerStore.request to add 207 handling
-         */
-
-        // @Override
+         * Override {@link HttpServerStore#request} to add 207 handling
+         * @Override
+		 */
         request(method, url, headers, body) {
             let self = this;
             return super.request(method, url, headers, body)
@@ -32,12 +35,11 @@ define("js/WebDAVStore", ["js/Utils", "js/HttpServerStore"], (Utils, HttpServerS
             });
         }
 
-        /**
+        /*UNUSED
          * Escape special characters in an XML string
          * @param {type} s string to exacpe
-         * @returns escaped string
-         */
-        /* UNUSED
+         * @return {string} escaped string
+
         static _escapeXml(s) {
             return s.replace(/[<>&"']/g, function (ch) {
                 switch (ch) {
@@ -64,7 +66,7 @@ define("js/WebDAVStore", ["js/Utils", "js/HttpServerStore"], (Utils, HttpServerS
         }
         */
 
-        /**
+        /*UNUSED
          * Generates a propFind request.
          *
          * @param {string} url Url to do the propfind request on
@@ -72,8 +74,7 @@ define("js/WebDAVStore", ["js/Utils", "js/HttpServerStore"], (Utils, HttpServerS
          * @param {string} depth "0", "1" or "infinity"
          * @param {Object} [headers] headers
          * @return {Promise}
-         */
-        /* UNUSED
+
         propFind(url, properties, depth, headers) {
 
             if(typeof depth === "undefined") {
@@ -96,7 +97,7 @@ define("js/WebDAVStore", ["js/Utils", "js/HttpServerStore"], (Utils, HttpServerS
             body += '><d:prop>';
 
             for (let ii in properties) {
-                if (!properties.hasOwnProperty(ii)) {
+                if (!Object.prototype.hasOwnProperty.call(properties, ii)) {
                     continue;
                 }
 
@@ -121,18 +122,17 @@ define("js/WebDAVStore", ["js/Utils", "js/HttpServerStore"], (Utils, HttpServerS
         }
         */
 
-        /**
+        /*UNUSED
          * Renders a "d:set" block for the given properties.
          *
          * @param {Object.<String,String>} properties
          * @return {String} XML "<d:set>" block
-         */
-        /* UNUSED
+
         _renderPropSet(properties) {
             let body = '<d:set><d:prop>';
 
             for (let ii in properties) {
-                if (!properties.hasOwnProperty(ii))
+                if (!Object.prototype.hasOwnProperty.call(properties, ii))
                     continue;
 
                 let property = this._parseClarkNotation(ii);
@@ -156,15 +156,14 @@ define("js/WebDAVStore", ["js/Utils", "js/HttpServerStore"], (Utils, HttpServerS
         }
         */
 
-        /**
+        /*UNUSED
          * Generates a propPatch request.
          *
          * @param {string} url Url to do the proppatch request on
          * @param {Object.<String,String>} properties List of properties to store.
          * @param {Object} [headers] headers
          * @return {Promise}
-         */
-        /* UNUSED
+
         propPatch(url, properties, headers) {
             headers = headers || {};
 
@@ -189,7 +188,7 @@ define("js/WebDAVStore", ["js/Utils", "js/HttpServerStore"], (Utils, HttpServerS
         }
         */
 
-        /**
+        /*UNUSED
          * Generates a MKCOL request.
          * If attributes are given, it will use an extended MKCOL request.
          *
@@ -197,8 +196,7 @@ define("js/WebDAVStore", ["js/Utils", "js/HttpServerStore"], (Utils, HttpServerS
          * @param {Object.<String,String>} [properties] list of properties to store.
          * @param {Object} [headers] headers
          * @return {Promise}
-         */
-        /* UNUSED
+
         mkcol(url, properties, headers) {
             let body = '';
             headers = headers || {};
@@ -232,6 +230,7 @@ define("js/WebDAVStore", ["js/Utils", "js/HttpServerStore"], (Utils, HttpServerS
          *
          * @param {Object} propNode node to parse
          * @return {string|Array} text content as string or array of subnodes, excluding text nodes
+		 * @private
          */
         _parsePropNode(propNode) {
             let content = null;
@@ -254,9 +253,9 @@ define("js/WebDAVStore", ["js/Utils", "js/HttpServerStore"], (Utils, HttpServerS
 
         /**
          * Parses a multi-status response body.
-         *
          * @param {string} xmlBody
-         * @param {Array}
+         * @return {Array} array of {href: string, propstat: object[]}
+		 * @private
          */
         _parseMultiStatus(xmlBody) {
             let parser = new DOMParser();
@@ -268,6 +267,7 @@ define("js/WebDAVStore", ["js/Utils", "js/HttpServerStore"], (Utils, HttpServerS
                         return i;
                     }
                 }
+				return undefined;
             }.bind(this);
 
             let responseIterator = doc.evaluate('/d:multistatus/d:response', doc, resolver, XPathResult.ANY_TYPE, null);
@@ -315,10 +315,9 @@ define("js/WebDAVStore", ["js/Utils", "js/HttpServerStore"], (Utils, HttpServerS
         }
 
         /**
-         * Return a Promise to make a folder.
+         * @inheritdoc
          * @param {String} path folder URL relative to this.option("url")
-         */
-        // @Override
+		 */
         mkpath(path) {
             if (path.length === 0)
                 return Promise.resolve(); // at the root, always exists

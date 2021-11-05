@@ -4,12 +4,15 @@
 define("js/Action", ["js/Translator"], function(Translator) {
     const PATH_SEPARATOR = "↘";
     let TX = Translator.instance();
-    
+
+	/**
+	 * An action performed on a Hoard
+	 */
     class Action {
         
         /**
          * Construct a new action object.
-         * @param proto an action structure to clone, or a simple object with
+         * @param {object} proto an Action to clone, or a simple object with
          * type, path, time and data fields.
          */
         constructor(proto) {
@@ -25,6 +28,7 @@ define("js/Action", ["js/Translator"], function(Translator) {
         /**
          * Generate a path string from an array of path elements
          * @param terminate boolean true to append separator to end of path
+		 * @return {string} path string
          */
         static pathS(p, terminate) {
             return p.join(PATH_SEPARATOR) + (terminate ? PATH_SEPARATOR : "");

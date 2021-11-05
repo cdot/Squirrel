@@ -3,24 +3,26 @@
     <meta charset="utf-8">
     <title>TestRunner</title>
     <link rel="icon" href="favicon.ico" type="image/x-icon" />
-    <link href="//cdnjs.cloudflare.com/ajax/libs/mocha/6.0.2/mocha.css" rel="stylesheet" />
-    <script src="//cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.js"></script>
+    <link href="http://cdnjs.cloudflare.com/ajax/libs/mocha/6.0.2/mocha.css" rel="stylesheet" />
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.js"></script>
   </head>
   <body>
     <div id="mocha"></div>
     <div id="container"><div id="sites-node"></div></div>
     <script>
-      requirejs.config({
-        urlArgs: "nocache=" + Date.now(),
-        paths: {
-          jquery: "//code.jquery.com/jquery-3.3.1.min",
-          mocha: "//cdnjs.cloudflare.com/ajax/libs/mocha/6.0.2/mocha",
-          chai: "//cdnjs.cloudflare.com/ajax/libs/chai/4.2.0/chai",
-          "js-cookie": "//cdnjs.cloudflare.com/ajax/libs/js-cookie/2.2.0/js.cookie.min",
-        }
-      });
       let m = /module=([^&;]+)/.exec(window.location.search.substring(1));
-      requirejs([m[1]], function() {
+      requirejs.config({
+		  baseUrl: "..",
+          urlArgs: "nocache=" + Date.now(),
+          paths: {
+			  jquery: "http://code.jquery.com/jquery-3.3.1.min",
+			  mocha: "http://cdnjs.cloudflare.com/ajax/libs/mocha/6.0.2/mocha",
+			  chai: "http://cdnjs.cloudflare.com/ajax/libs/chai/4.2.0/chai",
+			  "js-cookie": "http://cdnjs.cloudflare.com/ajax/libs/js-cookie/2.2.0/js.cookie.min",
+			  unitTest: `test/${m[1]}.ut?no=`
+          }
+      });
+      requirejs(["unitTest"], function() {
       });
     </script>
   </body>

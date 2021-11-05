@@ -6,8 +6,8 @@ define("dialogs/add", ["js/Dialog", "js/Action"], function(Dialog, Action) {
     class AddDialog extends Dialog {
 
         /**
-         * @protected
          * Code shared between add and insert
+         * @protected
          */
         validateUniqueKey() {
             // Disable OK if key value exists or is invalid

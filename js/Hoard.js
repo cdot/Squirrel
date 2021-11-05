@@ -1,41 +1,43 @@
 /*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,node */
 
-/**
- * @typedef Conflict
- * @type {object}
- * @property {Action} action
- * @property {string} message
- *
- * @typedef Node
- * @type {object}
- * @property {Data[]|string} collection of subnodes, or leaf (non-object) data
- * @property time {integer} time of the last modification
- * @property alarm {string} time of next alarm, encode as "next ring;repeat"
- * @property constraints {string} constraints, encoded as "length;chars"
- */
-
 define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action, Translator, Serror) {
     let TX = Translator.instance();
 
     const MSPERDAY = 24 * 60 * 60 * 1000;
 
+	/**
+	 * @typedef Hoard.Conflict
+	 * @type {object}
+	 * @property {Action} action the action being played
+	 * @property {string} conflict string message, only set if there is a problem.
+	 */
+
+	/**
+	 * @typedef Hoard.Node
+	 * @type {object}
+	 * @property {Data[]|string} collection of subnodes, or leaf (non-object) data
+	 * @property {integer} time time of the last modification
+	 * @property {string} alarm time of next alarm, encoded as "next ring;repeat"
+	 * @property {string} constraints constraints, encoded as "length;chars"
+	 */
+
     /**
-     * @class
-     * @member {object} tree root of tree
-     * @member {Action[]} actions actions played since the last sync
+	 * A Hoard is a the database object used by Squirrel. It can be populated
+	 * with a Tree, and or a list of Action. 
      */
     class Hoard {
 
         /**
          * Constructor
-         * @param options structure with: <dl>
-         * <dt>hoard</dt><dd>optional hoard to copy (silently overrides
-         * tree and actions)</dd>
-         * <dt>tree</dt><dd>optional tree to copy (if hoard: not set)</dd>
-         * <dt>actions</dt><dd>optional array of actions to play into the
-         * hoard after the tree has been copied (if hoard: not set)</dd>
-         * <dt>debug</dt><dd>optional debugging function</dd></dl>
+         * @param {object} options
+         * @param {Hoard=} options.hoard hoard to copy (silently overrides
+         * `option.tree` and `options.actions`)
+         * @param {Hoard.Node=} options.tree tree to copy (if
+         * `options.hoard` not set)
+         * @param {Array.<Action>=} options.actions actions to play into the
+         * hoard after the tree has been copied (if `options.hoard` not set)
+         * @param {function=} options.debug debugging function
          */
         constructor(options) {
             options = options || {};
@@ -43,11 +45,26 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
             if (typeof options.debug === "function")
                 this.debug = options.debug;
 
-            // Actions played into this hoard and the
-            // corresponding undos required to undo the actions played.
-            // Each entry is { redo:, undo: }
+            /**
+			 * Actions played into this hoard and the
+             * corresponding undos required to undo the actions played.
+             * Each entry is { redo:, undo: }
+			 * @member {object[]}
+			 */
             this.history = [];
             
+			/**
+			 * Root of tree
+			 * @member {Hoard.Node}
+			 */
+			this.tree = undefined;
+
+			/**
+			 * Actions played since the last sync
+			 * @member {Action[]}
+			 */
+			this.actions = undefined;
+
             if (options.hoard) {
                 // hoard: overrides tree: and actions:
                 this.tree = options.hoard.tree;
@@ -85,8 +102,8 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
         }
         
         /**
-         * @private
          * Deep copy a hoard tree
+         * @private
          */
         static _copy_tree(tree) {
             let node = {
@@ -107,9 +124,9 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
         }
         
         /**
-         * @private
          * Get the path of the given node. Depth-first search for the
          * node object.
+         * @private
          */
         _get_path(node) {
             function _dfe(node, path, tgt) {
@@ -128,12 +145,12 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
         }
 
         /**
-         * @private
          * Record an action and its undo
          * @param type action type
          * @param path the path for the undo
          * @param time the time for the undo
          * @param act template for the undo (e.g. for data:, alarm: etc)
+         * @private
          */
         _record_event(redo, type, path, time, act) {
             if (!act)
@@ -146,11 +163,11 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
         }
         
         /**
-         * @private
          * Locate the node referenced by the given path in the tree
-         * @param path path string, or path array
-         * @param offset optional offset from the leaf e.g. 1 will
+         * @param {string|string[]} path path string, or path array
+         * @param {number=} offset offset from the leaf e.g. 1 will
          * find the parent of the node identified by the path
+         * @private
          */
         _locate_node(path, offset) {
             if (typeof path === "string") {
@@ -174,11 +191,7 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
 
         /**
          * Undo the action most recently played
-         * @return a promise that resolves to an object thus:
-         * {
-         *   action: the action being played
-         *   conflict: string message, only set if there is a problem.
-         * }
+         * @return {Promise} Promise that resolves to {@link Hoard.Conflict}
          */
         undo() {
             Serror.assert(this.history.length > 0);
@@ -191,6 +204,7 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
         
         /**
          * Return true if there is at least one undoable operation
+		 * @return {boolean}
          */
         can_undo() {
             return this.history.length > 0;
@@ -214,13 +228,9 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
          * Returns a conflict object if there was an error. This has two fields,
          * 'action' for the action record and 'message'.
          * @param {Action} action the action record
-         * @param {boolean} undoable if true and action that undos this action
+         * @param {boolean} undoable if true, an action that undos this action
          * will be added to the undo history. Default is true.
-         * @return a promise that resolves to an object thus:
-         * {
-         *   action: the action being played
-         *   conflict: string message, only set if there is a problem.
-         * }
+         * @return {Promise} Promise that resolves {@link Hoard.Conflict}
          */
         play_action(action, undoable) {
             action = new Action(action);
@@ -354,7 +364,7 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
                     // action.data is the path of the new parent
                     new_parent = this._locate_node(action.data);
                     if (!new_parent)
-                        return conflict(
+                        return conflict(action,
                             TX.tx("target folder '$1' does not exist",
                                   Action.pathS(action.data)));
 
@@ -422,10 +432,10 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
 
         /**
          * Merge two action streams in time order. Duplicate actions
-         * are merged. The input action streams will be irretrevably damaged.
-         * @param a the first action stream to merge
-         * @param b the second action stream to merge
-         * @return the merged action stream, sorted in time order. Note that
+         * are merged. The input action streams will be irretrievably damaged.
+         * @param {Action[]} a the first action stream to merge
+         * @param {Action[]} b the second action stream to merge
+         * @return {Action[]} the merged action stream, sorted in time order. Note that
          * the action objects in a and b are preserved for use here
          */
         static merge_actions(a, b) {
@@ -475,7 +485,7 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
         /**
          * Reconstruct the minimal action stream required to recreate
          * the data.  Actions will be 'N', 'A' and 'X'.
-         * @return an array of actions
+         * @return {Action[]} an action stream
          */
         actions_to_recreate() {
 
@@ -538,6 +548,8 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
          * to transform from the tree containing a to the tree with b, and
          * a and b are the tree nodes being compared. Actions used are
          * 'A', 'C', 'D', 'E', 'I' and 'X'
+		 * @param {Hoard} b the Hoard to compare
+		 * @param {function} difference listener function
          */
         diff(b, difference) {
         
@@ -588,7 +600,7 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
         /**
          * Return the tree node identified by the path.
          * @param path array of path elements, root first
-         * @return a tree node, or null if not found.
+         * @return {Node?} a tree node, or null if not found.
          */
         get_node(path) {
             let node = this.tree;

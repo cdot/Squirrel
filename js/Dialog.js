@@ -1,13 +1,6 @@
-/*@preserve Copyright (C) 2019 Crawford Currie http://c-dot.co.uk license MIT*/
+/*@preserve Copyright (C) 2019-2021 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser */
 
-/**
- * Dynamic dialog loader and Base class of modal dialogs. Loads
- * dialogs dynamically. Dialogs are defined using (1) an HTML <div>
- * which can either be embedded in the the main HTML or loaded using
- * from a file found using requirejs, and (2) a JS subclass of
- * "Dialog" again loaded by requirejs.
- */
 define("js/Dialog", ["js/Translator", "js/Serror", "jquery", "jquery-ui", "js/jq/icon_button", "js/jq/twisted"], function(Translator, Serror) {
 
     // Default options
@@ -19,6 +12,13 @@ define("js/Dialog", ["js/Translator", "js/Serror", "jquery", "jquery-ui", "js/jq
     // Cache of loaded code modules
     let classes = {};
 
+	/**
+	 * Dynamic dialog loader and Base class of modal dialogs. Loads
+	 * dialogs dynamically. Dialogs are defined using (1) an HTML <div>
+	 * which can either be embedded in the the main HTML or loaded using
+	 * from a file found using requirejs, and (2) a JS subclass of
+	 * "Dialog" again loaded by requirejs.
+	 */
     class Dialog {
 
         /**
@@ -30,10 +30,11 @@ define("js/Dialog", ["js/Translator", "js/Serror", "jquery", "jquery-ui", "js/jq
         }
 
         /**
-         * @param $dlg jQuery object for the dialog being constructed
-         * @param options options that will be passed on the the jQuery UI
-         * $.dialog() constructor. This class will use the 'debug' option
-         * which is a debug function.
+         * @param {jQuery} $dlg jQuery object for the dialog being constructed
+         * @param {object} options options that will be passed on the
+         * the jQuery UI $.dialog() constructor
+		 * @param {function} options.debug only option used by this class,
+		 * the rest are passed on to $.dialog
          */
         constructor($dlg, options) {
             let self = this;
@@ -93,7 +94,7 @@ define("js/Dialog", ["js/Translator", "js/Serror", "jquery", "jquery-ui", "js/jq
          * $.set_dialog_options(). These are passed to the Dialog subclass
          * during construction. The only options used in this module is
          * debug: optional debug function
-         * @return a promise that resolves to the Dialog object
+         * @return {Promise} resolves to the Dialog object
          */
         static load(id, options) {
             options = $.extend({}, default_dialog_options, options);
@@ -163,8 +164,8 @@ define("js/Dialog", ["js/Translator", "js/Serror", "jquery", "jquery-ui", "js/jq
 
         /**
          * Return a promise to load (if necessary) and open a non-blocking
-         * dialog.
-         * @return a promise that will resolve to the Dialog object
+         * dialog. See #load for a description of parameters.
+         * @return {Promise} resolves to the Dialog object
          */
         static open(id, options) {
             this.resolve = undefined;
@@ -180,7 +181,8 @@ define("js/Dialog", ["js/Translator", "js/Serror", "jquery", "jquery-ui", "js/jq
          * Return a promise to open a blocking
          * dialog. The promise returned will not resolve until the dialog
          * is explicitly closed. Most dialogs are of this type.
-         * @return a promise that will resolve to the Dialog object when
+		 * See #load for a description of parameters.
+         * @return {Promise} resolves to the Dialog object when
          * the dialog is closed.
          */
         static confirm(id, options) {
@@ -199,7 +201,7 @@ define("js/Dialog", ["js/Translator", "js/Serror", "jquery", "jquery-ui", "js/jq
          *    return dlg.wait();
          * })
          * .then((dlg) => { if (dlg.wasOked()) ... });
-         * @return a promise that will resolve to the Dialog object when
+         * @return {Promise} resolves to the Dialog object when
          * the dialog is closed.
          */
         wait() {
@@ -211,7 +213,6 @@ define("js/Dialog", ["js/Translator", "js/Serror", "jquery", "jquery-ui", "js/jq
             });
         }
 
-        // @private
         _initialise() {
             let self = this;
 
@@ -293,6 +294,7 @@ define("js/Dialog", ["js/Translator", "js/Serror", "jquery", "jquery-ui", "js/jq
         /**
          * Override in subclasses for actions when the dialog is being
          * initialised e.g. handlers
+         * @private
          */
         initialise() {
         }
@@ -306,7 +308,7 @@ define("js/Dialog", ["js/Translator", "js/Serror", "jquery", "jquery-ui", "js/jq
         /**
          * Override in subclasses to change behavior when OK button
          * is clicked.
-         * @return false to cancel the close.
+         * @return {boolean} false to cancel the close.
          */
         ok() {
             return true;
@@ -314,6 +316,7 @@ define("js/Dialog", ["js/Translator", "js/Serror", "jquery", "jquery-ui", "js/jq
 
         /**
          * Service for subclasses.
+		 * @return {boolean} true if the dialog is currently open
          */
         isOpen() {
             return this.$dlg.dialog("isOpen");
@@ -324,6 +327,7 @@ define("js/Dialog", ["js/Translator", "js/Serror", "jquery", "jquery-ui", "js/jq
          * Get the control in the dialog identified by the key
          * @param key data-id
          * @param optional, true if it's OK if the key is missing
+		 * @return {jQuery} the control
          */
         control(key, mayBeMissing) {
             let $el = this.$dlg.find(`[data-id='${key}']`);
@@ -357,7 +361,7 @@ define("js/Dialog", ["js/Translator", "js/Serror", "jquery", "jquery-ui", "js/jq
          */
         static doubleTapEvent() {
             return $.isTouchCapable && $.isTouchCapable() ?
-            "doubletap" : "dblclick"
+            "doubletap" : "dblclick";
         }
 
         /**

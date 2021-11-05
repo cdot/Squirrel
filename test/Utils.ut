@@ -5,7 +5,7 @@ if (typeof module !== "undefined") {
 }
 
 requirejs.config({
-    baseUrl: ".."
+    baseUrl: `${__dirname}/..`
 });
 
 // Max code point in Unicode is:
@@ -65,6 +65,14 @@ requirejs(["js/Utils", "test/TestRunner"], function(Utils, TestRunner) {
         } catch (e) {
             //console.log(e);
         }
+    });
+
+    tr.addTest('should ab/s', function() {
+		const plain = "1234567普通话/普通話العَرَبِيَّة";
+		let ab = Utils.StringToUint8Array(plain);
+		// ab is a byte-buffer containing 16-bit chars
+		let s = Utils.Uint8ArrayToString(ab);
+		assert.equal(s, plain);
     });
 
     tr.addTest("Uint16ArrayToPackedString and back", () => {

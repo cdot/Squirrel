@@ -2,11 +2,10 @@
 
 if (typeof module !== "undefined") {
     requirejs = require('requirejs');
+	requirejs.config({
+		baseUrl: `${__dirname}/..`
+	});
 }
-
-requirejs.config({
-    baseUrl: ".."
-});
 
 requirejs(["js/Pseudoword", "test/TestRunner"], function(Pseudoword, TestRunner) {
     let tr = new TestRunner("Pseudoword");

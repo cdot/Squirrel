@@ -11,7 +11,6 @@ define("js/LocalStorageStore", deps, function(Utils, Serror, AbstractStore, Stor
 
     if (typeof localStorage === "undefined") {
         // Use dom-storage to simulate localStorage with node.js
-        /* global localStorage: true */
         localStorage = new Storage('./scratch.json');
     }
 
@@ -20,16 +19,22 @@ define("js/LocalStorageStore", deps, function(Utils, Serror, AbstractStore, Stor
     const ROOT_PATH = "50C1BBE1";
 
     /**
-     * A store engine using HTML5 localStorage.
-     * @implements AbstractStore
+     * A store engine using browser localStorage.
+     * @extends AbstractStore
      */
     class LocalStorageStore extends AbstractStore {
 
+		/**
+		 * See {@link AbstractStore} for other constructor options.
+		 */
         constructor(p) {
             super(p);
             this.type = "LocalStorageStore";
         }
 
+		/**
+		 * @override
+		 */
         init() {
             // See if we can spot a possible user, identified by a personal
             // identifier. Note that if this is a client store and cloud
@@ -98,7 +103,10 @@ define("js/LocalStorageStore", deps, function(Utils, Serror, AbstractStore, Stor
             });
         }
         
-        _read(path) {
+		/**
+		 * @override
+		 */
+        reads(path) {
             let str = localStorage.getItem(this._makeKey(path));
             if (str === null) {
                 return Promise.reject(new Serror(
@@ -108,29 +116,30 @@ define("js/LocalStorageStore", deps, function(Utils, Serror, AbstractStore, Stor
             return Promise.resolve(str);
         }
 
-        _write(path, str) {
+		/**
+		 * @override
+		 */
+        writes(path, str) {
             localStorage.setItem(this._makeKey(path), str);
             return Promise.resolve();
         }
 
+		/**
+		 * @override
+		 */
         read(path) {
             if (this.debug) this.debug("read", path);
-            return this._read(path)
-            .then((str) => {
-                return Promise.resolve(Utils.PackedStringToUint8Array(str))
-                /*.then((a8) => {
-                    return this._wtf(path + ".rb", a8)
-                })*/;
-            });
+            return this.reads(path)
+            .then(str => Promise.resolve(Utils.PackedStringToUint8Array(str)));
         }
 
+		/**
+		 * @override
+		 */
         write(path, a8) {
             if (this.debug) this.debug("write", path);
             let str = Utils.Uint8ArrayToPackedString(a8);
-            return this._write(path, str)
-            /*.then(() => {
-                return this._wtf(path + ".wb", a8);
-            })*/;
+            return this.writes(path, str);
         }
 
         _makeKey(path) {

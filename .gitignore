@@ -1,6 +1,11 @@
-node_modules
 *.strings
-*.esl
+config.json
+npm-debug.log
+node_modules
 *~
-*.json
-/nbproject/private/
+doc/*.html
+doc/*.html
+doc/fonts
+doc/scripts
+doc/styles
+

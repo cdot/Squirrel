@@ -11,11 +11,11 @@ if (typeof requirejs === "undefined")
 requirejs.config({
     baseUrl: "..",
     paths: {
-        mocha: "//cdnjs.cloudflare.com/ajax/libs/mocha/6.0.2/mocha",
-        chai: "//cdnjs.cloudflare.com/ajax/libs/chai/4.2.0/chai",
-        "js-cookie": "//cdnjs.cloudflare.com/ajax/libs/js-cookie/2.2.0/js.cookie.min",
-        jquery: "//code.jquery.com/jquery-3.3.1",
-        "jquery-ui": "//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui"
+        mocha: "https://cdnjs.cloudflare.com/ajax/libs/mocha/6.0.2/mocha",
+        chai: "https://cdnjs.cloudflare.com/ajax/libs/chai/4.2.0/chai",
+        "js-cookie": "https://cdnjs.cloudflare.com/ajax/libs/js-cookie/2.2.0/js.cookie.min",
+        jquery: "https://code.jquery.com/jquery-3.3.1",
+        "jquery-ui": "https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui"
     }
 });
 

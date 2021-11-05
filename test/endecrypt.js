@@ -5,20 +5,21 @@ requirejs.config({
     baseUrl: ".."
 });
 
-const DESCRIPTION = "Encode/decode a file encrypted using AesLayer. If the input file has a .json extension, will encrypt it to a file of the same name without the extension. If there is no .json extension, will decrypt to a file of the same name with a .json extension.";
+const DESCRIPTION = "USAGE\n  node endecrypt.js [options] <file>\nEncode/decode a file encrypted using CryptoLayer. If the input file has a .json extension, will encrypt it to a file of the same name without the extension. If there is no .json extension, will decrypt to a file of the same name with a .json extension.";
 
 const OPTIONS = [
     ["e", "encrypt", "encrypt file (default is decrypt)"],
     ["p", "pass=ARG", "encryption password"],
+	["s", "stdio", "output to STDIO instead of file"],
     ["d", "debug", " to enable debug"],
     ["h", "help", "show this help"]
 ];
 
-requirejs(["node-getopt","js/FileStore", "js/AesLayer", "js/Utils"], function(Getopt, FileStore, AesLayer, Utils) {
+requirejs(["node-getopt","js/FileStore", "js/CryptoLayer", "js/Utils"], function(Getopt, FileStore, CryptoLayer, Utils) {
 
     let parse = new Getopt(OPTIONS)
         .bindHelp()
-        .setHelp(DESCRIPTION + "[[OPTIONS]]")
+        .setHelp(DESCRIPTION + "\nOPTIONS\n[[OPTIONS]]")
         .parseSystem();
 
     if (parse.argv.length !== 1) {
@@ -31,7 +32,7 @@ requirejs(["node-getopt","js/FileStore", "js/AesLayer", "js/Utils"], function(Ge
     let debug = typeof opt.debug === "undefined" ? () => {} : console.debug;
 
     let plainstore = new FileStore({ debug: debug });
-    let cipherstore = new AesLayer({
+    let cipherstore = new CryptoLayer({
         debug: debug,
         understore: new FileStore({ debug: debug })
     });
@@ -60,13 +61,18 @@ requirejs(["node-getopt","js/FileStore", "js/AesLayer", "js/Utils"], function(Ge
     debug("Input ", instore.type, instore.option("path"), fname);
     debug("Output ", outstore.type, outstore.option("path"), outf);
 
-    instore.read(fname)
-    .then((data) => {
+    instore.reads(fname)
+    .then(json => {
         if (!encrypt) {
-            let json = Utils.Uint8ArrayToString(data);
-            data = JSON.stringify(JSON.parse(json), null, " ");
+            json = JSON.stringify(JSON.parse(json), null, " ");
         }
-        return outstore.write(outf, data);
+        if (opt.stdio) {
+			console.log(json);
+			return Promise.resolve();
+		} else {
+			console.log(`Writing to ${outf}`);
+			return outstore.writes(outf, json);
+		}
     })
     .catch((e) => {
         console.log("Failed", e);

@@ -57,8 +57,8 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
         }
 
         /**
-         * @private
          * Report current stage of startup process
+         * @private
          */
         _stage(s, step) {
             if (this.debug) this.debug(`${step}: ${s}`);
@@ -66,8 +66,8 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
         }
         
         /**
-         * @private
          * Event handler code for "check_alarms" event
+         * @private
          */
         _handle_alarms( /* event */ ) {
             let self = this;
@@ -125,8 +125,8 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
         }
         
         /**
-         * @private
          * Event handler for "update_save" event
+         * @private
          */
         _handle_update_save( /*event*/ ) {
             let self = this;
@@ -155,8 +155,8 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
         }
         
         /**
-         * @private
          * Use classes to mark modifications in the UI tree
+         * @private
          */
         _reset_modified() {
             let self = this;
@@ -205,10 +205,10 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
         }
 
         /**
-         * @private
          * 401 network login handler. Normally a 401 will be handled by
          * the browser. This is a "just in case".
          * @param domain what we are logging in to (cloud or client)
+         * @private
          */
         _network_login(domain) {
             let self = this;
@@ -251,13 +251,13 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
         }
         
         /**
-         * @private
          * Initialisation of the cloud store *may* provide user
          * information - for example, initialisation of a
          * GoogleDriveStore will require a google login to a specific
          * user. We leverage this to get initial user information
          * which can be used in determining the encryption user for
          * the client store.
+         * @private
          */
         _1_init_cloud_store() {
             let self = this;
@@ -315,11 +315,11 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
         }
 
         /**
-         @private
          * This sets up the store but doesn't read anything
          * yet. Initialisation of the client store *may* provide user
          * information, but it will be overridden by any user
          * information coming from the cloud store.
+         * @private
          */
         _2_init_client_store() {
             let self = this;
@@ -372,11 +372,11 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
         }
 
         /**
-         * @private
          * Once the stores have been initialised, we can load the
          * client. This will give us the client hoard and the location
          * of the cloud hoard, so we can then laod and merge the cloud
          * hoard.
+         * @private
          */
         _3_load_client() {
             let self = this;
@@ -406,9 +406,9 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
         }
 
         /**
-         * @private
          * Called when we have a (possibly empty) client hoard.
          * Try and synch it from the cloud.
+         * @private
          */
         _4_load_cloud() {
             let self = this;
@@ -511,9 +511,9 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
         }
 
         /**
-         * @private
          * Perform a text search for a new search expression. The search is done
          * entirely within the DOM.
+         * @private
          */
         _search(s) {
             let self = this;

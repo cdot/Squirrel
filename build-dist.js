@@ -46,11 +46,11 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
             return a;
         
         for (k in a) {
-            if (a.hasOwnProperty(k))
+            if (Object.prototype.hasOwnProperty.call(a, k))
                 join[k] = a[k];
         }
         for (k in b) {
-             if (b.hasOwnProperty(k))
+            if (Object.prototype.hasOwnProperty.call(b, k))
                  join[k] = b[k];
         }
         return join;
@@ -144,7 +144,7 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
             console.log("Failed to load config", e);
         })
         .then((data) => {
-            let m = /\nrequirejs\.config\((.*?)\);/s.exec(data);
+            let m = /\nrequirejs\.config\((.*?)\);/.exec(data);
             if (m) {
                 let cfg;
                 eval(`cfg=${m[1]}`);
@@ -163,7 +163,7 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
         addDependency(module);
         
         // Look for config
-        let m = /\nrequirejs\.config\((.*?)\);/s.exec(js);
+        let m = /\nrequirejs\.config\((.*?)\);/.exec(js);
         if (m) {
             let cfg;
             eval(`cfg=${m[1]}`);

@@ -3,33 +3,6 @@
 
 /* global Tree: true */
 
-/**
- * Functions involved in the management of the DOM tree that represents
- * the content of the client hoard cache.
- *
- * Each node below the root in the hoard is represented in the DOM by an
- * LI node in a UL/LI tree. Elements in the tree are tagged with classes
- * as described in Tree.css and have data:
- *   key: the key name the node is for (simple name, not a path)
- *        NOTE: the root doesn't have a data-key
- *   value: if this is a leaf node
- *   path: the full pathname of the node (array of strings)
- *   alarm: if there is an alarm on the node (structure)
- *   constraints: record of constraints imposed on node (structure)
- *   last_time_changed: last time the node whas modified
- *   alarm-count: a count of the number of active alarms in the subtree
- *
- * The DOM tree is built and maintained through the use of actions sent
- * to the Squirrel client hoard, which are then passed on in a callback to
- * the DOM tree. Nodes in the DOM tree are never manipulated directly outside
- * this namespace (other than to add the 'tree-isModified' class)
- *
- * Nodes are managed using the squirrel.tree widget. Additional
- * services are provided through the functions of the Squirrel.Tree
- * namespace. These functions support a static cache mapping node path
- * names to DOM nodes.
- */
-
 define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", "js/jq/edit_in_place", "js/jq/scroll_into_view", "js/jq/icon_button", "jquery-ui"], function(Action, Hoard, Serror, Dialog) {
 
     // separator used in Path->node mapping index
@@ -46,6 +19,34 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
         + `00${d.getDate()}`.slice(-2);
     }
 
+	/**
+	 * Tree widget.
+	 * Manages the DOM tree that represents the content of the client
+	 * hoard cache.
+	 *
+	 * Each node below the root in the hoard is represented in the DOM by an
+	 * LI node in a UL/LI tree. Elements in the tree are tagged with classes
+	 * as described in Tree.css and have data:
+	 *   key: the key name the node is for (simple name, not a path)
+	 *        NOTE: the root doesn't have a data-key
+	 *   value: if this is a leaf node
+	 *   path: the full pathname of the node (array of strings)
+	 *   alarm: if there is an alarm on the node (structure)
+	 *   constraints: record of constraints imposed on node (structure)
+	 *   last_time_changed: last time the node whas modified
+	 *   alarm-count: a count of the number of active alarms in the subtree
+	 *
+	 * The DOM tree is built and maintained through the use of actions sent
+	 * to the Squirrel client hoard, which are then passed on in a callback to
+	 * the DOM tree. Nodes in the DOM tree are never manipulated directly outside
+	 * this namespace (other than to add the 'tree-isModified' class)
+	 *
+	 * Nodes are managed using the squirrel.tree widget. Additional
+	 * services are provided through the functions of the Tree
+	 * namespace supporting a static cache mapping node path
+	 * names to DOM nodes.
+	 * @namespace Tree
+	 */
     Tree = {
 
         /**
@@ -59,6 +60,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
 
         /**
          * Compare keys for sorting
+		 * @memberof Tree
          */
         compareKeys: (a, b) => {
             if (a == b)
@@ -70,6 +72,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
          * A change has been made to a node. Play the relevant action.
          * Override in calling context
          * @param {Action} act
+		 * @memberof Tree
          */
         playAction: () => {},
 
@@ -77,29 +80,34 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
          * Invoked when the mouse hovers over a node title.
          * Override in calling context
          * @returns {Boolean} true to terminate the hover-in action.
+		 * @memberof Tree
          */
         onTitleHoverIn: () => false,
         /**
          * Invoked when the mouse hover over a node title ends.
          * Override in calling context
          * @returns {Boolean} true to terminate the hover-out action.
+		 * @memberof Tree
          */
         onTitleHoverOut: () => false,
 
         /**
          * Are we to hide values when the tree is opened?
          * Override in calling context
+		 * @memberof Tree
          */
         hidingValues: () => false,
 
         /**
          * Are we to hide values when the tree is opened?
          * Override in calling context
+		 * @memberof Tree
          */
         showingChanges: () => false,
 
         /**
          * Set to a debug function
+		 * @memberof Tree
          */
         debug: null,
         
@@ -107,6 +115,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
          * Construct a new UI element for a tree node. The created element
          * is a placeholder only until the parent is opened, at which time the
          * element is populated with controls.
+		 * @private
          */
         _create: function() {
             let $node = this.element;
@@ -164,6 +173,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
                 this.options.onCreate.call($node);
         },
 
+		// called by widget
         _destroy: function() {
             let $node = this.element;
 
@@ -177,9 +187,9 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
         },
         
         /**
-         * @private
          * Get the current node value for display, obscuring as
          * required
+         * @private
          */
         _displayedValue: function() {
             let s = this.element.data("value");
@@ -190,6 +200,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
 
         /**
          * Change the display of values
+		 * @memberof Tree
          */
         hideValues: function(on) {
             if (on && Tree.hidingValues() ||
@@ -211,6 +222,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
 
         /**
          * Change the display of changes
+		 * @memberof Tree
          */
         showChanges: function(on) {
             if (on && Tree.showingChanges() ||
@@ -227,6 +239,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
          * ~para, text text to present in the editor
          * @param action 'R'ename or 'E'dit
          * @return a Promise that resolves to the changed value
+		 * @private
          */
         _edit: function($span, text, action) {
             let $node = this.element;
@@ -262,6 +275,10 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
             });
         },
 
+		/**
+		 * Widget method to edit the key
+		 * @memberof Tree
+		 */
         editKey: function() {
             let $node = this.element;
             return this._edit(
@@ -269,6 +286,10 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
                 .first(), $node.data("key"), "R");
         },
 
+		/**
+		 * Widget method to edit the value
+		 * @memberof Tree
+		 */
         editValue: function() {
             let $node = this.element;
             return this._edit(
@@ -396,8 +417,8 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
         },
 
         /**
-         * @private
          * Insert-sort the given node as a child of the given parent node
+         * @private
          */
         _insertInto: function($parent) {
             Serror.assert($parent.length === 1);
@@ -425,6 +446,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
                     inserted = true;
                     return false;
                 }
+				return true;
             });
             if (!inserted) {
                 $ul.append($node);
@@ -537,6 +559,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
                 .find(".tree__draghandle")
                 .first()
                 .hide();
+				return false;
             }
 
             // <title>
@@ -615,6 +638,10 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
             this._decorate_with_alarm($node);
         },
 
+		/**
+		 * Widget function to open the node
+		 * @memberof Tree
+		 */
         open: function(options) {
             let $node = this.element;
 
@@ -644,6 +671,10 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
             .show();
         },
 
+		/**
+		 * Widget function to close the node
+		 * @memberof Tree
+		 */
         close: function() {
             let $node = this.element;
             if (!$node.hasClass("tree-isOpen"))
@@ -657,6 +688,10 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
             .hide();
         },
 
+		/**
+		 * Widget function to toggle open/closed
+		 * @memberof Tree
+		 */
         toggle: function() {
             if (this.element.hasClass("tree-isOpen"))
                 return this.close();
@@ -664,8 +699,8 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
         },
 
         /**
+         * Action handler for node edit, called via action()
          * @private
-         * Action handler for node edit
          */
         _action_E: function(action) {
             let $node = this.element;
@@ -679,8 +714,8 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
         },
 
         /**
+         * Action handler for node delete, called via action()
          * @private
-         * Action handler for node delete
          */
         _action_D: function(action) {
             let $node = this.element;
@@ -693,8 +728,8 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
         },
 
         /**
+         * Action handler for node create, called via action()
          * @private
-         * Action handler for node create
          */
         _action_N: function(action, open) {
             return new Promise((resolve) => {
@@ -722,8 +757,8 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
         },
         
         /**
+         * Action handler for node insert, called via action()
          * @private
-         * Action handler for node insert
          */
         _action_I: function(action, open) {
             let content = JSON.parse(action.data);
@@ -756,8 +791,8 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
         },
         
         /**
+         * Action handler for alarm add, called via action()
          * @private
-         * Action handler for alarm add
          */
         _action_A: function(action) {
             let $node = this.element;
@@ -788,7 +823,8 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
         },
 
         /**
-         * Action handler for cancelling an alarm
+         * Action handler for cancelling an alarm, called via action()
+		 * @private
          */
         _action_C: function(action) {
             let $node = this.element;
@@ -814,7 +850,8 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
         },
 
         /**
-         * Action handler for modifying constraints
+         * Action handler for modifying constraints, called via action()
+		 * @private
          */
         _action_X: function(action) {
             let constraints = this.element.data("constraints");
@@ -826,7 +863,8 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
         },
 
         /**
-         * Action handler for moving a node
+         * Action handler for moving a node, called via action()
+		 * @private
          */
         _action_M: function(action) {
             let $node = this.element;
@@ -846,7 +884,8 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
         },
 
         /**
-         * Action handler for node rename
+         * Action handler for node rename, called via action()
+		 * @private
          */
         _action_R: function(action) {
             // Detach the li from the DOM
@@ -869,12 +908,12 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
         },
         
         /**
-         * Plays an action that is being
+         * Widget method to play an action that is being
          * played into the hoard into the DOM as well.
-         * @param e action to play
-         * @param open whether to open the node after the action is applied
+         * @param {Action} action to play
+         * @param {boolean} open whether to open the node after the action is applied
          * (only relevant on N and I actions)
-         * @return a promise that resolves when the UI has been updated.
+         * @return {Promise} Promise that resolves when the UI has been updated.
          */
         action: function(action, open) {
             if (Tree.debug) Tree.debug("$action",action);
@@ -900,6 +939,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
          * node, which maps to the PATHSEP separated path string.
          * @param $node jQuery node
          * @param parent optional path to the parent of this node
+		 * @private
          */
         _addToCaches: function() {
 
@@ -944,9 +984,9 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
         },
 
         /**
-         * @private
          * Remove the node (and all subnodes) from the node->path->node mappings
          * @param $node node to remove
+         * @private
          */
         _removeFromCaches: function() {
             let $node = this.element;

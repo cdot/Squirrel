@@ -18,12 +18,11 @@ function gapi_on_load() {
 define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore', 'js/Serror'], function(Utils, Translator, HttpServerStore, Serror) {
     let TX = Translator.instance();
 
-    /**
-     * A store using Google Drive
-     * @implements AbstractStore
-     */
-
-	// Client ID from 
+	// Client ID from Google APi dashboard. Note this is only valid
+	// for requests from specific URLs, so if you want to host your
+	// own Squirrel version - for example, to host a test version on
+	// localhost - you will have to
+	// change it. You can do so on https://console.developers.google.com
     const CLIENT_ID = "985219699584-mt1do7j28ifm2vt821d498emarmdukbt.apps.googleusercontent.com";
 
     // While the appfolder would seem to make sense for Squirrel, it does make
@@ -37,8 +36,16 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
     const RETIMILED = `\r\n--${BOUNDARY}--`;
 	const DISCOVERY_DOCS = ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"];
 
+    /**
+     * A store using Google Drive
+     * @extends HttpServerStore
+     */
     class GoogleDriveStore extends HttpServerStore {
 
+		/**
+		 * See {@link HttpServerStore} for other constructor options
+		 * Sets `options.needs_url` and `options.url`
+		 */
         constructor(p) {
 
             super(p);
@@ -48,7 +55,9 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
             this.option("url", "");
         }
 
-        // @Override
+        /**
+		 * @Override
+		 */
         init() {
             let self = this;
             if (gapi_is_loaded) {
@@ -65,8 +74,8 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
         }
 
         /**
-         * @private
          * Analyse an error returned by a Google promise
+         * @private
          */
         _gError(r, context) {
             let mess = context + TX.tx(" failed: ");
@@ -158,16 +167,18 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
 			});
         }
 
-        // @Override
+        /**
+		 * @Override
+		 */
         addAuth(headers) {
             headers.Authorization = `Bearer ${gapi.auth2.getToken().access_token}`;
         }
 
         /**
-         * @private
          * Promise to get the id of the folder at the end of the given path, optionally creating
          * the folders if they don't exist.
          * Any errors thrown will be from Google
+         * @private
          */
         _follow_path(parentid, path, create) {
             if (path.length === 0)
@@ -218,10 +229,10 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
         }
 
         /**
-         * @private
          * Promise to put data at the given path, optionally creating
          * intermediate folders if they don't exist.
          * Any errors thrown will be from Google
+         * @private
          */
         // id is a (string) id or a { parentid: name: structure }
         _putfile(parentid, name, data, id) {
@@ -278,7 +289,9 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
             });
         }
 
-        // @Override
+        /**
+		 * @Override
+		 */
         write(path, data) {
             if (this.debug) this.debug("write", path);
 
@@ -298,7 +311,7 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
                 .list({
                     q:  `name='${name}' and '${parentId}' in parents and trashed=false`,
 					fields: "files/id"
-                })
+                });
             })
             .then((response) => {
                 let files = response.result.files;
@@ -315,7 +328,9 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
             });
         }
 
-        // @Override
+        /**
+		 * @Override
+		 */
         read(path) {
             if (this.debug) this.debug("read", path);
 

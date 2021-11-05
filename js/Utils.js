@@ -1,9 +1,7 @@
 /*@preserve Copyright (C) 2015-2017 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,node */
 
-/* global utf8: false */
-
-define("js/Utils", ["libs/utf8"], function() {
+define("js/Utils", [], function() {
 
     /**
      * Utilities and plugins used by Squirrel
@@ -13,35 +11,28 @@ define("js/Utils", ["libs/utf8"], function() {
         /**
          * Convert an Uint8Array containing UTF-8 encoded string into a
          * String.
-         * @param a Uint8Array containing the UTF8 encoded string
-         * @return String the string
+         * @param {Uint8Array} a the UTF8 encoded string
+         * @return {string} the string
          * @throws UTF8 decode errors
          */
         static Uint8ArrayToString(a) {
-            let str = '';
-            for (let i = 0; i < a.length; i++)
-                str += String.fromCodePoint(a[i]);
-            return utf8.decode(str);
+            return new TextDecoder().decode(a);
         }
 
         /**
          * Convert a String into a Uint8Array containing the UTF8 encoded
          * string.
-         * @param str the String to convert
-         * @return a Uint8Array
+         * @param {string} str the String to convert
+         * @return {Uint8Array}
          */
         static StringToUint8Array(str) {
-            let u8 = utf8.encode(str);
-            let a = new Uint8Array(u8.length);
-            for (let i = 0; i < u8.length; i++)
-                a[i] = u8.codePointAt(i);
-            return a;
+            return new TextEncoder().encode(str);
         }
 
         /**
          * Pack arbitrary 16-bit data into a String.
-         * @param data arbitrary 16-bit data to be packed
-         * @return a String containing the data
+         * @param {Uint16Array} data arbitrary 16-bit data to be packed
+         * @return {string} containing the data
          */
         static Uint16ArrayToPackedString(a16) {
             let ps = "";
@@ -60,8 +51,8 @@ define("js/Utils", ["libs/utf8"], function() {
         
         /**
          * Unpack arbitrary 16-bit data into a String.
-         * @param data arbitrary 16-bit data to be packed
-         * @return a String containing the data
+         * @param {string} data arbitrary 16-bit data to be unpacked
+         * @return {Uint16Array} the data
          */
         static PackedStringToUint16Array(s) {
             let a16 = [];
@@ -78,8 +69,8 @@ define("js/Utils", ["libs/utf8"], function() {
         
         /**
          * Pack arbitrary binary byte data into a String.
-         * @param data arbitrary byte data to be packed
-         * @return a String containing the data
+         * @param {Uint8Array} data arbitrary byte data to be packed
+         * @return {string} packed String containing the data
          */
         static Uint8ArrayToPackedString(a8) {
             // Pack bytes into a 16-bit array. The usb of the first
@@ -105,6 +96,8 @@ define("js/Utils", ["libs/utf8"], function() {
         /**
          * Convert a packed string, created using Uint8ArrayToPackedString, back
          * into a Uint8Array containing the unpacked array.
+		 * @param {string} str packaed string
+		 * @return {Uint8Array} unpacked data
          */
         static PackedStringToUint8Array(str) {
             let a16 = Utils.PackedStringToUint16Array(str);
@@ -128,8 +121,8 @@ define("js/Utils", ["libs/utf8"], function() {
         /**
          * Convert an Uint8Array containing arbitrary byte data into a Base64
          * encoded string, suitable for use in a Data-URI
-         * @param a8 the Uint8Array to convert
-         * @return a String of Base64 bytes (using MIME encoding)
+         * @param {Uint8Array} a8 the Uint8Array to convert
+         * @return {string} Base64 bytes (using MIME encoding)
          */
         static Uint8ArrayToBase64(a8) {
             let nMod3 = 2;
@@ -173,8 +166,8 @@ define("js/Utils", ["libs/utf8"], function() {
         /**
          * Convert a MIME-Base64 string into an array of arbitrary
          * 8-bit data
-         * @param sB64Enc the String to convert
-         * @return a Uint8Array
+         * @param {string} sB64Enc the String to convert
+         * @return {Uint8Array}
          */
         static Base64ToUint8Array(sB64) {
             let sB64Enc = sB64.replace(/[^A-Za-z0-9+/]/g, ""); // == and =
@@ -213,12 +206,14 @@ define("js/Utils", ["libs/utf8"], function() {
 
         /**
          * Parse a URL parameter string according to the given spec
-         * @param s the URLparameters string (undecoded)
-         * @param spec optional parameter spec object. Fields are parameter
-         * names and map to an object that can have array:true for array values
+         * @param {string} s the URLparameters string (undecoded)
+         * @param {object.<string.object>} spec optional parameter spec object.
+		 * Fields are parameter names, and map to an object that can have
+		 * array:true for array values
          * and must have type: for the parameter type. type: is one of the
          * standard JS object types e.g. String, Number, Date and uses the
          * constructor of that object type to create the value.
+		 * @return {object.<string,object>} map of parameter name to value
          * @throw Error if there is a problem
          */
         static parseURLParams(s, specs) {
@@ -291,6 +286,8 @@ define("js/Utils", ["libs/utf8"], function() {
          * scripting. User input must never be passed to the templater. There is
          * no error checking on the eval, and it will throw an exception if the
          * syntax is incorrect.
+		 * @param {string} str string to expand, other arguments are template
+		 * parameters
          */
         static expandTemplate() {
             let tmpl = arguments[0];
@@ -299,7 +296,7 @@ define("js/Utils", ["libs/utf8"], function() {
             tmpl = tmpl.replace(/\$(\d+)/g, function (m, p1) {
                 let i = parseInt(p1);
                 return args[i];
-            })
+            });
             tmpl = tmpl.replace(
                     /\$\?\((.*?),(.*?),(.*?)\)/g,
                 function (m, test, pass, fail) {
@@ -310,17 +307,20 @@ define("js/Utils", ["libs/utf8"], function() {
 						/* eslint-enable no-eval */
                     } catch (e) {
                         throw new Error(
-							`Problem evaluating '${test}' in template '${arguments[0]}: ${e}`)
+							`Problem evaluating '${test}' in template '${arguments[0]}: ${e}`);
                     }
                     return result ? pass : fail;
                 });
             return tmpl;
         }
 
+		/**
+		 * Like jQuery $.extend
+		 */
         static extend() {
             for (let i = 1; i < arguments.length; i++)
                 for (let key in arguments[i])
-                    if(arguments[i].hasOwnProperty(key))
+                    if(arguments[i].hasOwnProperty.call(key))
                         arguments[0][key] = arguments[i][key];
             return arguments[0];
         }

@@ -5,6 +5,9 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
 
     let TX = Translator.instance();
 
+	/**
+	 * Squirrel context menu for nodes
+	 */
     class ContextMenu {
 
         constructor(app) {
@@ -130,6 +133,7 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
         /**
          * Check if the clipboard contains useable data
          * @return boolean
+		 * @private
          */
         _clipboardReady() {
             if (typeof this.clipboardContents !== "string")
@@ -164,12 +168,12 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
         }
 
         /**
-         * @private
          * Handle context menu open on a node
+         * @private
          */
         _before_menu_open(ui) {
             if (this.contextMenuDisables > 0)
-                return false;
+                return;
 
             let $node = (ui.target.is(".tree")) ?
                 ui.target :
@@ -207,8 +211,8 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
         }
 
         /**
-         * @private
          * Handler for context menu items
+         * @private
          */
         _handle_menu_choice(ui) {
             let self = this;
@@ -224,13 +228,14 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
                         ok = false;
                         return false; // stop iterator
                     }
+					return true;
                 });
                 return ok;
             }
             
             if (!$node) {
                 if (self.debug) self.debug("No node for contextmenu>", ui.cmd);
-                return;
+                return Promise.reject();
             }
 
             let promise;
@@ -360,7 +365,7 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
 
             default:
                 Serror.assert("Unrecognised command", ui.cmd);
-                return;
+                return Promise.reject();
             }
             
             this.toggle(false);

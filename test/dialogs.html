@@ -2,11 +2,11 @@
   <head>
     <meta charset="utf-8">
     <title>Dialog Tests</title>
-    <link id="jQueryTheme" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" rel="stylesheet">
+    <link id="jQueryTheme" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" rel="stylesheet">
     <link href="../css/Icons.css" rel="stylesheet">
     <link href="../css/Dialogs.css" rel="stylesheet">
-    <link href="//cdnjs.cloudflare.com/ajax/libs/mocha/5.2.0/mocha.css" rel="stylesheet" />
-    <script src="//cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/mocha/5.2.0/mocha.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.js"></script>
   </head>
   <body>
     <div id="mocha"></div>
@@ -15,7 +15,7 @@
     <div id="buttons"></div>
     <script>
       requirejs.config({
-        urlArgs: "nocache=" + Date.now()
+          urlArgs: "nocache=" + Date.now()
       });
       requirejs(["dialogs"], function(when_ready) {
         $(when_ready);

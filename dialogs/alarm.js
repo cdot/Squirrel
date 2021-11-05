@@ -31,7 +31,9 @@ define("dialogs/alarm", ["js/Dialog", "js/Action", "js/jq/template", "jquery-ui"
             this._updateSave();
         }
 
-        // @Override
+        /**
+		 * @Override
+		 */
         initialise() {
             let self = this;
 
@@ -86,7 +88,9 @@ define("dialogs/alarm", ["js/Dialog", "js/Action", "js/jq/template", "jquery-ui"
             return act;
         }
 
-        // @Override
+        /**
+		 * @Override
+		 */
         open() {
             this.control("path").text(Action.pathS(this.options.path));
             this.wasEnabled = (typeof this.options.alarm !== "undefined");

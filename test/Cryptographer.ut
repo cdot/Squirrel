@@ -1,0 +1,57 @@
+/*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
+/*eslint-env node, mocha */
+
+if (typeof module !== "undefined") {
+    requirejs = require('requirejs');
+    requirejs.config({
+        baseUrl: `${__dirname}/..`
+    });
+}
+
+requirejs(["js/Utils", "js/Cryptographer", "test/TestRunner"], function(Utils, Crypto, TestRunner) {
+
+    let tr = new TestRunner("Crypto");
+    let assert = tr.assert;
+
+    let plain = "North △ West ◁ South ▽ East ▷";
+
+    tr.addTest('should encrypt / decrypt bytes', function() {
+		let ab = new Uint8Array(256);
+        for (let i = 0; i < 256; i++)
+            ab[i] = i;
+		return Crypto.encryptBytes(ab, "$ecret")
+		.then(cipher => Crypto.decryptBytes(cipher, "$ecret"))
+		.then(ba => {
+			assert.equal(ab.length, ba.length);
+			for (let i = 0; i < ab.length; i++)
+				assert.equal(ab[i], ba[i]);
+		});
+    });
+	
+    tr.addTest('should handle empty bytes', function() {
+		let ab = new Uint8Array();
+		return Crypto.encryptBytes(ab, "$ecret")
+		.then(cipher => Crypto.decryptBytes(cipher, "$ecret"))
+		.then(ab => {
+			assert.equal(ab.length, 0);
+		});
+    });
+	
+    tr.addTest('should handle empty strings', function() {
+		return Crypto.encryptString("", "Secret")
+		.then(cipher => Crypto.decryptString(cipher, "Secret"))
+		.then(decipher => {
+			assert.equal(decipher, "");
+		});
+    });
+
+    tr.addTest('should encrypt / decrypt strings', function() {
+		return Crypto.encryptString(plain, "Secret")
+		.then(cipher => Crypto.decryptString(cipher, "Secret"))
+		.then(decipher => {
+			assert.equal(decipher, plain);
+		});
+    });
+
+    tr.run();
+});

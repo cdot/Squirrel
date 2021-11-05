@@ -1,32 +1,6 @@
-/*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
+/*@preserve Copyright (C) 2015-2021 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,node */
-/* global XMLHttpRequest:true */
 
-/**
- * Translations module. Guesses the language to use from cookies, or
- * from the browser locale, or it can be changed using language()
- *
- * Translatable strings are format strings that may be populated with
- * expandable arguments `$1..$N`.
- *
- * Strings are picked up from code and from HTML. In code, a call to
- * the tx() method of the singleton translator instance will return
- * the (expanded) translation of the string.
- *
- * Strings can also be drawn from HTML using classes.
- * 'TX_title' will automate the translation of the title= tag in that node.
- * 'TX_text' will translate all text nodes and title attributes in the
- * HTML under the tagged node, recursively.
- * Individual text nodes are translated individually, so "x<b>y</b>z"
- * will require tranlations of 3 strings, "x", "y" and "z".
- * 'TX_html'
- * TX_text and TX_html should never be used together on the same node.
- * HTML reaping is done by the build/extractTX.js node.js script.
- *
- * Implementation requires a "locale" URL that has "strings" (a file of
- * English strings) and <locale>.json URLS, one for each language, named
- * using the language code.
- */
 if (typeof XMLHttpRequest === "undefined")
     XMLHttpRequest = require("xhr2");
 
@@ -41,14 +15,49 @@ define("js/Translator", ["js/Utils", "js/Serror"], function(Utils, Serror) {
         d: "$1 day$?($1!=1,s,)"
     };
 
+	/**
+	 * Translations module. Guesses the language to use from cookies, or
+	 * from the browser locale, or it can be changed using language()
+	 *
+	 * Translatable strings are format strings that may be populated
+	 * with expandable arguments `$1..$N`. Includes an Elvis operator
+	 * for more flexibility in defining plurals.
+	 *
+	 * Strings are picked up from code and from HTML. In code, a call to
+	 * the tx() method of the singleton translator instance will return
+	 * the (expanded) translation of the string.
+	 *
+	 * Strings can also be drawn from HTML using classes.
+	 * * `TX_title` will automate the translation of the title= tag in
+	 *   that node.
+	 * * `TX_text` will translate all text nodes and title attributes in the
+	 *   HTML under the tagged node, recursively.
+	 * 
+	 * Individual text nodes are translated individually, so `x<b>y</b>z`
+	 * will require tranlations of 3 strings, `x`, `y` and `z`. Alternatively
+	 * `TX_html` can be used to perform a translation of the inner HTML
+	 * of the node.
+	 *
+	 * `TX_text` and `TX_html` should never be used together on the same node.
+	 * Reaping strings from source code is done by the `build/extractTX.js`
+	 * node.js script.
+	 *
+	 * Implementation requires a locale URL that has `strings` (a file of
+	 * English strings) and `<locale>.json` URLS, one for each language, named
+	 * using the language code e.g. `de.json`.
+	 */
     class Translator {
 
         /**
-         * @param options
-         * url: base URL under which to find language files
-         * files: base file path under which to find language files
-         * translations: reference to object contaiing translations
-         * url overrides files overrides translations
+         * @param {object} options
+         * @param {string} options.url base URL under which to find
+         * language files. `files` and `translations` ignored if set
+         * @param {string} options.files base file path under which to
+         * find language files Ignored is `'url` set, `translations`
+         * ignored if set
+         * @param {Object.<string,string>} options.translations used if
+		 * neither `url` nor `files` is given.
+		 * @param {function} options.debug optional debug function
          */
         constructor(options) {
             if (typeof options === "undefined")
@@ -65,7 +74,10 @@ define("js/Translator", ["js/Utils", "js/Serror"], function(Utils, Serror) {
             this.originals = undefined;
         }
 
-        /* Simplify a string for lookup in the translations table */
+        /**
+		 * Simplify a string for lookup in the translations table
+		 * @private
+		 */
         static _clean(s) {
             return s
                 .replace(/\s+/g, " ")
@@ -76,8 +88,9 @@ define("js/Translator", ["js/Utils", "js/Serror"], function(Utils, Serror) {
         /**
          * Promise to initialise the language. Required before the language
          * can be used. Finds and translates marked strings in the given DOM.
-         * @param lingo two-character language code e.g. 'en', 'de', 'fr'
-         * @param document optional DOM
+         * @param {string} lingo two-character language code e.g. 'en', 'de', 'fr'
+         * @param {jQuery} document optional DOM
+		 * @return {Promise} resolves to nothing
          */
         language(lingo, document) {
 
@@ -167,12 +180,14 @@ define("js/Translator", ["js/Utils", "js/Serror"], function(Utils, Serror) {
                     if (this.debug) this.debug("Trying fallback", generic);
                     return this.language(generic, document);
                 }
+				return undefined;
             });
         }
 
         /**
          * Find all tagged strings under the given DOM node and translate them
-         * in place
+         * in place.
+		 * @param {jQuery} dom DOM node to translate recursively
          */
         translate(dom) {
             if (!this.translations)
@@ -184,11 +199,10 @@ define("js/Translator", ["js/Utils", "js/Serror"], function(Utils, Serror) {
                 if (typeof tx !== "undefined")
                     s = tx.s;
                 return s;
-            })
+            });
         }
 
         /**
-         * @private
          * Find all tagged strings under the given DOM node and translate them
          * in place. The original string is held in dataset so that dynamic changes
          * of language are possible (requires HTML5 dataset)
@@ -198,7 +212,8 @@ define("js/Translator", ["js/Utils", "js/Serror"], function(Utils, Serror) {
          * not be translated.
          * @param translating boolean that indicates whether to translate text
          * nodes encountered. Initially false, it is set true whenever a node
-         * is encountered with TX_text.
+         * is encountered with `TX_text`.
+         * @private
          */
         _translateDOM(node, translate, translating) {
             function hasClass(element, thatClass) {
@@ -264,6 +279,7 @@ define("js/Translator", ["js/Utils", "js/Serror"], function(Utils, Serror) {
          * Analyse a DOM and generate a list of all translatable strings found.
          * This can be used to seed the translations table.
          * @param el root element of the DOM tree to analyse
+		 * @return {string[]} list of translatable strings
          */
         findAllStrings(el) {
             let strings = [], seen = {}; // use a map to uniquify
@@ -280,14 +296,15 @@ define("js/Translator", ["js/Utils", "js/Serror"], function(Utils, Serror) {
         }
 
         /**
-         * Translate and expand a string (and optional
-         * parameters) using the current translator. Translator.init() must
-         * have been called with a Translator instance before tx() can be
+         * Translate and expand a string (and optional parameters)
+         * using the current translation. Translator.init() must have
+         * been called with a Translator instance before tx() can be
          * called.
-         * @param s the string to expand. All other arguments are used
+         * @param {string} s the string to expand. All other arguments are used
          * to expand placeholders in the string, per Utils.expandTemplate
-         * (unless noexpand)
-         * @param noexpand don't expand template strings
+         * (unless noexpand is given)
+         * @param {boolean} noexpand don't expand template strings
+		 * @return {object[]} the arguments passed to the function
          */
         tx() {
             // Look up the translation
@@ -309,11 +326,13 @@ define("js/Translator", ["js/Utils", "js/Serror"], function(Utils, Serror) {
          * Given a time value, return a string describing the period
          * between a given time and that time. For example, "1 year
          * 6 months 4 days 3 hours 2 minutes 5 seconds".
-         * @param from absolute start date, as a number of ms since the epoch.
-         * @param to end of the perion, as a number of ms since the epoch
-         * @param hms if true, add hours, minutes and seconds. Defualt is
-         * days.
-         * @return string describing the period in the current language
+         * @param {number} from absolute start date, as a number of ms
+         * since the epoch.
+         * @param {number} to end of the period, as a number of ms
+         * since the epoch
+         * @param {boolean} hms if true, add hours, minutes and
+         * seconds. Default is days.
+         * @return {string} describing the period in the current language
          */
         deltaTimeString(from, to, hms) {
             let deltaDate = new Date(to - from);
@@ -347,10 +366,10 @@ define("js/Translator", ["js/Utils", "js/Serror"], function(Utils, Serror) {
         }
 
         /**
-         * Set an instance of Translator
-         * @param p options to pass to constructor
-         * @return a new instance of Translator that will be used in subsequent
-         * calls to static methods
+         * Create a singleton instance of Translator
+         * @param {object} p options to pass to constructor
+         * @return {Translator} a new instance of Translator that will
+         * be used in subsequent calls to static methods
          */
         static instance(p) {
             if (typeof p !== "undefined"

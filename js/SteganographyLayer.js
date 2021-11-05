@@ -9,11 +9,14 @@ define("js/SteganographyLayer", ["js/LayeredStore", "js/Serror", "js/Steganograp
      *
      * Requires a DOM <image> (not <img>!) with id "stegamage"
      *
-     * @param params: Standard for LayeredStore
-     * @implements LayeredStore
+     * @extends LayeredStore
      */
     class SteganographyLayer extends LayeredStore {
 
+		/**
+		 * See {@link LayeredStore} for other constructor options.
+		 * Sets `options.needs_image`.
+		 */
         constructor(p) {
             super(p);
             this.steg = new Steganographer({ debug: this.debug });
@@ -21,6 +24,9 @@ define("js/SteganographyLayer", ["js/LayeredStore", "js/Serror", "js/Steganograp
             this.option("needs_image", true);
         }
 
+		/**
+		 * @override
+		 */
         read(path) {
             if (this.debug) this.debug("read", path);
             return super.read(path)
@@ -29,6 +35,9 @@ define("js/SteganographyLayer", ["js/LayeredStore", "js/Serror", "js/Steganograp
             });
         }
 
+		/**
+		 * @override
+		 */
         write(path, data) {
             if (this.debug) this.debug("write", path);
 

@@ -1,31 +1,31 @@
 /*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser */
 
-/**
- * Steganography using the least-significant bits of the
- * colour channels in an image.
- *
- * We use the colour channels because using the alpha channel is a dead
- * giveaway that stenography is being used. Using the colour channels
- * will give some chromatic perturbation than might act as a statistical
- * signature, as a normal image will have runs of equal, or close,
- * pixel values, and injecting random data will confuse that. We try to
- * make it hard to detect by only using a small number of bits from each
- * channel, such that the data just looks like noise.
- */
 define("js/Steganographer", ["js/Utils"], function(Utils) {
 
+	/**
+	 * Steganography using the least-significant bits of the
+	 * colour channels in an image.
+	 *
+	 * We use the colour channels because using the alpha channel is a dead
+	 * giveaway that stenography is being used. Using the colour channels
+	 * will give some chromatic perturbation than might act as a statistical
+	 * signature, as a normal image will have runs of equal, or close,
+	 * pixel values, and injecting random data will confuse that. We try to
+	 * make it hard to detect by only using a small number of bits from each
+	 * channel, such that the data just looks like noise.
+	 */
     class Steganographer {
         /**
-         * Constructor
-         * @param params may contain the following fields
-         * maxChunk: override the default maximum number of bits per
-         * colour channel to use. The default is 3, which is a reasonable
-         * compromise between information capacity and image degradation.
-         * The theoretical maximum chunk size, using all the bits of the
-         * colour channels, would be 8 bits, but that would replace the
-         * image.
-         * debug: function, same signature as console.debug
+         * @param {object} params parameters
+         * @param {number} params.maxChunk override the default maximum
+         * number of bits per colour channel to use. The default is 3,
+         * which is a reasonable compromise between information
+         * capacity and image degradation.  The theoretical maximum
+         * chunk size, using all the bits of the colour channels,
+         * would be 8 bits, but that would replace the image.
+         * @param {function} params.debug debug function, same
+         * signature as console.debug
          */
         constructor(params) {
             // Messages are stored in chunks held in the least significant
@@ -35,13 +35,14 @@ define("js/Steganographer", ["js/Utils"], function(Utils) {
         }
 
         /**
-         * @private
          * Get raw image data from an image.
-         * @param image An Image, HTMLImageElement, Uint8*Array or String
-         * data-uri, or any of the types accepted by Context.drawImage.
-         * @return a Uint8Array containing the image data
+         * @param {Image|HTMLImageElement|Uint8Array|String|data-uri} image
+		 * or any of the types accepted by Context.drawImage.
+         * @return {Uint8Array} containing the image data
+         * @private
          */
         _getRawBytes(image) {
+			if (!image) throw new Error("No image data");
             if (image instanceof Uint8Array ||
                 image instanceof Uint8ClampedArray)
                 return image;
@@ -55,7 +56,7 @@ define("js/Steganographer", ["js/Utils"], function(Utils) {
                 image instanceof Float64Array)
                 return new Uint8Array(image.buffer);
 
-            if (image instanceof ImageData)
+            if (typeof ImageData !== 'undefined' && image instanceof ImageData)
                 return image.data;
 
             if (typeof image === "string") {
@@ -84,11 +85,11 @@ define("js/Steganographer", ["js/Utils"], function(Utils) {
          * Convert an image represented by an array of bytes into
          * an array of Base64 encoded bytes encoding the image
          * in a given format (default image/png)
-         * @param bytes the raw image data (a Uint8Array)
-         * @param width
-         * @param height
-         * @param type the default format type is image/png.
-         * @return a Uint8Array of Base 64 encoded image data
+         * @param {Uint8Array} bytes the raw image data
+         * @param {number} width
+         * @param {number} height
+         * @param {string} type the default format type is image/png.
+         * @return {Uint8Array} Base 64 encoded image data
          */
         bytesToImageFormat(bytes, width, height, type) {
             // Unused and untested
@@ -105,11 +106,11 @@ define("js/Steganographer", ["js/Utils"], function(Utils) {
         }
 
         /**
-         * @private
          * Adjust chunkSize until the data fits as well as
          * possible into the image (minimum number of bits-per-channel used)
          * @param size size of data to fit, in bytes
          * @param available number of bytes available for storage
+         * @private
          */
         _adjustToFit(size, available) {
             let bits = size * 8; // Number of bits to be stored
@@ -141,9 +142,9 @@ define("js/Steganographer", ["js/Utils"], function(Utils) {
         /**
          * Insert a message into the given image
          * @param a8 the message, in a Uint8Array. Size must be <= (2^32-1)
-         * @param image An Image, HTMLImageElement, Uint8*Array or String
-         * data-uri, or any of the types accepted by Context.drawImage.
-         * @return a Uint8Array containing the resulting raw image data with
+         * @param {Image|HTMLImageElement|Uint8Array|String|data-uri} image
+		 * or any of the types accepted by Context.drawImage.
+         * @return {Uint8Array} containing the resulting raw image data with
          * the embedded message
          * @throws Error if the image doesn't have enough capacity for
          * all the data given the current parameters.
@@ -254,9 +255,9 @@ define("js/Steganographer", ["js/Utils"], function(Utils) {
 
         /**
          * Extract the content hidden in the given image
-         * @param image An Image, HTMLImageElement, Uint8*Array or String
-         * data-uri, or any of the types accepted by Context.drawImage.
-         * @return a Uint8Array containing the content
+         * @param {Image|HTMLImageElement|Uint8Array|String|data-uri} image
+		 * or any of the types accepted by Context.drawImage.
+         * @return {Uint8Array} containing the content
          * @throws Error if the image doesn't seem to have anything embedded
          */
         extract(image) {

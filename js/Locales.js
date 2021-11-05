@@ -53,22 +53,28 @@ function auto_translate(en, lang) {
     return tx;
 }
 
-/**
- * Support for build-dist.js. Automatic string extraction and
- * translation. Development only.
- */
 define(["node-getopt", "jsdom", "js/Translator", "fs-extra", "readline-sync"], function(getopt, jsdom, Translator, Fs, rl) {
 
     let TX = Translator.instance();
     
+	/**
+	 * Support for build-dist.js. Automatic string extraction and
+	 * translation using mymemory.net. Not distributed.
+	 */
     class Locales {
 
+		/**
+		 * @param {function} debug debug function
+		 */
         constructor(debug) {
             this.strings = {};
             this.translations = {};
             this.debug = debug;
         }
 
+		/**
+		 * Load strings for translation from locale/strings
+		 */
         loadStrings() {
             return Fs.readFile("locale/strings")
             .then((data) => {
@@ -81,6 +87,9 @@ define(["node-getopt", "jsdom", "js/Translator", "fs-extra", "readline-sync"], f
             });
         }
 
+		/**
+		 * Save a new locale/strings
+		 */
         saveStrings() {
             let data = [];
             for (let s in this.strings) {
@@ -93,7 +102,8 @@ define(["node-getopt", "jsdom", "js/Translator", "fs-extra", "readline-sync"], f
         }
         
         /**
-         * Load reference translations from the "locale" subdir
+         * Load reference translations from the `locale` subdir
+		 * @return {Promise} Promise to load translations
          */
         loadTranslations() {
             let self = this;
@@ -118,9 +128,11 @@ define(["node-getopt", "jsdom", "js/Translator", "fs-extra", "readline-sync"], f
 
         /**
          * Save translations to dir/locale (defaults to ./locale)
+		 * @param {string} dir directory
+		 * @return {Promise} Promise to save
          */
         saveTranslations(dir) {
-            dir = (dir ? (dir + "/") : "") + "locale/";
+            dir = (dir ? `$dir/` : "") + "locale/";
             let proms = [];
             for (let lang in this.translations) {
                 let tx = this.translations[lang];
@@ -134,6 +146,7 @@ define(["node-getopt", "jsdom", "js/Translator", "fs-extra", "readline-sync"], f
         /**
          * Analyse a block of HTML and extract English strings
          * @param data string of HTML
+		 * @return {Promise} Promise that resolves to the number of strings
          */
         html(data, source) {
             let dom;
@@ -154,6 +167,7 @@ define(["node-getopt", "jsdom", "js/Translator", "fs-extra", "readline-sync"], f
         /**
          * Analyse a block of JS and extract English strings
          * @param data string of JS
+		 * @return {Promise} Promise that resolves to the number of strings
          */
         js(data, source) {
             let count = 0;
@@ -170,9 +184,10 @@ define(["node-getopt", "jsdom", "js/Translator", "fs-extra", "readline-sync"], f
 
         /**
          * Update the translation for the given language
-         * @param lang language code e.g. fr
-         * @param improve integer to re-translate existing known strings
+         * @param {string} lang language code e.g. fr
+         * @param {number} improve integer to re-translate existing known strings
          * below this confidence level
+		 * @return {boolean} true if update succeeded
          */
         updateTranslation(lang, improve) {
             function _translate(en, translated) {
@@ -215,6 +230,7 @@ define(["node-getopt", "jsdom", "js/Translator", "fs-extra", "readline-sync"], f
                         prompt = "> ";
                     }
                 }
+				return false;
             }
             
             console.log("Translate to", lang, "confidence <", improve);
@@ -242,7 +258,7 @@ define(["node-getopt", "jsdom", "js/Translator", "fs-extra", "readline-sync"], f
         }
 
         /**
-         * @param improve integer to re-translate existing known strings
+         * @param {number} improve integer to re-translate existing known strings
          * below this confidence level
          */
         updateTranslations(improve) {
