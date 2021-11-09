@@ -1,9 +1,9 @@
-if (typeof requirejs === "undefined")
+if (typeof requirejs === "undefined") {
     requirejs = require('requirejs');
-
-requirejs.config({
-    baseUrl: ".."
-});
+	requirejs.config({
+		baseUrl: `${__dirname}/..`
+	});
+}
 
 const DESCRIPTION = "USAGE\n  node endecrypt.js [options] <file>\nEncode/decode a file encrypted using CryptoLayer. If the input file has a .json extension, will encrypt it to a file of the same name without the extension. If there is no .json extension, will decrypt to a file of the same name with a .json extension.";
 
@@ -64,6 +64,7 @@ requirejs(["node-getopt","js/FileStore", "js/CryptoLayer", "js/Utils"], function
     instore.reads(fname)
     .then(json => {
         if (!encrypt) {
+			console.log(json);
             json = JSON.stringify(JSON.parse(json), null, " ");
         }
         if (opt.stdio) {

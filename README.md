@@ -32,7 +32,7 @@ use Squirrel?
    - it doesn't require an internet connection to run
    - it encrypts *everything* that it stores, sends or receives
    - it doesn't require a special website to store stuff (it can use a number of different online services, and you can even add more)
-   - it uses 256 bit AES (Rijndael), one of the toughest ciphers to crack
+   - it uses AES, one of the toughest ciphers to crack
    - it can use image steganography to mask its use
    - it's entirely open source, allowing you to inspect, and if you want, propose modifications to, the code
    - it doesn't have any way for users - or even developers - to access the data without your unique password
@@ -75,46 +75,49 @@ to you which file store you use. We recommend:
 * If you don't want to use an online store, you can use `LocalStorageStore`, which simulates the online store in the browser. However you won't be able to share your store with other devices.
 
 ### GoogleDriveStore
+
 You must be logged in to Google in the browser for this to work. The
 first time you open Squirrel with GoogleDriveStore, it will prompt for
 the path to your database file. This is simply the name of a file where
 encrypted data will be stored on Drive.
 
 Squirrel will prompt for a password every time you open it. This is
-the encryption password for your database, and will not usually be the same
+the encryption password for your database, and should not be the same
 as your Google password.
 
 ### HttpServerStore
 
-This store will work with any HTTP server that supports `GET' and `POST'
-requests and BasicAuth, and permits writing files on the server.
+This store will work with any HTTP server that supports `GET` and `POST`
+requests and `BasicAuth`, and permits writing files on the server.
 
 You need to tell Squirrel where to look for the server. The following
 additonal URL parameters are used:
 
-`url' - full URL pointing to the server location where Squirrel
+`url` - full URL pointing to the server location where Squirrel
 may save files.
 
 For example, if the server is running on `https://myserver/my/files'
 you would use:
 
-`?store=HttpServerStore&url=https://myserver/my/files'
+`?store=HttpServerStore&url=https://myserver/my/files`
 
 Note that it uses Basic Authentication and should only ever be used with
 an `HTTPS` server.
 
 #### web_server.js
 
-A suitable super-lightweight server using node.js is provided as part of the Squirrel
-release package.
+A suitable super-lightweight server using `node.js` is provided as part of the
+ package.
 
-For information on how to run the lightweight server, cd to the 'js' directory and:
+For information on how to run the lightweight server, `cd` to the `js` directory and:
 
-`node web_server.js --help'
+```
+node web_server.js --help
+```
 
 The same server can serve the Squirrel application from a git checkout. Start the server as described above at the root of the checkout, then use a URL like this:
 
-`https://myhost:3000/Squirrel.html?store=HttpServerStore&url=https://myhost:3000/remote_data'
+`https://myhost:3000/Squirrel.html?store=HttpServerStore&url=https://myhost:3000/remote_data`
 
 ### LocalStorageStore
 
@@ -129,19 +132,19 @@ can use it with Squirrel. You will need to pass the URL of a WebDAV-accessible
 folder using the `url` parameter.
 
 ## Choosing an Encryption Algorithm
-The encryption algorithm is selected using the `use' parameter. There are two algorithms available. These algorithms can be used individually, or can be combined e.g. `use=aes,steganography'. You can also switch off encryption completely using `use=' with no value.
+The encryption algorithm is selected using the `use` parameter. There are two algorithms available, `crypto` and `steganography`. These algorithms can be used individually, or can be combined e.g. `use=crypto,steganography`. You can also switch off encryption completely using `use=` with no value.
 
-### AES
-This is the default if no `use' parameter is given, It uses a customised 256-bit Rijndael algorithm for a very good level of encryption.
+### Crypto
+This is the default if no `use` parameter is given, It uses AES in GCM mode for a very good level of encryption.
 
 ### Steganography
 
 This is not encryption per se, it is data-hiding. Your data is embedded into
-extra bits in an image such that the image appears normal to the naked eye, but has your secret message embedded within it. You can use it alongside another algorithm e.g. `use=aes,steganography'
+extra bits in an image such that the image appears normal to the naked eye, but has your secret message embedded within it. You can use it alongside another algorithm e.g. `use=crypto,steganography`
 
 Steganography is expensive, but may be a viable alternative to encryption
-in regions where encryption is illegal. If you run with steganography enabled
-(`use=steganography'), you will need to choose an image URL for Squirrel to use.
+in regions where encryption is illegal. If you run with steganography enabled,
+you will need to choose an image URL for Squirrel to use.
 Your password safe will be embedded into this image, so it needs to be large
 enough to store
 all the data without degrading the image too much. For an average
@@ -177,7 +180,8 @@ And that's about it - you can find out the rest by experimenting.
 
 ## Security risks
 
-Once it's stored in a Squirrel database, your secret data is as secure as it
+Once it's stored in a Squirrel database with strong encryption, your
+secret data is as secure as it
 gets. The weak point of any password safe application is the master
 password - if a hacker can guess that, then it's game over. So:
 - make your Squirrel master password hard to guess
@@ -195,7 +199,7 @@ Squirrel is designed to work in a well defined environment:
 - With an uncompromised, modern browser
 
 Squirrel doesn't store your password, nor does it transmit your
-password over the internet. Is it extremely difficult to extract your
+encyrption password over the internet. Is it extremely difficult to extract your
 password from your database (if you forget your password, no-one
 can help you - so don't forget it). The major risks you should be
 aware of are:

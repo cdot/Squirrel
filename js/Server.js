@@ -4,7 +4,9 @@
 // Yes, I could have used express, but I wrote this before I knew about
 // it, and it "just works". Only handles binary files, but knows about CORS.
 
-define("js/Server", ["url", "extend", "fs-extra"], function(Url, extend, Fs) {
+define("js/Server", ["url", "extend", "fs"], function(Url, extend, fs) {
+
+	const Fs = fs.promises;
 
     //require("https") done dynamically
     //require("http") done dynamically
@@ -48,14 +50,14 @@ define("js/Server", ["url", "extend", "fs-extra"], function(Url, extend, Fs) {
 
             self.ready = false;
             if (typeof self.docroot === "string")
-                self.docroot = Fs.realpathSync(self.docroot);
+                self.docroot = fs.realpathSync(self.docroot);
             else
                 self.docroot = process.cwd();
 
             if (typeof self.writable === "string") {
                 if (self.writable.indexOf("/") !== 0)
                     self.writable = `${self.docroot}/${self.writable}`;
-                self.writable = Fs.realpathSync(self.writable);
+                self.writable = fs.realpathSync(self.writable);
             }
 
             if (typeof this.auth !== "undefined") {
@@ -163,11 +165,11 @@ define("js/Server", ["url", "extend", "fs-extra"], function(Url, extend, Fs) {
                 });
             } else {
                 if (self.log) self.log("HTTP starting on port", self.port);
-                promise = require("http").createServer(handler);
+                promise = Promise.resolve(require("http").createServer(handler));
             }
 
             return promise
-            .then((httpot) => {
+            .then(httpot => {
                 self.ready = true;
                 self.http = httpot;
                 httpot.listen(self.port);
@@ -211,7 +213,6 @@ define("js/Server", ["url", "extend", "fs-extra"], function(Url, extend, Fs) {
                     response.setHeader("Content-Length",
                                        Buffer.byteLength(responseBody));
                     if (self.debug) self.debug(
-                        "Responding with",
                         Buffer.byteLength(responseBody), "bytes");
                     response.write(responseBody);
                 }

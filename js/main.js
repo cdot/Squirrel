@@ -1,4 +1,4 @@
-/*@preserve Copyright (C) 2019 Crawford Currie http://c-dot.co.uk license MIT*/
+/*@preserve Copyright (C) 2019-2021 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser */
 
 requirejs.config({
@@ -20,7 +20,7 @@ requirejs(["js/Utils"], function (Utils) {
         window.location.search.substring(1),
         {
             store: { type: "string", "default": "LocalStorageStore" },
-            use: { array: true, type: "string", "default": ["aes"] },
+            use: { array: true, type: "string", "default": ["Crypto"] },
             debug: { type: "boolean" },
             url: { type: "string" }
         });

@@ -69,50 +69,28 @@ define("js/LocalStorageStore", deps, function(Utils, Serror, AbstractStore, Stor
             return super.init();
         }
 
-        _wtf(path, data) {
-            if (!this.debug)
-                return Promise.resolve(data);
-
-            return new Promise((resolve) => {
-                requirejs(["js/WebDAVStore"], function(WebDAVStore) {
-                    let wds = new WebDAVStore();
-                    wds.option("network_login", () => {
-                        return { user: "test", pass: "test" };
-                    });
-                    wds.option("url", "http://192.168.1.11/webdav");
-                    wds.write(path, data)
-                    .then(() => { resolve(data); });
-                });
-            });
+		/**
+		 * Make a key that uniquely identifies the given path and the
+		 * current user (if any).
+		 * @private
+		 */
+        _makeKey(path) {
+            let key = [];
+            if (typeof this.option("user") !== "undefined")
+                key.push(this.option("user"));
+            key.push(ROOT_PATH);
+            key.push(path);
+            return key.join('.');
         }
 
-        _wtfs(path, data) {
-            if (!this.debug)
-                return Promise.resolve(data);
-
-            return new Promise((resolve) => {
-                requirejs(["js/WebDAVStore"], function(WebDAVStore) {
-                    let wds = new WebDAVStore();
-                    wds.option("network_login", () => {
-                        return { user: "test", pass: "test" };
-                    });
-                    wds.option("url", "http://192.168.1.11/webdav");
-                    wds.writes(path, data)
-                    .then(() => { resolve(data); });
-                });
-            });
-        }
-        
 		/**
 		 * @override
 		 */
         reads(path) {
-            let str = localStorage.getItem(this._makeKey(path));
-            if (str === null) {
+            const str = localStorage.getItem(this._makeKey(path));
+            if (str === null)
                 return Promise.reject(new Serror(
                     404, path + " does not exist"));
-            }
-
             return Promise.resolve(str);
         }
 
@@ -128,27 +106,19 @@ define("js/LocalStorageStore", deps, function(Utils, Serror, AbstractStore, Stor
 		 * @override
 		 */
         read(path) {
-            if (this.debug) this.debug("read", path);
             return this.reads(path)
-            .then(str => Promise.resolve(Utils.PackedStringToUint8Array(str)));
+            .then(str => {
+				const u8 = Utils.PackedStringToUint8Array(str);
+				return Promise.resolve(u8);
+			});
         }
 
 		/**
 		 * @override
 		 */
         write(path, a8) {
-            if (this.debug) this.debug("write", path);
-            let str = Utils.Uint8ArrayToPackedString(a8);
+            const str = Utils.Uint8ArrayToPackedString(a8);
             return this.writes(path, str);
-        }
-
-        _makeKey(path) {
-            let key = [];
-            if (typeof this.option("user") !== "undefined")
-                key.push(this.option("user"));
-            key.push(ROOT_PATH);
-            key.push(path);
-            return key.join(".");
         }
     }
     return LocalStorageStore;

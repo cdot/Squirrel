@@ -18,43 +18,104 @@ if (typeof module !== "undefined") {
 }
 
 requirejs(["test/TestRunner", "js/Steganographer", "js/Utils", "jquery"], function(TestRunner, Steganographer, Utils) {
-    let tr = new TestRunner("Steganographer");
-    let assert = tr.assert;
-    const TESTR = "1234567普通话/普通話العَرَبِيَّة";
+	let tr = new TestRunner("Steganographer");
+	let assert = tr.assert;
+	const TESTR = "1234567普通话/普通話العَرَبِيَّة";
 
-    tr.addTest("insert.extract small", function() {
-        let steg = new Steganographer({ debug: console.debug });
-        let a = Utils.StringToUint8Array(TESTR);
-		if (typeof module !== "undefined") {
-			console.log("This test is not runnable from node.js");
-			return;
+	const imageLoaded = (file) => {
+		if ($("#source").length > 0) {
+			// Browser
+			return new Promise(resolve => {
+				$("#source").on("load", () => resolve($("#source")[0]));
+			});
 		}
-        let id = steg.insert(a, $("#source")[0]);
-
-        let gets = new Steganographer({ debug: console.debug });
-        console.log("Extracting");
-        let b = gets.extract(id);
-        assert.deepEqual(b, a);
+		// use 'canvas' on node.js
+		const Canvas = require('canvas');
+		const Fs = require ("fs").promises;
+		return Canvas.loadImage(file)
+		.then(image => {
+			console.log(image);
+			const canvas = Canvas.createCanvas(image.width, image.height);
+			const cxt = canvas.getContext('2d');
+			cxt.drawImage(image, 0, 0);
+			return cxt.getImageData(0, 0, canvas.width, canvas.height);
+		});
+	};
+	
+	tr.addTest("insert.extract small", function() {
+        return imageLoaded('test/test_image.jpg')
+		.then(iData => {
+			const steg = new Steganographer();
+			let a = Utils.StringToUint8Array(TESTR);
+			return steg.insert(a, iData)
+			.then(idata => {
+				let gets = new Steganographer();
+				gets.extract(idata)
+				.then(b => assert.deepEqual(b, a));
+			});
+		});
     });
 
     tr.addTest("insert.extract large", function() {
-        let steg = new Steganographer({ debug: console.debug });
-        const len = 14760; // bytes
-        let a = new Uint8Array(len);
-        for (let i = 0; i < len; i++)
-            a[i] = (i & 0xFF);
-		if (typeof module !== "undefined") {
-			console.log("This test is not runnable from node.js");
-			return;
-		}
-        let id = steg.insert(a, $("#source")[0]);
-
-        let gets = new Steganographer({ debug: console.debug });
-        console.log("Extracting");
-        let b = gets.extract(id);
-        for (let i = 0; i < len; i++)
-            assert.equal(b[i], (i & 0xFF));
+        return imageLoaded('test/test_image.jpg')
+		.then(iData => {
+			const steg = new Steganographer();
+			const len = 14760; // bytes
+			let a = new Uint8Array(len);
+			for (let i = 0; i < len; i++)
+				a[i] = (i & 0xFF);
+			return steg.insert(a, iData)
+			.then(idata => {
+				let gets = new Steganographer();
+				return gets.extract(idata)
+				.then(b => {
+					for (let i = 0; i < len; i++)
+						assert.equal(b[i], (i & 0xFF));
+				});
+			});
+		});
     });
 
-    tr.run();
+	if (typeof module !== "undefined") {
+		const Canvas = require('canvas');
+		const len = 14760; // bytes
+		tr.addTest("insert.extract file", function() {
+			return imageLoaded('test/test_image.jpg')
+			.then(iData => {
+				const steg = new Steganographer();
+				let a = new Uint8Array(len);
+				for (let i = 0; i < len; i++)
+					a[i] = (i & 0xFF);
+				return steg.insert(a, iData);
+			})
+			.then(idata => {
+				const canvas = Canvas.createCanvas(
+					idata.width, idata.height);
+				const ctx = canvas.getContext('2d');
+				ctx.putImageData(idata, 0, 0);
+				const fs = require ("fs");
+				const out = fs.createWriteStream('test.png');
+				const stream = canvas.createPNGStream();
+				stream.pipe(out);
+				return new Promise(resolve => {
+					out.on('finish', () => {
+						console.log("Write finished");
+						resolve();
+					});
+				});
+			})
+			.then(() => Canvas.loadImage('test.png'))
+			.then(image => imageLoaded('test.png'))
+			.then(idata => {
+				let gets = new Steganographer();
+				return gets.extract(idata);
+			})
+			.then(b => {
+				for (let i = 0; i < len; i++)
+					assert.equal(b[i], (i & 0xFF));
+			});
+		});
+	}
+
+	tr.run();
 });

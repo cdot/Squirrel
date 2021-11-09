@@ -154,8 +154,9 @@ define("js/Translator", ["js/Utils", "js/Serror"], function(Utils, Serror) {
                 });
             } else if (this.options.files) {
                 // Specific to node.js - no browser support!
-                const fs = require("fs-extra");
-                getter = fs.readFile(`${this.options.files}${lingo}.json`)
+                return Utils.require("fs")
+				.then(fs => fs.promises.readFile(
+					`${this.options.files}${lingo}.json`))
                 .then((json) => {
                     return JSON.parse(json);
                 });

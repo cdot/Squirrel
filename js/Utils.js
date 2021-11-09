@@ -55,7 +55,7 @@ define("js/Utils", [], function() {
          * @return {Uint16Array} the data
          */
         static PackedStringToUint16Array(s) {
-            let a16 = [];
+            const a16 = [];
             for (let i = 0; i < s.length; i++) {
                 let cp = s.codePointAt(i);
                 if (cp === 0xD7FF) {
@@ -78,7 +78,7 @@ define("js/Utils", [], function() {
             // lsb of the last character is part of the array or not.
             let cc = ((a8.length & 1) !== 0) ? 0x100 : 0;
             let low = true; // have we just packed the high byte?
-            let a16 = [];
+            const a16 = [];
             for (let c of a8) {
                 if (low) {
                     a16.push(cc | c);
@@ -96,15 +96,15 @@ define("js/Utils", [], function() {
         /**
          * Convert a packed string, created using Uint8ArrayToPackedString, back
          * into a Uint8Array containing the unpacked array.
-		 * @param {string} str packaed string
+		 * @param {string} str packed string
 		 * @return {Uint8Array} unpacked data
          */
         static PackedStringToUint8Array(str) {
-            let a16 = Utils.PackedStringToUint16Array(str);
+            const a16 = Utils.PackedStringToUint16Array(str);
             let datalen = 2 * a16.length - 1;
             if ((a16[0] & 0x100) === 0)
                 datalen--;
-            let a8 = [];
+            const a8 = [];
             let high = false;
             for (let i = 0, j = 0; i < datalen; i++) {
                 if (high) {
@@ -324,6 +324,17 @@ define("js/Utils", [], function() {
                         arguments[0][key] = arguments[i][key];
             return arguments[0];
         }
+
+		/**
+		 * Promise to requirejs a module
+		 * @param {string} mod module to require
+		 * @return {Promise} Promise that resolves to the loaded module
+		 */
+		require(mod) {
+			return new Promise(resolve => {
+				requirejs([mod], fn => resolve(fn));
+			});
+		}
     }
 
     return Utils;

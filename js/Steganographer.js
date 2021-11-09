@@ -28,57 +28,11 @@ define("js/Steganographer", ["js/Utils"], function(Utils) {
          * signature as console.debug
          */
         constructor(params) {
+			if (!params) params = {};
             // Messages are stored in chunks held in the least significant
             // bits of the three colour channels.
             this.maxChunk = params.maxChunk || 3;
             this.debug = params.debug;
-        }
-
-        /**
-         * Get raw image data from an image.
-         * @param {Image|HTMLImageElement|Uint8Array|String|data-uri} image
-		 * or any of the types accepted by Context.drawImage.
-         * @return {Uint8Array} containing the image data
-         * @private
-         */
-        _getRawBytes(image) {
-			if (!image) throw new Error("No image data");
-            if (image instanceof Uint8Array ||
-                image instanceof Uint8ClampedArray)
-                return image;
-
-            if (image instanceof Int8Array ||
-                image instanceof Int16Array ||
-                image instanceof Uint16Array ||
-                image instanceof Int32Array ||
-                image instanceof Uint32Array ||
-                image instanceof Float32Array ||
-                image instanceof Float64Array)
-                return new Uint8Array(image.buffer);
-
-            if (typeof ImageData !== 'undefined' && image instanceof ImageData)
-                return image.data;
-
-            if (typeof image === "string") {
-                let im = new Image();
-                im.src = image;
-                image = im;
-            }
-
-            // Really want to use an OffscreenCanvas, but it's still
-            // experimental
-            let shadowCanvas = document.createElement("canvas");
-            shadowCanvas.style.display = "none";
-            shadowCanvas.width = image.naturalWidth;
-            shadowCanvas.height = image.naturalHeight;
-
-            let shadowCtx = shadowCanvas.getContext("2d");
-            shadowCtx.drawImage(image, 0, 0);
-
-            let id = shadowCtx.getImageData(
-                0, 0, shadowCanvas.width, shadowCanvas.height);
-
-            return id.data;
         }
 
         /**
@@ -140,21 +94,20 @@ define("js/Steganographer", ["js/Utils"], function(Utils) {
         }
 
         /**
-         * Insert a message into the given image
-         * @param a8 the message, in a Uint8Array. Size must be <= (2^32-1)
-         * @param {Image|HTMLImageElement|Uint8Array|String|data-uri} image
+         * Promise to insert a message into the given image
+         * @param message the message, in a Uint8Array. Size must be <= (2^32-1)
+         * @param {ImageData} the image
 		 * or any of the types accepted by Context.drawImage.
-         * @return {Uint8Array} containing the resulting raw image data with
-         * the embedded message
+		 * @return {Promise} that resolves to the ImageData object
          * @throws Error if the image doesn't have enough capacity for
          * all the data given the current parameters.
          */
-        insert(a8, image) {
+        insert(message, imageData) {
 
             if (this.debug) this.debug(
-                `Embedding ${a8.length} bytes (${a8.length * 8} bits)`);
+                `Embedding ${message.length} bytes (${message.length * 8} bits)`);
 
-            let iData = this._getRawBytes(image);
+			const bytes = imageData.data;
 
             // Irrespective of the source of the image, by the time we
             // get here the imageData.data consists of width*height
@@ -168,23 +121,23 @@ define("js/Steganographer", ["js/Utils"], function(Utils) {
             // store our secrets.
 
             // Set alpha channel to opaque
-            for (let i = 3; i < iData.length; i += 4)
-                iData[i] = 0xFF;
+            for (let i = 3; i < bytes.length; i += 4)
+                bytes[i] = 0xFF;
 
             // We reserve the first 24 bytes (6 pixels) for the data
             // length (32 bits) and chunk size (4 bits) packed 2 bits per
             // colour channel.
             let byte_i = 24;
 
-            let a8_len = a8.length;
-            let chunkSize = this._adjustToFit(a8_len, iData.length);
+            let a8_len = message.length;
+            let chunkSize = this._adjustToFit(a8_len, bytes.length);
             let chunkMask = (1 << chunkSize) - 1;
             let iChunkMask = ~chunkMask;
             let numChunks = 0;
 
             // Function to add a chunk into the image. c <= chunkMask
             function addChunk(c) {
-                iData[byte_i] = (iData[byte_i] & iChunkMask) | c;
+                bytes[byte_i] = (bytes[byte_i] & iChunkMask) | c;
                 byte_i++;
                 if (byte_i % 4 === 3)
                     byte_i++; // skip alpha channel
@@ -199,7 +152,7 @@ define("js/Steganographer", ["js/Utils"], function(Utils) {
             let bits;   // Number of bits remaining to process in the i'th byte
             let pending = 0; // number of bits still pending from the i-1'th byte
             for (let i = 0; i < a8_len; i++) {
-                a8_i = a8[i];
+                a8_i = message[i];
                 bits = 8;
                 if (pending > 0) {
                     // Remaining (high) bits of previous byte combined with
@@ -231,7 +184,7 @@ define("js/Steganographer", ["js/Utils"], function(Utils) {
             let shift = 30;
             while (shift >= 0) {
                 for (let channel = 0; channel < 3 && shift >= 0; channel++) {
-                    iData[byte_i] = (iData[byte_i] & 0xFC)
+                    bytes[byte_i] = (bytes[byte_i] & 0xFC)
                         | ((numChunks >> shift) & 0x3);
                     shift -= 2;
                     byte_i++;
@@ -240,9 +193,9 @@ define("js/Steganographer", ["js/Utils"], function(Utils) {
                 }
             }
             // That leaves just two channels for 2 bits of the chunkSize each
-            iData[byte_i] = (iData[byte_i] & 0xFC) | ((chunkSize >> 2) & 0x3);
+            bytes[byte_i] = (bytes[byte_i] & 0xFC) | ((chunkSize >> 2) & 0x3);
             byte_i++;
-            iData[byte_i] = (iData[byte_i] & 0xFC) | (chunkSize & 0x3);
+            bytes[byte_i] = (bytes[byte_i] & 0xFC) | (chunkSize & 0x3);
             byte_i += 2; // blue + alpha
 
             if (this.debug) this.debug(
@@ -250,35 +203,35 @@ define("js/Steganographer", ["js/Utils"], function(Utils) {
                 + `${chunkSize} bits, ${numChunks * chunkSize} bits / `
                 + `${numChunks * chunkSize / 8} bytes of data`);
 			
-            return iData;
+            return Promise.resolve(imageData);
         }
 
         /**
-         * Extract the content hidden in the given image
-         * @param {Image|HTMLImageElement|Uint8Array|String|data-uri} image
-		 * or any of the types accepted by Context.drawImage.
-         * @return {Uint8Array} containing the content
+         * Extract the content hidden in the given image.
+         * @param {ImageData} imageData the image
+         * @return {Promise{ that resolves to a {@link Uint8Array containing
+		 * the extracted content
          * @throws Error if the image doesn't seem to have anything embedded
          */
-        extract(image) {
-            let iData = this._getRawBytes(image);
+        extract(imageData) {
+            let bytes = imageData.data;
 
             // Extract data length and chunkSize
             // chunkSize = 4, prime = 17
             let numChunks = 0;
             let byte_i = 0;
             for (let i = 0; i < 32; i += 2) {
-                numChunks = (numChunks << 2) | (iData[byte_i] & 0x3);
+                numChunks = (numChunks << 2) | (bytes[byte_i] & 0x3);
                 byte_i++;
                 if (byte_i % 4 === 3)
                     byte_i++; // skip alpha channel
             }
 
-            let chunkSize = (iData[byte_i++] & 0x3) << 2;
-            chunkSize |= iData[byte_i] & 0x3;
+            let chunkSize = (bytes[byte_i++] & 0x3) << 2;
+            chunkSize |= bytes[byte_i] & 0x3;
             byte_i += 2; // blue and alpha
 
-            if (numChunks < 0 || numChunks > iData.length
+            if (numChunks < 0 || numChunks > bytes.length
                 || chunkSize <= 0 || chunkSize > 8)
                 throw new Error("No message embedded");
 
@@ -294,7 +247,7 @@ define("js/Steganographer", ["js/Utils"], function(Utils) {
             let chunkMask = (1 << chunkSize) - 1;
 
             for (let i = 0; i < numChunks; i++) {
-                let mmi = iData[byte_i++] & chunkMask;
+                let mmi = bytes[byte_i++] & chunkMask;
                 if (byte_i % 4 === 3)
                     byte_i++; // skip alpha channel
                 charCode |= mmi << bitCount;
@@ -311,7 +264,7 @@ define("js/Steganographer", ["js/Utils"], function(Utils) {
             if (this.debug) this.debug(
                 `Extracted ${message.length} bytes`);
 
-            return message;
+            return Promise.resolve(message);
         }
     }
 

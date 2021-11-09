@@ -1,14 +1,15 @@
 /*@preserve Copyright (C) 2021 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,node */
 
-//if (typeof crypto === 'undefined')
-//	crypto = require('crypto').webcrypto; // node.js
+if (typeof crypto === 'undefined')
+	crypto = require('crypto').webcrypto; // node.js
 
-define("js/Cryptographer", () => {
+define("js/Cryptographer", ["js/Serror"], Serror => {
 
 	const IV_LENGTH = 12;
 	const SHA = 'SHA-256';
 	const ALGORITHM = 'AES-GCM';
+    const SIGNATURE = 0x53;
 
 	/**
 	 * Thin layer around SubtleCrypto making it easier to use for simple
@@ -22,7 +23,7 @@ define("js/Cryptographer", () => {
 		 * @param   {string} password - Password to use to encrypt plaintext.
 		 * @returns {Promise} Promise resolves to Uint8Array ciphertext
 		 */
-		static encryptBytes(uint8, password) {
+		static encrypt(uint8, password) {
             // encode password as UTF-8
 			const pwUtf8 = new TextEncoder().encode(password);
 			// get 96-bit random iv
@@ -52,7 +53,7 @@ define("js/Cryptographer", () => {
 		 * @param {string} password - Password to use to decrypt cipherData.
 		 * @returns {Promise} Promise resolves to Uint8Array decrypted data
 		 */
-		static decryptBytes(cipherData, password) {
+		static decrypt(cipherData, password) {
             // encode password as UTF-8
 			const pwUtf8 = new TextEncoder().encode(password);
 			// Get iv
@@ -70,46 +71,39 @@ define("js/Cryptographer", () => {
 					'raw', pwHash, alg, false, ['decrypt']);
 			})
 			.then(key => crypto.subtle.decrypt(alg, key, uint8))
-			.then(buffer => new Uint8Array(buffer));
-		}
-
-		/**
-		 * Encrypts string using supplied password
-		 * @param   {string} unit8 bytes to be encrypted.
-		 * @param   {string} password - Password to use to encrypt plaintext.
-		 * @returns {Promise} Promise that resolves to a ciphertext string.
-		 */
-		static encryptString(plaintext, password) {
-			// encode plaintext as UTF-8 bytes
-			const uint8 = new TextEncoder().encode(plaintext);
-			// encrypt plaintext using key
-			return Cryptographer.encryptBytes(uint8, password)
-			.then(bytes => {
-				// iv+ciphertext as string
-				let chars = "";
-				bytes.forEach(byte => chars += String.fromCharCode(byte));
-				return chars;
-			});
-		}
-
-		/**
-		 * Decrypts ciphertext using supplied password.
-		 * based on (c) Chris Veness MIT Licence
-		 *
-		 * @param   {string} ciphertext base64 encoded ciphertext to be decrypted.
-		 * @param   {string} password - Password to use to decrypt ciphertext.
-		 * @returns {Promise} Promise resolves to decrypted plaintext
-		 */
-		static decryptString(ciphertext, password) {
-			// ciphertext as Uint8Array
-			const bytes = new Uint8Array(
-				Array.from(ciphertext).map(ch => ch.charCodeAt(0)));
-			return Cryptographer.decryptBytes(bytes, password)
-			.then(data => {
-                // plaintext from Uint8Array
-				const plaintext = new TextDecoder().decode(data);
-				return plaintext;
-			});
+			.then(buffer => new Uint8Array(buffer))
+			.catch(e => new Promise((resolve, reject) => {
+				// Data compatibility.
+				// Failover to AES-CTR reference implementation
+				// to read "old" format data.
+				requirejs(["js/AES"], AES => {
+					const data = AES.decrypt(cipherData, password, 256);
+					// Check signature and checksum
+					let cs = data.length % 255;
+					if (data[0] === SIGNATURE &&
+						((data[2] << 8) | data[3]) === cs) {
+						resolve(new Uint8Array(data.buffer, 4));
+						return;
+					} else if ((data.length & 1) === 0) {
+						// If self is old format, the file contains a
+						// 16-bit-per-character string and therefore
+						// must be an even length. Further it must be
+						// parseable JSON - an expensive check, but
+						// no big deal.
+						const s = String.fromCharCode.apply(
+							null, new Uint16Array(data.buffer));
+						try {
+							JSON.parse(s);
+							resolve(new TextEncoder().encode(s));
+							return;
+						} catch (e) {
+						}
+					}
+					// Otherwise the signature is wrong and it's
+					// odd sized. Wrong password?
+					reject(new Serror(400, "Decryption failed"));
+				});
+			}));
 		}
 	}
 

@@ -1,21 +1,71 @@
 /*@preserve Copyright (C) 2019 Crawford Currie http://c-dot.co.uk license MIT*//*eslint-env node, mocha */
 
-if (typeof requirejs === "undefined")
+if (typeof requirejs === "undefined") {
     requirejs = require('requirejs');
+	requirejs.config({
+		baseUrl: `${__dirname}/..`
+	});
 
-requirejs.config({
-    baseUrl: ".."
-});
+	
+}
+
+let deps = ["test/StoreTester"];
+if (typeof module !== "undefined") {
+    deps.push("webdav-server");
+}
 
 /**
- * When run from the command line, requires $T_url to be set up to point to
- * a webdav server.
- *
- * Requires the user RIGHT_USER:RIGHT_PASSWORD to be set up in the webdav store
- * (see StoreTester). This can be overridden by setting $T_user and/or
- * $T_pass.
+ * When run from the browser, requires `url` to be set up to point to
+ * a webdav server, and `net_user/net_password` to log in to that server.
+ * When run from node.js, will create it's own webdav server on port 1900.
  */
-requirejs(["test/StoreTester"], function(StoreTester) {
-    new StoreTester(["WebDAVStore"]).run();
+requirejs(deps, function(StoreTester, webdav) {
+	let config = Promise.resolve();
+	let server;
+
+	if (webdav) {
+		const WebDAV = webdav.v2;
+
+		const userManager = new WebDAV.SimpleUserManager();
+        const webdav_user = "u" + Date.now();
+        const webdav_pass = "p" + webdav_user;
+		const user = userManager.addUser(webdav_user, webdav_pass, false);
+		console.log("User", user);
+		const privilegeManager = new WebDAV.SimplePathPrivilegeManager();
+		privilegeManager.setRights(user, '/', [ 'all' ]);
+		server = new WebDAV.WebDAVServer({
+			httpAuthentication: new WebDAV.HTTPBasicAuthentication(
+				userManager, 'Default realm'),
+			privilegeManager: privilegeManager,
+			port: 1900
+		});
+
+		/*server.afterRequest((arg, next) => {
+			console.log('>>', arg.request.method, arg.requested.uri,
+						'>', arg.response.statusCode,
+						arg.response.statusMessage);
+			console.log(arg.responseBody);
+			next();
+		});*/
+ 
+		config = new Promise(resolve => server.setFileSystem(
+			'/',
+			new WebDAV.PhysicalFileSystem(__dirname),
+			success => {
+				server.start(() => {
+					console.log('Server ready');
+					resolve({
+						url: "http://localhost:1900",
+						net_user: webdav_user, net_pass: webdav_pass});
+				});
+			}));
+	}
+    config.then(cfg => {
+		new StoreTester(["WebDAVStore"])
+		.run(cfg)
+		.then(() => {
+            if (server) server.stopAsync();
+		});
+	});
 });
 

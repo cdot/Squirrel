@@ -2,6 +2,14 @@ JS := $(shell find . \( -path './node_modules/*' -o -path './test/*' -o -path '.
 
 MD := $(shell find . \( -path './node_modules/*' -o -path './test/*' -o -path './dist/*' \) -prune -o -name '*.md' -print)
 
+TESTS := $(shell find . \( -path './node_modules/*' -o -path './doc/*' -o -path './dist/*' \) -prune -o -name '*.ut' -print)
+
+# Default target; run unit tests
+tests: node_modules $(TESTS:.ut=.utr)
+
+%.utr: %.ut
+	node $^
+
 release: $(JS)
 	node build-dist.js
 
@@ -18,3 +26,6 @@ lint:
 # using npm-check-update (npm install -g npm-check-updates)
 update:
 	ncu -u
+
+clean:
+	rm -rf dist/* doc/*.html doc/fonts doc/scripts doc/styles

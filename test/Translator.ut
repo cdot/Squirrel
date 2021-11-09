@@ -26,11 +26,11 @@ if (typeof module !== "undefined") {
         }
     };
 	/*eslint-enable no-global-assign*/
-}
 
-requirejs.config({
-    baseUrl: ".."
-});
+	requirejs.config({
+		baseUrl: `${__dirname}/..`
+	});
+}
 
 const server_url = "http://cdot.github.io/Squirrel/locale/";
 
@@ -107,8 +107,8 @@ requirejs(["js/Translator", "test/TestRunner"], function(Translator, TestRunner)
     tr.addTest("Can change language", function() {
         let TX = Translator.instance({url:server_url});
         let en = '<div class="TX_title TX_text" title="Add">Length</div>';
-        let fr = '<div class="TX_title TX_text" title="Ajouter">Longueur</div>'
-        let de = '<div class="TX_title TX_text" title="Hinzufügen">Länge</div>'
+        let fr = '<div class="TX_title TX_text" title="Ajouter">Longueur</div>';
+        let de = '<div class="TX_title TX_text" title="Hinzufügen">Länge</div>';
         document.body.innerHTML = en;
         return TX
             .language("fr", document)
@@ -132,7 +132,7 @@ requirejs(["js/Translator", "test/TestRunner"], function(Translator, TestRunner)
         })
         .then(() => {
             assert.equal(document.body.innerHTML, en);
-        })
+        });
     });
 
     tr.run();

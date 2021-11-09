@@ -18,16 +18,16 @@ if (typeof module !== "undefined") {
 
     $.getTapEvent = function() { return "click"; }
 	/*eslint-enable no-global-assign */
-}
 
-// This all works fine in the browser, but not in node.js. So the fix
-// - whetever it is - belongs here :-(
-requirejs.config({
-    baseUrl: "..",
-    paths: {
-        "jquery-ui": "test/libs/jquery-ui"
-    }
-});
+	// This all works fine in the browser, but not in node.js. So the fix
+	// - whetever it is - belongs here :-(
+	requirejs.config({
+		baseUrl: `${__dirname}/..`,
+		paths: {
+			"jquery-ui": "test/libs/jquery-ui"
+		}
+	});
+}
 
 const actions = [
     {

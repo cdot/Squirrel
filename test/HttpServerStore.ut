@@ -72,7 +72,7 @@ requirejs(deps, function(StoreTester, express, basicAuth) {
         new StoreTester(["HttpServerStore"])
 		.run(cfg)
         .then(() => {
-                server.close();
+            if (server) server.close();
         })
 		.catch((e) => { console.log("Run failed", e); });
     });

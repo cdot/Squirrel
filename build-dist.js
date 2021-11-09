@@ -17,7 +17,9 @@ const DESCRIPTION = [
 
 let requirejs = require("requirejs");
 
-requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html-minifier", "jsdom", "js/Locales"], function(request, getopt, fs, uglify, MinifyCSS, MinifyHTML, jsdom, Locales) {
+requirejs(["request", "node-getopt", "fs", "uglify-es", "clean-css", "html-minifier", "jsdom", "js/Locales"], function(request, getopt, fs, uglify, MinifyCSS, MinifyHTML, jsdom, Locales) {
+
+	const Fs = fs.promises;
 
     let opts = getopt
         .create([
@@ -112,6 +114,7 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
     // Get the file or URL referenced by the given path. URLs are
     // recognised by starting with http and/or //
     function get(path) {
+		//console.log(`GET ${path}`);
         if (/^(https?:)?\/\//.test(path)) {
             if (!/^http/.test(path))
                 path = `https:${path}`;
@@ -134,7 +137,7 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
                 });
             });
         } else
-            return fs.readFile(path);
+            return Fs.readFile(path);
     }
 
     // Load the requirejs.config from the given ID
@@ -143,14 +146,14 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
         .catch((e) => {
             console.log("Failed to load config", e);
         })
-        .then((data) => {
-            let m = /\nrequirejs\.config\((.*?)\);/.exec(data);
+        .then(data => {
+            let m = /\nrequirejs\.config\((.*?)\);/s.exec(data);
             if (m) {
                 let cfg;
                 eval(`cfg=${m[1]}`);
                 return cfg;
             } else
-				throw `No requirejs found in ${module}`;
+				throw `No requirejs found in ${module} ${data}`;
         });
     }
 
@@ -203,12 +206,8 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
         if (dependencies) console.debug("Analysing dependencies for", module, "at", path);
         found_at[module] = path;
         return get(path)
-        .catch((e) => {
-            console.log("Failed to load", path, e);
-        })
-        .then((js) => {
-            return analyseDependencies(module, config, js);
-        })
+        .catch((e) => console.log("Failed to load", path, e))
+        .then((js) => analyseDependencies(module, config, js))
         .then(() => {
             return config;
         });
@@ -271,14 +270,14 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
             });
             if (cod.error) {
                 console.error("Error:", cod.error);
-                return fs.writeFile(`dist/${root}.bad_js`, codes);
+                return Fs.writeFile(`dist/${root}.bad_js`, codes);
             }
             return Promise.all([
                 locales.js(codes, root + ".js").then((c) => {
                     if (debug)
                         debug(`Extracted ${c} new strings from ${root}.js`);
                 }),
-                fs.writeFile(`dist/${root}.js`, cod.code)
+                Fs.writeFile(`dist/${root}.js`, cod.code)
             ]);
         });
     }
@@ -286,7 +285,7 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
     function listDir(dir, ext) {
         ext = ext || "[^.]*";
         let re = new RegExp(`\\.${ext}$`);
-        return fs.readdir(dir)
+        return Fs.readdir(dir)
         .then((entries) => {
             let files = [];
             for (let entry of entries) {
@@ -300,17 +299,17 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
     // Make the path to a directory
     function mkpath(file) {
         let m = /^(.+)\/(.*?)$/.exec(file);
-        let p = (m) ? mkpath(m[1]) : Promise.resolve()
+        let p = (m) ? mkpath(m[1]) : Promise.resolve();
         return p.then(() => {
-            return fs.stat(file);
+            return Fs.stat(file);
         })
         .then((stat) => {
             if (stat.isDirectory())
                 return Promise.resolve();
-            return fs.mkdir(file);
+            return Fs.mkdir(file);
         })
         .catch(() => {
-            return fs.mkdir(file);
+            return Fs.mkdir(file);
         });
     }
 
@@ -319,20 +318,18 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
             
             // Analyse dependencies rooted at js/help.js
             getConfig("js/help")
-            .then((cfg) => {
-                return analyse("js/help", cfg);
-            }),
+            .then(cfg => analyse("js/help", cfg)),
 
             // Analyse dependencies rooted at js/main.js
             getConfig("js/main")
             .then((cfg) => {
                 let deps = [ analyse("js/main", cfg) ];
                 
-                Promise.all([
+                return Promise.all([
                     // Analyse dependencies for dynamically-loaded
                     // dialog modules (they are becoming statically
                     // loaded)
-                    fs.readdir("dialogs")
+                    Fs.readdir("dialogs")
                     .then((entries) => {
                         for (let entry of entries) {
                             if (/\.js$/.test(entry)) {
@@ -346,7 +343,7 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
                     
                     // Analyse dependencies for *Store and *Layer modules, except those
                     // that are not marked as /* eslint-env browser */
-                    fs.readdir("js")
+                    Fs.readdir("js")
                     .then((entries) => {
                         for (let entry of entries) {
                             if (/(Store|Layer)\.js$/.test(entry)
@@ -357,11 +354,9 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
                             }
                         }
                     })
-                ])
-                .then(() => Promise.all(deps));
+                ]).catch(e => console.log("WANK", e));
             })
         ])
-
         // Generate JS for all dependencies
         .then(() => {
             return Promise.all([
@@ -379,9 +374,9 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
             for (let f of files) {
                 if (regex.test(f))
                     proms.push(
-                        fs.readFile(f)
+                        Fs.readFile(f)
                         .then((data) => {
-                            return fs.writeFile(`dist/${f}`, data);
+                            return Fs.writeFile(`dist/${f}`, data);
                         }));
             }
             return Promise.all(proms);
@@ -404,7 +399,7 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
             else
                 remove.push(link);
             proms.push(
-                fs.readFile(f)
+                Fs.readFile(f)
                 .then((data) => {
                     return data.toString();
                 }));
@@ -421,7 +416,7 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
             })
             .minify(allCss)
             .then((mini) => {
-                return fs.writeFile(`dist/${fn}`, mini.styles);
+                return Fs.writeFile(`dist/${fn}`, mini.styles);
             });
         });
     }
@@ -456,7 +451,7 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
 				/*eslint-disable no-loop-func*/
                 for (let f of files) {
                     proms.push(
-                        fs.readFile(f)
+                        Fs.readFile(f)
                         .then((data) => {
                             let div = document.createElement("div");
                             div.innerHTML = data.toString();
@@ -465,7 +460,7 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
                 }
 				/*eslint-enable no-loop-func*/
                 return Promise.all(proms);
-            })
+            });
         })
         .then(() => {
             // The HTML is complete, process the CSS
@@ -483,7 +478,7 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
                     collapseWhitespace: true,
                     removeComments: true
                 });
-                return fs.writeFile(`dist/${module}.html`, mindex);
+                return Fs.writeFile(`dist/${module}.html`, mindex);
             });
         });
     }
@@ -538,7 +533,11 @@ requirejs(["request", "node-getopt", "fs-extra", "uglify-es", "clean-css", "html
     let promise = locales.loadStrings();
     
     if (typeof opts.translate !== "undefined")
-        promise.then(target_translate(opts.translate, opts.language));
+        promise = promise.then(() => target_translate(opts.translate, opts.language));
     else
-        promise.then(target_release());
+        promise = promise.then(() => target_release());
+	promise
+	.catch(e => {
+		console.log("Error: ", e);
+	});
 })

@@ -231,7 +231,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                     continue;
                 let layer = algo.replace(/^([a-z])/, (m) => m.toUpperCase())
                     + "Layer";
-                
+
                 p = p.then((store) => {
                     return new Promise((resolve) => {
                         requirejs(

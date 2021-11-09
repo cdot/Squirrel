@@ -37,9 +37,9 @@ define("js/CryptoLayer", ["js/Serror", "js/LayeredStore", "js/Utils", "js/Crypto
             if (this.debug) this.debug("read", path);
             return super.read(path)
             .then(a8 => {
-				return Crypto.decryptBytes(a8, self.option("pass"))
+				return Crypto.decrypt(a8, self.option("pass"))
 				.catch(e => {
-					throw new Serror(new Serror(400, "read failed"));
+					throw new Serror(400, "read failed");
 				});
 			});
         }
@@ -49,9 +49,9 @@ define("js/CryptoLayer", ["js/Serror", "js/LayeredStore", "js/Utils", "js/Crypto
 		 */
         write(path, a8) {
             if (this.debug) this.debug("write", path);
-            return Crypto.encryptBytes(a8, this.option("pass"))
+            return Crypto.encrypt(a8, this.option("pass"))
 			.catch(e => {
-				throw new Serror(new Serror(400, "write failed"));
+				throw new Serror(400, "write failed");
 			})
             .then(encrypted => super.write(path, encrypted));
         }
@@ -62,9 +62,10 @@ define("js/CryptoLayer", ["js/Serror", "js/LayeredStore", "js/Utils", "js/Crypto
         reads(path) {
             let self = this;
             if (this.debug) this.debug("read", path);
-            return super.reads(path)
+            return super.read(path)
             .then(s => {
-				return Crypto.decryptString(s, self.option("pass"))
+				return Crypto.decrypt(s, self.option("pass"))
+				.then(data => new TextDecoder().decode(data))
 				.catch(e => {
 					throw new Serror(new Serror(400, "reads failed"));
 				});
@@ -76,11 +77,12 @@ define("js/CryptoLayer", ["js/Serror", "js/LayeredStore", "js/Utils", "js/Crypto
 		 */
         writes(path, s) {
             if (this.debug) this.debug("write", path);
-            return Crypto.encryptString(s, this.option("pass"))
+			const uint8 = new TextEncoder().encode(s);
+            return Crypto.encrypt(s, this.option("pass"))
 			.catch(e => {
 				throw new Serror(new Serror(400, "writes failed"));
 			})
-            .then(encrypted => super.writes(path, encrypted));
+            .then(encrypted => super.write(path, encrypted));
         }
     }
 

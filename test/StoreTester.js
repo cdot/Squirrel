@@ -111,7 +111,7 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
                     let key = option.replace(/^needs_/, "");
                     let v = config[key];
                     if (!config.inBrowser && typeof v === "undefined")
-                        throw "Require parameter " + key;
+                        throw new Error(`Require parameter '${key}'`);
                     if (self.debug) self.debug(option,key, "=", v);
                     store.option(key, v);
                 }
@@ -186,14 +186,14 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
             let assert = this.assert;
 
 			this.addTest("Write/Read 1 byte", function() {
-                let store = self.store;
-                let a = new Uint8Array(1);
+                const store = self.store;
+                const a = new Uint8Array(1);
                 a[0] = 69;
 				return store.write(test_path, a)
                 .then(function() {
 					return store.read(test_path);
                 })
-                .then(function(ab) {
+                .then(ab => {
                     assert.equal(ab.length, 1);
                     assert.equal(Utils.Uint8ArrayToString(ab),
                                  String.fromCodePoint(69));
@@ -368,6 +368,7 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
                     return store.writes(test_path, TESTR)
                     .then(function () {
                         store.option("pass", Date.now());
+						debugger;
                         return store.reads(test_path)
                         .then(function(data) {
                             assert(false, "Unexpected success "+data);
