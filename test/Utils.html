@@ -11,13 +11,16 @@
     <script src="//cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.js"></script>
     <script>
      requirejs.config({
-        urlArgs: "nocache=" + Date.now(),
+         urlArgs: "nocache=" + Date.now(),
+		 baseUrl: "..",
         paths: {
           mocha: "//cdnjs.cloudflare.com/ajax/libs/mocha/9.1.3/mocha",
-          chai: "//cdnjs.cloudflare.com/ajax/libs/chai/4.3.4/chai"
+			chai: "//cdnjs.cloudflare.com/ajax/libs/chai/4.3.4/chai",
+			test_Utils: "test/Utils.ut?noext=",
+			test_RGBA: "test/RGBA.ut?noext=",
         }
       });
-      requirejs(["Utils", "RGBA"], function() {
+      requirejs(["test_Utils", "test_RGBA"], function() {
       });
     </script>
   </body>

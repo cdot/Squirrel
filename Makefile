@@ -1,14 +1,17 @@
-JS := $(shell find . \( -path './node_modules/*' -o -path './test/*' -o -path './dist/*' -o -path './doc/*' \) -prune -o -name '*.js' -print)
+JS := $(shell find js \( -path './node_modules/*' -o -path './test/*' -o -path './dist/*' -o -path './doc/*' \) -prune -o -name '*.js' -print)
 
 MD := $(shell find . \( -path './node_modules/*' -o -path './test/*' -o -path './dist/*' \) -prune -o -name '*.md' -print)
 
-TESTS := $(shell find . \( -path './node_modules/*' -o -path './doc/*' -o -path './dist/*' \) -prune -o -name '*.ut' -print)
+TESTS := $(shell find test \( -path './node_modules/*' -o -path './doc/*' -o -path './dist/*' \) -prune -o -name '*.ut' -print)
 
 # Default target; run unit tests
 tests: node_modules $(TESTS:.ut=.utr)
 
 %.utr: %.ut
 	node $^
+
+node_modules:
+	npm install
 
 release: $(JS)
 	node build-dist.js

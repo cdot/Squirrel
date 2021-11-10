@@ -97,6 +97,8 @@ define("js/Cryptographer", ["js/Serror"], Serror => {
 							resolve(new TextEncoder().encode(s));
 							return;
 						} catch (e) {
+							// Should never happen
+							console.log("JSON parse error");
 						}
 					}
 					// Otherwise the signature is wrong and it's

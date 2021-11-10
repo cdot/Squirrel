@@ -3,7 +3,7 @@
 if (typeof module !== "undefined") {
     requirejs = require('requirejs');
     requirejs.config({
-        baseUrl: ".."
+        baseUrl: `${__dirname}/..`
     });
 }
 

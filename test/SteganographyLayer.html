@@ -1,6 +1,7 @@
 <html>
   <!-- Test stores -->
   <head>
+	<base href="..">
     <meta charset="utf-8">
     <title>SteganographyLayer Tests</title>
     <link rel="icon" href="favicon.ico" type="image/x-icon" />
@@ -13,15 +14,17 @@
     <script>
       requirejs.config({
         urlArgs: "nocache=" + Date.now(),
-        paths: {
-          jquery: "//code.jquery.com/jquery-3.3.1.min",
-          mocha: "//cdnjs.cloudflare.com/ajax/libs/mocha/6.0.2/mocha",
-          chai: "//cdnjs.cloudflare.com/ajax/libs/chai/4.2.0/chai"
-        }
+		  baseUrl: ".",
+          paths: {
+			  jquery: "//code.jquery.com/jquery-3.3.1.min",
+			  mocha: "//cdnjs.cloudflare.com/ajax/libs/mocha/6.0.2/mocha",
+			  chai: "//cdnjs.cloudflare.com/ajax/libs/chai/4.2.0/chai",
+			  // Append ?noext to stop .js being added to path
+			  unit_test: 'test/SteganographyLayer.ut?noext='
+          }
       });
-      requirejs(["SteganographyLayer"], function() {
+      requirejs(["unit_test"], function() {
       });
     </script>
-    <img id="stegamage" width="300" src="test_image.jpg"/>
   </body>
 </html>

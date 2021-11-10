@@ -12,17 +12,20 @@
     <div id="container"><div id="sites-node"></div></div>
     <script>
       requirejs.config({
-        urlArgs: "nocache=" + Date.now(),
+          urlArgs: "nocache=" + Date.now(),
+		  baseUrl: "..",
         paths: {
           jquery: "//code.jquery.com/jquery-3.3.1.min",
           mocha: "//cdnjs.cloudflare.com/ajax/libs/mocha/6.0.2/mocha",
-          chai: "//cdnjs.cloudflare.com/ajax/libs/chai/4.2.0/chai"
+			chai: "//cdnjs.cloudflare.com/ajax/libs/chai/4.2.0/chai",
+			// Append ?noext to stop .js being added to path
+			unit_test: 'test/Steganographer.ut?noext='
         }
       });
-      requirejs(["Steganographer"], function() {
+      requirejs(["unit_test"], function() {
       });
     </script>
-    <img id="source" src="test_image.jpg"/>
-    <canvas id="dest"/>
+    <img id="source" style="display:none" src="test_image.jpg"/>
+	Image with embedded cipher:
   </body>
 </html>

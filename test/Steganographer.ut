@@ -22,28 +22,34 @@ requirejs(["test/TestRunner", "js/Steganographer", "js/Utils", "jquery"], functi
 	let assert = tr.assert;
 	const TESTR = "1234567普通话/普通話العَرَبِيَّة";
 
-	const imageLoaded = (file) => {
-		if ($("#source").length > 0) {
-			// Browser
-			return new Promise(resolve => {
-				$("#source").on("load", () => resolve($("#source")[0]));
+	const imageLoaded = url => {
+		const $img = $('#source');
+		if ($img.length > 0) {
+			// Browser, file is ignored
+			const img = $img[0];
+			const canvas = $('<canvas></canvas>')[0];
+			const cxt = canvas.getContext('2d');
+			canvas.width = img.width;
+			canvas.height = img.height;
+			cxt.drawImage(img, 0, 0);
+			return Promise.resolve(
+				cxt.getImageData(0, 0, img.width, img.height));
+		} else {
+			// use 'canvas' on node.js
+			const Canvas = require('canvas');
+			const Fs = require ("fs").promises;
+			return Canvas.loadImage(`${__dirname}/${url}`)
+			.then(img => {
+				const canvas = Canvas.createCanvas(img.width, img.height);
+				const cxt = canvas.getContext('2d');
+				cxt.drawImage(img, 0, 0);
+				return cxt.getImageData(0, 0, canvas.width, canvas.height);
 			});
 		}
-		// use 'canvas' on node.js
-		const Canvas = require('canvas');
-		const Fs = require ("fs").promises;
-		return Canvas.loadImage(file)
-		.then(image => {
-			console.log(image);
-			const canvas = Canvas.createCanvas(image.width, image.height);
-			const cxt = canvas.getContext('2d');
-			cxt.drawImage(image, 0, 0);
-			return cxt.getImageData(0, 0, canvas.width, canvas.height);
-		});
 	};
 	
 	tr.addTest("insert.extract small", function() {
-        return imageLoaded('test/test_image.jpg')
+        return imageLoaded('test_image.jpg')
 		.then(iData => {
 			const steg = new Steganographer();
 			let a = Utils.StringToUint8Array(TESTR);
@@ -57,7 +63,7 @@ requirejs(["test/TestRunner", "js/Steganographer", "js/Utils", "jquery"], functi
     });
 
     tr.addTest("insert.extract large", function() {
-        return imageLoaded('test/test_image.jpg')
+        return imageLoaded('test_image.jpg')
 		.then(iData => {
 			const steg = new Steganographer();
 			const len = 14760; // bytes
@@ -71,6 +77,18 @@ requirejs(["test/TestRunner", "js/Steganographer", "js/Utils", "jquery"], functi
 				.then(b => {
 					for (let i = 0; i < len; i++)
 						assert.equal(b[i], (i & 0xFF));
+
+					const $img = $('#source');
+					if ($img.length > 0) {
+						// Browser
+						const img = $img[0];
+						const canvas = $('<canvas></canvas>')[0];
+						const cxt = canvas.getContext('2d');
+						canvas.width = img.width;
+						canvas.height = img.height;
+						cxt.drawImage(img, 0, 0);
+						$("body").append(canvas);
+					}
 				});
 			});
 		});
@@ -78,9 +96,9 @@ requirejs(["test/TestRunner", "js/Steganographer", "js/Utils", "jquery"], functi
 
 	if (typeof module !== "undefined") {
 		const Canvas = require('canvas');
-		const len = 14760; // bytes
+		const len = 65536; // bytes
 		tr.addTest("insert.extract file", function() {
-			return imageLoaded('test/test_image.jpg')
+			return imageLoaded('test_image.jpg')
 			.then(iData => {
 				const steg = new Steganographer();
 				let a = new Uint8Array(len);
@@ -94,7 +112,7 @@ requirejs(["test/TestRunner", "js/Steganographer", "js/Utils", "jquery"], functi
 				const ctx = canvas.getContext('2d');
 				ctx.putImageData(idata, 0, 0);
 				const fs = require ("fs");
-				const out = fs.createWriteStream('test.png');
+				const out = fs.createWriteStream(`${__dirname}/test.png`);
 				const stream = canvas.createPNGStream();
 				stream.pipe(out);
 				return new Promise(resolve => {
@@ -104,7 +122,6 @@ requirejs(["test/TestRunner", "js/Steganographer", "js/Utils", "jquery"], functi
 					});
 				});
 			})
-			.then(() => Canvas.loadImage('test.png'))
 			.then(image => imageLoaded('test.png'))
 			.then(idata => {
 				let gets = new Steganographer();

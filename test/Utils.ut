@@ -2,11 +2,11 @@
 
 if (typeof module !== "undefined") {
     requirejs = require('requirejs');
-}
 
-requirejs.config({
-    baseUrl: `${__dirname}/..`
-});
+	requirejs.config({
+		baseUrl: `${__dirname}/..`
+	});
+}
 
 // Max code point in Unicode is:
 const MAX_CHAR = 65535;
