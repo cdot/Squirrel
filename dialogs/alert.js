@@ -1,13 +1,13 @@
 /*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser */
 
-/**
- * Notification dialog
- */
 define("dialogs/alert", ["js/Dialog"], function(Dialog) {
 
     let $http = null;
 
+	/**
+	 * Notification dialog
+	 */
     class AlertDialog extends Dialog {
 
         /**
@@ -83,8 +83,7 @@ define("dialogs/alert", ["js/Dialog"], function(Dialog) {
         }
         
         /**
-         * Add a message to the end of the message list.
-         * @param {object} lert see `add()' for details
+         * @override
          */
         push(lert) {
             this.add(lert, false);

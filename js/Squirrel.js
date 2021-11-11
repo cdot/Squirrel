@@ -5,6 +5,14 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
 
     let TX = Translator.instance();
 
+    // Dialogs for loading in the background. These are loaded in roughly
+    // the order they are likely to be used, but the loads are supposed to
+    // be asynchronous so the order shouldn't really matter.
+    const DIALOGS = [ "alert", "login", "alarm", "store_settings",
+                      "choose_changes", "insert", "pick", "add",
+                      "delete", "randomise", "extras", "about",
+                      "optimise" ];
+    
     /**
      * This is the top level application singleton. It is primarily
      * concerned with UI management; database handling is done by the
@@ -17,23 +25,13 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
      * To help testing, as much as possible is delegated to a
      * paired "Hoarder" singleton.
      */
-
-    // Dialogs for loading in the background. These are loaded in roughly
-    // the order they are likely to be used, but the loads are supposed to
-    // be asynchronous so the order shouldn't really matter.
-    const DIALOGS = [ "alert", "login", "alarm", "store_settings",
-                      "choose_changes", "insert", "pick", "add",
-                      "delete", "randomise", "extras", "about",
-                      "optimise" ];
-    
     class Squirrel {
 
         /**
-         * OPTIONS:
-         * debug - boolean
-         * store - string name of the cloud store type
-         * url - store URL, if it requires one
-         * steg - boolean, enable steganography
+         * @param {object} options initialisation
+         * @param {boolean} options.debug - boolean
+         * @param {string} options.store - string name of the cloud store type
+         * @param {string} options.url - store URL, if it requires one
          */
         constructor(options) {
             let self = this;
@@ -89,7 +87,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                 })
             .then(() => {
                 if (lerts.length > 0) {
-                    return Dialog.confirm("alert", {
+                    Dialog.confirm("alert", {
                         title: TX.tx("Reminders"),
                         alert: lerts
                     });
@@ -298,7 +296,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                         });
                     }
                 }
-                return store.init()
+                return store.init();
             })
             .catch((e) => {
                 return Dialog.confirm("alert", {
@@ -702,9 +700,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                     Dialog.open("alert", {
                         title: TX.tx("Saving"),
                         alert: ""
-                    }).then((progress) => {
-                        return self._save_stores(progress);
-                    });
+                    }).then(progress => self._save_stores(progress));
                     return false;
                 });
 
@@ -849,6 +845,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                         + TX.tx("Are you really sure?");
                         return us;
                     }
+					return undefined;
                 });
 
                 //Initialise translation?
@@ -871,6 +868,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
          * update the UI to reflect that action.
          * @param action the action to play, in Hoard action format
          * @param open boolean to open the node after a N or I
+		 * @return {Promise} Promise to play the action.
          */
         playAction(action, open) {
             let self = this;

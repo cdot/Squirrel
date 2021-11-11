@@ -679,7 +679,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
             let $node = this.element;
             if (!$node.hasClass("tree-isOpen"))
                 return $node;
-            $node.find(".tree_toggle")
+            $node.find(".tree__toggle")
             .first()
             .icon_button("option", "icon", "squirrel-icon-folder-closed");
             return $node

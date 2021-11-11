@@ -5,7 +5,7 @@ define(function() {
 
 	/**
 	 * Module to create real-sounding words that may or not be real
-	 * words.
+	 * words. Unused.
 	 */
     class Pseudoword {
         /**

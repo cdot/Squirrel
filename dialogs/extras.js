@@ -1,12 +1,11 @@
 /*@preserve Copyright (C) 2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser */
 
-/**
- * Options:
- * app (required)
- */
 define("dialogs/extras", ["js/Dialog", "js/Translator", "js/Tree", "js-cookie", "js/jq/styling"], function(Dialog, Translator, Tree, Cookies) {
 
+	/**
+	 * Settings dialog
+	 */
     class ExtrasDialog extends Dialog {
 
         _autosave(on) {
@@ -137,9 +136,6 @@ define("dialogs/extras", ["js/Dialog", "js/Translator", "js/Tree", "js-cookie", 
         }
 
         open() {
-            // needs_image, image_url and cloud_path options are passed
-            // straight on to store_settings
-
             this.control("theme")
             .val($.styling.theme())
             .selectmenu("refresh");

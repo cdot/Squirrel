@@ -18,7 +18,8 @@ define("js/AbstractStore", ["js/Utils", "js/Serror"], function(Utils, Serror) {
         /**
          * Subclasses are expected to define `options.type`
          * @param {object} options parameters
-         * @param {function} debug debug function, same signature as console.debug
+         * @param {function} options.debug debug function, same signature
+		 * as console.debug
          */
         constructor(options) {
             this.type = "AbstractStore";
@@ -29,10 +30,10 @@ define("js/AbstractStore", ["js/Utils", "js/Serror"], function(Utils, Serror) {
                         this.options[k] = options[k];
             if (typeof this.options.debug === "function") {
                 let self = this;
-                this.debug = function() {
-                    let a = Array.from(arguments);
+                this.debug = () => {
+                    const a = Array.from(arguments);
                     a.unshift(self.type);
-                    self.options.debug.apply(null, a);
+                    this.options.debug.apply(null, a);
                 };
             }
         }

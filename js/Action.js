@@ -1,4 +1,4 @@
-/*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
+/*@preserve Copyright (C) 2015-2021 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,node */
 
 define("js/Action", ["js/Translator"], function(Translator) {
@@ -12,7 +12,7 @@ define("js/Action", ["js/Translator"], function(Translator) {
         
         /**
          * Construct a new action object.
-         * @param {object} proto an Action to clone, or a simple object with
+         * @param {(Action|object)} proto an Action to clone, or a simple object with
          * type, path, time and data fields.
          */
         constructor(proto) {

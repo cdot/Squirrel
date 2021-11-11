@@ -1,16 +1,29 @@
-/*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
+/*@preserve Copyright (C) 2015-2021 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,node */
 
 define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], function(Hoard, Action, Serror, Translator) {
 
     const CLIENT_PATH = "client";
     const TX = Translator.instance();
-    
+
 	/**
-	 * Management of client and cloud data stores.
-	 * Several methods support a `progress` parameter. This is an object that
-	 * supports a method `push({severity:string, message:string})'.
-	 * See `dialogs/alert.js` for how it is used in a notification dialog.
+	 * @callback Hoarder.ActionPlayer
+	 * @param {Action} action - the action to play
+	 */
+
+	/**
+	 * @callback Hoarder.Selector
+     * @param {Action[]} actions - actions
+     * to play
+	 * @return {Promise} returns a promise that resolves to the subset of
+     * actions that are selected to be played
+	 */
+
+	/**
+	 * Management of client and cloud data stores.  Several methods
+	 * support a `progress` parameter. This is an object that supports
+	 * a method `push({severity:string, message:string})'.  See
+	 * `dialogs/alert.js` for how it is used in a notification dialog.
 	 */
     class Hoarder {
 
@@ -84,7 +97,9 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
 
         /**
          * Return whatever we know about the current user from the
-         * stores
+         * stores, looking first in the cloud store and if that is
+		 * null, in the client store.
+		 * @return {string?}
          */
         probableUser() {
             return this.cloudStore.option("user")
@@ -92,7 +107,9 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
         }
         
         /**
-         * @param store an AbstractStore subclass
+		 * Getter/setter for the cloud store
+         * @param {AbstractStore=} store the store
+         * @return {AbstractStore} the store
          */
         cloud_store(store) {
             if (store) {
@@ -106,7 +123,9 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
         }
         
         /**
-         * @param store an AbstractStore subclass
+		 * Getter/setter for the client store
+         * @param {AbstractStore=} store the store
+         * @return {AbstractStore} the store
          */
         client_store(store) {
             if (store)
@@ -116,6 +135,8 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
 
         /**
          * Setter/getter for cloud store path
+		 * @param {string=} path
+         * @return {string} the path
          */
         cloud_path(path) {
             if (typeof path !== "undefined" && path !== this.cloudPath) {
@@ -129,14 +150,16 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
 
         /**
          * Is an image required by the store?
+		 * @return {boolean}
          */
         needs_image() {
             return this.cloudStore.option("needs_image");
         }
 
         /**
-         * Setter/getter for image URL. This is only used for saving;
-         * the #stegamage element is used to actually load the image
+         * Setter/getter for image URL.
+		 * @param {string=} path path to set
+		 * @return {string}
          */
         image_url(path) {
             if (typeof path !== "undefined" && path !== this.imageURL) {
@@ -150,6 +173,8 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
 
         /**
          * Getter/setter for encryption password
+		 * @param {string=} pass pass to set
+		 * @return {string}
          */
         encryption_pass(pass) {
             if (typeof pass !== "undefined") {
@@ -163,6 +188,8 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
 
         /**
          * Getter/setter for client hoard editable JSON text
+		 * @param {string=} json editable JSON text
+		 * @return {string} JSON text
          */
         tree_json(json) {
             if (json) {
@@ -175,16 +202,25 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
             return JSON.stringify(this.hoard.tree, null, " ");
         }
         
-        /** Getter */
+        /**
+		 * Getter/setter for the current user
+		 * @param {string=} u the user
+		 * @return {string} the user
+		 */
         user(u) {
             if (typeof u !== "undefined")
                 return this.clientStore.option("user", u);
             return this.clientStore.option("user");
         }
-        
-        check_alarms(handler) {
-            return this.hoard.check_alarms(handler)
-            .then((changes) => {
+
+		/**
+		 * Check alarms, calling the handler.
+         * @param {Hoard.Ringer} ringfn ring function([], Date)
+		 * @return {Promise}
+		 */
+        check_alarms(ringfn) {
+            return this.hoard.check_alarms(ringfn)
+            .then(changes => {
                 if (changes > 0) {
                     this.clientChanges.push(
                         TX.tx("$1 alarm change$?($1!=1,s,)", changes));
@@ -200,7 +236,8 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
          * @param {Action} action the action to play
          * @param {boolean} undoable if true and action that undos this action
          * will be added to the undo history. Default is true.
-         * @return {Promise} Promise that resolves to a {@link Hoard.Conflict}
+         * @return {Promise} Promise that resolves to a
+		 * {@link Hoard.PlayResult}.
          */
         play_action(action, undoable) {
             return this.hoard.play_action(action, undoable);
@@ -218,6 +255,7 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
         /**
          * Return true if there is at least one undoable operation
          * in the client
+		 * @return {boolean} 
          */
         can_undo() {
             return this.hoard.can_undo();
@@ -225,6 +263,7 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
 
         /**
          * Return a message describing the next undo that would be applied.
+		 * @return {string}
          */
         next_undo() {
             return this.hoard.history[this.hoard.history.length - 1]
@@ -233,7 +272,8 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
         
         /**
          * Return true if there is a node in the tree at the given path
-         * @param path array of path components
+         * @param {string[]} path array of path components
+		 * @return {boolean}
          */
         node_exists(path) {
             return this.hoard.get_node(path) ? true : false;
@@ -241,6 +281,7 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
 
         /**
          * Get the local action history
+		 * @return {Action[]}
          */
         history() {
             return this.hoard.history;
@@ -248,8 +289,8 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
         
         /**
          * Undo the action most recently played
-         * @return {Promise} Promise that resolves to the {@link Action} replayed, or rejects
-         * to a { message: } object
+         * @return {Promise} Promise that resolves to the
+		 * {@link Action} replayed, or rejects to a { message: } object
          */
         undo() {
             return this.hoard.undo()
@@ -265,7 +306,7 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
         /**
          * Return null if no auth is required, or a structure that may
          * optionally have a user field if one can be determined.
-         * @return null or { user }
+         * @return {{user: string}?} {user:} or null
          */
         auth_required() {
             
@@ -286,12 +327,14 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
 
             if (this.debug) this.debug("...user may be", poss_user);
 
-            return { user: poss_user }
+            return { user: poss_user };
         }
 
         /**
          * Propagate auth to the stores
-         * @param {object} auth structure {user, pass} 
+         * @param {object} auth user info
+		 * @param {string} auth.user - username
+		 * @param {string} auth.pass - password
          */
         authenticate(auth) {
             // Propagate to the stores
@@ -304,6 +347,9 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
             this.cloudStore.option("pass", auth.pass);
         }
 
+		/**
+		 * Clear the local store
+		 */
         reset_local() {
             this.hoard = new Hoard({debug: this.debug});
             this.history = [];
@@ -316,10 +362,10 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
         
         /**
          * Promise to load the client hoard. This reads the hoard from
-         * store, but does not play the actions; it is left up to the caller
-         * to call actions_to_recreate to build the UI. 
-         * @return Promise that resolves to undefined if the load succeeded,
-         * or an array of alert messages otherwise
+         * store, but does not play the actions; it is left up to the
+         * caller to call `actions_to_recreate()` to build the UI.
+         * @return {Promise} Promise that resolves to undefined if the
+         * load succeeded, or an array of alert messages otherwise
          */
         load_client() {
             if (this.debug) this.debug('...load client');
@@ -368,6 +414,7 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
         /**
          * Get a list of actions that have occured since the last
          * sync or save
+		 * @return {Action[]} list of actions
          */
         get_unsaved_actions() {
             let list = [];
@@ -383,6 +430,7 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
          * the last sync or the last client save are returned.
          * @param max_changes the maximum number of changes to reflect
          * in the list 
+		 * @return {string[]} list of change messages
          */
         get_changes(max_changes) {
             let messages = [];
@@ -406,7 +454,9 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
         }
         
         /**
-         * @param progress object, see class def for details
+		 * Save the client store
+         * @param {Progress} progress reporter
+		 * @return {Promise} Promise to save the store
          */
         save_client(progress) {
             let self = this;
@@ -454,8 +504,8 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
 
         /**
          * Promise to load cloud actions
-         * @return a promise that resolves to the list of actions read from
-         * the cloud
+         * @return {Promise} Promise that resolves to the list of
+         * actions read from the cloud
          */
         load_cloud() {
             return this.cloudStore.reads(this.cloudPath)
@@ -487,20 +537,20 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
          * that have been added since we last synched, and
          * interactively selecting those that are to be applied. last_sync is
          * update to reflect the changes.
-         * @param selector function that, when given a list of actions
+         * @param {Progress=} progress reporter
+         * @param {Hoarder.Selector=} selector function that, when given a list of actions
          * to play, returns a promise that resolves to the subset of
          * that list that is selected to be played
-         * @param player UI action player
-         * @param actions optional list of preloaded actions read from
+         * @param {ActionPlayer=} player UI action player
+         * @param {Array.<Action>=} actions list of preloaded actions read from
          * the cloud, saves reloading the cloud
-         * @param progress object, see class def for details
-         * @return a Promise that resolves to the proposed new contents
+         * @return {Promise} Promise that resolves to the proposed new contents
          * of the cloud
          */
         update_from_cloud(progress, selector, player, actions) {
             let new_cloud = [];
             let prom = actions ? Promise.resolve(actions) : this.load_cloud();
-            return prom.then((cloud_actions) => {
+            return prom.then(cloud_actions => {
 
                 if (this.debug) this.debug("Last sync was at", this.last_sync);
                 
@@ -565,7 +615,7 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
                 }
                 if (selected.length > 0) {
                     // If we saw changes, and we didn't start from an empty
-                    // hoard, then we need to save the client
+                    // client, then we need to save the client
                     this.last_sync = Date.now();
                     if (!this.clientIsEmpty)
                         this.clientChanges.push(TX.tx("Changes merged from cloud store"));
@@ -582,6 +632,13 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
             });
         }
 
+		/**
+		 * Save both stores as required by current change state.
+		 * @param {Progress} progress reporter
+		 * @param {Hoarder.Selector} selector
+		 * @param {ActionPlayer} player
+		 * @return {Promise} Promise to save both stores
+		 */
         save_stores(progress, selector, player) {
             let saveClient = this.clientChanges.length > 0;
             let saveCloud = this.cloudChanged;
@@ -603,13 +660,12 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
                 return Promise.resolve(false);
             }
             
-            let promise;
+            let promise; // order is important!
             let self = this;
             let cloud_saved = false;
             let client_saved = false;
             if (saveCloud) {
-                promise = this.update_from_cloud(
-                    progress, selector, player)
+                promise = this.update_from_cloud(progress, selector, player)
                 .then((new_cloud) => {
                     return self.save_cloud(new_cloud, progress)
                     .then(() => {
@@ -642,6 +698,7 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
             if (saveClient) {
                 promise = promise
                 .then(() => {
+					this.last_sync = Date.now();
                     return self.save_client(progress);
                 })
                 .then(() => {
@@ -673,9 +730,8 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
         
         /**
          * Promise to save the given actions list in the cloud
-         * @param actions list of actions to save in the cloud
-         * @param progress object, see class def for details
-         * @return a promise that resolves to true if the save succeeded
+         * @param {Action[]} actions list of actions to save in the cloud
+         * @param {Progress} progress reporter
          */
         save_cloud(actions, progress) {
             let self = this;

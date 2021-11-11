@@ -4,13 +4,14 @@
 define("js/LayeredStore", ["js/AbstractStore", "js/Serror"], function(AbstractStore, Serror) {
 
     /**
-     * A LayeredStore is an AbstractStore where actual store services are provided
-     * by another underlying AbstractStore. A LayeredStore is used where data to
-     * be stored/read is to be preprocessed, for example through encryption.
-     * To the AbstractStore constructor params options we add the 'understore'
-     * option (required) which must be a function that will construct
-     * the underlying store to be used as the engine, using parameters passed
-     * down.
+     * A LayeredStore is an AbstractStore where actual store services
+     * are provided by another underlying AbstractStore. A
+     * LayeredStore is used where data to be stored/read is to be
+     * preprocessed, for example through encryption.  To the
+     * AbstractStore constructor params options we add the
+     * 'understore' option (required) which must be a function that
+     * will construct the underlying store to be used as the engine,
+     * using parameters passed down.
 	 * @extends AbstractStore
      */
     class LayeredStore extends AbstractStore {
@@ -29,49 +30,49 @@ define("js/LayeredStore", ["js/AbstractStore", "js/Serror"], function(AbstractSt
         }
 
 		/**
-		 * @inheritdoc
+		 * @override
 		 */
         init() {
             return this.understore.init();
         }
 
 		/**
-		 * @inheritdoc
+		 * @override
 		 */
         option(k, v) {
             return this.understore.option(k, v);
         }
 
 		/**
-		 * @inheritdoc
+		 * @override
 		 */
         status() {
             return this.understore.status();
         }
 
 		/**
-		 * @inheritdoc
+		 * @override
 		 */
         read(path) {
             return this.understore.read(path);
         }
 
 		/**
-		 * @inheritdoc
+		 * @override
 		 */
         write(path, data) {
             return this.understore.write(path, data);
         }
 
 		/**
-		 * @inheritdoc
+		 * @override
 		 */
         reads(path) {
             return this.understore.reads(path);
         }
 
 		/**
-		 * @inheritdoc
+		 * @override
 		 */
         writes(path, s) {
             return this.understore.writes(path, s);

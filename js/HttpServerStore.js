@@ -1,4 +1,4 @@
-/*@preserve Copyright (C) 2018-2019 Crawford Currie http://c-dot.co.uk license MIT*/
+/*@preserve Copyright (C) 2018-2021 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env shared-node-browser */
 
 define("js/HttpServerStore", [
@@ -12,14 +12,13 @@ define("js/HttpServerStore", [
     }
 
     /**
-     * 'cloud' store using ajax to communicate with a remote file server
-     * e.g.  the node.js.server store included in the Squirrel
-     * distribution. Or node simple-server python -m SimpleHTTPServer 3000
-     * Or lighttpd nginx apache server etc. Or a simple server built using
-     * express.
+     * Interface to a 'cloud' store using ajax to communicate with a
+     * remote file server e.g. the node.js.server store included in
+     * the Squirrel distribution. Or node simple-server python -m
+     * SimpleHTTPServer 3000 Or lighttpd nginx apache server etc. Or a
+     * simple server built using express.
 	 * @extends AbstractStore
      */
-
     class HttpServerStore extends AbstractStore {
 
 		/**

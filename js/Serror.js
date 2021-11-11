@@ -6,12 +6,13 @@ define("js/Serror", function() {
     /**
      * Squirrel error. Generic vehicle for errors that have a status code
      * and optional path information.
+	 * @extends Error
      */
     class Serror extends Error {
         /**
-         * @param {number} status an optional HTTP status code describing the error
+         * @param {number=} status HTTP status code describing the error
          * (defaults to 400)
-         * @param {string} path optional path array where it failed,
+         * @param {string=} path path array where it failed,
          * @param {string} message is passed to the Error constructor
          * (filename and line number not supported)
          */

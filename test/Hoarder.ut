@@ -91,7 +91,7 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/Cr
                 assert.deepEqual(h.hoard.history, clierd.history);
                 assert.deepEqual(h.hoard.tree, clierd.tree);
             });
-        })
+        });
     });
 
     

@@ -132,7 +132,7 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
 
         /**
          * Check if the clipboard contains useable data
-         * @return boolean
+         * @return {boolean}
 		 * @private
          */
         _clipboardReady() {
@@ -150,6 +150,7 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
 
         /**
          * Handle context menu enable/disable
+         * @param {boolean} enable
          */
         toggle(enable) {
             if (enable) {

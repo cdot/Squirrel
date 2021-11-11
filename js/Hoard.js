@@ -1,4 +1,4 @@
-/*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
+/*@preserve Copyright (C) 2015-2021 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,node */
 
 define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action, Translator, Serror) {
@@ -7,19 +7,26 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
     const MSPERDAY = 24 * 60 * 60 * 1000;
 
 	/**
-	 * @typedef Hoard.Conflict
+	 * @typedef Hoard.PlayResult
 	 * @type {object}
 	 * @property {Action} action the action being played
-	 * @property {string} conflict string message, only set if there is a problem.
+	 * @property {string} conflict string message, only set if there is a
+	 * problem. If this is undefined, the play succeeded.
 	 */
 
 	/**
 	 * @typedef Hoard.Node
 	 * @type {object}
-	 * @property {Data[]|string} collection of subnodes, or leaf (non-object) data
-	 * @property {integer} time time of the last modification
-	 * @property {string} alarm time of next alarm, encoded as "next ring;repeat"
-	 * @property {string} constraints constraints, encoded as "length;chars"
+	 * @property {(Array.<Hoard.Node>|string)} collection subnodes, or leaf (non-object) data
+	 * @property {integer} time - time of the last modification
+	 * @property {string} alarm - time of next alarm, encoded as "next ring;repeat"
+	 * @property {string} constraints - constraints, encoded as "length;chars"
+	 */
+
+	/**
+	 * @callback Hoard.Ringer
+	 * @param {string[]} path path of node being rung
+	 * @param {number} date - due date for alarm
 	 */
 
     /**
@@ -146,10 +153,11 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
 
         /**
          * Record an action and its undo
-         * @param type action type
-         * @param path the path for the undo
-         * @param time the time for the undo
-         * @param act template for the undo (e.g. for data:, alarm: etc)
+         * @param {string} type action type
+         * @param {string} path the path for the undo
+         * @param {number] time the time for the undo
+         * @param {object=} act template for passing to the {@link Action}
+		 * constructor, for the undo (e.g. for data:, alarm: etc)
          * @private
          */
         _record_event(redo, type, path, time, act) {
@@ -191,7 +199,7 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
 
         /**
          * Undo the action most recently played
-         * @return {Promise} Promise that resolves to {@link Hoard.Conflict}
+         * @return {Promise} Promise that resolves to {@link Hoard.PlayResult}
          */
         undo() {
             Serror.assert(this.history.length > 0);
@@ -203,7 +211,7 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
         }
         
         /**
-         * Return true if there is at least one undoable operation
+         * Is there at least one undoable operation?
 		 * @return {boolean}
          */
         can_undo() {
@@ -214,23 +222,22 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
          * Promise to play a single action into the tree.
          *
          * Action types:
-         * <ul>
-         * <li>'N' with no data - create collection</li>
-         * <li>'N' with data - create leaf</li>
-         * <li>'D' delete node, no data. Will delete the entire node tree.</li>
-         * <li>'I' insert node, insert an entire node tree at a named node.</li>
-         * <li>'E' edit node - modify the leaf data in a node</li>
-         * <li>'R' rename node - data contains new name</li>
-         * <li>'A' add alarm to node - data is the alarm time</li>
-         * <li>'C' cancel alarm on node</li>
-         * <li>'X' add/remove value constraints</li>
-         * </ul>
+         * * 'N' with no data - create collection
+         * * 'N' with data - create leaf
+         * * 'D' delete node, no data. Will delete the entire node tree.
+         * * 'I' insert node, insert an entire node tree at a named node.
+         * * 'E' edit node - modify the leaf data in a node
+         * * 'R' rename node - data contains new name
+         * * 'A' add alarm to node - data is the alarm time
+         * * 'C' cancel alarm on node
+         * * 'X' add/remove value constraints
          * Returns a conflict object if there was an error. This has two fields,
          * 'action' for the action record and 'message'.
          * @param {Action} action the action record
          * @param {boolean} undoable if true, an action that undos this action
          * will be added to the undo history. Default is true.
-         * @return {Promise} Promise that resolves {@link Hoard.Conflict}
+         * @return {Promise} Promise that resolves to a
+		 * {@link Hoard.PlayResult}.
          */
         play_action(action, undoable) {
             action = new Action(action);
@@ -617,9 +624,9 @@ define("js/Hoard", ["js/Action", "js/Translator", "js/Serror"], function(Action,
         /**
          * Promise to check all alarms. Returns a promise to resolve all the
          * promises returned by 'ring'.
-         * @param ringfn function([], Date)
-         * @return a promise that resolves to the number of changes that need
-         * to be saved
+         * @param {Hoard.Ringer} ringfn ring function([], Date)
+         * @return {Promise} Promise that resolves to the number of
+         * changes that need to be saved
          */
         check_alarms(ringfn) {
 

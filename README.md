@@ -117,7 +117,7 @@ node web_server.js --help
 
 The same server can serve the Squirrel application from a git checkout. Start the server as described above at the root of the checkout, then use a URL like this:
 
-`https://myhost:3000/Squirrel.html?store=HttpServerStore&url=https://myhost:3000/remote_data`
+`https://myhost:3000/index.html?store=HttpServerStore&url=https://myhost:3000/remote_data`
 
 ### LocalStorageStore
 

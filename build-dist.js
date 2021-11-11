@@ -1,4 +1,4 @@
-/*@preserve Copyright (C) 2019 Crawford Currie http://c-dot.co.uk license MIT*/
+/*@preserve Copyright (C) 2019-2021 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env node */
 /* eslint-disable no-eval */
 /* eslint-disable no-use-before-define */

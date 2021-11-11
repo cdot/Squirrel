@@ -1,4 +1,4 @@
-/*@preserve Copyright (C) 2018-2019 Crawford Currie http://c-dot.co.uk license MIT*/
+/*@preserve Copyright (C) 2018-2021 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env node,browser,jquery */
 
 define("js/WebDAVStore", ["js/Utils", "js/HttpServerStore"], (Utils, HttpServerStore) => {

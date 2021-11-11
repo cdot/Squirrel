@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2019-2021 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser */
 
-define("js/Dialog", ["js/Translator", "js/Serror", "jquery", "jquery-ui", "js/jq/icon_button", "js/jq/twisted"], function(Translator, Serror) {
+define("js/Dialog", ["js/Translator", "js/Serror", "js/Progress", "jquery", "jquery-ui", "js/jq/icon_button", "js/jq/twisted"], function(Translator, Serror, Progress) {
 
     // Default options
     let default_dialog_options = {};
@@ -14,12 +14,13 @@ define("js/Dialog", ["js/Translator", "js/Serror", "jquery", "jquery-ui", "js/jq
 
 	/**
 	 * Dynamic dialog loader and Base class of modal dialogs. Loads
-	 * dialogs dynamically. Dialogs are defined using (1) an HTML <div>
+	 * dialogs dynamically. Dialogs are defined using (1) an HTML `div`
 	 * which can either be embedded in the the main HTML or loaded using
 	 * from a file found using requirejs, and (2) a JS subclass of
-	 * "Dialog" again loaded by requirejs.
+	 * `Dialog` again loaded by requirejs.
+	 * @extends Progress
 	 */
-    class Dialog {
+    class Dialog extends Progress {
 
         /**
          * Set default options for all dialogs that will be created using
@@ -37,6 +38,7 @@ define("js/Dialog", ["js/Translator", "js/Serror", "jquery", "jquery-ui", "js/jq
 		 * the rest are passed on to $.dialog
          */
         constructor($dlg, options) {
+			super();
             let self = this;
             this.debug = options.debug;
             this.$dlg = $dlg;
@@ -87,13 +89,14 @@ define("js/Dialog", ["js/Translator", "js/Serror", "jquery", "jquery-ui", "js/jq
 
         /**
          * Return a promise to load and initialise the code for a dialog.
-         * @param id the root name of the dialog. HTML will be loaded from
-         * dialogs/<id>.html and js from dialogs/<id>.js. dialogs/ is found
-         * from the requirejs.config.
-         * @param options optional options that override options set using
-         * $.set_dialog_options(). These are passed to the Dialog subclass
-         * during construction. The only options used in this module is
-         * debug: optional debug function
+         * @param {string} id the root name of the dialog. HTML will
+         * be loaded from `dialogs/<id>.html` and js from
+         * `dialogs/<id>.js`
+         * @param {object} options optional options that override
+         * options set using `$.set_dialog_options()`. These are
+         * passed to the Dialog subclass during construction. The only
+         * option used in this class is `debug` - an optional debug
+         * function
          * @return {Promise} resolves to the Dialog object
          */
         static load(id, options) {
@@ -170,7 +173,7 @@ define("js/Dialog", ["js/Translator", "js/Serror", "jquery", "jquery-ui", "js/jq
         static open(id, options) {
             this.resolve = undefined;
             return Dialog.load(id, options)
-            .then((dlg) => {
+            .then(dlg => {
                 dlg.options = $.extend(dlg.options, options);
                 dlg.$dlg.dialog("open");
                 return dlg;
@@ -358,6 +361,7 @@ define("js/Dialog", ["js/Translator", "js/Serror", "jquery", "jquery-ui", "js/jq
         /**
          * Service for subclasses.
          * Get the double-tap event
+		 * @return {string} either `doubletap` or `dblclick`
          */
         static doubleTapEvent() {
             return $.isTouchCapable && $.isTouchCapable() ?
@@ -375,7 +379,7 @@ define("js/Dialog", ["js/Translator", "js/Serror", "jquery", "jquery-ui", "js/jq
         /**
          * Service for subclasses.
          * Translate the string (and option parameters) passed
-         * @return {String} the translation
+         * @return {string} the translation
          */
         tx() {
             return Translator.prototype.tx.apply(
@@ -384,7 +388,8 @@ define("js/Dialog", ["js/Translator", "js/Serror", "jquery", "jquery-ui", "js/jq
 
         /**
          * Service for subclasses.
-         * Translate the dom passed
+         * Translate the dom passed. Translation occurs in-place.
+		 * @return {string} the translated dom
          */
         translate(dom) {
             return Translator.instance().translate(dom);
