@@ -459,7 +459,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                             changes: actions
                         });
                     },
-                    (act) => { // player
+                    (act) => { // uiPlayer
                         return self.$DOMtree.tree("action", act);
                     },
                     actions)
@@ -472,6 +472,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                             title: TX.tx("Conflicts"),
                             alert: conflicts
                         });
+					return undefined;
                 });
             })
             .catch((e) => {
@@ -640,6 +641,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
             };
 
             Tree.playAction = (action, open) => {
+				Serror.assert(action instanceof Action);
                 return self.playAction(action, open);
             };
             
@@ -866,19 +868,19 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
          * Interface to action playing for interactive functions.
          * This will play a single action into the client hoard, and
          * update the UI to reflect that action.
-         * @param action the action to play, in Hoard action format
-         * @param open boolean to open the node after a N or I
+         * @param {Action} action the action to play, in Hoard action format
+         * @param {boolean} open to open the node after a N or I
 		 * @return {Promise} Promise to play the action.
          */
         playAction(action, open) {
+			Serror.assert(action instanceof Action);
             let self = this;
-            return self.hoarder.play_action(new Action(action))
-            .then((e) => {
-                if (self.debug && e.conflict)
-                    self.debug("interactive", action,
-                               "had conflict", e.conflict);
-                return self.$DOMtree.tree("action", e.action, open);
-            })
+            const e = self.hoarder.play_action(
+				action, true, (act) => this.playAction(act, false));
+            if (self.debug && e.conflict)
+                self.debug("interactive", action,
+                           "had conflict", e.conflict);
+            return self.$DOMtree.tree("action", e.action, open)
             .then(() => {
                 $(document).trigger("update_save");
             })

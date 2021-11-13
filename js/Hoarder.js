@@ -7,11 +7,6 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
     const TX = Translator.instance();
 
 	/**
-	 * @callback Hoarder.ActionPlayer
-	 * @param {Action} action - the action to play
-	 */
-
-	/**
 	 * @callback Hoarder.Selector
      * @param {Action[]} actions - actions
      * to play
@@ -72,7 +67,7 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
 			 * The client Hoard
 			 * @member {Hoard}
 			 */
-            this.hoard = null;
+            this.hoard = new Hoard();
             /**
 			 * Record of non-action changes, such as paths and settings
 			 * @member {}
@@ -190,8 +185,7 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
          * Getter/setter for client hoard editable JSON text
 		 * @param {string=} json editable JSON text
 		 * @return {string} JSON text
-         */
-        tree_json(json) {
+		  tree_json(json) {
             if (json) {
                 let parsed = JSON.parse(json);
                 this.hoard.clear_history();
@@ -200,7 +194,7 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
                 this.cloudChanged = true;
             }
             return JSON.stringify(this.hoard.tree, null, " ");
-        }
+        }*/
         
         /**
 		 * Getter/setter for the current user
@@ -236,11 +230,13 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
          * @param {Action} action the action to play
          * @param {boolean} undoable if true and action that undos this action
          * will be added to the undo history. Default is true.
+		 * @param {Hoard.UIPlayer=} uiPlayer UI action player
          * @return {Promise} Promise that resolves to a
 		 * {@link Hoard.PlayResult}.
          */
-        play_action(action, undoable) {
-            return this.hoard.play_action(action, undoable);
+        play_action(action, undoable, uiPlayer) {
+			debugger;
+            return this.hoard.play_action(action, undoable, uiPlayer);
         }
 
         /**
@@ -293,14 +289,12 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
 		 * {@link Action} replayed, or rejects to a { message: } object
          */
         undo() {
-            return this.hoard.undo()
-            .then((e) => {
-                if (e.conflict) {
-                    if (self.debug) self.debug("undo had conflict", e.conflict);
-                    return Promise.reject({ message: e.conflict });
-                }
-                return Promise.resolve(e.action);
-            });
+            const e = this.hoard.undo();
+            if (e.conflict) {
+                if (self.debug) self.debug("undo had conflict", e.conflict);
+                return Promise.reject({ message: e.conflict });
+            }
+            return Promise.resolve(e.action);
         }
         
         /**
@@ -361,57 +355,6 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
         }
         
         /**
-         * Promise to load the client hoard. This reads the hoard from
-         * store, but does not play the actions; it is left up to the
-         * caller to call `actions_to_recreate()` to build the UI.
-         * @return {Promise} Promise that resolves to undefined if the
-         * load succeeded, or an array of alert messages otherwise
-         */
-        load_client() {
-            if (this.debug) this.debug('...load client');
-            this.clientIsEmpty = true;
-            let self = this;
-            return this.clientStore.reads(CLIENT_PATH)
-            .catch((e) => {
-                if (self.debug)
-                    self.debug("...local store could not be read", e);
-                // probably doesn't exist
-                self.hoard = new Hoard({debug: self.debug});
-                throw [
-                    {
-                        severity: "error",
-                        message: TX.tx("Local store does not exist.")
-                    },
-                    TX.tx("A new local store will be created.")];
-            })
-            .then((str) => {
-                try {
-                    let data = JSON.parse(str);
-                    self.cloudPath = data.cloud_path;
-                    self.imageURL = data.image_url;
-                    self.last_sync = data.last_sync || 0;
-                    self.last_save = data.last_save || 0;
-                    self.hoard = new Hoard({
-                        debug: this.debug,
-                        hoard: data.hoard
-                    });
-                    self.clientIsEmpty = false;
-                } catch (e) {
-                    if (self.debug) self.debug("...client parse failed", e);
-                    self.hoard = new Hoard({debug: self.debug});
-                    throw [
-                        {
-                            severity: "error",
-                            message: TX.tx("Local store exists, but can't be read.")
-                        },
-                        TX.tx("Check that you have the correct password."),
-                        TX.tx("If you continue and save, a new local store will be created.")
-                    ];
-                }
-            });
-        }
-
-        /**
          * Get a list of actions that have occured since the last
          * sync or save
 		 * @return {Action[]} list of actions
@@ -453,6 +396,56 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
             return messages;
         }
         
+        /**
+         * Promise to load the client hoard. This reads the hoard from
+         * store, but does not play the actions; it is left up to the
+         * caller to call `actions_to_recreate()` to build the UI.
+         * @return {Promise} Promise that resolves to undefined if the
+         * load succeeded, or an array of alert messages otherwise
+         */
+        load_client() {
+            if (this.debug) this.debug('...load client');
+            this.clientIsEmpty = true;
+            return this.clientStore.reads(CLIENT_PATH)
+            .catch(e => {
+                if (self.debug)
+                    self.debug("...local store could not be read", e);
+                // probably doesn't exist
+                this.hoard = new Hoard({debug: self.debug});
+                throw [
+                    {
+                        severity: "error",
+                        message: TX.tx("Local store does not exist.")
+                    },
+                    TX.tx("A new local store will be created.")];
+            })
+            .then(str => {
+                try {
+                    let data = JSON.parse(str);
+                    this.cloudPath = data.cloud_path;
+                    this.imageURL = data.image_url;
+                    this.last_sync = data.last_sync || 0;
+                    this.last_save = data.last_save || 0;
+                    this.hoard = new Hoard({
+                        debug: this.debug,
+                        hoard: data.hoard
+                    });
+                    this.clientIsEmpty = false;
+                } catch (e) {
+                    if (this.debug) this.debug("...client parse failed", e);
+                    this.hoard = new Hoard({debug: this.debug});
+                    throw [
+                        {
+                            severity: "error",
+                            message: TX.tx("Local store exists, but can't be read.")
+                        },
+                        TX.tx("Check that you have the correct password."),
+                        TX.tx("If you continue and save, a new local store will be created.")
+                    ];
+                }
+            });
+        }
+
         /**
 		 * Save the client store
          * @param {Progress} progress reporter
@@ -538,16 +531,19 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
          * interactively selecting those that are to be applied. last_sync is
          * update to reflect the changes.
          * @param {Progress=} progress reporter
-         * @param {Hoarder.Selector=} selector function that, when given a list of actions
-         * to play, returns a promise that resolves to the subset of
-         * that list that is selected to be played
-         * @param {ActionPlayer=} player UI action player
+         * @param {Hoarder.Selector=} selector function that, when
+         * given a list of actions to play, returns a promise that
+         * resolves to the subset of that list that is selected to be
+         * played. Intended for gathering feedback from the user as to
+		 * what actions are to be accepted. If undefined, all actions
+		 * will be kept.
+         * @param {Hoard.UIPlayer=} uiPlayer UI action player
          * @param {Array.<Action>=} actions list of preloaded actions read from
          * the cloud, saves reloading the cloud
          * @return {Promise} Promise that resolves to the proposed new contents
          * of the cloud
          */
-        update_from_cloud(progress, selector, player, actions) {
+        update_from_cloud(progress, selector, uiPlayer, actions) {
             let new_cloud = [];
             let prom = actions ? Promise.resolve(actions) : this.load_cloud();
             return prom.then(cloud_actions => {
@@ -591,27 +587,26 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
             .then((selected) => {              
                 let promise = Promise.resolve();
                 for (let act of selected) {
-                    promise = promise.then(
+                    promise = promise
+					.then(() => {
                         // Note that the cloud actions are pushed
                         // to the undo queue, so they can be undone, but
                         // not if the client was initially empty (otherwise
                         // this would force a cloud save, which we don't
                         // want)
-                        this.hoard.play_action(act, !this.clientIsEmpty)
-                        .then((e) => {
-                            if (e.conflict) {
-                                if (progress) progress.push({
-                                    severity: "warning",
-                                    message: e.conflict
-                                });
-                            } else {
-                                if (this.debug) this.debug("...played", act);
-                                new_cloud.push(act);
-                                if (player)
-                                    return player(act);
-                            }
-                            return Promise.resolve();
-                        }));
+                        const e = this.hoard.play_action(
+							act, !this.clientIsEmpty, uiPlayer);
+                        if (e.conflict) {
+                            if (progress) progress.push({
+                                severity: "warning",
+                                message: e.conflict
+                            });
+                        } else {
+                            if (this.debug) this.debug("...played", act);
+                            new_cloud.push(act);
+                        }
+                        return Promise.resolve();
+                    });
                 }
                 if (selected.length > 0) {
                     // If we saw changes, and we didn't start from an empty
@@ -632,14 +627,45 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
             });
         }
 
+        /**
+         * Promise to save the given actions list in the cloud
+         * @param {Action[]} actions list of actions to save in the cloud
+         * @param {Progress} progress reporter
+         */
+        save_cloud(actions, progress) {
+            let self = this;
+
+            return self.cloudStore.writes(
+                self.cloudPath,
+                JSON.stringify(actions))
+            .then(() => {
+                if (self.debug) self.debug("...cloud save OK");
+                self.cloudLength = actions.length;
+                if (progress) progress.push({
+                    severity: "notice",
+                    message: TX.tx("Saved in cloud")
+                });
+                self.cloudChanged = false;
+                return Promise.resolve(true);
+            })
+            .catch((e) => {
+                if (self.debug) self.debug("...cloud save failed", e.stack);
+                if (progress) progress.push({
+                    severity: "error",
+                    message: TX.tx("Failed to save in cloud store: $1", e)
+                });
+                return Promise.resolve(false);
+            });
+        }
+
 		/**
 		 * Save both stores as required by current change state.
 		 * @param {Progress} progress reporter
 		 * @param {Hoarder.Selector} selector
-		 * @param {ActionPlayer} player
+		 * @param {Hoard.UIPlayer=} uiPlayer
 		 * @return {Promise} Promise to save both stores
 		 */
-        save_stores(progress, selector, player) {
+        save_stores(progress, selector, uiPlayer) {
             let saveClient = this.clientChanges.length > 0;
             let saveCloud = this.cloudChanged;
 
@@ -665,7 +691,7 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
             let cloud_saved = false;
             let client_saved = false;
             if (saveCloud) {
-                promise = this.update_from_cloud(progress, selector, player)
+                promise = this.update_from_cloud(progress, selector, uiPlayer)
                 .then((new_cloud) => {
                     return self.save_cloud(new_cloud, progress)
                     .then(() => {
@@ -725,37 +751,6 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
                 }
                 else
                     return false;
-            });
-        }
-        
-        /**
-         * Promise to save the given actions list in the cloud
-         * @param {Action[]} actions list of actions to save in the cloud
-         * @param {Progress} progress reporter
-         */
-        save_cloud(actions, progress) {
-            let self = this;
-
-            return self.cloudStore.writes(
-                self.cloudPath,
-                JSON.stringify(actions))
-            .then(() => {
-                if (self.debug) self.debug("...cloud save OK");
-                self.cloudLength = actions.length;
-                if (progress) progress.push({
-                    severity: "notice",
-                    message: TX.tx("Saved in cloud")
-                });
-                self.cloudChanged = false;
-                return Promise.resolve(true);
-            })
-            .catch((e) => {
-                if (self.debug) self.debug("...cloud save failed", e.stack);
-                if (progress) progress.push({
-                    severity: "error",
-                    message: TX.tx("Failed to save in cloud store: $1", e)
-                });
-                return Promise.resolve(false);
             });
         }
     }

@@ -28,7 +28,7 @@ const OPTIONS = [
 let requirejs = require("requirejs");
 
 requirejs.config({
-    baseUrl: ".."
+    baseUrl: `${__dirname}/..`
 });
 
 requirejs(["node-getopt", "js/Server"], (getopt, Server) => {

@@ -12,8 +12,8 @@ define("dialogs/randomise", ["js/Dialog", "js-cookie"], function(Dialog, Cookies
 
     /**
      * Generate a new password subject to constraints:
-     * length: length of password
-     * charset: characters legal in the password. Ranges can be defined
+     * size: length of password
+     * chars: characters legal in the password. Ranges can be defined
      * using A-Z syntax. - must be the last or first character for it
      * to be included. Inverted ranges are supported e.g. Z-A
      */
@@ -135,7 +135,7 @@ define("dialogs/randomise", ["js/Dialog", "js-cookie"], function(Dialog, Cookies
                 res.constraints = {
                     size: parseInt(this.control("len").val()),
                     chars: this.control("chs").val()
-                }
+                };
             }
             return res;
         }

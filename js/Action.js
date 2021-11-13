@@ -1,8 +1,9 @@
 /*@preserve Copyright (C) 2015-2021 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,node */
 
-define("js/Action", ["js/Translator"], function(Translator) {
-    const PATH_SEPARATOR = "↘";
+define("js/Action", ["js/Translator", "js/Serror"], function(Translator, Serror) {
+
+    const MSPERDAY = 24 * 60 * 60 * 1000;
     let TX = Translator.instance();
 
 	/**
@@ -12,17 +13,79 @@ define("js/Action", ["js/Translator"], function(Translator) {
         
         /**
          * Construct a new action object.
-         * @param {(Action|object)} proto an Action to clone, or a simple object with
-         * type, path, time and data fields.
+         * @param {(Action|object)} proto an Action to clone, or a
+         * simple object with type, path, time and data fields.
+		 * Note that actions on the root (empty path) are not supported.
          */
         constructor(proto) {
-            this.type = proto.type;
-            if (typeof proto.path !== "undefined")
+			/**
+			 * Action type - a single character identifying code
+			 * * 'N' with no data - create collection
+			 * * 'N' with data:string - create leaf
+			 * * 'D' delete node, no data. Will delete the entire node tree.
+			 * * 'I' insert node, data:Node, insert an entire node tree
+			 * at a named node.
+			 * * 'E' edit node, data:string, modify the leaf data in a node
+			 * * 'R' rename node, data:string contains new name
+			 * * 'A' add alarm, data:{due:number, repeat:number}
+			 * Old format had data:number, number of days from last node
+			 * change, will be automatically updated when played.
+			 * * 'C' cancel alarm on node, no data
+			 * * 'X' with data, add value constraints
+			 * * 'X' with no data, remove value constraints
+             * @member {string}
+			 */
+			this.type = proto.type;
+
+			/**
+			 * Path to node the action applies to
+			 * @member {string}
+			 */
+			this.path = undefined;
+			if (typeof proto.path === 'string')
+				this.path = proto.path.split(Action.PATH_SEPARATOR);
+            else if (typeof proto.path !== "undefined")
                 this.path = proto.path.slice();
+
+			Serror.assert(this.path && this.path.length > 0);
+
+			/**
+			 * Time of action, defaults to `now`, epoch s
+			 * @member {number}
+			 */
             this.time = proto.time ? proto.time : Date.now();
 
-            if (typeof proto.data !== "undefined")
-                this.data = proto.data;
+			/**
+			 * Data associated with the action. The interpretation
+			 * depends on the type of the action.
+			 * @member {string|object}
+			 */
+            if (typeof proto.data !== "undefined") {
+				// Compatibility with old formats
+				if (this.type === 'A' && typeof proto.data === 'string') {
+					const mid = proto.data.indexOf(';');
+					this.data = {
+						due: Number.parseInt(proto.data.substr(0, mid)),
+						repeat: Number.parseInt(proto.data.substr(mid + 1))
+					};
+				}
+				else if (this.type === 'A' && typeof proto.data === 'number') {
+                    this.data = {
+                        due: this.time + (proto.data * MSPERDAY),
+                        repeat: proto.data * MSPERDAY
+					};
+				}
+				else if (this.type === 'X'
+						   && typeof proto.data === 'string') {
+					const mid = proto.data.indexOf(';');
+					this.data = {
+						size: Number.parseInt(proto.data.substr(0, mid)),
+						chars: proto.data.substr(mid + 1)
+					};
+				}
+				else
+					this.data = proto.data;
+			}
         }
 
         /**
@@ -31,7 +94,8 @@ define("js/Action", ["js/Translator"], function(Translator) {
 		 * @return {string} path string
          */
         static pathS(p, terminate) {
-            return p.join(PATH_SEPARATOR) + (terminate ? PATH_SEPARATOR : "");
+            return p.join(Action.PATH_SEPARATOR)
+			+ (terminate ? Action.PATH_SEPARATOR : "");
         }
         
         /**
@@ -92,8 +156,63 @@ define("js/Action", ["js/Translator"], function(Translator) {
             + (this.data ? ` '${this.data}'` : "")
             + ` @${new Date(this.time).toLocaleString()}`;
         }
+
+        /**
+         * Merge two action streams in time order. Duplicate actions
+         * are merged. The input action streams will be irretrievably damaged.
+         * @param {Action[]} a the first action stream to merge
+         * @param {Action[]} b the second action stream to merge
+         * @return {Action[]} the merged action stream, sorted in time
+         * order. Note that the action objects in a and b are
+         * preserved for use here
+         */
+        static mergeStreams(a, b) {
+
+            if (a.length === 0)
+                return b;
+            
+            if (b.length == 0)
+                return a;
+
+            function comp_act(a, b) {
+                return a.time < b.time ? -1 : a.time > b.time ? 1 : 0;
+            }
+
+            // Sort streams into time order
+            a.sort(comp_act);
+            b.sort(comp_act);
+
+            let aact = a.shift(), bact = b.shift();
+            let c = [];
+            while (aact || bact) {
+                if (aact && bact) {
+                    if (aact.time === bact.time &&
+                        aact.type === bact.type &&
+                        aact.path.join('/') === bact.path.join('/') &&
+                        aact.data === bact.data) {
+                        // Duplicate, ignore one of them
+                        aact = a.shift();
+                    } else if (aact.time < bact.time) {
+                        c.push(aact);
+                        aact = a.shift();
+                    } else {
+                        c.push(bact);
+                        bact = b.shift();
+                    }
+                } else if (aact) {
+                    c.push(aact);
+                    aact = a.shift();
+                } else {
+                    c.push(bact);
+                    bact = b.shift();
+                }
+            }
+            return c;
+        }
     }
-    
+
+    Action.PATH_SEPARATOR = "↘";
+
     return Action;
 });
 

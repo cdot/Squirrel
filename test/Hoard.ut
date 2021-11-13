@@ -8,66 +8,63 @@ if (typeof requirejs === "undefined") {
 	});
 }
 
-var cloud_actions = [
-    // Action already in the client
-    {
-		type: "N",
-		time: Date.UTC(2000,0),
-		path: ["FineDining"]
-    },
-    // Action not in the client yet
-    {
-		type: "N",
-		time: Date.UTC(2002,0),
-		path: [ "FineDining", "Caviar" ]
-    }
-];
-
-// Client hoard, with populated cache and action stream
-var client_actions = [
-    // Duplicate an action that is already in the cloud, different date
-    {
-	type: "N",
-	time: Date.UTC(2000,0,1),
-	path: ["FineDining"]
-    },
-    {
-	// Add an action that isn't in the cloud yet
-	type: "N",
-	time: Date.UTC(2003,0,1),
-	path: ["FineDining", "Truffles" ],
-        data: "Fungi"
-    }
-];
-
-//const MSPERDAY = 24 * 60 * 60 * 1000;
-
-requirejs(["js/Hoard", "js/Action", "test/TestRunner"], function(Hoard, Action, TestRunner) {
+requirejs(["js/Hoard", "js/Node", "js/Action", "test/TestRunner"], function(Hoard, Node, Action, TestRunner) {
     let tr = new TestRunner("Hoard");
     let assert = tr.assert;
     
+	const cloud_actions = [
+		// Action already in the client
+		new Action({
+			type: "N",
+			time: Date.UTC(2000,0),
+			path: ["FineDining"]
+		}),
+		// Action not in the client yet
+		new Action({
+			type: "N",
+			time: Date.UTC(2002,0),
+			path: [ "FineDining", "Caviar" ]
+		})
+	];
+
+	// Client hoard, with populated cache and action stream
+	const client_actions = [
+		// Duplicate an action that is already in the cloud, different date
+		new Action({
+			type: "N",
+			time: Date.UTC(2000,0,1),
+			path: ["FineDining"]
+		}),
+		new Action({
+			// Add an action that isn't in the cloud yet
+			type: "N",
+			time: Date.UTC(2003,0,1),
+			path: ["FineDining", "Truffles" ],
+			data: "Fungi"
+		})
+	];
+
     tr.addTest("should play_actions into empty hoard", function() {
         let debug;// = console.debug;
         let h = new Hoard({debug: debug});
-        let original = Hoard._copy_tree(h.tree);
+        let original = new Node(h.tree); // make copy
         assert(original);
-        assert.deepEqual(original.data, {});
+        assert(!original.children);
         assert(original.time);
 		for (let act of cloud_actions) {
-            h.play_action(act)
-            .then((r) => {
-                assert.deepEqual(r.action, act);
-                assert(!r.conflict);
-            });
+			const played = [];
+            let r = h.play_action(act, true, (act) => played.push(act));
+            assert.deepEqual(r.action, act);
+			assert.deepEqual(played, [act]);
+            assert(!r.conflict);
 		}
 		assert.deepEqual(h.tree, {
-            data: {
+            children: {
                 FineDining: {
 					time: Date.UTC(2002,0),
-					data:{
+					children:{
 						Caviar: {
-							time: Date.UTC(2002,0),
-							data: {}
+							time: Date.UTC(2002,0)
 						}
 					}
                 }
@@ -81,29 +78,28 @@ requirejs(["js/Hoard", "js/Action", "test/TestRunner"], function(Hoard, Action, 
     tr.addTest("should play_actions into populated hoard", function() {
         let debug;// = console.debug;
 		// Play the cloud action set into a populated client hoard
-		var h = new Hoard({actions: client_actions, debug: debug});
+		var h = new Hoard({debug: debug});
+		const conflicts = h.play_actions(client_actions);
+		assert.equal(conflicts.length, 0);
 		for (let act of cloud_actions) {
-			h.play_action(act, true)
-            .then((r) => {
-                assert.deepEqual(r.action, act);
-                if (act.path.length === 1) {
-                    assert(r.conflict);
-                    assert.equal(r.conflict, "Create FineDining failed: It was already created @ Wed Jan 01 2003 00:00:00 GMT+0000 (Greenwich Mean Time)");
-                }
-            });
+			let r = h.play_action(act, true);
+            assert.deepEqual(r.action, act);
+            if (act.path.length === 1) {
+                assert(r.conflict);
+                assert.equal(r.conflict, "Create FineDining failed: It was already created @ Wed Jan 01 2003 00:00:00 GMT+0000 (Greenwich Mean Time)");
+            }
         }
 		assert.deepEqual(h.tree, {
-			data:{
+			children:{
 				FineDining:{
 					time:Date.UTC(2002,0),
-					data:{
+					children:{
 						Caviar:{
-							time:Date.UTC(2002,0),
-							data:{}
+							time:Date.UTC(2002,0)
 						},
 						Truffles: {
 							time: Date.UTC(2003,0),
-							data: "Fungi"
+							value: "Fungi"
 						}
 					}
 				}
@@ -115,101 +111,229 @@ requirejs(["js/Hoard", "js/Action", "test/TestRunner"], function(Hoard, Action, 
     tr.addTest('should play_action N (node)', function() {
         let debug;// = console.debug;
         let h = new Hoard({debug: debug});
-        let original = Hoard._copy_tree(h.tree);
+        let original = new Node(h.tree);
         let act = new Action({
 			type: "N",
 			time: Date.UTC(2002,0),
 			path: [ "Lunch" ]
         });
-        return h.play_action(act)
-        .then((c) => {
-            assert(!c.conflict);
-            assert.deepEqual(h.tree, {
-                data: {
-                    Lunch: {
-						time: Date.UTC(2002,0),
-						data:{}
-                    }
-                },
-                time: Date.UTC(2002,0)
-            });   
-            assert.equal(h.history.length, 1);
-            assert.deepEqual(h.history[0].redo, act);
-            assert.equal(h.history[0].undo.type, "D");
-            assert.deepEqual(h.history[0].undo.path, [ "Lunch" ]);
-            return h.undo();
-        })
-        .then(() => {
-            assert.equal(h.history.length, 0);
-            // Replayed to empty tree
-            assert.deepEqual(h.tree, original);
-        });
+        let c = h.play_action(act);
+        assert(!c.conflict);
+        assert.deepEqual(h.tree, {
+            children: {
+                Lunch: {
+					time: Date.UTC(2002,0)
+                }
+            },
+            time: Date.UTC(2002,0)
+        });   
+        assert.equal(h.history.length, 1);
+        assert.deepEqual(h.history[0].redo, act);
+        assert.equal(h.history[0].undo.type, "D");
+        assert.deepEqual(h.history[0].undo.path, [ "Lunch" ]);
+		assert(h.can_undo());
+        c = h.undo();
+        assert(!c.conflict);
+        assert.equal(h.history.length, 0);
+        // Replayed to empty tree
+        assert.deepEqual(h.tree, original);
     });
     
     tr.addTest('should play_action N (leaf)', function() {
         let debug;// = console.debug;
         let h = new Hoard({debug: debug});
-        let original = Hoard._copy_tree(h.tree);
+        let original = new Node(h.tree);
         let act = new Action({
 			type: "N",
 			time: Date.UTC(2002,0),
 			path: [ "Lunch" ],
             data: "Sausages"
         });
-        return h.play_action(act)
-        .then((c) => {
-            assert(!c.conflict);
-            assert.deepEqual(h.tree, {
-                data: {
-                    Lunch: {
-						time: Date.UTC(2002,0),
-						data: "Sausages"
-                    }
-                },
-                time: Date.UTC(2002,0)
-            });
-            assert.equal(h.history.length, 1);
-            assert.deepEqual(h.history[0].redo, act);
-            assert.equal(h.history[0].undo.type, "D");
-            assert.deepEqual(h.history[0].undo.path, [ "Lunch" ]);
-            return h.undo();
-        })
-        .then(() => {
-            assert.equal(h.history.length, 0);
-            assert.deepEqual(h.tree, original);
+        let c = h.play_action(act);
+        assert(!c.conflict);
+        assert.deepEqual(h.tree, {
+            children: {
+                Lunch: {
+					time: Date.UTC(2002,0),
+					value: "Sausages"
+                }
+            },
+            time: Date.UTC(2002,0)
         });
+        assert.equal(h.history.length, 1);
+        assert.deepEqual(h.history[0].redo, act);
+        assert.equal(h.history[0].undo.type, "D");
+        assert.deepEqual(h.history[0].undo.path, [ "Lunch" ]);
+		assert(h.can_undo());
+        c = h.undo();
+        assert.equal(h.history.length, 0);
+        assert.deepEqual(h.tree, original);
     });
 
-    tr.addTest('should not play_action N on leaf', function() {
+    tr.addTest('play_action N on leaf', function() {
         let debug;// = console.debug;
         let h = new Hoard({debug: debug});
-        //let original = Hoard._copy_tree(h.tree);
-        return h.play_action({
+        //let original = new Node(h.tree);
+        let c = h.play_action(new Action({
 			type: "N",
 			time: Date.UTC(2002,0),
 			path: [ "Lunch" ],
             data: "Sausages"
-        }, false)
-        .then((c) => {
-            assert(!c.conflict);
-            return h.play_action({
-				type: "N",
-				time: Date.UTC(2002,0),
-				path: [ "Lunch", "Break" ],
-                data: "Crisps"
-            }).then((c) => {
-                assert(c.conflict);
-                assert.deepEqual(h.tree, {
-                    data: {
-                        Lunch: {
+        }), false);
+		
+        assert(!c.conflict);
+        c = h.play_action(new Action({
+			type: "N",
+			time: Date.UTC(2002,0),
+			path: [ "Lunch", "Break" ],
+            data: "Crisps"
+        }));
+        assert(!c.conflict);
+        assert.deepEqual(h.tree, {
+            children: {
+                Lunch: {
+					time: Date.UTC(2002,0),
+					children: {
+						Break: {
 							time: Date.UTC(2002,0),
-							data: "Sausages"
-                        }
-                    },
-                    time: Date.UTC(2002,0)
-                });
-            });
+							value: "Crisps"
+						}
+					},
+					value: "Sausages"
+                }
+            },
+            time: Date.UTC(2002,0)
         });
+    });
+
+    tr.addTest("missing intermediates", async function() {
+        let debug;// = console.debug;
+        let h = new Hoard(debug);
+		const acts = [
+			new Action({
+				type: "N",
+				time: 500,
+				path: [ "One", "Two", "Three" ],
+				data: "Floop"
+			})
+		];
+		const played = [];
+        const conflicts = h.play_actions(acts, false, (act) => played.push(act));
+		assert.equal(conflicts.length, 0);
+		assert.deepEqual(played, [
+			new Action( { type: 'N', path: [ 'One' ], time: 500 }),
+			new Action( { type: 'N', path: [ 'One', 'Two' ], time: 500 }),
+			new Action({
+				type: 'N',
+				path: [ 'One', 'Two', 'Three' ],
+				time: 500,
+				data: 'Floop'
+			})
+		]);
+    });
+
+    tr.addTest("missing leaf X+", async function() {
+        let debug;// = console.debug;
+        let h = new Hoard(debug);
+		const acts = [
+			new Action({
+				type: "X",
+				time: 500,
+				path: [ "One", "Two", "Three" ],
+				data: {
+					size: 10,
+					chars: "ABC"
+				}
+			})
+		];
+        const conflicts = h.play_actions(acts);
+		assert.equal(conflicts.length, 0);
+		assert(h.tree.getNodeAt([ "One", "Two", "Three" ]));
+    });
+
+    tr.addTest("missing leaf E", async function() {
+        let debug;// = console.debug;
+        let h = new Hoard(debug);
+		const acts = [
+			new Action({
+				type: "E",
+				time: 500,
+				path: [ "One", "Two", "Three" ],
+				data: "Smooch"
+			})
+		];
+		const played = [];
+        const conflicts = h.play_actions(acts, (act) => played.push(act));
+		assert.equal(conflicts.length, 0);
+		assert.deepEqual(played, [
+			new Action( { type: 'N', path: [ 'One' ], time: 500 }),
+			new Action( { type: 'N', path: [ 'One', 'Two' ], time: 500 }),
+			new Action( {
+				type: 'N',
+				path: [ 'One', 'Two', 'Three' ],
+				time: 500,
+				data: 'PLACEHOLDER'
+			}),
+			new Action( {
+				type: 'E',
+				path: [ 'One', 'Two', 'Three' ],
+				time: 500,
+				data: 'Smooch'
+			})
+		]);
+		assert(h.tree.getNodeAt([ "One", "Two", "Three" ]));
+    });
+
+    tr.addTest("missing leaf X-", async function() {
+        let debug;// = console.debug;
+        let h = new Hoard(debug);
+		const acts = [
+			new Action({
+				type: "X",
+				time: 500,
+				path: [ "One", "Two", "Three" ]
+				// data being nudefined should remove the constraint.
+				// But since the leaf doesn't exist, this should be a NOP
+			})
+		];
+        const conflicts = h.play_actions(acts);
+		assert.equal(conflicts.length, 0);
+		assert(!h.tree.getNodeAt([ "One", "Two", "Three" ]));
+    });
+
+    tr.addTest("missing leaf A+", async function() {
+        let debug;// = console.debug;
+        let h = new Hoard(debug);
+		const acts = [
+			new Action({
+				type: "A",
+				time: 500,
+				path: [ "One", "Two", "Three" ],
+				data: {
+					due: 1000000
+				}
+			})
+		];
+        const conflicts = h.play_actions(acts);
+		assert.equal(conflicts.length, 0);
+		assert(h.tree.getNodeAt([ "One", "Two", "Three" ]));
+    });
+
+    tr.addTest("missing leaf A-", async function() {
+        let debug;// = console.debug;
+        let h = new Hoard(debug);
+		const acts = [
+			new Action({
+				type: "A",
+				time: 500,
+				path: [ "One", "Two", "Three" ]
+				// data being nudefined should remove the alarm.
+				// But since the leaf doesn't exist, this should be a NOP
+			})
+		];
+        const conflicts = h.play_actions(acts);
+		assert.equal(conflicts.length, 0);
+		assert(!h.tree.getNodeAt([ "One", "Two", "Three" ]));
     });
 
     tr.addTest('should play_action M', function() {
@@ -218,25 +342,25 @@ requirejs(["js/Hoard", "js/Action", "test/TestRunner"], function(Hoard, Action, 
 		for (let act of cloud_actions) {
 			h.play_action(act, false);
         }
-		h.play_action({
+		h.play_action(new Action({
 			type: "N",
 			time: Date.UTC(2001,0,1),
 			path: ["FineDining", "Roe" ],
-        }, false);
-		h.play_action({
+        }), false);
+		h.play_action(new Action({
 			type: "N",
 			time: Date.UTC(2003,0,1),
 			path: ["FineDining", "Caviar", "Sevruga" ],
             data: "Meaty"
-        }, false);
-		h.play_action({
+        }), false);
+		h.play_action(new Action({
 			type: "N",
 			time: Date.UTC(2004,0,1),
 			path: ["FineDining", "Caviar", "Beluga" ],
             data: "Fishy"
-        }, false);
+        }), false);
 
-        let original = Hoard._copy_tree(h.tree);
+        let original = new Node(h.tree);
         
         // Move Beluga to be a subnode of Roe
         let act = new Action({
@@ -245,56 +369,52 @@ requirejs(["js/Hoard", "js/Action", "test/TestRunner"], function(Hoard, Action, 
 			path: ["FineDining", "Caviar", "Beluga"],
             data: [ "FineDining", "Roe" ]
         });
-		return h.play_action(act)
-        .then((r) => {
-            assert(!r.conflict);
-            assert.equal(h.history.length, 1);
-            assert.deepEqual(h.history[0].redo, act);
-            assert.equal(h.history[0].undo.type, "M");
-            assert.deepEqual(h.history[0].undo.data, ["FineDining", "Caviar"]);
-            assert.deepEqual(h.history[0].undo.path, ["FineDining", "Roe", "Beluga"]);
-            assert.equal(h.history[0].undo.time, Date.UTC(2004,0));
-			assert.deepEqual(h.tree, {
-                data: {
-                    FineDining: {
-						time: Date.UTC(2001,0),
-						data:{
-							Caviar: {
-								time: Date.UTC(2005,0),
-								data: {
-                                    Sevruga: {
-										time: Date.UTC(2003,0,1),
-                                        data: "Meaty"
-                                    }
-                                }
-							},
-                            Roe: {
-								time: Date.UTC(2005,0),
-                                data: {
-                                    Beluga: {
-										time: Date.UTC(2004,0,1),
-                                        data: "Fishy"
-                                    }
+		let r = h.play_action(act);
+        assert(!r.conflict);
+        assert.equal(h.history.length, 1);
+        assert.deepEqual(h.history[0].redo, act);
+        assert.equal(h.history[0].undo.type, "M");
+        assert.deepEqual(h.history[0].undo.data, ["FineDining", "Caviar"]);
+        assert.deepEqual(h.history[0].undo.path, ["FineDining", "Roe", "Beluga"]);
+        assert.equal(h.history[0].undo.time, Date.UTC(2004,0));
+		assert.deepEqual(h.tree, {
+            children: {
+                FineDining: {
+					time: Date.UTC(2001,0),
+					children:{
+						Caviar: {
+							time: Date.UTC(2005,0),
+							children: {
+                                Sevruga: {
+									time: Date.UTC(2003,0,1),
+                                    value: "Meaty"
                                 }
                             }
-						}
-                    }
-                },
-                time: Date.UTC(2000,0)
-            });
-        })
-        .then(() => {
-            return h.undo();
-        }).then((r) => {
-            assert(!r.conflict);
-            // The time for "Roe" will not be restored to the original
-            // creation time, but will get the time on "Caviar"
-            // - this is an accepted limitation of the move process, it's
-            // not perfectly symmetrical
-            original.data.FineDining.data.Roe.time
-            = original.data.FineDining.data.Caviar.time;
-			assert.deepEqual(h.tree, original);
+						},
+                        Roe: {
+							time: Date.UTC(2005,0),
+                            children: {
+                                Beluga: {
+									time: Date.UTC(2004,0,1),
+                                    value: "Fishy"
+                                }
+                            }
+                        }
+					}
+                }
+            },
+            time: Date.UTC(2000,0)
         });
+		assert(h.can_undo());
+        r = h.undo();
+        assert(!r.conflict);
+        // The time for "Roe" will not be restored to the original
+        // creation time, but will get the time on "Caviar"
+        // - this is an accepted limitation of the move process, it's
+        // not perfectly symmetrical
+        original.getNodeAt('FineDining↘Roe').time
+        = original.getNodeAt('FineDining↘Caviar').time;
+		assert.deepEqual(h.tree, original);
     });
 
     tr.addTest('should play_action R', function() {
@@ -304,7 +424,7 @@ requirejs(["js/Hoard", "js/Action", "test/TestRunner"], function(Hoard, Action, 
 			h.play_action(act, false);
         }
 
-        let original = Hoard._copy_tree(h.tree);
+        let original = new Node(h.tree);
 
         let act = new Action({
 			type: "R",
@@ -312,36 +432,33 @@ requirejs(["js/Hoard", "js/Action", "test/TestRunner"], function(Hoard, Action, 
 			path: ["FineDining", "Truffles"],
             data: "Earthball"
         });
-		return h.play_action(act)
-        .then((r) => {
-            assert(!r.conflict);
-			assert.deepEqual(h.tree, {
-                data: {
-                    FineDining: {
-						time: Date.UTC(2005,0),
-						data:{
-							Earthball: {
-								time: Date.UTC(2003,0),
-								data: "Fungi"
-							}
+		let r = h.play_action(act);
+        assert(!r.conflict);
+		assert.deepEqual(h.tree, {
+            children: {
+                FineDining: {
+					time: Date.UTC(2005,0),
+					children:{
+						Earthball: {
+							time: Date.UTC(2003,0),
+							value: "Fungi"
 						}
-                    }
-                },
-                time: Date.UTC(2000,0)
-            });
-            assert.equal(h.history.length, 1);
-            assert.deepEqual(h.history[0].redo, act);
-            assert.equal(h.history[0].undo.type, "R");
-            assert.equal(h.history[0].undo.data, "Truffles");
-            assert.deepEqual(h.history[0].undo.path, ["FineDining", "Earthball"]);
-            assert.equal(h.history[0].undo.time, Date.UTC(2003,0,1));
-            return h.undo();
-        })
-        .then((r) => {
-            assert(!r.conflict);
-            assert.equal(h.history.length, 0);
-			assert.deepEqual(h.tree, original);
+					}
+                }
+            },
+            time: Date.UTC(2000,0)
         });
+        assert.equal(h.history.length, 1);
+        assert.deepEqual(h.history[0].redo, act);
+        assert.equal(h.history[0].undo.type, "R");
+        assert.equal(h.history[0].undo.data, "Truffles");
+        assert.deepEqual(h.history[0].undo.path, ["FineDining", "Earthball"]);
+        assert.equal(h.history[0].undo.time, Date.UTC(2003,0,1));
+		assert(h.can_undo());
+        r = h.undo();
+        assert(!r.conflict);
+        assert.equal(h.history.length, 0);
+		assert.deepEqual(h.tree, original);
     });
 
     tr.addTest('should play_action E', function() {
@@ -351,7 +468,7 @@ requirejs(["js/Hoard", "js/Action", "test/TestRunner"], function(Hoard, Action, 
 			h.play_action(act, false);
         }
 
-        let original = Hoard._copy_tree(h.tree);
+        let original = new Node(h.tree);
 
         let act = new Action({
 			type: "E",
@@ -359,36 +476,33 @@ requirejs(["js/Hoard", "js/Action", "test/TestRunner"], function(Hoard, Action, 
 			path: ["FineDining", "Truffles"],
             data: "Earthball"
         });
-		return h.play_action(act)
-        .then((r) => {
-            assert(!r.conflict);
-			assert.deepEqual(h.tree, {
-                data: {
-                    FineDining: {
-						time: Date.UTC(2003,0,1),
-						data:{
-							Truffles: {
-								time: Date.UTC(2005,0),
-								data: "Earthball"
-							}
+		let r = h.play_action(act);
+        assert(!r.conflict);
+		assert.deepEqual(h.tree, {
+            children: {
+                FineDining: {
+					time: Date.UTC(2003,0,1),
+					children:{
+						Truffles: {
+							time: Date.UTC(2005,0),
+							value: "Earthball"
 						}
-                    }
-                },
-                time: Date.UTC(2000,0)
-            });
-            assert.equal(h.history.length, 1);
-            assert.deepEqual(h.history[0].redo, act);
-            assert.equal(h.history[0].undo.type, "E");
-            assert.equal(h.history[0].undo.data, "Fungi");
-            assert.deepEqual(h.history[0].undo.path, ["FineDining", "Truffles"]);
-            assert.equal(h.history[0].undo.time, Date.UTC(2003,0,1));
-            return h.undo();
-        })
-        .then((r) => {
-            assert(!r.conflict);
-            assert.equal(h.history.length, 0);
-			assert.deepEqual(h.tree, original);
+					}
+                }
+            },
+            time: Date.UTC(2000,0)
         });
+        assert.equal(h.history.length, 1);
+        assert.deepEqual(h.history[0].redo, act);
+        assert.equal(h.history[0].undo.type, "E");
+        assert.equal(h.history[0].undo.data, "Fungi");
+        assert.deepEqual(h.history[0].undo.path, ["FineDining", "Truffles"]);
+        assert.equal(h.history[0].undo.time, Date.UTC(2003,0,1));
+		assert(h.can_undo());
+        r = h.undo();
+        assert(!r.conflict);
+        assert.equal(h.history.length, 0);
+		assert.deepEqual(h.tree, original);
     });
 
     tr.addTest('should play_action X', function() {
@@ -397,44 +511,41 @@ requirejs(["js/Hoard", "js/Action", "test/TestRunner"], function(Hoard, Action, 
 		for (let act of client_actions) {
 			h.play_action(act, false);
         }
-        let original = Hoard._copy_tree(h.tree);
+        let original = new Node(h.tree);
         let act = new Action({
 			type: "X",
 			time: Date.UTC(2005,0),
 			path: ["FineDining", "Truffles"],
             data: { size: 1, chars: "2" }
         });
-		return h.play_action(act)
-        .then((r) => {
-            assert(!r.conflict);
-			assert.deepEqual(h.tree, {
-                data: {
-                    FineDining: {
-						time: Date.UTC(2003,0,1),
-						data:{
-							Truffles: {
-								time: Date.UTC(2005,0),
-								data: "Fungi",
-                                constraints: { size: 1, chars: "2" }
-							}
+		let r = h.play_action(act);
+        assert(!r.conflict);
+		assert.deepEqual(h.tree, {
+            children: {
+                FineDining: {
+					time: Date.UTC(2003,0,1),
+					children:{
+						Truffles: {
+							time: Date.UTC(2005,0),
+							value: "Fungi",
+                            constraints: { size: 1, chars: "2" }
 						}
-                    }
-                },
-                time: Date.UTC(2000,0)
-            });
-            assert.equal(h.history.length, 1);
-            assert.deepEqual(h.history[0].redo, act);
-            assert.equal(h.history[0].undo.type, "X");
-            assert.isUndefined(h.history[0].undo.data);
-            assert.deepEqual(h.history[0].undo.path, ["FineDining", "Truffles"]);
-            assert.equal(h.history[0].undo.time, Date.UTC(2003,0,1));
-            return h.undo();
-        })
-        .then((r) => {
-            assert(!r.conflict);
-            assert.equal(h.history.length, 0);
-			assert.deepEqual(h.tree, original);
+					}
+                }
+            },
+            time: Date.UTC(2000,0)
         });
+        assert.equal(h.history.length, 1);
+        assert.deepEqual(h.history[0].redo, act);
+        assert.equal(h.history[0].undo.type, "X");
+        assert.isUndefined(h.history[0].undo.data);
+        assert.deepEqual(h.history[0].undo.path, ["FineDining", "Truffles"]);
+        assert.equal(h.history[0].undo.time, Date.UTC(2003,0,1));
+		assert(h.can_undo());
+        r = h.undo();
+        assert(!r.conflict);
+        assert.equal(h.history.length, 0);
+		assert.deepEqual(h.tree, original);
     });
 
     tr.addTest('should play_action D/I', function() {
@@ -443,37 +554,33 @@ requirejs(["js/Hoard", "js/Action", "test/TestRunner"], function(Hoard, Action, 
 		for (let act of client_actions) {
 			h.play_action(act, false);
         }
-        let original = Hoard._copy_tree(h.tree);
+        let original = new Node(h.tree);
         let act = new Action({
 			type: "D",
 			time: Date.UTC(2005,0),
-			path: ["FineDining", "Truffles"],
-            data: "1;2"
+			path: ["FineDining", "Truffles"]
         });
-		return h.play_action(act).then((r) => {
-            assert(!r.conflict);
-			assert.deepEqual(h.tree, {
-                data: {
-                    FineDining: {
-						time: Date.UTC(2005,0,1),
-						data:{}
-                    }
-                },
-                time: Date.UTC(2000,0)
-            });
-            assert.equal(h.history.length, 1);
-            assert.deepEqual(h.history[0].redo, act);
-            assert.equal(h.history[0].undo.type, "I");
-            assert(h.history[0].undo.data);
-            assert.deepEqual(h.history[0].undo.path, ["FineDining", "Truffles"]);
-            assert.equal(h.history[0].undo.time, Date.UTC(2003,0,1));
-            return h.undo();
-        })
-        .then((r) => {
-            assert(!r.conflict, r.conflict);
-            assert.equal(h.history.length, 0);
-			assert.deepEqual(h.tree, original);
+		let r =  h.play_action(act);
+        assert(!r.conflict);
+		assert.deepEqual(h.tree, {
+            children: {
+                FineDining: {
+					time: Date.UTC(2005,0,1)
+                }
+            },
+            time: Date.UTC(2000,0)
         });
+        assert.equal(h.history.length, 1);
+        assert.deepEqual(h.history[0].redo, act);
+        assert.equal(h.history[0].undo.type, "I");
+        assert.equal(typeof h.history[0].undo.data, "string");
+        assert.deepEqual(h.history[0].undo.path, ["FineDining", "Truffles"]);
+        assert.equal(h.history[0].undo.time, Date.UTC(2003,0,1));
+		assert(h.can_undo());
+        r = h.undo();
+        assert(!r.conflict, r.conflict);
+        assert.equal(h.history.length, 0);
+		assert.deepEqual(h.tree, original);
     });
 
     tr.addTest('should play_action A/C', function() {
@@ -482,58 +589,56 @@ requirejs(["js/Hoard", "js/Action", "test/TestRunner"], function(Hoard, Action, 
 		for (let act of cloud_actions) {
 			h.play_action(act, false);
         }
-        let original = Hoard._copy_tree(h.tree);
+        let original = new Node(h.tree);
         let act = new Action({
 			type: "A",
 			time: Date.UTC(2005,0),
 			path: ["FineDining", "Caviar"],
             data: 1
         });
-		return h.play_action(act).then((r) => {
-            assert(!r.conflict);
-			assert.deepEqual(h.tree, {
-                data: {
-                    FineDining: {
-						time: Date.UTC(2002,0),
-						data:{
-							Caviar: {
-								time: Date.UTC(2005,0),
-								data: {},
-                                alarm: {
-                                    due: Date.UTC(2005,0,2),
-                                    repeat: 1 * 24 * 60 * 60 * 1000
-                                }
-							}
-						}
-                    }
-                },
-                time: Date.UTC(2000,0)
-            });
-            assert.equal(h.history.length, 1);
-            assert.deepEqual(h.history[0].redo, act);
-            assert.equal(h.history[0].undo.type, "C");
-            assert.deepEqual(h.history[0].undo.path, ["FineDining", "Caviar"]);
-            assert.equal(h.history[0].undo.time, Date.UTC(2002,0));
-            return h.undo();
-        })
-        .then((r) => {
-            assert(!r.conflict);
-            assert.equal(h.history.length, 0);
-			assert.deepEqual(h.tree, original);
-        });
-    });
-
-    tr.addTest('should make from actions', function() {
-        let debug;// = console.debug;
-        let h = new Hoard({actions: cloud_actions, debug: debug});
-        assert.deepEqual(h.tree, {
-            data: {
+		let r = h.play_action(act);
+        assert(!r.conflict);
+		assert.deepEqual(h.tree, {
+            children: {
                 FineDining: {
 					time: Date.UTC(2002,0),
-					data:{
+					children:{
+						Caviar: {
+							time: Date.UTC(2005,0),
+                            alarm: {
+                                due: Date.UTC(2005,0,2),
+                                repeat: 1 * 24 * 60 * 60 * 1000
+                            }
+						}
+					}
+                }
+            },
+            time: Date.UTC(2000,0)
+        });
+        assert.equal(h.history.length, 1);
+        assert.deepEqual(h.history[0].redo, act);
+        assert.equal(h.history[0].undo.type, "C");
+        assert.deepEqual(h.history[0].undo.path, ["FineDining", "Caviar"]);
+        assert.equal(h.history[0].undo.time, Date.UTC(2002,0));
+		assert(h.can_undo());
+        r = h.undo();
+        assert(!r.conflict);
+        assert.equal(h.history.length, 0);
+		assert.deepEqual(h.tree, original);
+    });
+
+    tr.addTest('should make from actions', async function() {
+        let debug;// = console.debug;
+		var h = new Hoard({debug: debug});
+		const conflicts = h.play_actions(cloud_actions);
+		assert.equal(conflicts.length, 0);
+        assert.deepEqual(h.tree, {
+            children: {
+                FineDining: {
+					time: Date.UTC(2002,0),
+					children:{
 						Caviar: {
 							time: Date.UTC(2002,0),
-							data: {}
 						}
 					}
                 }
@@ -541,31 +646,19 @@ requirejs(["js/Hoard", "js/Action", "test/TestRunner"], function(Hoard, Action, 
             // Touched at the time "FineDining" was stamped
             time: Date.UTC(2000,0)
         });
-        assert.equal(h.history.length, 0);
+        assert.equal(h.history.length, 2);
     });
 
-    tr.addTest('should make from hoard', function() {
+    tr.addTest('should make from hoard', async function() {
         let debug;// = console.debug;
-        let h1 = new Hoard({actions: cloud_actions, debug: debug});
+        let h1 = new Hoard({debug: debug});
+		const conflicts = h1.play_actions(client_actions);
+		assert.equal(conflicts.length, 0);
         let h = new Hoard({hoard: h1, debug: debug});
         assert.deepEqual(h1, h);
     });
 
-    tr.addTest('should conflict: zero path', function() {
-        let debug;// = console.debug;
-        let h = new Hoard({debug: debug});
-        let act = new Action({
-			type: "N",
-			time: Date.UTC(2004,0),
-			path: []
-		});
-		return h.play_action(act).then((c) => {
-			assert.equal(c.conflict, "Create  failed: Zero length path");
-            assert.deepEqual(c.action, act);
-        });
-    });
-
-    tr.addTest('should conflict: no parent', function() {
+    tr.addTest('should create parent', function() {
         let debug;// = console.debug;
         let h = new Hoard({debug: debug});
 		for (let act of cloud_actions) {
@@ -574,14 +667,15 @@ requirejs(["js/Hoard", "js/Action", "test/TestRunner"], function(Hoard, Action, 
 		let act = new Action({
 			type: "N",
 			time: Date.UTC(2004,0),
-			path: ["Junk", "Burger"]
+			path: ["Junk", "Burger"],
+			data: "Mayo"
         });
-        return h.play_action(act)
-        .then((r) => {
-			assert.equal(r.conflict,
-                         "Create Junk↘Burger failed: not found");
-            assert.deepEqual(r.action, act);
-        });
+        let r = h.play_action(act);
+		assert(!r.conflict);
+        assert.deepEqual(r.action, act);
+		let leef = h.tree.getNodeAt(["Junk", "Burger"]);
+		assert(leef instanceof Node);
+		assert.equal(leef.value, "Mayo");
     });
 
     tr.addTest('should conflict: no such node (delete)', function() {
@@ -589,114 +683,78 @@ requirejs(["js/Hoard", "js/Action", "test/TestRunner"], function(Hoard, Action, 
         let h = new Hoard({debug: debug});
 
 		// No cache, so promise should be resolved will be called
-		return h.play_action({
+		const c = h.play_action(new Action({
             type: "D",
             path: ["FineDining", "La Gavroche"]
-        }).then((c) => {
-            assert.equal(
-                c.conflict,
-                "Delete FineDining↘La Gavroche failed: not found");
-        });
+        }));
+        assert.equal(
+            c.conflict,
+            "Delete FineDining↘La Gavroche failed: it does not exist");
     });
 
-    tr.addTest('should conflict: no such node (edit)', function() {
+    tr.addTest('should create node (edit)', function() {
         let debug;// = console.debug;
         let h = new Hoard({debug: debug});
 
-        let kfc = {
+        let kfc = new Action({
 			type: "E",
 			time: Date.UTC(2004,0),
 			path: ["FineDining", "Doner"],
             data: "Sausages"
-		};
+		});
 
-		return h.play_action(cloud_actions[0])
-		.then((e) => {
-			assert.deepEqual(cloud_actions[0], e.action);
-			return h.play_action(kfc);
-        }).then((/*e*/) => {
-            return h.play_action(kfc);
-        }).then((e) => {
-			assert.equal(
-                e.conflict,
-                "Change value of FineDining↘Doner to 'Sausages' failed: it does not exist");
-            assert.deepEqual(e.action, kfc);
-        });
+		let e = h.play_action(cloud_actions[0]);
+		assert.deepEqual(cloud_actions[0], e.action);
+		h.play_action(kfc);
+        e = h.play_action(kfc);
+		assert(!e.conflict);
+        assert.deepEqual(e.action, kfc);
+		let node = h.tree.getNodeAt(["FineDining", "Doner"]);
+		assert.equal(node.value, "Sausages");
     });
 
-    tr.addTest('should merge action streams', function() {
-        //let debug;// = console.debug;
-        //let cloud = new Hoard({debug: debug});
-        // Initial action stream is empty
-        let m = Hoard.merge_actions([], cloud_actions.slice());
-        assert.deepEqual(m, cloud_actions);
-
-        // Merging should skip duplicates
-        m = Hoard.merge_actions(m, cloud_actions.slice());
-        assert.deepEqual(m, cloud_actions);
-
-        m = Hoard.merge_actions(cloud_actions.slice(),
-                                client_actions.slice());
-
-        assert.deepEqual(
-            m,
-            [
-                cloud_actions[0],
-                cloud_actions[1],
-                client_actions[1],
-            ]);
-
-        // A merge the other way should work the same
-        m = Hoard.merge_actions(client_actions.slice(),
-                                cloud_actions.slice());
-        assert.deepEqual(
-            m,
-            [
-                cloud_actions[0],
-                cloud_actions[1],
-                client_actions[1],
-            ]);
-    });
-
-    tr.addTest("should ring alarms", function() {
+    tr.addTest("should ring alarms", async function() {
         let debug;// = console.debug;
         let actions = [
-            {
+            new Action({
 				type: "N",
 				time: Date.UTC(2000,0),
 				path: ["FineDining"]
-            },
-            {
+            }),
+            new Action({
 				type: "A",
 				time: Date.UTC(2007,0,30),
                 data: 200, // should be interpreted as "200 days from
                 // the time the alarm was added"
-                ring_expected: Date.UTC(2007,7,18),
 				path: [ "FineDining" ]
-            },
-            {
+            }),
+            new Action({
 				type: "N",
 				time: Date.UTC(2001,6,1),
 				path: [ "FineDining", "Caviare" ]
-            },
-            {
+            }),
+            new Action({
 				type: "N",
 				time: Date.UTC(2002,0,1),
 				path: [ "FineDining", "Caviare", "Beluga" ],
                 data: "£6.70 per gram"
-            },
-            {
+            }),
+            new Action({
                 type: "A",
 				path: [ "FineDining", "Caviare", "Beluga" ],
 				time: Date.UTC(2003,0,1),
-                ring_expected: Date.UTC(2003,3,11),
                 data: {
                     due: Date.UTC(2003,3,11),
                     repeat: 3600000000
                 }
-            }
+            })
         ];
-        let cloud = new Hoard({actions: actions, debug: debug});
+		actions[1].ring_expected = Date.UTC(2007,7,18);
+		actions[4].ring_expected = Date.UTC(2003,3,11);
+		
+        let cloud = new Hoard({debug: debug});
+		const conflicts = cloud.play_actions(actions);
+		assert.equal(conflicts.length, 0);
         return cloud.check_alarms(function(path, rang_at) {
             for (let a of actions) {
                 if (a.type === "A" && TestRunner.samePath(a.path, path)) {
@@ -721,10 +779,10 @@ requirejs(["js/Hoard", "js/Action", "test/TestRunner"], function(Hoard, Action, 
                            + new Date(act.ring_expected).toUTCString());
             }
             
-            assert.equal(cloud.tree.data.FineDining.alarm.repeat,
+            assert.equal(cloud.tree.getChild("FineDining").alarm.repeat,
                          17280000000);
             assert.equal(
-                cloud.tree.data.FineDining.data.Caviare.data.Beluga.alarm.repeat,
+                cloud.tree.getNodeAt("FineDining↘Caviare↘Beluga").alarm.repeat,
                 3600000000);
         });
     });
@@ -732,78 +790,78 @@ requirejs(["js/Hoard", "js/Action", "test/TestRunner"], function(Hoard, Action, 
     tr.addTest("get_node", function() {
         let debug;// = console.debug;
         const actions = [
-            {
+            new Action({
 				type: "N",
 				time: Date.UTC(2000,0,1),
 				path: ["A"]
-            },
-            {
+            }),
+            new Action({
 				type: "N",
 				time: Date.UTC(2001,6,1),
 				path: [ "A", "A" ]
-            },
-            {
+            }),
+            new Action({
 				type: "N",
 				time: Date.UTC(2002,0,1),
 				path: [ "A", "B" ]
-            },
-            {
+            }),
+            new Action({
 				type: "N",
 				time: Date.UTC(2002,0,1),
 				path: [ "A", "C" ]
-            },
-            {
+            }),
+            new Action({
                 type: "N",
 				path: [ "A", "B", "C" ],
 				time: Date.UTC(2003,0,1)
-            },
-            {
+            }),
+            new Action({
 				type: "N",
 				time: Date.UTC(2002,0,2),
 				path: ["A", "C"]
-            },
+            })
         ];
         let cloud = new Hoard({debug: debug});
 		for (let act of actions) {
 			cloud.play_action(act);
         }
-        cloud.play_action({
+        cloud.play_action(new Action({
 			type: "N",
 			time: Date.UTC(2001,6,1),
 			path: [ "A", "A" ]
-        });
+        }));
         let n = cloud.get_node(["A", "B", "C"]);
         assert.equal(n.time, Date.UTC(2003,0,1));
         n = cloud.get_node(["A", "A"]);
         assert.equal(n.time, Date.UTC(2001,6,1));
         n = cloud.get_node(["A", "B", "D"]);
-        assert.isNull(n);
+        assert(!n);
     });
 
     const full_tree_actions = [
-        {
+        new Action({
 			type: "N",
 			time: 100,
 			path: ["FineDining"]
-        },
-        {
+        }),
+        new Action({
 			type: "A",
 			time: 200,
             data: { due: Date.UTC(2015,3,4), repeat: 10 },
 			path: ["FineDining"]
-        },
-        {
+        }),
+        new Action({
 			type: "N",
 			time: 300,
 			path: [ "FineDining", "Caviare" ]
-        },
-        {
+        }),
+        new Action({
 			type: "N",
 			time: 400,
 			path: [ "FineDining", "Caviare", "Beluga" ],
             data: "£6.70 per gram"
-        },
-        {
+        }),
+        new Action({
             type: "A",
 			path: [ "FineDining", "Caviare", "Beluga" ],
 			time: 500,
@@ -811,33 +869,33 @@ requirejs(["js/Hoard", "js/Action", "test/TestRunner"], function(Hoard, Action, 
                 due: Date.UTC(2007,11,25),
                 repeat: 100
             }
-        },
-        {
+        }),
+        new Action({
             type: "A",
 			path: [ "FineDining", "Caviare" ],
 			time: 600,
             data: {
                 due: Date.UTC(2005,3,1),
                 repeat: 365}
-        },
-        {
+        }),
+        new Action({
 			type: "X",
 			time: 300,
 			path: [ "FineDining", "Caviare", "Beluga" ],
             data: { size: 32, chars: "A-Z;0-9" }
-        }
+        })
     ];
 
     let full_tree_json = {
         FineDining: {
             time: 300,
-            data: {
+            children: {
                 Caviare: {
                     time: 600,
-                    data: {
+                    children: {
                         Beluga: {
                             time: 300,
-                            data: "£6.70 per gram",
+                            value: "£6.70 per gram",
                             alarm: {
                                 due: Date.UTC(2007,11,25),
                                 repeat: 100
@@ -857,9 +915,11 @@ requirejs(["js/Hoard", "js/Action", "test/TestRunner"], function(Hoard, Action, 
         }
     };
 
-    tr.addTest("actions from tree", function() {
+    tr.addTest("actions from tree", async function() {
         let debug;// = console.debug;
-        let cloud = new Hoard({debug: debug, actions: full_tree_actions});
+        let cloud = new Hoard({debug: debug});
+		const conflicts = cloud.play_actions(full_tree_actions);
+		assert.equal(conflicts.length, 0);
 
         // Make sure we can construct from the tree
 		let h = new Hoard({debug: debug, tree: cloud.tree});
@@ -896,142 +956,6 @@ requirejs(["js/Hoard", "js/Action", "test/TestRunner"], function(Hoard, Action, 
               data: { size: 32, chars:"A-Z;0-9" }
             }
         ]);
-    });
-    
-    tr.addTest("generate correct JSON", function() {
-        let debug;// = console.debug;
-        let cloud = new Hoard({debug: debug});
-		for (let act of full_tree_actions) {
-			cloud.play_action(act);
-        }
-        assert.equal(JSON.stringify(cloud.tree, null, " "),
-                     JSON.stringify({ data: full_tree_json, time: 100 }, null, " "));
-    });
-
-    let tra =  {
-        data: {
-            Constraints: {
-				time: Date.UTC(2001,0),
-				constraints: { size: 1, chars: "2" },
-                data: "constrained"
-            },
-            Alarm: {
-				time: Date.UTC(2002,0),
-				alarm: 1234567890,
-                data: "alarm"
-            },
-            Data: {
-				time: Date.UTC(2003,0),
-                data: "before"
-            },
-            Tree: {
-				time: Date.UTC(2004,0),
-                data: {
-                    A: {
-						time: Date.UTC(2005,0),
-                        data: "a"
-                    },
-                    B: {
-						time: Date.UTC(2006,0),
-                        data: "b"
-                    },
-                    C: {
-						time: Date.UTC(2007,0),
-                        data: "c"
-                    }
-                }
-            },
-        }
-    };
-
-    let trb =  {
-        data: {
-            Constraints: {
-				time: Date.UTC(2001,0),
-				constraints: { size: 2, chars: "1" },
-                data: "constrained"
-            },
-            Alarm: {
-				time: Date.UTC(2002,0),
-				alarm: 9876543210,
-                data: "alarm"
-            },
-            Data: {
-				time: Date.UTC(2003,0),
-                data: "after"
-            },
-            Tree: {
-				time: Date.UTC(2004,0),
-                data: {
-                    A: {
-						time: Date.UTC(2005,0),
-                        data: "a"
-                    },
-                    C: {
-						time: Date.UTC(2007,0),
-                        data: "c"
-                    },
-                    D: {
-						time: Date.UTC(2008,0),
-                        data: "d"
-                    },
-                }
-            },
-        }
-    };
-
-    let tre = [
-        { type: "X",
-          path: [ 'Constraints' ],
-          constraints: { size: 2, chars: "1" }
-        },
-        {
-            type:"A",
-            path: [ 'Alarm' ],
-            alarm: 9876543210
-        },
-        {
-            type:"E",
-            path: [ 'Data' ],
-            data: 'after'
-        },
-        {
-            type:"D",
-            path: [ 'Tree', 'B' ]
-        },
-        {
-            type: "I",
-            path: [ 'Tree' ],
-            data: JSON.stringify({
-                name: 'D',
-                node: { time: Date.UTC(2008,0), data: 'd' }
-            })
-        }
-    ];
-
-    tr.addTest("should diff", function() {
-        let debug;// = console.debug;
-        let ah = new Hoard({debug: debug});
-        ah.tree = tra;
-
-        let bh = new Hoard({debug: debug});
-        bh.tree = trb;
-
-        ah.diff(bh, (act) => {
-            let matched = false;
-            for (let x of tre) {
-                if (x.type === act.type && !x.matched) {
-                    delete x.time; delete act.time;
-                    assert.deepEqual(act, x);
-                    x.matched = matched = true;
-                    break;
-                }
-            }
-            assert(matched, act.type);
-        });
-        for (let x of tre)
-            assert(x.matched, x.type);
-
     });
 
     tr.run();

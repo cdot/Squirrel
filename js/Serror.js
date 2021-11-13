@@ -10,8 +10,7 @@ define("js/Serror", function() {
      */
     class Serror extends Error {
         /**
-         * @param {number=} status HTTP status code describing the error
-         * (defaults to 400)
+         * @param {number} [status=400] HTTP status code describing the error
          * @param {string=} path path array where it failed,
          * @param {string} message is passed to the Error constructor
          * (filename and line number not supported)

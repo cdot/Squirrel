@@ -42,7 +42,10 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/Cr
         {
 			type: "A",
 			time: 200,
-            data: 100000,
+            data: {
+                due: Date.UTC(2513,9,9),
+                repeat: 100
+            },
 			path: ["One"]
         },
         {
@@ -60,21 +63,30 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/Cr
             type: "A",
 			path: [ "One", "Two", "Three" ],
 			time: 500,
-            data: 100
+            data: {
+                due: Date.UTC(2918,11,11),
+                repeat: 100
+            }
         },
         {
             type: "A",
 			path: [ "One", "Two" ],
 			time: 600,
-            data: 11111
+            data: {
+                due: Date.UTC(2413,6,23),
+                repeat: 100
+            }
         },
         {
 			type: "X",
 			time: 500,
 			path: [ "One", "Two", "Three" ],
-            data: { size: 32, chars: "A-Z;0-9" }
+            data: {
+				size: 32,
+				chars: "A-Z;0-9"
+			}
         }
-    ];
+    ].map(a => new Action(a));
 
     tr.addTest("load_client", function() {
         let debug;// = console.debug;
@@ -94,7 +106,6 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/Cr
         });
     });
 
-    
     tr.addTest("load_cloud", function() {
         let debug;// = console.debug;
         let store = new MemoryStore({ debug: debug, user: "Zeno" });
@@ -165,22 +176,34 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/Cr
     // that overlap. The update from the cloud should play the
     // remote change into the local hoard
     tr.addTest("simple synchronise", function() {
-        let debug;// = console.debug;
+        let debug;// = console.log;
         let cliest = new MemoryStore();
         let cloust = new MemoryStore();
 
-        // Add an action to the cloud
+        // Add an action to the cloud that won't be in the client
         let acts = full_tree_actions.slice();
-        let cloud_act = new Action({type:"N", path:["One", "From Cloud"],
-                                    time:960, data:"4"});
-        let h;
+        let cloud_act = new Action({
+			type:"N",
+			path:["One", "From Cloud"],
+            time: 1000,
+			data:"cloud action"
+		});
         acts.push(cloud_act);
 
-        let eact = new Action({
-                type:"N", path:["One", "Five"], time:950, data:"5"});
+		// Make an action that will be in the client, but not the cloud,
+		// slightly before the cloud one
+        let client_act = new Action({
+            type:"N",
+			path:["One", "From Client"],
+			time: 950,
+			data:"client action"
+		});
+
+        let h;
+		let conflicts = [];
         return make_cloud(acts, cloust)
         .then(() => {
-            // Populate the client with the base tree
+            // Populate the client with the basic actions
             return make_client(full_tree_actions, cliest);
         })
         .then(() => {
@@ -188,42 +211,37 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/Cr
                 debug: debug,
                 cloudPath: "blah",
                 clientStore: cliest,
-                cloudStore: cloust,
-                last_sync: 900
+                cloudStore: cloust
             });
             return h.load_client();
         })
         .then(() => {
-            // Add a local action in the client
-            return h.hoard.play_action(eact, true);
-        })
-        .then((/*e*/) => {
-            return h.update_from_cloud(
-                [],
-                (choose) => {
-                    return Promise.resolve(choose);
-                } // no player
-            );
-        })
+            // Add local action in the client, adding an undo
+            h.hoard.play_action(client_act, true);
+		})
+        .then((/*e*/) =>
+              h.update_from_cloud(
+                  conflicts // array supports push, which is all we need
+              ))
         .then((actions) => {
-            assert.equal(actions.length, 9);
+			assert.equal(conflicts.length, 0);
+			assert(h.last_sync > 510);
+			// Make sure client and cloud actions both present
             assert.deepEqual(actions, full_tree_actions.concat(
-                [eact], [
-                { type: 'N', path: [ 'One', 'From Cloud' ], time: 960, data: '4' }
-            ]));
-            assert.deepEqual(h.hoard.tree.data, {
+                [ client_act,  cloud_act ]));
+            assert.deepEqual(h.hoard.tree.children, {
                 One: {
-                    time: 960,
-                    data: {
+                    time: 1000, // cloud action time
+                    children: {
                         Two: {
                             time: 600,
-                            data: {
+                            children: {
                                 Three: {
                                     time: 500,
-                                    data: "£6.70 per gram",
+                                    value: "£6.70 per gram",
                                     alarm: {
-                                        due: 500 + 100 * MSPERDAY,
-                                        repeat: 100 * MSPERDAY
+                                        due: Date.UTC(2918,11,11),
+                                        repeat: 100
                                     },
                                     constraints: {
                                         chars: "A-Z;0-9",
@@ -232,22 +250,22 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/Cr
                                 }
                             },
                             alarm: {
-                                due: 600 + 11111 * MSPERDAY,
-                                repeat: 11111 * MSPERDAY
+                                due: Date.UTC(2413,6,23),
+                                repeat: 100
                             }
                         },
                         "From Cloud": {
-                            time: 960, // synch time
-                            data: "4"
+                            time: 1000, // synch time
+                            value: "cloud action"
                         },
-                        "Five": {
+                        "From Client": {
                             time: 950,
-                            data: "5"
+                            value: "client action"
                         }
                     },
                     alarm: {
-                        due: 200 + 100000 * MSPERDAY,
-                        repeat: 100000 * MSPERDAY
+                        due: Date.UTC(2513,9,9),
+                        repeat: 100
                     }
                 }
             });
@@ -287,7 +305,7 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/Cr
             // Add a local action in the client renaming a different node to
             // the same name as the cloud action
             
-            return h.hoard.play_action(eact, true);
+            h.hoard.play_action(eact, true);
         })
         .then(() => {
             let progress = [];
@@ -338,8 +356,7 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/Cr
         .then(() => {
             // Add a local action in the client
             let act = new Action({type:"N", path:["One", "Five"], time:950, data:"5"});
-            return h.hoard.play_action(act);
-        }).then((c) => {
+            const c = h.hoard.play_action(act);
             assert(!c.conflict);
             return h.update_from_cloud(progress);
         })
@@ -365,7 +382,7 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/Cr
             //console.log(cloud));
             let acts = JSON.parse(cloud);
             for (let act of acts) {
-                clouh.play_action(act);
+                clouh.play_action(new Action(act));
             }
             //console.log(clieh.treeJSON());
             //console.log(clouh.treeJSON());
@@ -404,8 +421,7 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/Cr
         .then(() => {
             // Add a local action in the client
             let act = new Action({type:"N", path:["One", "Five"], time:950, data:"5"});
-            return h.hoard.play_action(act);
-        }).then((c) => {
+            const c = h.hoard.play_action(act);
             assert(!c.conflict);
             let progress = [];
             return h.update_from_cloud(progress);
@@ -497,6 +513,65 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/Cr
                     return Promise.resolve();
                 });
             });
+        });
+    });
+
+	// Like simple syncrhonise, but save_stores should do most of the work
+    tr.addTest("save_stores", function() {
+        let debug;// = console.debug;
+        let cliest = new MemoryStore();
+        let cloust = new MemoryStore();
+
+        // Add an action to the cloud
+        let acts = full_tree_actions.slice();
+        let cloud_act = new Action({
+			type:"N",
+			path:["One", "From Cloud"],
+            time:960,
+			data:"4"
+		});
+        let h;
+        acts.push(cloud_act);
+
+        let eact = new Action({
+            type:"N",
+			path:["One", "Five"],
+			time:950,
+			data:"5"
+		});
+        return make_cloud(acts, cloust)
+        .then(() => {
+            // Populate the client with the base tree
+            return make_client(full_tree_actions, cliest);
+        })
+        .then(() => {
+            h = new Hoarder({
+                debug: debug,
+                cloudPath: "blah",
+                clientStore: cliest,
+                cloudStore: cloust,
+                last_sync: 900
+            });
+            return h.load_client();
+        })
+        .then(() => {
+            // Add a local action in the client
+            h.hoard.play_action(eact, true);
+        })
+        .then(() => {
+            return h.save_stores(
+                [],
+                (choose) => {
+                    return Promise.resolve(choose);
+                } // no player
+            );
+        })
+        .then(() => {
+			let loco = h.hoard.actions_to_recreate();
+			let remoh = new Hoard({});
+			remoh.play_actions(JSON.parse(cloust.data.blah).map(a => new Action(a)));
+			let remo = remoh.actions_to_recreate();
+			assert.deepEqual(loco, remo);
         });
     });
 

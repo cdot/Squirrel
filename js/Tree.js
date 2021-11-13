@@ -141,6 +141,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
                 parent = this.options.path.slice();
                 key = parent.pop();
                 $parent = this.getNodeFromPath(parent);
+				Serror.assert($parent && $parent.length === 1);
                 $node.data("key", key);
 
                 if (typeof this.options.value !== "undefined" &&
