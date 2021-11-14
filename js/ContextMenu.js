@@ -49,7 +49,7 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
                     {
                         title: TX.tx("Set/Change Reminder"),
                         cmd: "add_alarm",
-                        uiIcon: "squirrel-icon-alarm squirrel-icon"
+                        uiIcon: "tree-icon-alarm squirrel-icon"
                     },
                     {
                         title: TX.tx("Generate new random value"),
