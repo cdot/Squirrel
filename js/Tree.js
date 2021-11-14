@@ -133,10 +133,17 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
             // will have no controls.
             $node.addClass("tree-never_opened");
 
+            const $ul = $("<ul></ul>")
+                  .addClass("sortable")
+                  .hide();
+            $node.append($ul);
+
             if (is_root) {
                 Tree.path2$node[""] = $node;
-                $node.addClass("tree-isRoot"); // should be there in HTML?
-                $node.data("path", []);
+                $node
+				.addClass("tree-isRoot")
+				.addClass("tree-isColl") // not needed
+                .data("path", []);
             } else {
                 parent = this.options.path.slice();
                 key = parent.pop();
@@ -151,16 +158,8 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
                     .data("value", this.options.value)
                     .addClass("tree-isLeaf");
                     is_leaf = true;
-                }
-            }
-
-            if (!is_leaf) {
-                let $ul = $("<ul></ul>")
-                    .addClass("sortable")
-                    .hide();
-                $node
-                .addClass("tree-isColl")
-                .append($ul);
+                } else
+					$node.addClass("tree-isColl");
             }
 
             if ($parent)
@@ -573,8 +572,8 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
                 })
                 .prependTo($node);
 
-            if (!$node.hasClass("tree-isLeaf")) {
-                // Add open/close button on child none-leaf nodes
+            if ($node.hasClass("tree-isColl")) {
+                // Add open/close button on non-leaf nodes
                 let $control = $("<button></button>").addClass("tree__toggle");
                 $control.appendTo($title);
                 $control.icon_button({
