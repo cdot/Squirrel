@@ -1,68 +1,70 @@
 /*
- * Naming convention
+ * Structural classes naming convention
  *
- * An immediate child is separated with _ e.g. tree_title means a "title"
- * element under a ".tree" element
- *
- * A descendant is separated with __ e.g. tree__info is a descendant of .tree
- * (shorthand for .tree_title_info)
- *
- * Markers on a node are separated with - e.g. tree-isRoot means an isRoot
- * attribute of a tree node
+ * Classes on nodes deeper in the structure inherit the first
+ * character of the class used on their parent. Thus tree_title
+ * contains tree_t_info, and tree_t_info contains tree_t_i_leaf
  */
 
-/* Nodes in a tree. This is be an li for a collection node and should be a
- * div for the root (though it could be some other block node) */
+/**
+ * A node in the tree. This will be an li for a collection or leaf node
+ * and should be a div for the root.
+ */
 .tree {}
 
-/* Wrapper around the tree__toggle and tree__info */
+/* A child node (not the root) is always an li */
+li.tree {
+    padding-left: 1em;
+}
+
+/* A tree node contains a tree_title and a ul for subnodes.
+ * tree_title is a div wrapper around the tree_t_toggle and tree_t_info */
 .tree_title {}
 
+/* Open/close button, tree_title_toggle */
+.tree_t_toggle {
+    margin-right: 1em;
+}
+
 /* full path tree_title_info */
-.tree__info {
+.tree_t_info {
     display: inline-block !important;
 }
 
-/* Just the root node */
-.tree-isRoot {}
-
-.tree-isRoot > .tree_title > .tree__info {
-    margin: 0.3em 0 0 0;
+/** tree_title_info_leaf */
+.tree_t_i_leaf {
 }
 
-/* On a tree, if it's a folder */
-.tree-isColl {}
-
-/* On a tree, if it's a value */
-.tree-isLeaf {}
-
-.tree-hasAlarms:not(.tree-isOpen) {
-    border-left: 1px solid magenta;
+/* tree_title_info_leaf_value */
+.tree_t_i_l_value {
+    font-family: "Courier New", Courier, monospace;
 }
 
-.tree-isDropTarget {
-    border: 1px solid green;
+/* An alarm button, tree_title_info_alarm */
+.tree_t_i_alarm {
+    float: left;
+    margin: 0.2em;
 }
 
-/* span that contains change info - full path tree_title_info_change */
-.tree__change {
+/* tree_title_info_leaf_separator */
+.tree_t_i_l_separator {
+    color: rgb(0, 100, 105); /* may be complemented in code */
+}
+
+/* span that contains change info - tree_title_info_change */
+.tree_t_i_change {
     font-size: smaller;
     margin-left: 2em;
     vertical-align: middle;
 }
 
-/* Open/close button, full path tree_title_toggle */
-.tree__toggle {
-    margin-right: 1em;
-}
-
-/* Icon handle for dragging - full path tree_title_draghandle */
-.tree__draghandle {
+/* Icon handle for dragging - tree_title_draghandle */
+.tree_t_draghandle {
     float: right;
 }
 
 /* The UL that contains all the child nodes under a tree node */
-.tree > ul {
+.tree_subtree {
     list-style-type: none;
     -webkit-padding-start: 0;
     -webkit-margin-start: 0;
@@ -70,9 +72,41 @@
     padding-left: 0;
 }
 
-/* A child node */
-li.tree {
-    padding-left: 1em;
+/**
+ * Class used to associate attributes with nodes.
+ * Naming convention is tree-* e.g. tree-isRoot means an isRoot
+ * attribute of a tree node
+ */
+
+ /* Just the root node */
+.tree-isRoot {}
+.tree-isRoot > .tree_title > .tree_t_info {
+    margin: 0.3em 0 0 0;
+}
+
+/* Leaf (value) node */
+.tree-isLeaf {}
+
+/* if it's a value, don't display the open/close toggle */
+.tree-isLeaf > .tree_title > .tree_t_toggle {
+	display: none;
+}
+
+/* if it's not a value, don't display the leaf container */
+.tree:not(.tree-isLeaf) > .tree_title > .tree_t_info > .tree_t_i_leaf {
+	display: none;
+}
+
+/* If there's at least one alarm in the node or sub-tree */
+.tree-hasAlarms {}
+
+.tree-hasAlarms:not(.tree-isOpen) {
+    border-left: 1px solid magenta;
+}
+
+/* if it's a valid drop target
+.tree-isDropTarget {
+    border: 1px solid green;
 }
 
 /* Applied when a node is open */
@@ -83,22 +117,7 @@ li.tree {
     border: 1px solid;
 }
 
-/* An alarm button, full path tree_title_info_alarm */
-.tree__alarm {
-    float: left;
-    margin: 0.2em;
-}
-
+/* Applied when a subtree has modifications */
 .tree-isModified {
     color: rgb(0, 89, 255); /* may be complemented in code */
-}
-
-/* full path tree_title_info_value */
-.tree__value {
-    font-family: "Courier New", Courier, monospace;
-}
-
-/* full path tree_title_info_separator */
-.tree__separator {
-    color: rgb(0, 100, 105); /* may be complemented in code */
 }

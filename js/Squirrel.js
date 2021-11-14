@@ -571,7 +571,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                     "$1 of $2 found", self.picked_hit + 1, hits.length));
                 $(hits[self.picked_hit])
                     .addClass("picked-hit")
-                    .parents(".tree-isColl")
+                    .parents(".tree")
                     .each(function () {
                         $(this)
                             .tree("open");
@@ -686,7 +686,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                 if (self.debug) self.debug("All dialogs loaded");
             });
 
-            $("#sites-node button.tree__toggle").icon_button();
+            $("#sites-node button.tree_t_toggle").icon_button();
             $("#help_button")
                 .icon_button()
                 .on(Dialog.tapEvent(), function() {

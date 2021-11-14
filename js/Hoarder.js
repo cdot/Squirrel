@@ -235,7 +235,6 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
 		 * {@link Hoard.PlayResult}.
          */
         play_action(action, undoable, uiPlayer) {
-			debugger;
             return this.hoard.play_action(action, undoable, uiPlayer);
         }
 
