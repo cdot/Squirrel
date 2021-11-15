@@ -8,14 +8,14 @@ define("js/jq/edit_in_place", ["jquery", "jquery-ui"], function () {
 
     $.fn.edit_in_place = function (options) {
 
-        let $this = $(this);
-        let h = options.height || $this.height() || "1em";
-        let w = options.width || $this.width() || "1em";
-        let $input = $(document.createElement("input"));
-        let text = options.text || $this.text();
+        const $this = $(this);
+        const h = options.height || $this.height() || "1em";
+        const w = options.width || $this.width() || "1em";
+        const $input = $(document.createElement("input"));
+        const text = options.text || $this.text();
 
         function close() {
-            let v = $input.val();
+            const v = $input.val();
             $input.remove();
             $this.show();
             if (options.onClose)

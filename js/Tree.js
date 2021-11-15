@@ -12,7 +12,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
     const HIDE = "※";
 
     function formatDate(time) {
-        let d = new Date(time);
+        const d = new Date(time);
         return `${d.getFullYear()}-`
         + `00${d.getMonth() + 1}`.slice(-2)
 		+ "-"
@@ -74,7 +74,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
          * @param {Action} act
 		 * @memberof Tree
          */
-        playAction: () => {},
+        treePlayAction: () => {},
 
         /**
          * Invoked when the mouse hovers over a node title.
@@ -118,14 +118,13 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
 		 * @private
          */
         _create: function() {
-            let $node = this.element;
+            const $node = this.element;
 
             // this.element is the object it's called on
             // This will be a div for the root, and an li for any other node
             // this.options is the options passed
 
-            let is_leaf = false;
-            let is_root = !this.options.path;
+            const is_root = !this.options.path;
             let parent, key = "", $parent;
 
             $node.addClass("tree");
@@ -148,6 +147,9 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
                 key = parent.pop();
                 $parent = this.getNodeFromPath(parent);
 				Serror.assert($parent && $parent.length === 1);
+
+				$node[0].accessKey = key; // DEBUG HACK
+
                 $node.data("key", key);
 
                 if (typeof this.options.value !== "undefined" &&
@@ -156,7 +158,6 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
                     $node
                     .data("value", this.options.value)
                     .addClass("tree-isLeaf");
-                    is_leaf = true;
                 }
             }
 
@@ -173,7 +174,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
 
 		// called by widget
         _destroy: function() {
-            let $node = this.element;
+            const $node = this.element;
 
             this._removeFromCaches();
 
@@ -190,7 +191,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
          * @private
          */
         _displayedValue: function() {
-            let s = this.element.data("value");
+            const s = this.element.data("value");
             if (Tree.hidingValues())
                 return s.replace(/./g, HIDE);
             return s;
@@ -208,7 +209,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
             Tree.hidingValues(on);
             $(".tree-isLeaf")
             .each(function() {
-                let v = $(this).data("value");
+                const v = $(this).data("value");
                 $(this)
                 .find(".tree_t_i_l_value")
                 .each(
@@ -240,7 +241,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
 		 * @private
          */
         _edit: function($span, text, action) {
-            let $node = this.element;
+            const $node = this.element;
 
             // Fit width to the container
             let w = $node.closest(".tree-isRoot")
@@ -254,7 +255,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
                 .left;
             });
 
-            let nodepath = this.getPath();
+            const nodepath = this.getPath();
             return new Promise((resolve, reject) => {
                 $span.edit_in_place({
                     width: w,
@@ -278,7 +279,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
 		 * @memberof Tree
 		 */
         editKey: function() {
-            let $node = this.element;
+            const $node = this.element;
             return this._edit(
                 $node.find(".tree_t_i_key")
                 .first(), $node.data("key"), "R");
@@ -289,7 +290,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
 		 * @memberof Tree
 		 */
         editValue: function() {
-            let $node = this.element;
+            const $node = this.element;
             return this._edit(
                 $node.find(".tree_t_i_l_value")
                 .first(), $node.data("value"), "E");
@@ -305,90 +306,12 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
             .addClass("tree-icon-rang");
         },
 
-        _makeDraggable: function($node) {
-            function handleDrag(event) {
-                // Get from a position to a target .tree collection node
-                let $within = $(".tree")
-                    .not(".ui-draggable-dragging")
-                      .filter(function () {
-                          if (
-							  // No point on dropping on current parent
-							  $(this)
-							  .is($node.parent()
-                                .closest(".tree"))
-							// Can't drop on leaves
-							|| $(this).hasClass('tree-isLeaf'))
-                            return false;
-                        let box = $(this)
-                            .offset();
-                        if (event.pageX < box.left ||
-                            event.pageY < box.top)
-                            return false;
-                        if (event.pageX >
-                            box.left + $(this)
-                            .outerWidth(true) ||
-                            event.pageY >
-                            box.top + $(this)
-                            .outerHeight(true))
-                            return false;
-                        return true;
-                    });
-                // inside $(this)
-                $(".tree-isDropTarget")
-                .removeClass("tree-isDropTarget");
-                if ($within.length > 0) {
-                    $within = $within.last();
-                    $within.addClass("tree-isDropTarget");
-                }
-            }
-
-            function handleStop() {
-                let $target = $(".tree-isDropTarget");
-                if ($target.length > 1)
-                    debugger;
-                $target.each(function () {
-                    let $new_parent = $(this);
-                    $new_parent.removeClass("tree-isDropTarget");
-                    let oldpath = $node.tree("getPath");
-                    let newpath = $new_parent.tree("getPath");
-                    Tree.playAction(new Action({
-                        type: "M",
-                        path: oldpath,
-                        data: newpath
-                    }));
-                });
-            }
-
-            // Drag handle
-            let $button = $("<div></div>")
-                .addClass("tree_t_draghandle")
-                .icon_button({
-                    icon: "ui-icon-arrow-2-n-s"
-                })
-                .hide();
-            $node
-            .children(".tree_title")
-            .append($button);
-
-            // Make the node draggable by using the drag handle
-            $node.draggable({
-                handle: ".tree_t_draghandle",
-                axis: "y",
-                containment: ".tree",
-                cursor: "pointer",
-                revert: true,
-                revertDuration: 1,
-                drag: handleDrag,
-                stop: handleStop
-            });
-        },
-
         /**
          * Find the path for a DOM node or jQuery node.
          * @return an array containing the path to the node, one string per key
          */
         getPath: function() {
-            let $node = this.element;
+            const $node = this.element;
             if ($node.hasClass("tree-isRoot"))
                 return [];
             Serror.assert($node.hasClass("tree"), "Missing class");
@@ -412,7 +335,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
          * @return a JQuery element
          */
         getNodeFromPath: function(path) {
-            let $node = Tree.path2$node[path.join(PATHSEP)];
+            const $node = Tree.path2$node[path.join(PATHSEP)];
             // Has something not been added to the cache?
             Serror.assert($node && $node.length === 1, path, $node);
             return $node;
@@ -424,7 +347,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
          */
         _insertInto: function($parent) {
             Serror.assert($parent.length === 1);
-            let $node = this.element;
+            const $node = this.element;
 
             // First decouple from the old parent. We have to remove
             // from caches manually because we are detaching, not removing
@@ -433,26 +356,26 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
             $node.detach();
 
             // Now insert in the new parent
-            let key = $node.data("key");
+            const key = $node.data("key");
             let inserted = false;
 
-            let $ul = $parent.find("ul").first();
+            const $ul = $parent.find("ul").first();
             Serror.assert($ul.length === 1);
 
             $ul.children(".tree")
-            .each(function () {
-                if (Tree.compareKeys(
-                    $(this)
+            .each((i, el) => {
+                if (!inserted && Tree.compareKeys(
+                    $(el)
                     .data("key"), key) > 0) {
-                    $node.insertBefore($(this));
+                    $node.insertBefore($(el));
                     inserted = true;
                     return false;
                 }
 				return true;
             });
-            if (!inserted) {
+            if (!inserted)
                 $ul.append($node);
-            }
+
             this._addToCaches();
         },
 
@@ -462,53 +385,18 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
         setModified: function(time) {
             this.element.find(".tree_t_i_change").first()
             .text(formatDate(time));
-            
             return this.element
             .addClass("tree-isModified")
             .data("last-time-changed", time);
         },
 
-        // Add UI components for handling any alarm that may be on
-        // the node
-        _decorate_with_alarm: function($node) {
-            let alarm = $node.data("alarm");
-            if (!alarm)
-                return; // no alarm
-            $node
-            .find(".tree_t_i_key")
-            .first()
-            .before(function () {
-                let $button = $("<button></button>").addClass("tree_t_i_alarm");
-
-                $button.icon_button({
-                    icon: "tree-icon-alarm"
-                })
-                .on(Dialog.tapEvent(), function () {
-                    Dialog.confirm("alarm", {
-                        path: $node.tree("getPath"),
-                        alarm: $node.data("alarm")
-                    })
-                    .then((act) => {
-                        if (act.type === "C") {
-                            $node.data("alarm", null);
-                        } else {
-                            $node.data("alarm", {
-                                due: act.data.due,
-                                repeat:act.data.repeat
-                            });
-                        }
-                    })
-                    .catch((/*e*/) => {});
-                    return false;
-                });
-                return $button;
-            });
-        },
-
         _decorate_node: function() {
-            let self = this;
-            let $node = this.element;
+            const $node = this.element;
+			if ($node.hasClass("tree-decorated"))
+				return;
+			$node.addClass("tree-decorated");
 
+			const self = this;
             // Invoked on tree_title
             function hoverIn( /*evt*/ ) {
                 if (Tree.onTitleHoverIn() || $("body")
@@ -530,10 +418,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
                 }
 
                 $(this)
-                .addClass("tree-hover")
-                .find(".tree_t_draghandle")
-                .first()
-                .show();
+                .addClass("tree-hover");
 
                 return false;
             }
@@ -557,15 +442,12 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
                         });
                 }
                 $(this)
-                .removeClass("tree-hover")
-                .find(".tree_t_draghandle")
-                .first()
-                .hide();
+                .removeClass("tree-hover");
 				return false;
             }
 
             // <title>
-            let $title = $("<div></div>")
+            const $title = $("<div></div>")
                 .addClass("tree_title")
             // SMELL: only if screen is wide enough!
                 .hover(hoverIn, hoverOut)
@@ -575,22 +457,50 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
                 .prependTo($node);
 
             // Add open/close button, visible on non-leaf nodes
-            let $control = $("<button></button>")
+            const $control = $("<button></button>")
 				.addClass("tree_t_toggle");
             $control.appendTo($title);
             $control.icon_button({
                 icon: "squirrel-icon-folder-closed"
             })
-            .on(Dialog.tapEvent(),
-                function () {
-                    $node.tree("toggle");
+            .on(Dialog.tapEvent(), () => {
+                $node.tree("toggle");
+                return false;
+            });
+
+            // <info>
+            const $info = $("<div></div>")
+                .addClass("tree_t_info")
+                .appendTo($title);
+
+			// Alarm button
+            const $alarm = $("<button></button>")
+				.appendTo($info)
+				.addClass("tree_t_i_alarm")
+				.icon_button({
+                    icon: "tree-icon-alarm"
+                })
+                .on(Dialog.tapEvent(), function () {
+                    Dialog.confirm("alarm", {
+                        path: $node.tree("getPath"),
+                        alarm: $node.data("alarm")
+                    })
+                    .then(act => {
+                        if (act.type === "C") {
+                            $node.data("alarm", null);
+                        } else {
+                            $node.data("alarm", {
+                                due: act.data.due,
+                                repeat:act.data.repeat
+                            });
+                        }
+                    })
+                    .catch((/*e*/) => {});
                     return false;
                 });
 
-            // <info>
-            let $info = $("<div></div>")
-                .addClass("tree_t_info")
-                .appendTo($title);
+			if (!$node.data("alarm"))
+				$node.addClass("tree-noAlarm");
 
             // Create the key span
             $("<span></span>")
@@ -602,9 +512,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
                     if (Tree.debug) Tree.debug("Double-click 1");
                     e.preventDefault();
                     $(e.target).closest(".tree").tree("editKey")
-                    .then((a) => {
-                        Tree.playAction(a);
-                    })
+                    .then(a => Tree.treePlayAction(a))
                     .catch((/*e*/) => {});
                 });
 
@@ -621,16 +529,13 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
             .appendTo($value_parts)
             .addClass("tree_t_i_l_value")
             .text(this._displayedValue())
-            .on(Dialog.doubleTapEvent(),
-                function (e) {
-                    if (Tree.debug) Tree.debug("Double-click 2");
-                    e.preventDefault();
-                    $(e.target).closest(".tree").tree("editValue")
-                    .then((a) => {
-                        Tree.playAction(a);
-                    })
-                    .catch((/*e*/) => {});
-                });
+            .on(Dialog.doubleTapEvent(), e => {
+                if (Tree.debug) Tree.debug("Double-click 2");
+                e.preventDefault();
+                $(e.target).closest(".tree").tree("editValue")
+                .then(a => Tree.treePlayAction(a))
+                .catch(() => {});
+            });
 
             $info.append(" ");
 
@@ -638,9 +543,6 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
             .appendTo($info)
             .text(formatDate($node.data("last-time-changed")))
             .toggle(Tree.showingChanges());
-
-            this._makeDraggable($node);
-            this._decorate_with_alarm($node);
         },
 
 		/**
@@ -648,7 +550,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
 		 * @memberof Tree
 		 */
         open: function(options) {
-            let $node = this.element;
+            const $node = this.element;
 
             if (options && options.decorate)
                 this._decorate_node();
@@ -666,7 +568,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
             }
 
             if (!$node.hasClass("tree-isRoot")) {
-                let fruitbat = $node.find(".tree_t_toggle")
+                const fruitbat = $node.find(".tree_t_toggle")
                     .first();
                 fruitbat.icon_button("option", "icon", "squirrel-icon-folder-open");
             }
@@ -681,7 +583,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
 		 * @memberof Tree
 		 */
         close: function() {
-            let $node = this.element;
+            const $node = this.element;
             if (!$node.hasClass("tree-isOpen"))
                 return $node;
             $node.find(".tree_t_toggle")
@@ -708,7 +610,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
          * @private
          */
         _action_E: function(action) {
-            let $node = this.element;
+            const $node = this.element;
             $node
             .data("value", action.data)
             .find(".tree_t_i_l_value")
@@ -723,9 +625,9 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
          * @private
          */
         _action_D: function(action) {
-            let $node = this.element;
+            const $node = this.element;
 
-            let $parent = $node.parent()
+            const $parent = $node.parent()
                 .closest(".tree");
             $parent.tree("setModified", action.time);
 
@@ -737,8 +639,8 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
          * @private
          */
         _action_N: function(action, open) {
-            return new Promise((resolve) => {
-                let $node = $("<li></li>");
+            return new Promise(resolve => {
+                const $node = $("<li></li>");
                 // _create automatically adds it to the right parent.
                 $node.tree($.extend(
                     {},
@@ -766,16 +668,15 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
          * @private
          */
         _action_I: function(action, open) {
-            let content = JSON.parse(action.data);
+            const content = JSON.parse(action.data);
             let acts = [];
             if (typeof content.data === "object") {               
-                let h = new Hoard({ tree: content });
+                const h = new Hoard({ tree: content });
                 acts = h.actions_to_recreate();
                 content.data = undefined;
             }
 
             // Create the node at the root of the insert
-            let self = this;
             return this._action_N(new Action({
                 type: "N",
                 path: action.path,
@@ -786,11 +687,11 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
                 for (let act of acts) {
                     // Paths recorded in the action are relative
                     act.path = action.path.concat(act.path);
-                    self.action(act);
+                    this.action(act);
                 }
                 
                 // Finally decorate
-                self.getNodeFromPath(action.path)
+                this.getNodeFromPath(action.path)
                 .tree("instance")._decorate_node();
             });
         },
@@ -800,58 +701,56 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
          * @private
          */
         _action_A: function(action) {
-            let $node = this.element;
+            const $node = this.element;
             // Check there's an alarm already
-            let alarm = $node.data("alarm");
-            if (alarm === action.data)
+            const oldAlarm = $node.data("alarm");
+            if (oldAlarm === action.data)
                 return; // no change
 
-            $node.data("alarm", action.data);
-
-            if (typeof alarm === "undefined") {
-                // No existing alarm, need to create parts
-                this._decorate_with_alarm($node);
-
-                // Run up the tree, incrementing the alarm count
-                $node.parents(".tree")
-                .each(function () {
-                    let c = $(this)
-                        .data("alarm-count") || 0;
-                    $(this)
-                    .data("alarm-count", c + 1);
-                    $(this)
-                    .addClass("tree-hasAlarms");
-                });
-            }
+			if (action.data) {
+				$node.data("alarm", action.data);
+				$node.removeClass("tree-noAlarm");
+				if (typeof oldAlarm === "undefined") {
+					// Run up the tree, incrementing the alarm count
+					$node
+					.parents(".tree")
+					.each(function () {
+						const c = $(this).data("alarm-count") || 0;
+						$(this)
+						.data("alarm-count", c + 1)
+						.addClass("tree-hasAlarms");
+					});
+				}
+			} else {
+				$node.addClass("tree-noAlarm");
+				if (typeof oldAlarm !== 'undefined') {
+					$node.removeData("alarm");
+					// Run up the tree decrementing the alarm count
+					$node
+					.parents(".tree")
+					.each(function () {
+						let c = $(this).data("alarm-count") || 0;
+						c = c - 1;
+						if (c === 0)
+							$(this).removeClass("tree-hasAlarms");
+						$(this).data("alarm-count", c);
+					});
+				}
+			}
 
             this.setModified(action.time);
         },
 
         /**
          * Action handler for cancelling an alarm, called via action()
+		 * Compatibility only: action C has been replaced by A with
+		 * undefined data
 		 * @private
          */
         _action_C: function(action) {
-            let $node = this.element;
-
-            let alarm = $node.data("alarm");
-            if (!alarm)
-                return;
-
-            // run up the tree decrementing the alarm count
-            $node.parents(".tree").each(function () {
-                let c = $(this).data("alarm-count") || 0;
-                c = c - 1;
-                $(this).data("alarm-count", c);
-                if (c === 0)
-                    $(this).removeClass("tree-hasAlarms");
-            });
-
-            $(".tree_t_i_alarm").first().remove();
-
-            $node.removeData("alarm");
-
-            this.setModified(action.time);
+			// action.data is always undefined, so this is the same as
+			// an A with null data
+			this._action_A(action);
         },
 
         /**
@@ -859,7 +758,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
 		 * @private
          */
         _action_X: function(action) {
-            let constraints = this.element.data("constraints");
+            const constraints = this.element.data("constraints");
             if (constraints === action.data)
                 return; // same constraints already
 
@@ -872,10 +771,10 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
 		 * @private
          */
         _action_M: function(action) {
-            let $node = this.element;
-            let oldpath = this.getPath();
-            let newpath = action.data.slice();
-            let $new_parent = this.getNodeFromPath(newpath);
+            const $node = this.element;
+            const oldpath = this.getPath();
+            const newpath = action.data.slice();
+            const $new_parent = this.getNodeFromPath(newpath);
 
             // Relocate the node in the DOM
             this._insertInto($new_parent);
@@ -884,8 +783,6 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
                 $node.scroll_into_view();
 
             this.setModified(action.time);
-
-            newpath.push(oldpath.pop());
         },
 
         /**
@@ -894,8 +791,10 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
          */
         _action_R: function(action) {
             // Detach the li from the DOM
-            let $node = this.element;
+            const $node = this.element;
 
+			$node[0].accessKey = action.data; // DEBUG HACK
+			
             $node
             .data("key", action.data)
             .find(".tree_t_i_key")
@@ -930,8 +829,8 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
                 return this._action_I(action, open);
 
             // All else requires a pre-existing node
-            let $node = this.getNodeFromPath(action.path);
-            let widget = $node.tree("instance");
+            const $node = this.getNodeFromPath(action.path);
+            const widget = $node.tree("instance");
             widget[`_action_${action.type}`].call(widget, action, open);
             return Promise.resolve();
         },
@@ -949,7 +848,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
 
             // Recursively cache node and descendants
             function recache($node, pa) {
-                let path = pa.concat($node.data("key"));
+                const path = pa.concat($node.data("key"));
 
                 if (Tree.debug) {
                     if (!pa)
@@ -977,13 +876,13 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
                 });
             }
 
-            let $el = this.element;
+            const $el = this.element;
 
             // Find the path to the parent of this node
-            let $parent = $el.parent().closest(".tree");
+            const $parent = $el.parent().closest(".tree");
             Serror.assert($parent && $parent.length === 1);
 
-            let pa = $parent.tree("getPath");
+            const pa = $parent.tree("getPath");
             recache($el, pa);
         },
 
@@ -1006,7 +905,7 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
             // Reset the path of all subnodes
             .find(".tree")
             .each(function () {
-                let $s = $(this);
+                const $s = $(this);
                 delete Tree.path2$node[$s.data("path").join(PATHSEP)];
                 $s.removeData("path");
             });

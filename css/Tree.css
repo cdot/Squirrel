@@ -58,11 +58,6 @@ li.tree {
     vertical-align: middle;
 }
 
-/* Icon handle for dragging - tree_title_draghandle */
-.tree_t_draghandle {
-    float: right;
-}
-
 /* The UL that contains all the child nodes under a tree node */
 .tree_subtree {
     list-style-type: none;
@@ -102,6 +97,11 @@ li.tree {
 
 .tree-hasAlarms:not(.tree-isOpen) {
     border-left: 1px solid magenta;
+}
+
+/* Set on an alarm button on a node that has no alarm */
+.tree-noAlarm > .tree_title > .tree_t_info > .tree_t_i_alarm{
+	display: none;
 }
 
 /* if it's a valid drop target

@@ -11,8 +11,8 @@ define("dialogs/add", ["js/Dialog", "js/Action"], function(Dialog, Action) {
          */
         validateUniqueKey() {
             // Disable OK if key value exists or is invalid
-            let $input = this.control("key");
-            let val = $input.val();
+            const $input = this.$control("key");
+            const val = $input.val();
             let enabled = true;
 
             if (!/\S/.test(val)) // empty?
@@ -21,12 +21,12 @@ define("dialogs/add", ["js/Dialog", "js/Action"], function(Dialog, Action) {
                 enabled = this.options.validate(val);
 
             if (enabled) {
-                this.control("ok").icon_button("enable");
+                this.$control("ok").icon_button("enable");
                 $input
                     .removeClass("dlg-disabled")
                     .attr("title", this.tx("Enter new name"));
             } else {
-                this.control("ok").icon_button("disable");
+                this.$control("ok").icon_button("disable");
                 $input
                     .addClass("dlg-disabled")
                     .attr("title", this.tx("Name is already in use"));
@@ -34,9 +34,9 @@ define("dialogs/add", ["js/Dialog", "js/Action"], function(Dialog, Action) {
         }
 
         initialise() {
-            let self = this;
+            const self = this;
 
-            this.control("key")
+            this.$control("key")
             .on("input", function () {
                 self.validateUniqueKey();
             })
@@ -47,22 +47,22 @@ define("dialogs/add", ["js/Dialog", "js/Action"], function(Dialog, Action) {
         }
 
         open() {
-            this.control("path").text(Action.pathS(this.options.path, true));
-            let isV = this.options.is_value;
-            this.control("value_help", true).toggle(isV);
-            this.control("folder_help", true).toggle(!isV);
-            this.control("value_parts", true).toggle(isV);
-            this.control("key")
+            this.$control("path").text(Action.pathS(this.options.path, true));
+            const isV = this.options.is_value;
+            this.$control("value_help", true).toggle(isV);
+            this.$control("folder_help", true).toggle(!isV);
+            this.$control("value_parts", true).toggle(isV);
+            this.$control("key")
             .autocomplete(isV ? "enable" : "disable").select();
-            this.control("value", true).val(this.options.value || "");
+            this.$control("value", true).val(this.options.value || "");
 
             this.validateUniqueKey();
         }
 
         ok() {
             return {
-                key: this.control("key").val(),
-                value: this.control("value", true).val()
+                key: this.$control("key").val(),
+                value: this.$control("value", true).val()
             };
         }
     }

@@ -94,7 +94,7 @@ define(["mocha", "chai"], (maybeMocha, chai) => {
 			.then(Fs => {
 				return Fs.readdir(path)
 				.then(files => {
-					let promises = [];
+					const promises = [];
 					files.forEach(file => {
 						var curPath = `${path}/${file}`;
 						promises.push(
@@ -143,19 +143,18 @@ define(["mocha", "chai"], (maybeMocha, chai) => {
 					return;
 			}
 
-			const self = this;
 			const test = new Mocha.Test(title, () => {
-                if (typeof self.before === "function")
-                    self.before();
+                if (typeof this.before === "function")
+                    this.before();
 				const res = fn.call(this);
                 if (res instanceof Promise) {
                     return res.then(() => {
-                        if (typeof self.after === "function")
-                            self.after();
+                        if (typeof this.after === "function")
+                            this.after();
                     });
                 }
-                else if (typeof self.after === "function") {
-                    self.after();
+                else if (typeof this.after === "function") {
+                    this.after();
 				}
 				return Promise.resolve();
 			});

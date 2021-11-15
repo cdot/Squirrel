@@ -10,17 +10,17 @@
 define("dialogs/insert", ["dialogs/add"], function(AddDialog) {
     class InsertDialog extends AddDialog {
         validateValue() {
-            let $ta = this.control("value");
-            let text = $ta.val();
+            const $ta = this.$control("value");
+            const text = $ta.val();
             
             try {
                 JSON.parse(text);
-                this.control("ok").icon_button("enable");
+                this.$control("ok").icon_button("enable");
                 $ta
                 .removeClass("dlg-disabled")
                 .attr("title", this.tx("Edit valid JSON"));
             } catch (e) {
-                this.control("ok").icon_button("disable");
+                this.$control("ok").icon_button("disable");
                 $ta
                 .addClass("dlg-disabled")
                 .attr("title", e);
@@ -28,9 +28,9 @@ define("dialogs/insert", ["dialogs/add"], function(AddDialog) {
         }
 
         initialise() {
-            let self = this;
+            const self = this;
             super.initialise();
-            this.control("value")
+            this.$control("value")
             .on("input", function () {
                 self.validateValue();
             })

@@ -100,7 +100,7 @@ define("js/Translator", ["js/Utils", "js/Serror"], function(Utils, Serror) {
                 // It would have been cleaner if we could have iterated over
                 // the originals, but it's a WeakMap which can't be iterated
                 // so we have to re-un-translate the document thisead.
-                let bod = document.getElementsByTagName("body");
+                const bod = document.getElementsByTagName("body");
                 this._translateDOM(bod[0], function (s) {
                     return s;
                 });
@@ -120,7 +120,7 @@ define("js/Translator", ["js/Utils", "js/Serror"], function(Utils, Serror) {
             // Load the language
             let getter;
             if (this.options.url) {
-                let xhr = new XMLHttpRequest();
+                const xhr = new XMLHttpRequest();
                 let url = `${this.options.url}/${lingo}.json`;
                 if (this.debug) this.debug("Get language from", url);
                 if (this.debug)
@@ -157,26 +157,24 @@ define("js/Translator", ["js/Utils", "js/Serror"], function(Utils, Serror) {
                 return Utils.require("fs")
 				.then(fs => fs.promises.readFile(
 					`${this.options.files}${lingo}.json`))
-                .then((json) => {
-                    return JSON.parse(json);
-                });
+                .then(json => JSON.parse(json));
             } else if (this.options.translations) {
                 getter = Promise.resolve(this.options.translations[lingo]);
             }
 
-            return getter.then((data) => {
+            return getter.then(data => {
                 this.translations = data;
                 if (document) {
                     // Translate the DOM
                     if (this.debug) this.debug("Translating body to", lingo);
-                    let bod = document.getElementsByTagName("body");
+                    const bod = document.getElementsByTagName("body");
                     this.translate(bod[0]);
                 }
                 if (this.debug) this.debug("Using language", lingo);
             })
-            .catch((e) => {
-                if (this.debug) this.debug("Could not load language", lingo, e);
-                let generic = lingo.replace(/-.*/, "");
+            .catch(e => {
+                if (this.debug) this.debug("Could not load language", lingo);
+                const generic = lingo.replace(/-.*/, "");
                 if (generic !== lingo) {
                     if (this.debug) this.debug("Trying fallback", generic);
                     return this.language(generic, document);
@@ -196,7 +194,7 @@ define("js/Translator", ["js/Utils", "js/Serror"], function(Utils, Serror) {
             if (!this.originals)
                 this.originals = new WeakMap();
             this._translateDOM(dom, function (s) {
-                let tx = this.translations[Translator._clean(s)];
+                const tx = this.translations[Translator._clean(s)];
                 if (typeof tx !== "undefined")
                     s = tx.s;
                 return s;
@@ -283,9 +281,9 @@ define("js/Translator", ["js/Utils", "js/Serror"], function(Utils, Serror) {
 		 * @return {string[]} list of translatable strings
          */
         findAllStrings(el) {
-            let strings = [], seen = {}; // use a map to uniquify
+            const strings = [], seen = {}; // use a map to uniquify
             this.originals = new WeakMap();
-            this._translateDOM(el, (s) => {
+            this._translateDOM(el, s => {
                 s = Translator._clean(s);
                 if (!seen[s]) {
                     strings.push(s);
@@ -309,9 +307,9 @@ define("js/Translator", ["js/Utils", "js/Serror"], function(Utils, Serror) {
          */
         tx() {
             // Look up the translation
-            let txes = this.translations;
+            const txes = this.translations;
             if (txes) {
-                let tx = txes[Translator._clean(arguments[0])];
+                const tx = txes[Translator._clean(arguments[0])];
                 if (typeof tx !== "undefined")
                     arguments[0] = tx.s;
                 // else use English
@@ -336,9 +334,8 @@ define("js/Translator", ["js/Utils", "js/Serror"], function(Utils, Serror) {
          * @return {string} describing the period in the current language
          */
         deltaTimeString(from, to, hms) {
-            let deltaDate = new Date(to - from);
-
-            let s = [];
+            const deltaDate = new Date(to - from);
+            const s = [];
 
             let delta = deltaDate.getUTCFullYear() - 1970;
             if (delta > 0)

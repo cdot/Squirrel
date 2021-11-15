@@ -23,7 +23,7 @@ define("js/LayeredStore", ["js/AbstractStore", "js/Serror"], function(AbstractSt
 		 * on top of
 		 */
         constructor(options) {
-            let us = options.understore;
+            const us = options.understore;
             super(options);
             Serror.assert(us instanceof AbstractStore);
             this.understore = us;

@@ -59,7 +59,7 @@ requirejs(deps, function(StoreTester, express, basicAuth) {
             res.sendStatus(404);
         });
 
-        config = new Promise((resolve) => {
+        config = new Promise(resolve => {
             server = app.listen(function() {
                 let url = "http://localhost:" + server.address().port;
                 console.debug("Express server listening on " + url);
@@ -68,13 +68,13 @@ requirejs(deps, function(StoreTester, express, basicAuth) {
         });
     }
 
-    config.then((cfg) => {
+    config.then(cfg => {
         new StoreTester(["HttpServerStore"])
 		.run(cfg)
         .then(() => {
             if (server) server.close();
         })
-		.catch((e) => { console.log("Run failed", e); });
+		.catch(e => { console.log("Run failed", e); });
     });
 });
 

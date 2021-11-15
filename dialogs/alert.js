@@ -14,7 +14,7 @@ define("dialogs/alert", ["js/Dialog"], function(Dialog) {
 		 * @Override
 		 */
         open() {
-            this.control("messages").empty();
+            this.$control("messages").empty();
 
             if (this.options.title)
                 this.$dlg.dialog("option", "title", this.options.title);
@@ -45,11 +45,11 @@ define("dialogs/alert", ["js/Dialog"], function(Dialog) {
                 lert = { message: lert };
             else if (lert.http) {
                 if (!$http) {
-                    let http_url = requirejs.toUrl("dialogs/http.html");
-                    let self = this;
-                    let morlert = $.extend({ first: true }, lert);
+                    const http_url = requirejs.toUrl("dialogs/http.html");
+                    const self = this;
+                    const morlert = $.extend({ first: true }, lert);
                     $.get(http_url)
-                    .then((html) => {
+                    .then(html => {
                         $http = $(html);
                         $("body").append($http);
                         self.translate($http);
@@ -66,12 +66,12 @@ define("dialogs/alert", ["js/Dialog"], function(Dialog) {
             if (mess instanceof Array)
                 mess = mess.join("<br />");
 
-            let $mess = $("<div>" + mess + "</div>")
+            const $mess = $("<div>" + mess + "</div>")
                 .addClass('dlg-' + lert.severity);
             if (first)
-                this.control("messages").prepend($mess);
+                this.$control("messages").prepend($mess);
             else
-                this.control("messages").append($mess);
+                this.$control("messages").append($mess);
         }
 
         /**

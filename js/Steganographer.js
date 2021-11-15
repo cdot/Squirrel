@@ -47,15 +47,15 @@ define("js/Steganographer", ["js/Utils"], function(Utils) {
          */
         bytesToImageFormat(bytes, width, height, type) {
             // Unused and untested
-            let canvas = document.createElement("canvas");
+            const canvas = document.createElement("canvas");
             canvas.style.display = "none";
             canvas.width = width;
             canvas.height = height;
-            let cxt = canvas.getContext("2d");
-            let id = cxt.getImageData(0, 0, width, height).data;
+            const cxt = canvas.getContext("2d");
+            const id = cxt.getImageData(0, 0, width, height).data;
             for (let i = 0; i < bytes.length; i++)
                 id[i] = bytes[i];
-            let b64 = canvas.toDataURL(type, 1).split(",", 2)[1];
+            const b64 = canvas.toDataURL(type, 1).split(",", 2)[1];
             return Utils.Base64ToUint8Array(b64);
         }
 
@@ -67,14 +67,14 @@ define("js/Steganographer", ["js/Utils"], function(Utils) {
          * @private
          */
         _adjustToFit(size, available) {
-            let bits = size * 8; // Number of bits to be stored
+            const bits = size * 8; // Number of bits to be stored
 
             // number of chunks (32 bits) and chunk size (4 bits) are stored
             // 2 bits per channel, so that means 18 channels, 3 channels
             // per pixel so need 6 pixels for this info.
-            let slots = 3 * available - 6;
+            const slots = 3 * available - 6;
 
-            let chunkSize = (bits / slots + 1) >> 0;
+            const chunkSize = (bits / slots + 1) >> 0;
             if (this.debug) this.debug(
                 `Storage required ${bits} bits, ${size} bytes`
                     + ` Max image capacity ${this.maxChunk * slots} bits, `
@@ -129,10 +129,10 @@ define("js/Steganographer", ["js/Utils"], function(Utils) {
             // colour channel.
             let byte_i = 24;
 
-            let a8_len = message.length;
-            let chunkSize = this._adjustToFit(a8_len, bytes.length);
-            let chunkMask = (1 << chunkSize) - 1;
-            let iChunkMask = ~chunkMask;
+            const a8_len = message.length;
+            const chunkSize = this._adjustToFit(a8_len, bytes.length);
+            const chunkMask = (1 << chunkSize) - 1;
+            const iChunkMask = ~chunkMask;
             let numChunks = 0;
 
             // Function to add a chunk into the image. c <= chunkMask
@@ -214,7 +214,7 @@ define("js/Steganographer", ["js/Utils"], function(Utils) {
          * @throws Error if the image doesn't seem to have anything embedded
          */
         extract(imageData) {
-            let bytes = imageData.data;
+            const bytes = imageData.data;
 
             // Extract data length and chunkSize
             // chunkSize = 4, prime = 17
@@ -235,7 +235,7 @@ define("js/Steganographer", ["js/Utils"], function(Utils) {
                 || chunkSize <= 0 || chunkSize > 8)
                 throw new Error("No message embedded");
 
-            let message = new Uint8Array((numChunks * chunkSize) >> 3);
+            const message = new Uint8Array((numChunks * chunkSize) >> 3);
             if (this.debug) this.debug(
                 `Extracting ${numChunks} chunks of `
                 + `${chunkSize} bits, ${numChunks * chunkSize} bits / `
@@ -244,10 +244,10 @@ define("js/Steganographer", ["js/Utils"], function(Utils) {
             let charCode = 0;
             let bitCount = 0;
             let mi = 0;
-            let chunkMask = (1 << chunkSize) - 1;
+            const chunkMask = (1 << chunkSize) - 1;
 
             for (let i = 0; i < numChunks; i++) {
-                let mmi = bytes[byte_i++] & chunkMask;
+                const mmi = bytes[byte_i++] & chunkMask;
                 if (byte_i % 4 === 3)
                     byte_i++; // skip alpha channel
                 charCode |= mmi << bitCount;

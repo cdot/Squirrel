@@ -132,6 +132,32 @@ requirejs(["js/Action", "test/TestRunner"], function(Action, TestRunner) {
             ]);
     });
 
+    const MSPERDAY = 24 * 60 * 60 * 1000;
+
+	tr.addTest('compatibility', () => {
+		// Simple number of days, both due and repeat
+		let act = new Action({type:'A', data:"7", path:["Pah"], time:9999});
+		assert.equal(typeof act.data.due, 'number');
+		assert.equal(act.data.due, 9999 + 7 * MSPERDAY);
+		assert.equal(act.data.repeat, 7 * MSPERDAY);
+		
+		act = new Action({type:'A', data:1, path:["Pah"], time: 9999});
+		assert.equal(typeof act.data.due, 'number');
+		assert.equal(act.data.due, 9999 + 1 * MSPERDAY);
+		assert.equal(act.data.repeat, MSPERDAY);
+
+		// String encoding, ms
+		act = new Action({type:'A', data:"1;5", path:["Pah"]});
+		assert.equal(typeof act.data.due, 'number');
+		assert.equal(act.data.due, 1);
+		assert.equal(act.data.repeat, 5);
+
+		// { time: number }
+		act = new Action({type:'A', data:{time:1}, path:["Pah"]});
+		assert.equal(typeof act.data.due, 'number');
+		assert.equal(act.data.due, 1);
+		assert.equal(act.data.repeat, 0);
+	});
 
     tr.run();
 });

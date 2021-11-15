@@ -176,11 +176,11 @@ define("js/AES", () => {
          * @returns {Uint8Array} Decrypted data
          */
         static decrypt(ciphertext, password, nBits) {
-            let blockSize = 16;
+            const blockSize = 16;
 
             // use AES to encrypt password (mirroring encrypt routine)
-            let nBytes = nBits / 8; // no bytes in key
-            let pwBytes = new Uint8Array(nBytes);
+            const nBytes = nBits / 8; // no bytes in key
+            const pwBytes = new Uint8Array(nBytes);
             let i;
             for (i = 0; i < nBytes; i++) {
                 if (i < password.length)
@@ -193,16 +193,16 @@ define("js/AES", () => {
             key = key.concat(key.slice(0, nBytes - 16));
 
             // recover nonce from 1st 8 bytes of ciphertext
-            let counterBlock = new Uint8Array(8);
+            const counterBlock = new Uint8Array(8);
             for (i = 0; i < 8; i++)
                 counterBlock[i] = ciphertext[i];
 
             // generate key schedule
-            let keySchedule = Aes.keyExpansion(key);
+            const keySchedule = Aes.keyExpansion(key);
 
             // separate ciphertext into blocks (skipping past initial 8 bytes)
-            let nBlocks = Math.ceil((ciphertext.length - 8) / blockSize);
-            let ct = new Array(nBlocks);
+            const nBlocks = Math.ceil((ciphertext.length - 8) / blockSize);
+            const ct = new Array(nBlocks);
             let offset = 8;
             let b;
             for (b = 0; b < nBlocks; b++) {
@@ -213,7 +213,7 @@ define("js/AES", () => {
 
             // plaintext will get generated block-by-block into array of
             // block-length Uint8Arrays
-            let plaintxt = new Array(nBlocks);
+            const plaintxt = new Array(nBlocks);
             let size = 0;
 
             for (b = 0; b < nBlocks; b++) {
@@ -228,10 +228,10 @@ define("js/AES", () => {
                 }
 
                 // encrypt counter block
-                let cipherCntr = Aes.cipher(counterBlock, keySchedule);
+                const cipherCntr = Aes.cipher(counterBlock, keySchedule);
 
-                let blen = ct[b].length;
-                let plaintxtByte = new Uint8Array(blen);
+                const blen = ct[b].length;
+                const plaintxtByte = new Uint8Array(blen);
                 for (i = 0; i < blen; i++) {
                     // xor plaintxt with ciphered counter byte-by-byte
                     plaintxtByte[i] = cipherCntr[i] ^ ct[b][i];
@@ -240,7 +240,7 @@ define("js/AES", () => {
                 size += blen;
             }
 
-            let pt = new Uint8Array(size);
+            const pt = new Uint8Array(size);
             offset = 0;
             for (b = 0; b < nBlocks; b++) {
                 pt.set(plaintxt[b], offset);

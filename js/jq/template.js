@@ -48,7 +48,7 @@ define("js/jq/template", ["js/Utils", "jquery", "jquery-ui"], function (Utils) {
 
         pick: function (id) {
             this.element.children().hide();
-            let $picked = this.element.children(`[data-id='${id}']`);
+            const $picked = this.element.children(`[data-id='${id}']`);
             $picked.show();
             return $picked;
         },

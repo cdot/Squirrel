@@ -1,16 +1,27 @@
 /*@preserve Copyright (C) 2019-2021 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser */
 
-define("js/Dialog", ["js/Translator", "js/Serror", "js/Progress", "jquery", "jquery-ui", "js/jq/icon_button", "js/jq/twisted"], function(Translator, Serror, Progress) {
+define("js/Dialog", [
+	"js/Translator",
+	"js/Serror",
+	"js/Utils",
+	"js/Progress",
+
+	"jquery",
+	"jquery-ui",
+	"jquery-touch-events",
+	"js/jq/icon_button",
+	"js/jq/twisted"
+], (Translator, Serror, Utils, Progress) => {
 
     // Default options
-    let default_dialog_options = {};
+    const default_dialog_options = {};
 
     // Promises for HTML modules waiting for load
-    let htmls = [];
+    const htmls = [];
     
     // Cache of loaded code modules
-    let classes = {};
+    const classes = {};
 
 	/**
 	 * Dynamic dialog loader and Base class of modal dialogs. Loads
@@ -39,36 +50,36 @@ define("js/Dialog", ["js/Translator", "js/Serror", "js/Progress", "jquery", "jqu
          */
         constructor($dlg, options) {
 			super();
-            let self = this;
+
             this.debug = options.debug;
             this.$dlg = $dlg;
 
             // Default options
-            self.options = $.extend({}, options);
+            this.options = $.extend({}, options);
 
-            let jq_options = $.extend({
+            const jq_options = $.extend({
                 modal: true,
                 width: "auto",
                 autoOpen: false,
                 closeOnEscape: false,
-                open: function(/*event, ui*/) {
+                open: (/*event, ui*/) => {
                     // jqueryui.dialog open event
 
                     // Lazy initialisation
                     if (!$dlg.hasClass("dlg-initialised"))
-                        self._initialise();
+                        this._initialise();
 
-                    self._oked = false;
-                    self._result = false;
-                    self._resolve = undefined;
-                    self._reject = undefined;
-                    self.open();
+                    this._oked = false;
+                    this._result = false;
+                    this._resolve = undefined;
+                    this._reject = undefined;
+                    this.open();
                 },
-                beforeClose: function() {
-                    if (self._oked && self._resolve)
-                        self._resolve(self._result);
-                    else if (!self.oked && self._reject)
-                        self._reject(self);
+                beforeClose: () => {
+                    if (this._oked && this._resolve)
+                        this._resolve(this._result);
+                    else if (!this.oked && this._reject)
+                        this._reject(this);
                     return true;
                 }
             }, options);
@@ -101,7 +112,7 @@ define("js/Dialog", ["js/Translator", "js/Serror", "js/Progress", "jquery", "jqu
          */
         static load(id, options) {
             options = $.extend({}, default_dialog_options, options);
-            let $dlg = $(`#${id}_dlg`);
+            const $dlg = $(`#${id}_dlg`);
             let p;
 
             // Load HTML first (if we need to), then js. We don't use
@@ -125,10 +136,10 @@ define("js/Dialog", ["js/Translator", "js/Serror", "js/Progress", "jquery", "jqu
 
                 if (!htmls[html_url]) {
                     htmls[html_url] = $.get(html_url)
-                    .then((html) => {
+                    .then(html => {
                         if (options.debug)
                             options.debug("HTML for",id,"was loaded");
-                        let $dlg = $(html);
+                        const $dlg = $(html);
                         Translator.instance().translate($dlg[0]);
                         // force the id so we can find it again
                         $dlg.attr("id", id + "_dlg");
@@ -143,25 +154,19 @@ define("js/Dialog", ["js/Translator", "js/Serror", "js/Progress", "jquery", "jqu
                 p = htmls[html_url];
             }
 
-            return p.then(($dlg) => {
-                if (typeof classes[id] === "undefined") {
-                    classes[id] = new Promise((resolve) => {
-                        requirejs(
-                            [`dialogs/${id}`],
-                            function(dlgClass) {
-                                classes[id] = new dlgClass($dlg, options);
-                                resolve(classes[id]);
-                            },
-                            function(/*err*/) {
-                                // Don't strictly need a .js
-                                Serror.assert(`Missing dialog ${id}.js`);
-                            });
-                    });
+            return p.then($dlg => {
+                if (typeof classes[id] === 'undefined') {
+                    return Utils.require(`dialogs/${id}`)
+					.then(dlgClass => {
+                        classes[id] = new dlgClass($dlg, options);
+                        return classes[id];
+                    })
+					.catch(() =>
+                           // Don't strictly need a .js
+                           Serror.assert(`Missing dialog ${id}.js`));
                 }
-                else if (classes[id] instanceof Promise)
-                    return classes[id];
 
-                return Promise.resolve(classes[id]);
+                return classes[id];
             });
         }
 
@@ -190,7 +195,7 @@ define("js/Dialog", ["js/Translator", "js/Serror", "js/Progress", "jquery", "jqu
          */
         static confirm(id, options) {
             return Dialog.load(id, options)
-            .then((dlg) => {
+            .then(dlg => {
                 dlg.options = $.extend(dlg.options, options);
                 dlg.$dlg.dialog("open");
                 return dlg.wait();
@@ -200,50 +205,44 @@ define("js/Dialog", ["js/Translator", "js/Serror", "js/Progress", "jquery", "jqu
         /**
          * Promise to wait for a dialog that was opened using Dialog.open to
          * be closed (e.g.
-         * Dialog.open("dialog").then((dlg) => {
+         * Dialog.open("dialog").then(dlg => {
          *    return dlg.wait();
          * })
-         * .then((dlg) => { if (dlg.wasOked()) ... });
+         * .then(dlg => { if (dlg.wasOked()) ... });
          * @return {Promise} resolves to the Dialog object when
          * the dialog is closed.
          */
         wait() {
-            let self = this;
             //this.$dlg.parent().find(".ui-dialog-titlebar>button").hide();
             return new Promise((resolve, reject) => {
-                self._resolve = resolve;
-                self._reject = reject;
+                this._resolve = resolve;
+                this._reject = reject;
             });
         }
 
         _initialise() {
-            let self = this;
-
             this.initialise();
 
             // On devices with touch capability, hovering over an element
             // to see the tooltip doesn't work. So on these devices we
             // open the title in a dialog.
-            if ($.isTouchCapable()) {
-                this.find(".tooltip-twisty").each(function() {
+            if ($.isTouchCapable && $.isTouchCapable()) {
+                this.$dlg.find(".tooltip-twisty").each((i, el) => {
                     //if (!$.isTouchCapable())
                     //    return;
-                    let $this = $(this);
-                    let $div = $("<div data-open='ui-icon-info'></div>");
+                    const $this = $(el);
+                    const $div = $("<div data-open='ui-icon-info'></div>");
                     $div.addClass("twisted");
                     $div.addClass("TX_text");
                     $div.text($this.attr("title"));
                     $this.after($div);
                 });
 
-                this.find(".tooltip-tr").each(function() {
-                });
-
                 // If a TR has the the dialog attr, transfer it
                 // down to the first element in the first cell in the table
-                this.find("tr.tooltip-dialog").each(function() {
-                    let $tr = $(this);
-                    let text = $tr.attr("title");
+                this.$dlg.find("tr.tooltip-dialog").each((i, tr) => {
+                    const $tr = $(tr);
+                    const text = $tr.attr("title");
                     $tr.removeClass("tooltip-dialog");
                     $tr.children("td,th")
                     .first().children().first().each(function() {
@@ -252,43 +251,43 @@ define("js/Dialog", ["js/Translator", "js/Serror", "js/Progress", "jquery", "jqu
                         .addClass("tooltip-dialog TX_title");
                     });
                 });
-                
-                this.find(".tooltip-dialog").each(function() {
-                    let $this = $(this);
+
+				const info = this.tx("Information");
+                this.$dlg.find(".tooltip-dialog").each((i, dlg) => {
+                    const $this = $(dlg);
                     $("<button data-icon='ui-icon-info'></button>")
                     .insertAfter($this)
                     .icon_button()
-                    .on(Dialog.tapEvent(), function() {
+                    .on(Dialog.tapEvent(), () =>
                         Dialog.confirm("alert", {
-                            title: self.tx("Information"),
+                            title: info,
                             alert: $this.attr("title")
-                        });
-                    });
+                        }));
                 });
             }
             
-            this.find(".twisted").twisted();
-            this.find("button").icon_button();
+            this.$dlg.find(".twisted").twisted();
+            this.$dlg.find("button").icon_button();
 
             
             // Add handler to default OK control
-            let $ok = this.control("ok", true);
+            const $ok = this.$control("ok", true);
             if ($ok) {
-                $ok.on(Dialog.tapEvent(), function () {
-                    self._result = true;
-                    self._oked = true;
-                    if (self.ok)
-                        self._result = self.ok();
-                    self.close();
+                $ok.on(Dialog.tapEvent(), () => {
+                    this._result = true;
+                    this._oked = true;
+                    if (this.ok)
+                        this._result = this.ok();
+                    this.close();
                 });
             }
 
-            let $cancel = this.control("cancel", true);
+            const $cancel = this.$control("cancel", true);
             if ($cancel)
                 $cancel.on(Dialog.tapEvent(), () => {
-                    self._result = false;
-                    self._oked = false;
-                    self.close();
+                    this._result = false;
+                    this._oked = false;
+                    this.close();
                 });
 
             this.$dlg.addClass("dlg-initialised");
@@ -332,23 +331,14 @@ define("js/Dialog", ["js/Translator", "js/Serror", "js/Progress", "jquery", "jqu
          * @param optional, true if it's OK if the key is missing
 		 * @return {jQuery} the control
          */
-        control(key, mayBeMissing) {
-            let $el = this.$dlg.find(`[data-id='${key}']`);
+        $control(key, mayBeMissing) {
+            const $el = this.$dlg.find(`[data-id='${key}']`);
             if (this.debug && $el.length === 0 && !mayBeMissing) {
                 this.debug("Unknown control", key);
                 throw new Serror(500,`Unknown control ${key}`);
             }
             return $el;
         }
-
-        /**
-         * Service for subclasses.
-         * Perform a jquery .find on the dialog
-         */
-        find(sel) {
-            return this.$dlg.find(sel);
-        }
-
 
         /**
          * Service for subclasses.

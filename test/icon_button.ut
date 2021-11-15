@@ -17,44 +17,43 @@ if (typeof module !== "undefined") {
     global.window = window;
     global.document = window.document;
     global.navigator = { userAgent: "node.js" };
-    let jQuery = require('jquery');
+    const jQuery = require('jquery');
     global.jQuery = jQuery;
     global.$ = jQuery;
 
     requirejs.config({
-        baseUrl: "..",
+        baseUrl: `${__dirname}/..`,
         paths: {
-            "jquery-ui": "test/libs/jquery-ui",
+			"jquery-ui": "node_modules/jquery-ui-dist/jquery-ui"
+//            "jquery-ui": "test/libs/jquery-ui",
         }
     });
 }
 
 requirejs(["test/TestRunner", "jquery", "js/jq/icon_button"], function(TestRunner) {
 
-    let tr = new TestRunner("icon_button");
-    let assert = tr.assert;
+    const tr = new TestRunner("icon_button");
+    const assert = tr.assert;
 
     tr.afterEach(function() {
         $("#working").empty();
     });
 
     tr.addTest('basic', function() {
-        let $butt = $('<button data-icon="ui-icon-info">Info</button>');
+        const $butt = $('<button data-icon="ui-icon-info">Info</button>');
         $("#working").append($butt);
         $butt.icon_button();
-        let html = $("#working").html();
+        const html = $("#working").html();
         assert.equal(html, '<button data-icon="ui-icon-info" class="ui-button ui-corner-all ui-widget ui-button-icon-only" title="Info"><span class="ui-button-icon ui-icon ui-icon-info"></span><span class="ui-button-icon-space"> </span>Info</button>');
     });
 
     tr.addTest('application', function() {
-        let $butt = $('<button data-icon="app">App</button>');
+        const $butt = $('<button data-icon="app">App</button>');
         $("#working").append($butt);
         $butt.icon_button();
-        let html = $("#working").html();
+        const html = $("#working").html();
         assert.equal(html, '<button data-icon="app" class="ui-button ui-widget ui-button-icon-only" title="App"><span class="ui-button-icon squirrel-icon ui-icon app"></span><span class="ui-button-icon-space"> </span>App</button>');
     });
 
-    $(() => {
-        tr.run();
-    });
+    $(() => tr.run());
 });

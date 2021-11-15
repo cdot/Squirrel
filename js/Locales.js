@@ -28,20 +28,20 @@ function lengthInUtf8Bytes(str) {
 // trouble if we fling too many requests too quickly.
 // So sequence the requests, and respect 429.
 function auto_translate(en, lang) {
-    let s = protect(en);
+    const s = protect(en);
     if (lengthInUtf8Bytes(s) > 500) {
         throw `Cannot auto-translate '${s}' it's > 500 bytes`;
     }
-    let url = "http://api.mymemory.translated.net/get?q="
+    const url = "http://api.mymemory.translated.net/get?q="
         + encodeURIComponent(s) + "&langpair="
         + encodeURIComponent(`en|${lang}`);
     
-    let response = request('GET', url);
+    const response = request('GET', url);
     let tx;
     if (response.statusCode !== 200)
         console.log("Bad response", response);
     else {
-        let result = JSON.parse(response.getBody()).responseData;
+        const result = JSON.parse(response.getBody()).responseData;
         tx = {
             m: result.match,
             s: unprotect(result.translatedText)
@@ -55,7 +55,7 @@ function auto_translate(en, lang) {
 
 define(["node-getopt", "jsdom", "js/Translator", "fs-extra", "readline-sync"], function(getopt, jsdom, Translator, Fs, rl) {
 
-    let TX = Translator.instance();
+    const TX = Translator.instance();
     
 	/**
 	 * Support for build-dist.js. Automatic string extraction and
@@ -77,11 +77,11 @@ define(["node-getopt", "jsdom", "js/Translator", "fs-extra", "readline-sync"], f
 		 */
         loadStrings() {
             return Fs.readFile("locale/strings")
-            .then((data) => {
+            .then(data => {
                 this.strings = {};
                 for (let s of data.toString().split("\n"))
                     this.strings[s] = "strings";
-            }).catch((e) => {
+            }).catch(e => {
                 console.log("No strings extracted yet", e);
                 this.strings = [];
             });
@@ -91,7 +91,7 @@ define(["node-getopt", "jsdom", "js/Translator", "fs-extra", "readline-sync"], f
 		 * Save a new locale/strings
 		 */
         saveStrings() {
-            let data = [];
+            const data = [];
             for (let s in this.strings) {
                 if (this.strings[s] === "strings")
                     console.log("Removed string", s);
@@ -106,18 +106,17 @@ define(["node-getopt", "jsdom", "js/Translator", "fs-extra", "readline-sync"], f
 		 * @return {Promise} Promise to load translations
          */
         loadTranslations() {
-            let self = this;
             return Fs.readdir("locale")
-            .then((entries) => {
-                let proms = [];
+            .then(entries => {
+                const proms = [];
                 for (let entry of entries) {
                     if (/^[-a-zA-Z]+\.json$/.test(entry)) {
-                        let lang = entry.replace(".json", "");
+                        const lang = entry.replace(".json", "");
                         proms.push(
                             Fs.readFile(`locale/${entry}`, 'utf8')
-                            .then(function(data) {
-                                self.translations[lang] = JSON.parse(data);
-                                if (self.debug) self.debug(
+                            .then(data => {
+                                this.translations[lang] = JSON.parse(data);
+                                if (this.debug) this.debug(
                                     "Translation for", lang, "loaded");
                             }));
                     }
@@ -133,9 +132,9 @@ define(["node-getopt", "jsdom", "js/Translator", "fs-extra", "readline-sync"], f
          */
         saveTranslations(dir) {
             dir = (dir ? `$dir/` : "") + "locale/";
-            let proms = [];
+            const proms = [];
             for (let lang in this.translations) {
-                let tx = this.translations[lang];
+                const tx = this.translations[lang];
                 console.log("Writing", dir + lang + ".json");
                 proms.push(Fs.writeFile(
                     dir + lang + ".json", JSON.stringify(tx)));
@@ -155,7 +154,7 @@ define(["node-getopt", "jsdom", "js/Translator", "fs-extra", "readline-sync"], f
             else
                 dom = data;
             let count = 0;
-            let strings = TX.findAllStrings(dom.window.document.body);
+            const strings = TX.findAllStrings(dom.window.document.body);
             for (let s of strings) {
                 if (!this.strings[s])
                     count++;
@@ -202,7 +201,7 @@ define(["node-getopt", "jsdom", "js/Translator", "fs-extra", "readline-sync"], f
                 console.log("t to auto-translate, <enter> to accept, x to end translation, anything else to enter a translation manually");
 
                 while (!finished) {
-                    let data = rl.question(prompt);
+                    const data = rl.question(prompt);
                     // User input exit.
                     if (prompt === "> ") {
                         if (data === 't') {

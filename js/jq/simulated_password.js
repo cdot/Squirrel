@@ -18,8 +18,8 @@ define("js/jq/simulated_password", ["jquery"], function() {
         } else if (document.selection) {
             // IE
             input.focus();
-            let sel = document.selection.createRange();
-            let selLen = document.selection.createRange().text.length;
+            const sel = document.selection.createRange();
+            const selLen = document.selection.createRange().text.length;
             sel.moveStart('character', -input.value.length);
             return sel.text.length - selLen;
         }
@@ -29,7 +29,7 @@ define("js/jq/simulated_password", ["jquery"], function() {
         if ('setSelectionRange' in input) {
             input.setSelectionRange(pos, pos);
         } else if ('createTextRange' in input) {
-            let range = input.createTextRange();
+            const range = input.createTextRange();
             range.collapse(true);
             range.moveEnd('character', pos);
             range.moveStart('character', pos);
@@ -43,16 +43,16 @@ define("js/jq/simulated_password", ["jquery"], function() {
      * @param show boolean whther to show or not
      */
     function showPass(el, show) {
-        let $this = $(el);
-        let isHidden = $this.hasClass("pass_hidden");
+        const $this = $(el);
+        const isHidden = $this.hasClass("pass_hidden");
         if (show && isHidden) {
             $.fn.raw_val.call($this, $this.data("hidden_pass"));
             $this.removeClass("pass_hidden");
         } else if (!show && !isHidden) {
-            let dv = $.fn.raw_val.call($this);
+            const dv = $.fn.raw_val.call($this);
             $this.data("hidden_pass", dv);
             if (typeof dv === "string") {
-                let hv = dv.replace(/./g, SPOT)
+                const hv = dv.replace(/./g, SPOT);
                 $.fn.raw_val.call($this, hv);
             }
             $this.addClass("pass_hidden");
@@ -72,14 +72,14 @@ define("js/jq/simulated_password", ["jquery"], function() {
     $.fn.raw_val = $.fn.val;
 
     $.fn.val = function() {
-        let $this = $(this);
+        const $this = $(this);
         if (!$this.hasClass("pass_hidden"))
             return $.fn.raw_val.apply($this, arguments);
         if (arguments.length >= 1) {
             // Set value
             let dv = arguments[0];
             $this.data("hidden_pass", dv);
-            let hv = dv.replace(/./g, SPOT)
+            const hv = dv.replace(/./g, SPOT);
             $.fn.raw_val.call($this, hv);
         }
         return $this.data("hidden_pass");
@@ -98,9 +98,9 @@ define("js/jq/simulated_password", ["jquery"], function() {
         $(this)
         .addClass("simulated_password")
         .each(function () {
-            let self = this;
-            let $this = $(this);
-            let options = $.extend([], dopts);
+            const self = this;
+            const $this = $(this);
+            const options = $.extend([], dopts);
 
             if (typeof $(this).data("options") !== "undefined")
                 $.extend(options, $(this).data("options"));
@@ -115,7 +115,7 @@ define("js/jq/simulated_password", ["jquery"], function() {
 
             if (options.checkbox) {
                 // Add a show/no show checkbox
-                let $showpass = $('<input type="checkbox"/>');
+                const $showpass = $('<input type="checkbox"/>');
                 $this.after($showpass);
                 $showpass
                 .on($.getTapEvent(), function () {
@@ -132,7 +132,7 @@ define("js/jq/simulated_password", ["jquery"], function() {
             // so we know what the selection was (for overtyping) and also
             // what the keycode was
             .on("paste", function(/*e*/) {
-                let el = document.activeElement;
+                const el = document.activeElement;
                 selectionStart = el.selectionStart;
                 selectionEnd = el.selectionEnd;
                 if (debug) debug("paste:", selectionStart,
@@ -142,7 +142,7 @@ define("js/jq/simulated_password", ["jquery"], function() {
             .on("keydown", function(e) {
                 // Because selectionchange event doesn't get
                 // fired on firefox
-                let el = document.activeElement;
+                const el = document.activeElement;
                 selectionStart = el.selectionStart;
                 selectionEnd = el.selectionEnd;
                 keyDown = e.keyCode; 
@@ -150,13 +150,13 @@ define("js/jq/simulated_password", ["jquery"], function() {
                                  "-", selectionEnd, "key", keyDown);
             })
             .on("input", function (/*e*/) {
-                let el = document.activeElement;
+                const el = document.activeElement;
                 if (debug) debug("input:", el.selectionStart,
                                  "selEnd:", el.selectionEnd);
                 if ($this.hasClass("pass_hidden")) {
-                    let cPos = getCursorPosition(self);
+                    const cPos = getCursorPosition(self);
                     let hv = $this.data("hidden_pass");
-                    let dv = $.fn.raw_val.call($this);
+                    const dv = $.fn.raw_val.call($this);
                     if (debug)
                         debug("at:", cPos, "actual:", hv, "displayed:", dv);
 
@@ -172,7 +172,7 @@ define("js/jq/simulated_password", ["jquery"], function() {
                     else if (dv.length >= hv.length) {
                         // No select to replace, all hv chars retained
                         // Characters added before cPos
-                        let count = (dv.length - hv.length);
+                        const count = (dv.length - hv.length);
                         hv = hv.substring(0, cPos - count)
                         + dv.substring(cPos - count, cPos)
                         + hv.substring(cPos - count);

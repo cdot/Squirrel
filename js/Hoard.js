@@ -2,7 +2,7 @@
 /* eslint-env browser,node */
 
 define("js/Hoard", ["js/Node", "js/Action", "js/Translator", "js/Serror"], function(Node, Action, Translator, Serror) {
-    let TX = Translator.instance();
+    const TX = Translator.instance();
 
 	/**
 	 * Object that represents the result of a `play_action`.
@@ -79,11 +79,11 @@ define("js/Hoard", ["js/Node", "js/Action", "js/Translator", "js/Serror"], funct
                 // hoard: overrides tree:
                 this.tree = new Node(options.hoard.tree);
                 if (options.hoard.actions)
-                    this.history = options.hoard.actions.map((a) => {
+                    this.history = options.hoard.actions.map(a => {
                         return { redo: new Action(a) };
                     });
                 else
-                    this.history = options.hoard.history.map((a) => {
+                    this.history = options.hoard.history.map(a => {
                         return { redo: new Action(a.redo),
                                  undo: new Action(a.undo) };
                     });
@@ -97,7 +97,7 @@ define("js/Hoard", ["js/Node", "js/Action", "js/Translator", "js/Serror"], funct
          * @return the events removed
          */
         clear_history() {
-            let events = this.history;
+            const events = this.history;
             this.history = [];
             return events;
         }
@@ -127,7 +127,7 @@ define("js/Hoard", ["js/Node", "js/Action", "js/Translator", "js/Serror"], funct
          */
         undo() {
             Serror.assert(this.history.length > 0);
-            let a = this.history.pop();
+            const a = this.history.pop();
             if (this.debug) this.debug("Undo", a);
             
             // Replay the reverse of the action
@@ -148,9 +148,9 @@ define("js/Hoard", ["js/Node", "js/Action", "js/Translator", "js/Serror"], funct
          * @param {boolean} [undoable=true] when true, an action that
          * undos this action will be added to the undo
          * history. Default is true.
-		 * @param {Hoard.UIPlayer=} uiPlayer called to play actions that
-		 * may need to be played into the UI. The replayer will normally
-		 * invoke play_action() recursively.
+		 * @param {Hoard.UIPlayer=} uiPlayer called to play additional
+		 * actions that may need to be played into the UI. The uiPlayer
+		 * will normally invoke play_action() recursively.
          * @return {Hoard.PlayResult} result of the play
          */
         play_action(action, undoable, uiPlayer) {
@@ -167,7 +167,7 @@ define("js/Hoard", ["js/Node", "js/Action", "js/Translator", "js/Serror"], funct
 
             if (this.debug) this.debug("Play", action);
 
-            const conflict = (mess) => {
+            const conflict = mess => {
                 return {
                     action: action,
                     conflict: TX.tx("$1 failed: $2", action.verbose(), mess)
@@ -178,7 +178,7 @@ define("js/Hoard", ["js/Node", "js/Action", "js/Translator", "js/Serror"], funct
 			// as necessary.
 			// Return the node at the end of the path
 			const mkNode = (path, leaf) => {
-				let p = [];
+				const p = [];
 				for (let index = 0; index < path.length; index++) {
 					p.push(path[index]);
 					const node = this.tree.getNodeAt(p);
@@ -190,7 +190,7 @@ define("js/Hoard", ["js/Node", "js/Action", "js/Translator", "js/Serror"], funct
 						});
 						if (leaf && index === path.length - 1)
 							act.data = "PLACEHOLDER";
-						let e = this.play_action(act, undoable, uiPlayer);
+						const e = this.play_action(act, undoable, uiPlayer);
 						Serror.assert(!e.conflict, e.conflict);
 					}
 				}
@@ -215,7 +215,7 @@ define("js/Hoard", ["js/Node", "js/Action", "js/Translator", "js/Serror"], funct
                     this._record_event(action, 'D', action.path, parent.time);
 
                 parent.time = action.time; // collection is being modified
-                let nn = new Node({ time: action.time });
+                const nn = new Node({ time: action.time });
                 if (typeof action.data === "string")
 					// STEAL the action data
 					nn.setValue(action.data);
@@ -227,7 +227,7 @@ define("js/Hoard", ["js/Node", "js/Action", "js/Translator", "js/Serror"], funct
                 if (undoable)
                     this._record_event(action, 'D', action.path, action.time);
                 
-                let json = JSON.parse(action.data);
+                const json = JSON.parse(action.data);
 				const parent = mkNode(action.path.slice(0, -1));
                 parent.time = action.time; // collection is being modified
 				const name = action.path.slice(-1)[0];
@@ -321,7 +321,7 @@ define("js/Hoard", ["js/Node", "js/Action", "js/Translator", "js/Serror"], funct
 				const parent = this.tree.getNodeAt(
 					action.path.slice(0, -1));
                 if (undoable) {
-                    let from_parent = action.path.slice();
+                    const from_parent = action.path.slice();
                     from_parent.pop();
                     this._record_event(
                         action,
@@ -349,7 +349,7 @@ define("js/Hoard", ["js/Node", "js/Action", "js/Translator", "js/Serror"], funct
                     return conflict(TX.tx("it already exists"));
 				const name = action.path.slice(-1)[0];
                 if (undoable) {
-                    let p = action.path.slice();
+                    const p = action.path.slice();
                     p[p.length - 1] = action.data;
                     this._record_event(
                         action, 'R', p, parent.time, { data: name });
@@ -391,13 +391,9 @@ define("js/Hoard", ["js/Node", "js/Action", "js/Translator", "js/Serror"], funct
 			}
 
             default:
-                // Version incomptibility?
+                // Version incompatibility?
                 Serror.assert(false, "Unrecognised action type");
             }
-
-			// Play the action into the UI
-			if (uiPlayer)
-				uiPlayer(action);
 
             return { action: action }; // Hoard.PlayResult
         }
@@ -433,7 +429,7 @@ define("js/Hoard", ["js/Node", "js/Action", "js/Translator", "js/Serror"], funct
          */
         actions_to_recreate() {
 
-            let actions = [];
+            const actions = [];
             
             function _visit(node, path) {
                 let time = node.time;
@@ -442,7 +438,7 @@ define("js/Hoard", ["js/Node", "js/Action", "js/Translator", "js/Serror"], funct
                     time = Date.now();
 
                 if (path.length > 0) {
-                    let action = new Action({
+                    const action = new Action({
                         type: 'N',
                         path: path,
                         time: time
@@ -503,7 +499,7 @@ define("js/Hoard", ["js/Node", "js/Action", "js/Translator", "js/Serror"], funct
             if (!this.tree)
                 return Promise.resolve();
 
-            let checkAlarms = [{
+            const checkAlarms = [{
                 path: [],
                 node: this.tree
             }];
@@ -512,19 +508,17 @@ define("js/Hoard", ["js/Node", "js/Action", "js/Translator", "js/Serror"], funct
             let changes = 0;
             
             while (checkAlarms.length > 0) {
-                let item = checkAlarms.pop();
-                let node = item.node;
-				node.eachChild((name, snode) => {
-                    checkAlarms.push({
-                        node: snode,
-                        path: item.path.slice().concat([name])
-                    });
-                });
+                const item = checkAlarms.pop();
+                const node = item.node;
+				node.eachChild((name, snode) => checkAlarms.push({
+                    node: snode,
+                    path: item.path.slice().concat([name])
+                }));
 
                 if (typeof node.alarm !== "undefined"                   
                     && node.alarm.due > 0
 					&& Date.now() >= node.alarm.due) {
-                    let ding = new Date(node.alarm.due);
+                    const ding = new Date(node.alarm.due);
                     promise = promise.then(ringfn(item.path, ding));
                     if (node.alarm.repeat > 0)
                         // Update the alarm for the next ring

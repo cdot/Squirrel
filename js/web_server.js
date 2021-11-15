@@ -33,13 +33,13 @@ requirejs.config({
 
 requirejs(["node-getopt", "js/Server"], (getopt, Server) => {
 
-    let cliopt = getopt.create(OPTIONS)
+    const cliopt = getopt.create(OPTIONS)
         .bindHelp()
         .setHelp(DESCRIPTION + "[[OPTIONS]]")
         .parseSystem()
         .options;
 
-    let params = {
+    const params = {
         port: cliopt.port || 3000,
         docroot: cliopt.docroot,
         writable: cliopt.writable

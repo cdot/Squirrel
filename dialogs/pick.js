@@ -7,34 +7,33 @@
 define("dialogs/pick", ["js/Dialog"], function(Dialog) {
     class PickDialog extends Dialog {
         initialise() {
-            let self = this;
-            this.control("clear")
-            .on(Dialog.tapEvent(), function () {
-                self.find(".dlg-picked")
-                .removeClass("dlg-picked");
-            });
+            this.$control("clear")
+            .on(Dialog.tapEvent(), () =>
+				this.$dlg.find(".dlg-picked")
+                .removeClass("dlg-picked"));
         }
 
         open() {
-            let self = this;
+            const $dlg = this.$dlg;
 
-            let val = this.options.pick_from;
-            let $which = this.control("which");
-            let $from = this.control("from");
-            let i, $f;
+            const val = this.options.pick_from;
+            const $which = this.$control("which");
+            const $from = this.$control("from");
+            let i;
 
-            this.find(".dlg-pick-cell")
+            $dlg
+			.find(".dlg-pick-cell")
             .remove();
 
-            let item_clicked = function () {
-                let ii = $(this)
+            const item_clicked = function() {
+                const ii = $(this)
                     .data("i");
-                self.find("td.i" + ii)
+                $dlg.find("td.i" + ii)
                 .addClass("dlg-picked");
             };
 
             for (i = 0; i < val.length; i++) {
-                $f = $from.children("td.i" + i);
+                const $f = $from.children("td.i" + i);
                 if ($f.length === 0) {
                     $("<td></td>")
                     .data("i", i)
@@ -59,7 +58,7 @@ define("dialogs/pick", ["js/Dialog"], function(Dialog) {
                 i++;
             }
 
-            this.find(".dlg-picked")
+            $dlg.find(".dlg-picked")
             .removeClass("dlg-picked");
         }
     }

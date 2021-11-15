@@ -15,13 +15,27 @@ requirejs.config({
         chai: "https://cdnjs.cloudflare.com/ajax/libs/chai/4.2.0/chai",
         "js-cookie": "https://cdnjs.cloudflare.com/ajax/libs/js-cookie/2.2.0/js.cookie.min",
         jquery: "https://code.jquery.com/jquery-3.3.1",
+		"jquery-touch-events": "//cdnjs.cloudflare.com/ajax/libs/jquery-touch-events/2.0.3/jquery.mobile-events.min",
         "jquery-ui": "https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui"
     }
 });
 
-define(["js/Dialog", "js/Translator", "js/LocalStorageStore", "js/Action", "js/Hoard", "js/Tree", "jquery", "js/jq/simulated_password", "js/jq/icon_button"], function(Dialog, Translator, LocalStorageStore, Action, Hoard) {
+define([
+	"js/Dialog",
+	"js/Translator",
+	"js/LocalStorageStore",
+	"js/Action",
+	"js/Hoard",
+	"js/Tree",
+	"jquery",
+	"jquery-touch-events",
+	"js/jq/simulated_password",
+	"js/jq/icon_button"
+], (
+	Dialog, Translator, LocalStorageStore, Action, Hoard
+) => {
 
-    let debug = console.debug;
+    const debug = console.debug;
 
     // Make sure global options get passed in
     Dialog.set_default_options({
@@ -30,7 +44,7 @@ define(["js/Dialog", "js/Translator", "js/LocalStorageStore", "js/Action", "js/H
     const TESTR = "1234567普通话/普通話العَرَبِيَّة";
 
     // Test application (do we need this any more?)
-    let test_app = {
+    const test_app = {
         client: {
             store: new LocalStorageStore(),
             hoard: new Hoard()
@@ -39,13 +53,13 @@ define(["js/Dialog", "js/Translator", "js/LocalStorageStore", "js/Action", "js/H
             store: new LocalStorageStore(),
             hoard: new Hoard()
         },
-        playAction: function() {
-            debug("playAction", arguments);
+        appPlayAction: function() {
+            debug("appPlayAction", arguments);
             return Promise.resolve();
         }
     };
 
-    let login_title = "Login";
+    const login_title = "Login";
 
     function lert() {
         var args = Array.prototype.slice.call(arguments);
@@ -54,26 +68,26 @@ define(["js/Dialog", "js/Translator", "js/LocalStorageStore", "js/Action", "js/H
         });
     }
     
-    let tests = {
+    const tests = {
         add_node: function() {
             return Dialog.confirm("add", {
                 path: [ "New", "Node", "Not", "x" ],
-                validate: (key) => {
+                validate: key => {
                     return key !== "x";
                 },
                 is_value: false
-            }).then((result) => {
+            }).then(result => {
                 lert(name, "OK", result);
             });
         },
         add_leaf: function() {
             return Dialog.confirm("add", {
                 path: [ "Leaf", "Value", "Not", "x" ],
-                validate: (key) => {
+                validate: key => {
                     return key !== "x";
                 },
                 is_value: true
-            }).then((result) => {
+            }).then(result => {
                 lert(name, "OK", result);
             });
         },
@@ -83,7 +97,7 @@ define(["js/Dialog", "js/Translator", "js/LocalStorageStore", "js/Action", "js/H
                 alarm: { time: Date.UTC(2002,0,2), repeat: 12345678910 },
                 last_change: Date.UTC(1998,3,1)
             })
-            .then((act) => {
+            .then(act => {
                 lert("Alarm", act);
             });
         },
@@ -110,7 +124,7 @@ define(["js/Dialog", "js/Translator", "js/LocalStorageStore", "js/Action", "js/H
                         severity: "warning",
                         message: "Message"
                     }
-                }).then((dlg) => {
+                }).then(dlg => {
                     dlg.push([
                         {
                             severity: "error",
@@ -122,7 +136,7 @@ define(["js/Dialog", "js/Translator", "js/LocalStorageStore", "js/Action", "js/H
                         }]);
                     return dlg;
                 })
-                .then((dlg) => {
+                .then(dlg => {
                     lert("Waiting for confirmation or cancel");
                     return dlg.wait();
                 })
@@ -185,13 +199,13 @@ define(["js/Dialog", "js/Translator", "js/LocalStorageStore", "js/Action", "js/H
                     }),
                 ]
             })
-            .then((changes) => {
+            .then(changes => {
                 lert("ok choose_changes", changes);
             });
         },
         change_pass: function() {
             return Dialog.confirm("change_password")
-            .then((pw) => {
+            .then(pw => {
                 lert("new pw", pw);
             });
         },
@@ -200,7 +214,7 @@ define(["js/Dialog", "js/Translator", "js/LocalStorageStore", "js/Action", "js/H
                 path: [ "Woggle", "Niblick" ],
                 is_leaf: true
             })
-            .then((path) => {
+            .then(path => {
                 lert("Confirmed delete of", path);
             });
         },
@@ -224,7 +238,7 @@ define(["js/Dialog", "js/Translator", "js/LocalStorageStore", "js/Action", "js/H
                     return json;
                 }
             })
-            .then((options) => {
+            .then(options => {
                 lert("Confirmed extras", options);
             });
         },
@@ -233,7 +247,7 @@ define(["js/Dialog", "js/Translator", "js/LocalStorageStore", "js/Action", "js/H
                 $node: $("#node"),
                 data: { "fruit": "bat" }
             })
-            .then((options) => {
+            .then(options => {
                 lert("insert", options);
             });
         },
@@ -243,7 +257,7 @@ define(["js/Dialog", "js/Translator", "js/LocalStorageStore", "js/Action", "js/H
                 user: "Jaffar",
                 pass: "Cayke"
             })
-            .then((info) => {
+            .then(info => {
                 lert("Login", info.user, info.pass);
             });
         },
@@ -266,7 +280,7 @@ define(["js/Dialog", "js/Translator", "js/LocalStorageStore", "js/Action", "js/H
                     return "/a/bogus/path";
                 }
             })
-            .then((path) => {
+            .then(path => {
                 lert("store_settings OK", path);
             });
         },
@@ -278,7 +292,7 @@ define(["js/Dialog", "js/Translator", "js/LocalStorageStore", "js/Action", "js/H
                     return "/a/bogus/path";
                 }
             })
-            .then((path) => {
+            .then(path => {
                 lert("store_settings OK", path);
             });
         },
@@ -287,8 +301,67 @@ define(["js/Dialog", "js/Translator", "js/LocalStorageStore", "js/Action", "js/H
                 key: "TEST",
                 constraints: { size: 16, chars: "AB-D" }
             })
-            .then((res) => {
+            .then(res => {
                 lert("randomise OK", res);
+            });
+        },
+        move_to: function() {
+			const data = {
+				A: {
+					AA: {
+						AAA: false
+					},
+					AB: false,
+					AC: false,
+					AD: {
+						ADA: {
+							ADAA: false,
+							ADAB: false,
+							ADAC: false
+						}
+					}
+				},
+				B: {
+					BA: {
+						BAA: false
+					},
+					BB: false,
+					BC: false,
+					BD: {
+						BDA: {
+							BDAA: false,
+							BDAB: false,
+							BDAC: false
+						}
+					}
+				},
+				C: {
+					CA: {
+						CAA: false
+					},
+					CB: false,
+					CC: false,
+					CD: {
+						CDA: {
+							CDAA: false,
+							CDAB: false,
+							CDAC: false
+						}
+					}
+				}
+			};
+            return Dialog.confirm("move_to", {
+                key: "TEST",
+                path: [ "A", "AA", "AAA" ],
+				getContent: path => {
+					let n = data;
+					for (let i of path)
+						n = n[i];
+					return n;
+				}
+            })
+            .then(res => {
+                lert("move_to OK", res);
             });
         }
     };
@@ -305,10 +378,10 @@ define(["js/Dialog", "js/Translator", "js/LocalStorageStore", "js/Action", "js/H
         $("#node").data("alarm", { time: Date.UTC(2020,1,2) });
 
         for (let name in tests) {
-            let $button = $("<button>" + name + " </button>");
+            const $button = $("<button>" + name + " </button>");
             $button.on("click", () => {
                 tests[name]()
-                .catch((f) => {
+                .catch(f => {
                     lert("Aborted", f);
                 });
             });

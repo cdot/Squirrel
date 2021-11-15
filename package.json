@@ -89,6 +89,8 @@
     "express-basic-auth": "^1.2.0",
     "fs-extra": "^10.0.0",
     "html-minifier": "^4.0.0",
+    "jquery-touch-events": "^1.0.7",
+    "jquery-ui-dist": "^1.12.1",
     "jsdoc": "^3.6.7",
     "jsdom": "^18.0.1",
     "mocha": "^9.1.3",

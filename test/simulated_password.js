@@ -19,7 +19,7 @@ if (typeof module !== "undefined") {
     global.window = window;
     global.document = window.document;
     global.navigator = { userAgent: "node.js" };
-    let jQuery = require('jquery');
+    const jQuery = require('jquery');
     global.jQuery = jQuery;
     global.$ = jQuery;
 }
@@ -30,32 +30,32 @@ requirejs.config({
 
 requirejs(["test/TestRunner", "jquery", "js/jq/simulated_password"], function(TestRunner) {
 
-    let tr = new TestRunner("simulated_password");
-    let assert = tr.assert;
+    const tr = new TestRunner("simulated_password");
+    const assert = tr.assert;
 
     tr.afterEach(function() {
         $("#working").empty();
     });
 
     tr.addTest('basic', function() {
-        let $html = $('<input type="password">');
+        const $html = $('<input type="password">');
         $("#working").append($html);
         $html.simulated_password();
-        let html = $("#working").html();
+        const html = $("#working").html();
         assert.equal(html, '<input type="text" class="pass_hidden"><input type="checkbox">');
     });
 
     tr.addTest('not hidden, no checkbox', function() {
         $("#working").html('<input class="password" id="tt" value="initial">');
         $(".password").simulated_password({hidden: false, checkbox:false});
-        let html = $("#working").html();
+        const html = $("#working").html();
         assert.equal(html, '<input class="password" id="tt" value="initial">');
     });
 
     tr.addTest('options in data', function() {
         $("#working").html('<input class="password" id="tt" value="initial" data-options=\'{"hidden":false,"checkbox":false}\'>');
         $(".password").simulated_password();
-        let html = $("#working").html();
+        const html = $("#working").html();
         assert.equal(html, '<input class="password" id="tt" value="initial" data-options="{&quot;hidden&quot;:false,&quot;checkbox&quot;:false}">');
     });
 
@@ -63,7 +63,7 @@ requirejs(["test/TestRunner", "jquery", "js/jq/simulated_password"], function(Te
         if ('setSelectionRange' in input) {
             input.setSelectionRange(pos, pos);
         } else if ('createTextRange' in input) {
-            let range = input.createTextRange();
+            const range = input.createTextRange();
             range.collapse(true);
             range.moveEnd('character', pos);
             range.moveStart('character', pos);
@@ -73,7 +73,7 @@ requirejs(["test/TestRunner", "jquery", "js/jq/simulated_password"], function(Te
 
     tr.addTest('typing', function() {
         $("#working").html('<input class="password" id="tt" value="bass">');
-        let $p = $(".password");
+        const $p = $(".password");
         $p.simulated_password({hidden: true, checkbox:false});
         $p.raw_val("•r•••");
         setCursorPosition($p[0], 2); // just after the r was typed
@@ -86,7 +86,7 @@ requirejs(["test/TestRunner", "jquery", "js/jq/simulated_password"], function(Te
 
     tr.addTest('typing', function() {
         $("#working").html('<input class="password" id="tt" value="bass">');
-        let $p = $(".password");
+        const $p = $(".password");
         $p.simulated_password({hidden: true, checkbox:false});
         $p.raw_val("•••");
         setCursorPosition($p[0], 0);
@@ -99,10 +99,10 @@ requirejs(["test/TestRunner", "jquery", "js/jq/simulated_password"], function(Te
 
     tr.addTest('set val', function() {
         $("#working").html('<input class="password" id="tt" value="bass">');
-        let $p = $(".password");
+        const $p = $(".password");
         $p.simulated_password({hidden: true, checkbox:false});
         return new Promise((resolve, reject) => {
-            let timmy = window.setTimeout(() => {
+            const timmy = window.setTimeout(() => {
                 assert.equal($p.val(), "roach");
                 resolve();
             }, 20);
@@ -116,7 +116,5 @@ requirejs(["test/TestRunner", "jquery", "js/jq/simulated_password"], function(Te
         });
     });
 
-    $(() => {
-        tr.run();
-    });
+    $(() => tr.run());
 });

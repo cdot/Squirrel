@@ -35,8 +35,8 @@ define("js/jq/styling", ["js/RGBA", "js-cookie", "jquery", "jquery-ui"], functio
          * same look.
          */
         reset: function () {
-            let styles = [];
-            let $picker = $("<div></div>");
+            const styles = [];
+            const $picker = $("<div></div>");
             $("body").append($picker);
 
             // In theory only local stylesheets can be
@@ -56,10 +56,10 @@ define("js/jq/styling", ["js/RGBA", "js-cookie", "jquery", "jquery-ui"], functio
                 if (!rules)
                     continue;
                 for (let rule of rules) {
-                    let m = /(.*)\.inherit_(.*)$/.exec(rule.selectorText);
+                    const m = /(.*)\.inherit_(.*)$/.exec(rule.selectorText);
                     if (m) {
-                        let selector = m[1];
-                        let superclass = m[2].split('_').join(' ');
+                        const selector = m[1];
+                        const superclass = m[2].split('_').join(' ');
 
                         $picker.addClass(superclass);
                         let s = "";
@@ -84,7 +84,7 @@ define("js/jq/styling", ["js/RGBA", "js-cookie", "jquery", "jquery-ui"], functio
             $("#computed-styles").remove();
             if (styles.length === 0)
                 return;
-            let $style = $("style")
+            const $style = $("style")
                 .attr("id", "computed-styles")
                 .text(styles.join("\n"));
             $("body").prepend($style);
@@ -92,7 +92,7 @@ define("js/jq/styling", ["js/RGBA", "js-cookie", "jquery", "jquery-ui"], functio
 
         theme: function(theme) {
             if (typeof theme !== "undefined") {
-                let promises = [];
+                const promises = [];
                 $("#jQueryTheme")
                 .each(function () {
                     this.href = this.href.replace(
@@ -101,22 +101,19 @@ define("js/jq/styling", ["js/RGBA", "js-cookie", "jquery", "jquery-ui"], functio
                     // Use the loading of the CSS as an image (which will
                     // trigger an error) to tell us when we can reset the
                     // styling
-                    let $img = $("<img />");
+                    const $img = $("<img />");
                     $img.attr("src", this.href).hide();
                     $("body").append($img);
-                    promises.push(new Promise((resolve) => {
+                    promises.push(new Promise(resolve =>
                         $img.on("error", () => {
                             resolve();
                             $img.remove();
-                        });
-                    }));
+                        })));
                 });
                 // Allow time for the new style to kick in before
                 // resetting the styling
                 Promise.all(promises)
-                .then(() => {
-                    $.styling.reset();
-                });
+                .then(() => $.styling.reset());
 
                 if (theme === "base") {
                     Cookies.remove("ui_theme");
@@ -130,8 +127,7 @@ define("js/jq/styling", ["js/RGBA", "js-cookie", "jquery", "jquery-ui"], functio
         },
 
         scale: function(scale) {
-            let now = $("body").css("font-size");
-            now = now.replace(/px/, "");
+            let now = $("body").css("font-size").replace(/px/, "");
             if (typeof scale !== "undefined" && scale > 6) { // don't go below 6px
                 now = scale;
                 $("body").css("font-size", scale + "px");

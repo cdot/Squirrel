@@ -38,11 +38,11 @@ requirejs(["js/Utils", "js/Cryptographer", "js/Server", "fs", "axios", "test/Tes
 
     tr.addTest("no-auth-get", () => {
         return request.get(serverUrl + '/')
-        .then((r) => {
+        .then(r => {
             console.log(r);
             assert(false, "Unexpected");
         })
-        .catch((e) => {
+        .catch(e => {
             assert.equal(e.response.status, 401);
         });
     });
@@ -55,7 +55,7 @@ requirejs(["js/Utils", "js/Cryptographer", "js/Server", "fs", "axios", "test/Tes
         .then(() => {
             assert("Unexpected");
         })
-        .catch((e) => {
+        .catch(e => {
             assert.equal(e.response.status, 401);
         });
     });
@@ -70,7 +70,7 @@ requirejs(["js/Utils", "js/Cryptographer", "js/Server", "fs", "axios", "test/Tes
         .then(() => {
             assert("Unexpected");
         })
-        .catch((err) => {
+        .catch(err => {
             assert.equal(err.response.status, 500);
             assert.equal(err.response.data, "Error: EISDIR: illegal operation on a directory, readError: EISDIR: illegal operation on a directory, read");
         });
@@ -86,7 +86,7 @@ requirejs(["js/Utils", "js/Cryptographer", "js/Server", "fs", "axios", "test/Tes
         .then(() => {
             assert("Unexpected");
         })
-        .catch((e) => {
+        .catch(e => {
             assert.equal(e.response.status, 405);
             assert.equal(e.response.data, "No support for POST");
         });
@@ -193,7 +193,7 @@ requirejs(["js/Utils", "js/Cryptographer", "js/Server", "fs", "axios", "test/Tes
         .then(() => {
             assert(false, "Unexpected");
         })
-        .catch((err) => {
+        .catch(err => {
             assert.equal(err.response.status, 403);
             assert(!fs.existsSync(__dirname + "/banished"));
         });

@@ -51,14 +51,13 @@ requirejs(deps, function(StoreTester, webdav) {
 		config = new Promise(resolve => server.setFileSystem(
 			'/',
 			new WebDAV.PhysicalFileSystem(__dirname),
-			success => {
+			success =>
 				server.start(() => {
 					console.log('Server ready');
 					resolve({
 						url: "http://localhost:1900",
 						net_user: webdav_user, net_pass: webdav_pass});
-				});
-			}));
+				})));
 	}
     config.then(cfg => {
 		new StoreTester(["WebDAVStore"])

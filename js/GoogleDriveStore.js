@@ -16,7 +16,7 @@ function gapi_on_load() {
 /* eslint-enable no-unused-vars */
 
 define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore', 'js/Serror'], function(Utils, Translator, HttpServerStore, Serror) {
-    let TX = Translator.instance();
+    const TX = Translator.instance();
 
 	// Client ID from Google APi dashboard. Note this is only valid
 	// for requests from specific URLs, so if you want to host your
@@ -59,15 +59,14 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
 		 * @Override
 		 */
         init() {
-            let self = this;
             if (gapi_is_loaded) {
                 if (this.debug) this.debug("gapi is already loaded");
                 return this._init();
             }
-            return new Promise((resolve) => {
-                gapi_loader = function () {
-                    if (self.debug) self.debug("Loading GoogleDriveStore");
-                    resolve(self._init());
+            return new Promise(resolve => {
+                gapi_loader = () => {
+                    if (this.debug) this.debug("Loading GoogleDriveStore");
+                    resolve(this._init());
                 };
                 return $.getScript("https://apis.google.com/js/client.js?onload=gapi_on_load");
             });
@@ -99,7 +98,7 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
 
         _init() {
             // Timeout after 20 seconds of waiting for auth
-            let tid = window.setTimeout(function () {
+            const tid = window.setTimeout(function () {
                 window.clearTimeout(tid);
                 throw new Serror(
 					408,
@@ -110,9 +109,8 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
 
             if (this.debug) this.debug("authorising");
 
-			let self = this;
             return new Promise((resolve, reject) => {
-				gapi.load("client:auth2", function() {
+				gapi.load("client:auth2", () => {
 					let gauth;
 					gapi.client.init({
 						//immediate: true,
@@ -132,7 +130,7 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
 								promise = Promise.resolve();
 							} else {
 								// User is not signed in. Promise to auth.
-								promise = new Promise((resolve) => {
+								promise = new Promise(resolve => {
 									gauth.isSignedIn.listen(function(sin) {
 										if (sin)
 											resolve();
@@ -143,25 +141,23 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
 								});
 							}
 							return promise.then(() => {
-								let guser = gauth.currentUser.get();
-								let gprofile = guser.getBasicProfile();
-								let name = gprofile.getName()
-								if (self.debug) self.debug(`auth OK, user ${name}`);
-								self.option("user", name);
+								const guser = gauth.currentUser.get();
+								const gprofile = guser.getBasicProfile();
+								const name = gprofile.getName();
+								if (this.debug) this.debug(`auth OK, user ${name}`);
+								this.option("user", name);
 								return gapi.client.load("drive", "v3");
 							});
 						},
-						(gerror) => {
-							throw new Serror(403, gerror);
-						}
+						gerror => { throw new Serror(403, gerror); }
 					)
 					.then(() => {
-						if (self.debug) self.debug("drive/v3 loaded");
+						if (this.debug) this.debug("drive/v3 loaded");
 						resolve();
 					})
-					.catch((r) => {
+					.catch(r => {
 						throw new Serror(
-							500, self._gError(r, TX.tx("Google Drive load")));
+							500, this._gError(r, TX.tx("Google Drive load")));
 					});
 				});				
 			});
@@ -184,11 +180,11 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
             if (path.length === 0)
                 return Promise.resolve(parentid);
 
-            let p = path.slice();
-            let pathel = p.shift();
+            const p = path.slice();
+            const pathel = p.shift();
 
             function create_folder() {
-                let metadata = {
+                const metadata = {
                     title: pathel,
                     mimeType: "application/vnd.google-apps.folder"
                 };
@@ -200,12 +196,11 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
                 if (this.debug) this.debug(`Creating folder ${pathel} under ${parentid}`);
                 return gapi.client.drive.files
                 .insert(metadata)
-                .then((response) => {
-                    return this._follow_path(response.result.id, p, true);
-                });
+                .then(response =>
+					  this._follow_path(response.result.id, p, true));
             }
 
-            let query = `title='${pathel}' and '${parentid}' in parents` +
+            const query = `title='${pathel}' and '${parentid}' in parents` +
                 " and mimeType='application/vnd.google-apps.folder' and trashed=false";
 
             return gapi.client.drive.files
@@ -213,10 +208,10 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
                 q: query,
 				fields: "files/id"
             })
-            .then((response) => {
-                let files = response.result.files;
+            .then(response => {
+                const files = response.result.files;
                 if (files.length > 0) {
-                    let id = files[0].id;
+                    const id = files[0].id;
                     if (this.debug) this.debug(`found ${query} at ${id}`);
                     return this._follow_path(id, p, create);
                 }
@@ -238,11 +233,11 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
         _putfile(parentid, name, data, id) {
             let url = "/upload/drive/v2/files";
             let method = "POST";
-            let params = {
+            const params = {
                 uploadType: "multipart",
                 visibility: "PRIVATE"
             };
-            let metadata = {
+            const metadata = {
                 title: name,
                 mimeType: "application/octet-stream"
             };
@@ -280,10 +275,8 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
                 },
                 body: multipartRequestBody
             })
-            .then((/*response*/) => {
-                return true;
-            })
-            .catch((e) => {
+            .then((/*response*/) => true)
+            .catch(e => {
                 this.status(e.code);
                 return false;
             });
@@ -295,13 +288,13 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
         write(path, data) {
             if (this.debug) this.debug("write", path);
 
-            let p = path.split("/");
-            let name = p.pop();
+            const p = path.split("/");
+            const name = p.pop();
             let parentId;
             
             return this
             ._follow_path("root", p, true)
-            .then((pid) => {
+            .then(pid => {
                 if (typeof pid === "undefined")
                     return false;
                 parentId = pid;
@@ -313,8 +306,8 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
 					fields: "files/id"
                 });
             })
-            .then((response) => {
-                let files = response.result.files;
+            .then(response => {
+                const files = response.result.files;
                 let id;
                 if (files.length > 0) {
                     id = files[0].id;
@@ -323,7 +316,7 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
                     if (this.debug) this.debug(`creating ${name} in ${parentId}`);
                 return this._putfile(parentId, name, data, id);
             })
-            .catch((r) => {
+            .catch(r => {
                 throw new Serror(400, path + this._gError(r, TX.tx("Write")));
             });
         }
@@ -334,11 +327,11 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
         read(path) {
             if (this.debug) this.debug("read", path);
 
-            let p = path.split("/");
-            let name = p.pop();
+            const p = path.split("/");
+            const name = p.pop();
             return this
             ._follow_path("root", p, false)
-            .then((parentId) => {
+            .then(parentId => {
                 if (typeof parentId === "undefined")
                     return undefined;
 				if (this.debug) this.debug(
@@ -350,31 +343,31 @@ define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore'
 					fields: "files/id"
                 });
             })
-            .then((response) => {
-                let files = response.result.files;
+            .then(response => {
+                const files = response.result.files;
                 if (files === null || files.length === 0) {
                     if (this.debug) this.debug(`could not find ${name}`);
                     throw new Serror(401, `${path} not found`);
                 }
-                let id = files[0].id;
+                const id = files[0].id;
                 if (this.debug) this.debug(`found '${name}' id ${id}`);
 				return gapi.client.drive.files.get(
 					{
 						fileId: id,
 						alt: "media"
 					})
-				.then((res) => {
+				.then(res => {
 					// alt=media requests content-type=text/plain. AFAICT the
 					// file comes in base64-encoded, and is simply converted
 					// to a "string" by concatenating the bytes,
 					// one per code point, without any decoding (thankfully!)
-					let a = new Uint8Array(res.body.length);
+					const a = new Uint8Array(res.body.length);
 					for (let i = 0; i < a.length; i++)
 						a[i] = res.body.codePointAt(i);
 					return a;
 				});
             })
-			.catch((r) => {
+			.catch(r => {
                 throw new Serror(400, path + this._gError(r, TX.tx("Read")));
             });
         }

@@ -9,8 +9,8 @@ define("dialogs/about", ["js/Dialog", "js/jq/template"], function(Dialog) {
     class AboutDialog extends Dialog {
 
         initialise() {
-            this.find(".template").template();
-            this.control("built").template(
+            this.$dlg.find(".template").template();
+            this.$control("built").template(
                 "expand", $("meta[name='build-date']").attr("content"));
         }
     }

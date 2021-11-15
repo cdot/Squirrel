@@ -33,36 +33,29 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
 			//this.debug = console.log;
         }
 
-        // Return a promise to construct self.store
+        // Return a promise to construct this.store
         buildStore() {
-            let self = this;
             let p = Promise.resolve();
 
             // Starting from the end of the class list, construct store objects
             for (let i = this.storeClasses.length - 1; i >= 0; i--) {
-                let storeClass = this.storeClasses[i];
+                const storeClass = this.storeClasses[i];
                 let sc;
                 try {
                     sc = eval(storeClass);
                     p = Promise.resolve(sc);
                 } catch (e) {
-                    if (self.debug) self.debug("Require", storeClass);
-                    p = p.then(function () {
-                        return new Promise(function(res,rej) {
+                    if (this.debug) this.debug("Require", storeClass);
+                    p = p.then(() => new Promise((res,rej) => {
                             requirejs(["js/" + storeClass],
-                                      function(module) {
-                                          res(module);
-                                      },
-                                      function(e) {
-                                          rej(e);
-                                      });
-                        });
-                    });
+                                      module => res(module),
+                                      e => rej(e));
+                    }));
                 }
-                p = p.then((module) => {
-                    self.store = new module({
-                        debug: self.debug,
-                        understore: self.store
+                p = p.then(module => {
+                    this.store = new module({
+                        debug: this.debug,
+                        understore: this.store
                     });
                 });
             }
@@ -75,7 +68,7 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
             if (typeof global === "undefined") {
                 // Browser
                 config.inBrowser = true;
-                let up = Utils.parseURLParams(
+                const up = Utils.parseURLParams(
                     window.location.search.substring(1));
                 for (key in up)
                     config[key] = up[key];
@@ -85,7 +78,7 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
                 for (key in process.argv)
                     config[key] = process.env[key];
                 for (key in process.argv) {
-                    let p = process.argv[key].split("=");
+                    const p = process.argv[key].split("=");
                     config[p[0]] = p[1];
                 }
             }
@@ -102,38 +95,37 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
          * for node.js.
          */
         configureStore(config) {
-            let self = this;
-            let store = self.store;
-            let four01 = {};
+            const store = this.store;
+            const four01 = {};
 
             for (let option in store.option()) {
                 if (/^needs_/.test(option)) {
-                    let key = option.replace(/^needs_/, "");
-                    let v = config[key];
+                    const key = option.replace(/^needs_/, "");
+                    const v = config[key];
                     if (!config.inBrowser && typeof v === "undefined")
                         throw new Error(`Require parameter '${key}'`);
-                    if (self.debug) self.debug(option,key, "=", v);
+                    if (this.debug) this.debug(option,key, "=", v);
                     store.option(key, v);
                 }
             }
 
             if (store.option("needs_url")) {
                 for (let key in { net_user: 1, net_pass: 1 }) {
-                    let v = config[key];
-                    if (self.debug) self.debug(key, "=", v);
+                    const v = config[key];
+                    if (this.debug) this.debug(key, "=", v);
                     four01[key] = v;
                 }
             }
 
             // 401 handler, build credentials and pass back
             store.option("network_login", function() {
-                if (self.debug) self.debug("Called network_login",store.option());
+                if (this.debug) this.debug("Called network_login",store.option());
                 if (store.option("net_user") === four01.net_user
                     && store.option("net_pass") === four01.net_pass) {
                     // If we get here, this is a second pass through
                     // this code. We can't improve on credentials, so
                     // it's a fail.
-                    if (self.debug) self.debug("auth failed with "
+                    if (this.debug) this.debug("auth failed with "
                                                + store.option("net_user"));
                     return Promise.reject();
                 }
@@ -147,22 +139,22 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
                 return Promise.resolve();
 
             // Build a UI to capture required parameters in the browser
-            return new Promise(function(resolve) {
+            return new Promise(resolve => {
                 requirejs(["jquery"], () => {
                     let needs = 0;
                     for (let option in store.option()) {
-                        let m = /^needs_(.*)$/.exec(option);
+                        const m = /^needs_(.*)$/.exec(option);
                         if (m) {
-                            let opt = m[1];
-                            self.store.option(opt, config[opt]);
-                            let $div = $("<div>" + opt + "</div>");
-                            let $input = $('<input/>');
+                            const opt = m[1];
+                            this.store.option(opt, config[opt]);
+                            const $div = $("<div>" + opt + "</div>");
+                            const $input = $('<input/>');
                             $div.append($input);
                             $input
                             .val(config[opt])
                             .on("change", function() {
                                 console.log(opt, $(this).val());
-                                self.store.option(opt, $(this).val());
+                                this.store.option(opt, $(this).val());
                            });
                             $("body").append($div);
                             needs++;
@@ -170,7 +162,7 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
                     }
                     
                     if (needs > 0) {
-                        let $run = $("<button>Run</button>");
+                        const $run = $("<button>Run</button>");
                         $run.on("click", function() {
                             resolve();
                         });
@@ -182,15 +174,14 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
         }
 
         makeTests() {
-            let self = this;
-            let assert = this.assert;
+            const assert = this.assert;
 
-			this.addTest("Write/Read 1 byte", function() {
-                const store = self.store;
+			this.addTest("Write/Read 1 byte", () => {
+                const store = this.store;
                 const a = new Uint8Array(1);
                 a[0] = 69;
 				return store.write(test_path, a)
-                .then(function() {
+                .then(() => {
 					return store.read(test_path);
                 })
                 .then(ab => {
@@ -200,8 +191,8 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
                 });
             });
 
-            this.addTest("Write/Read 0 bytes", function() {
-                let store = self.store;
+            this.addTest("Write/Read 0 bytes", () => {
+                const store = this.store;
                 return store.write(test_path, new Uint8Array(0))
                 .then(function () {
                     return store.read(test_path);
@@ -211,8 +202,8 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
                 });
             });
 
-            this.addTest("Write/Read empty string", function() {
-                let store = self.store;
+            this.addTest("Write/Read empty string", () => {
+                const store = this.store;
                 return store.writes(test_path, "")
                 .then(function () {
                     return store.reads(test_path);
@@ -222,10 +213,10 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
                 });
             });
 
-            this.addTest("Read non-existant byte data", function() {
-                let store = self.store;
+            this.addTest("Read non-existant byte data", () => {
+                const store = this.store;
                 return store.read("not/a/known/resource.dat")
-                .then(function() {
+                .then(() => {
                     assert(false, "Non existant should not resolve");
                 })
                 .catch(function(se) {
@@ -234,10 +225,10 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
                 });
             });
 
-            this.addTest("Read non-existant string", function() {
-                let store = self.store;
+            this.addTest("Read non-existant string", () => {
+                const store = this.store;
                 return store.reads("not/a/known/resource.dat")
-                .then(function() {
+                .then(() => {
                     assert(false, "Non existant should not resolve");
                 })
                 .catch(function(se) {
@@ -246,9 +237,9 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
                 });
             });
 
-            this.addTest("Write/read binary data", function() {
-                let store = self.store;
-                let a = new Uint8Array(DATASIZE);
+            this.addTest("Write/read binary data", () => {
+                const store = this.store;
+                const a = new Uint8Array(DATASIZE);
 
                 for (let i = 0; i < DATASIZE; i++)
                     a[i] = ((i + 1) & 0xFF);
@@ -265,8 +256,8 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
                 });
             });
 
-            this.addTest("Write/Read string", function() {
-                let store = self.store;
+            this.addTest("Write/Read string", () => {
+                const store = this.store;
                 return store.writes(test_path, TESTR)
                 .then(function () {
                     return store.reads(test_path);
@@ -276,20 +267,20 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
                 });
             });
 
-            if (self.store.option("needs_url")) {
+            if (this.store.option("needs_url")) {
                 // Won't do anything in the browser, as 401 isn't handled
                 // by us
-                this.addTest("Handles incorrect net user", function() {
-                    let store = self.store;
+                this.addTest("Handles incorrect net user", () => {
+                    const store = this.store;
                     return store.writes(test_path, TESTR)
                     .then(function () {
                         // Switch off 401 handler
-                        let h401 = store.option("network_login");
+                        const h401 = store.option("network_login");
                         store.option("network_login", null);
-                        let nu = store.option("net_user");
+                        const nu = store.option("net_user");
                         store.option("net_user", Date.now());
                         return store.reads(test_path)
-                        .then(function() {
+                        .then(() => {
                             assert(false, "Expected an error");
                         })
                         .catch(function(e) {
@@ -299,24 +290,24 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
                             store.option("net_user", nu);
                         });
                     })
-                    .catch((e) => {
+                    .catch(e => {
                         assert(false, "Write error" + e);
                     });
                 });
 
                 // Won't do anything in the browser, as 401 isn't handled
                 // by us
-                this.addTest("Handles incorrect net pass", function() {
-                    let store = self.store;
+                this.addTest("Handles incorrect net pass", () => {
+                    const store = this.store;
                     return store.writes(test_path, TESTR)
                     .then(function () {
                         // Switch off 401 handler
-                        let h401 = store.option("network_login");
+                        const h401 = store.option("network_login");
                         store.option("network_login", null);
-                        let np = store.option("net_pass");
+                        const np = store.option("net_pass");
                         store.option("net_pass", Date.now());
                         return store.reads(test_path, TESTR)
-                        .then(function() {
+                        .then(() => {
                             assert(false, "Unexpected");
                         })
                         .catch(function(e) {
@@ -326,21 +317,21 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
                             store.option("net_pass", np);
                         });
                     })
-                    .catch((e) => {
+                    .catch(e => {
                         assert(false, "Write error" + e);
                     });
                 });
             }
 
-            if (self.store.option("needs_user")) {
-                this.addTest("Handles incorrect user", function() {
-                    let store = self.store;
-                    let u = store.option("pass");
+            if (this.store.option("needs_user")) {
+                this.addTest("Handles incorrect user", () => {
+                    const store = this.store;
+                    const u = store.option("pass");
                     return store.writes(test_path, TESTR)
                     .then(function () {
                         store.option("user", Date.now());
                         return store.reads(test_path)
-                        .then(function() {
+                        .then(() => {
                             assert(false, "Unexpected");
                         })
                         .catch(function(e) {
@@ -359,12 +350,12 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
                 });
             }
 
-            if (self.store.option("needs_pass")) {
+            if (this.store.option("needs_pass")) {
                 // Note this is testing encryption (needs_pass)
                 // not web authentication (needs_url)
-                this.addTest("Handles incorrect password", function() {
-                    let store = self.store;
-                    let p = store.option("pass");
+                this.addTest("Handles incorrect password", () => {
+                    const store = this.store;
+                    const p = store.option("pass");
                     return store.writes(test_path, TESTR)
                     .then(function () {
                         store.option("pass", Date.now());
@@ -393,7 +384,7 @@ define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, Tes
         run(params) {
             params = params || {};
             return this.getParams(params)
-            .then((config) => {
+            .then(config => {
                 return this.buildStore()
                 .then(() => {
                     return this.configureStore(config);

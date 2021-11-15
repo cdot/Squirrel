@@ -10,13 +10,13 @@
 define("dialogs/login", ["js/Dialog", "js/jq/simulated_password"], function(Dialog) {
     class LoginDialog extends Dialog {
         initialise() {
-            let self = this;
-            let $pass = this.control("pass");
-            let $button = self.control("ok");
+            const self = this;
+            const $pass = this.$control("pass");
+            const $button = self.$control("ok");
 
             $pass.simulated_password();
 
-            this.control("user")
+            this.$control("user")
             .on('keyup', function (e) {
                 if (e.keyCode == 13) {
                     $pass.focus();
@@ -38,17 +38,17 @@ define("dialogs/login", ["js/Dialog", "js/jq/simulated_password"], function(Dial
         }
 
         open() {
-            let $user = this.control("user");
-            let $pass = this.control("pass");
+            const $user = this.$control("user");
+            const $pass = this.$control("pass");
 
             this.$dlg.dialog("option", "title", this.options.title);
 
             if (typeof this.options.user !== "undefined") {
-                let u = this.options.user;
+                const u = this.options.user;
                 $user.val(u);
-                if (u.length > 0) {
+                if (u.length > 0)
                     $pass.focus();
-                } else
+				else
                     $user.focus();
             }
 
@@ -58,8 +58,8 @@ define("dialogs/login", ["js/Dialog", "js/jq/simulated_password"], function(Dial
 
         ok() {
             return {
-                user: this.control("user").val(),
-                pass: this.control("pass").val()
+                user: this.$control("user").val(),
+                pass: this.$control("pass").val()
             };
         }
     }

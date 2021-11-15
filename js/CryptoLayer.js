@@ -32,14 +32,11 @@ define("js/CryptoLayer", ["js/Serror", "js/LayeredStore", "js/Utils", "js/Crypto
 		 * @override
 		 */
         read(path) {
-            let self = this;
             if (this.debug) this.debug("read", path);
             return super.read(path)
-            .then(a8 => {
-				return Crypto.decrypt(a8, self.option("pass"))
-				.catch(e => {
-					throw new Serror(400, "read failed");
-				});
+            .then(a8 => Crypto.decrypt(a8, this.option("pass")))
+			.catch(e => {
+				throw new Serror(400, "read failed");
 			});
         }
 
@@ -59,15 +56,12 @@ define("js/CryptoLayer", ["js/Serror", "js/LayeredStore", "js/Utils", "js/Crypto
 		 * @override
 		 */
         reads(path) {
-            let self = this;
             if (this.debug) this.debug("read", path);
             return super.read(path)
-            .then(uint8 => {
-				return Crypto.decrypt(uint8, self.option("pass"))
-				.then(data => new TextDecoder().decode(data))
-				.catch(e => {
-					throw new Serror(new Serror(400, "reads failed"));
-				});
+            .then(uint8 => Crypto.decrypt(uint8, this.option("pass")))
+			.then(data => new TextDecoder().decode(data))
+			.catch(e => {
+				throw new Serror(new Serror(400, "reads failed"));
 			});
         }
 

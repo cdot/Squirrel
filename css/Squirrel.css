@@ -90,6 +90,10 @@ body .inherit_ui-widget_ui-widget-content {
     background-color: rgba(0,150,0,0.5);
 }
 
+.greyed {
+	opacity: 0.5;
+}
+
 .topbar {
     position: fixed;
     top: 0px;

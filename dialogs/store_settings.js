@@ -8,17 +8,17 @@ define("dialogs/store_settings", ["js/Dialog", "js/jq/template"], function(Dialo
         /*
         // Local file support
         newImage(img) {
-            let self = this;
+            const self = this;
 
             // Check that we can use the image.
             requirejs(["js/Steganographer"], function(Steganographer) {
-                let steg = new Steganographer({debug: self.debug});
+                const steg = new Steganographer({debug: self.debug});
                 steg.insert("tada", img);
-                self.control("ok").icon_button("enable");
-                let h = img.naturalHeight;
-                let w = img.naturalWidth;
+                self.$control("ok").icon_button("enable");
+                const h = img.naturalHeight;
+                const w = img.naturalWidth;
                 img.height = 100;
-                self.control("image_message")
+                self.$control("image_message")
                 .show()
                 .template("pick", "xbyy")
                 .template("expand", w, h);
@@ -26,14 +26,14 @@ define("dialogs/store_settings", ["js/Dialog", "js/jq/template"], function(Dialo
         }
 
         changeImage() {
-            let self = this;
+            const self = this;
 
-            let file = this.control("image_file")[0].files[0];
+            const file = this.$control("image_file")[0].files[0];
             new Promise((resolve, reject) => {
-                let reader = new FileReader();
+                const reader = new FileReader();
                 reader.onload = function (e) {
                     // SMELL: use readAsDataURL?
-                    let data = new Uint8Array(reader.result);
+                    const data = new Uint8Array(reader.result);
                     resolve("data:" + file.type + ";base64," +
                             Utils.Uint8ArrayToBase64(data));
                 };
@@ -43,18 +43,16 @@ define("dialogs/store_settings", ["js/Dialog", "js/jq/template"], function(Dialo
                 reader.onabort = reader.onerror;
                 reader.readAsArrayBuffer(file);
             })
-            .then((data) => {
-                if (data === this.control("steg_image").attr("src", data))
+            .then(data => {
+                if (data === this.$control("steg_image").attr("src", data))
                     return;
-                let $img = this.control("steg_image");
+                const $img = this.$control("steg_image");
                 $img.attr("src", data)
                 .off("load")
-                .on("load", () => {
-                    self.newImage($img[0]);
-                });
+                .on("load", () => self.newImage($img[0]));
             })
-            .catch((e) => {
-                this.control("image_message")
+            .catch(e => {
+                this.$control("image_message")
                 .show()
                 .template("pick", "cui")
                 .template("expand", e);
@@ -65,7 +63,7 @@ define("dialogs/store_settings", ["js/Dialog", "js/jq/template"], function(Dialo
         _check_paths() {
             let ok = true;
             
-            let $ctl = this.control("cloud_path");
+            const $ctl = this.$control("cloud_path");
             if ($ctl.val() === "") {
                 $ctl.prop(
                     "title", this.tx("Cloud store path may not be empty"));
@@ -74,7 +72,7 @@ define("dialogs/store_settings", ["js/Dialog", "js/jq/template"], function(Dialo
                 $ctl.prop("title", this.tx("Path to your cloud store"));
 
             if (this.options.needs_image) {
-                $ctl = this.control("image_url");
+                $ctl = this.$control("image_url");
                 if ($ctl.val() === "") {
                     $ctl.prop(
                         "title",
@@ -83,56 +81,49 @@ define("dialogs/store_settings", ["js/Dialog", "js/jq/template"], function(Dialo
                 } else {
                     $ctl.prop(
                         "title", this.tx("URL of your steganography image"));
-                    this.control("steg_image").attr("src", $ctl.val());
+                    this.$control("steg_image").attr("src", $ctl.val());
                 }
             }
                 
-            this.control("ok").toggle(ok);
+            this.$control("ok").toggle(ok);
             
             return ok;
         }
 
         initialise() {
-            let self = this;
 
-            this.find(".template").template();
+            this.$dlg.find(".template").template();
 
-            this.control("image_url")
+            this.$control("image_url")
             //Local file
             //.on("change", function () {
             //    self.changeImage();
             //})
-            .on("input", function () {
-                self._check_paths();
-            });
+            .on("input", () => this._check_paths());
 
-            this.control("cloud_path")
-            .on("input", function () {
-                self._check_paths();
-            })
-            .on("change", function() {
-                self.control("ok").focus();
-            });
+            this.$control("cloud_path")
+            .on("input", () => this._check_paths())
+            .on("change", () => this.$control("ok").focus());
         }
 
         open() {
-            this.control("image_message").hide();
+            this.$control("image_message").hide();
             if (this.options.needs_image) {
-                this.control("get_image").show();
-                this.control("image_url").val(this.options.image_url());
-                this.control("steg_image").attr(
+                this.$control("get_image").show();
+                this.$control("image_url").val(this.options.image_url());
+                this.$control("steg_image").attr(
                     "src", this.options.image_url());
             } else
-                this.control("get_image").hide();
+                this.$control("get_image").hide();
 
-            this.control("cloud_path").val(this.options.cloud_path()).focus();
+            this.$control("cloud_path").val(this.options.cloud_path()).focus();
             this._check_paths();
         }
 
         ok() {
             return {
-                cloud_path: this.control("cloud_path").val(),
-                image_url: this.control("image_url").val()
+                cloud_path: this.$control("cloud_path").val(),
+                image_url: this.$control("image_url").val()
             }
         }
     }

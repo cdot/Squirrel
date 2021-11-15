@@ -26,11 +26,10 @@ define("js/WebDAVStore", ["js/Utils", "js/HttpServerStore"], (Utils, HttpServerS
          * @Override
 		 */
         request(method, url, headers, body) {
-            let self = this;
             return super.request(method, url, headers, body)
-            .then((res) => {
+            .then(res => {
                 if (res.status === 207)
-                    res.body = self._parseMultiStatus(res.body);
+                    res.body = this._parseMultiStatus(res.body);
                 return res;
             });
         }
@@ -55,7 +54,7 @@ define("js/WebDAVStore", ["js/Utils", "js/HttpServerStore"], (Utils, HttpServerS
 
         /* UNUSED
         _parseClarkNotation(propertyName) {
-            let result = propertyName.match(/^{([^}]+)}(.*)$/);
+            const result = propertyName.match(/^{([^}]+)}(.*)$/);
             if (!result)
                 return;
 
@@ -101,7 +100,7 @@ define("js/WebDAVStore", ["js/Utils", "js/HttpServerStore"], (Utils, HttpServerS
                     continue;
                 }
 
-                let property = this._parseClarkNotation(properties[ii]);
+                const property = this._parseClarkNotation(properties[ii]);
                 if (property && XML_NAMESPACES[property.namespace]) {
                     body += '<' + XML_NAMESPACES[property.namespace] + ':' + property.name + ' />';
                 } else {
@@ -112,7 +111,7 @@ define("js/WebDAVStore", ["js/Utils", "js/HttpServerStore"], (Utils, HttpServerS
 
             return this
                 .request('PROPFIND', url, headers, body)
-                .then((result) => {
+                .then(result => {
                     return {
                         status: result.status,
                         body: depth === '0' ? result.body[0] : result.body,
@@ -178,7 +177,7 @@ define("js/WebDAVStore", ["js/Utils", "js/HttpServerStore"], (Utils, HttpServerS
             body += '>' + this._renderPropSet(properties) + '</d:propertyupdate>';
 
             return this.request('PROPPATCH', url, headers, body)
-            .then((result) => {
+            .then(result => {
                     return {
                         status: result.status,
                         body: result.body,
@@ -212,7 +211,7 @@ define("js/WebDAVStore", ["js/Utils", "js/HttpServerStore"], (Utils, HttpServerS
                 body += '>' + this._renderPropSet(properties) + '</d:mkcol>';
             }
 
-            return this.request('MKCOL', url, headers, body).then((result) => {
+            return this.request('MKCOL', url, headers, body).then(result => {
                 return {
                     status: result.status,
                     body: result.body,
@@ -258,10 +257,10 @@ define("js/WebDAVStore", ["js/Utils", "js/HttpServerStore"], (Utils, HttpServerS
 		 * @private
          */
         _parseMultiStatus(xmlBody) {
-            let parser = new DOMParser();
-            let doc = parser.parseFromString(xmlBody, "application/xml");
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(xmlBody, "application/xml");
 
-            let resolver = function(foo) {
+            const resolver = function(foo) {
                 for (let i in XML_NAMESPACES) {
                     if (foo === XML_NAMESPACES[i]) {
                         return i;
@@ -270,33 +269,33 @@ define("js/WebDAVStore", ["js/Utils", "js/HttpServerStore"], (Utils, HttpServerS
 				return undefined;
             }.bind(this);
 
-            let responseIterator = doc.evaluate('/d:multistatus/d:response', doc, resolver, XPathResult.ANY_TYPE, null);
+            const responseIterator = doc.evaluate('/d:multistatus/d:response', doc, resolver, XPathResult.ANY_TYPE, null);
 
-            let result = [];
+            const result = [];
             let responseNode = responseIterator.iterateNext();
 
             while (responseNode) {
-                let response = {
+                const response = {
                     href : null,
                     propStat : []
                 };
 
                 response.href = doc.evaluate('string(d:href)', responseNode, resolver, XPathResult.ANY_TYPE, null).stringValue;
 
-                let propStatIterator = doc.evaluate('d:propstat', responseNode, resolver, XPathResult.ANY_TYPE, null);
+                const propStatIterator = doc.evaluate('d:propstat', responseNode, resolver, XPathResult.ANY_TYPE, null);
                 let propStatNode = propStatIterator.iterateNext();
 
                 while (propStatNode) {
-                    let propStat = {
+                    const propStat = {
                         status : doc.evaluate('string(d:status)', propStatNode, resolver, XPathResult.ANY_TYPE, null).stringValue,
                         properties : {},
                     };
 
-                    let propIterator = doc.evaluate('d:prop/*', propStatNode, resolver, XPathResult.ANY_TYPE, null);
+                    const propIterator = doc.evaluate('d:prop/*', propStatNode, resolver, XPathResult.ANY_TYPE, null);
 
                     let propNode = propIterator.iterateNext();
                     while (propNode) {
-                        let content = this._parsePropNode(propNode);
+                        const content = this._parsePropNode(propNode);
                         propStat.properties['{' + propNode.namespaceURI + '}' + propNode.localName] = content;
                         propNode = propIterator.iterateNext();
 
@@ -322,26 +321,21 @@ define("js/WebDAVStore", ["js/Utils", "js/HttpServerStore"], (Utils, HttpServerS
             if (path.length === 0)
                 return Promise.resolve(); // at the root, always exists
 
-            let self = this;
-
             return this.request('PROPFIND', path.join('/'), { Depth: 1 })
-            .then((res) => {
+            .then(res => {
                 if (200 <= res.status && res.status < 300)
                     return Promise.resolve();
 
                 if (res.status === 404) {
-                    let p = path.slice();
+                    const p = path.slice();
                     p.pop();
-                    return self.mkpath(p).then(() => {
+                    return this.mkpath(p).then(
                         // Simple MKCOL request, no properties
-                        return this.request('MKCOL', path.join('/'));
-                    });
+						() => this.request('MKCOL', path.join('/')));
                 }
 
-                return self._handle_error(path, res)
-                .then(() => {
-                    return self.mkpath(path);
-                });
+                return this._handle_error(path, res)
+                .then(() => this.mkpath(path));
             });
         }
     }

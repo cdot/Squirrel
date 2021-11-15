@@ -21,7 +21,7 @@ requirejs.config({
 
 define(["js/Translator", "jquery", "js/jq/simulated_password", "js/jq/icon_button", "test/simulated_password"], function(Translator) {
 
-    let TX = Translator.instance({ url: "locale", debug: console.debug});
+    const TX = Translator.instance({ url: "locale", debug: console.debug});
 
     /*function assert(v, m) {
         if (!v) {
@@ -36,12 +36,12 @@ define(["js/Translator", "jquery", "js/jq/simulated_password", "js/jq/icon_butto
         $("#hidden_pw")
             .simulated_password()
             .on("change", function() {
-                let info = $(this).val() + " (on change)";
+                const info = $(this).val() + " (on change)";
                 console.debug(info);
                 $("#pw_val").text(info);
             })
             .on("input", function() {
-                let info = $(this).val() + "(on input)";
+                const info = $(this).val() + "(on input)";
                 console.debug(info);
                 $("#pw_val").text(info);
             });
@@ -55,11 +55,10 @@ define(["js/Translator", "jquery", "js/jq/simulated_password", "js/jq/icon_butto
         $(".icon_button").icon_button();
     }
 
-    return () => {
+    return () =>
         // on ready
         TX.language("fr").then(() => {
             simulated_password();
             icon_button();
         });
-    };
 });

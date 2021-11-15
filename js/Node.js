@@ -121,6 +121,13 @@ define("js/Node", [
 		}
 
 		/**
+		 * True if this node if a leaf node (has no children)
+		 */
+		isLeaf() {
+			return !this.children || this.children.length === 0;
+		}
+
+		/**
 		 * Get the named child node
 		 * @param {string} name - name of the child node
 		 * @return {Node?} the child node, or undefined
@@ -279,7 +286,7 @@ define("js/Node", [
 			let subnode;
 			if (this.children) {
 				for (subnode in this.children) {
-					let subpath = path.concat([subnode]);
+					const subpath = path.concat([subnode]);
 					if (b.children[subnode]) {
 						matchedChild[subnode] = true;
 						this.children[subnode].diff(

@@ -33,6 +33,8 @@
     background-image: url('../images/folder-open.svg')!important; }
 .squirrel-icon-folder-closed {
     background-image: url('../images/folder-closed.svg')!important; }
+.squirrel-icon-move-to {
+    background-image: url('../images/move-to.svg')!important; }
 
 .inline-icon {
 /*    width: 1em;

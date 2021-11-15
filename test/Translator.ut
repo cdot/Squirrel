@@ -15,13 +15,13 @@ if (typeof module !== "undefined") {
     global.Cookies = Cookies = {
         // TODO: save a .rc
         vals: {},
-        get: (k) => {
+        get: k => {
             return Cookies.vals[k];
         },
         set: (k, v) => {
             Cookies.vals[k] = v;
         },
-        remove: (k) => {
+        remove: k => {
             delete Cookies.vals[k];
         }
     };

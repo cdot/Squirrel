@@ -43,9 +43,9 @@ define("js/LocalStorageStore", deps, function(Utils, Serror, AbstractStore, Stor
                 let i = 0;
                 let key;
                 let poss_user = null;
-                let re = new RegExp(`^(.*)\\.${ROOT_PATH}`);
+                const re = new RegExp(`^(.*)\\.${ROOT_PATH}`);
                 while ((key = localStorage.key(i)) != null) {
-                    let m = re.exec(key);
+                    const m = re.exec(key);
                     if (m) {
                         if (poss_user) {
                             if (this.debug) this.debug(
@@ -75,7 +75,7 @@ define("js/LocalStorageStore", deps, function(Utils, Serror, AbstractStore, Stor
 		 * @private
 		 */
         _makeKey(path) {
-            let key = [];
+            const key = [];
             if (typeof this.option("user") !== "undefined")
                 key.push(this.option("user"));
             key.push(ROOT_PATH);

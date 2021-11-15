@@ -10,7 +10,7 @@ define("dialogs/extras", ["js/Dialog", "js/Translator", "js/Tree", "js-cookie", 
 
         _autosave(on) {
             if (typeof on !== "undefined") {
-                let ons = (on ? "on" : "off");
+                const ons = (on ? "on" : "off");
                 if (Cookies.get("ui_autosave") !== ons) {
                     Cookies.set("ui_autosave", ons, {
                         expires: 365
@@ -22,61 +22,59 @@ define("dialogs/extras", ["js/Dialog", "js/Translator", "js/Tree", "js-cookie", 
         }
 
         _checkSamePass() {
-            let p = this.control("pass").val(),
-                c = this.control("conf").val();
-            let ok = (p !== "" && p === c);
-            this.control("nonull").toggle(p === "");
-            this.control("nomatch").toggle(p !== c);
-            this.control("ok").toggle(ok);
+            const p = this.$control("pass").val(),
+                c = this.$control("conf").val();
+            const ok = (p !== "" && p === c);
+            this.$control("nonull").toggle(p === "");
+            this.$control("nomatch").toggle(p !== c);
+            this.$control("ok").toggle(ok);
             return ok;
         }
 
         initialise() {
-            let self = this;
+            const self = this;
 
-            this.control("theme")
+            this.$control("theme")
             .on("selectmenuchange", function () {
                 $.styling.theme($(this).val());
             })
             .selectmenu();
 
-            this.control("autosave")
+            this.$control("autosave")
             .on("change", function () {
                 self._autosave($(this).prop("checked"));
             });
 
-            this.control("hidevalues")
+            this.$control("hidevalues")
             .on("change", function () {
-                let checked = $(this).prop("checked");
+                const checked = $(this).prop("checked");
                 Tree.hideValues(checked);
             });
 
-            this.control("lastchange")
+            this.$control("lastchange")
             .on("change", function () {
-                let checked = $(this).prop("checked");
+                const checked = $(this).prop("checked");
                 Tree.showChanges(checked);
             });
 
-            this.control("chss")
+            this.$control("chss")
             .on(Dialog.tapEvent(), function () {
                 Dialog.confirm("store_settings", self.options)
-                .then((paths) => {
+                .then(paths => {
                     self.options.cloud_path(paths.cloud_path);
                     self.options.image_url(paths.image_url);
                      $(document).trigger("update_save");
                })
-                .catch((f) => {
+                .catch(f => {
                     if (self.debug) self.debug("Store settings aborted", f);
                 });
             });
 
-            this.control("chpw")
+            this.$control("chpw")
             .on(Dialog.tapEvent(), function () {
                 Dialog.confirm("change_password", self.options)
-                .then((pass) => {
-                    self.options.encryption_pass(pass);
-                })
-                .catch((f) => {
+                .then(pass => self.options.encryption_pass(pass))
+                .catch(f => {
                     if (self.debug) self.debug("Change password aborted", f);
                 });
             });
@@ -84,18 +82,18 @@ define("dialogs/extras", ["js/Dialog", "js/Translator", "js/Tree", "js-cookie", 
             // TODO: add password constraints
             // Cookie ui_randomise contains a JSON { size:, chars: }
 
-            this.control("theme")
+            this.$control("theme")
             .on(Dialog.tapEvent(), function () {
                 Dialog.confirm("theme", self.options);
             });
 
-            this.control("optimise")
+            this.$control("optimise")
             .on(Dialog.tapEvent(), function () {
                 Dialog.confirm("optimise", self.options)
                 .catch(() => {});
             });
 
-            this.control("reset_local")
+            this.$control("reset_local")
             .on(Dialog.tapEvent(), function () {
                 Dialog.confirm("alert", {
                     title: self.tx("Reset Local Store"),
@@ -111,44 +109,43 @@ define("dialogs/extras", ["js/Dialog", "js/Translator", "js/Tree", "js-cookie", 
                 .catch(() => {});
             });
 
-            this.control("bigger")
+            this.$control("bigger")
             .on(Dialog.tapEvent(), function () {
                 $.styling.scale(Math.round(1.25 * $.styling.scale()));
             });
 
-            this.control("smaller")
+            this.$control("smaller")
             .on(Dialog.tapEvent(), function () {
                 $.styling.scale(Math.round(0.8 * $.styling.scale()));
             });
 
-            this.control("about")
+            this.$control("about")
             .on(Dialog.tapEvent(), function () {
                 Dialog.confirm("about", self.options)
                 .catch(() => {
                 });
             });
 
-            this.control("language")
+            this.$control("language")
             .on("change", function () {
-                let fresh = self.control("language").val();
+                const fresh = self.$control("language").val();
                 self.options.set_language(fresh);
             });
         }
 
         open() {
-            this.control("theme")
+            this.$control("theme")
             .val($.styling.theme())
             .selectmenu("refresh");
 
-            this.control("autosave").prop("checked", this._autosave());
+            this.$control("autosave").prop("checked", this._autosave());
 
-            this.control("hidevalues").prop("checked", Tree.hidingValues());
+            this.$control("hidevalues").prop("checked", Tree.hidingValues());
 
-            this.control("lastchange").prop("checked", Tree.showingChanges());
+            this.$control("lastchange").prop("checked", Tree.showingChanges());
 
-            Translator.instance().language().then((lingo) => {
-                this.control("language").val(lingo);
-            });
+            Translator.instance().language().then(
+				lingo => this.$control("language").val(lingo));
         }
     }
     return ExtrasDialog;

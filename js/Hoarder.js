@@ -109,7 +109,7 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
         cloud_store(store) {
             if (store) {
                 this.cloudStore = store;
-                let cluser = store.option("user");
+                const cluser = store.option("user");
                 if (cluser && this.debug)
                     this.debug("...cloud suggests user may be", cluser);        
                 if (this.debug) this.debug("...cloud initialised");
@@ -187,7 +187,7 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
 		 * @return {string} JSON text
 		  tree_json(json) {
             if (json) {
-                let parsed = JSON.parse(json);
+                const parsed = JSON.parse(json);
                 this.hoard.clear_history();
                 this.hoard.tree = parsed;
                 this.clientChanges.push(TX.tx("Bulk content change"));
@@ -274,6 +274,22 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
             return this.hoard.get_node(path) ? true : false;
         }
 
+		/**
+		 * Get a list of the contents of the node at the given
+		 * path.
+		 * @param {string[]} path the path to the node of interest
+		 * @return {Object.<string,boolean>} map from node name to
+		 * a boolean that is true if the child is a folder.
+		 */
+		nodeContents(path) {
+			const n = this.hoard.get_node(path);
+			const kids = {};
+			n.eachChild((name, node) => {
+				kids[name] = !node.isLeaf();
+			});
+			return kids;
+		}
+
         /**
          * Get the local action history
 		 * @return {Action[]}
@@ -290,7 +306,7 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
         undo() {
             const e = this.hoard.undo();
             if (e.conflict) {
-                if (self.debug) self.debug("undo had conflict", e.conflict);
+                if (this.debug) this.debug("undo had conflict", e.conflict);
                 return Promise.reject({ message: e.conflict });
             }
             return Promise.resolve(e.action);
@@ -359,7 +375,7 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
 		 * @return {Action[]} list of actions
          */
         get_unsaved_actions() {
-            let list = [];
+            const list = [];
             for (let record of this.hoard.history) {
                 if (record.redo.time > this.last_save)
                     list.push(record);
@@ -385,7 +401,7 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
 
             // Cap the return length at max_changes
             if (max_changes > 0 && messages.length > max_changes) {
-                let l = messages.length;
+                const l = messages.length;
                 messages = messages.slice(-max_changes);
                 messages.push(TX.tx("... and $1 more change$?($1!=1,s,)",
                                    l - max_changes));
@@ -407,10 +423,10 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
             this.clientIsEmpty = true;
             return this.clientStore.reads(CLIENT_PATH)
             .catch(e => {
-                if (self.debug)
-                    self.debug("...local store could not be read", e);
+                if (this.debug)
+                    this.debug("...local store could not be read", e);
                 // probably doesn't exist
-                this.hoard = new Hoard({debug: self.debug});
+                this.hoard = new Hoard({debug: this.debug});
                 throw [
                     {
                         severity: "error",
@@ -420,7 +436,7 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
             })
             .then(str => {
                 try {
-                    let data = JSON.parse(str);
+                    const data = JSON.parse(str);
                     this.cloudPath = data.cloud_path;
                     this.imageURL = data.image_url;
                     this.last_sync = data.last_sync || 0;
@@ -451,19 +467,17 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
 		 * @return {Promise} Promise to save the store
          */
         save_client(progress) {
-            let self = this;
-
             if (this.debug) this.debug("...save to client");
 
             // Make a serialisable data block
-            let data = {
+            const data = {
                 cloud_path: this.cloudPath,
                 image_url: this.imageURL,
                 last_sync: this.last_sync,
                 last_save: Date.now(),
                 hoard: this.hoard
             };
-            let json = JSON.stringify(data);
+            const json = JSON.stringify(data);
             return this.clientStore.writes(CLIENT_PATH, json)
             .then(() => {
                 if (this.debug) this.debug("...client write OK");
@@ -471,7 +485,7 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
                 // READBACK CHECK - debug, make sure what we
                 // wrote is still readable
                 //return this.clientStore.reads(CLIENT_PATH)
-                //.then((json2) => {
+                //.then(json2 => {
                 //    if (json2 !== json) {
                 //        throw new Serror(500, "Readback check failed");
                 //    }
@@ -479,11 +493,11 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
                         severity: "notice",
                         message: TX.tx("Saved in local store")
                     });
-                    self.last_save = data.last_save;
+                    this.last_save = data.last_save;
                     return Promise.resolve();
                 //});
             })
-            .catch((e) => {
+            .catch(e => {
                 if (this.debug) this.debug("...client save failed", e);
                 if (progress) progress.push({
                     severity: "error",
@@ -501,7 +515,7 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
          */
         load_cloud() {
             return this.cloudStore.reads(this.cloudPath)
-            .then((data) => {
+            .then(data => {
                 let actions = [];
                 if (data && data.length > 0) {
                     if (this.debug) this.debug("...parsing cloud actions");
@@ -520,7 +534,7 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
                     this.cloudLength = actions.length;
                 }
                 else if (this.debug) this.debug("...cloud is empty");
-                return Promise.resolve(actions.map((act) => new Action(act)));
+                return Promise.resolve(actions.map(act => new Action(act)));
             });
         }
 
@@ -543,15 +557,15 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
          * of the cloud
          */
         update_from_cloud(progress, selector, uiPlayer, actions) {
-            let new_cloud = [];
-            let prom = actions ? Promise.resolve(actions) : this.load_cloud();
+            const new_cloud = [];
+            const prom = actions ? Promise.resolve(actions) : this.load_cloud();
             return prom.then(cloud_actions => {
 
                 if (this.debug) this.debug("Last sync was at", this.last_sync);
                 
                 // Split the actions read from the cloud into "known" and
                 // "unknown"
-                let new_client = [];
+                const new_client = [];
                 for (let act of cloud_actions) {
                     if (act.time > this.last_sync) {
                         // This is new, not reflected in the local tree
@@ -583,7 +597,7 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
                 else
                     return Promise.resolve(new_client);
              })
-            .then((selected) => {              
+            .then(selected => {              
                 let promise = Promise.resolve();
                 for (let act of selected) {
                     promise = promise
@@ -604,26 +618,27 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
                             if (this.debug) this.debug("...played", act);
                             new_cloud.push(act);
                         }
-                        return Promise.resolve();
                     });
                 }
+
                 if (selected.length > 0) {
-                    // If we saw changes, and we didn't start from an empty
-                    // client, then we need to save the client
-                    this.last_sync = Date.now();
+                    // If changes were selected, and we didn't start from
+					// an empty client, then we need to remember the sync
                     if (!this.clientIsEmpty)
-                        this.clientChanges.push(TX.tx("Changes merged from cloud store"));
+                        this.clientChanges.push(
+							TX.tx("Changes merged from cloud store"));
                     if (this.debug) this.debug("...synced at", this.last_sync);
                     this.clientIsEmpty = false;
+
+                    this.last_sync = Date.now();
                 }
                 return promise;
             })
-            .then(() => {
-                // new_cloud contains the right set of actions to
-                // rebuild a cloud by taking the cloud actions before
-                // the sync and appending the local actions.
-                return new_cloud;
-            });
+            .then(() =>
+                  // new_cloud contains the right set of actions to
+                  // rebuild a cloud by taking the cloud actions before
+                  // the sync and appending the local actions.
+                  new_cloud);
         }
 
         /**
@@ -632,23 +647,21 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
          * @param {Progress} progress reporter
          */
         save_cloud(actions, progress) {
-            let self = this;
-
-            return self.cloudStore.writes(
-                self.cloudPath,
+            return this.cloudStore.writes(
+                this.cloudPath,
                 JSON.stringify(actions))
             .then(() => {
-                if (self.debug) self.debug("...cloud save OK");
-                self.cloudLength = actions.length;
+                if (this.debug) this.debug("...cloud save OK");
+                this.cloudLength = actions.length;
                 if (progress) progress.push({
                     severity: "notice",
                     message: TX.tx("Saved in cloud")
                 });
-                self.cloudChanged = false;
+                this.cloudChanged = false;
                 return Promise.resolve(true);
             })
-            .catch((e) => {
-                if (self.debug) self.debug("...cloud save failed", e.stack);
+            .catch(e => {
+                if (this.debug) this.debug("...cloud save failed", e.stack);
                 if (progress) progress.push({
                     severity: "error",
                     message: TX.tx("Failed to save in cloud store: $1", e)
@@ -686,25 +699,20 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
             }
             
             let promise; // order is important!
-            let self = this;
             let cloud_saved = false;
             let client_saved = false;
             if (saveCloud) {
                 promise = this.update_from_cloud(progress, selector, uiPlayer)
-                .then((new_cloud) => {
-                    return self.save_cloud(new_cloud, progress)
-                    .then(() => {
-                        cloud_saved = true;
-                    });
-                })
-                .catch((e) => {
-                    if (self.debug) self.debug("cloud update failed", e);
+                .then(new_cloud => this.save_cloud(new_cloud, progress))
+                .then(() => cloud_saved = true)
+				.catch(e => {
+                    if (this.debug) this.debug("cloud update failed", e);
                     progress.push({
                         severity: "error",
                         message: [
                             TX.tx(
                                 "Could not update from cloud store '$1'",
-                                self.cloudPath),
+                                this.cloudPath),
                             TX.tx("Cloud store could not be saved")
                         ]
                     });
@@ -724,14 +732,14 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
                 promise = promise
                 .then(() => {
 					this.last_sync = Date.now();
-                    return self.save_client(progress);
+                    return this.save_client(progress);
                 })
                 .then(() => {
                     client_saved = true;
-					self.clientChanges = [];
+					this.clientChanges = [];
                 })
-                .catch((e) => {
-                    if (self.debug) self.debug("Client save failed", e);
+                .catch(e => {
+                    if (this.debug) this.debug("Client save failed", e);
                     progress.push({
                         severity: "error",
                         message: [
@@ -745,7 +753,7 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
             .then(() => {               
                 if ((!saveCloud || cloud_saved)
                     && (!saveClient || client_saved)) {
-                    self.hoard.clear_history();
+                    this.hoard.clear_history();
                     return true;
                 }
                 else

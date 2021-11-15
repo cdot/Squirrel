@@ -3,7 +3,7 @@
 
 define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror", "clipboard", "jquery", "jquery-ui", "contextmenu" ], function(Translator, Dialog, Action, Serror, ClipboardJS) {
 
-    let TX = Translator.instance();
+    const TX = Translator.instance();
 
 	/**
 	 * Squirrel context menu for nodes
@@ -11,12 +11,10 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
     class ContextMenu {
 
         constructor(app) {
-            let self = this;
-            
             this.debug = app.debug;
 
             // Node that is the target of a context menu operation
-            this.$menuTarget;
+            this.$menuTarget = undefined;
 
             this.clipboard = null;
             this.clipboardContents = null;
@@ -28,7 +26,7 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
 
             this.app = app;
 
-            let menu = {
+            const menu = {
                 delegate: ".tree_title",
                 menu: [
                     {
@@ -66,6 +64,11 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
                         cmd: "add_subtree",
                         uiIcon: "squirrel-icon-add-folder squirrel-icon"
                     },
+					{
+						title: TX.tx("Move to"),
+						cmd: "move_to",
+						uiIcon: "squirrel-icon-move-to squirrel-icon"
+					},
                     {
                         title: TX.tx("Copy"),
                         cmd: "copy",
@@ -85,8 +88,8 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
                 preventContextMenuForPopup: true,
                 preventSelect: true,
                 //taphold: true,
-                beforeOpen: function (e, ui) { self._before_menu_open(ui); },
-                select: function (e, ui) { self._handle_menu_choice(ui); }
+                beforeOpen: (e, ui) => this._before_menu_open(ui),
+                select: (e, ui) => this._handle_menu_choice(ui)
             };
 
             $("body")
@@ -98,12 +101,12 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
             // was copied in the clipboardContents. Of course this means
             // we can't paste the system clipboard as it was before the
             // app started.
-            let clipboard =
+            const clipboard =
             new ClipboardJS(".ui-contextmenu li[data-command='copy']", {
-                text: function () {
-                    let p = self.$menuTarget.tree("getPath");
-                    if (self.debug) self.debug("copy tree from", p);
-                    let n = self.app.hoarder.hoard.get_node(p);
+                text: () => {
+                    const p = this.$menuTarget.tree("getPath");
+                    if (this.debug) this.debug("copy tree from", p);
+                    const n = this.app.hoarder.hoard.get_node(p);
                     if (typeof n.data === "object")
                         return JSON.stringify(n);
                     else
@@ -117,7 +120,7 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
             .then(function(result) {
                 if (result.state == 'granted') {
                     navigator.clipboard.readText().then(
-                        clipText => self.clipboardContents = clipText);
+                        clipText => this.clipboardContents = clipText);
                 }
             });*/
 
@@ -126,7 +129,7 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
             this.clipboardContents = '{"data":"' + TX.tx("Add new value")
             + '"}';
             clipboard.on("success", function(e) {
-                self.clipboardContents = e.text;
+                this.clipboardContents = e.text;
             });
         }
 
@@ -176,15 +179,15 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
             if (this.contextMenuDisables > 0)
                 return;
 
-            let $node = (ui.target.is(".tree")) ?
+            const $node = (ui.target.is(".tree")) ?
                 ui.target :
                 ui.target.closest(".tree");
 
             //let has_alarm = typeof $node.data("alarm") !== "undefined";
-            let is_leaf = $node.hasClass("tree-isLeaf");
-            let is_root = ui.target.closest(".tree")
+            const is_leaf = $node.hasClass("tree-isLeaf");
+            const is_root = ui.target.closest(".tree")
                 .hasClass("tree-isRoot");
-            let is_open = $node.hasClass("tree-isOpen");
+            const is_open = $node.hasClass("tree-isOpen");
 
             if (this.debug) this.debug("beforeOpen contextmenu on",
                                        $node.data("key"), is_leaf);
@@ -202,7 +205,8 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
                          is_open && !is_leaf && this._clipboardReady())
             .contextmenu("showEntry", "pick_from", is_leaf)
             .contextmenu("showEntry", "randomise", is_leaf)
-            .contextmenu("showEntry", "rename", !is_root);
+            .contextmenu("showEntry", "rename", !is_root)
+			.contextmenu("showEntry", "move_to", true);
 
             $("body").contextmenu("setTitle", "copy",
                                   is_leaf ? TX.tx("Copy Value")
@@ -216,15 +220,14 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
          * @private
          */
         _handle_menu_choice(ui) {
-            let self = this;
-            let $node = self.$menuTarget;
+            const $node = this.$menuTarget;
 
-            function validate_unique_key(val) {
+            const validate_unique_key = val => {
                 let ok = true;
-                let $ul = $node.find("ul").first();
+                const $ul = $node.find("ul").first();
                 $ul.children(".tree")
-                .each(function () {
-                    if (val === $(this).data("key")) {
+                .each((i, el) => {
+                    if (val === $(el).data("key")) {
                         // Key not unique
                         ok = false;
                         return false; // stop iterator
@@ -232,10 +235,10 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
 					return true;
                 });
                 return ok;
-            }
+            };
             
             if (!$node) {
-                if (self.debug) self.debug("No node for contextmenu>", ui.cmd);
+                if (this.debug) this.debug("No node for contextmenu>", ui.cmd);
                 return Promise.reject();
             }
 
@@ -255,12 +258,12 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
                 return Dialog.confirm("insert", {
                     path: $node.tree("getPath"),
                     validate: validate_unique_key,
-                    value: self.clipboardContents,
+                    value: this.clipboardContents,
                     is_value: true
                 })
-                .then((kv) => {
-                    self.clipboardContents = kv.value;
-                    return self.app.playAction(new Action({
+                .then(kv => {
+                    this.clipboardContents = kv.value;
+                    return this.app.appPlayAction(new Action({
                         type: "I",
                         path: $node.tree("getPath").concat(kv.key),
                         data: kv.value
@@ -270,16 +273,12 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
 
             case "rename":
                 promise = $node.tree("editKey")
-                .then((a) => {
-                    return self.app.playAction(a);
-                });
+                .then(a => this.app.appPlayAction(a));
                 break;
 
             case "edit":
                 promise = $node.tree("editValue")
-                .then((a) => {
-                    return self.app.playAction(a);
-                });
+                .then(a => this.app.appPlayAction(a));
                 break;
 
             case "add_value":
@@ -288,13 +287,11 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
                     validate: validate_unique_key,
                     is_value: true
                 })
-                .then((res) => {
-                    return self.app.playAction(new Action({
-                        type: "N",
-                        path: $node.tree("getPath").concat(res.key),
-                        data: res.value
-                    }), true);
-                });
+                .then(res => this.app.appPlayAction(new Action({
+                    type: "N",
+                    path: $node.tree("getPath").concat(res.key),
+                    data: res.value
+                }), true));
                 break;
 
             case "add_subtree":
@@ -303,28 +300,38 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
                     validate: validate_unique_key,
                     is_value: false
                 })
-                .then((res) => {
-                    return self.app.playAction(new Action({
-                        type: "N",
-                        path: $node.tree("getPath").concat(res.key)
-                    }), true);
-                });
+                .then(res => this.app.appPlayAction(new Action({
+                    type: "N",
+                    path: $node.tree("getPath").concat(res.key)
+                }), true));
                 break;
+
+			case "move_to":
+				promise = Dialog.confirm("move_to", {
+                    path: $node.tree("getPath"),
+					getContent: path => this.app.nodeContents(path)
+				})
+				.then(path => this.app.appPlayAction(new Action({
+                    type: "M",
+                    path: $node.tree("getPath"),
+                    data: path
+                }), true));
+				break;
 
             case "randomise":
                 promise = Dialog.confirm("randomise", {
                     key: $node.data("key"),
                     constraints: $node.data("constraints")
                 })
-                .then((result) => {
-                    let prom = self.app.playAction(new Action({
+                .then(result => {
+                    let prom = this.app.appPlayAction(new Action({
                         type: "E",
                         path: $node.tree("getPath"),
                         data: result.text
                     }));
                     if (typeof result.constraints !== "undefined")
                         prom = prom.then(() => {
-                            return self.app.playAction(new Action({
+                            return this.app.appPlayAction(new Action({
                                 type: "X",
                                 path: $node.tree("getPath"),
                                 data: result.constraints
@@ -340,9 +347,9 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
                     alarm: $node.data("alarm"),
                     last_change: $node.data("last-time-changed")
                 })
-                .then((act) => {
+                .then(act => {
                     act.path = $node.tree("getPath").slice();
-                    return self.app.playAction(act);
+                    return this.app.appPlayAction(act);
                 });
                 break;
 
@@ -351,12 +358,10 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
                     path: $node.tree("getPath"),
                     is_leaf: $node.hasClass("tree-isLeaf")
                 })
-                .then(() => {
-                    return self.app.playAction(new Action({
-                        type: "D",
-                        path: $node.tree("getPath")
-                    }));
-                });
+                .then(() => this.app.appPlayAction(new Action({
+                    type: "D",
+                    path: $node.tree("getPath")
+                })));
                 break;
 
             case "pick_from":
@@ -370,15 +375,14 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
             }
             
             this.toggle(false);
-            if (self.debug)
-                promise = promise.catch((fail) => {
-                    if (fail) self.debug("Dialog catch", fail);
+            if (this.debug) {
+                promise = promise.catch(fail => {
+                    if (fail) this.debug("Dialog catch", fail);
                 });
+			}
             
             return promise
-            .finally(() => {
-                this.toggle(true);
-            });
+            .then(() => this.toggle(true));
         }
     }
     return ContextMenu;

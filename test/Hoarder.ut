@@ -108,19 +108,20 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/Cr
 
     tr.addTest("load_cloud", function() {
         let debug;// = console.debug;
-        let store = new MemoryStore({ debug: debug, user: "Zeno" });
-        let h = new Hoarder({
+        const store = new MemoryStore({ debug: debug, user: "Zeno" });
+        const h = new Hoarder({
             debug: debug, cloudPath: "blah", cloudStore: store });
-        return store.writes("blah", JSON.stringify(full_tree_actions)).then(() => {
+        return store.writes("blah", JSON.stringify(full_tree_actions))
+		.then(() => {
             return h.load_cloud()
-            .then((actions) => {
+            .then(actions => {
                 assert.deepEqual(actions, full_tree_actions);
             });
         });
     });
 
     tr.addTest("load_cloud fails 1", function() {
-        let debug;// = console.debug;
+        let debug = console.log;
         let store = new MemoryStore({ debug: debug, user: "Zeno" });
         let h = new Hoarder({
             debug: debug, cloudPath: "paradox", cloudStore: store });
@@ -128,7 +129,7 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/Cr
         .then(() => {
             assert(false);
         })
-        .catch((e) => {
+        .catch(e => {
             assert(e instanceof Serror);
             assert.equal(e.status, 400);
             assert.equal(e.message, "paradox is not in store");
@@ -146,7 +147,7 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/Cr
             .then(() => {
                 assert(false);
             })
-            .catch((e) => {
+            .catch(e => {
                 assert(e instanceof Serror);
             });
         });
@@ -223,7 +224,7 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/Cr
               h.update_from_cloud(
                   conflicts // array supports push, which is all we need
               ))
-        .then((actions) => {
+        .then(actions => {
 			assert.equal(conflicts.length, 0);
 			assert(h.last_sync > 510);
 			// Make sure client and cloud actions both present
@@ -311,10 +312,10 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/Cr
             let progress = [];
             return h.update_from_cloud(
                 progress,
-                (a) => {
+                a => {
                     return Promise.resolve(a);
                 })
-            .then((actions) => {
+            .then(actions => {
                 assert.equal(actions.length, 8);
                 assert.deepEqual(actions, full_tree_actions.concat(
                     [eact]));
@@ -360,7 +361,7 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/Cr
             assert(!c.conflict);
             return h.update_from_cloud(progress);
         })
-        .then((actions) => {
+        .then(actions => {
             assert.equal(actions.length, 9);
             return h.save_cloud(actions, progress);
         })
@@ -426,7 +427,7 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/Cr
             let progress = [];
             return h.update_from_cloud(progress);
         })
-        .then((actions) => {
+        .then(actions => {
             assert.equal(actions.length, 9);
             return h.save_cloud(actions, progress)
         })
@@ -468,7 +469,7 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/Cr
                 .then(() => {
                     assert(false);
                 })
-                .catch((e) => {
+                .catch(e => {
                     assert(e instanceof Serror);
                     assert.equal(e.message, "Cloud store could not be parsed");
                     assert.equal(e.status, 400);
@@ -561,7 +562,7 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/Cr
         .then(() => {
             return h.save_stores(
                 [],
-                (choose) => {
+                choose => {
                     return Promise.resolve(choose);
                 } // no player
             );

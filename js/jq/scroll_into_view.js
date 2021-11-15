@@ -8,11 +8,11 @@ define("js/jq/scroll_into_view", ["jquery", "jquery-ui"], function () {
     $.fn.scroll_into_view = function () {
         return this.each(function () {
             // Top of element relative to document
-            let offset = $(this).offset().top;
-            let thisht = $(this).height();
-            let $win = $(window);
-            let curtop = $win.scrollTop();
-            let winht = $win.innerHeight();
+            const offset = $(this).offset().top;
+            const thisht = $(this).height();
+            const $win = $(window);
+            const curtop = $win.scrollTop();
+            const winht = $win.innerHeight();
 
             if (offset < curtop || offset + thisht > curtop + winht) {
                 // Not in the view. Scroll it to the centre.

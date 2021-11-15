@@ -9,8 +9,8 @@ define("dialogs/optimise", ["dialogs/alert", "js/jq/template"], function(AlertDi
     class OptimiseDialog extends AlertDialog {
 
         initialise() {
-            this.control("existing").template();
-            this.control("study").template();
+            this.$control("existing").template();
+            this.$control("study").template();
         }
 
         ok() {
@@ -20,17 +20,17 @@ define("dialogs/optimise", ["dialogs/alert", "js/jq/template"], function(AlertDi
         open() {
             super.open();
 
-            this.control("study").hide();
-            this.control("calculating")
+            this.$control("study").hide();
+            this.$control("calculating")
             .show()
             .toggle("pulsate", 101);
 
-            let analysis = this.options.analyse();
+            const analysis = this.options.analyse();
             
-            this.control("existing").template("expand", analysis.cloud);
+            this.$control("existing").template("expand", analysis.cloud);
 
-            this.control("calculating").hide();
-            this.control("study")
+            this.$control("calculating").hide();
+            this.$control("study")
             .template(
                 "expand",
                 analysis.N, analysis.A, analysis.X,

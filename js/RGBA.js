@@ -172,7 +172,7 @@ define("js/RGBA", function() {
         constructor(r, g, b, a) {
             function parseComponent(value, max) {
                 if (/%\s*$/.test(value)) {
-                    let pc = parseFloat(value);
+                    const pc = parseFloat(value);
                     return pc * max / 100.0;
                 }
                 return parseFloat(value);
@@ -206,7 +206,7 @@ define("js/RGBA", function() {
 
             // String or integer RGB value
             if (typeof r === "string") {
-                let named = CSSColours[r.toLowerCase()];
+                const named = CSSColours[r.toLowerCase()];
                 if (typeof named !== "undefined")
                     r = named;
 
@@ -220,7 +220,7 @@ define("js/RGBA", function() {
                 if (/^hsla?\(.*\)$/.test(r)) {
                     a = r.replace(/(hsla?\(|\))/g, "")
                         .split(/[,\s]+/);
-                    let n = RGBA.fromHSL(
+                    const n = RGBA.fromHSL(
                         parseComponent(a[0], 360),
                         parseComponent(a[1], 1),
                         parseComponent(a[2], 1),
@@ -263,7 +263,7 @@ define("js/RGBA", function() {
 		 * @return {RGBA}
          */
         complement() {
-            let hsv = this.toHSV();
+            const hsv = this.toHSV();
             return RGBA.fromHSV((hsv[0] + 180) % 360, hsv[1], hsv[2], this.a);
         }
 
@@ -284,7 +284,7 @@ define("js/RGBA", function() {
 		 * @return {string}
          */
         toString() {
-            let tuple = [Math.round(255 * this.r),
+            const tuple = [Math.round(255 * this.r),
                          Math.round(255 * this.g),
                          Math.round(255 * this.b)];
 
@@ -294,7 +294,7 @@ define("js/RGBA", function() {
             } else {
                 let s = "#";
                 for (let i = 0; i < 3; i++) {
-                    let v = tuple[i].toString(16);
+                    const v = tuple[i].toString(16);
                     s += v.length == 1 ? `0${v}` : v;
                 }
                 return s.toUpperCase();
@@ -308,11 +308,11 @@ define("js/RGBA", function() {
          * @return {number[]} [ hue, saturation, value ]
          */
         toHSV() {
-            let M = Math.max(this.r, this.g, this.b);
-            let m = Math.min(this.r, this.g, this.b);
-            let C = M - m; // saturation / chroma
-            let V = M;
-            let S = (V == 0) ? 0 : (C / V); // sat (= chroma)
+            const M = Math.max(this.r, this.g, this.b);
+            const m = Math.min(this.r, this.g, this.b);
+            const C = M - m; // saturation / chroma
+            const V = M;
+            const S = (V == 0) ? 0 : (C / V); // sat (= chroma)
             let H = 0;
 
             if (C != 0) {
@@ -328,7 +328,7 @@ define("js/RGBA", function() {
                     H += 360;
             }
 
-            let hsv = [H, S, V];
+            const hsv = [H, S, V];
 
             if (typeof this.a != "undefined")
                 hsv.push(this.a);
@@ -343,9 +343,9 @@ define("js/RGBA", function() {
          * @return {number[]} [ hue (0..360), saturation (0..1), lightness (0..1) ]
          */
         toHSL() {
-            let M = Math.max(this.r, this.g, this.b);
-            let m = Math.min(this.r, this.g, this.b);
-            let C = M - m; // saturation / chroma
+            const M = Math.max(this.r, this.g, this.b);
+            const m = Math.min(this.r, this.g, this.b);
+            const C = M - m; // saturation / chroma
             let H, S, L;
 
             if (C == 0) { // achromatic
@@ -369,7 +369,7 @@ define("js/RGBA", function() {
                     H += 360;
             }
 
-            let hsl = [H, S, L];
+            const hsl = [H, S, L];
 
             if (typeof this.a != "undefined")
                 hsl.push(this.a);
@@ -400,11 +400,11 @@ define("js/RGBA", function() {
 
             } else {
                 H /= 60;
-                let i = Math.floor(H);
-                let f = H - i;
-                let p = V * (1 - S);
-                let q = V * (1 - S * f);
-                let t = V * (1 - S * (1 - f));
+                const i = Math.floor(H);
+                const f = H - i;
+                const p = V * (1 - S);
+                const q = V * (1 - S * f);
+                const t = V * (1 - S * (1 - f));
                 switch (i) {
                 case 0:
                     R = V;
@@ -474,9 +474,9 @@ define("js/RGBA", function() {
 
             } else {
                 H /= 360;
-                let q = L < 0.5 ? L * (1 + S) :
+                const q = L < 0.5 ? L * (1 + S) :
                     L + S - L * S;
-                let p = 2 * L - q;
+                const p = 2 * L - q;
                 R = hue2RGB(p, q, H + 1 / 3);
                 G = hue2RGB(p, q, H);
                 B = hue2RGB(p, q, H - 1 / 3);

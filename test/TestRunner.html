@@ -10,7 +10,7 @@
     <div id="mocha"></div>
     <div id="container"><div id="sites-node"></div></div>
     <script>
-      let m = /module=([^&;]+)/.exec(window.location.search.substring(1));
+      const m = /module=([^&;]+)/.exec(window.location.search.substring(1));
       requirejs.config({
 		  baseUrl: "..",
           urlArgs: "nocache=" + Date.now(),
@@ -18,7 +18,7 @@
 			  jquery: "http://code.jquery.com/jquery-3.3.1.min",
 			  mocha: "http://cdnjs.cloudflare.com/ajax/libs/mocha/6.0.2/mocha",
 			  chai: "http://cdnjs.cloudflare.com/ajax/libs/chai/4.2.0/chai",
-			  "js-cookie": "http://cdnjs.cloudflare.com/ajax/libs/js-cookie/2.2.0/js.cookie.min",
+			  "js-cookie": "http://cdnjs.cloudflare.com/ajax/libs/js-cookie/latest/js.cookie.min",
 			  unitTest: `test/${m[1]}.ut?no=`
           }
       });

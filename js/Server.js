@@ -44,54 +44,51 @@ define("js/Server", ["url", "extend", "fs"], function(Url, extend, fs) {
 		 * @param {function} proto.log function for request reporting
 		 */
         constructor(p) {
-            let self = this;
 
             extend(this, p);
 
-            self.ready = false;
-            if (typeof self.docroot === "string")
-                self.docroot = fs.realpathSync(self.docroot);
+            this.ready = false;
+            if (typeof this.docroot === "string")
+                this.docroot = fs.realpathSync(this.docroot);
             else
-                self.docroot = process.cwd();
+                this.docroot = process.cwd();
 
-            if (typeof self.writable === "string") {
-                if (self.writable.indexOf("/") !== 0)
-                    self.writable = `${self.docroot}/${self.writable}`;
-                self.writable = fs.realpathSync(self.writable);
+            if (typeof this.writable === "string") {
+                if (this.writable.indexOf("/") !== 0)
+                    this.writable = `${this.docroot}/${this.writable}`;
+                this.writable = fs.realpathSync(this.writable);
             }
 
             if (typeof this.auth !== "undefined") {
-                self.authenticate = function (request, response) {
-                    let BasicAuth = require("basic-auth");
-                    let credentials = BasicAuth(request);
+                this.authenticate = (request, response) => {
+                    const BasicAuth = require("basic-auth");
+                    const credentials = BasicAuth(request);
                     if (typeof credentials === "undefined" ||
-                        credentials.name !== self.auth.user ||
-                        credentials.pass !== self.auth.pass) {
-                        if (self.debug) {
+                        credentials.name !== this.auth.user ||
+                        credentials.pass !== this.auth.pass) {
+                        if (this.debug) {
                             if (credentials) {
-                                self.debug(
+                                this.debug(
 									`User ${credentials.name}`,
                                     "is trying to log in with password",
 									`'${credentials.pass}'`);
 							}
-                        } else if (self.log)
-                            self.log("No credentials in request");
-                        if (self.log)
-                            self.log("Authentication failed ", request.url);
+                        } else if (this.log)
+                            this.log("No credentials in request");
+                        if (this.log)
+                            this.log("Authentication failed ", request.url);
                         response.statusCode = 401;
                         response.setHeader('WWW-Authenticate', 'Basic realm="' +
-                                           self.auth.realm + '"');
+                                           this.auth.realm + '"');
                         response.end('Access denied');
                         return false;
                     }
-                    if (self.debug)
-                        self.debug(`User '${credentials.name}' is authenticated`);
+                    if (this.debug)
+                        this.debug(`User '${credentials.name}' is authenticated`);
                     return true;
                 };
             } else
-                self.authenticate = function () {
-                    return true;
-                };
+                this.authenticate = () => true;
         }
 
         /**
@@ -99,15 +96,13 @@ define("js/Server", ["url", "extend", "fs"], function(Url, extend, fs) {
          * @return {Promise} a promise to start the server
          */
         start() {
-            let self = this;
-
-            let handler = function (request, response) {
-                if (self.log)
-                    self.log(request.method, " ", request.url,
+            const handler = (request, response) => {
+                if (this.log)
+                    this.log(request.method, " ", request.url,
                                 "from", request.headers);
 
-                if (self[request.method]) {
-                    self[request.method].call(self, request, response);
+                if (this[request.method]) {
+                    this[request.method].call(this, request, response);
                 } else {
                     response.statusCode = 405;
                     response.write(`No support for ${request.method}`);
@@ -115,64 +110,59 @@ define("js/Server", ["url", "extend", "fs"], function(Url, extend, fs) {
                 }
             };
 
-            console.log("Starting server on port", self.port);
-            console.log(` Document root '${self.docroot}'`);
-            if (self.writable)
-                console.log(` Writable directory '${self.writable}'`);
-            if (self.auth)
-                console.log(" Auth", self.auth);
+            console.log("Starting server on port", this.port);
+            console.log(` Document root '${this.docroot}'`);
+            if (this.writable)
+                console.log(` Writable directory '${this.writable}'`);
+            if (this.auth)
+                console.log(" Auth", this.auth);
             else
                 console.log(" No auth");
 
-            if (typeof self.port === "undefined")
-                self.port = 3000;
+            if (typeof this.port === "undefined")
+                this.port = 3000;
 
-            if (typeof self.auth !== "undefined" && self.debug)
-                self.debug("- requires authentication");
+            if (typeof this.auth !== "undefined" && this.debug)
+                this.debug("- requires authentication");
 
 			let promise;
             if (typeof this.ssl !== "undefined") {
-                let options = {};
-				let promises = [
-					Fs.pathExists(self.ssl.key)
-					.then((exists) => {
-						if (exists)
-							return Fs.readFile(self.ssl.key);
-						else
-							return self.ssl.key;
-					})
-					.then(function (k) {
+                const options = {};
+				const promises = [
+					Fs.pathExists(this.ssl.key)
+					.then(exists =>
+						  ((exists)
+						   ? Fs.readFile(this.ssl.key)
+						   : this.ssl.key))
+					.then(k => {
 						options.key = k.toString();
-						if (self.debug) self.debug("SSL key loaded");
+						if (this.debug) this.debug("SSL key loaded");
 					}),
-					Fs.pathExists(self.ssl.cert)
-					.then((exists) => {
-						if (exists)
-							return Fs.readFile(self.ssl.cert);
-						else
-							return self.ssl.cert;
-					})
-					.then(function (c) {
+					Fs.pathExists(this.ssl.cert)
+					.then(exists => (exists)
+						  ? Fs.readFile(this.ssl.cert)
+						  : this.ssl.cert)
+					.then(c => {
 						options.cert = c.toString();
-						if (self.debug) self.debug("SSL certificate loaded");
+						if (this.debug) this.debug("SSL certificate loaded");
 					})
 				];
 
 				promise = Promise.all(promises)
-                .then(function () {
-					if (self.log) self.log("HTTPS starting on port", self.port);
+                .then(() => {
+					if (this.log) this.log("HTTPS starting on port", this.port);
                     return require("https").createServer(options, handler);
                 });
             } else {
-                if (self.log) self.log("HTTP starting on port", self.port);
+                if (this.log) this.log("HTTP starting on port", this.port);
                 promise = Promise.resolve(require("http").createServer(handler));
             }
 
             return promise
             .then(httpot => {
-                self.ready = true;
-                self.http = httpot;
-                httpot.listen(self.port);
+                this.ready = true;
+                this.http = httpot;
+                httpot.listen(this.port);
             });
         }
 
@@ -198,11 +188,10 @@ define("js/Server", ["url", "extend", "fs"], function(Url, extend, fs) {
          * @private
          */
         handle(request, response, promise, data) {
-            let self = this;
             let contentType = "text/plain";
 
-            function handleResponse(responseBody) {
-                if (self.debug) {
+            const handleResponse = responseBody => {
+                if (this.debug) {
                     // Don't cache when debugging.
                     response.setHeader("Cache-Control", "no-cache");
                     response.setHeader("Cache-Control", "no-store");
@@ -212,29 +201,29 @@ define("js/Server", ["url", "extend", "fs"], function(Url, extend, fs) {
                     response.setHeader("Content-Type", contentType);
                     response.setHeader("Content-Length",
                                        Buffer.byteLength(responseBody));
-                    if (self.debug) self.debug(
+                    if (this.debug) this.debug(
                         Buffer.byteLength(responseBody), "bytes");
                     response.write(responseBody);
                 }
                 response.statusCode = 200;
-                if (self.debug) self.debug("Response code 200 ", response.getHeaders());
+                if (this.debug) this.debug("Response code 200 ", response.getHeaders());
                 response.end();
-            }
+            };
 
-            function handleError(error) {
+            const handleError = error => {
                 // Send the error message in the payload
                 if (error.code === "ENOENT") {
-                    if (self.debug) self.debug(error);
+                    if (this.debug) this.debug(error);
                     response.statusCode = 404;
                 } else {
-                    if (self.log) self.log(error);
-                    if (self.debug) self.debug(error.stack);
+                    if (this.log) this.log(error);
+                    if (this.debug) this.debug(error.stack);
                     response.statusCode = 500;
                 }
-                let e = error.toString();
+                const e = error.toString();
                 response.write(e);
                 response.end(e);
-            }
+            };
 
             if (!this.authenticate(request, response))
                 return;
@@ -247,12 +236,12 @@ define("js/Server", ["url", "extend", "fs"], function(Url, extend, fs) {
                 return;
             }
 
-            let req = Url.parse(`${request.url}`, true);
+            const req = Url.parse(`${request.url}`, true);
 
             // Get file path
             let spath = req.pathname;
             if (spath.indexOf("/") !== 0 || spath.length === 0) {
-                self.debug("ROOT or relative path GET");
+                this.debug("ROOT or relative path GET");
                 response.statusCode = 400;
                 response.end();
                 return;
@@ -260,17 +249,17 @@ define("js/Server", ["url", "extend", "fs"], function(Url, extend, fs) {
             spath = this.docroot + spath;
 
             if (request.method === "GET") {
-                let m = /\.([A-Z0-9]+)$/i.exec(spath);
+                const m = /\.([A-Z0-9]+)$/i.exec(spath);
                 if (m) {
-                    let Mime = require("mime-types");
+                    const Mime = require("mime-types");
                     contentType = Mime.lookup(m[1]) || "application/octet-stream";
                 } else {
                     contentType = "application/octet-stream";
                 }
             } else if (request.method === "PUT") {
                 if (this.writable && spath.indexOf(this.writable) !== 0) {
-                    if (self.debug)
-                        self.debug(
+                    if (this.debug)
+                        this.debug(
 							`Trying to write '${spath}' in read-only area. Expected /^${this.writable}/`);
                     response.statusCode = 403;
                     response.end();
@@ -278,13 +267,13 @@ define("js/Server", ["url", "extend", "fs"], function(Url, extend, fs) {
                 }
             }
 
-            self._addCORSHeaders(request, response);
+            this._addCORSHeaders(request, response);
 
             try {
                 promise(spath, data)
                 .then(handleResponse, handleError);
             } catch (e) {
-                if (self.debug) self.debug(e, " in ", request.url, "\n",
+                if (this.debug) this.debug(e, " in ", request.url, "\n",
                               typeof e.stack !== "undefined" ? e.stack : e);
                 response.write(`${e} in ${request.url}\n`);
                 response.statusCode = 400;
@@ -307,9 +296,7 @@ define("js/Server", ["url", "extend", "fs"], function(Url, extend, fs) {
          */
         GET(request, response) {
             this.handle(request, response,
-                        function (path) {
-                            return Fs.readFile(path);
-                        });
+                        path => Fs.readFile(path));
         }
 
         /**
@@ -317,19 +304,16 @@ define("js/Server", ["url", "extend", "fs"], function(Url, extend, fs) {
          * @private
          */
         PUT(request, response) {
-            let self = this;
-
-            let chunks = [];
-            if (self.debug)
-                self.debug(request.headers);
-            request.on("data", function (chunk) {
-                chunks.push(chunk);
-            }).on("end", function () {
-                let body = Buffer.concat(chunks);
-                self.handle(request, response,
-                            function (path, data) {
-                                return Fs.writeFile(path, data);
-                            }, body);
+            const chunks = [];
+            if (this.debug)
+                this.debug(request.headers);
+            request
+			.on("data", chunk => chunks.push(chunk))
+			.on("end", () => {
+                const body = Buffer.concat(chunks);
+                this.handle(request, response,
+                            (path, data) => Fs.writeFile(path, data),
+							body);
             });
         }
     }

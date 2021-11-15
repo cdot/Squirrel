@@ -28,7 +28,7 @@ define("js/FileStore", ["fs", "js/AbstractStore", "js/Serror"], function(fs, Abs
         read(path) {
             if (this.debug) this.debug("read", path);
             return Fs.readFile(`${this.option("path")}/${path}`)
-            .catch((e) => {
+            .catch(e => {
                 if (/ENOENT/.test(e.message))
                     throw new Serror(404, `${path} ${e.message}`);
                 throw e;

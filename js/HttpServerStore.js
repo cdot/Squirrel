@@ -60,8 +60,6 @@ define("js/HttpServerStore", [
 		 * @protected
          */
         request(method, url, headers, body) {
-            let self = this;
-
             // We would like to use the features of jQuery.ajax, but
             // by default it doesn't handle binary files. We could add
             // a jQuery transport, as described in
@@ -72,7 +70,7 @@ define("js/HttpServerStore", [
             this.addAuth(headers);
 
             let turl;
-            let base = self.option("url");
+            let base = this.option("url");
             if (base && base.length > 0) {
                 if (/\w$/.test(base))
                     base += "/";
@@ -80,8 +78,8 @@ define("js/HttpServerStore", [
             } else
                 turl = new URL(url);
 
-            return new Promise(function(resolve, reject) {
-                let xhr = new XMLHttpRequest();
+            return new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
 
                 // for binary data (does nothing in node.js)
                 xhr.responseType = "arraybuffer";
@@ -99,22 +97,22 @@ define("js/HttpServerStore", [
                         xhr.send(body);
                     }
                 } catch (e) {
-                    reject(self.error(500, turl.split("/"),
+                    reject(this.error(500, turl.split("/"),
                                       `xhr.send error: ${e}`));
                 }
 
-                xhr.onload = function() {
-                    if (self.debug) self.debug("response",xhr.status);
+                xhr.onload = () => {
+                    if (this.debug) this.debug("response",xhr.status);
                     if (xhr.status === 401) {
-                        let handler = self.option("network_login");
+                        const handler = this.option("network_login");
                         if (typeof handler === "function") {
-							if (self.debug) self.debug("handling 401");
-                            handler()
-                            .then((login) => {
-                                resolve(self.request(method, url, headers, body));
+							if (this.debug) this.debug("handling 401");
+                            handler.call(this)
+                            .then(login => {
+                                resolve(this.request(method, url, headers, body));
                             });
                             return;
-                        } else if (self.debug) self.debug("No 401 handler");
+                        } else if (this.debug) this.debug("No 401 handler");
                     }
 
                     resolve({
@@ -147,7 +145,7 @@ define("js/HttpServerStore", [
         read(path) {
             if (this.debug) this.debug("read", path);
             return this.request("GET", path)
-            .then((res) => {
+            .then(res => {
                 if (200 <= res.status && res.status < 300)
                     return res.body;
                 throw new Serror(res.status, path + " read failed");
@@ -167,11 +165,11 @@ define("js/HttpServerStore", [
 		 */
         write(path, data) {
             if (this.debug) this.debug("write", path);
-            let pathbits = path.split('/');
-            let folder = pathbits.slice(0, pathbits.length - 1);
+            const pathbits = path.split('/');
+            const folder = pathbits.slice(0, pathbits.length - 1);
             return this.mkpath(folder.join('/'))
             .then(() => this.request('PUT', path, {}, data))
-            .then((res) => {
+            .then(res => {
                 if (res.status < 200 || res.status >= 300)
                     throw new Serror(res.status, path + " write failed");
             });

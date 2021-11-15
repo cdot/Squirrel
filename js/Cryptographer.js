@@ -4,7 +4,7 @@
 if (typeof crypto === 'undefined')
 	crypto = require('crypto').webcrypto; // node.js
 
-define("js/Cryptographer", ["js/Serror"], Serror => {
+define("js/Cryptographer", ["js/Serror", "js/Utils"], (Serror, Utils) => {
 
 	const IV_LENGTH = 12;
 	const SHA = 'SHA-256';
@@ -31,11 +31,10 @@ define("js/Cryptographer", ["js/Serror"], Serror => {
 			// specify algorithm to use
 			const alg = { name: ALGORITHM, iv: iv };
 			return crypto.subtle.digest(SHA, pwUtf8)
-			.then(pwHash => {
+			.then(pwHash => 
 				  // generate key from pw
-				return crypto.subtle.importKey(
-					'raw', pwHash, alg, false, ['encrypt']);
-			})
+				  crypto.subtle.importKey(
+					  'raw', pwHash, alg, false, ['encrypt']))
 			.then(key => crypto.subtle.encrypt(alg, key, uint8))
 			.then(ab => {
 				const cipherData = new Uint8Array(
@@ -65,25 +64,24 @@ define("js/Cryptographer", ["js/Serror"], Serror => {
 
             // hash the password
 			return crypto.subtle.digest('SHA-256', pwUtf8)
-			.then(pwHash => {
+			.then(pwHash =>
 				  // generate key from pw
-				return crypto.subtle.importKey(
-					'raw', pwHash, alg, false, ['decrypt']);
-			})
+				  crypto.subtle.importKey(
+					  'raw', pwHash, alg, false, ['decrypt']))
 			.then(key => crypto.subtle.decrypt(alg, key, uint8))
 			.then(buffer => new Uint8Array(buffer))
-			.catch(e => new Promise((resolve, reject) => {
+			.catch(e => {
 				// Data compatibility.
 				// Failover to AES-CTR reference implementation
 				// to read "old" format data.
-				requirejs(["js/AES"], AES => {
+				return Utils.require("js/AES")
+				.then(AES => {
 					const data = AES.decrypt(cipherData, password, 256);
 					// Check signature and checksum
-					let cs = data.length % 255;
+					const cs = data.length % 255;
 					if (data[0] === SIGNATURE &&
 						((data[2] << 8) | data[3]) === cs) {
-						resolve(new Uint8Array(data.buffer, 4));
-						return;
+						return Promise.resolve(new Uint8Array(data.buffer, 4));
 					} else if ((data.length & 1) === 0) {
 						// If self is old format, the file contains a
 						// 16-bit-per-character string and therefore
@@ -94,8 +92,7 @@ define("js/Cryptographer", ["js/Serror"], Serror => {
 							null, new Uint16Array(data.buffer));
 						try {
 							JSON.parse(s);
-							resolve(new TextEncoder().encode(s));
-							return;
+							return Promise.resolve(new TextEncoder().encode(s));
 						} catch (e) {
 							// Should never happen
 							console.log("JSON parse error");
@@ -103,9 +100,9 @@ define("js/Cryptographer", ["js/Serror"], Serror => {
 					}
 					// Otherwise the signature is wrong and it's
 					// odd sized. Wrong password?
-					reject(new Serror(400, "Decryption failed"));
+					return Promise.reject(new Serror(400, "Decryption failed"));
 				});
-			}));
+			});
 		}
 	}
 

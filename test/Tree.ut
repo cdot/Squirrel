@@ -24,7 +24,7 @@ if (typeof module !== "undefined") {
 	requirejs.config({
 		baseUrl: `${__dirname}/..`,
 		paths: {
-			"jquery-ui": "test/libs/jquery-ui"
+			"jquery-ui": "node_modules/jquery-ui-dist/jquery-ui"
 		}
 	});
 }

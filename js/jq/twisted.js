@@ -19,8 +19,8 @@
 define("js/jq/twisted", ["jquery", "jquery-ui", "js/jq/icon_button"], function() {
     $.widget("squirrel.twisted", {
         _create: function () {
-            let self = this;
-            let $container = self.element;
+            const self = this;
+            const $container = self.element;
 
             function handleTap() {
                 if ($container.hasClass("twisted-shut"))
@@ -29,14 +29,14 @@ define("js/jq/twisted", ["jquery", "jquery-ui", "js/jq/icon_button"], function()
                     self.close();
             }
 
-            let $button = $(document.createElement("button"))
+            const $button = $(document.createElement("button"))
                 .addClass("twisted-button twisted-title")
                 .icon_button({
                     icon: "ui-icon-info",
                     showLabel: false
                 });
 
-            let $title = $container
+            const $title = $container
                 .children(".twisted-title")
                 .first()
                 .detach()
@@ -57,7 +57,7 @@ define("js/jq/twisted", ["jquery", "jquery-ui", "js/jq/icon_button"], function()
         },
 
         open: function () {
-            let icon = this.element.data("close") ||
+            const icon = this.element.data("close") ||
                 "ui-icon-circle-minus";
             this.element
             .removeClass("twisted-shut")
@@ -67,7 +67,7 @@ define("js/jq/twisted", ["jquery", "jquery-ui", "js/jq/icon_button"], function()
         },
 
         close: function () {
-            let icon = this.element.data("open") ||
+            const icon = this.element.data("open") ||
                 "ui-icon-circle-plus";
             this.element
             .addClass("twisted-shut")

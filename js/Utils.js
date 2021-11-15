@@ -127,7 +127,7 @@ define("js/Utils", [], function() {
         static Uint8ArrayToBase64(a8) {
             let nMod3 = 2;
             let sB64Enc = "";
-            let nLen = a8.length;
+            const nLen = a8.length;
 
             // Convert a base 64 number to the charcode of the character used to
             // represent it
@@ -170,10 +170,10 @@ define("js/Utils", [], function() {
          * @return {Uint8Array}
          */
         static Base64ToUint8Array(sB64) {
-            let sB64Enc = sB64.replace(/[^A-Za-z0-9+/]/g, ""); // == and =
-            let nInLen = sB64Enc.length;
-            let nOutLen = nInLen * 3 + 1 >> 2;
-            let ta8 = new Uint8Array(nOutLen);
+            const sB64Enc = sB64.replace(/[^A-Za-z0-9+/]/g, ""); // == and =
+            const nInLen = sB64Enc.length;
+            const nOutLen = nInLen * 3 + 1 >> 2;
+            const ta8 = new Uint8Array(nOutLen);
             // Convert Base64 char (as char code) to the number represented
             function b64ToUInt6(nChr) {
                 return nChr > 64 && nChr < 91 ?
@@ -233,26 +233,25 @@ define("js/Utils", [], function() {
             }
             
             if (!specs) specs = {};
-            let lets = s.split(/[&;]+/);
-            let query = {};
+            const lets = s.split(/[&;]+/);
+            const query = {};
             for (let i = 0; i < lets.length; i++) {
                 if (lets[i] === "")
                     continue;
-                let ass = lets[i].split("=", 2);
+                const ass = lets[i].split("=", 2);
                 let key, value;
                 if (ass.length > 1) // value option
                     key = ass[0], value = decodeURIComponent(ass[1]);
                 else
                     key = ass, value = "1"; // boolean option
                 
-                let spec = specs[key];
+                const spec = specs[key];
                 if (!spec)
                     query[key] = value;
                 else {
                     if (spec.array) {
-                        query[key] = value.split(",").map((v) => {
-                            return parse(v, spec.type);
-                        });
+                        query[key] = value.split(",")
+						.map(v => parse(v, spec.type));
                     }
                     else
                         query[key] = parse(value, spec.type);
@@ -290,27 +289,27 @@ define("js/Utils", [], function() {
 		 * parameters
          */
         static expandTemplate() {
-            let tmpl = arguments[0];
-            let args = arguments;
+            const args = arguments;
 
-            tmpl = tmpl.replace(/\$(\d+)/g, function (m, p1) {
-                let i = parseInt(p1);
-                return args[i];
-            });
-            tmpl = tmpl.replace(
-                    /\$\?\((.*?),(.*?),(.*?)\)/g,
-                function (m, test, pass, fail) {
-                    let result = false;
-                    try {
-						/* eslint-disable no-eval */
-                        eval(`result=(${test})`);
-						/* eslint-enable no-eval */
-                    } catch (e) {
-                        throw new Error(
-							`Problem evaluating '${test}' in template '${arguments[0]}: ${e}`);
-                    }
-                    return result ? pass : fail;
-                });
+            const tmpl = arguments[0]
+				  .replace(/\$(\d+)/g, function (m, p1) {
+					  const i = parseInt(p1);
+					  return args[i];
+				  })
+				  .replace(
+                      /\$\?\((.*?),(.*?),(.*?)\)/g,
+					  function (m, test, pass, fail) {
+						  let result = false;
+						  try {
+							  /* eslint-disable no-eval */
+							  eval(`result=(${test})`);
+							  /* eslint-enable no-eval */
+						  } catch (e) {
+							  throw new Error(
+								  `Problem evaluating '${test}' in template '${arguments[0]}: ${e}`);
+						  }
+						  return result ? pass : fail;
+					  });
             return tmpl;
         }
 
@@ -330,7 +329,7 @@ define("js/Utils", [], function() {
 		 * @param {string} mod module to require
 		 * @return {Promise} Promise that resolves to the loaded module
 		 */
-		require(mod) {
+		static require(mod) {
 			return new Promise(resolve => {
 				requirejs([mod], fn => resolve(fn));
 			});

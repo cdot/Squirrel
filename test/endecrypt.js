@@ -17,7 +17,7 @@ const OPTIONS = [
 
 requirejs(["node-getopt","js/FileStore", "js/CryptoLayer", "js/Utils"], function(Getopt, FileStore, CryptoLayer, Utils) {
 
-    let parse = new Getopt(OPTIONS)
+    const parse = new Getopt(OPTIONS)
         .bindHelp()
         .setHelp(DESCRIPTION + "\nOPTIONS\n[[OPTIONS]]")
         .parseSystem();
@@ -26,19 +26,19 @@ requirejs(["node-getopt","js/FileStore", "js/CryptoLayer", "js/Utils"], function
         parse.showHelp();
         throw "No filename";
     }
-    let fname = parse.argv[0];
+    const fname = parse.argv[0];
 
-    let opt = parse.options;
-    let debug = typeof opt.debug === "undefined" ? () => {} : console.debug;
+    const opt = parse.options;
+    const debug = typeof opt.debug === "undefined" ? () => {} : console.debug;
 
-    let plainstore = new FileStore({ debug: debug });
-    let cipherstore = new CryptoLayer({
+    const plainstore = new FileStore({ debug: debug });
+    const cipherstore = new CryptoLayer({
         debug: debug,
         understore: new FileStore({ debug: debug })
     });
     cipherstore.option("pass", opt.pass || '');
     
-    let path = /\//.test(fname) ? fname.replace(/\/[^/]*$/, "") : "";
+    const path = /\//.test(fname) ? fname.replace(/\/[^/]*$/, "") : "";
 
     cipherstore.option("path", path);
     plainstore.option("path", path);
@@ -75,8 +75,6 @@ requirejs(["node-getopt","js/FileStore", "js/CryptoLayer", "js/Utils"], function
 			return outstore.writes(outf, json);
 		}
     })
-    .catch((e) => {
-        console.log("Failed", e);
-    });
+    .catch(e => console.log("Failed", e));
 });
 
