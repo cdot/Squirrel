@@ -371,8 +371,8 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                     $("body").append($img);
                 }
                 // Load the tree into the UI by replaying actions
-                let promise = Promise.resolve();
-                for (let act of this.hoarder.tree_actions()) {
+				// sequentially
+                for (let act of this.hoarder.action_stream()) {
                     await this.$DOMtree.tree("action", act);
                 }
                 return Promise.resolve();
@@ -552,13 +552,13 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
 
         _reset_local_store() {           
             return this.hoarder.reset_local()
-            .then(() => {
+            .then(async () => {
                 // Reset UI
                 this.$DOMtree.tree("destroy");
                 this.$DOMtree.tree({});
                 let promise = Promise.resolve();
                 for (let act of this.hoarder.tree_actions()) {
-                    promise = promise.then(this.$DOMtree.tree("action", act));
+                    await this.$DOMtree.tree("action", act);
                 }
                 $("#sites-node").tree("open");
                 
@@ -721,18 +721,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                             $(document).trigger("update_save");
                             return json;
                         },
-                        analyse: () => {
-                            const counts = {
-                                cloud: this.hoarder.cloudLength,
-                                N: 0,
-                                A: 0,
-                                X: 0
-                            };
-                            const acts = this.hoarder.tree_actions();
-                            for (let act of acts)
-                                counts[act.type]++;
-                            return counts;
-                        },
+                        analyse: () => this.hoarder.analyse(),
                         optimise: () => {
                             const acts = this.hoarder.tree_actions();
                             return Dialog.open("alert", {
@@ -747,7 +736,8 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                         set_language: lingo => {
                             // Won't apply until we clear caches and restart
                             Cookies.set("tx_lang", lingo, {
-                                expires: 365
+                                Expires: 365,
+								SameSite: "Strict"
                             });
                             TX.language(lingo, document);
                         }
@@ -830,7 +820,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
         appPlayAction(action, open) {
 			Serror.assert(action instanceof Action);
             const e = this.hoarder.play_action(
-				action, true, act => this.appPlayAction(act, false));
+				action, true, act => this.appPlayAction(act, open));
             if (this.debug && e.conflict)
                 this.debug("interactive", action,
                            "had conflict", e.conflict);

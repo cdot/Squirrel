@@ -395,6 +395,9 @@ define("js/Hoard", ["js/Node", "js/Action", "js/Translator", "js/Serror"], funct
                 Serror.assert(false, "Unrecognised action type");
             }
 
+			if (uiPlayer)
+				uiPlayer(action);
+
             return { action: action }; // Hoard.PlayResult
         }
 

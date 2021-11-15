@@ -31,21 +31,25 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
             /**
 			 * pathname of the cloud store
 			 * @member {string}
+			 * @private
 			 */
             this.cloudPath = null;
             /**
 			 * URL of steganography image
 			 * @member {string}
+			 * @private
 			 */
             this.imageURL = null;
             /**
 			 * Client store interface
 			 * @member {AbstractStore}
+			 * @private
 			 */
             this.clientStore = null;
             /**
 			 * Cloud store interface
 			 * @member {AbstractStore}
+			 * @private
 			 */
             this.cloudStore = null;
             /**
@@ -74,13 +78,21 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
 			 */
             this.clientChanges = [];
             /**
-			 * Flag that indicates if the cloud was changed
+			 * Flag that indicates if the cloud was changed. This applies
+			 * only to the meta-data and not to the action stream; the
+			 * stream can change without the cloudChanged flag being set
+			 * (it's rebuilt from the client tree).
 			 * @member {boolean}
+			 * @private
 			 */
             this.cloudChanged = false;
             /**
-			 * Flag that indicates if the hoard was just created
+			 * Flag that indicates if the hoard was just created. When
+			 * we open on a new store, the client will be emptied and
+			 * this flag set. It will be cleared when the client has been
+			 * populated from the cloud.
 			 * @member {boolean}
+			 * @private
 			 */
             this.clientIsEmpty = true;
             
@@ -243,7 +255,7 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
          * client tree.
          * @return an array of actions
          */
-        tree_actions() {
+        action_stream() {
             return this.hoard.actions_to_recreate();
         }
 
@@ -554,10 +566,10 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
          * @param {Array.<Action>=} actions list of preloaded actions read from
          * the cloud, saves reloading the cloud
          * @return {Promise} Promise that resolves to the proposed new contents
-         * of the cloud
+         * of the cloud (a list of {@link Action}
          */
         update_from_cloud(progress, selector, uiPlayer, actions) {
-            const new_cloud = [];
+            const new_cloud = []; // list of actions
             const prom = actions ? Promise.resolve(actions) : this.load_cloud();
             return prom.then(cloud_actions => {
 
@@ -608,7 +620,12 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
                         // this would force a cloud save, which we don't
                         // want)
                         const e = this.hoard.play_action(
-							act, !this.clientIsEmpty, uiPlayer);
+							act, !this.clientIsEmpty,
+							act => {
+								new_cloud.push(act);
+								if (uiPlayer)
+									uiPlayer(act);
+							});
                         if (e.conflict) {
                             if (progress) progress.push({
                                 severity: "warning",
@@ -616,17 +633,22 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
                             });
                         } else {
                             if (this.debug) this.debug("...played", act);
-                            new_cloud.push(act);
                         }
+						return Promise.resolve();
                     });
                 }
 
-                if (selected.length > 0) {
+				if (this.clientIsEmpty) {
+					// if the client was empty, we want to store in the client
+					// but NOT in the cloud
+                    this.last_sync = Date.now();
+                    this.clientIsEmpty = false;
+				}
+                else if (selected.length > 0) {
                     // If changes were selected, and we didn't start from
 					// an empty client, then we need to remember the sync
-                    if (!this.clientIsEmpty)
-                        this.clientChanges.push(
-							TX.tx("Changes merged from cloud store"));
+                    this.clientChanges.push(
+						TX.tx("Changes merged from cloud store"));
                     if (this.debug) this.debug("...synced at", this.last_sync);
                     this.clientIsEmpty = false;
 
@@ -634,11 +656,27 @@ define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], fu
                 }
                 return promise;
             })
-            .then(() =>
-                  // new_cloud contains the right set of actions to
-                  // rebuild a cloud by taking the cloud actions before
-                  // the sync and appending the local actions.
-                  new_cloud);
+            // new_cloud contains the right set of actions
+            .then(() => new_cloud);
+        }
+
+		/**
+		 * Analyse the number of different types of action.
+		 * @return {Object.<string,number>} a map from the code of each
+		 * action type to the number of times it is used when recreating
+		 * the action stream.
+		 */
+		analyse() {
+            const counts = {
+                cloud: this.hoarder.cloudLength,
+                N: 0,
+                A: 0,
+                X: 0
+            };
+            const acts = this.hoard.actions_to_recreate();
+            for (let act of acts)
+                counts[act.type]++;
+            return counts;
         }
 
         /**

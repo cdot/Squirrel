@@ -88,9 +88,10 @@ define("js/Translator", ["js/Utils", "js/Serror"], function(Utils, Serror) {
         /**
          * Promise to initialise the language. Required before the language
          * can be used. Finds and translates marked strings in the given DOM.
-         * @param {string} lingo two-character language code e.g. 'en', 'de', 'fr'
+         * @param {string} lingo two-character language code e.g. 'en', 'de',
+		 * 'fr'
          * @param {jQuery} document optional DOM
-		 * @return {Promise} resolves to nothing
+		 * @return {Promise} resolves to the name of the language
          */
         language(lingo, document) {
 
@@ -99,7 +100,7 @@ define("js/Translator", ["js/Utils", "js/Serror"], function(Utils, Serror) {
                 // If there is already a language applied, unapply it.
                 // It would have been cleaner if we could have iterated over
                 // the originals, but it's a WeakMap which can't be iterated
-                // so we have to re-un-translate the document thisead.
+                // so we have to re-un-translate the document.
                 const bod = document.getElementsByTagName("body");
                 this._translateDOM(bod[0], function (s) {
                     return s;
@@ -109,12 +110,13 @@ define("js/Translator", ["js/Utils", "js/Serror"], function(Utils, Serror) {
                 this.originals = undefined;
             }
 
-            this.lingo = lingo;
+            lingo = lingo || this.lingo || "en";
+			this.lingo = lingo;
 
             if (lingo === "en") {
                 // English, so no need to translate the DOM
                 if (this.debug) this.debug("Using English");
-                return Promise.resolve();
+                return Promise.resolve(lingo);
             }
 
             // Load the language
@@ -154,7 +156,7 @@ define("js/Translator", ["js/Utils", "js/Serror"], function(Utils, Serror) {
                 });
             } else if (this.options.files) {
                 // Specific to node.js - no browser support!
-                return Utils.require("fs")
+                getter = Utils.require("fs")
 				.then(fs => fs.promises.readFile(
 					`${this.options.files}${lingo}.json`))
                 .then(json => JSON.parse(json));
@@ -171,6 +173,7 @@ define("js/Translator", ["js/Utils", "js/Serror"], function(Utils, Serror) {
                     this.translate(bod[0]);
                 }
                 if (this.debug) this.debug("Using language", lingo);
+				return lingo;
             })
             .catch(e => {
                 if (this.debug) this.debug("Could not load language", lingo);

@@ -105,12 +105,12 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
             new ClipboardJS(".ui-contextmenu li[data-command='copy']", {
                 text: () => {
                     const p = this.$menuTarget.tree("getPath");
-                    if (this.debug) this.debug("copy tree from", p);
+                    if (this.debug) this.debug("copy ", p);
                     const n = this.app.hoarder.hoard.get_node(p);
-                    if (typeof n.data === "object")
+                    if (n.isLeaf())
+						return n.value;
+					else
                         return JSON.stringify(n);
-                    else
-                        return n.data;
                 }
             });
 
@@ -126,9 +126,8 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
 
             // Initialise the clipboard to get "paste" enabled, in case
             // we are copy-pasting external content
-            this.clipboardContents = '{"data":"' + TX.tx("Add new value")
-            + '"}';
-            clipboard.on("success", function(e) {
+            this.clipboardContents = `{"data":"${TX.tx("Add new value")}"}`;
+            clipboard.on("success", e => {
                 this.clipboardContents = e.text;
             });
         }
@@ -145,7 +144,7 @@ define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror"
                 JSON.parse(this.clipboardContents);
                 return true;
             } catch(e) {
-                if (this.debug) this.debug("Clipboard", e);
+                if (this.debug) this.debug("Clipboard", this.clipboardContents, e);
                 return false;
             }
         }
