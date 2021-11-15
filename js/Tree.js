@@ -392,6 +392,8 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
 
         _decorate_node: function() {
             const $node = this.element;
+
+			// Don't redecorate
 			if ($node.hasClass("tree-decorated"))
 				return;
 			$node.addClass("tree-decorated");
@@ -775,6 +777,15 @@ define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", 
             const oldpath = this.getPath();
             const newpath = action.data.slice();
             const $new_parent = this.getNodeFromPath(newpath);
+
+			// Open the new parent, so we can see when it lands
+            $new_parent
+			.parents('.tree')
+			.each(function() {
+                $(this)
+                .tree("open");
+            });
+            $new_parent.tree("open");
 
             // Relocate the node in the DOM
             this._insertInto($new_parent);
