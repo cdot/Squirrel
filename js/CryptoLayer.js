@@ -1,7 +1,9 @@
 /*@preserve Copyright (C) 2015-2021 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,node */
 
-define("js/CryptoLayer", ["js/Serror", "js/LayeredStore", "js/Utils", "js/Cryptographer"], function (Serror, LayeredStore, Utils, Crypto) {
+define("js/CryptoLayer", [
+	"js/Serror", "js/LayeredStore", "js/Utils", "js/Cryptographer"
+], (Serror, LayeredStore, Utils, Crypto) => {
 
     const SIGNATURE = 0x53;
     const VERSION = 1;
@@ -34,10 +36,10 @@ define("js/CryptoLayer", ["js/Serror", "js/LayeredStore", "js/Utils", "js/Crypto
         read(path) {
             if (this.debug) this.debug("read", path);
             return super.read(path)
-            .then(a8 => Crypto.decrypt(a8, this.option("pass")))
-			.catch(e => {
-				throw new Serror(400, "read failed");
-			});
+            .then(a8 => Crypto.decrypt(a8, this.option("pass"))
+				  .catch(e => {
+					  throw new Serror(400, "read failed");
+				  }));
         }
 
         /**
@@ -58,11 +60,11 @@ define("js/CryptoLayer", ["js/Serror", "js/LayeredStore", "js/Utils", "js/Crypto
         reads(path) {
             if (this.debug) this.debug("read", path);
             return super.read(path)
-            .then(uint8 => Crypto.decrypt(uint8, this.option("pass")))
-			.then(data => new TextDecoder().decode(data))
-			.catch(e => {
-				throw new Serror(new Serror(400, "reads failed"));
-			});
+            .then(uint8 => Crypto.decrypt(uint8, this.option("pass"))
+				  .then(data => new TextDecoder().decode(data))
+				  .catch(e => {
+					  throw new Serror(new Serror(400, "reads failed"));
+				  }));
         }
 
         /**

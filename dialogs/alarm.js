@@ -4,7 +4,9 @@
  * Reminder setting dialog
  * Options:
  */
-define("dialogs/alarm", ["js/Dialog", "js/Action", "js/jq/template", "jquery-ui"], function(Dialog, Action) {
+define("dialogs/alarm", [
+	"js/Dialog", "js/Action", "js/jq/template", "jquery-ui"
+], (Dialog, Action) => {
 
     const MSPERDAY = 24 * 60 * 60 * 1000;
 

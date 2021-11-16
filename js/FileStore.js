@@ -1,7 +1,9 @@
 /*@preserve Copyright (C) 2017-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env node */
 
-define("js/FileStore", ["fs", "js/AbstractStore", "js/Serror"], function(fs, AbstractStore, Serror) {
+define("js/FileStore", [
+	"fs", "js/AbstractStore", "js/Serror"
+], (fs, AbstractStore, Serror) => {
 
 	const Fs = fs.promises;
 

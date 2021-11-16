@@ -1,8 +1,12 @@
 /*@preserve Copyright (C) 2015-2021 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,node */
 
-define("js/Hoard", ["js/Node", "js/Action", "js/Translator", "js/Serror"], function(Node, Action, Translator, Serror) {
-    const TX = Translator.instance();
+define("js/Hoard", [
+	"js/Node", "js/Action", "js/Translator", "js/Serror"
+], (
+	Node, Action, Translator, Serror
+) => {
+	const TX = Translator.instance();
 
 	/**
 	 * Object that represents the result of a `play_action`.

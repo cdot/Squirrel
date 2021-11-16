@@ -1,7 +1,10 @@
 /*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,jquery */
 
-define("js/ContextMenu", ["js/Translator", "js/Dialog", "js/Action", "js/Serror", "clipboard", "jquery", "jquery-ui", "contextmenu" ], function(Translator, Dialog, Action, Serror, ClipboardJS) {
+define("js/ContextMenu", [
+	"js/Translator", "js/Dialog", "js/Action", "js/Serror",
+	"clipboard", "jquery", "jquery-ui", "contextmenu"
+], (Translator, Dialog, Action, Serror, ClipboardJS) => {
 
     const TX = Translator.instance();
 

@@ -34,7 +34,7 @@
  * raw-template - records the unexpanded template
  */
 
-define("js/jq/template", ["js/Utils", "jquery", "jquery-ui"], function (Utils) {
+define("js/jq/template", ["js/Utils", "jquery", "jquery-ui"], Utils => {
     $.widget("squirrel.template", {
         _create: function () {
             if (this.element.hasClass("pick-one")) {

@@ -4,7 +4,7 @@
 /**
  * Simple in-place editing widget
  */
-define("js/jq/edit_in_place", ["jquery", "jquery-ui"], function () {
+define("js/jq/edit_in_place", ["jquery", "jquery-ui"], () => {
 
     $.fn.edit_in_place = function (options) {
 

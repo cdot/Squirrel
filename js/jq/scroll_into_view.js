@@ -4,7 +4,7 @@
 /**
  * Plugin to scroll the view to this element
  */
-define("js/jq/scroll_into_view", ["jquery", "jquery-ui"], function () {
+define("js/jq/scroll_into_view", ["jquery", "jquery-ui"], () => {
     $.fn.scroll_into_view = function () {
         return this.each(function () {
             // Top of element relative to document

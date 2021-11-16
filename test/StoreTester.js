@@ -9,7 +9,9 @@ if (typeof requirejs === "undefined") {
 /**
  * Shared code used in testing stores.
  */
-define(["js/Utils", "js/Serror", "test/TestRunner"], function(Utils, Serror, TestRunner) {
+define([
+	"js/Utils", "js/Serror", "test/TestRunner"
+], (Utils, Serror, TestRunner) => {
 
     const TESTR = "1234567普通话/普通話العَرَبِيَّة";
 

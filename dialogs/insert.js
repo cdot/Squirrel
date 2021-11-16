@@ -7,7 +7,7 @@
  * $node (required)
  * data: data value to insert
  */
-define("dialogs/insert", ["dialogs/add"], function(AddDialog) {
+define("dialogs/insert", ["dialogs/add"], AddDialog => {
     class InsertDialog extends AddDialog {
         validateValue() {
             const $ta = this.$control("value");

@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser */
 
-define("dialogs/store_settings", ["js/Dialog", "js/jq/template"], function(Dialog) {
+define("dialogs/store_settings", ["js/Dialog", "js/jq/template"], Dialog => {
 
     class StoreSettingsDialog extends Dialog {
 

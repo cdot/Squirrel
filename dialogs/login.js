@@ -7,7 +7,9 @@
  * user: initial value for username
  * pass: initial value for password
  */
-define("dialogs/login", ["js/Dialog", "js/jq/simulated_password"], function(Dialog) {
+define("dialogs/login", [
+	"js/Dialog", "js/jq/simulated_password"
+], Dialog => {
     class LoginDialog extends Dialog {
         initialise() {
             const self = this;

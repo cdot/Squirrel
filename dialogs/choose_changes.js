@@ -4,7 +4,7 @@
 /**
  * Change chooser dialog
  */
-define("dialogs/choose_changes", ["js/Dialog"], function(Dialog) {
+define("dialogs/choose_changes", ["js/Dialog"], Dialog => {
 
     class ChangesDialog extends Dialog {
 

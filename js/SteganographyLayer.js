@@ -1,7 +1,9 @@
 /*@preserve Copyright (C) 2015-2021 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env node, browser */
 
-define("js/SteganographyLayer", ["js/LayeredStore", "js/Serror", "js/Steganographer"], function(LayeredStore, Serror, Steganographer) {
+define("js/SteganographyLayer", [
+	"js/LayeredStore", "js/Serror", "js/Steganographer"
+], (LayeredStore, Serror, Steganographer) => {
 
 	const Canvas = (typeof process !== 'undefined') ?
 		  require('canvas') : undefined;

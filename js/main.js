@@ -4,13 +4,13 @@
 requirejs.config({
     baseUrl: ".",
     paths: {
-        jquery: "//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery",
-        "jquery-ui": "//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui",
+        jquery: "//cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min",
+        "jquery-ui": "//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min",
         "jquery-ui/ui": "//cdn.jsdelivr.net/npm/jquery-ui@1.12.1/ui",
         contextmenu: "//cdnjs.cloudflare.com/ajax/libs/jquery.ui-contextmenu/1.18.1/jquery.ui-contextmenu.min",
-        "js-cookie": "//cdnjs.cloudflare.com/ajax/libs/js-cookie/latest/js.cookie.min",
+        "js-cookie": "//cdnjs.cloudflare.com/ajax/libs/js-cookie/2.2.1/js.cookie.min",
         "jquery-touch-events": "//cdnjs.cloudflare.com/ajax/libs/jquery-touch-events/2.0.3/jquery.mobile-events.min",
-        clipboard: "//cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.3/clipboard.min"
+        clipboard: "//cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.8/clipboard.min"
     }
 });
 

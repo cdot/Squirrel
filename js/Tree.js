@@ -3,7 +3,11 @@
 
 /* global Tree: true */
 
-define("js/Tree", ["js/Action", "js/Hoard", "js/Serror", "js/Dialog", "jquery", "js/jq/edit_in_place", "js/jq/scroll_into_view", "js/jq/icon_button", "jquery-ui"], function(Action, Hoard, Serror, Dialog) {
+define("js/Tree", [
+	"js/Action", "js/Hoard", "js/Serror", "js/Dialog",
+	"jquery", "js/jq/edit_in_place", "js/jq/scroll_into_view",
+	"js/jq/icon_button", "jquery-ui"
+], (Action, Hoard, Serror, Dialog) => {
 
     // separator used in Path->node mapping index
     const PATHSEP = String.fromCharCode(1);

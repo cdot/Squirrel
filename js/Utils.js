@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2015-2017 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,node */
 
-define("js/Utils", [], function() {
+define("js/Utils", [], () => {
 
     /**
      * Utilities and plugins used by Squirrel

@@ -1,7 +1,9 @@
 /*@preserve Copyright (C) 2015-2021 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,node */
 
-define("js/Hoarder", ["js/Hoard", "js/Action", "js/Serror", "js/Translator"], function(Hoard, Action, Serror, Translator) {
+define("js/Hoarder", [
+	"js/Hoard", "js/Action", "js/Serror", "js/Translator"
+], (Hoard, Action, Serror, Translator) => {
 
     const CLIENT_PATH = "client";
     const TX = Translator.instance();

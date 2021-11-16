@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser */
 
-define("dialogs/add", ["js/Dialog", "js/Action"], function(Dialog, Action) {
+define("dialogs/add", ["js/Dialog", "js/Action"], (Dialog, Action) => {
 
     class AddDialog extends Dialog {
 

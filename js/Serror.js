@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,node */
 
-define("js/Serror", function() {
+define("js/Serror", () => {
     
     /**
      * Squirrel error. Generic vehicle for errors that have a status code

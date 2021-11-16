@@ -15,7 +15,10 @@ function gapi_on_load() {
 }
 /* eslint-enable no-unused-vars */
 
-define("js/GoogleDriveStore", ['js/Utils', 'js/Translator', 'js/HttpServerStore', 'js/Serror'], function(Utils, Translator, HttpServerStore, Serror) {
+define("js/GoogleDriveStore", [
+	'js/Utils', 'js/Translator', 'js/HttpServerStore', 'js/Serror'
+], (Utils, Translator, HttpServerStore, Serror) => {
+
     const TX = Translator.instance();
 
 	// Client ID from Google APi dashboard. Note this is only valid

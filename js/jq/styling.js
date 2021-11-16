@@ -1,7 +1,9 @@
 /*@preserve Copyright (C) 2017 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,jquery */
 
-define("js/jq/styling", ["js/RGBA", "js-cookie", "jquery", "jquery-ui"], function(RGBA, Cookies) {
+define("js/jq/styling", [
+	"js/RGBA", "js-cookie", "jquery", "jquery-ui"
+], (RGBA, Cookies) => {
 
     /**
      * Plugin to manage custom styling for a UI theme
@@ -119,7 +121,8 @@ define("js/jq/styling", ["js/RGBA", "js-cookie", "jquery", "jquery-ui"], functio
                     Cookies.remove("ui_theme");
                 } else {
                     Cookies.set("ui_theme", theme, {
-                        expires: 365
+                        expires: 365,
+						samesite: "strict"
                     });
                 }
             }
@@ -132,7 +135,8 @@ define("js/jq/styling", ["js/RGBA", "js-cookie", "jquery", "jquery-ui"], functio
                 now = scale;
                 $("body").css("font-size", scale + "px");
                 Cookies.set("ui_scale", scale, {
-                    expires: 365
+                    expires: 365,
+					samesite: "strict"
                 });
             }
             return now;

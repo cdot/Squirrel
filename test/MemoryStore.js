@@ -1,7 +1,9 @@
 /*@preserve Copyright (C) 2019-2021 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,node */
 
-define("test/MemoryStore", ["js/Utils", "js/Serror", "js/AbstractStore"], function(Utils, Serror, AbstractStore) {
+define("test/MemoryStore", [
+	"js/Utils", "js/Serror", "js/AbstractStore"
+], (Utils, Serror, AbstractStore) => {
 
     /**
      * A store engine using memory. Used for testing only.

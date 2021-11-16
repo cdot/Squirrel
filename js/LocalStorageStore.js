@@ -1,15 +1,15 @@
 /*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,node */
 
-let deps = ["js/Utils", "js/Serror", "js/AbstractStore"];
-if (typeof localStorage === "undefined") {
-    // Use dom-storage to simulate localStorage with node.js
-    deps.push('dom-storage');
-}
+define("js/LocalStorageStore", [
+	"js/Utils", "js/Serror", "js/AbstractStore"
+], (Utils, Serror, AbstractStore) => {
 
-define("js/LocalStorageStore", deps, function(Utils, Serror, AbstractStore, Storage) {
-
-    if (typeof localStorage === "undefined") {
+	if (typeof localStorage === "undefined") {
+		// Use dom-storage to simulate localStorage with node.js
+		// This is not countd as a browser dyamic-dependency because
+		// it's for node.js only
+		const Storage = require('dom-storage');
         // Use dom-storage to simulate localStorage with node.js
         localStorage = new Storage('./scratch.json');
     }

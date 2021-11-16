@@ -4,7 +4,7 @@
 /**
  * Password generation for the given leaf node
  */
-define("dialogs/randomise", ["js/Dialog", "js-cookie"], function(Dialog, Cookies) {
+define("dialogs/randomise", ["js/Dialog", "js-cookie"], (Dialog, Cookies) => {
     const DEFAULT_CONSTRAINTS = {
         size: 30,
         chars: "A-Za-z0-9!%^&*_$+-=;:@#~,./?"

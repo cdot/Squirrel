@@ -19,7 +19,10 @@ requirejs.config({
     }
 });
 
-define(["js/Translator", "jquery", "js/jq/simulated_password", "js/jq/icon_button", "test/simulated_password"], function(Translator) {
+define([
+	"js/Translator", "jquery", "js/jq/simulated_password",
+	"js/jq/icon_button", "test/simulated_password"
+], Translator => {
 
     const TX = Translator.instance({ url: "locale", debug: console.debug});
 

@@ -4,7 +4,7 @@
 /**
  * Encryption password change dialog. Password entry fields must match.
  */
-define("dialogs/change_password", ["js/Dialog"], function(Dialog) {
+define("dialogs/change_password", ["js/Dialog"], Dialog => {
 
     class ChangePasswordDialog extends Dialog {
 

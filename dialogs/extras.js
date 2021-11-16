@@ -1,7 +1,9 @@
 /*@preserve Copyright (C) 2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser */
 
-define("dialogs/extras", ["js/Dialog", "js/Translator", "js/Tree", "js-cookie", "js/jq/styling"], function(Dialog, Translator, Tree, Cookies) {
+define("dialogs/extras", [
+	"js/Dialog", "js/Translator", "js/Tree", "js-cookie", "js/jq/styling"
+], (Dialog, Translator, Tree, Cookies) => {
 
 	/**
 	 * Settings dialog
@@ -13,7 +15,8 @@ define("dialogs/extras", ["js/Dialog", "js/Translator", "js/Tree", "js-cookie", 
                 const ons = (on ? "on" : "off");
                 if (Cookies.get("ui_autosave") !== ons) {
                     Cookies.set("ui_autosave", ons, {
-                        expires: 365
+                        expires: 365,
+						samesite: "strict"
                     });
                     $(document).trigger("update_save");
                 }

@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2015-2021 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,node */
 
-define("js/Action", ["js/Translator", "js/Serror"], function(Translator, Serror) {
+define("js/Action", ["js/Translator", "js/Serror"], (Translator, Serror) => {
 
     const MSPERDAY = 24 * 60 * 60 * 1000;
     const TX = Translator.instance();

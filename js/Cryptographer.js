@@ -4,6 +4,8 @@
 if (typeof crypto === 'undefined')
 	crypto = require('crypto').webcrypto; // node.js
 
+/* dynamic-dependencies ["js/AES"] */
+
 define("js/Cryptographer", ["js/Serror", "js/Utils"], (Serror, Utils) => {
 
 	const IV_LENGTH = 12;

@@ -4,7 +4,7 @@
 if (typeof XMLHttpRequest === "undefined")
     XMLHttpRequest = require("xhr2");
 
-define("js/Translator", ["js/Utils", "js/Serror"], function(Utils, Serror) {
+define("js/Translator", ["js/Utils", "js/Serror"], (Utils, Serror) => {
 
     const TIMEUNITS = {
         // TX.tx("$1 year$?($1!=1,s,)")

@@ -18,7 +18,11 @@ requirejs.config({
     }
 });
 
-define(["js-cookie", "jquery", "js/jq/icon_button", "js/jq/twisted", "js/jq/styling"], Cookies => {
+define([
+	"js-cookie", "jquery", "js/jq/icon_button", "js/jq/twisted",
+	"js/jq/styling"
+], Cookies => {
+
     $(function() {
         $.styling.init();
         $("button").icon_button();

@@ -16,7 +16,7 @@
  * data-close="ui-icon-circle-minus"
  */
 
-define("js/jq/twisted", ["jquery", "jquery-ui", "js/jq/icon_button"], function() {
+define("js/jq/twisted", ["jquery", "jquery-ui", "js/jq/icon_button"], () => {
     $.widget("squirrel.twisted", {
         _create: function () {
             const self = this;

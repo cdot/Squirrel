@@ -4,7 +4,7 @@
 /*
  * Pick characters from a string value
  */
-define("dialogs/pick", ["js/Dialog"], function(Dialog) {
+define("dialogs/pick", ["js/Dialog"], Dialog => {
     class PickDialog extends Dialog {
         initialise() {
             this.$control("clear")

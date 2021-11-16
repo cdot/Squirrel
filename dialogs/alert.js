@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser */
 
-define("dialogs/alert", ["js/Dialog"], function(Dialog) {
+define("dialogs/alert", ["js/Dialog"], Dialog => {
 
     let $http = null;
 

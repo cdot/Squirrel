@@ -270,7 +270,7 @@ requires the latest browsers to run. If you are stuck with IE8, don't
 even think about it :-(
 
 ## Developers
-See https://github.com/cdot/Squirrel/blob/master/DEVELOPING.md
+See [DEVELOPING}(DEVELOPING.md)
 
 ## About Squirrel
 

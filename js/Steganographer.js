@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser */
 
-define("js/Steganographer", ["js/Utils"], function(Utils) {
+define("js/Steganographer", ["js/Utils"], Utils => {
 
 	/**
 	 * Steganography using the least-significant bits of the

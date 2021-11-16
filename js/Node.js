@@ -3,9 +3,7 @@
 
 define("js/Node", [
 	"js/Action", "js/Translator", "js/Serror"
-], (
-	Action, Translator, Serror
-) => {
+], (Action, Translator, Serror) => {
 
     const MSPERDAY = 24 * 60 * 60 * 1000;
 

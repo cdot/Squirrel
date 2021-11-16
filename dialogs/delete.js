@@ -4,7 +4,7 @@
 /**
  * Confirm deletion of a node
  */
-define("dialogs/delete", ["js/Dialog", "js/Action"], function(Dialog, Action) {
+define("dialogs/delete", ["js/Dialog", "js/Action"], (Dialog, Action) => {
     class DeleteDialog extends Dialog {
 
         open() {

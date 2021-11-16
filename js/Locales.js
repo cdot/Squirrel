@@ -53,7 +53,9 @@ function auto_translate(en, lang) {
     return tx;
 }
 
-define(["node-getopt", "jsdom", "js/Translator", "fs-extra", "readline-sync"], function(getopt, jsdom, Translator, Fs, rl) {
+define([
+	"node-getopt", "jsdom", "js/Translator", "fs-extra", "readline-sync"
+], (getopt, jsdom, Translator, Fs, rl) => {
 
     const TX = Translator.instance();
     

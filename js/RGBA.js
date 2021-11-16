@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2017-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,node */
 
-define("js/RGBA", function() {
+define("js/RGBA", () => {
 
     /* Table of HTMl colour names and their RGB values */
     const CSSColours = {

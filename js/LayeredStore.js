@@ -1,7 +1,9 @@
 /*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,node */
 
-define("js/LayeredStore", ["js/AbstractStore", "js/Serror"], function(AbstractStore, Serror) {
+define("js/LayeredStore", [
+	"js/AbstractStore", "js/Serror"
+], (AbstractStore, Serror) => {
 
     /**
      * A LayeredStore is an AbstractStore where actual store services

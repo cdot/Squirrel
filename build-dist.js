@@ -17,7 +17,7 @@ const DESCRIPTION = [
 
 let requirejs = require("requirejs");
 
-requirejs(["request", "node-getopt", "fs", "uglify-es", "clean-css", "html-minifier", "jsdom", "js/Locales"], function(request, getopt, fs, uglify, MinifyCSS, MinifyHTML, jsdom, Locales) {
+requirejs(["request", "node-getopt", "fs", "uglify-js", "clean-css", "html-minifier", "jsdom", "js/Locales"], function(request, getopt, fs, uglify, MinifyCSS, MinifyHTML, jsdom, Locales) {
 
 	const Fs = fs.promises;
 
@@ -34,7 +34,7 @@ requirejs(["request", "node-getopt", "fs", "uglify-es", "clean-css", "html-minif
           .parseSystem()
 	.options;
 
-    const debug = opts.debug ? console.debug : false;
+    const debug = opts.debug ? console.debug : () => {};
     const dependencies = opts.deps;
 
 	/**
@@ -72,7 +72,7 @@ requirejs(["request", "node-getopt", "fs", "uglify-es", "clean-css", "html-minif
         if (!d)
             depends_on[dependant] = d = {};
         if (dependee && !d[dependee]) {
-            if (dependencies) console.debug(dependant, "depends on", dependee);
+            if (dependencies) debug(dependant, "depends on", dependee);
             d[dependee] = true;
         }
     }
@@ -161,7 +161,10 @@ requirejs(["request", "node-getopt", "fs", "uglify-es", "clean-css", "html-minif
 
     // Analyse the dependencies described in the given block of code. This
     // is not a general solution - the code is not parsed, just
-    // processed by regexps.
+    // processed by regexps. Looks for:
+	// define("...", [...]
+	// requirejs("...", [...]
+	// /* dynamic-dependencies [...]
     function analyseDependencies(module, config, js) {
         addDependency(module);
         
@@ -175,8 +178,9 @@ requirejs(["request", "node-getopt", "fs", "uglify-es", "clean-css", "html-minif
         }
 
         const promises = [];
-        // Look for require or define in a format we can analyse
-        const re = /(?:(?:requirejs|define)\s*\(\s*(?:"[^"]*"\s*,\s*)?|let\s*deps\s*=\s*)\[\s*(.*?)\s*\]/g;
+        // Look for requirejs or define in a format we can analyse
+		// Also supports /* dynamic-dependencies [...] */
+        const re = /(?:(?:requirejs|define)\s*\(\s*(?:"[^"]*"\s*,\s*)?|\/\*\*?\s*dynamic-dependencies\s*)\[\s*(.*?)\s*\]/gs;
         while ((m = re.exec(js)) !== null) {
             
             const deps = m[1].split(/\s*,\s*/);
@@ -189,6 +193,7 @@ requirejs(["request", "node-getopt", "fs", "uglify-es", "clean-css", "html-minif
                         dep = dep.replace("../", module.replace(/[^/]*\/[^/]*$/, ""));
                     else if (/^\.\//.test(dep))
                         dep = dep.replace("./", module.replace(/\/[^/]*$/, "/"));
+					//debug(module, "depends on", dep);
                     addDependency(module, dep);
                     promises.push(analyse(dep, config));
                 }
@@ -203,7 +208,7 @@ requirejs(["request", "node-getopt", "fs", "uglify-es", "clean-css", "html-minif
             return Promise.resolve();
 
         const path = getModulePath(module, config);
-        if (dependencies) console.debug("Analysing dependencies for", module, "at", path);
+        debug("Analysing dependencies for", module, "at", path);
         found_at[module] = path;
         return get(path)
         .catch(e => console.log("Failed to load", path, e))
@@ -222,7 +227,7 @@ requirejs(["request", "node-getopt", "fs", "uglify-es", "clean-css", "html-minif
             if (!visited[d])
                 treeSort(d, stack, visited);
         }
-        //if (debug) debug("Embed",key);
+        //debug("Embed",key);
         stack.push(key);
         return stack;
     }          
@@ -231,6 +236,8 @@ requirejs(["request", "node-getopt", "fs", "uglify-es", "clean-css", "html-minif
     // the dependency tree.
     function generateJS(root) {
         const js = treeSort(root);
+
+		debug("Generate monolithic JS", js);
 
         const proms = [];
         for (let module of js) {
@@ -252,7 +259,7 @@ requirejs(["request", "node-getopt", "fs", "uglify-es", "clean-css", "html-minif
                         "(^|\\W)define\\s*\\(\\s*[\"']" + module + "[\"']", "m");
                     if (!check.test(codes)) {
                         // If not, add one
-                        //if (debug) debug("Adding ID to", module);
+                        //debug("Adding ID to", module);
                         codes = codes + "\ndefine(\"" + module
                         + "\",function(){});\n";
                     }
@@ -265,19 +272,19 @@ requirejs(["request", "node-getopt", "fs", "uglify-es", "clean-css", "html-minif
             code.push(`requirejs(['${root}']);`);
             const codes = code.join("\n");
 			//console.log("Uglify",codes);
-            const cod = uglify.minify(codes, {
-                        ie8: true
-            });
-            if (cod.error) {
-                console.error("Error:", cod.error);
-                return Fs.writeFile(`dist/${root}.bad_js`, codes);
-            }
+			// See https://www.npmjs.com/package/uglify-js for options
+            //const cod = uglify.minify(codes, { ie: true });
+            //if (cod.error) {
+            //    console.error("Error:", cod.error);
+            //    return Fs.writeFile(`dist/${root}.bad_js`, codes);
+            //}
+			// cod = cod.codel
+			const cod = codes;
             return Promise.all([
                 locales.js(codes, root + ".js").then(c => {
-                    if (debug)
-                        debug(`Extracted ${c} new strings from ${root}.js`);
+                    debug(`Extracted ${c} new strings from ${root}.js`);
                 }),
-                Fs.writeFile(`dist/${root}.js`, cod.code)
+                Fs.writeFile(`dist/${root}.js`, cod)
             ]);
         });
     }
@@ -341,20 +348,27 @@ requirejs(["request", "node-getopt", "fs", "uglify-es", "clean-css", "html-minif
                         
                     }),
                     
-                    // Analyse dependencies for *Store and *Layer modules, except those
-                    // that are not marked as /* eslint-env browser */
+                    // Analyse dependencies for *Store and *Layer modules,
+					// except those that are not marked as
+					// /* eslint-env browser */
                     Fs.readdir("js")
                     .then(entries => {
                         for (let entry of entries) {
-                            if (/(Store|Layer)\.js$/.test(entry)
-                                && entry !== "FileStore.js") {
-                                const module = `js/${entry.replace(".js", "")}`;
-                                addDependency("js/main", module);
-                                deps.push(analyse(module, cfg));
+                            if (/(Store|Layer)\.js$/.test(entry)) {
+								Fs.readFile(`js/${entry}`)
+								.then(b => {
+									const s = b.toString();
+									if (/\/*\s+eslint-env[^*]*browser/.test(s)) {
+										const module = `js/${entry.replace(".js", "")}`;
+										addDependency("js/main", module);
+										deps.push(analyse(module, cfg));
+									} else
+										debug(`Ignore ${entry}`);
+								});
                             }
                         }
                     })
-                ]).catch(e => console.log("WANK", e));
+                ]);
             })
         ])
         // Generate JS for all dependencies
@@ -375,9 +389,7 @@ requirejs(["request", "node-getopt", "fs", "uglify-es", "clean-css", "html-minif
                 if (regex.test(f))
                     proms.push(
                         Fs.readFile(f)
-                        .then(data => {
-                            return Fs.writeFile(`dist/${f}`, data);
-                        }));
+                        .then(data => Fs.writeFile(`dist/${f}`, data)));
             }
             return Promise.all(proms);
         });
@@ -472,8 +484,7 @@ requirejs(["request", "node-getopt", "fs", "uglify-es", "clean-css", "html-minif
             const index = `<!DOCTYPE html>\n${document.querySelector("html").innerHTML}`;
             return locales.html(index, `${module}.html`)
             .then(c => {
-                if (debug)
-                    debug(`Extracted ${c} new strings from ${module}.html`);
+                debug(`Extracted ${c} new strings from ${module}.html`);
                 //let re = new RegExp(`(href=(["'])css/${module})(\\.css\\2)`);
                 const mindex = MinifyHTML.minify(index, {
                     collapseWhitespace: true,
@@ -506,14 +517,14 @@ requirejs(["request", "node-getopt", "fs", "uglify-es", "clean-css", "html-minif
         
         .then(() => {
             // The strings have been updated during the processing
-            if (debug) debug("Saving strings");
+            debug("Saving strings");
             return locales.saveStrings();
         });
     }
 
     function target_translate(improve, lang) {
         // Update translations
-        if (debug) debug("Updating translations");
+        debug("Updating translations");
         return locales.loadStrings()
         .then(() => {
             return locales.loadTranslations();
@@ -525,7 +536,7 @@ requirejs(["request", "node-getopt", "fs", "uglify-es", "clean-css", "html-minif
                 locales.updateTranslations(improve);
         })
         .then(() => {
-            if (debug) debug("Saving translations");
+            debug("Saving translations");
             return locales.saveTranslations();
         });
     }

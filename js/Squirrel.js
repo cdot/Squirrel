@@ -1,9 +1,19 @@
 /*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,jquery */
 
-define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Hoarder", "js/Hoard", "js/LocalStorageStore", "js/Translator", "js/Tree", "js-cookie", "js/ContextMenu", "js/jq/simulated_password", "js/jq/scroll_into_view", "js/jq/icon_button", "js/jq/styling", "js/jq/template", "js/jq/twisted" ], function(Serror, Utils, Dialog, Action, Hoarder, Hoard, LocalStorageStore, Translator, Tree, Cookies, ContextMenu) {
+define("js/Squirrel", [
+	'js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Hoarder",
+	"js/Hoard", "js/LocalStorageStore", "js/Translator", "js/Tree",
+	"js-cookie", "js/ContextMenu", "js/jq/simulated_password",
+	"js/jq/scroll_into_view", "js/jq/icon_button", "js/jq/styling",
+	"js/jq/template", "js/jq/twisted"
+], (
+	Serror, Utils, Dialog, Action, Hoarder,
+	Hoard, LocalStorageStore, Translator, Tree,
+	Cookies, ContextMenu
+) => {
 
-    const TX = Translator.instance();
+	const TX = Translator.instance();
 
     // Dialogs for loading in the background. These are loaded in roughly
     // the order they are likely to be used, but the loads are supposed to
@@ -228,17 +238,15 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                     + "Layer";
 
                 p = p.then(
-					store => new Promise(resolve =>
-                        requirejs(
-                            [`js/${layer}`],
-                            module => {
-                                if (this.debug)
-                                    this.debug('...adding', layer, 'to', to);
-                                resolve(new module({
-                                    debug: this.debug,
-                                    understore: store
-                                }));
-                            })));
+					store => Utils.require(`js/${layer}`)
+					.then(module => {
+                        if (this.debug)
+                            this.debug(`...adding ${layer} to ${to}`);
+                        return new module({
+                            debug: this.debug,
+                            understore: store
+                        });
+					}));
             }
             return p;
         }
@@ -259,7 +267,6 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                 network_login: () =>
                 this._network_login(TX.tx("cloud"))
 			}))
-
             .then(store => this._add_layers("cloud", store))
             .then(store => {
                 // Tell the hoarder to use this store
@@ -303,12 +310,10 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
          * @private
          */
         _2_init_client_store() {
-            const store = new LocalStorageStore({
+            return this._add_layers("client", new LocalStorageStore({
                 debug: this.debug
-            });
-			
-            return this._add_layers("client", store)
-            .then(() => {
+            }))
+            .then(store => {
                 // Tell the hoarder to use this store
                 this.hoarder.client_store(store);
                 // Initialisation of the cloud store may have provided
@@ -576,7 +581,7 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
          * Main entry point for the application, invoked from main.js
          */
         begin() {
-            let lingo = Cookies.get("tx_lang");
+            let lingo = Cookies.get("ui_lang");
             if (!lingo && window && window.navigator)
                 lingo = (window.navigator.userLanguage
                          || window.navigator.language);
@@ -621,14 +626,21 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
             
             Tree.hidingValues = tf => {
                 if (typeof tf !== "undefined") {
-                    Cookies.set("ui_hidevalues", tf ? "on" : null);
+                    Cookies.set(
+						"ui_hidevalues", tf ? "on" : null, {
+							expires: 365,
+							samesite: "strict"
+						});
                 }
                 return (Cookies.get("ui_hidevalues") === "on");
             };
             
             Tree.showingChanges = tf => {
                 if (typeof tf !== "undefined") {
-                    Cookies.set("ui_showchanges", tf ? "on" : null);
+                    Cookies.set("ui_showchanges", tf ? "on" : null, {
+							expires: 365,
+							samesite: "strict"
+						});
                 }
                 return (Cookies.get("ui_showchanges") === "on");
             };
@@ -735,9 +747,9 @@ define("js/Squirrel", ['js/Serror', 'js/Utils', "js/Dialog", "js/Action", "js/Ho
                         },
                         set_language: lingo => {
                             // Won't apply until we clear caches and restart
-                            Cookies.set("tx_lang", lingo, {
-                                Expires: 365,
-								SameSite: "Strict"
+                            Cookies.set("ui_lang", lingo, {
+                                expires: 365,
+								samesite: "strict"
                             });
                             TX.language(lingo, document);
                         }
