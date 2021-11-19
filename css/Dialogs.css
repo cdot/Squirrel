@@ -17,6 +17,10 @@
     border: 1px solid grey;
 }
 
+.dlg-pick-result {
+    font-family: "Courier New", Courier, monospace;
+}
+
 .dlg-picked {
     background-color: blue;
     color: white;
