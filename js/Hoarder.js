@@ -148,7 +148,7 @@ define("js/Hoarder", [
          * @return {string} the path
          */
         cloud_path(path) {
-            if (typeof path !== "undefined" && path !== this.cloudPath) {
+            if (typeof path !== 'undefined' && path !== this.cloudPath) {
                 if (this.debug) this.debug("Set cloud path", path);
                 this.cloudPath = path;
                 this.cloudChanged = !this.clientIsEmpty;
@@ -171,7 +171,7 @@ define("js/Hoarder", [
 		 * @return {string}
          */
         image_url(path) {
-            if (typeof path !== "undefined" && path !== this.imageURL) {
+            if (typeof path !== 'undefined' && path !== this.imageURL) {
                 if (this.debug) this.debug("Set image url", path);
                 this.imageURL = path;
                 this.cloudChanged = !this.clientIsEmpty;
@@ -186,7 +186,7 @@ define("js/Hoarder", [
 		 * @return {string}
          */
         encryption_pass(pass) {
-            if (typeof pass !== "undefined") {
+            if (typeof pass !== 'undefined') {
                 this.clientStore.option("pass", pass);
                 this.clientChanges.push(TX.tx("New encryption details"));
                 this.cloudStore.option("pass", pass);
@@ -207,7 +207,7 @@ define("js/Hoarder", [
                 this.clientChanges.push(TX.tx("Bulk content change"));
                 this.cloudChanged = true;
             }
-            return JSON.stringify(this.hoard.tree, null, " ");
+            return JSON.stringify(this.hoard.tree, null, ' ');
         }*/
         
         /**
@@ -216,7 +216,7 @@ define("js/Hoarder", [
 		 * @return {string} the user
 		 */
         user(u) {
-            if (typeof u !== "undefined")
+            if (typeof u !== 'undefined')
                 return this.clientStore.option("user", u);
             return this.clientStore.option("user");
         }
@@ -242,14 +242,11 @@ define("js/Hoarder", [
          * Promise to add an action to the client hoard. This will play
          * the action into the client tree, and add the undo
          * @param {Action} action the action to play
-         * @param {boolean} undoable if true and action that undos this action
-         * will be added to the undo history. Default is true.
-		 * @param {Hoard.UIPlayer=} uiPlayer UI action player
-         * @return {Promise} Promise that resolves to a
-		 * {@link Hoard.PlayResult}.
+         * @param {object} options see {@link Hoard#play_action}
+         * @return {Promise} Promise that resolves to undefined
          */
-        play_action(action, undoable, uiPlayer) {
-            return this.hoard.play_action(action, undoable, uiPlayer);
+        play_action(action, options) {
+            return this.hoard.play_action(action, options);
         }
 
         /**
@@ -314,16 +311,14 @@ define("js/Hoarder", [
         
         /**
          * Undo the action most recently played
-         * @return {Promise} Promise that resolves to the
-		 * {@link Action} replayed, or rejects to a { message: } object
+		 * @param {object=} options options passed to {@link Hoard#play_action}.
+		 * `undoable` is forced to `false`
+         * @return {Promise} Promise that resolves to undefined.
          */
-        undo() {
-            const e = this.hoard.undo();
-            if (e.conflict) {
-                if (this.debug) this.debug("undo had conflict", e.conflict);
-                return Promise.reject({ message: e.conflict });
-            }
-            return Promise.resolve(e.action);
+        undo(options) {
+			options = options || {};
+			options.undoable = false;
+            return this.hoard.undo(options);
         }
         
         /**
@@ -334,7 +329,7 @@ define("js/Hoarder", [
         auth_required() {
             
             if (!this.clientStore.option("needs_pass") &&
-                typeof this.clientStore.option("user") !== "undefined") {
+                typeof this.clientStore.option("user") !== 'undefined') {
                 if (this.debug) this.debug("...client doesn't need auth");
                 return null; 
             }
@@ -557,22 +552,26 @@ define("js/Hoarder", [
          * that have been added since we last synched, and
          * interactively selecting those that are to be applied. last_sync is
          * update to reflect the changes.
-         * @param {Progress=} progress reporter
-         * @param {Hoarder.Selector=} selector function that, when
+		 * @param {object=} options options
+         * @param {Progress=} options.progress reporter
+         * @param {Hoarder.Selector=} options.selector function that, when
          * given a list of actions to play, returns a promise that
          * resolves to the subset of that list that is selected to be
          * played. Intended for gathering feedback from the user as to
 		 * what actions are to be accepted. If undefined, all actions
 		 * will be kept.
-         * @param {Hoard.UIPlayer=} uiPlayer UI action player
-         * @param {Array.<Action>=} actions list of preloaded actions read from
-         * the cloud, saves reloading the cloud
+         * @param {Hoard.UIPlayer=} options.uiPlayer UI action player
+         * @param {Array.<Action>=} options.actions list of preloaded
+		 * actions, saves reloading the cloud
          * @return {Promise} Promise that resolves to the proposed new contents
          * of the cloud (a list of {@link Action}
          */
-        update_from_cloud(progress, selector, uiPlayer, actions) {
+        update_from_cloud(options) {
+			options = options || {};
+
             const new_cloud = []; // list of actions
-            const prom = actions ? Promise.resolve(actions) : this.load_cloud();
+            const prom = options.actions
+				  ? Promise.resolve(options.actions) : this.load_cloud();
             return prom.then(cloud_actions => {
 
                 if (this.debug) this.debug("Last sync was at", this.last_sync);
@@ -606,36 +605,42 @@ define("js/Hoarder", [
                 // Select the cloud changes to apply, interactively if
                 // the client actions list isn't initially empty
                 if (new_client.length > 0 && this.hoard.history.length > 0
-                    && selector)
-                    return selector(new_client);
+                    && options.selector)
+                    return options.selector(new_client);
                 else
                     return Promise.resolve(new_client);
              })
-            .then(selected => {              
+            .then(selected => {
                 let promise = Promise.resolve();
+				const freshStart = this.clientIsEmpty;
                 for (let act of selected) {
                     promise = promise
-					.then(() => {
-                        // Note that the cloud actions are pushed
-                        // to the undo queue, so they can be undone, but
-                        // not if the client was initially empty (otherwise
-                        // this would force a cloud save, which we don't
-                        // want)
-                        const e = this.hoard.play_action(
-							act, !this.clientIsEmpty,
-							act => {
+					.then(() => this.hoard.play_action(
+                        act,
+						{
+							// Note that the cloud actions are pushed
+							// to the undo queue, so they can be undone, but
+							// not if the client was initially empty (otherwise
+							// this would force a cloud save, which we don't
+							// want)
+							undoable: !freshStart,
+							autocreate: freshStart,
+							uiPlayer: act => {
 								new_cloud.push(act);
-								if (uiPlayer)
-									uiPlayer(act);
-							});
-                        if (e.conflict) {
-                            if (progress) progress.push({
-                                severity: "warning",
-                                message: e.conflict
-                            });
-                        } else {
-                            if (this.debug) this.debug("...played", act);
-                        }
+								return options.uiPlayer
+								? options.uiPlayer(act) : Promise.resolve();
+							}
+						}))
+					.then(() => {
+                        if (this.debug) this.debug("...played", act);
+                    })
+					.catch(e => {
+						debugger;
+                        if (this.debug) this.debug("FAILED", act, e);
+                        if (options.progress) options.progress.push({
+                            severity: "warning",
+                            message: e
+                        });
 						return Promise.resolve();
                     });
                 }
@@ -659,7 +664,9 @@ define("js/Hoarder", [
                 return promise;
             })
             // new_cloud contains the right set of actions
-            .then(() => new_cloud);
+            .then(() => {
+				return new_cloud;
+			});
         }
 
 		/**
@@ -712,12 +719,14 @@ define("js/Hoarder", [
 
 		/**
 		 * Save both stores as required by current change state.
-		 * @param {Progress} progress reporter
-		 * @param {Hoarder.Selector} selector
-		 * @param {Hoard.UIPlayer=} uiPlayer
+		 * @param {object=} options options
+		 * @param {Progress} options.progress reporter
+		 * @param {Hoarder.Selector} options.selector
+		 * @param {Hoard.UIPlayer=} options.uiPlayer
 		 * @return {Promise} Promise to save both stores
 		 */
-        save_stores(progress, selector, uiPlayer) {
+        save_stores(options) {
+			options = options || {};
             let saveClient = this.clientChanges.length > 0;
             let saveCloud = this.cloudChanged;
 
@@ -731,7 +740,7 @@ define("js/Hoarder", [
             }
 
             if (!(saveCloud || saveClient)) {
-                if (progress) progress.push({
+                if (options.progress) options.progress.push({
                     severity: "notice",
                     message: TX.tx("No changes needed to be saved")
                 });
@@ -742,12 +751,13 @@ define("js/Hoarder", [
             let cloud_saved = false;
             let client_saved = false;
             if (saveCloud) {
-                promise = this.update_from_cloud(progress, selector, uiPlayer)
-                .then(new_cloud => this.save_cloud(new_cloud, progress))
+                promise = this.update_from_cloud(options)
+                .then(new_cloud => this.save_cloud(new_cloud, options.progress))
                 .then(() => cloud_saved = true)
 				.catch(e => {
                     if (this.debug) this.debug("cloud update failed", e);
-                    progress.push({
+                    if (options.progress)
+						options.progress.push({
                         severity: "error",
                         message: [
                             TX.tx(
@@ -757,10 +767,10 @@ define("js/Hoarder", [
                         ]
                     });
                     if (e instanceof Serror) {
-                        if (e.status)
-                            progress.push({ severity: "error", http: e.status });
-                        if (e.message)
-                            progress.push(e.message);
+                        if (e.status && options.progress)
+                            options.progress.push({ severity: "error", http: e.status });
+                        if (e.message && options.progress)
+                            options.progress.push(e.message);
                     }
                     // Resolve, not reject!
                     return Promise.resolve();
@@ -772,7 +782,7 @@ define("js/Hoarder", [
                 promise = promise
                 .then(() => {
 					this.last_sync = Date.now();
-                    return this.save_client(progress);
+                    return this.save_client(options.progress);
                 })
                 .then(() => {
                     client_saved = true;
@@ -780,7 +790,7 @@ define("js/Hoarder", [
                 })
                 .catch(e => {
                     if (this.debug) this.debug("Client save failed", e);
-                    progress.push({
+                    if (options.progress) options.progress.push({
                         severity: "error",
                         message: [
                             TX.tx("Local store could not be saved"), e

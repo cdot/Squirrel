@@ -42,7 +42,7 @@ define("js/Node", [
 			 */
             this.time = data.time;
 			
-            if (typeof data.alarm === "string") {
+            if (typeof data.alarm === 'string') {
                 // Compatibility
 				const mid = data.alarm.indexOf(';');
 				if (mid > 0) {
@@ -57,14 +57,14 @@ define("js/Node", [
 					};
 				}
 			}
-            else if (typeof data.alarm === "number") {
+            else if (typeof data.alarm === 'number') {
                 // Compatibility
                 this.alarm = {
                     due: this.time + (data.alarm * MSPERDAY),
                     repeat: data.alarm * MSPERDAY
                 };
             }
-			else if (typeof data.alarm !== "undefined") {
+			else if (typeof data.alarm !== 'undefined') {
 				/**
 				 * Time of next alarm, `{due:number, repeat:number}`
 				 * @member {object}
@@ -72,14 +72,14 @@ define("js/Node", [
                 this.alarm = data.alarm;
 			}
 
-			if (typeof data.constraints === "string") {
+			if (typeof data.constraints === 'string') {
 				const mid = data.constraints.indexOf(';');
 				this.constraints = {
 					size: Number.parseInt(data.constraints.substr(0, mid)),
 					chars: data.constraints.substr(mid + 1)
 				};
 			}
-            else if (typeof data.constraints !== "undefined") {
+            else if (typeof data.constraints !== 'undefined') {
 				/**
 				 * Constraints, `{size:number, chars:string}`
 				 * @member {string} constraints
@@ -219,7 +219,7 @@ define("js/Node", [
 		 * @return {Node?} the node found, or undefined if not found
          */
  		getNodeAt(path, offset) {
-            if (typeof path === "string")
+            if (typeof path === 'string')
                 path = path.split(Action.PATH_SEPARATOR);
 
             offset = offset || 0;

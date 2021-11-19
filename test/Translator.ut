@@ -1,7 +1,7 @@
 /* eslint-env node, mocha */
 /* global Cookies:writable, document:writable */
 
-if (typeof module !== "undefined") {
+if (typeof module !== 'undefined') {
     requirejs = require('requirejs');
     let jsdom = require('jsdom');
 	/*eslint-disable no-global-assign*/

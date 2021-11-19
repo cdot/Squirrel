@@ -41,7 +41,7 @@ define("dialogs/alert", ["js/Dialog"], Dialog => {
                         this.add(lert[i], false);
                 return;
             }
-            if (typeof lert === "string")
+            if (typeof lert === 'string')
                 lert = { message: lert };
             else if (lert.http) {
                 if (!$http) {

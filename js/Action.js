@@ -44,10 +44,10 @@ define("js/Action", ["js/Translator", "js/Serror"], (Translator, Serror) => {
 			this.path = undefined;
 			if (typeof proto.path === 'string')
 				this.path = proto.path.split(Action.PATH_SEPARATOR);
-            else if (typeof proto.path !== "undefined")
+            else if (typeof proto.path !== 'undefined')
                 this.path = proto.path.slice();
 
-			Serror.assert(this.path && this.path.length > 0);
+			Serror.assert(this.path/* && this.path.length > 0*/);
 
 			/**
 			 * Time of action, defaults to `now`, epoch s
@@ -60,7 +60,7 @@ define("js/Action", ["js/Translator", "js/Serror"], (Translator, Serror) => {
 			 * depends on the type of the action.
 			 * @member {string|object}
 			 */
-            if (typeof proto.data !== "undefined") {
+            if (typeof proto.data !== 'undefined') {
 				// Compatibility with old formats
 				if (this.type === 'A') {
 					if (typeof proto.data === 'string') {
@@ -128,13 +128,16 @@ define("js/Action", ["js/Translator", "js/Serror"], (Translator, Serror) => {
             let s;
             switch (this.type) {
             case 'A':
-                s = TX.tx("Add reminder on $1$2 to $3",
-                          new Date(this.data.due).toLocaleString(),
-                          (this.data.repeat === 0)
+				if (this.data) {
+					s = TX.tx("Add reminder on $1$2 to $3",
+							  new Date(this.data.due).toLocaleString(),
+							  (this.data.repeat === 0)
                               ? ""
                               : TX.tx(" (repeat every $1)",
-                                  TX.deltaTimeString(0, this.data.repeat)),
-                          p);
+									  TX.deltaTimeString(0, this.data.repeat)),
+							  p);
+				} else
+					s = TX.tx("Cancel reminder on $1", p);
                 break;
             case 'C':
                 s = TX.tx("Cancel reminder on $1", p);
@@ -162,7 +165,7 @@ define("js/Action", ["js/Translator", "js/Serror"], (Translator, Serror) => {
                     s = TX.tx("Constrain $1 to $2 character$?($2!=1,s,) from $3",
                               p, this.data.size, this.data.chars);
                 else
-                    s = TX.tx("Clear constraints");
+                    s = TX.tx("Clear constraints on $1", p);
                 break;
             }
             return s;

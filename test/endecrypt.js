@@ -1,4 +1,4 @@
-if (typeof requirejs === "undefined") {
+if (typeof requirejs === 'undefined') {
     requirejs = require('requirejs');
 	requirejs.config({
 		baseUrl: `${__dirname}/..`
@@ -8,14 +8,14 @@ if (typeof requirejs === "undefined") {
 const DESCRIPTION = "USAGE\n  node endecrypt.js [options] <file>\nEncode/decode a file encrypted using CryptoLayer. If the input file has a .json extension, will encrypt it to a file of the same name without the extension. If there is no .json extension, will decrypt to a file of the same name with a .json extension.";
 
 const OPTIONS = [
-    ["e", "encrypt", "encrypt file (default is decrypt)"],
-    ["p", "pass=ARG", "encryption password"],
-	["s", "stdio", "output to STDIO instead of file"],
-    ["d", "debug", " to enable debug"],
-    ["h", "help", "show this help"]
+    ['e', "encrypt", "encrypt file (default is decrypt)"],
+    ['p', "pass=ARG", "encryption password"],
+	['s', "stdio", "output to STDIO instead of file"],
+    ['d', "debug", " to enable debug"],
+    ['h', "help", "show this help"]
 ];
 
-requirejs(["node-getopt","js/FileStore", "js/CryptoLayer", "js/Utils"], function(Getopt, FileStore, CryptoLayer, Utils) {
+requirejs(["node-getopt','js/FileStore", "js/CryptoLayer", "js/Utils"], function(Getopt, FileStore, CryptoLayer, Utils) {
 
     const parse = new Getopt(OPTIONS)
         .bindHelp()
@@ -29,14 +29,14 @@ requirejs(["node-getopt","js/FileStore", "js/CryptoLayer", "js/Utils"], function
     const fname = parse.argv[0];
 
     const opt = parse.options;
-    const debug = typeof opt.debug === "undefined" ? () => {} : console.debug;
+    const debug = typeof opt.debug === 'undefined' ? () => {} : console.debug;
 
     const plainstore = new FileStore({ debug: debug });
     const cipherstore = new CryptoLayer({
         debug: debug,
         understore: new FileStore({ debug: debug })
     });
-    cipherstore.option("pass", opt.pass || '');
+    cipherstore.option("pass", opt.pass || "");
     
     const path = /\//.test(fname) ? fname.replace(/\/[^/]*$/, "") : "";
 
@@ -65,7 +65,7 @@ requirejs(["node-getopt","js/FileStore", "js/CryptoLayer", "js/Utils"], function
     .then(json => {
         if (!encrypt) {
 			console.log(json);
-            json = JSON.stringify(JSON.parse(json), null, " ");
+            json = JSON.stringify(JSON.parse(json), null, ' ');
         }
         if (opt.stdio) {
 			console.log(json);

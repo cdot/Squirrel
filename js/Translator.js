@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2015-2021 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,node */
 
-if (typeof XMLHttpRequest === "undefined")
+if (typeof XMLHttpRequest === 'undefined')
     XMLHttpRequest = require("xhr2");
 
 define("js/Translator", ["js/Utils", "js/Serror"], (Utils, Serror) => {
@@ -60,7 +60,7 @@ define("js/Translator", ["js/Utils", "js/Serror"], (Utils, Serror) => {
 		 * @param {function} options.debug optional debug function
          */
         constructor(options) {
-            if (typeof options === "undefined")
+            if (typeof options === 'undefined')
                 options = {};
             this.options = options;
             this.debug = options.debug;
@@ -80,7 +80,7 @@ define("js/Translator", ["js/Utils", "js/Serror"], (Utils, Serror) => {
 		 */
         static _clean(s) {
             return s
-                .replace(/\s+/g, " ")
+                .replace(/\s+/g, ' ')
                 .replace(/^ /, "")
                 .replace(/ $/, "");
         }
@@ -198,7 +198,7 @@ define("js/Translator", ["js/Utils", "js/Serror"], (Utils, Serror) => {
                 this.originals = new WeakMap();
             this._translateDOM(dom, function (s) {
                 const tx = this.translations[Translator._clean(s)];
-                if (typeof tx !== "undefined")
+                if (typeof tx !== 'undefined')
                     s = tx.s;
                 return s;
             });
@@ -221,7 +221,7 @@ define("js/Translator", ["js/Utils", "js/Serror"], (Utils, Serror) => {
             function hasClass(element, thatClass) {
                 return (` ${element.className} `
                         .replace(
-                                /\s+/g, " ")
+                                /\s+/g, ' ')
                         .indexOf(` ${thatClass} `) >= 0);
             }
 
@@ -236,7 +236,7 @@ define("js/Translator", ["js/Utils", "js/Serror"], (Utils, Serror) => {
                 // text node
                 if (translating && /\S/.test(node.nodeValue)) {
                     t = attrs.text;
-                    if (typeof t === "undefined")
+                    if (typeof t === 'undefined')
                         attrs.text = t = node.nodeValue;
                     if (t) {
                         t = translate.call(this, t);
@@ -247,17 +247,17 @@ define("js/Translator", ["js/Utils", "js/Serror"], (Utils, Serror) => {
             } else {
                 if (translating || hasClass(node, "TX_title")) {
                     t = attrs.title;
-                    if (typeof t === "undefined")
+                    if (typeof t === 'undefined')
                         attrs.title = t = node.title;
                     if (t) {
                         t = translate.call(this, t);
-                        if (typeof t !== "undefined")
+                        if (typeof t !== 'undefined')
                             node.title = t;
                     }
                 }
                 if (hasClass(node, "TX_html")) {
                     t = attrs.html;
-                    if (typeof t === "undefined")
+                    if (typeof t === 'undefined')
                         attrs.html = t = node.innerHTML;
                     if (t) {
                         t = translate.call(this, t);
@@ -313,7 +313,7 @@ define("js/Translator", ["js/Utils", "js/Serror"], (Utils, Serror) => {
             const txes = this.translations;
             if (txes) {
                 const tx = txes[Translator._clean(arguments[0])];
-                if (typeof tx !== "undefined")
+                if (typeof tx !== 'undefined')
                     arguments[0] = tx.s;
                 // else use English
             }
@@ -363,7 +363,7 @@ define("js/Translator", ["js/Utils", "js/Serror"], (Utils, Serror) => {
                        + ":" + `00${deltaDate.getUTCMinutes()}`.slice(-2)
                        + ":" + `00${deltaDate.getUTCSeconds()}`.slice(-2));
  
-            return s.join(" ");
+            return s.join(' ');
         }
 
         /**
@@ -373,8 +373,8 @@ define("js/Translator", ["js/Utils", "js/Serror"], (Utils, Serror) => {
          * be used in subsequent calls to static methods
          */
         static instance(p) {
-            if (typeof p !== "undefined"
-                || typeof Translator.inst === "undefined") {
+            if (typeof p !== 'undefined'
+                || typeof Translator.inst === 'undefined') {
                 Translator.inst = new Translator(p);
             }
             return Translator.inst;

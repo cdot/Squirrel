@@ -1,6 +1,6 @@
 /*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 
-if (typeof module !== "undefined") {
+if (typeof module !== 'undefined') {
     requirejs = require('requirejs');
 	requirejs.config({
 		baseUrl: `${__dirname}/..`

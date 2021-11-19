@@ -2,7 +2,7 @@
 /* eslint-env browser */
 /* global __filename */
 
-if (typeof requirejs === "undefined")
+if (typeof requirejs === 'undefined')
     throw new Error(__filename + " is not runnable stand-alone");
 
 /**
@@ -73,22 +73,22 @@ define([
             return Dialog.confirm("add", {
                 path: [ "New", "Node", "Not", "x" ],
                 validate: key => {
-                    return key !== "x";
+                    return key !== 'x';
                 },
                 is_value: false
             }).then(result => {
-                lert(name, "OK", result);
+                lert("add_node", "OK", result);
             });
         },
         add_leaf: function() {
             return Dialog.confirm("add", {
                 path: [ "Leaf", "Value", "Not", "x" ],
                 validate: key => {
-                    return key !== "x";
+                    return key !== 'x';
                 },
                 is_value: true
             }).then(result => {
-                lert(name, "OK", result);
+                lert("add_leaf", "OK", result);
             });
         },
         alarm: function() {
@@ -226,13 +226,13 @@ define([
                     return pass;
                 },
                 cloud_path: function(path) {
-                    if (typeof path !== "undefined")
+                    if (typeof path !== 'undefined')
                         lert("Cloud path", path);
                     else path = "/a/bogus/path";
                     return path;
                 },
                 tree_json: function(json) {
-                    if (typeof json !== "undefined")
+                    if (typeof json !== 'undefined')
                         lert("JSON", json);
                     else json = JSON.stringify({ A: 1, C: 2 }, null, " ");
                     return json;
@@ -270,12 +270,12 @@ define([
             return Dialog.confirm("store_settings", {
                 needs_image: true,
                 image_url: function(path) {
-                    if (typeof path !== "undefined")
+                    if (typeof path !== 'undefined')
                         lert("Steg image", path);
                     return requirejs.toUrl("images/GCHQ.png")
                 },
                 cloud_path: function(path) {
-                    if (typeof path !== "undefined")
+                    if (typeof path !== 'undefined')
                         lert("Cloud path", path);
                     return "/a/bogus/path";
                 }
@@ -287,7 +287,7 @@ define([
         store_settings_noimage: function() {
             return Dialog.confirm("store_settings", {
                 cloud_path: function(path) {
-                    if (typeof path !== "undefined")
+                    if (typeof path !== 'undefined')
                         lert("Cloud path", path);
                     return "/a/bogus/path";
                 }

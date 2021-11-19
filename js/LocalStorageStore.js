@@ -5,7 +5,7 @@ define("js/LocalStorageStore", [
 	"js/Utils", "js/Serror", "js/AbstractStore"
 ], (Utils, Serror, AbstractStore) => {
 
-	if (typeof localStorage === "undefined") {
+	if (typeof localStorage === 'undefined') {
 		// Use dom-storage to simulate localStorage with node.js
 		// This is not countd as a browser dyamic-dependency because
 		// it's for node.js only
@@ -39,7 +39,7 @@ define("js/LocalStorageStore", [
             // See if we can spot a possible user, identified by a personal
             // identifier. Note that if this is a client store and cloud
             // initialisation worked, then the user should already be set.
-            if (typeof this.option("user") === "undefined") {
+            if (typeof this.option("user") === 'undefined') {
                 let i = 0;
                 let key;
                 let poss_user = null;
@@ -76,7 +76,7 @@ define("js/LocalStorageStore", [
 		 */
         _makeKey(path) {
             const key = [];
-            if (typeof this.option("user") !== "undefined")
+            if (typeof this.option("user") !== 'undefined')
                 key.push(this.option("user"));
             key.push(ROOT_PATH);
             key.push(path);

@@ -4,22 +4,22 @@
 /* global Tree: true */
 
 define("js/Tree", [
-	"js/Action", "js/Hoard", "js/Serror", "js/Dialog",
+	"js/Action", "js/Hoard", "js/Serror", "js/Dialog", "js/Node",
 	"jquery", "js/jq/edit_in_place", "js/jq/scroll_into_view",
 	"js/jq/icon_button", "jquery-ui"
-], (Action, Hoard, Serror, Dialog) => {
+], (Action, Hoard, Serror, Dialog, Node) => {
 
     // separator used in Path->node mapping index
     const PATHSEP = String.fromCharCode(1);
 
     // Character used to hide values
-    const HIDE = "※";
+    const HIDE = '※';
 
     function formatDate(time) {
         const d = new Date(time);
         return `${d.getFullYear()}-`
         + `00${d.getMonth() + 1}`.slice(-2)
-		+ "-"
+		+ '-'
         + `00${d.getDate()}`.slice(-2);
     }
 
@@ -156,7 +156,7 @@ define("js/Tree", [
 
                 $node.data("key", key);
 
-                if (typeof this.options.value !== "undefined" &&
+                if (typeof this.options.value !== 'undefined' &&
                     this.options.value !== null) {
 
                     $node
@@ -169,7 +169,7 @@ define("js/Tree", [
                 // Insert-sort into the $parent
                 this._insertInto($parent);
 
-            if (typeof this.options.time !== "undefined")
+            if (typeof this.options.time !== 'undefined')
                 this.setModified(this.options.time);
 
             if (this.options.onCreate)
@@ -286,7 +286,7 @@ define("js/Tree", [
             const $node = this.element;
             return this._edit(
                 $node.find(".tree_t_i_key")
-                .first(), $node.data("key"), "R");
+                .first(), $node.data("key"), 'R');
         },
 
 		/**
@@ -297,7 +297,7 @@ define("js/Tree", [
             const $node = this.element;
             return this._edit(
                 $node.find(".tree_t_i_l_value")
-                .first(), $node.data("value"), "E");
+                .first(), $node.data("value"), 'E');
         },
 
         /**
@@ -492,7 +492,7 @@ define("js/Tree", [
                         alarm: $node.data("alarm")
                     })
                     .then(act => {
-                        if (act.type === "C") {
+                        if (act.type === 'C') {
                             $node.data("alarm", null);
                         } else {
                             $node.data("alarm", {
@@ -543,7 +543,7 @@ define("js/Tree", [
                 .catch(() => {});
             });
 
-            $info.append(" ");
+            $info.append(' ');
 
             $("<span class='tree_t_i_change'></span>")
             .appendTo($info)
@@ -675,31 +675,17 @@ define("js/Tree", [
          */
         _action_I: function(action, open) {
             const content = JSON.parse(action.data);
-            let acts = [];
-            if (typeof content.data === "object") {               
-                const h = new Hoard({ tree: content });
-                acts = h.actions_to_recreate();
-                content.data = undefined;
-            }
+			const h = new Hoard({ tree: content });
+			const acts  = h.actions_to_recreate(true);
+			acts.forEach(a => {
+				a.path = action.path.concat(a.path);
+				this.action(a);
+			});
+			// Finally decorate
+			this.getNodeFromPath(action.path)
+			.tree("instance")._decorate_node();
 
-            // Create the node at the root of the insert
-            return this._action_N(new Action({
-                type: "N",
-                path: action.path,
-                time: content.time,
-                data: content.data
-            }), open)
-            .then(() => {
-                for (let act of acts) {
-                    // Paths recorded in the action are relative
-                    act.path = action.path.concat(act.path);
-                    this.action(act);
-                }
-                
-                // Finally decorate
-                this.getNodeFromPath(action.path)
-                .tree("instance")._decorate_node();
-            });
+			return Promise.resolve();
         },
         
         /**
@@ -716,7 +702,7 @@ define("js/Tree", [
 			if (action.data) {
 				$node.data("alarm", action.data);
 				$node.removeClass("tree-noAlarm");
-				if (typeof oldAlarm === "undefined") {
+				if (typeof oldAlarm === 'undefined') {
 					// Run up the tree, incrementing the alarm count
 					$node
 					.parents(".tree")
@@ -794,7 +780,7 @@ define("js/Tree", [
             // Relocate the node in the DOM
             this._insertInto($new_parent);
 
-            if (typeof $node.scroll_into_view !== "undefined")
+            if (typeof $node.scroll_into_view !== 'undefined')
                 $node.scroll_into_view();
 
             this.setModified(action.time);
@@ -821,7 +807,7 @@ define("js/Tree", [
             // Re-insert the element in it's sorted position
             this._insertInto($node.parent().closest(".tree"));
 
-            if (typeof $node.scroll_into_view !== "undefined")
+            if (typeof $node.scroll_into_view !== 'undefined')
                 $node.scroll_into_view();
         },
         
@@ -834,16 +820,17 @@ define("js/Tree", [
          * @return {Promise} Promise that resolves when the UI has been updated.
          */
         action: function(action, open) {
-            if (Tree.debug) Tree.debug("$action",action);
+            if (Tree.debug) Tree.debug("Tree.action", action);
             
-            // "N" and "I" require construction of a new node.
-            if (action.type === "N")
+            // 'N' and 'I' require construction of a new node.
+            if (action.type === 'N')
                 return this._action_N(action, open);
             
-            if (action.type === "I")
-                return this._action_I(action, open);
+            if (action.type === 'I')
+				return this._action_I(action, open);
 
             // All else requires a pre-existing node
+			// Intermediates ought to be created and uiPlayer invoked!
             const $node = this.getNodeFromPath(action.path);
             const widget = $node.tree("instance");
             widget[`_action_${action.type}`].call(widget, action, open);
@@ -866,13 +853,11 @@ define("js/Tree", [
                 const path = pa.concat($node.data("key"));
 
                 if (Tree.debug) {
-                    if (!pa)
-                        throw "recache outside tree";
-                    if (Tree.path2$node[path.join(PATHSEP)]) {
-                        throw "Remapping path -> node";
-                    }
-                    if ($node.data("path"))
-                        throw "Remapping node -> path";
+                    Serror.assert(pa);
+					const p = path.join(PATHSEP);
+                    Serror.assert(!Tree.path2$node[p], `Cannot remap '${p}'`);
+					Serror.assert(!$node.data("path"),
+								  `Node at ${p}already mapped`);
                 }
 
                 // node->path mapping

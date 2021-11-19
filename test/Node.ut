@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2021 Crawford Currie http://c-dot.co.uk license MIT*/
 /*eslint-env shared-node-browser, mocha */
 
-if (typeof requirejs === "undefined") {
+if (typeof requirejs === 'undefined') {
     requirejs = require('requirejs');
 	requirejs.config({
 		baseUrl: `${__dirname}/..`
@@ -30,7 +30,7 @@ requirejs(["js/Node", "js/Action", "test/TestRunner"], function(Node, Action,  T
 							C:{
 								time:1041379200000,
 								alarm: { due: 8080, repeat: 99 },
-								value: "C",
+								value: 'C',
 								constraints: "1;A-Z"
 							}
 						}
@@ -53,7 +53,7 @@ requirejs(["js/Node", "js/Action", "test/TestRunner"], function(Node, Action,  T
 		assert(root.children.A.children.A instanceof Node);
 		assert(root.children.A.children.B instanceof Node);
 		assert(root.children.A.children.B.children.C instanceof Node);
-		assert.equal(root.children.A.children.B.children.C.value,"C");
+		assert.equal(root.children.A.children.B.children.C.value,'C');
 		assert(root.children.A.children.C instanceof Node);
     });
 
@@ -128,22 +128,22 @@ requirejs(["js/Node", "js/Action", "test/TestRunner"], function(Node, Action,  T
     tr.addTest("getNodeAt", function() {
         let debug;// = console.debug;
 		let node = new Node(node_data);
-        const abc = node.getNodeAt(["A", "B", "C"]);
+        const abc = node.getNodeAt(['A', 'B', 'C']);
         assert.equal(abc.time, Date.UTC(2003,0,1));
-        assert.equal(abc.value, "C");
+        assert.equal(abc.value, 'C');
 		assert.deepEqual(abc.alarm, {due:8080,repeat:99});
 		assert.deepEqual(abc.constraints, {size:1,chars:"A-Z"});
-        const aa = node.getNodeAt(["A", "A"]);
+        const aa = node.getNodeAt(['A', 'A']);
         assert.equal(aa.time, Date.UTC(2001,6,1));
 		assert.deepEqual(aa.alarm, {
 			due: aa.time + 9 * 24 * 60 * 60 * 1000,
 			repeat:9 * 24 * 60 * 60 * 1000
 		});
-        const abd = node.getNodeAt(["A", "B", "D"]);
+        const abd = node.getNodeAt(['A', 'B', 'D']);
         assert(!abd);
-		const ab = node.getNodeAt(["A", "B", "C"], 1);
-        assert.equal(ab.children.C.value, "C");
-		const a = node.getNodeAt(["A", "B", "C"], 2);
+		const ab = node.getNodeAt(['A', 'B', 'C'], 1);
+        assert.equal(ab.children.C.value, 'C');
+		const a = node.getNodeAt(['A', 'B', 'C'], 2);
         assert.equal(a, node.children.A);
         assert.deepEqual(a.alarm, {due:8080,repeat:99});
     });
@@ -151,8 +151,8 @@ requirejs(["js/Node", "js/Action", "test/TestRunner"], function(Node, Action,  T
     tr.addTest("getPath", function() {
         let debug;// = console.debug;
 		let root = new Node(node_data);
-        let n = root.getNodeAt(["A", "B", "C"]);
-        assert.equal(n.value, "C");
+        let n = root.getNodeAt(['A', 'B', 'C']);
+        assert.equal(n.value, 'C');
 		
         assert.deepEqual(root.getPathTo(n),['A','B','C']);
     });
@@ -161,7 +161,7 @@ requirejs(["js/Node", "js/Action", "test/TestRunner"], function(Node, Action,  T
         children: {
             Constraints: {
 				time: Date.UTC(2001,0),
-				constraints: { size: 1, chars: "2" },
+				constraints: { size: 1, chars: '2' },
 				children: {},
                 value: "constrained"
             },
@@ -182,17 +182,17 @@ requirejs(["js/Node", "js/Action", "test/TestRunner"], function(Node, Action,  T
                     A: {
 						time: Date.UTC(2005,0),
 						children: {},
-                        value: "a"
+                        value: 'a'
                     },
                     B: {
 						time: Date.UTC(2006,0),
 						children: {},
-                        value: "b"
+                        value: 'b'
                     },
                     C: {
 						time: Date.UTC(2007,0),
 						children: {},
-                        value: "c"
+                        value: 'c'
                     }
                 }
             },
@@ -203,7 +203,7 @@ requirejs(["js/Node", "js/Action", "test/TestRunner"], function(Node, Action,  T
         children: {
             Constraints: {
 				time: Date.UTC(2001,0),
-				constraints: { size: 2, chars: "1" },
+				constraints: { size: 2, chars: '1' },
 				children: {},
                 value: "constrained"
             },
@@ -224,17 +224,17 @@ requirejs(["js/Node", "js/Action", "test/TestRunner"], function(Node, Action,  T
                     A: {
 						time: Date.UTC(2005,0),
 						children: {},
-                        value: "a"
+                        value: 'a'
                     },
                     C: {
 						time: Date.UTC(2007,0),
 						children: {},
-                        value: "c"
+                        value: 'c'
                     },
                     D: {
 						time: Date.UTC(2008,0),
 						children: {},
-                        value: "d"
+                        value: 'd'
                     },
                 }
             },
@@ -243,26 +243,26 @@ requirejs(["js/Node", "js/Action", "test/TestRunner"], function(Node, Action,  T
 
     let diff_actions = [
         new Action({
-			type: "X",
+			type: 'X',
 			path: [ 'Constraints' ],
-			constraints: { size: 2, chars: "1" }
+			constraints: { size: 2, chars: '1' }
 		}),
         new Action({
-            type:"A",
+            type:'A',
             path: [ 'Alarm' ],
             alarm: { due: 909090, repeat: 1 }
         }),
         new Action({
-            type:"E",
+            type:'E',
             path: [ 'Data' ],
             data: 'after'
         }),
         new Action({
-            type:"D",
+            type:'D',
             path: [ 'Tree', 'B' ]
         }),
         new Action({
-            type: "I",
+            type: 'I',
             path: [ 'Tree' ],
             data: JSON.stringify({
                 name: 'D',

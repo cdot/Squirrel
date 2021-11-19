@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2017 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser, node */
 
-if (typeof requirejs === "undefined") {
+if (typeof requirejs === 'undefined') {
     requirejs = require('requirejs');
 	requirejs.config({
 		baseUrl: `${__dirname}/..`

@@ -48,22 +48,22 @@ define("js/Server", ["url", "extend", "fs"], (Url, extend, fs) => {
             extend(this, p);
 
             this.ready = false;
-            if (typeof this.docroot === "string")
+            if (typeof this.docroot === 'string')
                 this.docroot = fs.realpathSync(this.docroot);
             else
                 this.docroot = process.cwd();
 
-            if (typeof this.writable === "string") {
+            if (typeof this.writable === 'string') {
                 if (this.writable.indexOf("/") !== 0)
                     this.writable = `${this.docroot}/${this.writable}`;
                 this.writable = fs.realpathSync(this.writable);
             }
 
-            if (typeof this.auth !== "undefined") {
+            if (typeof this.auth !== 'undefined') {
                 this.authenticate = (request, response) => {
                     const BasicAuth = require("basic-auth");
                     const credentials = BasicAuth(request);
-                    if (typeof credentials === "undefined" ||
+                    if (typeof credentials === 'undefined' ||
                         credentials.name !== this.auth.user ||
                         credentials.pass !== this.auth.pass) {
                         if (this.debug) {
@@ -98,7 +98,7 @@ define("js/Server", ["url", "extend", "fs"], (Url, extend, fs) => {
         start() {
             const handler = (request, response) => {
                 if (this.log)
-                    this.log(request.method, " ", request.url,
+                    this.log(request.method, request.url,
                                 "from", request.headers);
 
                 if (this[request.method]) {
@@ -119,14 +119,14 @@ define("js/Server", ["url", "extend", "fs"], (Url, extend, fs) => {
             else
                 console.log(" No auth");
 
-            if (typeof this.port === "undefined")
+            if (typeof this.port === 'undefined')
                 this.port = 3000;
 
-            if (typeof this.auth !== "undefined" && this.debug)
+            if (typeof this.auth !== 'undefined' && this.debug)
                 this.debug("- requires authentication");
 
 			let promise;
-            if (typeof this.ssl !== "undefined") {
+            if (typeof this.ssl !== 'undefined') {
                 const options = {};
 				const promises = [
 					Fs.pathExists(this.ssl.key)
@@ -274,7 +274,7 @@ define("js/Server", ["url", "extend", "fs"], (Url, extend, fs) => {
                 .then(handleResponse, handleError);
             } catch (e) {
                 if (this.debug) this.debug(e, " in ", request.url, "\n",
-                              typeof e.stack !== "undefined" ? e.stack : e);
+                              typeof e.stack !== 'undefined' ? e.stack : e);
                 response.write(`${e} in ${request.url}\n`);
                 response.statusCode = 400;
                 response.end();

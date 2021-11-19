@@ -97,7 +97,7 @@ define("js/Cryptographer", ["js/Serror", "js/Utils"], (Serror, Utils) => {
 							return Promise.resolve(new TextEncoder().encode(s));
 						} catch (e) {
 							// Should never happen
-							console.log("JSON parse error");
+							Serror.assert(false, e);
 						}
 					}
 					// Otherwise the signature is wrong and it's

@@ -81,14 +81,14 @@ define("js/GoogleDriveStore", [
          */
         _gError(r, context) {
             let mess = context + TX.tx(" failed: ");
-            if (typeof r.details !== "undefined")
+            if (typeof r.details !== 'undefined')
                 mess += r.details;
-            else if (typeof r.error !== "undefined")
+            else if (typeof r.error !== 'undefined')
                 mess += r.error;
             else if (r.status === 401) {
                 mess +=
                     TX.tx("Your access token has expired, or you are not logged in.") +
-                    " " +
+                    ' ' +
                     TX.tx("Please refresh the page in order to save in Google Drive");
             } else if (r.result && r.result.error) {
                 mess += r.result.error.message;
@@ -106,7 +106,7 @@ define("js/GoogleDriveStore", [
                 throw new Serror(
 					408,
 					TX.tx("Timeout trying to authorise access to Google Drive.")
-					+ " "
+					+ ' '
 					+ TX.tx("Are popups blocked in your browser?"));
             }, 20000);
 
@@ -245,13 +245,13 @@ define("js/GoogleDriveStore", [
                 mimeType: "application/octet-stream"
             };
 
-            if (typeof parentid !== "undefined") {
+            if (typeof parentid !== 'undefined') {
                 metadata.parents = [{
                     id: parentid
                 }];
             }
 
-            if (typeof id !== "undefined") {
+            if (typeof id !== 'undefined') {
                 // Known fileId, we're updating an existing file
                 url += `/${id}`;
                 method = "PUT";
@@ -298,7 +298,7 @@ define("js/GoogleDriveStore", [
             return this
             ._follow_path("root", p, true)
             .then(pid => {
-                if (typeof pid === "undefined")
+                if (typeof pid === 'undefined')
                     return false;
                 parentId = pid;
                 // See if the file already exists, if it does then use it's id
@@ -335,7 +335,7 @@ define("js/GoogleDriveStore", [
             return this
             ._follow_path("root", p, false)
             .then(parentId => {
-                if (typeof parentId === "undefined")
+                if (typeof parentId === 'undefined')
                     return undefined;
 				if (this.debug) this.debug(
 					`listing files called ${name} in ${parentId}`);
@@ -362,7 +362,7 @@ define("js/GoogleDriveStore", [
 				.then(res => {
 					// alt=media requests content-type=text/plain. AFAICT the
 					// file comes in base64-encoded, and is simply converted
-					// to a "string" by concatenating the bytes,
+					// to a 'string' by concatenating the bytes,
 					// one per code point, without any decoding (thankfully!)
 					const a = new Uint8Array(res.body.length);
 					for (let i = 0; i < a.length; i++)

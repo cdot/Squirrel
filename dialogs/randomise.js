@@ -21,17 +21,17 @@ define("dialogs/randomise", ["js/Dialog", "js-cookie"], (Dialog, Cookies) => {
         if (!constraints)
             constraints = {};
 
-        if (typeof constraints.length === "undefined")
+        if (typeof constraints.length === 'undefined')
             constraints.length = 24;
 
-        if (typeof constraints.charset === "undefined")
+        if (typeof constraints.charset === 'undefined')
             constraints.charset = "A-Za-z0-9";
 
         let cs = constraints.charset;
         const legal = [];
         while (cs.length > 0) {
             const sor = cs.charAt(0);
-            if (cs.length >= 3 && cs.charAt(1) === "-") {
+            if (cs.length >= 3 && cs.charAt(1) === '-') {
                 const eor = cs.charAt(2);
                 let sorc = sor.charCodeAt(0);
                 let eorc = eor.charCodeAt(0);
@@ -48,7 +48,7 @@ define("dialogs/randomise", ["js/Dialog", "js-cookie"], (Dialog, Cookies) => {
             }
         }
         const array = new Uint8Array(constraints.length);
-        if (typeof window !== "undefined")
+        if (typeof window !== 'undefined')
             window.crypto.getRandomValues(array);
         else {
             for (let i in array)
@@ -143,7 +143,7 @@ define("dialogs/randomise", ["js/Dialog", "js-cookie"], (Dialog, Cookies) => {
         open() {
             this.defaults = DEFAULT_CONSTRAINTS;
             const glob_cons = Cookies.get("ui_randomise");
-            if (typeof glob_cons !== "undefined") {
+            if (typeof glob_cons !== 'undefined') {
                 try {
                     this.defaults = JSON.parse(glob_cons);
                 } catch (e) {

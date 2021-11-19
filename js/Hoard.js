@@ -9,14 +9,6 @@ define("js/Hoard", [
 	const TX = Translator.instance();
 
 	/**
-	 * Object that represents the result of a `play_action`.
-	 * @typedef Hoard.PlayResult
-	 * @property {Action} action the action being played
-	 * @property {string} conflict string message, only set if there is a
-	 * problem. If this is undefined, the play succeeded.
-	 */
-
-	/**
 	 * History of an action that was played into the hoard.
 	 * @typedef Hoard.HistoryEvent
 	 * @property {Action} redo - the action that was played
@@ -32,9 +24,10 @@ define("js/Hoard", [
 	 */
 
 	/**
-	 * Function called to play an action into the UI
+	 * Function that plays an action into the UI
 	 * @callback Hoard.UIPlayer
 	 * @param {Action} action - action to play
+	 * @return {Promise} a promise to play the action into the UI
 	 */
 
     /**
@@ -56,7 +49,7 @@ define("js/Hoard", [
         constructor(options) {
             options = options || {};
             
-            if (typeof options.debug === "function")
+            if (typeof options.debug === 'function')
                 this.debug = options.debug;
 
             /**
@@ -126,16 +119,22 @@ define("js/Hoard", [
         }
         
         /**
-         * Undo the action most recently played
-         * @return {Hoard.PlayResult} the result
+         * Undo the action most recently played.
+		 * @param {object=} options options passed to {@link Hoard#play_action}.
+		 * `undoable` is forced to `false`
+         * @return {Promise} Promise that resolves to undefined.
          */
-        undo() {
-            Serror.assert(this.history.length > 0);
+        undo(options) {
+			options = options || {};
+            if (this.history.length === 0)
+				return Promise.reject(new Error(TX.tx("Nothing to undo")));
             const a = this.history.pop();
             if (this.debug) this.debug("Undo", a);
             
-            // Replay the reverse of the action
-            return this.play_action(a.undo, false);
+			// Don't stack an undo for the undo.
+			options.undoable = false;
+            // Replay the undo.
+            return this.play_action(a.undo, options);
         }
         
         /**
@@ -149,132 +148,150 @@ define("js/Hoard", [
         /**
          * Play a single action into the tree.
          * @param {Action} action the action to play
-         * @param {boolean} [undoable=true] when true, an action that
+		 * @param {object} options control options
+         * @param {boolean} [options.undoable=true] when true, an action that
          * undos this action will be added to the undo
          * history. Default is true.
-		 * @param {Hoard.UIPlayer=} uiPlayer called to play additional
-		 * actions that may need to be played into the UI. The uiPlayer
-		 * will normally invoke play_action() recursively.
-         * @return {Hoard.PlayResult} result of the play
+		 * @param {boolean} [options.autocreate=false] controls whether missing
+		 * nodes are reported as errors, or are automatically created.
+		 * @param {Hoard.UIPlayer=} options.uiPlayer called to play
+		 * actions into a UI.
+         * @return {Promise} Promise that will resolve to undefined
          */
-        play_action(action, undoable, uiPlayer) {
+        play_action(action, options) {
             Serror.assert(action.path && action.path.length > 0);
             Serror.assert(action instanceof Action);
 
-            if (typeof undoable !== 'boolean') {
-				uiPlayer = undoable;
-				undoable = true;
-			}
+            options = options || {};
+
+			if (typeof options.undoable !== 'boolean')
+				options.undoable = true;
+			if (typeof options.autocreate !== 'boolean')
+				options.autocreate = false;
 
             if (!action.time)
                 action.time = Date.now();
 
             if (this.debug) this.debug("Play", action);
 
-            const conflict = mess => {
-                return {
-                    action: action,
-                    conflict: TX.tx("$1 failed: $2", action.verbose(), mess)
-                };
-            };
+			// Conflict messages are wrapped in an error simply because
+			// it's easier to debug them that way.
+            const conflict = mess =>
+				  Promise.reject(
+					  new Error(TX.tx("$1 failed: $2",
+									  action.verbose(), mess)));
 
 			// Make nodes on the path (including the end), adding history
 			// as necessary.
-			// Return the node at the end of the path
-			const mkNode = (path, leaf) => {
-				const p = [];
-				for (let index = 0; index < path.length; index++) {
-					p.push(path[index]);
-					const node = this.tree.getNodeAt(p);
-					if (!node) {
-						const act = new Action({
+			// path to the node
+			// forceMake - forces creation of the node.
+			// Return Promise to create node path
+			const mkNode = (path, forceMake) => {
+				const node = this.tree.getNodeAt(path);
+				if (!node && (options.autocreate || forceMake)) {
+					Serror.assert(path.length > 0);
+					return mkNode(path.slice(0, -1))
+					.then(parent => {
+						let act = new Action({
 							type: 'N',
 							time: action.time,
-							path: p.slice()
+							path: path
 						});
-						if (leaf && index === path.length - 1)
-							act.data = "PLACEHOLDER";
-						const e = this.play_action(act, undoable, uiPlayer);
-						Serror.assert(!e.conflict, e.conflict);
-					}
-				}
-				return this.tree.getNodeAt(path);
+						if (action.type === 'N'
+							&& path.length === action.path.length)
+							act = action;
+						if (options.undoable)
+							// It was just created, and we want an undo
+							this._record_event(act, 'D', path, parent.time);
+						const nn = new Node({ time: action.time });
+						//console.log(`making ${path} at `,new Date(nn.time));
+						parent.addChild(path[path.length - 1], nn);
+						parent.time = action.time;
+						if (options.uiPlayer) {
+							return options.uiPlayer(act)
+							.then(() => nn);
+						}
+						else
+							return nn;
+					});
+				} else if (node)
+					return Promise.resolve(node);
+				else
+					return Promise.reject(new Error("it does not exist"));
 			};
+
+			let promise;
 
             switch (action.type) {
 
             case 'N': { // New
-				const node = this.tree.getNodeAt(action.path);
-                if (node)
-                    // This is not really an error, we can survive it
-                    // easily enough. However if we don't signal a
-                    // conflict, the tree will be told to create a duplicate
-                    // node, which it mustn't do.
-                    return conflict(
-                        TX.tx("It was already created @ $1",
-                              new Date(node.time)));
-
-				const parent = mkNode(action.path.slice(0, -1));
-                if (undoable)
-                    this._record_event(action, 'D', action.path, parent.time);
-
-                parent.time = action.time; // collection is being modified
-                const nn = new Node({ time: action.time });
-                if (typeof action.data === "string")
-					// STEAL the action data
-					nn.setValue(action.data);
-				parent.addChild(action.path.slice(-1)[0], nn);
+				// return becuase mkNode handles calling the uiPlayer
+				return mkNode(action.path, true)
+				.then(node => {
+					if (typeof action.data === 'string') {
+						// STEAL the action data
+						node.setValue(action.data);
+						node.time = action.time;
+					}
+				});
 				break;
-            }
+			}
 
 			case 'I': { // Insert
-                if (undoable)
+                if (options.undoable)
                     this._record_event(action, 'D', action.path, action.time);
                 
-                const json = JSON.parse(action.data);
-				const parent = mkNode(action.path.slice(0, -1));
-                parent.time = action.time; // collection is being modified
-				const name = action.path.slice(-1)[0];
-                parent.addChild(name, new Node(json));
-                // collection is being modified
-                parent.time = action.time;
+				const node = this.tree.getNodeAt(action.path);
+				if (node)
+					return conflict(TX.tx("it already exists"));
+
+				const json = JSON.parse(action.data);
+				promise = mkNode(action.path.slice(0, -1))
+				.then(parent => {
+					parent.time = action.time; // collection is being modified
+					const name = action.path[action.path.length - 1];
+					parent.addChild(name, new Node(json));
+					// collection is being modified
+					parent.time = action.time;
+				});
 				break;
             }
                     
             case 'A': { // Alarm
-				const node = action.data ?
-					  mkNode(action.path, true)
-					  : this.tree.getNodeAt(action.path);
-
-				if (!node && !action.data)
-					break; // NOP
-
-				Serror.assert(node);
-
-                if (undoable) {
-                    if (typeof node.alarm === "undefined")
-                        // Undo by cancelling the new alarm
-                        this._record_event(action, 'C', action.path,
-                                           node.time);
-                    else
-                        this._record_event(
-							action, 'A', action.path,
-                            node.time, { alarm: node.alarm });
-                }
-                if (action.data)
-                    node.alarm = action.data;
-				else
-                    delete node.alarm;
-                node.time = action.time;
+				promise = (action.data ? mkNode(action.path)
+						   : Promise.resolve(this.tree.getNodeAt(action.path)))
+				.then(node => {
+					if (!node && action.data)
+						return conflict("it does not exist");
+					if (options.undoable) {
+						if (typeof node.alarm === 'undefined')
+							// Undo by cancelling the new alarm
+							this._record_event(action, 'C', action.path,
+											   node.time);
+						else
+							this._record_event(
+								action, 'A', action.path,
+								node.time, { alarm: node.alarm });
+					}
+					
+					if (node) {
+						if (action.data)
+							node.alarm = action.data;
+						else
+							delete node.alarm;
+						node.time = action.time;
+					}
+				});
                 break;
 			}
 
             case 'C': {
+				// Compatibility, replaced by 'A' with undefined data
 				const node = this.tree.getNodeAt(action.path);
 				if (!node)
 					return conflict(TX.tx("it does not exist"));
 				// Cancel alarm
-                if (undoable)
+                if (options.undoable)
                     this._record_event(action, 'A', action.path,
                                        node.time, { alarm: node.alarm });
                 delete node.alarm;
@@ -285,29 +302,30 @@ define("js/Hoard", [
             case 'D': { // Delete
 				const node = this.tree.getNodeAt(action.path);
 				if (!node)
-					return conflict(TX.tx("it does not exist"));
+					return conflict("it does not exist");
+
 				const parent = this.tree.getNodeAt(
 					action.path.slice(0, -1));
-                if (undoable) {
-                    this._record_event(action,
+				if (options.undoable) {
+					this._record_event(action,
 									   'I', action.path, parent.time,
 									   { data: JSON.stringify(node) });
-                }
-                parent.removeChild(action.path.slice(-1)[0]);
-                // collection is being modified
-                parent.time = action.time;
+				}
+				parent.removeChild(action.path.slice(-1)[0]);
+				// collection is being modified
+				parent.time = action.time;
 				break;
 			}
 
             case 'E': { // Edit
-				const node = mkNode(action.path, true);
-				if (!node)
-					return conflict(TX.tx("it does not exist"));
-                if (undoable)
-                    this._record_event(action, 'E', action.path,
-                                       node.time, { data: node.value });
-                node.setValue(action.data);
-                node.time = action.time;
+				promise = mkNode(action.path)
+				.then(node => {
+					if (options.undoable)
+						this._record_event(action, 'E', action.path,
+										   node.time, { data: node.value });
+					node.setValue(action.data);
+					node.time = action.time;
+				});
                 break;
 			}
 
@@ -317,28 +335,31 @@ define("js/Hoard", [
  				const node = this.tree.getNodeAt(action.path);
 				if (!node)
 					return conflict(TX.tx("it does not exist"));
-				const new_parent = mkNode(action.data);
-				const name = action.path.slice(-1)[0];
-                if (new_parent.getChild(name))
-                    return conflict(TX.tx("it already exists"));
+				promise = mkNode(action.data)
+				.then(new_parent => {
+					const name = action.path.slice(-1)[0];
+					if (new_parent.getChild(name))
+						return conflict(TX.tx("it already exists"));
                 
-				const parent = this.tree.getNodeAt(
-					action.path.slice(0, -1));
-                if (undoable) {
-                    const from_parent = action.path.slice();
-                    from_parent.pop();
-                    this._record_event(
-                        action,
-                        'M', action.data.slice().concat([name]),
-                        parent.time,
-                        { data: from_parent });
-                }
+					const parent = this.tree.getNodeAt(
+						action.path.slice(0, -1));
+					if (options.undoable) {
+						const from_parent = action.path.slice();
+						from_parent.pop();
+						this._record_event(
+							action,
+							'M', action.data.slice().concat([name]),
+							parent.time,
+							{ data: from_parent });
+					}
                 
-                // collection is being modified
-                new_parent.time = parent.time = action.time;
+					// collection is being modified
+					new_parent.time = parent.time = action.time;
 
-                parent.removeChild(name);
-                new_parent.addChild(name, node);
+					parent.removeChild(name);
+					new_parent.addChild(name, node);
+					return Promise.resolve();
+				});
                 break;
 			}
 
@@ -346,51 +367,50 @@ define("js/Hoard", [
 				// Rename
  				const node = this.tree.getNodeAt(action.path);
 				if (!node)
-					return conflict(TX.tx("it does not exist"));
+					return conflict("it does not exist");
+
 				const parent = this.tree.getNodeAt(
 					action.path.slice(0, -1));
-                if (parent.getChild(action.data))
-                    return conflict(TX.tx("it already exists"));
+				if (parent.getChild(action.data))
+					return conflict(TX.tx("it already exists"));
 				const name = action.path.slice(-1)[0];
-                if (undoable) {
-                    const p = action.path.slice();
-                    p[p.length - 1] = action.data;
-                    this._record_event(
-                        action, 'R', p, parent.time, { data: name });
-                }
-                parent.addChild(action.data, node);
-                parent.removeChild(name);
-                // collection is being modified, node is not
-                parent.time = action.time;
+				if (options.undoable) {
+					const p = action.path.slice();
+					p[p.length - 1] = action.data;
+					this._record_event(
+						action, 'R', p, parent.time, { data: name });
+				}
+				parent.addChild(action.data, node);
+				parent.removeChild(name);
+				// collection is being modified, node is not
+				parent.time = action.time;
                 break;
 			}
 
             case 'X': {
-				// Constrain. Introduced in 2.0, however 1.0 code
-                // will simply ignore this action.
-				const node = action.data ?
-					  mkNode(action.path, true)
-					  : this.tree.getNodeAt(action.path);
+				// Constrain.
+				promise = (action.data ?
+						   mkNode(action.path)
+						   : Promise.resolve(this.tree.getNodeAt(action.path)))
+				.then(node => {
 
-				if (!node && !action.data)
-					break; // NOP
-
-				Serror.assert(node);
-
-                if (undoable) {
-                    if (node.constraints)
-                        this._record_event(
-                            action, 'X', action.path, node.time,
-                            { data: node.constraints });
-                    else
-                        this._record_event(
-                            action, 'X', action.path, node.time);
-                }
-                if (action.data)
-                    node.constraints = action.data;
-				else
-                    delete node.constraints;
-                node.time = action.time;
+					if (node) {
+						if (options.undoable) {
+							if (node.constraints)
+								this._record_event(
+									action, 'X', action.path, node.time,
+									{ data: node.constraints });
+							else
+								this._record_event(
+									action, 'X', action.path, node.time);
+						}
+						if (action.data)
+							node.constraints = action.data;
+						else
+							delete node.constraints;
+						node.time = action.time;
+					}
+				});
                 break;
 			}
 
@@ -399,32 +419,28 @@ define("js/Hoard", [
                 Serror.assert(false, "Unrecognised action type");
             }
 
-			if (uiPlayer)
-				uiPlayer(action);
-
-            return { action: action }; // Hoard.PlayResult
+			if (!promise)
+				promise = Promise.resolve();
+			
+			return promise
+			.then(() => (options.uiPlayer
+						 ? options.uiPlayer(action)
+						 : Promise.resolve()));
         }
 
 		/**
 		 * Play a list of actions into the hoard in order.
          * @param {Array.<Action>} actions - actions to play
          * into the hoard.
-		 * @param {boolean} [undoable=true] add undos for all actions
-		 * played into the hoard.
-		 * @param {Hoard.UIPlayer=} uiPlayer called to play actions that
-		 * may need to be played into the UI.
-		 * @return {string[]} a list of conflict messages.
+		 * @param {object=} options options passed to play_action
 		 */
-		play_actions(actions, undoable, uiPlayer) {
-            if (typeof undoable !== 'boolean') {
-				uiPlayer = undoable;
-				undoable = true;
-			}
+		async play_actions(actions, options) {
+            options = options || {};
+
 			const conflicts = [];
 			for (let act of actions) {
-				const pr = this.play_action(act, undoable, uiPlayer);
-				if (pr.conflict)
-					conflicts.push(pr.conflict);
+				await this.play_action(act, options)
+				.catch(e => conflicts.push(e));
 			}
 			return conflicts;
 		}
@@ -432,19 +448,22 @@ define("js/Hoard", [
         /**
          * Reconstruct the minimal action stream required to recreate
          * the data.  Actions will be 'N', 'A' and 'X'.
+		 * @param {boolean} [includeRoot=false] normally the root node
+		 * of the hoard is not included in the actions list. Set this
+		 * to make it included.
          * @return {Action[]} an action stream
          */
-        actions_to_recreate() {
+        actions_to_recreate(includeRoot) {
 
             const actions = [];
             
             function _visit(node, path) {
                 let time = node.time;
 
-                if (typeof time === "undefined")
+                if (typeof time === 'undefined')
                     time = Date.now();
 
-                if (path.length > 0) {
+                if (includeRoot || path.length > 0) {
                     const action = new Action({
                         type: 'N',
                         path: path,
@@ -522,7 +541,7 @@ define("js/Hoard", [
                     path: item.path.slice().concat([name])
                 }));
 
-                if (typeof node.alarm !== "undefined"                   
+                if (typeof node.alarm !== 'undefined'                   
                     && node.alarm.due > 0
 					&& Date.now() >= node.alarm.due) {
                     const ding = new Date(node.alarm.due);

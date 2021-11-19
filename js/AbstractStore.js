@@ -28,7 +28,7 @@ define("js/AbstractStore", ["js/Utils", "js/Serror"], (Utils, Serror) => {
                 for (let k in options)
                     if (Object.prototype.hasOwnProperty.call(options, k))
                         this.options[k] = options[k];
-            if (typeof this.options.debug === "function") {
+            if (typeof this.options.debug === 'function') {
                 this.debug = () => {
                     const a = Array.from(arguments);
                     a.unshift(self.type);
@@ -53,10 +53,10 @@ define("js/AbstractStore", ["js/Utils", "js/Serror"], (Utils, Serror) => {
 		 * @return {object} the (new) value of the option
          */
         option(k, v) {
-            if (typeof k === "undefined")
+            if (typeof k === 'undefined')
                 return this.options;
 
-            if (typeof v !== "undefined") {
+            if (typeof v !== 'undefined') {
                 if (v === null)
                     delete this.options[k];
                 else

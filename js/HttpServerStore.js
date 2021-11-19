@@ -4,7 +4,7 @@
 define("js/HttpServerStore", [
 	"js/Serror", "js/Utils", "js/AbstractStore"
 ], (Serror,      Utils,      AbstractStore) => {
-    if (typeof XMLHttpRequest === "undefined") {
+    if (typeof XMLHttpRequest === 'undefined') {
         // node.js
         XMLHttpRequest = require("xhr2");
         ///* global URL: true */
@@ -97,7 +97,7 @@ define("js/HttpServerStore", [
                         xhr.send(body);
                     }
                 } catch (e) {
-                    reject(this.error(500, turl.split("/"),
+                    reject(this.error(500, turl.split('/'),
                                       `xhr.send error: ${e}`));
                 }
 
@@ -105,7 +105,7 @@ define("js/HttpServerStore", [
                     if (this.debug) this.debug("response",xhr.status);
                     if (xhr.status === 401) {
                         const handler = this.option("network_login");
-                        if (typeof handler === "function") {
+                        if (typeof handler === 'function') {
 							if (this.debug) this.debug("handling 401");
                             handler.call(this)
                             .then(login => {

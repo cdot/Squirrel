@@ -2,7 +2,7 @@
 /* eslint-env node, mocha */
 /* global document:writable */
 
-if (typeof module !== "undefined") {
+if (typeof module !== 'undefined') {
     requirejs = require('requirejs');
     // node.js
     const { JSDOM } = require('jsdom');

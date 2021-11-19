@@ -93,7 +93,7 @@ define("js/jq/styling", [
         },
 
         theme: function(theme) {
-            if (typeof theme !== "undefined") {
+            if (typeof theme !== 'undefined') {
                 const promises = [];
                 $("#jQueryTheme")
                 .each(function () {
@@ -131,7 +131,7 @@ define("js/jq/styling", [
 
         scale: function(scale) {
             let now = $("body").css("font-size").replace(/px/, "");
-            if (typeof scale !== "undefined" && scale > 6) { // don't go below 6px
+            if (typeof scale !== 'undefined' && scale > 6) { // don't go below 6px
                 now = scale;
                 $("body").css("font-size", scale + "px");
                 Cookies.set("ui_scale", scale, {

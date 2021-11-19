@@ -2,7 +2,7 @@
 /*eslint-env browser*/
 /*global __filename*/
 
-if (typeof requirejs === "undefined")
+if (typeof requirejs === 'undefined')
     throw new Error(__filename + " is not runnable stand-alone");
 
 /**
@@ -28,7 +28,7 @@ define([
 
     /*function assert(v, m) {
         if (!v) {
-            if (typeof m !== "undefined")
+            if (typeof m !== 'undefined')
                 throw "Assert failed: " + m;
             else
                 throw "Assret failed";

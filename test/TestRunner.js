@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2015-2021 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env node, mocha */
 
-if (typeof requirejs === "undefined") {
+if (typeof requirejs === 'undefined') {
 	throw new Error(__filename + " is not runnable stand-alone");
 }
 
@@ -14,22 +14,22 @@ if (typeof requirejs === "undefined") {
  */
 define(["mocha", "chai"], (maybeMocha, chai) => {
 
-	if (typeof Mocha === "undefined")
+	if (typeof Mocha === 'undefined')
 		Mocha = maybeMocha; // node.js
 
 	class TestRunner extends Mocha {
 
 		constructor(title, debug) {
-			super({ reporter: (typeof global === "undefined") ? 'html' : 'spec' });
+			super({ reporter: (typeof global === 'undefined') ? 'html' : 'spec' });
 			this.chai = chai;
 			this.assert = chai.assert;
-			if (typeof title === "string")
+			if (typeof title === 'string')
 				this.suite.title = title;
 			this.debug = debug;
 
 			this.matches = [];
 			this.keepTmpFiles = false;
-			if (typeof process !== "undefined") {
+			if (typeof process !== 'undefined') {
 				for (let i = 2; i < process.argv.length; i++) {
 					const arg = process.argv[i];
 					if (arg === "--keep")
@@ -144,16 +144,16 @@ define(["mocha", "chai"], (maybeMocha, chai) => {
 			}
 
 			const test = new Mocha.Test(title, () => {
-                if (typeof this.before === "function")
+                if (typeof this.before === 'function')
                     this.before();
 				const res = fn.call(this);
                 if (res instanceof Promise) {
                     return res.then(() => {
-                        if (typeof this.after === "function")
+                        if (typeof this.after === 'function')
                             this.after();
                     });
                 }
-                else if (typeof this.after === "function") {
+                else if (typeof this.after === 'function') {
                     this.after();
 				}
 				return Promise.resolve();

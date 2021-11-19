@@ -116,14 +116,13 @@ define("js/Squirrel", [
          * @private
          */
         _save_stores(progress) {
-            this.hoarder.save_stores(
-                progress,
-				// Selector
-                actions => Dialog.confirm("choose_changes", {
+            this.hoarder.save_stores({
+                progress: progress,
+                selector: actions => Dialog.confirm("choose_changes", {
                     changes: actions
                 }),
-				// UIPlayer
-                act => this.$DOMtree.tree("action", act))
+                uiPlayer: act => this.$DOMtree.tree("action", act)
+			})
             .then(saved => {
                 if (saved) {
                     // otherwise if cloud or client save failed, we have to
@@ -401,7 +400,7 @@ define("js/Squirrel", [
             // store records the path, which is used to load
             // the cloud store/
             const clop = this.hoarder.cloud_path();
-            if (typeof clop === "string" && clop !== "")
+            if (typeof clop === 'string' && clop !== "")
                 p = Promise.resolve();
             else {
                 // Use the store_settings dlg to initialise the cloud store
@@ -429,15 +428,14 @@ define("js/Squirrel", [
                 const conflicts = [];
 
                 // Merge updates from cloud hoard to client
-                return this.hoarder.update_from_cloud(
-                    conflicts,
-					// Selector
-                    actions => Dialog.confirm("choose_changes", {
+                return this.hoarder.update_from_cloud({
+                    progress: conflicts,
+                    selector: actions => Dialog.confirm("choose_changes", {
                         changes: actions
                     }),
-					// UIPlayer
-                    act => this.$DOMtree.tree("action", act),
-                    actions)
+                    uiPlayer: act => this.$DOMtree.tree("action", act),
+                    actions: actions
+				})
 
                 .then(() => {
                     if (conflicts.length === 0)
@@ -625,7 +623,7 @@ define("js/Squirrel", [
             Tree.onTitleHoverOut = () => $("body").contextmenu("isOpen");
             
             Tree.hidingValues = tf => {
-                if (typeof tf !== "undefined") {
+                if (typeof tf !== 'undefined') {
                     Cookies.set(
 						"ui_hidevalues", tf ? "on" : null, {
 							expires: 365,
@@ -636,7 +634,7 @@ define("js/Squirrel", [
             };
             
             Tree.showingChanges = tf => {
-                if (typeof tf !== "undefined") {
+                if (typeof tf !== 'undefined') {
                     Cookies.set("ui_showchanges", tf ? "on" : null, {
 							expires: 365,
 							samesite: "strict"
@@ -687,14 +685,16 @@ define("js/Squirrel", [
                 .icon_button()
                 .hide()
                 .on(Dialog.tapEvent(), () => {
-                    this.hoarder.undo()
-                    .then(act => {
-                        this.$DOMtree.tree("action", act)
-                        .then(() => {
-                            this._reset_modified();
-                            $(document).trigger("update_save");
-                        });
-                    })
+                    this.hoarder.undo(
+						{
+							uiPlayer: act => {
+								return this.$DOMtree.tree("action", act)
+								.then(() => {
+									this._reset_modified();
+									$(document).trigger("update_save");
+								});
+							}
+						})
                     .catch(e => {
                         if (this.debug) this.debug("undo failed", e);
                         Dialog.confirm("alert", {
@@ -831,24 +831,25 @@ define("js/Squirrel", [
          */
         appPlayAction(action, open) {
 			Serror.assert(action instanceof Action);
-            const e = this.hoarder.play_action(
-				action, true, act => this.appPlayAction(act, open));
-            if (this.debug && e.conflict)
-                this.debug("interactive", action,
-                           "had conflict", e.conflict);
-            return this.$DOMtree.tree("action", e.action, open)
-            .then(() => $(document).trigger("update_save"))
-            .catch(e => {
-                if (this.debug) this.debug("Error", e);
-                return Dialog.confirm("alert", {
-                    title: TX.tx("Error"),
-                    alert: {
-                        severity: "error",
-                        message: e.message
-                    }
-                });
-            });
-        }
+            return this.hoarder.play_action(
+				action,
+				{
+					undoable: true,
+					uiPlayer: act => this.$DOMtree.tree("action", act, open)
+					.then(() => {
+						//if (this.debug && pr.conflict)
+						//	this.debug("interactive", action,
+						//			   "had conflict", pr.conflict);
+						$(document).trigger("update_save");
+					})
+				})
+			.catch(e => Dialog.confirm("alert", {
+				title: TX.tx("Error"),
+				alert: {
+					severity: "error",
+					message: e.message
+				}}));
+		}
     }
 
     return Squirrel;

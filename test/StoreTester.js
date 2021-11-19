@@ -2,7 +2,7 @@
 /*eslint-env node,mocha,browser*/
 /*eslint-disable no-eval*/
 
-if (typeof requirejs === "undefined") {
+if (typeof requirejs === 'undefined') {
     throw new Error(__filename + " is not runnable on its own");
 }
 
@@ -67,14 +67,14 @@ define([
         getParams(config) {
             let key;
             
-            if (typeof global === "undefined") {
+            if (typeof global === 'undefined') {
                 // Browser
                 config.inBrowser = true;
                 const up = Utils.parseURLParams(
                     window.location.search.substring(1));
                 for (key in up)
                     config[key] = up[key];
-            } else if (typeof process !== "undefined") {
+            } else if (typeof process !== 'undefined') {
                 // Node.js
                 config.inBrowser = false;
                 for (key in process.argv)
@@ -104,7 +104,7 @@ define([
                 if (/^needs_/.test(option)) {
                     const key = option.replace(/^needs_/, "");
                     const v = config[key];
-                    if (!config.inBrowser && typeof v === "undefined")
+                    if (!config.inBrowser && typeof v === 'undefined')
                         throw new Error(`Require parameter '${key}'`);
                     if (this.debug) this.debug(option,key, "=", v);
                     store.option(key, v);

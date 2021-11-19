@@ -238,7 +238,7 @@ define("js/Utils", [], () => {
             for (let i = 0; i < lets.length; i++) {
                 if (lets[i] === "")
                     continue;
-                const ass = lets[i].split("=", 2);
+                const ass = lets[i].split('=', 2);
                 let key, value;
                 if (ass.length > 1) // value option
                     key = ass[0], value = decodeURIComponent(ass[1]);

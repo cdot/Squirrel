@@ -23,11 +23,11 @@ requirejs(["request", "node-getopt", "fs", "uglify-js", "clean-css", "html-minif
 
     const opts = getopt
         .create([
-            [ "d", "debug", "Debug" ],
-            [ "D", "deps", "Show dependencies" ],
-            [ "h", "help", "Display this help" ],
-            [ "l", "language=ARG", "Target language for translation" ],
-            [ "t", "translate=ARG", "Just re-translate strings below this confidence level (1 for all strings, 0 for untranslated only)" ]
+            [ 'd', "debug", "Debug" ],
+            [ 'D', "deps", "Show dependencies" ],
+            [ 'h', "help", "Display this help" ],
+            [ 'l', "language=ARG", "Target language for translation" ],
+            [ 't', "translate=ARG", "Just re-translate strings below this confidence level (1 for all strings, 0 for untranslated only)" ]
         ])
         .bindHelp()
         .setHelp(DESCRIPTION.join("\n"))
@@ -127,7 +127,7 @@ requirejs(["request", "node-getopt", "fs", "uglify-js", "clean-css", "html-minif
                         reject(`${path}: ${response.statusCode}`);
                         return;
                     }
-                    let body = '';
+                    let body = "";
                     response.on('data', chunk => {
                         body += chunk;
                     });
@@ -260,8 +260,8 @@ requirejs(["request", "node-getopt", "fs", "uglify-js", "clean-css", "html-minif
                     if (!check.test(codes)) {
                         // If not, add one
                         //debug("Adding ID to", module);
-                        codes = codes + "\ndefine(\"" + module
-                        + "\",function(){});\n";
+                        codes = codes + "\ndefine('" + module
+                        + "',function(){});\n";
                     }
                     return codes;
                 }));
@@ -544,7 +544,7 @@ requirejs(["request", "node-getopt", "fs", "uglify-js", "clean-css", "html-minif
     const locales = new Locales(debug);
     let promise = locales.loadStrings();
     
-    if (typeof opts.translate !== "undefined")
+    if (typeof opts.translate !== 'undefined')
         promise = promise.then(() => target_translate(opts.translate, opts.language));
     else
         promise = promise.then(() => target_release());

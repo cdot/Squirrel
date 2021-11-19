@@ -8,7 +8,7 @@
  * Note this may not run correctly under node.js, due to the lack of event
  * handlers in jsdom. The gold standard is that it runs in a browser.
  */
-if (typeof module !== "undefined") {
+if (typeof module !== 'undefined') {
     requirejs = require('requirejs');
    // node.js
     const { JSDOM } = require('jsdom');
@@ -94,7 +94,7 @@ requirejs(["test/TestRunner", "jquery", "js/jq/simulated_password"], function(Te
             assert.equal($p.val(), "ass");
             assert.equal($p.raw_val(), "•••");
         });
-        $p.trigger(new jQuery.Event("input", { key: "h" }));
+        $p.trigger(new jQuery.Event("input", { key: 'h' }));
     });
 
     tr.addTest('set val', function() {

@@ -151,7 +151,7 @@ define([
          */
         html(data, source) {
             let dom;
-            if (typeof data === "string")
+            if (typeof data === 'string')
                 dom = new jsdom.JSDOM(data);
             else
                 dom = data;

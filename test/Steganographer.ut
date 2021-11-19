@@ -1,6 +1,6 @@
 /*@preserve Copyright (C) 2019 Crawford Currie http://c-dot.co.uk license MIT*//*eslint-env node, mocha */
 
-if (typeof module !== "undefined") {
+if (typeof module !== 'undefined') {
     requirejs = require('requirejs');
 	requirejs.config({
 		baseUrl: `${__dirname}/..`
@@ -94,7 +94,7 @@ requirejs(["test/TestRunner", "js/Steganographer", "js/Utils", "jquery"], functi
 		});
     });
 
-	if (typeof module !== "undefined") {
+	if (typeof module !== 'undefined') {
 		const Canvas = require('canvas');
 		const len = 65536; // bytes
 		tr.addTest("insert.extract file", function() {

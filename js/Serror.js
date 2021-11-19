@@ -17,7 +17,7 @@ define("js/Serror", () => {
          */
         constructor(...rest) {
             let status = 400, path;
-            if (rest.length > 0 && typeof rest[0] === "number")
+            if (rest.length > 0 && typeof rest[0] === 'number')
                 status = rest.shift();
             if (rest.length > 1)
                 path = rest.shift();
@@ -39,14 +39,14 @@ define("js/Serror", () => {
          */
         static assert(cond, message) {
             if (cond) return;
-            if (typeof message === "undefined")
+            if (typeof message === 'undefined')
                 message = "Assertion failed";
             throw new Error(message);
         }
         
         toString() {
             return this.status
-            + (this.path ? ` ${this.path.join("/")}` : "")
+            + (this.path ? ` ${this.path.join('/')}` : "")
             + (this.message ? ` ${this.message}` : "");
         }
     }

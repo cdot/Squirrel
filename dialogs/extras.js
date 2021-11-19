@@ -11,7 +11,7 @@ define("dialogs/extras", [
     class ExtrasDialog extends Dialog {
 
         _autosave(on) {
-            if (typeof on !== "undefined") {
+            if (typeof on !== 'undefined') {
                 const ons = (on ? "on" : "off");
                 if (Cookies.get("ui_autosave") !== ons) {
                     Cookies.set("ui_autosave", ons, {

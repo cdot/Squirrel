@@ -310,7 +310,8 @@ define("js/Dialog", [
         /**
          * Override in subclasses to change behavior when OK button
          * is clicked.
-         * @return {boolean} false to cancel the close.
+         * @return {object} return value, or undefined to cancel the close.
+		 * Default is to return `true`.
          */
         ok() {
             return true;

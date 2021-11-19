@@ -17,7 +17,7 @@ define("dialogs/add", ["js/Dialog", "js/Action"], (Dialog, Action) => {
 
             if (!/\S/.test(val)) // empty?
                 enabled = false;
-            else if (typeof this.options.validate === "function")
+            else if (typeof this.options.validate === 'function')
                 enabled = this.options.validate(val);
 
             if (enabled) {

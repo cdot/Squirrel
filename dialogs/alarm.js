@@ -29,7 +29,7 @@ define("dialogs/alarm", [
             const numb = this.$control("number").val();
             const unit = this.$control("unit").val();
             this.$control("date")
-            .datepicker("setDate", "+" + numb + unit);
+            .datepicker("setDate", `+${numb}${unit}`);
             this._updateSave();
         }
 
@@ -66,24 +66,21 @@ define("dialogs/alarm", [
 
         ok() {
             const isEnabled = this.$control("enabled").prop("checked");
-            let act;
-            if (isEnabled)
-                act = new Action({
-                    type: "A",
-                    path: this.options.path,
-                    data: {
-                        due: this.$control("date")
-                        .datepicker("getDate").getTime(),
-                        repeat: 0 // TODO: grab this
-                    }
-                });
-            else if (this.wasEnabled)
-                act = new Action({
-                    type: "C",
-                    path: this.options.path
-                });
-            
-            return act;
+			if (isEnabled || this.wasEnabled) {
+				const act = new Action({
+                    type: 'A',
+					path: this.options.path
+				});
+				if (isEnabled) {
+					act.data = {
+						due: this.$control("date")
+						.datepicker("getDate").getTime(),
+						repeat: 0 // TODO: grab this
+					};
+				}
+				return act;
+			}            
+            return undefined;
         }
 
         /**
@@ -91,7 +88,7 @@ define("dialogs/alarm", [
 		 */
         open() {
             this.$control("path").text(Action.pathS(this.options.path));
-            this.wasEnabled = (typeof this.options.alarm !== "undefined");
+            this.wasEnabled = (typeof this.options.alarm !== 'undefined');
 
             this.$control("enabled").prop("checked", this.wasEnabled);
             this.$control("settings").find(":input").prop("disabled", !this.wasEnabled);

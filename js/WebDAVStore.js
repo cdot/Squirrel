@@ -78,12 +78,12 @@ define("js/WebDAVStore", [
 
         propFind(url, properties, depth, headers) {
 
-            if(typeof depth === "undefined") {
+            if(typeof depth === 'undefined') {
                 depth = '0';
             }
 
             // depth header must be a string, in case a number was passed in
-            depth = '' + depth;
+            depth = "" + depth;
 
             headers = headers || {};
 
@@ -199,7 +199,7 @@ define("js/WebDAVStore", [
          * @return {Promise}
 
         mkcol(url, properties, headers) {
-            let body = '';
+            let body = "";
             headers = headers || {};
             headers['Content-Type'] = 'application/xml; charset=utf-8';
 
@@ -249,7 +249,7 @@ define("js/WebDAVStore", [
                 }
             }
 
-            return content || propNode.textContent || propNode.text || '';
+            return content || propNode.textContent || propNode.text || "";
         }
 
         /**

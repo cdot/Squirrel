@@ -7,7 +7,7 @@
  */
 define("js/jq/simulated_password", ["jquery"], () => {
 
-    const SPOT = "•";
+    const SPOT = '•';
     let debug; // global for all instances
     let selectionStart = 0, selectionEnd = 0, keyDown = -1;
     
@@ -51,7 +51,7 @@ define("js/jq/simulated_password", ["jquery"], () => {
         } else if (!show && !isHidden) {
             const dv = $.fn.raw_val.call($this);
             $this.data("hidden_pass", dv);
-            if (typeof dv === "string") {
+            if (typeof dv === 'string') {
                 const hv = dv.replace(/./g, SPOT);
                 $.fn.raw_val.call($this, hv);
             }
@@ -92,7 +92,7 @@ define("js/jq/simulated_password", ["jquery"], () => {
     $.fn.simulated_password = function (dopts) {
         dopts = dopts || {};
 
-        if (typeof dopts.debug === "function")
+        if (typeof dopts.debug === 'function')
             debug = dopts.debug;
         
         $(this)
@@ -102,12 +102,12 @@ define("js/jq/simulated_password", ["jquery"], () => {
             const $this = $(this);
             const options = $.extend([], dopts);
 
-            if (typeof $(this).data("options") !== "undefined")
+            if (typeof $(this).data("options") !== 'undefined')
                 $.extend(options, $(this).data("options"));
 
-            if (typeof options.checkbox === "undefined")
+            if (typeof options.checkbox === 'undefined')
                 options.checkbox = true;
-            if (typeof options.hidden === "undefined")
+            if (typeof options.hidden === 'undefined')
                 options.hidden = true;
 
             if (this.type === "password")

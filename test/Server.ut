@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2016-2018 Crawford Currie http://c-dot.co.uk license MIT*/
 /*eslint-env node, mocha */
 
-if (typeof module !== "undefined") {
+if (typeof module !== 'undefined') {
     requirejs = require('requirejs');
     requirejs.config({
         baseUrl: `${__dirname}/..`
@@ -114,7 +114,7 @@ requirejs(["js/Utils", "js/Cryptographer", "js/Server", "fs", "axios", "test/Tes
             assert.equal(res.headers['content-type'],
                          "application/octet-stream");
             assert.equal(res.data,
-                         "\0" + "Some 16 bit text".split('').join("\0") + "\n");
+                         '\0' + "Some 16 bit text".split("").join("\0") + "\n");
         });
     });
 

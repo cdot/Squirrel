@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /*eslint-env node, mocha */
 
-if (typeof requirejs === "undefined") {
+if (typeof requirejs === 'undefined') {
     requirejs = require('requirejs');
 	requirejs.config({
 		baseUrl: `${__dirname}/..`
@@ -12,7 +12,7 @@ var server;
 var datastore = {};
 
 let deps = ["test/StoreTester"];
-if (typeof module !== "undefined") {
+if (typeof module !== 'undefined') {
     deps.push("express");
     deps.push("express-basic-auth");
 }
@@ -52,7 +52,7 @@ requirejs(deps, function(StoreTester, express, basicAuth) {
         });
 
         app.get('/*', (req, res) => {
-            if (typeof datastore[req.path] !== "undefined") {
+            if (typeof datastore[req.path] !== 'undefined') {
                 res.send(datastore[req.path]);
                 return;
             }

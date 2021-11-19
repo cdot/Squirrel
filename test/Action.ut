@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2015-2021 Crawford Currie http://c-dot.co.uk license MIT*/
 /*eslint-env shared-node-browser, mocha */
 
-if (typeof requirejs === "undefined") {
+if (typeof requirejs === 'undefined') {
     requirejs = require('requirejs');
 	requirejs.config({
 		baseUrl: `${__dirname}/..`

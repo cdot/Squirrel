@@ -45,7 +45,7 @@ define("dialogs/login", [
 
             this.$dlg.dialog("option", "title", this.options.title);
 
-            if (typeof this.options.user !== "undefined") {
+            if (typeof this.options.user !== 'undefined') {
                 const u = this.options.user;
                 $user.val(u);
                 if (u.length > 0)
@@ -54,7 +54,7 @@ define("dialogs/login", [
                     $user.focus();
             }
 
-            if (typeof this.options.pass !== "undefined")
+            if (typeof this.options.pass !== 'undefined')
                 $pass.val(this.options.pass);
         }
 

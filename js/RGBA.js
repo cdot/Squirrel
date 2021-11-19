@@ -179,15 +179,15 @@ define("js/RGBA", () => {
             }
 
             if (arguments.length === 1) {
-                if (typeof r !== "string") {
+                if (typeof r !== 'string') {
                     if (r.constructor.name === "Array") {
                         this.r = r[0];
                         this.g = r[1];
                         this.b = r[2];
                         this.a = r[3];
-                    } else if (typeof r.r === "number" &&
-                               typeof r.g === "number" &&
-                               typeof r.b === "number") {
+                    } else if (typeof r.r === 'number' &&
+                               typeof r.g === 'number' &&
+                               typeof r.b === 'number') {
                         this.r = r.r;
                         this.g = r.g;
                         this.b = r.b;
@@ -205,12 +205,12 @@ define("js/RGBA", () => {
             }
 
             // String or integer RGB value
-            if (typeof r === "string") {
+            if (typeof r === 'string') {
                 const named = CSSColours[r.toLowerCase()];
-                if (typeof named !== "undefined")
+                if (typeof named !== 'undefined')
                     r = named;
 
-                if (r.charAt(0) == "#") {
+                if (r.charAt(0) === '#') {
                     this.r = parseInt(r.substr(1, 2), 16) / 255.0;
                     this.g = parseInt(r.substr(3, 2), 16) / 255.0;
                     this.b = parseInt(r.substr(5, 2), 16) / 255.0;
@@ -235,7 +235,7 @@ define("js/RGBA", () => {
 
                 if (/^rgba?\(.*\)$/.test(r)) {
                     a = r.replace(/(rgba?\(|\))/g, "")
-                        .split(",");
+                        .split(',');
                     this.r = Math.floor(parseComponent(a[0], 255)) / 255;
                     this.g = Math.floor(parseComponent(a[1], 255)) / 255;
                     this.b = Math.floor(parseComponent(a[2], 255)) / 255;
@@ -244,7 +244,7 @@ define("js/RGBA", () => {
                 }
             }
 
-            if (typeof r === "object" && r.constructor.name === "RGBA")
+            if (typeof r === 'object' && r.constructor.name === "RGBA")
                 jQuery.extend(this, r);
 
             throw `Cannot construct from ${typeof r}`;
@@ -288,9 +288,9 @@ define("js/RGBA", () => {
                          Math.round(255 * this.g),
                          Math.round(255 * this.b)];
 
-            if (typeof this.a !== "undefined") {
+            if (typeof this.a !== 'undefined') {
                 tuple.push(this.a);
-                return `rgba(${tuple.join(",")})`;
+                return `rgba(${tuple.join(',')})`;
             } else {
                 let s = "#";
                 for (let i = 0; i < 3; i++) {
@@ -330,7 +330,7 @@ define("js/RGBA", () => {
 
             const hsv = [H, S, V];
 
-            if (typeof this.a != "undefined")
+            if (typeof this.a != 'undefined')
                 hsv.push(this.a);
 
             return hsv;
@@ -371,7 +371,7 @@ define("js/RGBA", () => {
 
             const hsl = [H, S, L];
 
-            if (typeof this.a != "undefined")
+            if (typeof this.a != 'undefined')
                 hsl.push(this.a);
 
             return hsl;
