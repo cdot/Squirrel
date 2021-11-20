@@ -1,22 +1,27 @@
 /*@preserve Copyright (C) 2017 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,jquery */
 
-/**
- * jQuery widget for twisting
- * Create open-close buttons on a container
- *
- * Classes used:
- * .twisted-title - optional element that will be shown even when
- * the twist is closed and will also be sensitive to open/close clicks
- * .twisted-button - applied to the open/close button
- * .twisted-shut - applied if the twist is closed
- *
- * data- attributes used:
- * data-open="ui-icon-circle-plus"
- * data-close="ui-icon-circle-minus"
- */
-
 define("js/jq/twisted", ["jquery", "jquery-ui", "js/jq/icon_button"], () => {
+	/**
+	 * jQuery widget for twisting (opening/closing paragraphs)
+	 * Creates open-close buttons on a container e.g. a `div`
+	 *
+	 * CSS classes used:
+	 * * `twisted-title` - optional element that will be shown even when
+	 * the twist is closed and will also be sensitive to open/close clicks
+	 * * `twisted-button` - applied to the open/close button
+	 * * `twisted-shut` - applied if the twist is closed
+	 *
+	 * `data-` attributes used:
+	 * * `data-open="ui-icon-circle-plus"`
+	 * * `data-close="ui-icon-circle-minus"`
+	 *
+	 * Example:
+	 * ```
+	 * $(".twist").twisted();
+	 * ```
+	 * @namespace squirrel.twisted
+	 */
     $.widget("squirrel.twisted", {
         _create: function () {
             const self = this;
@@ -56,6 +61,11 @@ define("js/jq/twisted", ["jquery", "jquery-ui", "js/jq/icon_button"], () => {
             self.close();
         },
 
+		/**
+		 * @name squirrel.twisted#open
+		 * @function
+		 * @description Open the container
+		 */
         open: function () {
             const icon = this.element.data("close") ||
                 "ui-icon-circle-minus";
@@ -63,9 +73,14 @@ define("js/jq/twisted", ["jquery", "jquery-ui", "js/jq/icon_button"], () => {
             .removeClass("twisted-shut")
             .show()
             .data("twisted-button")
-            .icon_button("option", "icon", icon)
+            .icon_button("option", "icon", icon);
         },
 
+		/**
+		 * @name squirrel.twisted#close
+		 * @function
+		 * @description Close the container
+		 */
         close: function () {
             const icon = this.element.data("open") ||
                 "ui-icon-circle-plus";

@@ -1,4 +1,4 @@
-JS := $(shell find js \( -path './node_modules/*' -o -path './test/*' -o -path './dist/*' -o -path './doc/*' \) -prune -o -name '*.js' -print)
+JS := $(shell find . \( -path './node_modules/*' -o -path './test/*' -o -path './dist/*' -o -path './doc/*' \) -prune -o -name '*.js' -print)
 
 MD := $(shell find . \( -path './node_modules/*' -o -path './test/*' -o -path './dist/*' \) -prune -o -name '*.md' -print)
 

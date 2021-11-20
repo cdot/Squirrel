@@ -141,7 +141,7 @@ define("js/Squirrel", [
         _handle_update_save( /*event*/ ) {
             if (this.hoarder.can_undo())
                 $("#undo_button")
-                .show().attr("title", this.hoarder.next_undo());
+            .show().attr("title", this.hoarder.next_undo());
             else
                 $("#undo_button").hide();
             const $sb = $("#save_button");
@@ -234,7 +234,7 @@ define("js/Squirrel", [
                 if (algo.length === 0)
                     continue;
                 const layer = algo.replace(/^([a-z])/, m => m.toUpperCase())
-                    + "Layer";
+                      + "Layer";
 
                 p = p.then(
 					store => Utils.require(`js/${layer}`)
@@ -489,10 +489,10 @@ define("js/Squirrel", [
         _search(s) {
             let hits;
             $(".picked-hit")
-                .removeClass("picked-hit");
+            .removeClass("picked-hit");
             if (s !== this.last_search) {
                 $("#search_hits")
-                    .text(TX.tx("Searching..."));
+                .text(TX.tx("Searching..."));
 
                 let re;
                 try {
@@ -502,7 +502,7 @@ define("js/Squirrel", [
                         alert: {
                             severity: "error",
                             message: TX.tx("Error in search expression") +
-                                ` '${s}': ${e}`
+                            ` '${s}': ${e}`
                         }
                     });
                     return;
@@ -511,24 +511,24 @@ define("js/Squirrel", [
                 this.last_search = s;
 
                 $(".search-hit")
-                    .removeClass("search-hit");
+                .removeClass("search-hit");
 
                 $(".tree")
-                    .not(".tree-isRoot")
-                    .each(function() {
-                        const $node = $(this);
-                        if ($node.data("key")
-                            .match(re) ||
-                            ($node.hasClass("tree-isLeaf") &&
-                             $node.data("value")
-                             .match(re)))
-                            $node.addClass("search-hit");
-                    });
+                .not(".tree-isRoot")
+                .each(function() {
+                    const $node = $(this);
+                    if ($node.data("key")
+                        .match(re) ||
+                        ($node.hasClass("tree-isLeaf") &&
+                         $node.data("value")
+                         .match(re)))
+                        $node.addClass("search-hit");
+                });
 
                 hits = $(".search-hit");
                 if (hits.length === 0) {
                     $("#search_hits")
-                        .text(TX.tx("Not found"));
+                    .text(TX.tx("Not found"));
                     return;
                 }
 
@@ -541,14 +541,14 @@ define("js/Squirrel", [
                 .text(TX.tx(
                     "$1 of $2 found", this.picked_hit + 1, hits.length));
                 $(hits[this.picked_hit])
-                    .addClass("picked-hit")
-                    .parents(".tree")
-                    .each(function() {
-                        $(this)
-                            .tree("open");
-                    });
+                .addClass("picked-hit")
+                .parents(".tree")
+                .each(function() {
+                    $(this)
+                    .tree("open");
+                });
                 $(hits[this.picked_hit])
-                    .scroll_into_view();
+                .scroll_into_view();
                 this.picked_hit = (this.picked_hit + 1) % hits.length;
             }
         }
@@ -590,7 +590,7 @@ define("js/Squirrel", [
             Translator.instance().language(lingo, document);
             
             this._stage(TX.tx("Loading application"), 0);
-            $.styling.init(this.options);
+            $.styling.init({ debug: this.debug});
 
             // Special keys in sort ordering. Currently only works for
             // English.
@@ -627,7 +627,7 @@ define("js/Squirrel", [
                     Cookies.set(
 						"ui_hidevalues", tf ? "on" : null, {
 							expires: 365,
-							samesite: "strict"
+							sameSite: "strict"
 						});
                 }
                 return (Cookies.get("ui_hidevalues") === "on");
@@ -636,9 +636,9 @@ define("js/Squirrel", [
             Tree.showingChanges = tf => {
                 if (typeof tf !== 'undefined') {
                     Cookies.set("ui_showchanges", tf ? "on" : null, {
-							expires: 365,
-							samesite: "strict"
-						});
+						expires: 365,
+						sameSite: "strict"
+					});
                 }
                 return (Cookies.get("ui_showchanges") === "on");
             };
@@ -663,101 +663,101 @@ define("js/Squirrel", [
 
             $("#sites-node button.tree_t_toggle").icon_button();
             $("#help_button")
-                .icon_button()
-                .on(Dialog.tapEvent(), () => {
-                    const url = requirejs.toUrl("help.html");
-                    $(this).closest("a").attr("href", url);
-                    return true;
-                });
+            .icon_button()
+            .on(Dialog.tapEvent(), function() {
+                const url = requirejs.toUrl("help.html");
+                $(this).closest("a").attr("href", url);
+				// Allow event to bubble
+                return true;
+            });
 
             $("#save_button")
-                .icon_button()
-                .hide()
-                .on(Dialog.tapEvent(), ( /*evt*/ ) => {
-                    Dialog.open("alert", {
-                        title: TX.tx("Saving"),
-                        alert: ""
-                    }).then(progress => this._save_stores(progress));
-                    return false;
-                });
+            .icon_button()
+            .hide()
+            .on(Dialog.tapEvent(), ( /*evt*/ ) => {
+                Dialog.open("alert", {
+                    title: TX.tx("Saving"),
+                    alert: ""
+                }).then(progress => this._save_stores(progress));
+                return false;
+            });
 
             $("#undo_button")
-                .icon_button()
-                .hide()
-                .on(Dialog.tapEvent(), () => {
-                    this.hoarder.undo(
-						{
-							uiPlayer: act => {
-								return this.$DOMtree.tree("action", act)
-								.then(() => {
-									this._reset_modified();
-									$(document).trigger("update_save");
-								});
-							}
-						})
-                    .catch(e => {
-                        if (this.debug) this.debug("undo failed", e);
-                        Dialog.confirm("alert", {
-                            title: TX.tx("Error"),
-                            alert: {
-                                severity: "error",
-                                message: e.message
-                            }
-                        });
+            .icon_button()
+            .hide()
+            .on(Dialog.tapEvent(), () => {
+                this.hoarder.undo(
+					{
+						uiPlayer: act => {
+							return this.$DOMtree.tree("action", act)
+							.then(() => {
+								this._reset_modified();
+								$(document).trigger("update_save");
+							});
+						}
+					})
+                .catch(e => {
+                    if (this.debug) this.debug("undo failed", e);
+                    Dialog.confirm("alert", {
+                        title: TX.tx("Error"),
+                        alert: {
+                            severity: "error",
+                            message: e.message
+                        }
                     });
-                    return false;
                 });
+                return false;
+            });
 
             $("#extras_button")
-                .icon_button()
-                .on(Dialog.tapEvent(), () => {
-                    Dialog.confirm("extras", {
-                        needs_image: this.hoarder.needs_image(),
-                        image_url: path => {
-                            path = this.hoarder.image_url(path);
-                            $(document).trigger("update_save");
-                            return path;
-                        },
-                        cloud_path: path => {
-                            path = this.hoarder.cloud_path(path);
-                            $(document).trigger("update_save");
-                            return path;
-                        },
-                        encryption_pass: pass => {
-                            pass = this.hoarder.encryption_pass(pass);
-                            $(document).trigger("update_save");
-                            return pass;
-                        },
-                        tree_json: json => {
-                            json = this.hoarder.JSON();
-                            $(document).trigger("update_save");
-                            return json;
-                        },
-                        analyse: () => this.hoarder.analyse(),
-                        optimise: () => {
-                            const acts = this.hoarder.tree_actions();
-                            return Dialog.open("alert", {
-                                title: TX.tx("Saving"),
-                                alert: ""
-                            }).then(progress => 
-									this.hoarder.save_cloud(acts, progress));
-                        },
-                        reset_local_store: () => {
-                            return this._reset_local_store();
-                        },
-                        set_language: lingo => {
-                            // Won't apply until we clear caches and restart
-                            Cookies.set("ui_lang", lingo, {
-                                expires: 365,
-								samesite: "strict"
-                            });
-                            TX.language(lingo, document);
-                        }
-                    })
-                    .catch((/*f*/) => {
-                        if (this.debug) this.debug("extras closed");
-                    });
+            .icon_button()
+            .on(Dialog.tapEvent(), () => {
+                Dialog.confirm("extras", {
+                    needs_image: this.hoarder.needs_image(),
+                    image_url: path => {
+                        path = this.hoarder.image_url(path);
+                        $(document).trigger("update_save");
+                        return path;
+                    },
+                    cloud_path: path => {
+                        path = this.hoarder.cloud_path(path);
+                        $(document).trigger("update_save");
+                        return path;
+                    },
+                    encryption_pass: pass => {
+                        pass = this.hoarder.encryption_pass(pass);
+                        $(document).trigger("update_save");
+                        return pass;
+                    },
+                    tree_json: json => {
+                        json = this.hoarder.JSON();
+                        $(document).trigger("update_save");
+                        return json;
+                    },
+                    analyse: () => this.hoarder.analyse(),
+                    optimise: () => {
+                        const acts = this.hoarder.tree_actions();
+                        return Dialog.open("alert", {
+                            title: TX.tx("Saving"),
+                            alert: ""
+                        }).then(progress => 
+								this.hoarder.save_cloud(acts, progress));
+                    },
+                    reset_local_store: () => {
+                        return this._reset_local_store();
+                    },
+                    set_language: lingo => {
+                        // Won't apply until we clear caches and restart
+                        Cookies.set("ui_lang", lingo, {
+                            expires: 365,
+							sameSite: "strict"
+                        });
+                        TX.language(lingo, document);
+                    }
+                })
+                .catch((/*f*/) => {
                 });
+            });
 
             $("#search_input")
             .on("change", () => this._search($("#search_input").val()));
@@ -768,8 +768,6 @@ define("js/Squirrel", [
 				() => this._search($("#search_input").val()));
 
             this.contextMenu = new ContextMenu(this);
-
-            $.styling.reset();
 
             // Set up event handlers.
             $(document)

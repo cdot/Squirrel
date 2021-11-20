@@ -82,7 +82,7 @@ define("js/Node", [
             else if (typeof data.constraints !== 'undefined') {
 				/**
 				 * Constraints, `{size:number, chars:string}`
-				 * @member {string} constraints
+				 * @member {string}
 				 */
                 this.constraints = data.constraints;
 			}

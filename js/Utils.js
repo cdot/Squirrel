@@ -269,7 +269,7 @@ define("js/Utils", [], () => {
         }
 
         /**
-         * Expand $1..$N in a string to the arguments passed.
+         * Expand `$1`..$N in a string to the arguments passed.
          *
          * There is limited support for conditional expansion using the
          * `$?(bexpr,then,else)` macro. If `bexpr1` eval()s to true then the
@@ -282,7 +282,7 @@ define("js/Utils", [], () => {
          * but if it is `11` it will expand to `11 days`
          *
          * NOTE: conditions are evaled and could thus be used for cross
-         * scripting. User input must never be passed to the templater. There is
+         * scripting. User input must *never* be passed to the templater. There is
          * no error checking on the eval, and it will throw an exception if the
          * syntax is incorrect.
 		 * @param {string} str string to expand, other arguments are template

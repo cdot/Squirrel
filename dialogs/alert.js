@@ -6,7 +6,9 @@ define("dialogs/alert", ["js/Dialog"], Dialog => {
     let $http = null;
 
 	/**
-	 * Notification dialog
+	 * Notification dialog.
+	 * See {@link Dialog} for constructor parameters.
+	 * @extends Dialog
 	 */
     class AlertDialog extends Dialog {
 

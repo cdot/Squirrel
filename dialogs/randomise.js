@@ -65,6 +65,11 @@ define("dialogs/randomise", ["js/Dialog", "js-cookie"], (Dialog, Cookies) => {
         return a.size === b.size && a.chars === b.chars;
     }
     
+    /**
+	 * Randomise string dialog.
+	 * See {@link Dialog} for constructor parameters
+	 * @extends Dialog
+	 */
     class RandomiseDialog extends Dialog {
 
         constraints_changed() {

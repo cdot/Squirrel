@@ -1,10 +1,13 @@
 /*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser */
 
-/*
- * Pick characters from a string value
- */
 define("dialogs/pick", ["js/Dialog"], Dialog => {
+	
+    /**
+	 * Pick characters dialog.
+	 * See {@link Dialog} for constructor parameters
+	 * @extends Dialog
+	 */
     class PickDialog extends Dialog {
         initialise() {
             this.$control("clear")

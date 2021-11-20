@@ -1,11 +1,22 @@
 /*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,jquery */
 
-/**
- * Simple in-place editing widget
- */
 define("js/jq/edit_in_place", ["jquery", "jquery-ui"], () => {
 
+	/**
+	 * Simple in-place editing jQuery widget. Creates an edit box in place
+	 * over a span. 
+	 * ```
+	 * $span.edit_in_place({
+	 *     text: text,
+	 *     onClose: function (s) {
+	 *         if (s !== text)
+	 *             console.log("New text:", text);
+	 *     }
+	 * });
+	 * ```
+	 * @namespace $.edit_in_place
+	 */
     $.fn.edit_in_place = function (options) {
 
         const $this = $(this);

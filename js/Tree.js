@@ -24,7 +24,7 @@ define("js/Tree", [
     }
 
 	/**
-	 * Tree widget.
+	 * jQuery tree widget.
 	 * Manages the DOM tree that represents the content of the client
 	 * hoard cache.
 	 *
@@ -63,8 +63,12 @@ define("js/Tree", [
         // overridden once in the calling context.
 
         /**
-         * Compare keys for sorting
-		 * @memberof Tree
+         * Compare keys for sorting.
+         * Override in calling context.
+		 * @name Tree#compareKeys
+		 * @function
+		 * @param {string} a first key
+		 * @param {string} b second key
          */
         compareKeys: (a, b) => {
             if (a == b)
@@ -73,45 +77,51 @@ define("js/Tree", [
         },
 
         /**
-         * A change has been made to a node. Play the relevant action.
+		 * A change has been made to a node. Play the relevant action.
          * Override in calling context
+		 * @name Tree#treePlayAction
+         * @function
          * @param {Action} act
-		 * @memberof Tree
          */
         treePlayAction: () => {},
 
         /**
-         * Invoked when the mouse hovers over a node title.
+		 * Invoked when the mouse hovers over a node title.
          * Override in calling context
+		 * @name Tree#onTitleHoverIn
+         * @function
          * @returns {Boolean} true to terminate the hover-in action.
-		 * @memberof Tree
          */
         onTitleHoverIn: () => false,
+
         /**
-         * Invoked when the mouse hover over a node title ends.
+		 * Invoked when the mouse hover over a node title ends.
          * Override in calling context
+		 * @name Tree#onTitleHoverOut
+         * @function
          * @returns {Boolean} true to terminate the hover-out action.
-		 * @memberof Tree
          */
         onTitleHoverOut: () => false,
 
         /**
-         * Are we to hide values when the tree is opened?
-         * Override in calling context
-		 * @memberof Tree
+		 * Are we to hide values when the tree is opened?
+         * Override in calling context.
+		 * @name Tree#hidingValues
+         * @function
          */
         hidingValues: () => false,
 
         /**
-         * Are we to hide values when the tree is opened?
-         * Override in calling context
-		 * @memberof Tree
+		 * Are we to hide values when the tree is opened?
+         * Override in calling context.
+		 * @name Tree#showingChanges
+         * @function
          */
         showingChanges: () => false,
 
         /**
-         * Set to a debug function
-		 * @memberof Tree
+		 * Set to a debug function in the calling context.
+		 * @name Tree#debug
          */
         debug: null,
         
@@ -119,7 +129,6 @@ define("js/Tree", [
          * Construct a new UI element for a tree node. The created element
          * is a placeholder only until the parent is opened, at which time the
          * element is populated with controls.
-		 * @private
          */
         _create: function() {
             const $node = this.element;
@@ -202,8 +211,10 @@ define("js/Tree", [
         },
 
         /**
-         * Change the display of values
-		 * @memberof Tree
+		 * Change the display of values
+		 * @name Tree#hideValues
+         * @function
+		 * @param {boolean} on hiding on/off
          */
         hideValues: function(on) {
             if (on && Tree.hidingValues() ||
@@ -224,8 +235,10 @@ define("js/Tree", [
         },
 
         /**
-         * Change the display of changes
-		 * @memberof Tree
+		 * Change the display of changes
+		 * @name Tree#showChanges
+         * @function
+		 * @param {boolean} on display on/off
          */
         showChanges: function(on) {
             if (on && Tree.showingChanges() ||
@@ -279,8 +292,9 @@ define("js/Tree", [
         },
 
 		/**
-		 * Widget method to edit the key
-		 * @memberof Tree
+		 * Edit the key in place
+		 * @name Tree#editKey
+		 * @function
 		 */
         editKey: function() {
             const $node = this.element;
@@ -290,8 +304,9 @@ define("js/Tree", [
         },
 
 		/**
-		 * Widget method to edit the value
-		 * @memberof Tree
+		 * Edit the value in place
+		 * @name Tree#editValue
+		 * @function
 		 */
         editValue: function() {
             const $node = this.element;
@@ -301,7 +316,9 @@ define("js/Tree", [
         },
 
         /**
-         * Mark the alarm on this node as having rung
+		 * Mark the alarm on this node as having rung
+		 * @name Tree#ringAlarm
+         * @function
          */
         ringAlarm: function() {
             this.element
@@ -311,8 +328,10 @@ define("js/Tree", [
         },
 
         /**
-         * Find the path for a DOM node or jQuery node.
-         * @return an array containing the path to the node, one string per key
+		 * Find the path for a DOM node or jQuery node.
+		 * @name Tree#getPath
+         * @function
+         * @return {string[]} the path to the node, one string per key
          */
         getPath: function() {
             const $node = this.element;
@@ -334,9 +353,11 @@ define("js/Tree", [
         },
 
         /**
-         * Find the jQuery node for a path. Callable on any node.
-         * @param path array of keys representing the path
-         * @return a JQuery element
+		 * Find the jQuery node for a path. Callable on any node.
+		 * @name Tree#getNodeFromPath
+         * @function
+         * @param {string[]} path list of keys representing the path
+         * @return {jQuery} the tree node
          */
         getNodeFromPath: function(path) {
             const $node = Tree.path2$node[path.join(PATHSEP)];
@@ -384,7 +405,10 @@ define("js/Tree", [
         },
 
         /**
-         * @param time optional time in ms, if missing will use now
+		 * Set the modified time on the node
+		 * @name Tree#setModified
+		 * @function
+         * @param {number} time optional time in ms, if missing will use now
          */
         setModified: function(time) {
             this.element.find(".tree_t_i_change").first()
@@ -553,7 +577,8 @@ define("js/Tree", [
 
 		/**
 		 * Widget function to open the node
-		 * @memberof Tree
+		 * @name Tree#open
+		 * @function
 		 */
         open: function(options) {
             const $node = this.element;
@@ -586,7 +611,8 @@ define("js/Tree", [
 
 		/**
 		 * Widget function to close the node
-		 * @memberof Tree
+		 * @name Tree#close
+		 * @function
 		 */
         close: function() {
             const $node = this.element;
@@ -603,7 +629,8 @@ define("js/Tree", [
 
 		/**
 		 * Widget function to toggle open/closed
-		 * @memberof Tree
+		 * @name Tree#toggle
+		 * @function
 		 */
         toggle: function() {
             if (this.element.hasClass("tree-isOpen"))
@@ -812,8 +839,10 @@ define("js/Tree", [
         },
         
         /**
-         * Widget method to play an action that is being
+		 * Widget method to play an action that is being
          * played into the hoard into the DOM as well.
+		 * @name Tree#action
+         * @function
          * @param {Action} action to play
          * @param {boolean} open whether to open the node after the action is applied
          * (only relevant on N and I actions)

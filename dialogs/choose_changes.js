@@ -6,6 +6,11 @@
  */
 define("dialogs/choose_changes", ["js/Dialog"], Dialog => {
 
+	/**
+	 * Review changes dialog.
+	 * See {@link Dialog} for constructor parameters.
+	 * @extends Dialog
+	 */
     class ChangesDialog extends Dialog {
 
         ok() {

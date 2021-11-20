@@ -6,9 +6,19 @@ define("js/jq/styling", [
 ], (RGBA, Cookies) => {
 
     /**
-     * Plugin to manage custom styling for a UI theme
+     * JQuery plugin to manage custom styling for a UI theme.
+	 * Styling is controlled through use of a `link` tag that has
+	 * id `jQueryTheme`. Styling is initialised by reading the `ui_theme`
+	 * cookie for the name of a jquery-ui theme, that is then used to
+	 * edit the `jQueryTheme` link to reload the stylesheets. On reset,
+	 * all stylesheets are scanned to extract tags with `.inherit_*` classes.
+	 * The styling from the imported theme stylesheet is then pushed onto
+	 * those tags.
+	 *
+	 * Also supports is body font scaling, using $.scale to set a pixel font
+	 * size globally.
+	 * @namespace $.styling
      */
-
     $.styling = {
 
         /**
@@ -16,7 +26,7 @@ define("js/jq/styling", [
          * options block or, failing that, Cookies
          * @param options { theme, scale
          */
-         init: function(options) {
+         init: options => {
              options = options || {};
 
              options.theme = options.theme || Cookies.get("ui_theme");
@@ -27,24 +37,45 @@ define("js/jq/styling", [
              options.scale = options.scale || Cookies.get("ui_scale");
 
              if (options.scale && options.scale > 0)
-                $.styling.scale(options.scale);
+                 $.styling.scale(options.scale);
+
+			 $.styling._resetOnLoad($("#jQueryTheme").attr("href"));
         },
 
+		// Many browsers don't support onlod on the link element
+		// - see https://pie.gd/test/script-link-events/ so
+		// we need an alternative.
+		_resetOnLoad: (href) => {
+			// We would like to use:
+			// $("#jQueryTheme").on("load", () => $.styling.reset());
+			// but it doesn't work. So, muddy boots, lead the CSS into an
+			// IMG tag. This will throw an error, but at least give
+			// us an idea that the stylesheet has been loaded.
+			const $img = $(`<img src="${href}" />`);
+			$("body").append($img);
+			$img.on("error", () => {
+				$img.remove();
+				$.styling.reset();
+            });
+		},
+		
         /**
          * Reset the theme by finding all font, color and
          * background-color settings currently set in the theme for
          * dialogs, then recolouring our custom styles to achieve the
          * same look.
          */
-        reset: function () {
+        reset: () => {
+			console.debug("Resetting styling");
             const styles = [];
+			// Temporary element used to extract styling
             const $picker = $("<div></div>");
             $("body").append($picker);
 
-            // In theory only local stylesheets can be
+            // In theory, only local stylesheets can be
             // found this way. Stylesheets loading from other domains
             // (i.e. CDNs) are not local. However that's not always
-            // the case....
+            // the case! This works, at least in Chrome and Firefox.
             for (let sheet of document.styleSheets) {
                 if (!sheet)
                     continue;
@@ -56,7 +87,10 @@ define("js/jq/styling", [
                     // Ignore it and continue
                 }
                 if (!rules)
+					// Not able to get rules, possible because they
+					// are "external"?
                     continue;
+
                 for (let rule of rules) {
                     const m = /(.*)\.inherit_(.*)$/.exec(rule.selectorText);
                     if (m) {
@@ -81,8 +115,8 @@ define("js/jq/styling", [
                     }
                 }
             }
-
             $picker.remove();
+
             $("#computed-styles").remove();
             if (styles.length === 0)
                 return;
@@ -92,51 +126,49 @@ define("js/jq/styling", [
             $("body").prepend($style);
         },
 
-        theme: function(theme) {
+		/**
+		 * Change the theme.
+		 * @param {string} theme name, e.g. swanky-purse. This is one of the
+		 * predefined themes in the theme library you are using (set by an
+		 * HTML `link` element, with `id="jQueryTheme"`)
+		 * @return {string} the theme name
+		 */
+        theme: theme => {
             if (typeof theme !== 'undefined') {
-                const promises = [];
+                let promise;
                 $("#jQueryTheme")
                 .each(function () {
                     this.href = this.href.replace(
                         /\/themes\/[^/]+/, `/themes/${theme}`);
-                    $(this).replaceWith($(this));
-                    // Use the loading of the CSS as an image (which will
-                    // trigger an error) to tell us when we can reset the
-                    // styling
-                    const $img = $("<img />");
-                    $img.attr("src", this.href).hide();
-                    $("body").append($img);
-                    promises.push(new Promise(resolve =>
-                        $img.on("error", () => {
-                            resolve();
-                            $img.remove();
-                        })));
+					$.styling._resetOnLoad(this.href);
                 });
-                // Allow time for the new style to kick in before
-                // resetting the styling
-                Promise.all(promises)
-                .then(() => $.styling.reset());
 
-                if (theme === "base") {
+                if (theme === "base")
                     Cookies.remove("ui_theme");
-                } else {
+				else {
                     Cookies.set("ui_theme", theme, {
                         expires: 365,
-						samesite: "strict"
+						sameSite: "strict"
                     });
                 }
             }
             return Cookies.get("ui_theme");
         },
 
-        scale: function(scale) {
+		/**
+		 * Getter/setter for the body font size.
+		 * @param {number=} scale font size in pixels (px) - must be > 6
+		 * or it will be ignored. 
+		 * @return {number} the (new) scale
+		 */
+        scale: scale => {
             let now = $("body").css("font-size").replace(/px/, "");
-            if (typeof scale !== 'undefined' && scale > 6) { // don't go below 6px
+            if (typeof scale !== 'undefined' && scale > 6) {
                 now = scale;
-                $("body").css("font-size", scale + "px");
+                $("body").css("font-size", `${scale}px`);
                 Cookies.set("ui_scale", scale, {
                     expires: 365,
-					samesite: "strict"
+					sameSite: "strict"
                 });
             }
             return now;

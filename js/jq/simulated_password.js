@@ -1,12 +1,17 @@
 /*@preserve Copyright (C) 2018-2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,jquery */
 
-/**
- * Simulated password plugin, to overcome Firefox infinite loop and add
- * a "show pass" checkbox
- */
 define("js/jq/simulated_password", ["jquery"], () => {
 
+	/**
+	 * Simulated password jQuery plugin, fixes `input type="password".
+	 * Sits over an `input` tag to overcome Firefox infinite loop and add
+	 * a "show pass" checkbox.
+	 * ```
+     * $("input[type='password']").simulated_password();
+	 * ```
+	 * @namespace $.simulated_password
+	 */
     const SPOT = '•';
     let debug; // global for all instances
     let selectionStart = 0, selectionEnd = 0, keyDown = -1;
@@ -22,7 +27,8 @@ define("js/jq/simulated_password", ["jquery"], () => {
             const selLen = document.selection.createRange().text.length;
             sel.moveStart('character', -input.value.length);
             return sel.text.length - selLen;
-        }
+        } else
+			return -1;
     }
 
     function setCursorPosition(input, pos) {

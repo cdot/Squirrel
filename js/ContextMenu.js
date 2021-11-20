@@ -9,10 +9,13 @@ define("js/ContextMenu", [
     const TX = Translator.instance();
 
 	/**
-	 * Squirrel context menu for nodes
+	 * Squirrel context menu for nodes, using jquery.ui-contentmenu
 	 */
     class ContextMenu {
 
+		/**
+		 * @param {Squirrel} containing app object
+		 */
         constructor(app) {
             this.debug = app.debug;
 

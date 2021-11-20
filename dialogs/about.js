@@ -6,6 +6,11 @@
  */
 define("dialogs/about", ["js/Dialog", "js/jq/template"], Dialog => {
 
+	/**
+	 * About Squirrel dialog.
+	 * See {@link Dialog} for constructor parameters.
+	 * @extends Dialog
+	 */
     class AboutDialog extends Dialog {
 
         initialise() {

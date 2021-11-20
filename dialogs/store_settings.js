@@ -3,6 +3,11 @@
 
 define("dialogs/store_settings", ["js/Dialog", "js/jq/template"], Dialog => {
 
+	/**
+	 * Store settings dialog.
+	 * See {@link Dialog} for constructor parameters.
+	 * @extends Dialog
+	 */
     class StoreSettingsDialog extends Dialog {
 
         /*

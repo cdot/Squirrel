@@ -6,7 +6,9 @@ define("dialogs/extras", [
 ], (Dialog, Translator, Tree, Cookies) => {
 
 	/**
-	 * Settings dialog
+	 * Settings dialog.
+	 * See {@link Dialog} for constructor parameters
+	 * @extends Dialog
 	 */
     class ExtrasDialog extends Dialog {
 
@@ -16,7 +18,7 @@ define("dialogs/extras", [
                 if (Cookies.get("ui_autosave") !== ons) {
                     Cookies.set("ui_autosave", ons, {
                         expires: 365,
-						samesite: "strict"
+						sameSite: "strict"
                     });
                     $(document).trigger("update_save");
                 }
@@ -34,6 +36,9 @@ define("dialogs/extras", [
             return ok;
         }
 
+		/**
+		 * @override
+		 */
         initialise() {
             const self = this;
 
@@ -136,6 +141,9 @@ define("dialogs/extras", [
             });
         }
 
+		/**
+		 * @override
+		 */
         open() {
             this.$control("theme")
             .val($.styling.theme())
@@ -150,6 +158,13 @@ define("dialogs/extras", [
             Translator.instance().language().then(
 				lingo => this.$control("language").val(lingo));
         }
+
+		/**
+		 * @override
+		 */
+		closed() {
+            if (this.debug) this.debug("extras closed");
+		}
     }
     return ExtrasDialog;
 });

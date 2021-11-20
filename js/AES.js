@@ -161,8 +161,8 @@ define("js/AES", () => {
 
 	
 	/**
-     * AES Counter-mode implementation in JavaScript
-     * @augments Aes
+     * AES Counter-mode implementation in JavaScript. Only decrypts, kept
+	 * just for compatibility with old stores.
      */
     class AES {
 

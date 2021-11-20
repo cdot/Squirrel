@@ -10,7 +10,12 @@ define("dialogs/alarm", [
 
     const MSPERDAY = 24 * 60 * 60 * 1000;
 
-    class AlarmDialog extends Dialog {
+    /**
+	 * Alarm dialog.
+	 * See {@link Dialog} for constructor parameters
+	 * @extends Dialog
+	 */
+	class AlarmDialog extends Dialog {
 
         _getPickedDate() {
             return this.$control("date").datepicker("getDate").getTime();
@@ -33,7 +38,7 @@ define("dialogs/alarm", [
             this._updateSave();
         }
 
-        /**
+		/**
 		 * @Override
 		 */
         initialise() {

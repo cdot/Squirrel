@@ -5,6 +5,12 @@
  * Confirm deletion of a node
  */
 define("dialogs/delete", ["js/Dialog", "js/Action"], (Dialog, Action) => {
+
+	/**
+	 * Confirm delete dialog.
+	 * See {@link Dialog} for constructor parameters.
+	 * @extends Dialog
+	 */
     class DeleteDialog extends Dialog {
 
         open() {

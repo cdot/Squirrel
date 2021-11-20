@@ -6,6 +6,11 @@
  */
 define("dialogs/change_password", ["js/Dialog"], Dialog => {
 
+	/**
+	 * Password change dialog.
+	 * See {@link Dialog} for constructor parameters.
+	 * @extends Dialog
+	 */
     class ChangePasswordDialog extends Dialog {
 
         _checkSamePass() {

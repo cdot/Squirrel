@@ -3,6 +3,11 @@
 
 define("dialogs/add", ["js/Dialog", "js/Action"], (Dialog, Action) => {
 
+	/**
+	 * Add folder/value dialog.
+	 * See {@link Dialog} for constructor parameters
+	 * @extends Dialog
+	 */
     class AddDialog extends Dialog {
 
         /**

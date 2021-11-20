@@ -1,15 +1,19 @@
 /*@preserve Copyright (C) 2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser */
 
-/**
- * Options:
- * title: title for the dialog
- * user: initial value for username
- * pass: initial value for password
- */
 define("dialogs/login", [
 	"js/Dialog", "js/jq/simulated_password"
 ], Dialog => {
+
+	/**
+	 * Login dialog.
+	 * See {@link Dialog} for constructor parameters.
+	 * Options:
+	 * * title: title for the dialog
+	 * * user: initial value for username
+	 * * pass: initial value for password
+	 * @extends Dialog
+	 */
     class LoginDialog extends Dialog {
         initialise() {
             const self = this;

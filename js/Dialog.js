@@ -81,7 +81,10 @@ define("js/Dialog", [
                     else if (!this.oked && this._reject)
                         this._reject(this);
                     return true;
-                }
+                },
+				close: () => {
+					this.closed();
+				}
             }, options);
 
             // On touch capable devices, position the dialog at the
@@ -296,7 +299,6 @@ define("js/Dialog", [
         /**
          * Override in subclasses for actions when the dialog is being
          * initialised e.g. handlers
-         * @private
          */
         initialise() {
         }
@@ -305,6 +307,13 @@ define("js/Dialog", [
          * Override in subclasses for actions when the dialog opens
          */
         open() {
+        }
+
+        /**
+         * Override in subclasses for actions when the dialog is
+		 * closed
+         */
+        closed() {
         }
 
         /**
