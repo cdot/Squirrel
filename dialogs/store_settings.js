@@ -68,7 +68,7 @@ define("dialogs/store_settings", ["js/Dialog", "js/jq/template"], Dialog => {
         _check_paths() {
             let ok = true;
             
-            const $ctl = this.$control("cloud_path");
+            let $ctl = this.$control("cloud_path");
             if ($ctl.val() === "") {
                 $ctl.prop(
                     "title", this.tx("Cloud store path may not be empty"));

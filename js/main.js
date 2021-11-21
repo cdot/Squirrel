@@ -14,14 +14,25 @@ requirejs.config({
     }
 });
 
-requirejs(["js/Utils"], function (Utils) {
+/**
+ * "Main Program"
+ */
+
+// Two step require, as we want to be able to suppress the browser cache if
+// debug=1, and jquery-touch-events has a dependency on jQuery which
+// can't be resolved by a single requirejs which loads asynchronously.
+requirejs(["js/Utils", "jquery", "jquery-ui"], Utils => {
     // Parse URL parameters
     const qs = Utils.parseURLParams(
         window.location.search.substring(1),
         {
+			// The base store path
             store: { type: "string", "default": "LocalStorageStore" },
+			// Additional store layers
             use: { array: true, type: "string", "default": ["Crypto"] },
+			// 1 for debug messages
             debug: { type: "boolean" },
+			// Remote store URL
             url: { type: "string" }
         });
 
@@ -31,33 +42,34 @@ requirejs(["js/Utils"], function (Utils) {
         });
     }
 
-    requirejs(["jquery", "jquery-ui", "js/Translator", "js/Squirrel"], function (jq, jqui, Translator, Squirrel) {
+    requirejs([
+		"js/Translator", "js/Squirrel", "jquery-touch-events"
+	], (Translator, Squirrel) => {
 
-        Translator.instance().debug = qs.debug ? console.debug : false;
-        Translator.instance().options.url = "locale";
+		Translator.instance({
+			url: "locale",
+			debug: qs.debug ? console.debug : false
+		});
         
-        if (qs.debug) {
-            if ($.isTouchCapable && $.isTouchCapable())
-                console.debug("Device is touch-capable");
-            console.debug(
+		if (qs.debug) {
+			if ($.isTouchCapable && $.isTouchCapable())
+				console.debug("Device is touch-capable");
+			console.debug(
 				"Device is", window.screen.width, "X",
-                window.screen.height, "Body is",
-                $("body").width(), "X", $("body").height());
-        } else {
-            // By default, jQuery timestamps datatype 'script' and 'jsonp'
-            // requests to avoid them being cached by the browser.
-            // Disable this functionality by default so that as much as
-            // possible is cached locally
-            $.ajaxSetup({
-                cache: true
-            });
-        }
+				window.screen.height, "Body is",
+				$("body").width(), "X", $("body").height());
+		} else {
+			// By default, jQuery timestamps datatype 'script' and 'jsonp'
+			// requests to avoid them being cached by the browser.
+			// Disable this functionality by default so that as much as
+			// possible is cached locally
+			$.ajaxSetup({
+				cache: true
+			});
+		}
 
-        // Initialise UI components
-        // Have to do this as a two-step process because mobile-events has
-        // a clumsy dependency on jQuery
-        $(() => Utils.require("jquery-touch-events")
-		  .then(() => new Squirrel(qs).begin()));
+		// Initialise UI components
+		return new Squirrel(qs).begin();
     });
 });
     

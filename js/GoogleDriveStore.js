@@ -80,7 +80,7 @@ define("js/GoogleDriveStore", [
          * @private
          */
         _gError(r, context) {
-            let mess = context + TX.tx(" failed: ");
+            let mess = `${context} ` + TX.tx("failed") + ": ";
             if (typeof r.details !== 'undefined')
                 mess += r.details;
             else if (typeof r.error !== 'undefined')

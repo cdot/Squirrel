@@ -27,7 +27,7 @@ lint:
 
 # Update package.json with latest packages
 # using npm-check-update (npm install -g npm-check-updates)
-update:
+update: node_modules
 	ncu -u
 
 clean:

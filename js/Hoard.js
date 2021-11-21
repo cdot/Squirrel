@@ -234,7 +234,6 @@ define("js/Hoard", [
 						node.time = action.time;
 					}
 				});
-				break;
 			}
 
 			case 'I': { // Insert

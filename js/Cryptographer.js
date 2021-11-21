@@ -1,5 +1,6 @@
 /*@preserve Copyright (C) 2021 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,node */
+/* eslint no-global-assign: [ "error", { "exceptions": ["crypto"]}] */
 
 if (typeof crypto === 'undefined')
 	crypto = require('crypto').webcrypto; // node.js

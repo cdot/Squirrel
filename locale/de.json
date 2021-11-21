@@ -1,1 +1,842 @@
-{"$1 day$?($1!=1,s,)":{"s":"Tag$?($1!=1,e,)","m":0.9},"$1 month$?($1!=1,s,)":{"s":"$1 Monat$?($1!=1,e,)","m":0.9},"$1 year$?($1!=1,s,)":{"s":"$1 Jahr$?($1!=1,e,)","m":0.9},"... and $1 more change$?($1!=1,s,)":{"s":"... und $1 weitere Änderung$?($1!=1,en,)","m":0.9},"Add new folder":{"m":0.99,"s":"Neuen Ordner hinzufügen"},"Add new value":{"m":0.9,"s":"Neuen Wert hinzufügen"},"Are you really sure?":{"m":0.9,"s":"Sind Sie wirklich sicher?"},"Check that you have the correct password.":{"m":0.85,"s":"Überprüfen Sie, ob Sie das richtige Passwort haben."},"Could not open cloud store: $1":{"m":0.5,"s":"Konnte nicht geöffnet Cloud Speicher: 1 €"},"Delete":{"m":0.5,"s":"Löschen"},"Edit value":{"m":0.5,"s":"Wert bearbeiten"},"Enter search string":{"m":0.5,"s":"Suchbegriff eingeben"},"Error":{"m":0.5,"s":"Fehler"},"Generate new random value":{"m":0.5,"s":"Neuen Zufallswert"},"Google Drive load":{"m":0.5,"s":"Google Drive"},"If you continue, only the local store will be available":{"m":0.5,"s":"Wenn Sie den Vorgang fortsetzen, wird nur der Speicher des Clients verfügbar sein"},"Pick characters":{"m":0.85,"s":"Wähle Charaktere aus"},"Read":{"m":0.9,"s":"Lesen"},"Reminder on '$1' was due on $2":{"m":0.85,"s":"Die Erinnerung für '$1' war am $2 fällig."},"Rename":{"m":0.9,"s":"Umbenennnen"},"Save":{"m":0.9,"s":"Speichern"},"Search":{"m":0.9,"s":"Wonach suchst du?"},"Searching...":{"m":0.9,"s":"Suchen..."},"Tools/Options":{"m":0.98,"s":"TOOLS/OPTIONS"},"Undo":{"m":0.9,"s":"Rückgängig machen"},"Undo last change":{"m":0.99,"s":"Letzte Änderung rückgängig machen"},"Warning":{"m":0.5,"s":"Warnung"},"Write":{"m":0.9,"s":"Schreiben"},"You have unsaved changes":{"m":0.9,"s":"Du hast nicht gespeicherte Änderungen"},"Paste":{"m":0.9,"s":"Paste"},"Error in search expression":{"m":0.85,"s":"Fehler im Suchbegriff"}," failed: ":{"s":"gescheitert:","m":0.9},"Your access token has expired, or you are not logged in.":{"m":0.85,"s":"Ihre Zugangs-Token abgelaufen ist, oder du bist nicht eingeloggt."},"Timeout trying to authorise access to Google Drive.":{"m":0.85,"s":"Zeitüberschreitung aufgetreten, Zugriff auf Google Drive zu genehmigen."},"Are popups blocked in your browser?":{"m":0.85,"s":"Werden Popups in Ihrem Browser blockiert?"},"Reading from cloud":{"m":0.85,"s":"Aus der Cloud lesen"},"Authentication":{"m":0.9,"s":"Authentifizierung"},"Loading application":{"m":0.85,"s":"Anwendung wird geladen"},"Please refresh the page in order to save in Google Drive":{"m":0.85,"s":"Bitte aktualisieren Sie die Seite, um sie in Google Drive zu speichern"},"Not found":{"m":0.9,"s":"Nicht gefunden"},"Reminders":{"m":0.9,"s":"Erinnerungen"},"Saved in local store":{"m":0.85,"s":"Im lokalenspeicher gespeichert"},"Saved in cloud":{"m":0.85,"s":"In der Cloud gespeichert"},"Could not load cloud store '$1'":{"s":"Cloud-Speicher '$1' konnte nicht geladen werden","m":0.7},"Continuing and saving will create a new cloud store.":{"m":0.85,"s":"Wenn Sie fortfahren und speichern, wird ein neuer Cloud Store erstellt."},"If you continue and save, the cloud store will be overwritten and you may lose data.":{"m":0.85,"s":"Wenn Sie fortfahren und speichern, wird der Cloud-Speicher überschrieben und Sie können Daten verlieren."},"Cloud store read failed":{"m":0.85,"s":"Lesen des Cloud-Speichers fehlgeschlagen"},"Local store exists, but can't be read.":{"m":0.85,"s":"Lokaler Speicher existiert, kann aber nicht gelesen werden."},"Network login for $1":{"s":"Netzwerkanmeldung für $1","m":0.8},"cloud":{"m":0.9,"s":"cloud"},"About Squirrel":{"s":"Über Squirrel","m":0.9},"Add":{"m":0.9,"s":"Hinzufügen"},"Add new entry":{"m":0.9,"s":"Neuen Eintrag hinzufügen"},"After optimisation it will have $1 node$?($1!=1,s,) + $2 alarm$?($2!=1,s,) + $3 constraint$?($3!=1,s,) = $4 action$?($4!=1,s,).":{"s":"Nach der Optimierung hat es $1 Knot$?($1!=1,en,) + $2 Alarm$?($2!=1,e,) + $3 Einschränkung$?($3!=1,en,) + $4 Aktion$?($4!=1,e,)","m":0.9},"Alert":{"s":"Warnung","m":0.9},"Are you sure you want to delete":{"m":0.9,"s":"Möchten Sie den Eintrag wirklich löschen"},"Autosave":{"m":0.9,"s":"Automatisch speichern"},"Calculating if optimisation is worthwhile":{"m":0.85,"s":"Berechnen, ob sich eine Optimierung lohnt"},"Cancel":{"m":0.9,"s":"Abbrechen"},"Cannot use this image because of this error: $1":{"m":0.85,"s":"Dieses Bild kann aufgrund des folgenden Fehlers nicht verwendet werden: $1"},"Change":{"m":0.9,"s":"Ändern"},"Change Encryption Password":{"m":0.85,"s":"Ändern Sie das Verschlüsselungskennwort"},"Changing the encryption password will overwrite all data in the cloud with what you can currently see in the browser.":{"m":0.85,"s":"Wenn Sie das Verschlüsselungskennwort ändern, werden alle Daten in der Cloud mit den Daten überschrieben, die derzeit im Browser angezeigt werden."},"Characters":{"m":0.9,"s":"Zeichen"},"Choose Image for Steganography":{"m":0.85,"s":"Wählen Sie Bild für Steganographie"},"Choose a local image that will be copied and used to hide your cloud store.":{"m":0.85,"s":"Wählen Sie ein lokales Image aus, das kopiert und zum Ausblenden Ihres Cloud Stores verwendet wird."},"Choose when you want to be reminded about":{"m":0.85,"s":"Wählen Sie, wann Sie daran erinnert werden möchten"},"Clear":{"m":0.9,"s":"Clear"},"Click on a character position to see what character it is":{"m":0.85,"s":"Klicken Sie auf eine Zeichenposition, um zu sehen, um welches Zeichen es sich handelt"},"Close":{"m":0.9,"s":"Ticket schließen"},"Cloud Store":{"m":0.85,"s":"Cloud Store"},"Colour scheme":{"m":0.9,"s":"Farbschema"},"Confirm new password":{"m":0.9,"s":"Neues Passwort bestätigen"},"Database":{"s":"Database","m":0.1},"Delete entry":{"m":1,"s":"Eintrag löschen"},"Enable reminder":{"m":1,"s":"Erinnerung Aktivieren"},"Enter new password":{"m":1,"s":"Altes Passwort"},"Enter password":{"m":1,"s":"Passwort eingeben"},"Enter password length":{"m":0.85,"s":"Passwortlänge eingeben"},"Enter the characters that are legal in passwords for this site. You can use character ranges like A-Z or 0-9":{"m":0.85,"s":"Geben Sie die Zeichen ein, die in Kennwörtern für diese Site zulässig sind. Sie können Zeichenbereiche wie AZ oder 0-9 verwenden"},"Enter the language code for a supported language":{"m":0.85,"s":"Geben Sie den Sprachcode für eine unterstützte Sprache ein"},"Enter the name and value for the new entry":{"m":0.85,"s":"Geben Sie den Namen und den Wert für den neuen Eintrag ein"},"Enter the name for the new folder":{"m":0.98,"s":"Geben Sie einen Namen für den neuen Ordner ein."},"Enter the path to your cloud data store":{"m":0.85,"s":"Geben Sie den Pfad zu Ihrem Cloud-Datenspeicher ein"},"Enter username":{"m":1,"s":"Nutzernamen eingeben"},"Enter value":{"m":1,"s":"Wert eingeben"},"Generate random value":{"m":0.85,"s":"Zufälligen Wert generieren"},"Hide Values":{"m":0.85,"s":"Werte ausblenden"},"Hide values until they are hovered over. Use if someone might be looking over your shoulder":{"m":0.85,"s":"Blenden Sie Werte aus, bis Sie den Mauszeiger darüber bewegen. Verwenden Sie diese Option, wenn jemand über Ihre Schulter schaut"},"Increase/decrease text size":{"m":0.85,"s":"Text vergrößern / verkleinern"},"Language":{"m":1,"s":"Sprache"},"Length":{"m":1,"s":"Länge"},"Licensed under the MIT License. Reuse within proprietary software is permitted provided all copies of the licensed software include a copy of the MIT License terms and the copyright notice.":{"m":0.85,"s":"Lizenziert unter der MIT-Lizenz. Die Wiederverwendung in proprietärer Software ist zulässig, sofern alle Kopien der lizenzierten Software eine Kopie der MIT-Lizenzbestimmungen und des Urheberrechtsvermerks enthalten."},"Login":{"m":1,"s":"Anmelden"},"New password":{"m":0.9,"s":"Neues Passwort"},"Note that very large images may take a long time to load and save.":{"m":0.85,"s":"Beachten Sie, dass das Laden und Speichern sehr großer Bilder sehr lange dauern kann."},"OK":{"m":0.9,"s":"OK"},"Optimise":{"m":0.9,"s":"Optimieren"},"Optimise Cloud":{"m":0.85,"s":"Cloud optimieren"},"Optimising your cloud store will lose all the history, which will make it impossible for any client that is not completely up to date to synchronise. You have been warned!":{"m":0.85,"s":"Durch die Optimierung Ihres Cloud-Speichers geht der gesamte Verlauf verloren, sodass kein Client mehr synchronisieren kann, der nicht vollständig auf dem neuesten Stand ist. Du wurdest gewarnt!"},"Pass:":{"m":1,"s":"Bestanden:"},"Password may not be empty":{"m":0.93,"s":"Ihr Passwort darf nicht leer sein"},"Passwords do not match":{"m":1,"s":"Passwörter stimmen nicht überein"},"Path to your cloud store":{"m":0.85,"s":"Pfad zu Ihrem Cloud Store"},"Re-enter new password":{"m":0.9,"s":"Neues Passwort erneut eingeben"},"Remember constraints on this value":{"m":0.85,"s":"Beachten Sie die Einschränkungen für diesen Wert"},"Remind in":{"m":0.85,"s":"Erinnere dich daran"},"Reminder":{"m":0.9,"s":"Erinnerung"},"Set new password":{"m":0.9,"s":"Neues Passwort setzen"},"Settings":{"m":0.9,"s":"Einstellungen"},"Sign In":{"m":0.9,"s":"Registrieren"},"Squirrel is Copyright © 2015-2019 Crawford Currie <a href=\"http://c-dot.co.uk\">http://c-dot.co.uk</a>":{"m":0.85,"s":"Eichhörnchen ist Copyright © 2015-2019 Crawford Currie </a> http://c-dot.co.uk $1"},"Store settings":{"m":0.98,"s":"Shop-Einstellungen"},"Suggested value for":{"m":0.85,"s":"Empfohlener Wert für"},"Text size":{"m":0.9,"s":"Schriftgrösse"},"The cloud currently has $1 action$?($1!=1,s,) in the history.":{"m":0.85,"s":"Die Cloud hat derzeit $1 Aktion$?($1!=1,en,) im Verlauf."},"These preferences will be saved in cookies in your browser":{"m":0.85,"s":"Diese Einstellungen werden in Cookies in Ihrem Browser gespeichert"},"This should be a complex colour image of at least 1024x768 pixels, preferably with variable transparency.":{"m":0.85,"s":"Dies sollte ein komplexes Farbbild mit mindestens 1024 x 768 Pixeln sein, vorzugsweise mit variabler Transparenz."},"This version was released on $1":{"m":0.85,"s":"Diese Version wurde veröffentlicht am $1"},"Try again":{"m":0.9,"s":"Bitte nochmals versuchen"},"Use this":{"m":0.9,"s":"Verwenden"},"User interface":{"m":0.9,"s":"Benutzeroberfläche"},"User:":{"m":0.9,"s":"Benutzer:"},"You must ensure that all clients up to date and you are safely connected to the internet before doing this, or you will lose data.":{"m":0.85,"s":"Sie müssen dafür sorgen, dass alle Clients auf dem neuesten Stand sind und Sie sicher mit dem Internet verbunden sind, bevor Sie dies tun. Andernfalls gehen Daten verloren."},"and everything under it?":{"m":0.85,"s":"und alles darunter?"},"days":{"m":0.9,"s":"Tage"},"months":{"m":0.9,"s":"Monate"},"on":{"m":0.9,"s":"am"},"years":{"m":0.9,"s":"Jahre"},"$1 failed: $2":{"s":"fehlgeschlagen: $2","m":0.9}," (repeat every $1)":{"s":"(Wiederhole Sie jede $1)","m":0.9},"Cloud store path:":{"m":0.85,"s":"Cloud-Speicherpfad:"},"Local store read failed":{"m":0.85,"s":"Lesen des lokalenspeichers fehlgeschlagen"},"Apply selected changes":{"m":0.85,"s":"Übernehmen Sie die ausgewählten Änderungen"},"Add reminder on $1$2 to $3":{"s":"füge eine Erinnerung hinzu, zu am $1$2 zu $3","m":0.5},"Cloud store path may not be empty":{"m":0.85,"s":"Der Cloud-Speicherpfad darf nicht leer sein"},"$1 alarm change$?($1!=1,s,)":{"s":"$1 Alarmwechsel","m":0.9},"Undo changes to constraints":{"m":0.85,"s":"Änderungen an Einschränkungen rückgängig machen"},"Bulk content change":{"m":0.89,"s":"Inhaltsänderung"},"Local store could not be saved":{"m":0.85,"s":"Lokalenspeicher konnte nicht gespeichert werden"},"it does not exist":{"m":0.98,"s":"existiert nicht"},"Cloud path changed":{"m":0.85,"s":"Wolkenpfad geändert"},"it already exists":{"m":0.97,"s":"Weil die soziale Dimension nämlich schon besteht."},"A new local store will be created.":{"m":0.85,"s":"Ein neuer lokalen speicher wird erstellt."},"Change the encryption password for the store":{"m":0.85,"s":"Ändern Sie das Verschlüsselungskennwort für den Speicher"},"Cancel reminder on $1":{"m":0.85,"s":"Erinnerung abbrechen am $1"},"Undo changes":{"m":0.9,"s":"Änderungen rückgängig machen"},"Cloud store could not be saved":{"m":0.85,"s":"Cloud Store konnte nicht gespeichert werden"},"Local store does not exist.":{"m":0.85,"s":"Lokalenspeicher existiert nicht."},"Set new encryption password":{"m":0.85,"s":"Legen Sie ein neues Verschlüsselungskennwort fest"},"Revert to default constraints":{"m":0.85,"s":"Auf Standardeinschränkungen zurücksetzen"},"Change value of $1 to '$2'":{"m":0.85,"s":"Ändern Sie den Wert von $2 in &quot;$1&quot;."},"No changes needed to be saved":{"m":0.85,"s":"Es mussten keine Änderungen gespeichert werden"},"Optimisation will not improve performance":{"m":0.85,"s":"Durch die Optimierung wird die Leistung nicht verbessert"},"Open the store settings dialog":{"m":0.85,"s":"Öffnen Sie den Speichereinstellungsdialog"},"Select your preferred colour scheme":{"m":0.85,"s":"Wählen Sie Ihr bevorzugtes Farbschema"},"Show when the last change happened":{"m":0.85,"s":"Zeigen Sie an, wann die letzte Änderung stattgefunden hat"},"Reading from local store":{"m":0.85,"s":"Aus dem lokalen speicher lesen"},"The following changes were added in the cloud since you last synchronised. Deselect any you don't want to apply (they will be lost!)":{"m":0.85,"s":"Die folgenden Änderungen wurden in der Cloud seit Ihrer letzten Synchronisierung hinzugefügt. Deaktivieren Sie alle, die Sie nicht anwenden möchten (sie gehen verloren!)"},"These changes need to be saved:\\n$1":{"m":0.85,"s":"Diese Änderungen müssen gespeichert werden: \\n$1"},"Remember constraints":{"m":0.85,"s":"Beachten Sie die Einschränkungen"},"Rename $1 to '$2'":{"m":0.85,"s":"benenne $1 in '$2' um"},"Revert":{"m":0.9,"s":"Rückgängig"},"Select changes":{"m":0.85,"s":"Änderungen auswählen"},"Set/Change Reminder":{"m":0.85,"s":"Erinnerung setzen / ändern"},"Change the encryption password for the store. This should be different to the password you use to log in to your cloud storage provider (e.g. Google). You should ensure that all clients up to date and you are safely connected to the internet before changing the password, or you may lose data. The encryption password is never saved, and there is no way to recover it if you lose it!":{"m":0.85,"s":"Ändern Sie das Verschlüsselungskennwort für den Speicher. Dies sollte sich von dem Kennwort unterscheiden, mit dem Sie sich bei Ihrem Cloud-Speicheranbieter (z. B. Google) anmelden. Sie sollten sicherstellen, dass alle Clients auf dem neuesten Stand sind und dass Sie sicher mit dem Internet verbunden sind, bevor Sie das Kennwort ändern. Andernfalls können Daten verloren gehen. Das Verschlüsselungskennwort wird nie gespeichert, und es kann nicht wiederhergestellt werden, wenn Sie es verlieren!"},"Conflicts":{"m":1,"s":"Konflikte"},"Copy":{"m":1,"s":"Kopie"},"Copy Folder":{"m":0.99,"s":"Ordner kopieren"},"Copy Value":{"m":0.99,"s":"Wert kopieren"},"Create $1":{"s":"Erstelle $1","m":0.8},"Delete $1":{"s":"Löschen $1","m":0.8},"Edit valid JSON":{"m":0.85,"s":"Bearbeiten Sie gültigen JSON"},"Enable to automatically save whenever anything changes":{"m":0.85,"s":"Aktivieren Sie diese Option, um automatisch zu speichern, wenn sich etwas ändert"},"Encryption password":{"s":"Verschlüsselungspasswort","m":0.8},"Enter a name for the pasted folder or value":{"m":0.85,"s":"Geben Sie einen Namen für den eingefügten Ordner oder Wert ein"},"Enter new name":{"m":1,"s":"Neuen Namen eingeben"},"Failed to save in cloud store: $1":{"s":"Speichern im Cloud Store fehlgeschlagen: $1","m":0.8},"If you continue and save, a new local store will be created.":{"m":0.85,"s":"Wenn Sie fortfahren und speichern, wird ein neuer lokalen speicher erstellt."},"Image URL changed":{"m":0.85,"s":"Bild-URL geändert"},"Information":{"m":1,"s":"Informationen"},"Initialising local store":{"m":0.85,"s":"Initialisierung des lokalen speichers"},"Initialising cloud store":{"m":0.85,"s":"Cloud Store wird initialisiert"},"Insert $1 = $2":{"s":"$1 = $2 einfügen","m":0.8},"Last Change":{"m":1,"s":"Letzte Änderung"},"Move $1 to $2":{"s":"Bewege $1 nach $2","m":0.7},"Name is already in use":{"m":0.99,"s":"Der Name wird bereits verwendet."},"New encryption details":{"m":0.85,"s":"Neue Verschlüsselungsdetails"},"Optimise the store by removing old actions. The cloud keeps a history of all changes from all clients, so that every client has a chance to see every change. This history can get quite long, so you may want to optimise it by removing the history. You should only do this if you are 100% certain that no client has local changes that may need to be saved to the cloud":{"m":0.85,"s":"Optimieren Sie den Shop, indem Sie alte Aktionen entfernen. In der Cloud werden alle Änderungen aller Clients protokolliert, sodass jeder Client die Möglichkeit hat, jede Änderung zu sehen. Dieser Verlauf kann sehr lang werden. Sie können ihn optimieren, indem Sie den Verlauf entfernen. Sie sollten dies nur tun, wenn Sie zu 100% sicher sind, dass auf keinem Client lokale Änderungen vorhanden sind, die möglicherweise in der Cloud gespeichert werden müssen"},"Steganography image URL may not be empty":{"m":0.85,"s":"Die URL des Steganografie-Bilds darf nicht leer sein"},"URL of your steganography image":{"m":0.85,"s":"URL Ihres Steganografie-Bildes"},"Clear constraints":{"s":"Beseitigen Sie die Einschränkungen","m":0.9},"Could not open client store: $1":{"s":"Client-Speicher konnte nicht geöffnet werden: $1","m":0.7},"Local store has been reset":{"s":"Lokaler Speicher wurde zurückgesetz","m":0.7},"Please confirm you want to reset your local store. Changes not saved in the cloud will be lost!":{"m":0.85,"s":"Bitte bestätigen Sie, dass Sie Ihr lokales Geschäft zurücksetzen möchten. Nicht in der Cloud gespeicherte Änderungen gehen verloren!"},"Preparing UI":{"s":"UI Vorbereiten","m":0.6},"Reset":{"s":"Zurücksetzen","m":0.6},"Reset Local Store":{"s":"Setzen Sie den lokalen Speicher zurück","m":0.6},"Reset the local store. This will reset the local store from the cloud. Any local changes will be lost.":{"s":"Setzen Sie den lokalen Speicher zurück. Dadurch wird der lokale Speicher aus der Cloud zurückgesetzt. Alle lokalen Änderungen gehen verloren.","m":0.6},"Saving":{"s":"Retten","m":0.5},"Unable to continue":{"s":"Kann nicht fortfahren","m":0.5},"Back to parent folder":{"m":0.86,"s":"Zurück zum übergeordneten Ordner"},"Changes merged from cloud store":{"m":0.85,"s":"Änderungen aus Cloud Store zusammengeführt"},"Client user":{"m":1,"s":"Client Anwender"},"Constrain $1 to $2 character$?($2!=1,s,) from $3":{"m":0.85,"s":"$2 auf $ Zeichen$2 beschränken?(!=$31,s,) von undefined"},"It was already created @ $1":{"m":0.85,"s":"Es wurde bereits erstellt @ undefined"},"Move Here":{"m":1,"s":"An diese Stelle verschieben"},"Move To":{"m":1,"s":"Gehe zu"},"Move to":{"m":1,"s":"Umzug nach"},"Move to this folder":{"m":0.98,"s":"In diesen Ordner verschieben"}}
+{
+ "$1 day$?($1!=1,s,)": {
+  "s": "Tag$?($1!=1,e,)",
+  "m": 0.9
+ },
+ "$1 month$?($1!=1,s,)": {
+  "s": "$1 Monat$?($1!=1,e,)",
+  "m": 0.9
+ },
+ "$1 year$?($1!=1,s,)": {
+  "s": "$1 Jahr$?($1!=1,e,)",
+  "m": 0.9
+ },
+ "... and $1 more change$?($1!=1,s,)": {
+  "s": "... und $1 weitere Änderung$?($1!=1,en,)",
+  "m": 0.9
+ },
+ "Add new folder": {
+  "m": 0.99,
+  "s": "Neuen Ordner hinzufügen"
+ },
+ "Add new value": {
+  "m": 0.9,
+  "s": "Neuen Wert hinzufügen"
+ },
+ "Are you really sure?": {
+  "m": 0.9,
+  "s": "Sind Sie wirklich sicher?"
+ },
+ "Check that you have the correct password.": {
+  "m": 0.85,
+  "s": "Überprüfen Sie, ob Sie das richtige Passwort haben."
+ },
+ "Could not open cloud store: $1": {
+  "m": 0.5,
+  "s": "Konnte nicht geöffnet Cloud-Speicher: 1 €"
+ },
+ "Delete": {
+  "m": 0.5,
+  "s": "Löschen"
+ },
+ "Edit value": {
+  "m": 0.5,
+  "s": "Wert bearbeiten"
+ },
+ "Enter search string": {
+  "m": 0.5,
+  "s": "Suchbegriff eingeben"
+ },
+ "Error": {
+  "m": 0.5,
+  "s": "Fehler"
+ },
+ "Generate new random value": {
+  "m": 0.5,
+  "s": "Neuen Zufallswert"
+ },
+ "Google Drive load": {
+  "m": 0.5,
+  "s": "Google Drive"
+ },
+ "If you continue, only the local store will be available": {
+  "m": 0.5,
+  "s": "Wenn Sie den Vorgang fortsetzen, wird nur der Speicher des Clients verfügbar sein"
+ },
+ "Pick characters": {
+  "m": 0.85,
+  "s": "Wähle Charaktere aus"
+ },
+ "Read": {
+  "m": 0.9,
+  "s": "Lesen"
+ },
+ "Reminder on '$1' was due on $2": {
+  "m": 0.85,
+  "s": "Die Erinnerung für '$1' war am $2 fällig."
+ },
+ "Rename": {
+  "m": 0.9,
+  "s": "Umbenennnen"
+ },
+ "Save": {
+  "m": 0.9,
+  "s": "Speichern"
+ },
+ "Search": {
+  "m": 0.9,
+  "s": "Wonach suchst du?"
+ },
+ "Searching...": {
+  "m": 0.9,
+  "s": "Suchen..."
+ },
+ "Tools/Options": {
+  "m": 0.98,
+  "s": "TOOLS/OPTIONS"
+ },
+ "Undo": {
+  "m": 0.9,
+  "s": "Rückgängig machen"
+ },
+ "Undo last change": {
+  "m": 0.99,
+  "s": "Letzte Änderung rückgängig machen"
+ },
+ "Warning": {
+  "m": 0.5,
+  "s": "Warnung"
+ },
+ "Write": {
+  "m": 0.9,
+  "s": "Schreiben"
+ },
+ "You have unsaved changes": {
+  "m": 0.9,
+  "s": "Du hast nicht gespeicherte Änderungen"
+ },
+ "Paste": {
+  "m": 0.9,
+  "s": "Paste"
+ },
+ "Error in search expression": {
+  "m": 0.85,
+  "s": "Fehler im Suchbegriff"
+ },
+ "Your access token has expired, or you are not logged in.": {
+  "m": 0.85,
+  "s": "Ihre Zugangs-Token abgelaufen ist, oder du bist nicht eingeloggt."
+ },
+ "Timeout trying to authorise access to Google Drive.": {
+  "m": 0.85,
+  "s": "Zeitüberschreitung aufgetreten, Zugriff auf Google Drive zu genehmigen."
+ },
+ "Are popups blocked in your browser?": {
+  "m": 0.85,
+  "s": "Werden Popups in Ihrem Browser blockiert?"
+ },
+ "Reading from cloud": {
+  "m": 0.85,
+  "s": "Aus der Cloud lesen"
+ },
+ "Authentication": {
+  "m": 0.9,
+  "s": "Authentifizierung"
+ },
+ "Loading application": {
+  "m": 0.85,
+  "s": "Anwendung wird geladen"
+ },
+ "Please refresh the page in order to save in Google Drive": {
+  "m": 0.85,
+  "s": "Bitte aktualisieren Sie die Seite, um sie in Google Drive zu speichern"
+ },
+ "Not found": {
+  "m": 0.9,
+  "s": "Nicht gefunden"
+ },
+ "Reminders": {
+  "m": 0.9,
+  "s": "Erinnerungen"
+ },
+ "Saved in local store": {
+  "m": 0.85,
+  "s": "Im lokalenspeicher gespeichert"
+ },
+ "Saved in cloud": {
+  "m": 0.85,
+  "s": "In der Cloud gespeichert"
+ },
+ "Could not load cloud store '$1'": {
+  "s": "Cloud-Speicher '$1' konnte nicht geladen werden",
+  "m": 0.7
+ },
+ "Continuing and saving will create a new cloud store.": {
+  "m": 0.85,
+  "s": "Wenn Sie fortfahren und speichern, wird ein neuer Cloud-Speicher erstellt."
+ },
+ "If you continue and save, the cloud store will be overwritten and you may lose data.": {
+  "m": 0.85,
+  "s": "Wenn Sie fortfahren und speichern, wird der Cloud-Speicher überschrieben und Sie können Daten verlieren."
+ },
+ "Cloud store read failed": {
+  "m": 0.85,
+  "s": "Lesen des Cloud-Speichers fehlgeschlagen"
+ },
+ "Local store exists, but can't be read.": {
+  "m": 0.85,
+  "s": "Lokaler Speicher existiert, kann aber nicht gelesen werden."
+ },
+ "Network login for $1": {
+  "s": "Netzwerkanmeldung für $1",
+  "m": 0.8
+ },
+ "cloud": {
+  "m": 0.9,
+  "s": "cloud"
+ },
+ "About Squirrel": {
+  "s": "Über Squirrel",
+  "m": 0.9
+ },
+ "Add": {
+  "m": 0.9,
+  "s": "Hinzufügen"
+ },
+ "Add new entry": {
+  "m": 0.9,
+  "s": "Neuen Eintrag hinzufügen"
+ },
+ "After optimisation it will have $1 node$?($1!=1,s,) + $2 alarm$?($2!=1,s,) + $3 constraint$?($3!=1,s,) = $4 action$?($4!=1,s,).": {
+  "s": "Nach der Optimierung hat es $1 Knot$?($1!=1,en,) + $2 Alarm$?($2!=1,e,) + $3 Einschränkung$?($3!=1,en,) + $4 Aktion$?($4!=1,e,)",
+  "m": 0.9
+ },
+ "Alert": {
+  "s": "Warnung",
+  "m": 0.9
+ },
+ "Are you sure you want to delete": {
+  "m": 0.9,
+  "s": "Möchten Sie den Eintrag wirklich löschen"
+ },
+ "Autosave": {
+  "m": 0.9,
+  "s": "Automatisch speichern"
+ },
+ "Calculating if optimisation is worthwhile": {
+  "m": 0.85,
+  "s": "Berechnen, ob sich eine Optimierung lohnt"
+ },
+ "Cancel": {
+  "m": 0.9,
+  "s": "Abbrechen"
+ },
+ "Cannot use this image because of this error: $1": {
+  "m": 0.85,
+  "s": "Dieses Bild kann aufgrund des folgenden Fehlers nicht verwendet werden: $1"
+ },
+ "Change": {
+  "m": 0.9,
+  "s": "Ändern"
+ },
+ "Change Encryption Password": {
+  "m": 0.85,
+  "s": "Ändern Sie das Verschlüsselungskennwort"
+ },
+ "Changing the encryption password will overwrite all data in the cloud with what you can currently see in the browser.": {
+  "m": 0.85,
+  "s": "Wenn Sie das Verschlüsselungskennwort ändern, werden alle Daten in der Cloud mit den Daten überschrieben, die derzeit im Browser angezeigt werden."
+ },
+ "Characters": {
+  "m": 0.9,
+  "s": "Zeichen"
+ },
+ "Choose Image for Steganography": {
+  "m": 0.85,
+  "s": "Wählen Sie Bild für Steganographie"
+ },
+ "Choose a local image that will be copied and used to hide your cloud store.": {
+  "m": 0.85,
+  "s": "Wählen Sie ein lokales Image aus, das kopiert und zum Ausblenden Ihres Cloud-Speicher verwendet wird."
+ },
+ "Choose when you want to be reminded about": {
+  "m": 0.85,
+  "s": "Wählen Sie, wann Sie daran erinnert werden möchten"
+ },
+ "Clear": {
+  "m": 0.9,
+  "s": "Clear"
+ },
+ "Click on a character position to see what character it is": {
+  "m": 0.85,
+  "s": "Klicken Sie auf eine Zeichenposition, um zu sehen, um welches Zeichen es sich handelt"
+ },
+ "Close": {
+  "m": 0.9,
+  "s": "Ticket schließen"
+ },
+ "Cloud Store": {
+  "m": 0.85,
+  "s": "Cloud Store"
+ },
+ "Colour scheme": {
+  "m": 0.9,
+  "s": "Farbschema"
+ },
+ "Confirm new password": {
+  "m": 0.9,
+  "s": "Neues Passwort bestätigen"
+ },
+ "Database": {
+  "s": "Database",
+  "m": 0.1
+ },
+ "Delete entry": {
+  "m": 1,
+  "s": "Eintrag löschen"
+ },
+ "Enable reminder": {
+  "m": 1,
+  "s": "Erinnerung Aktivieren"
+ },
+ "Enter new password": {
+  "m": 1,
+  "s": "Altes Passwort"
+ },
+ "Enter password": {
+  "m": 1,
+  "s": "Passwort eingeben"
+ },
+ "Enter password length": {
+  "m": 0.85,
+  "s": "Passwortlänge eingeben"
+ },
+ "Enter the characters that are legal in passwords for this site. You can use character ranges like A-Z or 0-9": {
+  "m": 0.85,
+  "s": "Geben Sie die Zeichen ein, die in Kennwörtern für diese Site zulässig sind. Sie können Zeichenbereiche wie AZ oder 0-9 verwenden"
+ },
+ "Enter the language code for a supported language": {
+  "m": 0.85,
+  "s": "Geben Sie den Sprachcode für eine unterstützte Sprache ein"
+ },
+ "Enter the name and value for the new entry": {
+  "m": 0.85,
+  "s": "Geben Sie den Namen und den Wert für den neuen Eintrag ein"
+ },
+ "Enter the name for the new folder": {
+  "m": 0.98,
+  "s": "Geben Sie einen Namen für den neuen Ordner ein."
+ },
+ "Enter the path to your cloud data store": {
+  "m": 0.85,
+  "s": "Geben Sie den Pfad zu Ihrem Cloud-Speicher ein"
+ },
+ "Enter username": {
+  "m": 1,
+  "s": "Nutzernamen eingeben"
+ },
+ "Enter value": {
+  "m": 1,
+  "s": "Wert eingeben"
+ },
+ "Generate random value": {
+  "m": 0.85,
+  "s": "Zufälligen Wert generieren"
+ },
+ "Hide Values": {
+  "m": 0.85,
+  "s": "Werte ausblenden"
+ },
+ "Hide values until they are hovered over. Use if someone might be looking over your shoulder": {
+  "m": 0.85,
+  "s": "Blenden Sie Werte aus, bis Sie den Mauszeiger darüber bewegen. Verwenden Sie diese Option, wenn jemand über Ihre Schulter schaut"
+ },
+ "Increase/decrease text size": {
+  "m": 0.85,
+  "s": "Text vergrößern / verkleinern"
+ },
+ "Language": {
+  "m": 1,
+  "s": "Sprache"
+ },
+ "Length": {
+  "m": 1,
+  "s": "Länge"
+ },
+ "Licensed under the MIT License. Reuse within proprietary software is permitted provided all copies of the licensed software include a copy of the MIT License terms and the copyright notice.": {
+  "m": 0.85,
+  "s": "Lizenziert unter der MIT-Lizenz. Die Wiederverwendung in proprietärer Software ist zulässig, sofern alle Kopien der lizenzierten Software eine Kopie der MIT-Lizenzbestimmungen und des Urheberrechtsvermerks enthalten."
+ },
+ "Login": {
+  "m": 1,
+  "s": "Anmelden"
+ },
+ "New password": {
+  "m": 0.9,
+  "s": "Neues Passwort"
+ },
+ "Note that very large images may take a long time to load and save.": {
+  "m": 0.85,
+  "s": "Beachten Sie, dass das Laden und Speichern sehr großer Bilder sehr lange dauern kann."
+ },
+ "OK": {
+  "m": 0.9,
+  "s": "OK"
+ },
+ "Optimise": {
+  "m": 0.9,
+  "s": "Optimieren"
+ },
+ "Optimise Cloud": {
+  "m": 0.85,
+  "s": "Cloud optimieren"
+ },
+ "Optimising your cloud store will lose all the history, which will make it impossible for any client that is not completely up to date to synchronise. You have been warned!": {
+  "m": 0.85,
+  "s": "Durch die Optimierung Ihres Cloud-Speichers geht der gesamte Verlauf verloren, sodass kein Client mehr synchronisieren kann, der nicht vollständig auf dem neuesten Stand ist. Du wurdest gewarnt!"
+ },
+ "Pass:": {
+  "m": 1,
+  "s": "Bestanden:"
+ },
+ "Password may not be empty": {
+  "m": 0.93,
+  "s": "Ihr Passwort darf nicht leer sein"
+ },
+ "Passwords do not match": {
+  "m": 1,
+  "s": "Passwörter stimmen nicht überein"
+ },
+ "Path to your cloud store": {
+  "m": 0.85,
+  "s": "Pfad zu Ihrem Cloud-Speicher"
+ },
+ "Re-enter new password": {
+  "m": 0.9,
+  "s": "Neues Passwort erneut eingeben"
+ },
+ "Remember constraints on this value": {
+  "m": 0.85,
+  "s": "Beachten Sie die Einschränkungen für diesen Wert"
+ },
+ "Remind in": {
+  "m": 0.85,
+  "s": "Erinnere dich daran"
+ },
+ "Reminder": {
+  "m": 0.9,
+  "s": "Erinnerung"
+ },
+ "Set new password": {
+  "m": 0.9,
+  "s": "Neues Passwort setzen"
+ },
+ "Settings": {
+  "m": 0.9,
+  "s": "Einstellungen"
+ },
+ "Sign In": {
+  "m": 0.9,
+  "s": "Registrieren"
+ },
+ "Squirrel is Copyright © 2015-2019 Crawford Currie <a href=\"http://c-dot.co.uk\">http://c-dot.co.uk</a>": {
+  "m": 0.85,
+  "s": "Eichhörnchen ist Copyright © 2015-2019 Crawford Currie </a> http://c-dot.co.uk $1"
+ },
+ "Store settings": {
+  "m": 0.98,
+  "s": "Shop-Einstellungen"
+ },
+ "Suggested value for": {
+  "m": 0.85,
+  "s": "Empfohlener Wert für"
+ },
+ "Text size": {
+  "m": 0.9,
+  "s": "Schriftgrösse"
+ },
+ "The cloud currently has $1 action$?($1!=1,s,) in the history.": {
+  "m": 0.85,
+  "s": "Die Cloud hat derzeit $1 Aktion$?($1!=1,en,) im Verlauf."
+ },
+ "These preferences will be saved in cookies in your browser": {
+  "m": 0.85,
+  "s": "Diese Einstellungen werden in Cookies in Ihrem Browser gespeichert"
+ },
+ "This should be a complex colour image of at least 1024x768 pixels, preferably with variable transparency.": {
+  "m": 0.85,
+  "s": "Dies sollte ein komplexes Farbbild mit mindestens 1024 x 768 Pixeln sein, vorzugsweise mit variabler Transparenz."
+ },
+ "This version was released on $1": {
+  "m": 0.85,
+  "s": "Diese Version wurde veröffentlicht am $1"
+ },
+ "Try again": {
+  "m": 0.9,
+  "s": "Bitte nochmals versuchen"
+ },
+ "Use this": {
+  "m": 0.9,
+  "s": "Verwenden"
+ },
+ "User interface": {
+  "m": 0.9,
+  "s": "Benutzeroberfläche"
+ },
+ "User:": {
+  "m": 0.9,
+  "s": "Benutzer:"
+ },
+ "You must ensure that all clients up to date and you are safely connected to the internet before doing this, or you will lose data.": {
+  "m": 0.85,
+  "s": "Sie müssen dafür sorgen, dass alle Clients auf dem neuesten Stand sind und Sie sicher mit dem Internet verbunden sind, bevor Sie dies tun. Andernfalls gehen Daten verloren."
+ },
+ "and everything under it?": {
+  "m": 0.85,
+  "s": "und alles darunter?"
+ },
+ "days": {
+  "m": 0.9,
+  "s": "Tage"
+ },
+ "months": {
+  "m": 0.9,
+  "s": "Monate"
+ },
+ "on": {
+  "m": 0.9,
+  "s": "am"
+ },
+ "years": {
+  "m": 0.9,
+  "s": "Jahre"
+ },
+ "$1 failed: $2": {
+  "s": "fehlgeschlagen: $2",
+  "m": 0.9
+ },
+ " (repeat every $1)": {
+  "s": "(Wiederhole Sie jede $1)",
+  "m": 0.9
+ },
+ "Cloud store path:": {
+  "m": 0.85,
+  "s": "Cloud-Speicherpfad:"
+ },
+ "Local store read failed": {
+  "m": 0.85,
+  "s": "Lesen des lokalenspeichers fehlgeschlagen"
+ },
+ "Apply selected changes": {
+  "m": 0.85,
+  "s": "Übernehmen Sie die ausgewählten Änderungen"
+ },
+ "Add reminder on $1$2 to $3": {
+  "s": "füge eine Erinnerung hinzu, zu am $1$2 zu $3",
+  "m": 0.5
+ },
+ "Cloud store path may not be empty": {
+  "m": 0.85,
+  "s": "Der Cloud-Speicherpfad darf nicht leer sein"
+ },
+ "$1 alarm change$?($1!=1,s,)": {
+  "s": "$1 Alarmwechsel",
+  "m": 0.9
+ },
+ "Undo changes to constraints": {
+  "m": 0.85,
+  "s": "Änderungen an Einschränkungen rückgängig machen"
+ },
+ "Bulk content change": {
+  "m": 0.89,
+  "s": "Inhaltsänderung"
+ },
+ "Local store could not be saved": {
+  "m": 0.85,
+  "s": "Lokalenspeicher konnte nicht gespeichert werden"
+ },
+ "it does not exist": {
+  "m": 0.98,
+  "s": "existiert nicht"
+ },
+ "Cloud path changed": {
+  "m": 0.85,
+  "s": "Wolkenpfad geändert"
+ },
+ "it already exists": {
+  "m": 0.97,
+  "s": "Weil die soziale Dimension nämlich schon besteht."
+ },
+ "A new local store will be created.": {
+  "m": 0.85,
+  "s": "Ein neuer lokalen speicher wird erstellt."
+ },
+ "Change the encryption password for the store": {
+  "m": 0.85,
+  "s": "Ändern Sie das Verschlüsselungskennwort für den Speicher"
+ },
+ "Cancel reminder on $1": {
+  "m": 0.85,
+  "s": "Erinnerung abbrechen am $1"
+ },
+ "Undo changes": {
+  "m": 0.9,
+  "s": "Änderungen rückgängig machen"
+ },
+ "Cloud store could not be saved": {
+  "m": 0.85,
+  "s": "Cloud-Speicher konnte nicht gespeichert werden"
+ },
+ "Local store does not exist.": {
+  "m": 0.85,
+  "s": "Lokalenspeicher existiert nicht."
+ },
+ "Set new encryption password": {
+  "m": 0.85,
+  "s": "Legen Sie ein neues Verschlüsselungskennwort fest"
+ },
+ "Revert to default constraints": {
+  "m": 0.85,
+  "s": "Auf Standardeinschränkungen zurücksetzen"
+ },
+ "Change value of $1 to '$2'": {
+  "m": 0.85,
+  "s": "Ändern Sie den Wert von $2 in &quot;$1&quot;."
+ },
+ "No changes needed to be saved": {
+  "m": 0.85,
+  "s": "Es mussten keine Änderungen gespeichert werden"
+ },
+ "Optimisation will not improve performance": {
+  "m": 0.85,
+  "s": "Durch die Optimierung wird die Leistung nicht verbessert"
+ },
+ "Open the store settings dialog": {
+  "m": 0.85,
+  "s": "Öffnen Sie den Speichereinstellungsdialog"
+ },
+ "Select your preferred colour scheme": {
+  "m": 0.85,
+  "s": "Wählen Sie Ihr bevorzugtes Farbschema"
+ },
+ "Show when the last change happened": {
+  "m": 0.85,
+  "s": "Zeigen Sie an, wann die letzte Änderung stattgefunden hat"
+ },
+ "Reading from local store": {
+  "m": 0.85,
+  "s": "Aus dem lokalen speicher lesen"
+ },
+ "The following changes were added in the cloud since you last synchronised. Deselect any you don't want to apply (they will be lost!)": {
+  "m": 0.85,
+  "s": "Die folgenden Änderungen wurden in der Cloud seit Ihrer letzten Synchronisierung hinzugefügt. Deaktivieren Sie alle, die Sie nicht anwenden möchten (sie gehen verloren!)"
+ },
+ "These changes need to be saved:\\n$1": {
+  "m": 0.85,
+  "s": "Diese Änderungen müssen gespeichert werden: \\n$1"
+ },
+ "Remember constraints": {
+  "m": 0.85,
+  "s": "Beachten Sie die Einschränkungen"
+ },
+ "Rename $1 to '$2'": {
+  "m": 0.85,
+  "s": "benenne $1 in '$2' um"
+ },
+ "Revert": {
+  "m": 0.9,
+  "s": "Rückgängig"
+ },
+ "Select changes": {
+  "m": 0.85,
+  "s": "Änderungen auswählen"
+ },
+ "Set/Change Reminder": {
+  "m": 0.85,
+  "s": "Erinnerung setzen / ändern"
+ },
+ "Change the encryption password for the store. This should be different to the password you use to log in to your cloud storage provider (e.g. Google). You should ensure that all clients up to date and you are safely connected to the internet before changing the password, or you may lose data. The encryption password is never saved, and there is no way to recover it if you lose it!": {
+  "m": 0.85,
+  "s": "Ändern Sie das Verschlüsselungskennwort für den Speicher. Dies sollte sich von dem Kennwort unterscheiden, mit dem Sie sich bei Ihrem Cloud-Speicheranbieter (z. B. Google) anmelden. Sie sollten sicherstellen, dass alle Clients auf dem neuesten Stand sind und dass Sie sicher mit dem Internet verbunden sind, bevor Sie das Kennwort ändern. Andernfalls können Daten verloren gehen. Das Verschlüsselungskennwort wird nie gespeichert, und es kann nicht wiederhergestellt werden, wenn Sie es verlieren!"
+ },
+ "Conflicts": {
+  "m": 1,
+  "s": "Konflikte"
+ },
+ "Copy": {
+  "m": 1,
+  "s": "Kopie"
+ },
+ "Copy Folder": {
+  "m": 0.99,
+  "s": "Ordner kopieren"
+ },
+ "Copy Value": {
+  "m": 0.99,
+  "s": "Wert kopieren"
+ },
+ "Create $1": {
+  "s": "Erstelle $1",
+  "m": 0.8
+ },
+ "Delete $1": {
+  "s": "Löschen $1",
+  "m": 0.8
+ },
+ "Edit valid JSON": {
+  "m": 0.85,
+  "s": "Bearbeiten Sie gültigen JSON"
+ },
+ "Enable to automatically save whenever anything changes": {
+  "m": 0.85,
+  "s": "Aktivieren Sie diese Option, um automatisch zu speichern, wenn sich etwas ändert"
+ },
+ "Encryption password": {
+  "s": "Verschlüsselungspasswort",
+  "m": 0.8
+ },
+ "Enter a name for the pasted folder or value": {
+  "m": 0.85,
+  "s": "Geben Sie einen Namen für den eingefügten Ordner oder Wert ein"
+ },
+ "Enter new name": {
+  "m": 1,
+  "s": "Neuen Namen eingeben"
+ },
+ "Failed to save in cloud store: $1": {
+  "s": "Speichern im Cloud-Speicher fehlgeschlagen: $1",
+  "m": 0.8
+ },
+ "If you continue and save, a new local store will be created.": {
+  "m": 0.85,
+  "s": "Wenn Sie fortfahren und speichern, wird ein neuer lokalen speicher erstellt."
+ },
+ "Image URL changed": {
+  "m": 0.85,
+  "s": "Bild-URL geändert"
+ },
+ "Information": {
+  "m": 1,
+  "s": "Informationen"
+ },
+ "Initialising local store": {
+  "m": 0.85,
+  "s": "Initialisierung des lokalen speichers"
+ },
+ "Initialising cloud store": {
+  "m": 0.85,
+  "s": "Cloud-Speicher wird initialisiert"
+ },
+ "Insert $1 = $2": {
+  "s": "$1 = $2 einfügen",
+  "m": 0.8
+ },
+ "Last Change": {
+  "m": 1,
+  "s": "Letzte Änderung"
+ },
+ "Move $1 to $2": {
+  "s": "Bewege $1 nach $2",
+  "m": 0.7
+ },
+ "Name is already in use": {
+  "m": 0.99,
+  "s": "Der Name wird bereits verwendet."
+ },
+ "New encryption details": {
+  "m": 0.85,
+  "s": "Neue Verschlüsselungsdetails"
+ },
+ "Optimise the store by removing old actions. The cloud keeps a history of all changes from all clients, so that every client has a chance to see every change. This history can get quite long, so you may want to optimise it by removing the history. You should only do this if you are 100% certain that no client has local changes that may need to be saved to the cloud": {
+  "m": 0.85,
+  "s": "Optimieren Sie den Shop, indem Sie alte Aktionen entfernen. In der Cloud werden alle Änderungen aller Clients protokolliert, sodass jeder Client die Möglichkeit hat, jede Änderung zu sehen. Dieser Verlauf kann sehr lang werden. Sie können ihn optimieren, indem Sie den Verlauf entfernen. Sie sollten dies nur tun, wenn Sie zu 100% sicher sind, dass auf keinem Client lokale Änderungen vorhanden sind, die möglicherweise in der Cloud gespeichert werden müssen"
+ },
+ "Steganography image URL may not be empty": {
+  "m": 0.85,
+  "s": "Die URL des Steganografie-Bilds darf nicht leer sein"
+ },
+ "URL of your steganography image": {
+  "m": 0.85,
+  "s": "URL Ihres Steganografie-Bildes"
+ },
+ "Could not open client store: $1": {
+  "s": "Client-Speicher konnte nicht geöffnet werden: $1",
+  "m": 0.7
+ },
+ "Local store has been reset": {
+  "s": "Lokaler Speicher wurde zurückgesetz",
+  "m": 0.7
+ },
+ "Please confirm you want to reset your local store. Changes not saved in the cloud will be lost!": {
+  "m": 0.85,
+  "s": "Bitte bestätigen Sie, dass Sie Ihr lokales Geschäft zurücksetzen möchten. Nicht in der Cloud gespeicherte Änderungen gehen verloren!"
+ },
+ "Preparing UI": {
+  "s": "UI Vorbereiten",
+  "m": 0.6
+ },
+ "Reset": {
+  "s": "Zurücksetzen",
+  "m": 0.6
+ },
+ "Reset Local Store": {
+  "s": "Setzen Sie den lokalen Speicher zurück",
+  "m": 0.6
+ },
+ "Reset the local store. This will reset the local store from the cloud. Any local changes will be lost.": {
+  "s": "Setzen Sie den lokalen Speicher zurück. Dadurch wird der lokale Speicher aus der Cloud zurückgesetzt. Alle lokalen Änderungen gehen verloren.",
+  "m": 0.6
+ },
+ "Saving": {
+  "s": "Retten",
+  "m": 0.5
+ },
+ "Unable to continue": {
+  "s": "Kann nicht fortfahren",
+  "m": 0.5
+ },
+ "Back to parent folder": {
+  "m": 0.86,
+  "s": "Zurück zum übergeordneten Ordner"
+ },
+ "Changes merged from cloud store": {
+  "m": 0.85,
+  "s": "Änderungen aus Cloud-Speicher zusammengeführt"
+ },
+ "Client user": {
+  "m": 1,
+  "s": "Client Anwender"
+ },
+ "Constrain $1 to $2 character$?($2!=1,s,) from $3": {
+  "m": 0.85,
+  "s": "$1 auf $2 Zeichen beschränken von $3"
+ },
+ "Move Here": {
+  "m": 1,
+  "s": "An diese Stelle verschieben"
+ },
+ "Move To": {
+  "m": 1,
+  "s": "Gehe zu"
+ },
+ "Move to": {
+  "m": 1,
+  "s": "Umzug nach"
+ },
+ "Move to this folder": {
+  "m": 0.98,
+  "s": "In diesen Ordner verschieben"
+ },
+ "Clear constraints on $1": {
+  "m": 0.85,
+  "s": "Klare Einschränkungen für $1"
+ },
+ "Nothing to undo": {
+  "m": 0.98,
+  "s": "Es kann nichts rückgängig gemacht werden."
+ },
+ "failed": {
+  "m": 1,
+  "s": "fehlgeschlagen"
+ }
+}

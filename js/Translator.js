@@ -6,6 +6,9 @@ if (typeof XMLHttpRequest === 'undefined')
 
 define("js/Translator", ["js/Utils", "js/Serror"], (Utils, Serror) => {
 
+	// Singleton instance of Translator, initialised in instance()
+	let singleton;
+
     const TIMEUNITS = {
         // TX.tx("$1 year$?($1!=1,s,)")
         y: "$1 year$?($1!=1,s,)",
@@ -367,21 +370,20 @@ define("js/Translator", ["js/Utils", "js/Serror"], (Utils, Serror) => {
         }
 
         /**
-         * Create a singleton instance of Translator
-         * @param {object} p options to pass to constructor
-         * @return {Translator} a new instance of Translator that will
-         * be used in subsequent calls to static methods
+         * Setter/getter for the singleton instance of Translator
+         * @param {object} p options to pass to constructor. If
+		 * defined, will force the re-initialisation of the singleton.
+         * @return {Translator} singleton instance of Translator that
+         * can be used for calls to methods.
          */
         static instance(p) {
             if (typeof p !== 'undefined'
-                || typeof Translator.inst === 'undefined') {
-                Translator.inst = new Translator(p);
+                || typeof singleton === 'undefined') {
+                singleton = new Translator(p);
             }
-            return Translator.inst;
+            return singleton;
         }
     }
-
-    Translator.inst = undefined;
 
     return Translator;
 });

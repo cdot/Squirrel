@@ -42,15 +42,12 @@ function auto_translate(en, lang) {
         console.log("Bad response", response);
     else {
         const result = JSON.parse(response.getBody()).responseData;
-        tx = {
-            m: result.match,
-            s: unprotect(result.translatedText)
-        };
+        tx = unprotect(result.translatedText);
         console.log(
             `Auto-translated '${en}' to ${lang}`,
-			`as '${tx.s}' with confidence ${tx.m}`);
+			`as '${tx}' with confidence ${result.match}`);
     }
-    return tx;
+	return tx;
 }
 
 define([
@@ -117,7 +114,8 @@ define([
                         proms.push(
                             Fs.readFile(`locale/${entry}`, 'utf8')
                             .then(data => {
-                                this.translations[lang] = JSON.parse(data);
+                                this.translations[lang] = JSON.parse(data)
+								.map(tx => typeof tx === 'string' ? tx : tx.s);
                                 if (this.debug) this.debug(
                                     "Translation for", lang, "loaded");
                             }));
@@ -137,9 +135,9 @@ define([
             const proms = [];
             for (let lang in this.translations) {
                 const tx = this.translations[lang];
-                console.log("Writing", dir + lang + ".json");
-                proms.push(Fs.writeFile(
-                    dir + lang + ".json", JSON.stringify(tx)));
+				const file = `${dir}${lang}.json`;
+                console.log(`Writing ${file}`);
+                proms.push(Fs.writeFile(file, JSON.stringify(tx, null, 1)));
             }
             return Promise.all(proms);
         }
@@ -193,48 +191,36 @@ define([
         updateTranslation(lang, improve) {
             function _translate(en, translated) {
                 let finished = false;
-                let prompt = "> ";
+                const prompt = "> ";
                 
                 console.log("Translate:", en);
                 if (translated[en]) {
-                    console.log("Current:", translated[en].s,
-                                "with confidence", translated[en].m);
+                    console.log(`Current: ${translated[en]}`);
                 }
                 console.log("t to auto-translate, <enter> to accept, x to end translation, anything else to enter a translation manually");
 
                 while (!finished) {
                     const data = rl.question(prompt);
                     // User input exit.
-                    if (prompt === "> ") {
-                        if (data === 't') {
-                            let tx = auto_translate(en, lang);
-                            if (tx)
-                                translated[en] = tx;
-                        } else if (data === "") {
-                            if (translated[en]) {
-                                console.log(
-                                    "Accepted:", translated[en].s,
-                                    "with confidence", translated[en].m);
-                                return true;
-                            }
-                        } else if (data === "x")
-                            return false;
-                        else {
-                            prompt = "confidence: ";
-                            translated[en] = { s: data, m: 0 };
+                    if (data === 't') {
+                        let tx = auto_translate(en, lang);
+                        if (typeof tx !== 'undefined')
+                            translated[en] = tx;
+                    } else if (data === "") {
+                        if (translated[en]) {
+                            console.log(`Accepted: ${translated[en]}`);
+                            return true;
                         }
-                    } else {
-                        if (/^[0-9.]+$/.test(data) && parseFloat(data) <= 1)
-                            translated[en].m = parseFloat(data);
-                        console.log("Current:", translated[en].s,
-                                    "with confidence", translated[en].m);
-                        prompt = "> ";
+                    } else if (data === "x")
+                        return false;
+                    else {
+                        translated[en] = data;
                     }
                 }
 				return false;
             }
             
-            console.log("Translate to", lang, "confidence <", improve);
+            console.log("Translate to", lang);
 
             let translated = this.translations[lang];
             if (!translated)
@@ -249,7 +235,7 @@ define([
             }
 
             for (en in this.strings) {
-                if (!translated[en] || translated[en].m < improve) {
+                if (typeof translated[en] === 'undefined') {
                     if (!_translate(en, translated))
                         return false;
                 }

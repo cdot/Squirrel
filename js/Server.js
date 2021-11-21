@@ -129,19 +129,16 @@ define("js/Server", ["url", "extend", "fs"], (Url, extend, fs) => {
             if (typeof this.ssl !== 'undefined') {
                 const options = {};
 				const promises = [
-					Fs.pathExists(this.ssl.key)
-					.then(exists =>
-						  ((exists)
-						   ? Fs.readFile(this.ssl.key)
-						   : this.ssl.key))
+					Fs.stat(this.ssl.key)
+					.then(() => Fs.readFile(this.ssl.key))
+					.catch(() => this.ssl.key)
 					.then(k => {
 						options.key = k.toString();
 						if (this.debug) this.debug("SSL key loaded");
 					}),
-					Fs.pathExists(this.ssl.cert)
-					.then(exists => (exists)
-						  ? Fs.readFile(this.ssl.cert)
-						  : this.ssl.cert)
+					Fs.stat(this.ssl.cert)
+					.then(() => Fs.readFile(this.ssl.cert))
+					.catch(() => this.ssl.cert)
 					.then(c => {
 						options.cert = c.toString();
 						if (this.debug) this.debug("SSL certificate loaded");
