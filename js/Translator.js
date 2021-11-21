@@ -10,12 +10,12 @@ define("js/Translator", ["js/Utils", "js/Serror"], (Utils, Serror) => {
 	let singleton;
 
     const TIMEUNITS = {
-        // TX.tx("$1 year$?($1!=1,s,)")
-        y: "$1 year$?($1!=1,s,)",
-        // TX.tx("$1 month$?($1!=1,s,)")
-        m: "$1 month$?($1!=1,s,)",
-        // TX.tx("$1 day$?($1!=1,s,)")
-        d: "$1 day$?($1!=1,s,)"
+        // TX.tx("$1 {{plural:$1|year|years}}")
+        y: "$1 {{plural:$1|year|years}}",
+        // TX.tx("$1 {{plural:$1|month|months}}")
+        m: "$1 {{plural:$1|month|months}}",
+        // TX.tx("$1 {{plural:$1|day|days}}")
+        d: "$1 {{plural:$1|day|days}}"
     };
 
 	/**

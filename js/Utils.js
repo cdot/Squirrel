@@ -271,27 +271,33 @@ define("js/Utils", [], () => {
         /**
          * Expand `$1`..$N in a string to the arguments passed.
          *
-         * There is limited support for conditional expansion using the
+		 * There is support for CLDR plural syntax {{plural:$N||}}.
+		 * 
+         * There is limited support for generic conditional expansion using the
          * `$?(bexpr,then,else)` macro. If `bexpr1` eval()s to true then the
          * expression will expand to `then`, otherwise it will expand to `else`.
          * Both `then` and `else` must be given, though can be empty.
          *
-         * For example, consider `TX.tx("$1 day$?($1!=1,s,)", ndays)`.
+         * For example, consider `expandTemplate("$1 day$?($1!=1,s,)", ndays)`.
          * If `$1!=1` succeeds then the macro expands to `s` otherwise
          * to the empty string. Thus if `ndays` is `1` it will expand to `1 day`
          * but if it is `11` it will expand to `11 days`
          *
          * NOTE: conditions are evaled and could thus be used for cross
-         * scripting. User input must *never* be passed to the templater. There is
-         * no error checking on the eval, and it will throw an exception if the
-         * syntax is incorrect.
+         * scripting. User input must *never* be passed to the templater.
+		 * There is no error checking on the eval, and it will throw
+         * an exception if the syntax is incorrect.
 		 * @param {string} str string to expand, other arguments are template
 		 * parameters
          */
         static expandTemplate() {
-            const args = arguments;
-
+            const args = Array.from(arguments);
             const tmpl = arguments[0]
+				  .replace(
+                      /{{plural:\$(\d+)\|(.*?)\|(.*?)}}/gi,
+					  (m, test, one, many) => {
+						  return arguments[test] === 1 ? one : many;
+					  })
 				  .replace(/\$(\d+)/g, function (m, p1) {
 					  const i = parseInt(p1);
 					  return args[i];

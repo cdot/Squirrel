@@ -119,6 +119,16 @@ requirejs(["js/Utils", "test/TestRunner"], function(Utils, TestRunner) {
         assert.deepEqual(ba, ab);
     });
 
+	tr.addTest("expandTemplate", () => {
+		assert.equal(Utils.expandTemplate("A$1C", "B"), "ABC");
+		assert.equal(Utils.expandTemplate("A$?(true,B,C)D"), "ABD");
+		assert.equal(Utils.expandTemplate("$?(false,true,false)"), "false");
+		assert.equal(Utils.expandTemplate("$?($1==1,true,false)", 1), "true");
+		assert.equal(Utils.expandTemplate("$?($1!=1,true,false)", 1), "false");
+		assert.equal(Utils.expandTemplate("{{plural:$1|true|false}}", 1), "true");
+		assert.equal(Utils.expandTemplate("{{plural:$1|true|false}}", 2), "false");
+	});
+
     tr.run();
 });
 

@@ -26,8 +26,7 @@ requirejs(["request", "node-getopt", "fs", "uglify-js", "clean-css", "html-minif
             [ 'd', "debug", "Debug" ],
             [ 'D', "deps", "Show dependencies" ],
             [ 'h', "help", "Display this help" ],
-            [ 'l', "language=ARG", "Target language for translation" ],
-            [ 't', "translate=ARG", "Just re-translate strings below this confidence level (1 for all strings, 0 for untranslated only)" ]
+            [ 'l', "language=ARG", "Target language for translation" ]
         ])
         .bindHelp()
         .setHelp(DESCRIPTION.join("\n"))
@@ -522,7 +521,7 @@ requirejs(["request", "node-getopt", "fs", "uglify-js", "clean-css", "html-minif
         });
     }
 
-    function target_translate(improve, lang) {
+    function target_translate(lang) {
         // Update translations
         debug("Updating translations");
         return locales.loadStrings()
@@ -530,22 +529,18 @@ requirejs(["request", "node-getopt", "fs", "uglify-js", "clean-css", "html-minif
             return locales.loadTranslations();
         })
         .then(() => {
-            if (lang)
-                locales.updateTranslation(lang, improve);
-            else
-                locales.updateTranslations(improve);
-        })
-        .then(() => {
-            debug("Saving translations");
-            return locales.saveTranslations();
+            if (lang === "all")
+                return locales.updateTranslations();
+			else
+                return locales.updateTranslation(lang);
         });
     }
 
     const locales = new Locales(debug);
     let promise = locales.loadStrings();
     
-    if (typeof opts.translate !== 'undefined')
-        promise = promise.then(() => target_translate(opts.translate, opts.language));
+    if (typeof opts.language !== 'undefined')
+        promise = promise.then(() => target_translate(opts.language));
     else
         promise = promise.then(() => target_release());
 	promise

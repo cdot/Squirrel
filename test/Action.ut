@@ -83,22 +83,6 @@ requirejs(["js/Action", "test/TestRunner"], function(Action, TestRunner) {
 
 	});
 
-    tr.addTest('should fail: zero path', function() {
-        let debug;// = console.debug;
-        try {
-			new Action({
-				type: "N",
-				time: Date.UTC(2004,0),
-				path: []
-			});
-		} catch (e) {
-			assert(e instanceof Error);
-			return;
-		}
-		assert(false);
-    });
-
-
     tr.addTest('should merge action streams', function() {
         //let debug;// = console.debug;
         // Initial action stream is empty

@@ -231,7 +231,7 @@ define("js/Hoarder", [
             .then(changes => {
                 if (changes > 0) {
                     this.clientChanges.push(
-                        TX.tx("$1 alarm change$?($1!=1,s,)", changes));
+                        TX.tx("$1 alarm {{plural:$1|change|changes}}", changes));
                     this.cloudChanged = true;
                     this.clientIsEmpty = false;
                 }
@@ -412,8 +412,9 @@ define("js/Hoarder", [
             if (max_changes > 0 && messages.length > max_changes) {
                 const l = messages.length;
                 messages = messages.slice(-max_changes);
-                messages.push(TX.tx("... and $1 more change$?($1!=1,s,)",
-                                   l - max_changes));
+                messages.push(
+					TX.tx("... and $1 more {{plural:$1|change|changes}}",
+                          l - max_changes));
             }
             if (this.debug) this.debug(messages);
             

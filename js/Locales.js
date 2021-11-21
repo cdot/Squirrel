@@ -1,60 +1,60 @@
-/*@preserve Copyright (C) 2019 Crawford Currie http://c-dot.co.uk license MIT*/
+/*@preserve Copyright (C) 2019-2021 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env node */
-
-let request = require('sync-request');
-let protection = [];
-
-function protect(os) {
-    return os.replace(/(!=|\{|\}|\$\d*|<[^>]*>)/g, function(m, p) {
-        protection.push(p);
-        return `{${protection.length}}`;
-    });
-}
-
-function unprotect(ns) {
-    return ns.replace(/{(\d+)}/g, function(m, i) {
-        return protection[parseInt(i)];
-    });
-}
-
-function lengthInUtf8Bytes(str) {
-    // Matches only the 10.. bytes that are non-initial
-    // characters in a multi-byte sequence.
-    var m = encodeURIComponent(str).match(/%[89ABab]/g);
-    return str.length + (m ? m.length : 0);
-}
-
-// mymemory translation is rate-limited, and we get in
-// trouble if we fling too many requests too quickly.
-// So sequence the requests, and respect 429.
-function auto_translate(en, lang) {
-    const s = protect(en);
-    if (lengthInUtf8Bytes(s) > 500) {
-        throw `Cannot auto-translate '${s}' it's > 500 bytes`;
-    }
-    const url = "http://api.mymemory.translated.net/get?q="
-        + encodeURIComponent(s) + "&langpair="
-        + encodeURIComponent(`en|${lang}`);
-    
-    const response = request('GET', url);
-    let tx;
-    if (response.statusCode !== 200)
-        console.log("Bad response", response);
-    else {
-        const result = JSON.parse(response.getBody()).responseData;
-        tx = unprotect(result.translatedText);
-        console.log(
-            `Auto-translated '${en}' to ${lang}`,
-			`as '${tx}' with confidence ${result.match}`);
-    }
-	return tx;
-}
 
 define([
 	"node-getopt", "jsdom", "js/Translator", "fs-extra", "readline-sync"
 ], (getopt, jsdom, Translator, Fs, rl) => {
 
-    const TX = Translator.instance();
+	const request = require('sync-request');
+	const protection = [];
+
+	function protect(os) {
+		return os.replace(/(!=|\{|\}|\$\d*|<[^>]*>)/g, function(m, p) {
+			protection.push(p);
+			return `{${protection.length}}`;
+		});
+	}
+
+	function unprotect(ns) {
+		return ns.replace(/{(\d+)}/g, function(m, i) {
+			return protection[parseInt(i)];
+		});
+	}
+
+	function lengthInUtf8Bytes(str) {
+		// Matches only the 10.. bytes that are non-initial
+		// characters in a multi-byte sequence.
+		var m = encodeURIComponent(str).match(/%[89ABab]/g);
+		return str.length + (m ? m.length : 0);
+	}
+
+	// mymemory translation is rate-limited, and we get in
+	// trouble if we fling too many requests too quickly.
+	// So sequence the requests, and respect 429.
+	function auto_translate(en, lang) {
+		const s = protect(en);
+		if (lengthInUtf8Bytes(s) > 500) {
+			throw `Cannot auto-translate '${s}' it's > 500 bytes`;
+		}
+		const url = "http://api.mymemory.translated.net/get?q="
+			  + encodeURIComponent(s) + "&langpair="
+			  + encodeURIComponent(`en|${lang}`);
+		console.log(url);
+		const response = request('GET', url);
+		let tx;
+		if (response.statusCode !== 200)
+			console.log("Bad response", response, response.body.toString());
+		else {
+			const result = JSON.parse(response.getBody()).responseData;
+			tx = unprotect(result.translatedText);
+			console.log(
+				`Auto-translated '${en}' to ${lang}`,
+				`as '${tx}' with confidence ${result.match}`);
+		}
+		return tx;
+	}
+
+	const TX = Translator.instance();
     
 	/**
 	 * Support for build-dist.js. Automatic string extraction and
@@ -114,8 +114,14 @@ define([
                         proms.push(
                             Fs.readFile(`locale/${entry}`, 'utf8')
                             .then(data => {
-                                this.translations[lang] = JSON.parse(data)
-								.map(tx => typeof tx === 'string' ? tx : tx.s);
+								const tx = JSON.parse(data);
+								// Discard field
+								let ss = Object.keys(tx);
+								for (let key in tx)
+									if (key !== "@metadata" &&
+										typeof tx[key] === 'object')
+										tx[key] = tx[key].s;
+                                this.translations[lang] = tx;
                                 if (this.debug) this.debug(
                                     "Translation for", lang, "loaded");
                             }));
@@ -126,18 +132,27 @@ define([
         }
 
         /**
-         * Save translations to dir/locale (defaults to ./locale)
-		 * @param {string} dir directory
+         * Save one translation to ./locale
 		 * @return {Promise} Promise to save
          */
-        saveTranslations(dir) {
-            dir = (dir ? `$dir/` : "") + "locale/";
+		saveTranslation(lang) {
+            const tx = this.translations[lang];
+			const file = `locale/${lang}.json`;
+			const metadata = tx["@metadata"];
+			metadata["last-updated"] = new Date().toISOString()
+			.replace(/T.*/, "");
+			console.log(`Writing ${file}`);
+			return Fs.writeFile(file, JSON.stringify(tx, null, 1));
+		}
+		
+        /**
+         * Save translations to ./locale
+		 * @return {Promise} Promise to save
+         */
+        saveTranslations() {
             const proms = [];
             for (let lang in this.translations) {
-                const tx = this.translations[lang];
-				const file = `${dir}${lang}.json`;
-                console.log(`Writing ${file}`);
-                proms.push(Fs.writeFile(file, JSON.stringify(tx, null, 1)));
+				proms.push(this.saveTranslation(lang));
             }
             return Promise.all(proms);
         }
@@ -184,16 +199,36 @@ define([
         /**
          * Update the translation for the given language
          * @param {string} lang language code e.g. fr
-         * @param {number} improve integer to re-translate existing known strings
-         * below this confidence level
-		 * @return {boolean} true if update succeeded
+		 * @return {Promise} resolves when any updates have been saved
          */
-        updateTranslation(lang, improve) {
-            function _translate(en, translated) {
+        updateTranslation(lang) {
+
+            console.log(`Translate to '${lang}'`);
+			debugger;
+			let modified = false;
+            let translated = this.translations[lang];
+            if (translated) {
+				if (typeof translated["@metadata"] !== 'object') {
+					translated["@metadata"] = {
+						locale: lang
+					};
+					modified = true;
+				}
+			} else {
+				// Needs creating
+                translated = {
+					"@metadata": { locale: lang }
+				};
+				this.translations[lang] = translated;
+				modified = true;
+			}
+
+			// Translate a single string
+            function _translate(en) {
                 let finished = false;
                 const prompt = "> ";
                 
-                console.log("Translate:", en);
+                console.log(`Translate '${en}' to ${lang}`);
                 if (translated[en]) {
                     console.log(`Current: ${translated[en]}`);
                 }
@@ -215,46 +250,45 @@ define([
                         return false;
                     else {
                         translated[en] = data;
+						modified = true;
                     }
                 }
 				return false;
             }
             
-            console.log("Translate to", lang);
-
-            let translated = this.translations[lang];
-            if (!translated)
-                this.translations[lang] = translated = {};
             let en;
-
             for (en in translated) {
-                if (!this.strings[en]) {
-                    if (this.debug) this.debug(`Removed '${en}' from ${lang}`);
+                if (en !== "@metadata" && !this.strings[en]) {
+                    console.log(`Removed '${en}' from ${lang}`);
                     delete translated[en];
+					modified = true;
                 }
             }
 
             for (en in this.strings) {
                 if (typeof translated[en] === 'undefined') {
-                    if (!_translate(en, translated))
-                        return false;
+                    _translate(en);
                 }
             }
-            
-            return true;
+
+			if (modified)
+				return this.saveTranslation(lang);
+
+			return Promise.resolve();
         }
 
         /**
-         * @param {number} improve integer to re-translate existing known strings
-         * below this confidence level
+		 * Update all known translations
+		 * @return {Promise} resolves when updates have been saved
          */
-        updateTranslations(improve) {
+        updateTranslations() {
             // Don't send more than one request at a time, and respect
             // rate-limiting
+			const promises = [];
             for (let lang in this.translations) {
-                if (!this.updateTranslation(lang, improve))
-                    break;
+                promises.push(this.updateTranslation(lang));
             }
+			return Promise.all(promises);
         }
     }
     

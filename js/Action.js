@@ -133,8 +133,8 @@ define("js/Action", ["js/Translator", "js/Serror"], (Translator, Serror) => {
 							  new Date(this.data.due).toLocaleString(),
 							  (this.data.repeat === 0)
                               ? ""
-                              : TX.tx(" (repeat every $1)",
-									  TX.deltaTimeString(0, this.data.repeat)),
+                              : " " +
+							  TX.tx("(repeat every $1)", TX.deltaTimeString(0, this.data.repeat)),
 							  p);
 				} else
 					s = TX.tx("Cancel reminder on $1", p);
@@ -162,7 +162,7 @@ define("js/Action", ["js/Translator", "js/Serror"], (Translator, Serror) => {
                 break;
             case 'X':
                 if (this.data)
-                    s = TX.tx("Constrain $1 to $2 character$?($2!=1,s,) from $3",
+                    s = TX.tx("Constrain $1 to $2 {{plural:$2|character|characters}} from $3",
                               p, this.data.size, this.data.chars);
                 else
                     s = TX.tx("Clear constraints on $1", p);

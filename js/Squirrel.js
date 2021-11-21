@@ -156,8 +156,8 @@ define("js/Squirrel", [
             } else {
                 $sb.attr(
                     "title",
-                    TX.tx("These changes need to be saved:\n$1",
-                          us.join("\n")));
+                    TX.tx("These changes need to be saved:")
+					+ "\n" + us.join("\n"));
                 $sb.show();
             }
         }

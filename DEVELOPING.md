@@ -19,11 +19,14 @@ To generate (or update) a translation for a language, for example German
 - node build-dist.js -l xx -t 0
 to generate initial translations or provide missing translations. To correct an existing translation, use a text editor to edit the `locale/xx.json' file. If a string is not present in a translation, Squirrel will fall back to English.
 
+NOTE: if you change the strings in the code or HTML, you have to build
+using `make release` *first* before updating the translations.
+
 # Testing
 
 ## Unit tests
 
-There is a directory of unit tests in `js/test/*.ut'. These tests are written using the `Mocha' framework. Use `node` to run the tests, or `make` in the root.
+There is a directory of unit tests in `js/test/*.ut'. These tests are written using the `Mocha' framework. Use `make` in the root to run the tests.
 
 ## Browser testing
 
