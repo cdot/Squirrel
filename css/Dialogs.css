@@ -56,3 +56,22 @@
     background-color: #F0F0F0;
     color: #0F0F0F;
 }
+
+.flex-row {
+	margin-top: 0.25em;
+	margin-bottom: 0.25em;
+	flex-direction: row;
+}
+
+@media only screen and (width <= 720px) {
+	.ui-dialog {
+		top: 0!important;
+		left: 0!important;
+		width: 100%!important;
+		height: 100%!important;
+	}
+}
+
+@media only screen and (width > 720px) {
+
+}

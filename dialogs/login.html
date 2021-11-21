@@ -1,23 +1,13 @@
 <div id="login_dlg" class="dlg-dialog TX_title" title="Login">
-  <table width="100%">
-    <tbody>
-      <tr>
-        <td><label for="user" class="TX_text">User:</label></td>
-        <td>
-	  <input size="25" data-id="user" value="" class="TX_title" title="Enter username" />
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <label for="pass" class="TX_text">Pass:</label>
-        </td>
-        <td>
-	  <input type="text" size="25" data-id="pass" class="TX_title" title="Enter password" value="" /><br />
-        </td>
-      </tr>
-    </tbody>
-  </table>
-  <p>
+  <div style="flex-row">
+    <label for="user" class="TX_text">User:</label>
+	<input data-id="user" value="" class="TX_title" title="Enter username" style="flex-grow: 1"/>
+  </div>
+  <div class="flex-row">
+    <label for="pass" class="TX_text">Pass:</label>
+	<input data-id="pass" class="TX_title" title="Enter username" style="flex-grow: 1" title="Enter password" value=""/>
+  </div>
+  <div>
     <button data-id="ok" class="TX_text">Sign In</button>
-  </p>
+  </div>
 </div>
