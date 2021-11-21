@@ -23,6 +23,8 @@ define("js/Dialog", [
     // Cache of loaded code modules
     const classes = {};
 
+	const TX = Translator.instance();
+
 	/**
 	 * Dynamic dialog loader and Base class of modal dialogs. Loads
 	 * dialogs dynamically. Dialogs are defined using (1) an HTML `div`
@@ -224,6 +226,18 @@ define("js/Dialog", [
         }
 
         _initialise() {
+			const $title = this.$dlg.parent().find(".ui-dialog-title");
+			// jQuery dialog creates a new node for the title, so we have
+			// to mark it with the source string from the dialog title.
+			// This requires some hacking in the translator's weak map...
+			if (TX.originals) {
+				// Get the map for the dialog title node
+				const exMap = TX.originals.get(this.$dlg[0]);
+				// And map the #text child to the same string
+				TX.originals.set($title[0].firstChild, { text: exMap.title });
+			} // and make sure it is picked up by translation
+			$title.addClass("TX_text");
+
             this.initialise();
 
             // On devices with touch capability, hovering over an element

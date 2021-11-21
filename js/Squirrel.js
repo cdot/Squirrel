@@ -328,7 +328,7 @@ define("js/Squirrel", [
                 const auth_req = this.hoarder.auth_required();
                 if (!auth_req)
                     return Promise.resolve();
-                
+
                 return Dialog.confirm("login", {
                     title: TX.tx("Client user"),
                     user: auth_req.user
@@ -586,9 +586,9 @@ define("js/Squirrel", [
 
             if (!lingo)
                 lingo = "en";
-            
+
             Translator.instance().language(lingo, document);
-            
+
             this._stage(TX.tx("Loading application"), 0);
             $.styling.init({ debug: this.debug});
 

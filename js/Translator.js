@@ -6,9 +6,6 @@ if (typeof XMLHttpRequest === 'undefined')
 
 define("js/Translator", ["js/Utils", "js/Serror"], (Utils, Serror) => {
 
-	// Singleton instance of Translator, initialised in instance()
-	let singleton;
-
     const TIMEUNITS = {
         // TX.tx("$1 {{plural:$1|year|years}}")
         y: "$1 {{plural:$1|year|years}}",
@@ -201,16 +198,18 @@ define("js/Translator", ["js/Utils", "js/Serror"], (Utils, Serror) => {
                 this.originals = new WeakMap();
             this._translateDOM(dom, function (s) {
                 const tx = this.translations[Translator._clean(s)];
-                if (typeof tx !== 'undefined')
+                if (typeof tx === 'object' && typeof tx.s !== 'undefined')
                     s = tx.s;
+				if (typeof tx === 'string')
+					s = tx;
                 return s;
             });
         }
 
         /**
-         * Find all tagged strings under the given DOM node and translate them
-         * in place. The original string is held in dataset so that dynamic changes
-         * of language are possible (requires HTML5 dataset)
+         * Find all tagged strings under the given DOM node and
+         * translate them in place. The original string is held in
+         * originals so that dynamic changes of language are possible
          * @param node root of the DOM tree to process
          * @param translate function to call on each string to perform the
          * translation. If this function returns undefined, the string will
@@ -316,8 +315,10 @@ define("js/Translator", ["js/Utils", "js/Serror"], (Utils, Serror) => {
             const txes = this.translations;
             if (txes) {
                 const tx = txes[Translator._clean(arguments[0])];
-                if (typeof tx !== 'undefined')
-                    arguments[0] = tx.s;
+                if (typeof tx === 'object' && typeof tx.s !== 'undefined')
+					tx = tx.s;
+                if (typeof tx === 'string')
+					arguments[0] = tx;
                 // else use English
             }
 
@@ -377,13 +378,16 @@ define("js/Translator", ["js/Utils", "js/Serror"], (Utils, Serror) => {
          * can be used for calls to methods.
          */
         static instance(p) {
-            if (typeof p !== 'undefined'
-                || typeof singleton === 'undefined') {
-                singleton = new Translator(p);
-            }
-            return singleton;
+            if (typeof Translator.singleton === 'undefined')
+                Translator.singleton = new Translator(p);
+			if (typeof p !== 'undefined')
+				Utils.extend(Translator.singleton.options, p);
+            return Translator.singleton;
         }
     }
+
+	// Singleton instance of Translator, initialised in instance()
+	Translator.singleton = undefined;
 
     return Translator;
 });

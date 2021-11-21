@@ -47,7 +47,7 @@ requirejs(["js/Utils", "jquery", "jquery-ui"], Utils => {
 	], (Translator, Squirrel) => {
 
 		Translator.instance({
-			url: "locale",
+			url: "./locale",
 			debug: qs.debug ? console.debug : false
 		});
         

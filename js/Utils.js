@@ -323,10 +323,13 @@ define("js/Utils", [], () => {
 		 * Like jQuery $.extend
 		 */
         static extend() {
-            for (let i = 1; i < arguments.length; i++)
-                for (let key in arguments[i])
-                    if(arguments[i].hasOwnProperty.call(key))
+            for (let i = 1; i < arguments.length; i++) {
+				const arg = arguments[i];
+                for (let key in arg) {
+                    if(Object.prototype.hasOwnProperty.call(arg, key))
                         arguments[0][key] = arguments[i][key];
+				}
+			}
             return arguments[0];
         }
 
