@@ -35,6 +35,10 @@
     background-image: url('../images/folder-closed.svg')!important; }
 .squirrel-icon-move-to {
     background-image: url('../images/move-to.svg')!important; }
+.squirrel-icon-eye-open {
+    background-image: url('../images/eye-open.svg')!important; }
+.squirrel-icon-eye-closed {
+    background-image: url('../images/eye-closed.svg')!important; }
 
 .inline-icon {
 /*    width: 1em;

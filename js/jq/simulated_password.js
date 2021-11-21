@@ -44,9 +44,9 @@ define("js/jq/simulated_password", ["jquery"], () => {
     }
 
     /**
-     * Switch between shown/not shown
-     * @param el DOM element
-     * @param show boolean whther to show or not
+     * Switch password between clear/hidden
+     * @param {Element} el input element
+     * @param {boolean} show true to show
      */
     function showPass(el, show) {
         const $this = $(el);
@@ -63,6 +63,14 @@ define("js/jq/simulated_password", ["jquery"], () => {
             }
             $this.addClass("pass_hidden");
         }
+		const $showpass = $this.next();
+		if (show) {
+			$showpass.addClass("squirrel-icon-eye-open");
+			$showpass.removeClass("squirrel-icon-eye-closed");
+		} else {
+			$showpass.removeClass("squirrel-icon-eye-open");
+			$showpass.addClass("squirrel-icon-eye-closed");
+		}
     }
 
     // Require an unload handler on FF (and maybe others) to revert the
@@ -105,7 +113,7 @@ define("js/jq/simulated_password", ["jquery"], () => {
         .addClass("simulated_password")
         .each(function () {
             const self = this;
-            const $this = $(this);
+            const $input = $(this);
             const options = $.extend([], dopts);
 
             if (typeof $(this).data("options") !== 'undefined')
@@ -121,18 +129,22 @@ define("js/jq/simulated_password", ["jquery"], () => {
 
             if (options.checkbox) {
                 // Add a show/no show checkbox
-                const $showpass = $('<input type="checkbox"/>');
-                $this.after($showpass);
+                const $showpass = $('<span></span>')
+					  .addClass("ui-icon squirrel-icon");
+                $input.after($showpass);
+
                 $showpass
                 .on($.getTapEvent(), function () {
-                    showPass($this, $this.hasClass("pass_hidden"));
-                })
-                .prop("checked", !options.hidden);
+                    showPass($input, $input.hasClass("pass_hidden"));
+                });
+
+				showPass($input, !options.hidden);
             }
 
             // Handle input rather than keydown, as it's more friendly to
             // mobile devices
-            $this
+            $input
+
             // Because selectionchange event doesn't get fired on firefox
             // (unknown reason) we instead trap paste and keydown events
             // so we know what the selection was (for overtyping) and also
@@ -145,6 +157,7 @@ define("js/jq/simulated_password", ["jquery"], () => {
                                  "-", selectionEnd);
                 keyDown = -1;
             })
+
             .on("keydown", function(e) {
                 // Because selectionchange event doesn't get
                 // fired on firefox
@@ -155,14 +168,15 @@ define("js/jq/simulated_password", ["jquery"], () => {
                 if (debug) debug("keydown:", selectionStart,
                                  "-", selectionEnd, "key", keyDown);
             })
+
             .on("input", function (/*e*/) {
                 const el = document.activeElement;
                 if (debug) debug("input:", el.selectionStart,
                                  "selEnd:", el.selectionEnd);
-                if ($this.hasClass("pass_hidden")) {
+                if ($input.hasClass("pass_hidden")) {
                     const cPos = getCursorPosition(self);
-                    let hv = $this.data("hidden_pass");
-                    const dv = $.fn.raw_val.call($this);
+                    let hv = $input.data("hidden_pass");
+                    const dv = $.fn.raw_val.call($input);
                     if (debug)
                         debug("at:", cPos, "actual:", hv, "displayed:", dv);
 
@@ -195,15 +209,15 @@ define("js/jq/simulated_password", ["jquery"], () => {
                         debugger; // WTF? input event raised but not in
                         // response to a key event...?
                     }
-                    $this.data("hidden_pass", hv);
-                    $.fn.raw_val.call($this, hv.replace(/./g, SPOT));
+                    $input.data("hidden_pass", hv);
+                    $.fn.raw_val.call($input, hv.replace(/./g, SPOT));
                     setCursorPosition(self, cPos);
                     if (debug) debug("final:", hv, "cursor", cPos)
                 }
                 return true;
             });
 
-            showPass($this, !options.hidden);
+            showPass($input, !options.hidden);
         });
         return $(this);
     };
