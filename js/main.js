@@ -36,6 +36,8 @@ requirejs(["js/Utils", "jquery", "jquery-ui"], Utils => {
             url: { type: "string" }
         });
 
+	console.log("Starting", qs);
+
     if (qs.debug) {
         requirejs.config({
             urlArgs: `nocache=${Date.now()}` // suppress cache

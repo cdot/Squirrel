@@ -255,22 +255,26 @@ define("js/Dialog", [
                     $this.after($div);
                 });
 
-                // If a TR has the the dialog attr, transfer it
-                // down to the first element in the first cell in the table
-                this.$dlg.find("tr.tooltip-dialog").each((i, tr) => {
-                    const $tr = $(tr);
-                    const text = $tr.attr("title");
-                    $tr.removeClass("tooltip-dialog");
-                    $tr.children("td,th")
-                    .first().children().first().each(function() {
-                        $(this)
+                // If an element has the tooltip-bequeath class, copy the
+                // title down to the elements and add the tooltip-dialog
+				// class so they get an info button
+                this.$dlg.find(".tooltip-bequeath").each((i, el) => {
+                    const $el = $(el);
+                    const text = $el.attr("title");
+                    $el
+					.removeClass("tooltip-bequeath")
+                    .children()
+					.each((j, kid) => {
+                        $(kid)
                         .attr("title", text)
-                        .addClass("tooltip-dialog TX_title");
+                        .addClass("TX_title");
                     });
                 });
 
 				const info = this.tx("Information");
-                this.$dlg.find(".tooltip-dialog").each((i, dlg) => {
+                this.$dlg
+				.find(".tooltip-dialog")
+				.each((i, dlg) => {
                     const $this = $(dlg);
                     $("<button data-icon='ui-icon-info'></button>")
                     .insertAfter($this)
@@ -286,7 +290,6 @@ define("js/Dialog", [
             this.$dlg.find(".twisted").twisted();
             this.$dlg.find("button").icon_button();
 
-            
             // Add handler to default OK control
             const $ok = this.$control("ok", true);
             if ($ok) {

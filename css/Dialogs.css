@@ -58,12 +58,31 @@
 }
 
 .flex-row {
+	display: flex;
 	margin-top: 0.25em;
 	margin-bottom: 0.25em;
 	flex-direction: row;
+	width: 100%;
+}
+
+.flex-row label {
+	margin-right: 0.25em;
+}
+
+.flex-grow {
+	flex-grow: 1;
+}
+
+.ui-dialog h1 {
+	font-size: 1.1em;
+}
+
+.ui-dialog {
+	max-width: 500px;
 }
 
 @media only screen and (width <= 720px) {
+	/* Fullscreen dialogs on small display */
 	.ui-dialog {
 		top: 0!important;
 		left: 0!important;
@@ -73,5 +92,7 @@
 }
 
 @media only screen and (width > 720px) {
-
+	.ui-dialog {
+		min-width: 300px;
+	}
 }

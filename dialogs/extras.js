@@ -43,10 +43,13 @@ define("dialogs/extras", [
             const self = this;
 
             this.$control("theme")
+			.selectmenu()
             .on("selectmenuchange", function () {
-                $.styling.theme($(this).val());
-            })
-            .selectmenu();
+				if (self.debug) self.debug(`theme changed to ${$(this).val()}`);
+				$(this).selectmenu("disable");
+				$.styling.theme($(this).val());
+				$(this).selectmenu("enable");
+			});
 
             this.$control("autosave")
             .on("change", function () {
