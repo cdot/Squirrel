@@ -21,9 +21,9 @@ define("js/jq/edit_in_place", ["jquery", "jquery-ui"], () => {
 
         const $this = $(this);
         const h = options.height || $this.height() || "1em";
-        const w = options.width || $this.width() || "1em";
         const $input = $(document.createElement("input"));
         const text = options.text || $this.text();
+        let w = options.width || $this.width() || "15em";
 
         function close() {
             const v = $input.val();
@@ -36,22 +36,23 @@ define("js/jq/edit_in_place", ["jquery", "jquery-ui"], () => {
         $this.hide();
 
         $input
-            .insertBefore($this)
-            .addClass("in_place_editor")
-            .val(text)
-            .css("height", h)
-            .css("width", w)
-            .on("change", close)
-            .blur(close)
-            .on("keydown", function (e) { // Escape means cancel
-                if (e.keyCode === 27 ||
-                    (e.keyCode === 13 && $(this).val() === text)) {
-                    close();
-                    return false;
-                } else
-                    return true;
-            })
-
-            .select();
+		.addClass("in_place_editor")
+        .insertBefore($this)
+        .val(text)
+        .height(h)
+		// Adjust for padding and border
+        .width(w - ($input.outerWidth() - $input.width()))
+		.addClass("in_place_editor")
+        .on("change", close)
+        .blur(close)
+        .on("keydown", function (e) { // Escape means cancel
+            if (e.keyCode === 27 ||
+                (e.keyCode === 13 && $(this).val() === text)) {
+                close();
+                return false;
+            } else
+                return true;
+        })
+        .select();
     };
 });

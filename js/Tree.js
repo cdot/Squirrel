@@ -251,26 +251,20 @@ define("js/Tree", [
         /**
          * Requires edit_in_place. selector may be a jquery selector or
          * an object.
-         * @param $span child node to edit
-         * ~para, text text to present in the editor
-         * @param action 'R'ename or 'E'dit
+         * @param {jQuery} $span child node to edit
+         * @param {string} text text to present in the editor
+         * @param {string} action 'R'ename or 'E'dit
+		 * @param {function=} after post-edit function
          * @return a Promise that resolves to the changed value
 		 * @private
          */
-        _edit: function($span, text, action) {
+        _edit: function($span, text, action, after) {
             const $node = this.element;
 
-            // Fit width to the container
-            let w = $node.closest(".tree-isRoot")
-                .width();
-            w -= $span.position()
-            .left;
-            $span.parents()
-            .each(function () {
-                w -= $(this)
-                .position()
-                .left;
-            });
+			// Size it to use up the rest of the box
+			const $box = $span.closest(".tree_title");
+			const w = $box.width()-
+				  ($span.offset().left - $box.offset().left);
 
             const nodepath = this.getPath();
             return new Promise((resolve, reject) => {
@@ -278,6 +272,8 @@ define("js/Tree", [
                     width: w,
                     text: text,
                     onClose: function (s) {
+						if (after)
+							after(s);
                         if (s !== text)
                             resolve(new Action({
                                 type: action,
@@ -298,9 +294,12 @@ define("js/Tree", [
 		 */
         editKey: function() {
             const $node = this.element;
+			const $leaf = $node.find(".tree_t_i_leaf");
+			$leaf.hide();
             return this._edit(
                 $node.find(".tree_t_i_key")
-                .first(), $node.data("key"), 'R');
+                .first(), $node.data("key"), 'R',
+				() => $leaf.show());
         },
 
 		/**

@@ -121,3 +121,8 @@ li.tree {
 .tree-isModified {
     color: rgb(0, 89, 255); /* may be complemented in code */
 }
+
+input.in_place_editor {
+	border-width: 0px;
+	padding: 2px;
+}
