@@ -39,8 +39,8 @@ define("js/Translator", ["js/Utils", "js/Serror"], (Utils, Serror) => {
 	 * of the node.
 	 *
 	 * `TX_text` and `TX_html` should never be used together on the same node.
-	 * Reaping strings from source code is done by the `build/extractTX.js`
-	 * node.js script.
+	 * Reaping strings from source code is done by the `Locales` module from
+	 * `build-dist.js`.
 	 *
 	 * Implementation requires a locale URL that has `strings` (a file of
 	 * English strings) and `<locale>.json` URLS, one for each language, named
@@ -49,7 +49,7 @@ define("js/Translator", ["js/Utils", "js/Serror"], (Utils, Serror) => {
     class Translator {
 
         /**
-         * @param {object} options
+         * @param {object} options setup options
          * @param {string} options.url base URL under which to find
          * language files. `files` and `translations` ignored if set
          * @param {string} options.files base file path under which to
@@ -76,13 +76,12 @@ define("js/Translator", ["js/Utils", "js/Serror"], (Utils, Serror) => {
 
         /**
 		 * Simplify a string for lookup in the translations table
-		 * @private
 		 */
-        static _clean(s) {
+        static clean(s) {
             return s
-                .replace(/\s+/g, ' ')
-                .replace(/^ /, "")
-                .replace(/ $/, "");
+            .replace(/^\s+/, "")
+            .replace(/\s+$/, "")
+            .replace(/\s+/g, ' ');
         }
 
         /**
@@ -134,7 +133,7 @@ define("js/Translator", ["js/Utils", "js/Serror"], (Utils, Serror) => {
 					} catch (e) {
 						reject(new Serror(400, [ url ], e));
 					}
-				
+					
                     xhr.onreadystatechange = function() {
                         if (xhr.readyState != 4)
                             return;
@@ -197,7 +196,7 @@ define("js/Translator", ["js/Utils", "js/Serror"], (Utils, Serror) => {
             if (!this.originals)
                 this.originals = new WeakMap();
             this._translateDOM(dom, function (s) {
-                const tx = this.translations[Translator._clean(s)];
+                const tx = this.translations[Translator.clean(s)];
                 if (typeof tx === 'object' && typeof tx.s !== 'undefined')
                     s = tx.s;
 				if (typeof tx === 'string')
@@ -223,7 +222,7 @@ define("js/Translator", ["js/Utils", "js/Serror"], (Utils, Serror) => {
             function hasClass(element, thatClass) {
                 return (` ${element.className} `
                         .replace(
-                                /\s+/g, ' ')
+                            /\s+/g, ' ')
                         .indexOf(` ${thatClass} `) >= 0);
             }
 
@@ -271,8 +270,10 @@ define("js/Translator", ["js/Utils", "js/Serror"], (Utils, Serror) => {
                         translating = true;
 
                     if (node.childNodes) {
-                        for (let i = 0, len = node.childNodes.length; i < len; ++i) {
-                            this._translateDOM(node.childNodes[i], translate, translating);
+						const len = node.childNodes.length;
+                        for (let i = 0; i < len; i++) {
+                            this._translateDOM(
+								node.childNodes[i], translate, translating);
                         }
                     }
                 }
@@ -281,7 +282,7 @@ define("js/Translator", ["js/Utils", "js/Serror"], (Utils, Serror) => {
 
         /**
          * Analyse a DOM and generate a list of all translatable strings found.
-         * This can be used to seed the translations table.
+         * This is used to generate the translations table.
          * @param el root element of the DOM tree to analyse
 		 * @return {string[]} list of translatable strings
          */
@@ -289,7 +290,7 @@ define("js/Translator", ["js/Utils", "js/Serror"], (Utils, Serror) => {
             const strings = [], seen = {}; // use a map to uniquify
             this.originals = new WeakMap();
             this._translateDOM(el, s => {
-                s = Translator._clean(s);
+                s = Translator.clean(s);
                 if (!seen[s]) {
                     strings.push(s);
                     seen[s] = true;
@@ -314,8 +315,9 @@ define("js/Translator", ["js/Utils", "js/Serror"], (Utils, Serror) => {
             // Look up the translation
             const txes = this.translations;
             if (txes) {
-                const tx = txes[Translator._clean(arguments[0])];
+                let tx = txes[Translator.clean(arguments[0])];
                 if (typeof tx === 'object' && typeof tx.s !== 'undefined')
+					// Compatability
 					tx = tx.s;
                 if (typeof tx === 'string')
 					arguments[0] = tx;
@@ -366,7 +368,7 @@ define("js/Translator", ["js/Utils", "js/Serror"], (Utils, Serror) => {
                 s.push(`00${deltaDate.getUTCHours()}`.slice(-2)
                        + ":" + `00${deltaDate.getUTCMinutes()}`.slice(-2)
                        + ":" + `00${deltaDate.getUTCSeconds()}`.slice(-2));
- 
+			
             return s.join(' ');
         }
 
