@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- The icon can be used freely in both personal and commercial projects with no attribution required, but always appreciated. 
+You may NOT sub-license, resell, rent, redistribute or otherwise transfer the icon without express written permission from iconmonstr.com -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   version="1.1"
+   x="0px"
+   y="0px"
+   width="512px"
+   height="512px"
+   viewBox="0 0 512 512"
+   enable-background="new 0 0 512 512"
+   xml:space="preserve"
+   id="svg2996"
+   inkscape:version="0.92.3 (2405546, 2018-03-11)"
+   sodipodi:docname="undo.svg"
+   inkscape:export-filename="/home/crawford/Projects/Squirrel/images/undo16.png"
+   inkscape:export-xdpi="2.8125"
+   inkscape:export-ydpi="2.8125"><metadata
+     id="metadata3003"><rdf:RDF><cc:Work
+         rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" /><dc:title /></cc:Work></rdf:RDF></metadata><defs
+     id="defs3001"><inkscape:path-effect
+       effect="bend_path"
+       id="path-effect3773"
+       is_visible="true"
+       bendpath="m 25.981611,258.71187 466.545249,0"
+       prop_scale="1"
+       scale_y_rel="false"
+       vertical="false" /></defs><sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1861"
+     inkscape:window-height="1028"
+     id="namedview2999"
+     showgrid="false"
+     inkscape:zoom="0.92187502"
+     inkscape:cx="-375.63144"
+     inkscape:cy="155.79112"
+     inkscape:window-x="59"
+     inkscape:window-y="24"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg2996" /><path
+     id="undo-icon"
+     d="M 282.6335,78.146793 H 133.00682 V 21.796615 L 25.881611,128.20491 133.00682,234.61091 V 177.10606 H 282.6335 c 60.93765,0 110.33391,49.15071 110.33391,109.78032 0,60.63075 -49.39626,109.78147 -110.33391,109.78147 H 137.37371 v 98.95927 h 145.26094 c 115.86593,0 209.79221,-93.45732 209.79221,-208.74074 C 492.42571,171.60296 398.50058,78.146793 282.6335,78.146793 Z"
+     inkscape:connector-curvature="0"
+     style="fill:#00ca00;fill-opacity:1"
+     inkscape:path-effect="#path-effect3773"
+     inkscape:original-d="M 282.7335,78.146789 H 133.10682 V 21.796611 L 25.981611,128.20491 133.10682,234.61091 V 177.10606 H 282.7335 c 60.93765,0 110.33391,49.15071 110.33391,109.78032 0,60.63075 -49.39626,109.78147 -110.33391,109.78147 H 137.47371 v 98.95927 h 145.26094 c 115.86593,0 209.79221,-93.45732 209.79221,-208.74074 C 492.52571,171.60296 398.60058,78.146789 282.7335,78.146789 Z"
+     sodipodi:nodetypes="scccccsssccscs" /></svg>

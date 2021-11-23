@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- The icon can be used freely in both personal and commercial projects with no attribution required, but always appreciated. 
+You may NOT sub-license, resell, rent, redistribute or otherwise transfer the icon without express written permission from iconmonstr.com -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   version="1.1"
+   x="0px"
+   y="0px"
+   width="512px"
+   height="512px"
+   viewBox="0 0 512 512"
+   enable-background="new 0 0 512 512"
+   xml:space="preserve"
+   id="svg171450"
+   inkscape:version="0.92.3 (2405546, 2018-03-11)"
+   sodipodi:docname="delete.svg"
+   inkscape:export-filename="/home/crawford/Projects/Squirrel/images/delete18.png"
+   inkscape:export-xdpi="3.1640625"
+   inkscape:export-ydpi="3.1640625"><metadata
+     id="metadata171457"><rdf:RDF><cc:Work
+         rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" /><dc:title /></cc:Work></rdf:RDF></metadata><defs
+     id="defs171455" /><sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1529"
+     inkscape:window-height="731"
+     id="namedview171453"
+     showgrid="false"
+     inkscape:zoom="0.4609375"
+     inkscape:cx="-145.35593"
+     inkscape:cy="256"
+     inkscape:window-x="59"
+     inkscape:window-y="24"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="svg171450" /><path
+     id="x-mark-5-icon"
+     d="M 504.13922,91.171363 414.20941,14.40244 258.78136,197.08623 103.27633,10.786746 18.708237,98.311283 C 65.164113,157.34205 126.14338,219.09939 188.75454,276.49314 L 23.573656,468.51229 50.884059,498.9511 C 91.098346,471.63163 171.64514,410.74055 257.53305,337.41246 345.05558,412.48653 426.44238,473.72195 465.5417,501.21225 L 495.01467,475.05901 327.14468,276.10978 C 394.00809,215.25502 458.44361,150.32992 504.13922,91.171363 Z"
+     inkscape:connector-curvature="0"
+     style="fill:#ff0000;fill-opacity:1"
+     sodipodi:nodetypes="ccccccccccccc" /></svg>

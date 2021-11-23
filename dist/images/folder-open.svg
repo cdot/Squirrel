@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- The icon can be used freely in both personal and commercial projects with no attribution required, but always appreciated. 
+You may NOT sub-license, resell, rent, redistribute or otherwise transfer the icon without express written permission from iconmonstr.com -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   version="1.1"
+   x="0px"
+   y="0px"
+   width="512px"
+   height="512px"
+   viewBox="0 0 512 512"
+   enable-background="new 0 0 512 512"
+   xml:space="preserve"
+   id="svg4891"
+   inkscape:version="0.92.3 (2405546, 2018-03-11)"
+   sodipodi:docname="folder-open.svg"><metadata
+     id="metadata4898"><rdf:RDF><cc:Work
+         rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" /><dc:title /></cc:Work></rdf:RDF></metadata><defs
+     id="defs4896" /><sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1509"
+     inkscape:window-height="972"
+     id="namedview4894"
+     showgrid="false"
+     inkscape:zoom="0.921875"
+     inkscape:cx="17.216384"
+     inkscape:cy="256"
+     inkscape:window-x="59"
+     inkscape:window-y="24"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="svg4891" /><path
+     style="fill:#eeb900;fill-opacity:1;fill-rule:nonzero;stroke:none"
+     d="m 512,256 c 0,-5.342 -0.17749,-10.64542 -0.5,-15.90625 l -0.0937,32.9375 C 511.77625,267.40001 512,261.72485 512,256 Z M 437.9375,436.09375 254.90625,248.40625 436.125,74.09375 C 389.87037,28.289192 326.23948,0 256,0 114.6151,0 0,114.6151 0,256 c 0,141.3849 114.6151,256 256,256 71.16131,0 135.53982,-29.0366 181.9375,-75.90625 z"
+     id="path3758"
+     inkscape:connector-curvature="0"
+     sodipodi:nodetypes="sccscccsssc" /></svg>
