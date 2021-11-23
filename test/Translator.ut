@@ -36,9 +36,9 @@ const server_url = "http://cdot.github.io/Squirrel/locale/";
 
 const TRANSLATIONS = {
     pc: {
-        Fat: { m: 1, s: "Stocky"},
+        Fat: "Stocky",
         Skinny: { m: 1, s: "Slim" },
-        "$1 tomahto$?($1!=1,s,)": { m: 1, s: "$1 tomayto$?($1!=1,s,)" },
+        "$1 tomahto$?($1!=1,s,)": "$1 tomayto$?($1!=1,s,)",
         "<em>Stupid</em>": { m: 1, s: "<a name='silly'>Twit</a>" }
     }
 };
@@ -69,8 +69,9 @@ requirejs(["js/Translator", "test/TestRunner"], function(Translator, TestRunner)
     });
 
     tr.addTest("Works in an English DOM", function() {
-        let TX = Translator.instance({url:server_url});
-        let en = '<div class="TX_html">Stupid</div>';
+		delete Translator.singleton;
+        const TX = Translator.instance({url:server_url});
+        const en = '<div class="TX_html">Stupid</div>';
         document.body.innerHTML = en;
         return TX.language("en", document)
         .then(() => {
@@ -78,25 +79,15 @@ requirejs(["js/Translator", "test/TestRunner"], function(Translator, TestRunner)
         });
     });
 
-    tr.addTest("Works in a translated DOM", function() {
-        let TX = Translator.instance({
+    tr.addTest("translates a DOM", function() {
+        const TX = Translator.instance({
+			debug: console.debug,
             translations: TRANSLATIONS
         });
-        let en = '<div class="TX_title TX_text" title="Fat">Skinny</div>';
+        let en = '<div class="TX_title TX_text" title="Fat">Skinny</div>'
+        + '<div class="TX_html"><em>Stupid</em></div>';
         let pc = '<div class="TX_title TX_text" title="Stocky">Slim</div>'
-        document.body.innerHTML = en;
-        return TX.language("pc", document)
-        .then(() => {
-            assert.equal(document.body.innerHTML, pc);
-        });
-    });
-
-    tr.addTest("Translates HTML", function() {
-        let TX = Translator.instance({
-            translations: TRANSLATIONS
-        });
-        let en = '<div class="TX_html"><em>Stupid</em></div>';
-        let pc = '<div class="TX_html"><a name="silly">Twit</a></div>'
+        + '<div class="TX_html"><a name="silly">Twit</a></div>';
         document.body.innerHTML = en;
         return TX.language("pc", document)
         .then(() => {

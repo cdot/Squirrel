@@ -84,30 +84,35 @@ define("js/Translator", ["js/Utils", "js/Serror"], (Utils, Serror) => {
             .replace(/\s+/g, ' ');
         }
 
+		/**
+		 * If there is already a translation applied, unapply it
+		 * (translate back to English)
+		 */
+		untranslate(document) {
+			// It would have been cleaner if we could have iterated over
+			// the originals, but it's a WeakMap which can't be iterated
+			// so we have to re-un-translate the document.
+			if (this.originals && document) {
+				if (this.debug) this.debug("Untranslating");
+				const bod = document.getElementsByTagName("body");
+				this._translateDOM(bod[0], function (s) {
+					return s;
+				});
+				// originals no longer needed, will regenerate if necessary
+				// when the DOM is re-translated
+				this.originals = undefined;
+			}
+		}
+
         /**
          * Promise to initialise the language. Required before the language
          * can be used. Finds and translates marked strings in the given DOM.
          * @param {string} lingo two-character language code e.g. 'en', 'de',
 		 * 'fr'
-         * @param {jQuery} document optional DOM
+         * @param {Document} document optional Document object
 		 * @return {Promise} resolves to the name of the language
          */
         language(lingo, document) {
-
-            if (this.originals) {
-                if (this.debug) this.debug("Untranslating");
-                // If there is already a language applied, unapply it.
-                // It would have been cleaner if we could have iterated over
-                // the originals, but it's a WeakMap which can't be iterated
-                // so we have to re-un-translate the document.
-                const bod = document.getElementsByTagName("body");
-                this._translateDOM(bod[0], function (s) {
-                    return s;
-                });
-                // originals no longer needed, will regenerate if necessary
-                // when the DOM is re-translated
-                this.originals = undefined;
-            }
 
             lingo = lingo || this.lingo || "en";
 			this.lingo = lingo;
@@ -115,6 +120,7 @@ define("js/Translator", ["js/Utils", "js/Serror"], (Utils, Serror) => {
             if (lingo === "en") {
                 // English, so no need to translate the DOM
                 if (this.debug) this.debug("Using English");
+				this.untranslate(document);
                 return Promise.resolve(lingo);
             }
 
@@ -161,9 +167,13 @@ define("js/Translator", ["js/Utils", "js/Serror"], (Utils, Serror) => {
                 .then(json => JSON.parse(json));
             } else if (this.options.translations) {
                 getter = Promise.resolve(this.options.translations[lingo]);
-            }
+            } else
+				getter = Promise.reject(new Serror(500, [], "No translations source"));
 
-            return getter.then(data => {
+            return getter
+			.then(data => {
+				this.untranslate(document);
+
                 this.translations = data;
                 if (document) {
                     // Translate the DOM
@@ -173,15 +183,6 @@ define("js/Translator", ["js/Utils", "js/Serror"], (Utils, Serror) => {
                 }
                 if (this.debug) this.debug("Using language", lingo);
 				return lingo;
-            })
-            .catch(e => {
-                if (this.debug) this.debug("Could not load language", lingo);
-                const generic = lingo.replace(/-.*/, "");
-                if (generic !== lingo) {
-                    if (this.debug) this.debug("Trying fallback", generic);
-                    return this.language(generic, document);
-                }
-				return undefined;
             });
         }
 
@@ -383,7 +384,7 @@ define("js/Translator", ["js/Utils", "js/Serror"], (Utils, Serror) => {
             if (typeof Translator.singleton === 'undefined')
                 Translator.singleton = new Translator(p);
 			if (typeof p !== 'undefined')
-				Utils.extend(Translator.singleton.options, p);
+				Translator.singleton.options = p;
             return Translator.singleton;
         }
     }
