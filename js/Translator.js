@@ -374,23 +374,20 @@ define("js/Translator", ["js/Utils", "js/Serror"], (Utils, Serror) => {
         }
 
         /**
-         * Setter/getter for the singleton instance of Translator
-         * @param {object} p options to pass to constructor. If
-		 * defined, will force the re-initialisation of the singleton.
-         * @return {Translator} singleton instance of Translator that
-         * can be used for calls to methods.
+         * Configure the singleton instance of Translator
+         * @param {object} p same options as constructor.
+         * @return {Translator} singleton instance of Translator
          */
-        static instance(p) {
-            if (typeof Translator.singleton === 'undefined')
-                Translator.singleton = new Translator(p);
-			if (typeof p !== 'undefined')
-				Translator.singleton.options = p;
-            return Translator.singleton;
+        static configure(p) {
+            if (typeof p === 'undefined')
+                p = {};
+			Translator.TX.options = p;
+            return Translator.TX;
         }
     }
 
-	// Singleton instance of Translator, initialised in instance()
-	Translator.singleton = undefined;
+	// Singleton instance of Translator, initialised in configure()
+	Translator.TX = new Translator();
 
     return Translator;
 });

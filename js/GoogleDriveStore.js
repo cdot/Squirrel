@@ -19,7 +19,7 @@ define("js/GoogleDriveStore", [
 	'js/Utils', 'js/Translator', 'js/HttpServerStore', 'js/Serror'
 ], (Utils, Translator, HttpServerStore, Serror) => {
 
-    const TX = Translator.instance();
+    const TX = Translator.TX;
 
 	// Client ID from Google APi dashboard. Note this is only valid
 	// for requests from specific URLs, so if you want to host your

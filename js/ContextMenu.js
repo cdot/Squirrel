@@ -6,7 +6,7 @@ define("js/ContextMenu", [
 	"clipboard", "jquery", "jquery-ui", "contextmenu"
 ], (Translator, Dialog, Action, Serror, ClipboardJS) => {
 
-    const TX = Translator.instance();
+    const TX = Translator.TX;
 
 	/**
 	 * Squirrel context menu for nodes, using jquery.ui-contentmenu

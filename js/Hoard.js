@@ -6,7 +6,7 @@ define("js/Hoard", [
 ], (
 	Node, Action, Translator, Serror
 ) => {
-	const TX = Translator.instance();
+	const TX = Translator.TX;
 
 	/**
 	 * History of an action that was played into the hoard.

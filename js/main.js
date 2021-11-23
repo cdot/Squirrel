@@ -48,7 +48,7 @@ requirejs(["js/Utils", "jquery", "jquery-ui"], Utils => {
 		"js/Translator", "js/Squirrel", "jquery-touch-events"
 	], (Translator, Squirrel) => {
 
-		Translator.instance({
+		Translator.configure({
 			url: "./locale",
 			debug: qs.debug ? console.debug : false
 		});

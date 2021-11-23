@@ -4,7 +4,7 @@
 define("js/Action", ["js/Translator", "js/Serror"], (Translator, Serror) => {
 
     const MSPERDAY = 24 * 60 * 60 * 1000;
-    const TX = Translator.instance();
+    const TX = Translator.TX;
 
 	/**
 	 * An action performed on a Hoard

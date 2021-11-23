@@ -4,6 +4,8 @@ MD := $(shell find . \( -path './node_modules/*' -o -path './test/*' -o -path '.
 
 TESTS := $(shell find test \( -path './node_modules/*' -o -path './doc/*' -o -path './dist/*' \) -prune -o -name '*.ut' -print)
 
+HTML := $(shell find . \( -path './node_modules/*' -o -path './test/*' -o -path './dist/*' -o -path './doc/*' -o -path './build/*' \) -prune -o -name '*.html' -print)
+
 # Default target; run unit tests
 tests: node_modules $(TESTS:.ut=.utr)
 
@@ -13,8 +15,8 @@ tests: node_modules $(TESTS:.ut=.utr)
 node_modules:
 	npm install
 
-release: $(JS)
-	node build-dist.js
+release: $(JS) $(HTML) strings
+	node build/release.js
 
 # Make HTML source-code documentation
 doc: doc/index.html
@@ -24,6 +26,10 @@ doc/index.html: $(JS) $(MD)
 
 lint:
 	node node_modules/.bin/eslint $(JS)
+
+# Extract strings from source code
+strings: $(JS) $(HTML)
+	node build/strings.js
 
 # Update package.json with latest packages
 # using npm-check-update (npm install -g npm-check-updates)

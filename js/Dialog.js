@@ -23,7 +23,7 @@ define("js/Dialog", [
     // Cache of loaded code modules
     const classes = {};
 
-	const TX = Translator.instance();
+	const TX = Translator.TX;
 
 	/**
 	 * Dynamic dialog loader and Base class of modal dialogs. Loads
@@ -145,7 +145,7 @@ define("js/Dialog", [
                         if (options.debug)
                             options.debug("HTML for",id,"was loaded");
                         const $dlg = $(html);
-                        Translator.instance().translate($dlg[0]);
+                        Translator.TX.translate($dlg[0]);
                         // force the id so we can find it again
                         $dlg.attr("id", id + "_dlg");
                         // force the CSS class - should be hidden
@@ -400,7 +400,7 @@ define("js/Dialog", [
          */
         tx() {
             return Translator.prototype.tx.apply(
-                Translator.instance(), arguments);
+                Translator.TX, arguments);
         }
 
         /**
@@ -409,7 +409,7 @@ define("js/Dialog", [
 		 * @return {string} the translated dom
          */
         translate(dom) {
-            return Translator.instance().translate(dom);
+            return Translator.TX.translate(dom);
         }
     }
     return Dialog;

@@ -24,7 +24,7 @@ define([
 	"js/jq/icon_button", "test/simulated_password"
 ], Translator => {
 
-    const TX = Translator.instance({ url: "locale", debug: console.debug});
+    const TX = Translator.configure({ url: "locale", debug: console.debug});
 
     /*function assert(v, m) {
         if (!v) {

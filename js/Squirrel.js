@@ -13,7 +13,7 @@ define("js/Squirrel", [
 	Cookies, ContextMenu
 ) => {
 
-	const TX = Translator.instance();
+	const TX = Translator.TX;
 
     // Dialogs for loading in the background. These are loaded in roughly
     // the order they are likely to be used, but the loads are supposed to
@@ -587,7 +587,7 @@ define("js/Squirrel", [
             if (!lingo)
                 lingo = "en";
 
-            Translator.instance().language(lingo, document);
+            Translator.TX.language(lingo, document);
 
             this._stage(TX.tx("Loading application"), 0);
             $.styling.init({ debug: this.debug});

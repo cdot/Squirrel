@@ -367,7 +367,7 @@ define([
     };
 
     return () => {
-        Translator.instance({ url: "locale" }).language("en");
+        Translator.configure({ url: "locale" }).language("en");
         // Fake the need for store_settings
         test_app.cloud.store.option("needs_image", true);
         $("#node").data("key", "spoon");

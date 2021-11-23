@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2019-2021 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env node */
 
-define([
+define("build/Locales", [
 	"node-getopt", "jsdom", "js/Translator", "fs-extra", "readline-sync"
 ], (getopt, jsdom, Translator, Fs, rl) => {
 
@@ -54,11 +54,11 @@ define([
 		return tx;
 	}
 
-	const TX = Translator.instance();
+	const TX = Translator.TX;
     
 	/**
 	 * Support for build-dist.js. Automatic string extraction and
-	 * translation using mymemory.net. Not distributed.
+	 * translation using mymemory.net.
 	 */
     class Locales {
 
@@ -97,7 +97,8 @@ define([
                 else
                     data.push(s);
             }
-            return Fs.writeFile("locale/strings", data.sort().join("\n"));
+            return Fs.writeFile("locale/strings", data.sort().join("\n"))
+			.then(() => console.log("Wrote new locale/strings"));
         }
         
         /**
@@ -160,6 +161,7 @@ define([
         /**
          * Analyse a block of HTML and extract English strings
          * @param data string of HTML
+		 * @param {string} source where it came from
 		 * @return {Promise} Promise that resolves to the number of strings
          */
         html(data, source) {
@@ -175,24 +177,27 @@ define([
                     count++;
                 this.strings[s] = source;
             }
+            if (count > 0)
+				this.debug(`Extracted ${count} new strings from ${source}`);
             return Promise.resolve(count);
         }
 
         /**
-         * Analyse a block of JS and extract English strings
+         * Analyse a block of JS and extract English strings.
          * @param data string of JS
-		 * @return {Promise} Promise that resolves to the number of strings
+		 * @return {Promise} Promise that resolves to the number
+		 * of unique strings
          */
         js(data, source) {
-            let count = 0;
-            data.replace(
-                /\.tx\((["'])(.+?[^\\])\1/g,
-                (match, quote, str) => {
-                    if (!this.strings[str])
-                        count++;
-                    this.strings[str] = source;
-                    return "";
-                });
+            let count = 0, m;
+            const re = /\.tx\s*\(\s*(["'])(.+?[^\\])\1/gs;
+			while ((m = re.exec(data)) !== null) {
+                if (!this.strings[m[2]])
+                    count++;
+                this.strings[m[2]] = source;
+            }
+            if (count > 0)
+				this.debug(`Extracted ${count} new strings from ${source}`);
             return Promise.resolve(count);
         }
 

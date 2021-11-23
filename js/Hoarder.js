@@ -6,7 +6,7 @@ define("js/Hoarder", [
 ], (Hoard, Action, Serror, Translator) => {
 
     const CLIENT_PATH = "client";
-    const TX = Translator.instance();
+    const TX = Translator.TX;
 
 	/**
 	 * @callback Hoarder.Selector

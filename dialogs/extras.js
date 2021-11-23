@@ -5,7 +5,7 @@ define("dialogs/extras", [
 	"js/Dialog", "js/Translator", "js/Tree", "js-cookie", "js/jq/styling"
 ], (Dialog, Translator, Tree, Cookies) => {
 
-	const TX = Translator.instance();
+	const TX = Translator.TX;
 
 	/**
 	 * Settings dialog.
@@ -145,8 +145,8 @@ define("dialogs/extras", [
                 self.options.set_language(fresh)
 				.catch(e => {
 					Dialog.confirm("alert", {
-                        title: TX.tx("Reminders"),
-                        alert: TX.tx("Could not load $1, language not found", fresh)
+                        title: TX.tx("I18N load failure"),
+                        alert: TX.tx("Could not find translations for '$1'", fresh)
                     });
 				});
             });
@@ -166,7 +166,7 @@ define("dialogs/extras", [
 
             this.$control("lastchange").prop("checked", Tree.showingChanges());
 
-            Translator.instance().language().then(
+            TX.language().then(
 				lingo => this.$control("language").val(lingo));
         }
 
