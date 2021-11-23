@@ -5,6 +5,8 @@ define("dialogs/extras", [
 	"js/Dialog", "js/Translator", "js/Tree", "js-cookie", "js/jq/styling"
 ], (Dialog, Translator, Tree, Cookies) => {
 
+	const TX = Translator.instance();
+
 	/**
 	 * Settings dialog.
 	 * See {@link Dialog} for constructor parameters
@@ -140,7 +142,13 @@ define("dialogs/extras", [
             this.$control("language")
             .on("change", function () {
                 const fresh = self.$control("language").val();
-                self.options.set_language(fresh);
+                self.options.set_language(fresh)
+				.catch(e => {
+					Dialog.confirm("alert", {
+                        title: TX.tx("Reminders"),
+                        alert: TX.tx("Could not load $1, language not found", fresh)
+                    });
+				});
             });
         }
 

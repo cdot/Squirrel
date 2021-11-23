@@ -747,12 +747,14 @@ define("js/Squirrel", [
                         return this._reset_local_store();
                     },
                     set_language: lingo => {
-                        // Won't apply until we clear caches and restart
-                        Cookies.set("ui_lang", lingo, {
-                            expires: 365,
-							sameSite: "strict"
-                        });
-                        TX.language(lingo, document);
+                        return TX.language(lingo, document)
+						.then(() => {
+							// Won't apply until we clear caches and restart
+							Cookies.set("ui_lang", lingo, {
+								expires: 365,
+								sameSite: "strict"
+							});
+						});
                     }
                 })
                 .catch((/*f*/) => {
