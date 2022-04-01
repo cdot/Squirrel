@@ -48,7 +48,7 @@ requirejs(["js/Translator", "test/TestRunner"], function(Translator, TestRunner)
     let assert = tr.assert;
 
     tr.addTest("Works with simple English", function() {
-        let TX = Translator.instance({
+        let TX = Translator.configure({
             translations: TRANSLATIONS,
             debug: console.debug
         });
@@ -59,7 +59,7 @@ requirejs(["js/Translator", "test/TestRunner"], function(Translator, TestRunner)
     });
 
     tr.addTest("Works with templates", function() {
-        let TX = Translator.instance({
+        let TX = Translator.configure({
             translations: TRANSLATIONS
         });
         TX.language("pc").then(() => {
@@ -70,7 +70,7 @@ requirejs(["js/Translator", "test/TestRunner"], function(Translator, TestRunner)
 
     tr.addTest("Works in an English DOM", function() {
 		delete Translator.singleton;
-        const TX = Translator.instance({url:server_url});
+        const TX = Translator.configure({url:server_url});
         const en = '<div class="TX_html">Stupid</div>';
         document.body.innerHTML = en;
         return TX.language("en", document)
@@ -80,7 +80,7 @@ requirejs(["js/Translator", "test/TestRunner"], function(Translator, TestRunner)
     });
 
     tr.addTest("translates a DOM", function() {
-        const TX = Translator.instance({
+        const TX = Translator.configure({
 			debug: console.debug,
             translations: TRANSLATIONS
         });
@@ -96,7 +96,7 @@ requirejs(["js/Translator", "test/TestRunner"], function(Translator, TestRunner)
     });
 
     tr.addTest("Can change language", function() {
-        let TX = Translator.instance({url:server_url});
+        let TX = Translator.configure({url:server_url});
         let en = '<div class="TX_title TX_text" title="Add">Length</div>';
         let fr = '<div class="TX_title TX_text" title="Ajouter">Longueur</div>';
         let de = '<div class="TX_title TX_text" title="Hinzufügen">Länge</div>';

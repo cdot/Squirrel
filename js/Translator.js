@@ -117,7 +117,7 @@ define("js/Translator", ["js/Utils", "js/Serror"], (Utils, Serror) => {
             lingo = lingo || this.lingo || "en";
 			this.lingo = lingo;
 
-            if (lingo === "en") {
+            if (/^en/i.test(lingo)) {
                 // English, so no need to translate the DOM
                 if (this.debug) this.debug("Using English");
 				this.untranslate(document);

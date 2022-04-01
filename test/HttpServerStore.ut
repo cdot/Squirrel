@@ -17,7 +17,7 @@ if (typeof module !== 'undefined') {
     deps.push("express-basic-auth");
 }
 
-requirejs(deps, function(StoreTester, express, basicAuth) {
+requirejs(deps, (StoreTester, express, basicAuth) => {
     let config = Promise.resolve();
 
     if (express) {

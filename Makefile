@@ -6,7 +6,11 @@ TESTS := $(shell find test \( -path './node_modules/*' -o -path './doc/*' -o -pa
 
 HTML := $(shell find . \( -path './node_modules/*' -o -path './test/*' -o -path './dist/*' -o -path './doc/*' -o -path './build/*' \) -prune -o -name '*.html' -print)
 
-# Default target; run unit tests
+# Run an https web server store for testing
+server:
+	node js/web_server.js
+
+# Run unit tests
 tests: node_modules $(TESTS:.ut=.utr)
 
 %.utr: %.ut

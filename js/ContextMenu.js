@@ -387,7 +387,8 @@ define("js/ContextMenu", [
 			}
             
             return promise
-            .then(() => this.toggle(true));
+            .then(() => this.toggle(true))
+			.catch(() => this.toggle(true));
         }
     }
     return ContextMenu;

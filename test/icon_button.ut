@@ -25,7 +25,6 @@ if (typeof module !== 'undefined') {
         baseUrl: `${__dirname}/..`,
         paths: {
 			"jquery-ui": "node_modules/jquery-ui-dist/jquery-ui"
-//            "jquery-ui": "test/libs/jquery-ui",
         }
     });
 }
@@ -55,5 +54,7 @@ requirejs(["test/TestRunner", "jquery", "js/jq/icon_button"], function(TestRunne
         assert.equal(html, '<button data-icon="app" class="ui-button ui-widget ui-button-icon-only" title="App"><span class="ui-button-icon squirrel-icon ui-icon app"></span><span class="ui-button-icon-space"> </span>App</button>');
     });
 
-    $(() => tr.run());
+    $(() => {
+        tr.run();
+    });
 });
