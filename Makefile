@@ -8,7 +8,7 @@ HTML := $(shell find . \( -path './node_modules/*' -o -path './test/*' -o -path 
 
 # Run an https web server store for testing
 server:
-	node js/web_server.js
+	node js/web_server.js --user=x --pass=x --debug --log
 
 # Run unit tests
 tests: node_modules $(TESTS:.ut=.utr)

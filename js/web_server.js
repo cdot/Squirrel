@@ -11,7 +11,7 @@ const DESCRIPTION = [
 const OPTIONS = [
     ['r', "docroot=ARG", "absolute path to the document root. Defaults to the current directory when the server was started"],
     ['w', "writable=ARG", "relative path to writable files. If this option is given, then only files below this subdirectory will be writable; all other files will not"],
-    ['p', "port=ARG", "Port to run the server on"],
+    ['p', "port=ARG", "Port to run the server on (default 3000)"],
     ['l', "log", "Log requests to the console"],
 
     ['C', "cert=ARG", "SSL certificate (filename or text) required to run https. Certificates can be obtained for free from https://letsencrypt.org/"],
@@ -66,7 +66,7 @@ requirejs(["node-getopt", "js/Server"], (getopt, Server) => {
             user: cliopt.user || "",
             pass: cliopt.pass || "",
             realm: cliopt.realm || ""
-        }
+        };
     }
 
     new Server(params).start();
