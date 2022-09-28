@@ -3,27 +3,27 @@
 /* global __filename */
 
 if (typeof requirejs === 'undefined')
-    throw new Error(__filename + " is not runnable stand-alone");
+  throw new Error(__filename + " is not runnable stand-alone");
 
 const paths = {
-    jquery: "node_modules/jquery/dist/jquery",
+  jquery: "node_modules/jquery/dist/jquery",
   i18n: "node_modules/@wikimedia/jquery.i18n/src/jquery.i18n",
   "jquery-touch-events": "node_modules/@benmajor/jquery-touch-events/src/jquery.mobile-events",
   "jquery-ui": "node_modules/jquery-ui-dist/jquery-ui",
-    i18n_emitter:
-    "/node_modules/@wikimedia/jquery.i18n/src/jquery.i18n.emitter",
+  i18n_emitter:
+  "/node_modules/@wikimedia/jquery.i18n/src/jquery.i18n.emitter",
 
-    i18n_fallbacks:
-    "/node_modules/@wikimedia/jquery.i18n/src/jquery.i18n.fallbacks",
+  i18n_fallbacks:
+  "/node_modules/@wikimedia/jquery.i18n/src/jquery.i18n.fallbacks",
 
-    i18n_language:
-    "/node_modules/@wikimedia/jquery.i18n/src/jquery.i18n.language",
+  i18n_language:
+  "/node_modules/@wikimedia/jquery.i18n/src/jquery.i18n.language",
 
-    i18n_messagestore:
-    "/node_modules/@wikimedia/jquery.i18n/src/jquery.i18n.messagestore",
+  i18n_messagestore:
+  "/node_modules/@wikimedia/jquery.i18n/src/jquery.i18n.messagestore",
 
-    i18n_parser:
-    "/node_modules/@wikimedia/jquery.i18n/src/jquery.i18n.parser",
+  i18n_parser:
+  "/node_modules/@wikimedia/jquery.i18n/src/jquery.i18n.parser",
 };
 
 /**

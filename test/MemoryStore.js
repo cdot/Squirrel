@@ -5,26 +5,26 @@ define("test/MemoryStore", [
 	"js/Utils", "js/Serror", "js/AbstractStore"
 ], (Utils, Serror, AbstractStore) => {
 
-    /**
-     * A store engine using memory. Used for testing only.
-     * @extends AbstractStore
-     */
-    class MemoryStore extends AbstractStore {
+  /**
+   * A store engine using memory. Used for testing only.
+   * @extends AbstractStore
+   */
+  class MemoryStore extends AbstractStore {
 
-        constructor(p) {
-            super(p);
-            this.type = "MemoryStore";
-            this.data = {};
-        }
+    constructor(p) {
+      super(p);
+      this.type = "MemoryStore";
+      this.data = {};
+    }
 
 		/**
 		 * @override
 		 */
-        read(path) {
-            if (!(path in this.data))
-                return Promise.reject(new Serror(400, path + " is not in store"));
-            return Promise.resolve(this.data[path]);
-        }
+    read(path) {
+      if (!(path in this.data))
+        return Promise.reject(new Serror(400, path + " is not in store"));
+      return Promise.resolve(this.data[path]);
+    }
 
 		/**
 		 * @override
@@ -36,10 +36,10 @@ define("test/MemoryStore", [
 		/**
 		 * @override
 		 */
-        write(path, a8) {
-            this.data[path] = a8;
-            return Promise.resolve();
-        }
+    write(path, a8) {
+      this.data[path] = a8;
+      return Promise.resolve();
+    }
 
 		/**
 		 * @override
@@ -51,9 +51,9 @@ define("test/MemoryStore", [
 		/**
 		 * @override
 		 */
-        dump(path) {
-            console.log(Utils.Uint8ArrayToString(this.data[path]));
-        }
+    dump(path) {
+      console.log(Utils.Uint8ArrayToString(this.data[path]));
     }
-    return MemoryStore;
+  }
+  return MemoryStore;
 });

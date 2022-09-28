@@ -4,7 +4,7 @@
 if (typeof requirejs === 'undefined') {
 	throw new Error(__filename + " is not runnable stand-alone");
 }
-                   
+
 /**
  * Common code for running mocha tests.
  * Look at one of the UnitTest* files to understand the pattern.
@@ -113,13 +113,13 @@ define(["mocha", "chai"], (maybeMocha, chai) => {
 			});
 		}
 
-        beforeEach(before) {
-            this.before = before;
-        }
+    beforeEach(before) {
+      this.before = before;
+    }
 
-        afterEach(after) {
-            this.after = after;
-        }
+    afterEach(after) {
+      this.after = after;
+    }
 
 		/**
 		 * Alternative for addTest to defuse test
@@ -144,17 +144,17 @@ define(["mocha", "chai"], (maybeMocha, chai) => {
 			}
 
 			const test = new Mocha.Test(title, () => {
-                if (typeof this.before === 'function')
-                    this.before();
+        if (typeof this.before === 'function')
+          this.before();
 				const res = fn.call(this);
-                if (res instanceof Promise) {
-                    return res.then(() => {
-                        if (typeof this.after === 'function')
-                            this.after();
-                    });
-                }
-                else if (typeof this.after === 'function') {
-                    this.after();
+        if (res instanceof Promise) {
+          return res.then(() => {
+            if (typeof this.after === 'function')
+              this.after();
+          });
+        }
+        else if (typeof this.after === 'function') {
+          this.after();
 				}
 				return Promise.resolve();
 			});
