@@ -7,57 +7,57 @@ requirejs = require('requirejs');
 require("./TestSupport");
 
 const actions = [
-    {
-	type: "N",
-	time: Date.UTC(2000, 0),
-	path: ["FineDining"]
-    },
-    {
-	type: "N",
-	time: Date.UTC(2001, 0),
-	path: [ "FineDining", "Caviare" ]
-    },
-    {
-	type: "N",
-	time: Date.UTC(2002, 0),
-	path: [ "FineDining", "Caviare", "Beluga" ],
-        data: "£6.70 per gram"
-    },
-    {
-        type: "A",
-	path: [ "FineDining", "Caviare", "Beluga" ],
-	time: Date.UTC(2003, 0),
-        data: Date.UTC(2004, 0),
-    },
-    {
-        type: "R",
-	path: [ "FineDining", "Caviare" ],
-	time: Date.UTC(2005, 0),
-        data: "Caviar"
-    },
-    {
-        type: "E",
-	path: [ "FineDining", "Caviar", "Beluga" ],
-	time: Date.UTC(2006, 0),
-        data: "£6.70 per gramme"
-    },
-    {
-        type: "X",
-	path: [ "FineDining", "Caviar", "Beluga" ],
-	time: Date.UTC(2007,0),
-        data: { size: 10, chars: "If you have to ask, you can't afford it" }
-    }
+  {
+	  type: "N",
+	  time: Date.UTC(2000, 0),
+	  path: ["FineDining"]
+  },
+  {
+	  type: "N",
+	  time: Date.UTC(2001, 0),
+	  path: [ "FineDining", "Caviare" ]
+  },
+  {
+	  type: "N",
+	  time: Date.UTC(2002, 0),
+	  path: [ "FineDining", "Caviare", "Beluga" ],
+    data: "£6.70 per gram"
+  },
+  {
+    type: "A",
+	  path: [ "FineDining", "Caviare", "Beluga" ],
+	  time: Date.UTC(2003, 0),
+    data: Date.UTC(2004, 0),
+  },
+  {
+    type: "R",
+	  path: [ "FineDining", "Caviare" ],
+	  time: Date.UTC(2005, 0),
+    data: "Caviar"
+  },
+  {
+    type: "E",
+	  path: [ "FineDining", "Caviar", "Beluga" ],
+	  time: Date.UTC(2006, 0),
+    data: "£6.70 per gramme"
+  },
+  {
+    type: "X",
+	  path: [ "FineDining", "Caviar", "Beluga" ],
+	  time: Date.UTC(2007,0),
+    data: { size: 10, chars: "If you have to ask, you can't afford it" }
+  }
 ];
 
 /*var undos = [
-    "D:FineDining @1/1/2000, 12:00:00 AM",
-    "D:FineDining/Caviare @1/1/2001, 12:00:00 AM",
-    "D:FineDining/Caviare/Beluga @1/1/2002, 12:00:00 AM",
-    "C:FineDining/Caviare/Beluga @1/1/2003, 12:00:00 AM",
-    "R:FineDining/Caviar @1/1/2005, 12:00:00 AM Caviare",
-    "E:FineDining/Caviar/Beluga @1/1/2006, 12:00:00 AM £6.70 per gram",
-    "X:FineDining/Caviar/Beluga @1/1/2007, 12:00:00 AM"
-];*/
+  "D:FineDining @1/1/2000, 12:00:00 AM",
+  "D:FineDining/Caviare @1/1/2001, 12:00:00 AM",
+  "D:FineDining/Caviare/Beluga @1/1/2002, 12:00:00 AM",
+  "C:FineDining/Caviare/Beluga @1/1/2003, 12:00:00 AM",
+  "R:FineDining/Caviar @1/1/2005, 12:00:00 AM Caviare",
+  "E:FineDining/Caviar/Beluga @1/1/2006, 12:00:00 AM £6.70 per gram",
+  "X:FineDining/Caviar/Beluga @1/1/2007, 12:00:00 AM"
+  ];*/
 
 requirejs([
   "js/Utils",
@@ -99,7 +99,7 @@ requirejs([
   function expect_html(html) {
     $expect.empty().append(html.replace(/>\s+</g, "><"));
     assert($actual.find("div")[0].isEqualNode($expect.find("div")[0]),
-          `\nExpect: ${$expect.html()}\n\nActual: ${$actual.html()}`);
+           `\nExpect: ${$expect.html()}\n\nActual: ${$actual.html()}`);
   }
 
   tr.addTest("should reconstruct cache", function() {
@@ -141,7 +141,7 @@ requirejs([
       let $node = $DOMtree.tree("getNodeFromPath", ["FineDining", "Caviar", "Beluga"]);
       $node.tree("open");
       $expect.html(
-            `<div id="DOMtree" class="tree-never_opened tree tree-isRoot tree-hasAlarms">
+        `<div id="DOMtree" class="tree-never_opened tree tree-isRoot tree-hasAlarms">
                 <ul class="tree_subtree sortable" style="display: none;">
                   <li class="tree tree-never_opened tree-isModified tree-hasAlarms" accesskey="FineDining">
                     <ul class="tree_subtree sortable" style="display: none;">
@@ -171,7 +171,7 @@ requirejs([
       let $node = $DOMtree.tree("getNodeFromPath", ["FineDining", "Caviar", "Beluga"]);
       $node.tree("open", {decorate:true});
       $expect.html(
-            `<div id="DOMtree" class="tree-never_opened tree tree-isRoot tree-hasAlarms">
+        `<div id="DOMtree" class="tree-never_opened tree tree-isRoot tree-hasAlarms">
               <ul class="tree_subtree sortable" style="display: none;">
                <li class="tree tree-never_opened tree-isModified tree-hasAlarms" accesskey="FineDining">
                 <ul class="tree_subtree sortable" style="display: none;">

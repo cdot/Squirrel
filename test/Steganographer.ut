@@ -1,20 +1,20 @@
 /*@preserve Copyright (C) 2019 Crawford Currie http://c-dot.co.uk license MIT*//*eslint-env node, mocha */
 
 if (typeof module !== 'undefined') {
-    requirejs = require('requirejs');
+  requirejs = require('requirejs');
 	requirejs.config({
 		baseUrl: `${__dirname}/..`
 	});
-    // node.js
-    const { JSDOM } = require('jsdom');
-    document = new JSDOM('<!doctype html><html><body id="working"></body></html>');
-    const { window } = document;
-    global.window = window;
-    global.document = window.document;
-    global.navigator = { userAgent: "node.js" };
-    let jQuery = require('jquery');
-    global.jQuery = jQuery;
-    global.$ = jQuery;
+  // node.js
+  const { JSDOM } = require('jsdom');
+  document = new JSDOM('<!doctype html><html><body id="working"></body></html>');
+  const { window } = document;
+  global.window = window;
+  global.document = window.document;
+  global.navigator = { userAgent: "node.js" };
+  let jQuery = require('jquery');
+  global.jQuery = jQuery;
+  global.$ = jQuery;
 }
 
 requirejs(["test/TestRunner", "js/Steganographer", "js/Utils", "jquery"], function(TestRunner, Steganographer, Utils) {
@@ -49,7 +49,7 @@ requirejs(["test/TestRunner", "js/Steganographer", "js/Utils", "jquery"], functi
 	};
 	
 	tr.addTest("insert.extract small", function() {
-        return imageLoaded('test_image.jpg')
+    return imageLoaded('test_image.jpg')
 		.then(iData => {
 			const steg = new Steganographer();
 			let a = Utils.StringToUint8Array(TESTR);
@@ -60,10 +60,10 @@ requirejs(["test/TestRunner", "js/Steganographer", "js/Utils", "jquery"], functi
 				.then(b => assert.deepEqual(b, a));
 			});
 		});
-    });
+  });
 
-    tr.addTest("insert.extract large", function() {
-        return imageLoaded('test_image.jpg')
+  tr.addTest("insert.extract large", function() {
+    return imageLoaded('test_image.jpg')
 		.then(iData => {
 			const steg = new Steganographer();
 			const len = 14760; // bytes
@@ -92,7 +92,7 @@ requirejs(["test/TestRunner", "js/Steganographer", "js/Utils", "jquery"], functi
 				});
 			});
 		});
-    });
+  });
 
 	if (typeof module !== 'undefined') {
 		const Canvas = require('canvas');

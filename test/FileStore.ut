@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2019 Crawford Currie http://c-dot.co.uk license MIT*//*eslint-env node, mocha */
 
 if (typeof requirejs === 'undefined') {
-    requirejs = require('requirejs');
+  requirejs = require('requirejs');
 	requirejs.config({
 		baseUrl: `${__dirname}/..`
 	});
@@ -16,6 +16,5 @@ if (typeof requirejs === 'undefined') {
  * $T_pass.
  */
 requirejs(["test/StoreTester"], function(StoreTester) {
-    new StoreTester(["FileStore"]).run({ path: __dirname } );
+  new StoreTester(["FileStore"]).run({ path: __dirname } );
 });
-

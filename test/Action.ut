@@ -2,47 +2,47 @@
 /*eslint-env shared-node-browser, mocha */
 
 if (typeof requirejs === 'undefined') {
-    requirejs = require('requirejs');
+  requirejs = require('requirejs');
 	requirejs.config({
 		baseUrl: `${__dirname}/..`
 	});
 }
 
 var cloud_actions = [
-    // Action already in the client
-    {
+  // Action already in the client
+  {
 		type: "N",
 		time: Date.UTC(2000,0),
 		path: ["FineDining"]
-    },
-    // Action not in the client yet
-    {
+  },
+  // Action not in the client yet
+  {
 		type: "N",
 		time: Date.UTC(2002,0),
 		path: [ "FineDining", "Caviar" ]
-    }
+  }
 ];
 
 // Client hoard, with populated cache and action stream
 var client_actions = [
-    // Duplicate an action that is already in the cloud, different date
-    {
-	type: "N",
-	time: Date.UTC(2000,0,1),
-	path: ["FineDining"]
-    },
-    {
-	// Add an action that isn't in the cloud yet
-	type: "N",
-	time: Date.UTC(2003,0,1),
-	path: ["FineDining", "Truffles" ],
-        data: "Fungi"
-    }
+  // Duplicate an action that is already in the cloud, different date
+  {
+	  type: "N",
+	  time: Date.UTC(2000,0,1),
+	  path: ["FineDining"]
+  },
+  {
+	  // Add an action that isn't in the cloud yet
+	  type: "N",
+	  time: Date.UTC(2003,0,1),
+	  path: ["FineDining", "Truffles" ],
+    data: "Fungi"
+  }
 ];
 
 requirejs(["js/Action", "test/TestRunner"], function(Action, TestRunner) {
-    let tr = new TestRunner("Action");
-    let assert = tr.assert;
+  let tr = new TestRunner("Action");
+  let assert = tr.assert;
 
 	tr.addTest("constructor", () => {
 		let then = Date.now();
@@ -83,40 +83,40 @@ requirejs(["js/Action", "test/TestRunner"], function(Action, TestRunner) {
 
 	});
 
-    tr.addTest('should merge action streams', function() {
-        //let debug;// = console.debug;
-        // Initial action stream is empty
-        let m = Action.mergeStreams([], cloud_actions.slice());
-        assert.deepEqual(m, cloud_actions);
+  tr.addTest('should merge action streams', function() {
+    //let debug;// = console.debug;
+    // Initial action stream is empty
+    let m = Action.mergeStreams([], cloud_actions.slice());
+    assert.deepEqual(m, cloud_actions);
 
-        // Merging should skip duplicates
-        m = Action.mergeStreams(m, cloud_actions.slice());
-        assert.deepEqual(m, cloud_actions);
+    // Merging should skip duplicates
+    m = Action.mergeStreams(m, cloud_actions.slice());
+    assert.deepEqual(m, cloud_actions);
 
-        m = Action.mergeStreams(cloud_actions.slice(),
-                                client_actions.slice());
+    m = Action.mergeStreams(cloud_actions.slice(),
+                            client_actions.slice());
 
-        assert.deepEqual(
-            m,
-            [
-                cloud_actions[0],
-                cloud_actions[1],
-                client_actions[1],
-            ]);
+    assert.deepEqual(
+      m,
+      [
+        cloud_actions[0],
+        cloud_actions[1],
+        client_actions[1],
+      ]);
 
-        // A merge the other way should work the same
-        m = Action.mergeStreams(client_actions.slice(),
-                                cloud_actions.slice());
-        assert.deepEqual(
-            m,
-            [
-                cloud_actions[0],
-                cloud_actions[1],
-                client_actions[1],
-            ]);
-    });
+    // A merge the other way should work the same
+    m = Action.mergeStreams(client_actions.slice(),
+                            cloud_actions.slice());
+    assert.deepEqual(
+      m,
+      [
+        cloud_actions[0],
+        cloud_actions[1],
+        client_actions[1],
+      ]);
+  });
 
-    const MSPERDAY = 24 * 60 * 60 * 1000;
+  const MSPERDAY = 24 * 60 * 60 * 1000;
 
 	tr.addTest('compatibility', () => {
 		// Simple number of days, both due and repeat
@@ -143,5 +143,5 @@ requirejs(["js/Action", "test/TestRunner"], function(Action, TestRunner) {
 		assert.equal(act.data.repeat, 0);
 	});
 
-    tr.run();
+  tr.run();
 });

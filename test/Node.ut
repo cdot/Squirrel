@@ -2,15 +2,15 @@
 /*eslint-env shared-node-browser, mocha */
 
 if (typeof requirejs === 'undefined') {
-    requirejs = require('requirejs');
+  requirejs = require('requirejs');
 	requirejs.config({
 		baseUrl: `${__dirname}/..`
 	});
 }
 
 requirejs(["js/Node", "js/Action", "test/TestRunner"], function(Node, Action,  TestRunner) {
-    let tr = new TestRunner("Node");
-    let assert = tr.assert;
+  let tr = new TestRunner("Node");
+  let assert = tr.assert;
 
 	const node_data = {
 		time:946684800000,
@@ -45,8 +45,8 @@ requirejs(["js/Node", "js/Action", "test/TestRunner"], function(Node, Action,  T
 		}
 	};
 	
-    tr.addTest("construct", function() {
-        let debug;// = console.debug;
+  tr.addTest("construct", function() {
+    let debug;// = console.debug;
 		let root = new Node(node_data);
 		assert(root instanceof Node);
 		assert(root.children.A instanceof Node);
@@ -55,19 +55,19 @@ requirejs(["js/Node", "js/Action", "test/TestRunner"], function(Node, Action,  T
 		assert(root.children.A.children.B.children.C instanceof Node);
 		assert.equal(root.children.A.children.B.children.C.value,'C');
 		assert(root.children.A.children.C instanceof Node);
-    });
+  });
 
-    tr.addTest("getChild", function() {
-        let debug;// = console.debug;
+  tr.addTest("getChild", function() {
+    let debug;// = console.debug;
 		let root = new Node(node_data);
 		assert(root instanceof Node);
 		assert.equal(root.getChild('A'), root.children.A);
 		assert.equal(root.getChild('A').getChild('B'), root.children.A.children.B);
 		assert(!root.getChild('X'));
 	});
-			   
-    tr.addTest("eachChild", function() {
-        let debug;// = console.debug;
+	
+  tr.addTest("eachChild", function() {
+    let debug;// = console.debug;
 		let n = new Node(node_data).getChild('A');
 		let done = {};
 		
@@ -94,7 +94,7 @@ requirejs(["js/Node", "js/Action", "test/TestRunner"], function(Node, Action,  T
 	});
 
 	tr.addTest("addChild", function() {
-        let debug;// = console.debug;
+    let debug;// = console.debug;
 		let root = new Node(node_data);
 		root.addChild('X', new Node());
 		try {
@@ -103,10 +103,10 @@ requirejs(["js/Node", "js/Action", "test/TestRunner"], function(Node, Action,  T
 			return;
 		}
 		assert(false, "Expected an Error");
-    });
+  });
 
-    tr.addTest("removeChild", function() {
-        let debug;// = console.debug;
+  tr.addTest("removeChild", function() {
+    let debug;// = console.debug;
 		let root = new Node(node_data);
 		let a = root.getChild('A');
 		a.removeChild('A');
@@ -123,180 +123,180 @@ requirejs(["js/Node", "js/Action", "test/TestRunner"], function(Node, Action,  T
 			return;
 		}
 		assert(false, "Expected an Error");		
-    });
+  });
 
-    tr.addTest("getNodeAt", function() {
-        let debug;// = console.debug;
+  tr.addTest("getNodeAt", function() {
+    let debug;// = console.debug;
 		let node = new Node(node_data);
-        const abc = node.getNodeAt(['A', 'B', 'C']);
-        assert.equal(abc.time, Date.UTC(2003,0,1));
-        assert.equal(abc.value, 'C');
+    const abc = node.getNodeAt(['A', 'B', 'C']);
+    assert.equal(abc.time, Date.UTC(2003,0,1));
+    assert.equal(abc.value, 'C');
 		assert.deepEqual(abc.alarm, {due:8080,repeat:99});
 		assert.deepEqual(abc.constraints, {size:1,chars:"A-Z"});
-        const aa = node.getNodeAt(['A', 'A']);
-        assert.equal(aa.time, Date.UTC(2001,6,1));
+    const aa = node.getNodeAt(['A', 'A']);
+    assert.equal(aa.time, Date.UTC(2001,6,1));
 		assert.deepEqual(aa.alarm, {
 			due: aa.time + 9 * 24 * 60 * 60 * 1000,
 			repeat:9 * 24 * 60 * 60 * 1000
 		});
-        const abd = node.getNodeAt(['A', 'B', 'D']);
-        assert(!abd);
+    const abd = node.getNodeAt(['A', 'B', 'D']);
+    assert(!abd);
 		const ab = node.getNodeAt(['A', 'B', 'C'], 1);
-        assert.equal(ab.children.C.value, 'C');
+    assert.equal(ab.children.C.value, 'C');
 		const a = node.getNodeAt(['A', 'B', 'C'], 2);
-        assert.equal(a, node.children.A);
-        assert.deepEqual(a.alarm, {due:8080,repeat:99});
-    });
+    assert.equal(a, node.children.A);
+    assert.deepEqual(a.alarm, {due:8080,repeat:99});
+  });
 
-    tr.addTest("getPath", function() {
-        let debug;// = console.debug;
+  tr.addTest("getPath", function() {
+    let debug;// = console.debug;
 		let root = new Node(node_data);
-        let n = root.getNodeAt(['A', 'B', 'C']);
-        assert.equal(n.value, 'C');
+    let n = root.getNodeAt(['A', 'B', 'C']);
+    assert.equal(n.value, 'C');
 		
-        assert.deepEqual(root.getPathTo(n),['A','B','C']);
-    });
+    assert.deepEqual(root.getPathTo(n),['A','B','C']);
+  });
 
 	let tree_A =  {
-        children: {
-            Constraints: {
+    children: {
+      Constraints: {
 				time: Date.UTC(2001,0),
 				constraints: { size: 1, chars: '2' },
 				children: {},
-                value: "constrained"
-            },
-            Alarm: {
+        value: "constrained"
+      },
+      Alarm: {
 				time: Date.UTC(2002,0),
 				alarm: { due: 808080, repeat: 606060 },
 				children: {},
-                value: "alarm"
-            },
-            Data: {
+        value: "alarm"
+      },
+      Data: {
 				time: Date.UTC(2003,0),
 				children: {},
-                value: "before"
-            },
-            Tree: {
+        value: "before"
+      },
+      Tree: {
 				time: Date.UTC(2004,0),
-                children: {
-                    A: {
+        children: {
+          A: {
 						time: Date.UTC(2005,0),
 						children: {},
-                        value: 'a'
-                    },
-                    B: {
+            value: 'a'
+          },
+          B: {
 						time: Date.UTC(2006,0),
 						children: {},
-                        value: 'b'
-                    },
-                    C: {
+            value: 'b'
+          },
+          C: {
 						time: Date.UTC(2007,0),
 						children: {},
-                        value: 'c'
-                    }
-                }
-            },
+            value: 'c'
+          }
         }
-    };
+      },
+    }
+  };
 
-    let tree_B =  {
-        children: {
-            Constraints: {
+  let tree_B =  {
+    children: {
+      Constraints: {
 				time: Date.UTC(2001,0),
 				constraints: { size: 2, chars: '1' },
 				children: {},
-                value: "constrained"
-            },
-            Alarm: {
+        value: "constrained"
+      },
+      Alarm: {
 				time: Date.UTC(2002,0),
 				alarm: { due: 909090, repeat: 1 },
 				children: {},
-                value: "alarm"
-            },
-            Data: {
+        value: "alarm"
+      },
+      Data: {
 				time: Date.UTC(2003,0),
 				children: {},
-                value: "after"
-            },
-            Tree: {
+        value: "after"
+      },
+      Tree: {
 				time: Date.UTC(2004,0),
-                children: {
-                    A: {
+        children: {
+          A: {
 						time: Date.UTC(2005,0),
 						children: {},
-                        value: 'a'
-                    },
-                    C: {
+            value: 'a'
+          },
+          C: {
 						time: Date.UTC(2007,0),
 						children: {},
-                        value: 'c'
-                    },
-                    D: {
+            value: 'c'
+          },
+          D: {
 						time: Date.UTC(2008,0),
 						children: {},
-                        value: 'd'
-                    },
-                }
-            },
+            value: 'd'
+          },
         }
-    };
+      },
+    }
+  };
 
-    let diff_actions = [
-        new Action({
+  let diff_actions = [
+    new Action({
 			type: 'X',
 			path: [ 'Constraints' ],
 			constraints: { size: 2, chars: '1' }
 		}),
-        new Action({
-            type:'A',
-            path: [ 'Alarm' ],
-            alarm: { due: 909090, repeat: 1 }
-        }),
-        new Action({
-            type:'E',
-            path: [ 'Data' ],
-            data: 'after'
-        }),
-        new Action({
-            type:'D',
-            path: [ 'Tree', 'B' ]
-        }),
-        new Action({
-            type: 'I',
-            path: [ 'Tree' ],
-            data: JSON.stringify({
-                name: 'D',
-                node: {
+    new Action({
+      type:'A',
+      path: [ 'Alarm' ],
+      alarm: { due: 909090, repeat: 1 }
+    }),
+    new Action({
+      type:'E',
+      path: [ 'Data' ],
+      data: 'after'
+    }),
+    new Action({
+      type:'D',
+      path: [ 'Tree', 'B' ]
+    }),
+    new Action({
+      type: 'I',
+      path: [ 'Tree' ],
+      data: JSON.stringify({
+        name: 'D',
+        node: {
 					time: Date.UTC(2008,0),
 					children: {},
 					value: 'd'
 				}
-            })
-        })
-    ];
+      })
+    })
+  ];
 
-    tr.addTest("should diff", function() {
-        let debug;// = console.debug;
-        let tree_a = new Node(tree_A);
+  tr.addTest("should diff", function() {
+    let debug;// = console.debug;
+    let tree_a = new Node(tree_A);
 		let tree_b = new Node(tree_B);
 
-        tree_a.diff([], tree_b, act => {
-            let matched = false;
-            for (let x of diff_actions) {
-                if (x.type === act.type && !x.matched) {
+    tree_a.diff([], tree_b, act => {
+      let matched = false;
+      for (let x of diff_actions) {
+        if (x.type === act.type && !x.matched) {
 					//console.log("Matched", act.toString());
-                    delete x.time; delete act.time;
-                    assert.deepEqual(act, x);
-                    x.matched = matched = true;
-                    break;
-                }
-            }
-            assert(matched, act.toString());
-        });
-
-        for (let x of diff_actions)
-            assert(x.matched, x.toString());
+          delete x.time; delete act.time;
+          assert.deepEqual(act, x);
+          x.matched = matched = true;
+          break;
+        }
+      }
+      assert(matched, act.toString());
     });
+
+    for (let x of diff_actions)
+      assert(x.matched, x.toString());
+  });
 
 	tr.run();
 });
