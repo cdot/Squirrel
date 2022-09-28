@@ -7,51 +7,51 @@ define("js/FileStore", [
 
 	const Fs = fs.promises;
 
-    /**
-     * A store engine using file store, used with node.js.
-     * Uses 'url' to set the base path
-     * @extends AbstractStore
-     */
-    class FileStore extends AbstractStore {
+  /**
+   * A store engine using file store, used with node.js.
+   * Uses 'url' to set the base path
+   * @extends AbstractStore
+   */
+  class FileStore extends AbstractStore {
 
 		/**
 		 * {@link AbstractStore} for an explanation of parameters.
 		 * Sets `options.needs_path`
 		 */
-        constructor(p) {
-            super(p);
-            this.type = "FileStore";
-            this.option("needs_path", true);
-        }
+    constructor(p) {
+      super(p);
+      this.type = "FileStore";
+      this.option("needs_path", true);
+    }
 
 		/**
 		 * @override
 		 */
-        read(path) {
-            if (this.debug) this.debug("read", path);
-            return Fs.readFile(`${this.option("path")}/${path}`)
-            .catch(e => {
-                if (/ENOENT/.test(e.message))
-                    throw new Serror(404, `${path} ${e.message}`);
-                throw e;
-            });
-        }
+    read(path) {
+      if (this.debug) this.debug("read", path);
+      return Fs.readFile(`${this.option("path")}/${path}`)
+      .catch(e => {
+        if (/ENOENT/.test(e.message))
+          throw new Serror(404, `${path} ${e.message}`);
+        throw e;
+      });
+    }
 
 		/**
 		 * @override
 		 */
-        reads(path) {
+    reads(path) {
 			return this.read(path);
 		}
 
 		/**
 		 * @override
 		 */
-        write(path, data) {
-            if (this.debug) this.debug("write", path);
-            // data is an Uint8Array so is already bytes
-            return Fs.writeFile(`${this.option("path")}/${path}`, data);
-        }
+    write(path, data) {
+      if (this.debug) this.debug("write", path);
+      // data is an Uint8Array so is already bytes
+      return Fs.writeFile(`${this.option("path")}/${path}`, data);
+    }
 
 		/**
 		 * @override
@@ -59,7 +59,7 @@ define("js/FileStore", [
 		writes(path, s) {
 			return this.write(path, s);
 		}
-    }
+  }
 
-    return FileStore;
+  return FileStore;
 });

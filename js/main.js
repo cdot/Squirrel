@@ -145,7 +145,7 @@ requirejs([
   "i18n_messagestore",
   "i18n_parser"
 ], Squirrel => {
-    
+  
 	if (qs.debug) {
 		if ($.isTouchCapable && $.isTouchCapable())
 			console.debug("Device is touch-capable");

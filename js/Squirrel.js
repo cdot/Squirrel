@@ -97,8 +97,8 @@ define("js/Squirrel", [
               message:
               "<div class='ui-icon squirrel-icon tree-icon-rang'></div>" +
               $.i18n("reminder_overdue",
-                    Action.pathS(path),
-                    expired.toLocaleDateString())
+                     Action.pathS(path),
+                     expired.toLocaleDateString())
             });
         })
       .then(() => {
@@ -452,7 +452,7 @@ define("js/Squirrel", [
         mess.push({
           severity: "error",
           message: $.i18n("unloadable_cloud",
-                         this.hoarder.cloud_path())
+                          this.hoarder.cloud_path())
         });
         if (e instanceof Serror && e.status === 404) {
           // Could not contact cloud; continue all the same

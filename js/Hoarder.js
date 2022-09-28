@@ -413,7 +413,7 @@ define("js/Hoarder", [
         messages = messages.slice(-max_changes);
         messages.push(
 					$.i18n("more_changes",
-                l - max_changes));
+                 l - max_changes));
       }
       if (this.debug) this.debug(messages);
       

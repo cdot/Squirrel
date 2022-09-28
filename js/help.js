@@ -2,18 +2,18 @@
 /* eslint-env browser, node */
 
 if (typeof requirejs === 'undefined') {
-    requirejs = require('requirejs');
+  requirejs = require('requirejs');
 	requirejs.config({
 		baseUrl: `${__dirname}/..`
 	});
 }
 
 requirejs.config({
-    baseUrl: ".",
-    paths: {
-        jquery: "//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery",
-        "jquery-ui": "//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui"
-    }
+  baseUrl: ".",
+  paths: {
+    jquery: "//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery",
+    "jquery-ui": "//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui"
+  }
 });
 
 define([
@@ -21,12 +21,12 @@ define([
 	"js/jq/styling"
 ], () => {
 
-    $(function() {
-        $.styling.init();
-        $("button").icon_button();
-        $(".twisted").twisted();
-        if ($.cookie("ui_scale"))
-            $("body").css("font-size", $.cookie("ui_scale") + "px");
-        $.styling.reset();
-    });
+  $(function() {
+    $.styling.init();
+    $("button").icon_button();
+    $(".twisted").twisted();
+    if ($.cookie("ui_scale"))
+      $("body").css("font-size", $.cookie("ui_scale") + "px");
+    $.styling.reset();
+  });
 });

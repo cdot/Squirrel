@@ -12,7 +12,7 @@ define("js/Cryptographer", ["js/Serror", "js/Utils"], (Serror, Utils) => {
 	const IV_LENGTH = 12;
 	const SHA = 'SHA-256';
 	const ALGORITHM = 'AES-GCM';
-    const SIGNATURE = 0x53;
+  const SIGNATURE = 0x53;
 
 	/**
 	 * Thin layer around SubtleCrypto making it easier to use for simple
@@ -27,7 +27,7 @@ define("js/Cryptographer", ["js/Serror", "js/Utils"], (Serror, Utils) => {
 		 * @returns {Promise} Promise resolves to Uint8Array ciphertext
 		 */
 		static encrypt(uint8, password) {
-            // encode password as UTF-8
+      // encode password as UTF-8
 			const pwUtf8 = new TextEncoder().encode(password);
 			// get 96-bit random iv
 			const iv = crypto.getRandomValues(new Uint8Array(IV_LENGTH));
@@ -35,9 +35,9 @@ define("js/Cryptographer", ["js/Serror", "js/Utils"], (Serror, Utils) => {
 			const alg = { name: ALGORITHM, iv: iv };
 			return crypto.subtle.digest(SHA, pwUtf8)
 			.then(pwHash => 
-				  // generate key from pw
-				  crypto.subtle.importKey(
-					  'raw', pwHash, alg, false, ['encrypt']))
+				    // generate key from pw
+				    crypto.subtle.importKey(
+					    'raw', pwHash, alg, false, ['encrypt']))
 			.then(key => crypto.subtle.encrypt(alg, key, uint8))
 			.then(ab => {
 				const cipherData = new Uint8Array(
@@ -56,7 +56,7 @@ define("js/Cryptographer", ["js/Serror", "js/Utils"], (Serror, Utils) => {
 		 * @returns {Promise} Promise resolves to Uint8Array decrypted data
 		 */
 		static decrypt(cipherData, password) {
-            // encode password as UTF-8
+      // encode password as UTF-8
 			const pwUtf8 = new TextEncoder().encode(password);
 			// Get iv
 			const iv = cipherData.slice(0, IV_LENGTH);
@@ -65,12 +65,12 @@ define("js/Cryptographer", ["js/Serror", "js/Utils"], (Serror, Utils) => {
 			// specify algorithm to use
 			const alg = { name: ALGORITHM, iv: iv };
 
-            // hash the password
+      // hash the password
 			return crypto.subtle.digest('SHA-256', pwUtf8)
 			.then(pwHash =>
-				  // generate key from pw
-				  crypto.subtle.importKey(
-					  'raw', pwHash, alg, false, ['decrypt']))
+				    // generate key from pw
+				    crypto.subtle.importKey(
+					    'raw', pwHash, alg, false, ['decrypt']))
 			.then(key => crypto.subtle.decrypt(alg, key, uint8))
 			.then(buffer => new Uint8Array(buffer))
 			.catch(e => {
@@ -83,7 +83,7 @@ define("js/Cryptographer", ["js/Serror", "js/Utils"], (Serror, Utils) => {
 					// Check signature and checksum
 					const cs = data.length % 255;
 					if (data[0] === SIGNATURE &&
-						((data[2] << 8) | data[3]) === cs) {
+						  ((data[2] << 8) | data[3]) === cs) {
 						return Promise.resolve(new Uint8Array(data.buffer, 4));
 					} else if ((data.length & 1) === 0) {
 						// If self is old format, the file contains a
@@ -111,5 +111,3 @@ define("js/Cryptographer", ["js/Serror", "js/Utils"], (Serror, Utils) => {
 
 	return Cryptographer;
 });
-
-	   

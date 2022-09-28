@@ -117,7 +117,7 @@ define("js/GoogleDriveStore", [
         // Skip display of account chooser and consent dialog
         tokenClient.requestAccessToken({prompt: ''});
       }
-     }
+    }
 
     /**
      * Analyse an error returned by a Google promise
