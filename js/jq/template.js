@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2017 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,jquery */
 
-define("js/jq/template", ["js/Utils", "jquery", "jquery-ui"], Utils => {
+define("js/jq/template", ["js/Utils", "jquery", "jquery-ui", "i18n"], Utils => {
 	/**
 	 * JQuery plugin that supports two simple styles of template expansion,
 	 * `expand` and `pick`. See the function descriptions below for details.
@@ -19,17 +19,17 @@ define("js/jq/template", ["js/Utils", "jquery", "jquery-ui"], Utils => {
 	 * * `raw-template` - records the unexpanded template
 	 * @namespace squirrel.template
 	 */
-    $.widget("squirrel.template", {
+  $.widget("squirrel.template", {
 
-        _create: function () {
-            if (this.element.hasClass("pick-one")) {
-                // Nothing picked yet, show the first
-                this.element.children("[data-id]")
-                    .hide()
-                    .first()
-                    .show();
-            }
-        },
+    _create: function () {
+      if (this.element.hasClass("pick-one")) {
+        // Nothing picked yet, show the first
+        this.element.children("[data-id]")
+        .hide()
+        .first()
+        .show();
+      }
+    },
 
 		/**
 		 * A container that has class `pick-one` has one or more
@@ -55,12 +55,12 @@ define("js/jq/template", ["js/Utils", "jquery", "jquery-ui"], Utils => {
 		 * @param {string} id the `data-id` of the child to pick
 		 * @return {jQuery} the selected child
 		 */
-        pick: function (id) {
-            this.element.children("[data-id]").hide();
-            const $picked = this.element.children(`[data-id='${id}']`);
-            $picked.show();
-            return $picked;
-        },
+    pick: function (id) {
+      this.element.children("[data-id]").hide();
+      const $picked = this.element.children(`[data-id='${id}']`);
+      $picked.show();
+      return $picked;
+    },
 
 		/**
 		 * Expand a template passing arguments for the expansion.
@@ -72,24 +72,29 @@ define("js/jq/template", ["js/Utils", "jquery", "jquery-ui"], Utils => {
 		 * ```
 		 * $("#gender").template("expand", "Tony", "uncertain");
 		 * ```
-		 * Expansion of arguments to is done using
+		 * Expansion of arguments to is done using $.i18n
+     *
+     * Alternatively:
+		 * ```
+		 * <span id="gender" data-i18n-template="$1 is $2"></span>
+		 * ```
 		 * {@link Utils.expandTemplate}
 		 * @name squirrel.template#expand
 		 * @function
 		 */
-        expand: function () {
-            let tmpl = this.element.data("raw-template");
-            if (!tmpl)
-                this.element.data(
-                    "raw-template", tmpl = this.element.html());
-
-            let args = [tmpl];
-            // can't use concat() with an Arguments object :-(
-            for (let i = 0; i < arguments.length; i++)
-                args.push(arguments[i]);
-            tmpl = Utils.expandTemplate.apply(null, args);
-
-            this.element.html(tmpl);
-        }
-    });
+    expand: function () {
+      const tmpl = this.element.data("raw-template")
+            || this.element.data("i18n-template")
+            || this.element.html();
+      this.element.data("raw-template", tmpl);
+      let args = [tmpl];
+      // can't use concat() with an Arguments object :-(
+      for (let i = 0; i < arguments.length; i++)
+        args.push(arguments[i]);
+      const expansion = $.i18n.apply($, args);
+      this.element.html(expansion);
+    }
+  });
 });
+
+

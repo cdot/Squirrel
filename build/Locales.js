@@ -2,10 +2,10 @@
 /* eslint-env node */
 
 define("build/Locales", [
-	"node-getopt", "jsdom", "js/Translator", "fs-extra", "readline-sync"
-], (getopt, jsdom, Translator, Fs, rl) => {
+	"node-getopt", "jsdom", "js/Translator", "fs", "readline-sync", "sync-request"
+], (getopt, jsdom, Translator, fs, readline, request) => {
 
-	const request = require('sync-request');
+	const Fs = fs.promises;
 	const protection = [];
 
 	function protect(os) {
@@ -240,7 +240,7 @@ define("build/Locales", [
                 console.log("t to auto-translate, <enter> to accept, x to end translation, anything else to enter a translation manually");
 
                 while (!finished) {
-                    const data = rl.question(prompt);
+                    const data = readline.question(prompt);
                     // User input exit.
                     if (data === 't') {
                         let tx = auto_translate(en, lang);

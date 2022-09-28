@@ -6,55 +6,51 @@
  * Note this may not run correctly under node.js, due to the lack of event
  * handlers in jsdom. The gold standard is that it runs in a browser.
  */
-if (typeof module !== 'undefined') {
-    requirejs = require('requirejs');
-   // node.js
-    const { JSDOM } = require('jsdom');
-	/* eslint-disable no-global-assign */
-    document = new JSDOM('<!doctype html><html><body id="working"></body></html>');
-	/* eslint-enable no-global-assign */
-    const { window } = document;
-    global.window = window;
-    global.document = window.document;
-    global.navigator = { userAgent: "node.js" };
-    const jQuery = require('jquery');
-    global.jQuery = jQuery;
-    global.$ = jQuery;
+requirejs = require('requirejs');
 
-    requirejs.config({
-        baseUrl: `${__dirname}/..`,
-        paths: {
-			"jquery-ui": "node_modules/jquery-ui-dist/jquery-ui"
-        }
-    });
-}
+require("./TestSupport");
 
 requirejs(["test/TestRunner", "jquery", "js/jq/icon_button"], function(TestRunner) {
 
-    const tr = new TestRunner("icon_button");
-    const assert = tr.assert;
+  const tr = new TestRunner("icon_button");
+  const assert = tr.assert;
 
-    tr.afterEach(function() {
-        $("#working").empty();
-    });
+  tr.beforeEach(function() {
+    if ($("#actual").length === 0)
+      $("body").append("<div id='actual'></div>");
+    $("#actual").empty();
+    if ($("#expected").length === 0)
+      $("body").append("<div id='expected'></div>");
+    $("#expected").empty();
+  });
 
-    tr.addTest('basic', function() {
-        const $butt = $('<button data-icon="ui-icon-info">Info</button>');
-        $("#working").append($butt);
-        $butt.icon_button();
-        const html = $("#working").html();
-        assert.equal(html, '<button data-icon="ui-icon-info" class="ui-button ui-corner-all ui-widget ui-button-icon-only" title="Info"><span class="ui-button-icon ui-icon ui-icon-info"></span><span class="ui-button-icon-space"> </span>Info</button>');
-    });
+  tr.addTest('basic', function() {
+    const $expected = $("#expected");
+    const $actual = $("#actual");
+    const $butt = $('<button data-icon="ui-icon-info">Info</button>');
+    $actual.append($butt);
+    $butt.icon_button();
 
-    tr.addTest('application', function() {
-        const $butt = $('<button data-icon="app">App</button>');
-        $("#working").append($butt);
-        $butt.icon_button();
-        const html = $("#working").html();
-        assert.equal(html, '<button data-icon="app" class="ui-button ui-widget ui-button-icon-only" title="App"><span class="ui-button-icon squirrel-icon ui-icon app"></span><span class="ui-button-icon-space"> </span>App</button>');
-    });
+    $("#expected").append('<button data-icon="ui-icon-info" class="ui-button ui-corner-all ui-widget ui-button-icon-only" title="Info"><span class="ui-button-icon ui-icon ui-icon-info"></span><span class="ui-button-icon-space"> </span>Info</button>');
 
-    $(() => {
-        tr.run();
-    });
+    assert($actual.html(), $expected.html(),
+           `\nExpect: ${$expected.html()}\n\nActual: ${$actual.html()}`);
+  });
+
+  tr.addTest('application', function() {
+    const $expected = $("#expected");
+    const $actual = $("#actual");
+    const $butt = $('<button data-icon="app">App</button>');
+    $actual.append($butt);
+    $butt.icon_button();
+
+    $expected.append('<button data-icon="app" class="ui-button ui-widget ui-button-icon-only" title="App"><span class="ui-button-icon squirrel-icon ui-icon app"></span><span class="ui-button-icon-space"> </span>App</button>');
+
+    assert.equal($actual.html(), $expected.html(),
+           `\nExpect: ${$expected.html()}\n\nActual: ${$actual.html()}`);    
+  });
+
+  $(() => {
+    tr.run();
+  });
 });

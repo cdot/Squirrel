@@ -1,0 +1,22 @@
+<div id="alarm_dlg" class="dlg-dialog " data-i18n-title="Reminder">
+  <p>
+    <span data-i18n="set_reminder"></span>
+    '<span data-id="path"></span>'
+  </p>
+  <p>
+    <label for="alarm_enable"  data-i18n="Enable reminder"></label>
+    <input type="checkbox" data-id="enabled" id="alarm-enable">
+    <div data-id="settings">
+      <label for="alarm_number"  data-i18n="Remind in"></label>
+      <input data-id="number" size="3" value="6" />
+      <select data-id="unit">
+        <option value="d" selected="selected" data-i18n="days"></option>
+        <option value="m" data-i18n="months"></option>
+        <option value="y" data-i18n="years"></option>
+      </select>
+      <span data-i18n="on"></span>
+      <input data-id="date" type="text"/>
+    </div>
+  </p>
+  <button data-id="ok" data-i18n-title="Save" data-i18n="Save"></button>
+</div>

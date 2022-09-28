@@ -2,32 +2,9 @@
 /* eslint-env node, mocha */
 /* global document:writable */
 
-if (typeof module !== 'undefined') {
-    requirejs = require('requirejs');
-    // node.js
-    const { JSDOM } = require('jsdom');
-	/*eslint-disable no-global-assign */
-    document = new JSDOM('<!doctype html><html><body><div id="container"><div id="sites-node"></div></div></body></html>');
-    const { window } = document;
-    global.window = window;
-    global.document = window.document;
-    global.navigator = { userAgent: "node.js" };
-    let jQuery = require('jquery');
-    global.jQuery = jQuery;
-    global.$ = jQuery;
+requirejs = require('requirejs');
 
-    $.getTapEvent = function() { return "click"; }
-	/*eslint-enable no-global-assign */
-
-	// This all works fine in the browser, but not in node.js. So the fix
-	// - whetever it is - belongs here :-(
-	requirejs.config({
-		baseUrl: `${__dirname}/..`,
-		paths: {
-			"jquery-ui": "node_modules/jquery-ui-dist/jquery-ui"
-		}
-	});
-}
+require("./TestSupport");
 
 const actions = [
     {
@@ -82,217 +59,203 @@ const actions = [
     "X:FineDining/Caviar/Beluga @1/1/2007, 12:00:00 AM"
 ];*/
 
-let deps = ["js/Utils",
-            "js/Hoard",
-            "js/Serror",
-            "js/Translator",
-            "js/Tree",
-            "test/TestRunner",
-            "jquery",
-            "jquery-ui"
-           ];
-requirejs(deps, function(Utils, Hoard, Serror, Translator, Tree, TestRunner) {
+requirejs([
+  "js/Utils",
+  "js/Hoard",
+  "js/Serror",
+  "js/Tree",
+  "test/TestRunner",
+  "jquery",
+  "jquery-ui"
+], (Utils, Hoard, Serror, Tree, TestRunner) => {
 
-    let tr = new TestRunner("Tree");
-    let assert = tr.assert;
-    let $DOMtree = $("#sites-node");
+  let tr = new TestRunner("Tree");
+  let assert = tr.assert;
+  let $actual = $("#actual");
+  let $expect = $("#expect");
+  if ($actual.length == 0) {
+    // node.js
+    $actual = $("<div id='actual'></div>");
+    $("body").append($actual);
+  }
+  if ($expect.length === 0) {
+    $expect = $("<div id='expect'></div>");
+    $("body").append($expect);
+  }
 
-    function normalise_html(html) {
-        return html
-        .replace(/class="([^"]+)"/, function(m, c) {
-            let cns = c.split(" ").sort().join(" ");
-            return 'class="' + cns + '"';
-        })
-        .replace(/\n/g, " ")
-        .replace(/ +</g,"<")
-        .replace(/</g,"\n<")
-        .replace(/> +/g,">")
-        .replace(/ +/g," ")
-        .replace(/^ /, "")
-        .replace(/ $/, "");
+  let $DOMtree = $("<div id='DOMtree'></div>");
+  $actual.append($DOMtree);
+
+  tr.beforeEach(function() {
+    $DOMtree.tree({});
+  });
+
+  tr.afterEach(function() {
+    $DOMtree.tree("destroy");
+    $DOMtree.empty();
+    Tree.cache = {};
+  });
+
+  function expect_html(html) {
+    $expect.empty().append(html.replace(/>\s+</g, "><"));
+    assert($actual.find("div")[0].isEqualNode($expect.find("div")[0]),
+          `\nExpect: ${$expect.html()}\n\nActual: ${$actual.html()}`);
+  }
+
+  tr.addTest("should reconstruct cache", function() {
+    let promise = Promise.resolve();
+    for (let act of actions) {
+      promise = promise.then($DOMtree.tree("action", act));
     }
+    $expect.html(
+      `<div id="DOMtree" class="tree tree-never_opened tree-isRoot tree-hasAlarms">
+       <ul class="tree_subtree sortable" style="display: none;">
+        <li class="tree tree-never_opened tree-isModified tree-hasAlarms" accesskey="FineDining">
+         <ul class="tree_subtree sortable" style="display: none;">
+          <li class="tree tree-never_opened tree-isModified tree-hasAlarms" accesskey="Caviar">
+           <ul class="tree_subtree sortable" style="display: none;">
+            <li class="tree tree-never_opened tree-isLeaf tree-isModified" accesskey="Beluga">
+             <ul class="tree_subtree sortable" style="display: none;"></ul>
+            </li>
+           </ul>
+          </li>
+         </ul>
+        </li>
+       </ul>
+      </div>`.replace(/>\s+</g, "><"));
+    return promise.then(() => {
+      assert($actual.find("div")[0].isEqualNode($expect.find("div")[0]),
+             `\nExpect: ${$expect.html()}\n\nActual: ${$actual.html()}`);
+    });
+  });
 
-    function expect_html(expected_html) {
-        let actual = normalise_html($("#container").html());
-        let expected = normalise_html(expected_html)
-        if (actual !== expected) {
-            let a = actual.split("\n");
-            let e = expected.split("\n");
-            for (let i = 0; i < a.length; a++) {
-                assert.equal(a[i], e[i]);
-            }
-        }
+  tr.addTest("should open undecorated", function() {
+    let promise = Promise.resolve();
+    for (let act of actions) {
+      //console.log("Play",act);
+      promise = promise.then($DOMtree.tree("action", act));
+      $DOMtree.tree("getNodeFromPath", ["FineDining"]);
     }
-
-    tr.beforeEach(function() {
-        $DOMtree.tree({});
+    return promise.then(() => {
+      // open a leaf node
+      let $node = $DOMtree.tree("getNodeFromPath", ["FineDining", "Caviar", "Beluga"]);
+      $node.tree("open");
+      $expect.html(
+            `<div id="DOMtree" class="tree-never_opened tree tree-isRoot tree-hasAlarms">
+                <ul class="tree_subtree sortable" style="display: none;">
+                  <li class="tree tree-never_opened tree-isModified tree-hasAlarms" accesskey="FineDining">
+                    <ul class="tree_subtree sortable" style="display: none;">
+                      <li class="tree tree-never_opened tree-isModified tree-hasAlarms" accesskey="Caviar">
+                        <ul class="tree_subtree sortable" style="display: none;">
+                          <li class="tree tree-isLeaf tree-isModified tree-isOpen" accesskey="Beluga">
+                           <ul class="tree_subtree sortable" style=""></ul>
+                          </li>
+                        </ul>
+                      </li>
+                    </ul>
+                  </li>
+                </ul>
+              </div>`.replace(/>\s+</g, "><"));
+      assert($actual.find("div")[0].isEqualNode($expect.find("div")[0]),
+             `\nExpect: ${$expect.html()}\n\nActual: ${$actual.html()}`);
     });
-    
-    tr.afterEach(function() {
-        $DOMtree.tree("destroy");
-        $DOMtree.find("ul").remove();
-        Tree.cache = {};
-    });
+  });
 
-    tr.addTest("should reconstruct cache", function() {
-        let promise = Promise.resolve();
-        for (let act of actions) {
-            promise = promise.then($DOMtree.tree("action", act));
-        }
-        const empty_tree = '\
-            <div id="sites-node" class="tree tree-never_opened tree-isRoot tree-isColl tree-hasAlarms">\
-              <ul class="sortable" style="display: none;">\
-                <li class="tree tree-never_opened tree-isColl tree-isModified tree-hasAlarms">\
-                  <ul class="sortable" style="display: none;">\
-                    <li class="tree tree-never_opened tree-isColl tree-isModified tree-hasAlarms">\
-                      <ul class="sortable" style="display: none;">\
-                        <li class="tree tree-never_opened tree-isLeaf tree-isModified">\
-                        </li>\
-                      </ul>\
-                    </li>\
-                  </ul>\
-                </li>\
-              </ul>\
-            </div>';
-        return promise.then(() => {
-            expect_html(empty_tree);
-        });
-    });
+  tr.addTest("should open decorated", function() {
+    let promise = Promise.resolve();
+    for (let act of actions) {
+      promise = promise.then($DOMtree.tree("action", act));
+    }
+    return promise.then(() => {
+      // open a leaf node
+      let $node = $DOMtree.tree("getNodeFromPath", ["FineDining", "Caviar", "Beluga"]);
+      $node.tree("open", {decorate:true});
+      $expect.html(
+            `<div id="DOMtree" class="tree-never_opened tree tree-isRoot tree-hasAlarms">
+              <ul class="tree_subtree sortable" style="display: none;">
+               <li class="tree tree-never_opened tree-isModified tree-hasAlarms" accesskey="FineDining">
+                <ul class="tree_subtree sortable" style="display: none;">
+                 <li class="tree tree-never_opened tree-isModified tree-hasAlarms" accesskey="Caviar">
+                  <ul class="tree_subtree sortable" style="display: none;">
+                   <li class="tree tree-isLeaf tree-isModified tree-decorated tree-isOpen" accesskey="Beluga">
+                    <div class="tree_title">
+                     <button class="tree_t_toggle ui-button ui-widget ui-button-icon-only">
+                      <span class="ui-button-icon squirrel-icon ui-icon squirrel-icon-folder-open"></span>
+                      <span class="ui-button-icon-space"> </span>
+                     </button>
+                     <div class="tree_t_info">
+                      <button class="tree_t_i_alarm ui-button ui-widget ui-button-icon-only">
+                       <span class="ui-button-icon squirrel-icon ui-icon tree-icon-alarm"></span>
+                       <span class="ui-button-icon-space"> </span>
+                      </button>
+                      <span class="tree_t_i_key">Beluga</span>
+                      <span class="tree_t_i_leaf">
+                       <span class="tree_t_i_l_separator"> : </span>
+                       <span class="tree_t_i_l_value">£6.70 per gramme</span>
+                      </span>&nbsp;<span class="tree_t_i_change" style="display: none;">2007-01-01</span>
+                     </div>
+                    </div>
+                    <ul class="tree_subtree sortable" style=""></ul>
+                   </li>
+                  </ul>
+                 </li>
+                </ul>
+               </li>
+              </ul>
+             </div>`.replace(/>\s\s+</g, "><"));
+      assert($actual.find("div")[0].isEqualNode($expect.find("div")[0]),
+             `\nExpect: ${$expect.html()}\n\nActual: ${$actual.html()}`);
 
-    tr.addTest("should open undecorated", function() {
-        let promise = Promise.resolve();
-        for (let act of actions) {
-            //console.log("Play",act);
-            promise = promise.then($DOMtree.tree("action", act));
-            $DOMtree.tree("getNodeFromPath", ["FineDining"]);
-        }
-        return promise.then(() => {
-            // open a leaf node
-            let $node = $DOMtree.tree("getNodeFromPath", ["FineDining", "Caviar", "Beluga"]);
-            $node.tree("open");
-            const open_tree = '\
-            <div id="sites-node" class="tree tree-never_opened tree-isRoot tree-isColl tree-hasAlarms">\
-                <ul class="sortable" style="display: none;">\
-                  <li class="tree tree-never_opened tree-isColl tree-isModified tree-hasAlarms">\
-                    <ul class="sortable" style="display: none;">\
-                      <li class="tree tree-never_opened tree-isColl tree-isModified tree-hasAlarms">\
-                        <ul class="sortable" style="display: none;">\
-                          <li class="tree tree-isLeaf tree-isModified tree-isOpen">\
-                          </li>\
-                        </ul>\
-                      </li>\
-                    </ul>\
-                  </li>\
-                </ul>\
-              </div>';
-            expect_html(open_tree);
-        });
     });
+  });
 
-    tr.addTest("should open decorated", function() {
-        let promise = Promise.resolve();
-        for (let act of actions) {
-            promise = promise.then($DOMtree.tree("action", act));
-        }
-        return promise.then(() => {
-            // open a leaf node
-            let $node = $DOMtree.tree("getNodeFromPath", ["FineDining", "Caviar", "Beluga"]);
-            $node.tree("open", {decorate:true});
-            const open_tree = '\
-            <div id="sites-node" class="tree tree-never_opened tree-isRoot tree-isColl tree-hasAlarms">\
-              <ul class="sortable" style="display: none;">\
-                <li class="tree tree-never_opened tree-isColl tree-isModified tree-hasAlarms">\
-                  <ul class="sortable" style="display: none;">\
-                    <li class="tree tree-never_opened tree-isColl tree-isModified tree-hasAlarms">\
-                      <ul class="sortable" style="display: none;">\
-                        <li class="tree tree-isLeaf tree-isModified ui-draggable tree-isOpen" style="position: relative;">\
-                          <div class="tree_title">\
-                            <div class="tree__info">\
-                              <button class="tree__alarm ui-button ui-widget ui-button-icon-only">\
-                                <span class="ui-button-icon squirrel-icon ui-icon tree-icon-alarm">\
-                                </span>\
-                                <span class="ui-button-icon-space">\
-                                </span>\
-                              </button>\
-                              <span class="tree__key">Beluga\
-                              </span>\
-                              <span class="tree__separator"> :\
-                              </span>\
-                              <span class="tree__value">£6.70 per gramme\
-                              </span>\
-                              <span class="tree__change" style="display: none;">2007-01-01</span>\
-                            </div>\
-                            <div class="tree__draghandle ui-button ui-corner-all ui-widget ui-button-icon-only ui-draggable-handle" role="button" style="display: none;">\
-                              <span class="ui-button-icon ui-icon ui-icon-arrow-2-n-s">\
-                              </span>\
-                              <span class="ui-button-icon-space">\
-                              </span>\
-                            </div>\
-                          </div>\
-                        </li>\
-                      </ul>\
-                    </li>\
-                  </ul>\
-                </li>\
-              </ul>\
-            </div>';
-            expect_html(open_tree);
-        });
+  tr.addTest("should close decorated", function() {
+    let promise = Promise.resolve();
+    for (let act of actions) {
+      promise = promise.then($DOMtree.tree("action", act));
+    }
+    return promise.then(() => {
+      // open a leaf node
+      let $node = $DOMtree.tree("getNodeFromPath", ["FineDining", "Caviar", "Beluga"]);
+      $node.tree("open", {decorate:true});
+      $node.tree("close");
+      $expect.html(
+        `<div id="DOMtree" class="tree-never_opened tree tree-isRoot tree-hasAlarms">
+          <ul class="tree_subtree sortable" style="display: none;">
+           <li class="tree tree-never_opened tree-isModified tree-hasAlarms" accesskey="FineDining">
+            <ul class="tree_subtree sortable" style="display: none;">
+             <li class="tree tree-never_opened tree-isModified tree-hasAlarms" accesskey="Caviar">
+              <ul class="tree_subtree sortable" style="display: none;">
+               <li class="tree tree-isLeaf tree-isModified tree-decorated" accesskey="Beluga">
+                <div class="tree_title">
+                 <button class="tree_t_toggle ui-button ui-widget ui-button-icon-only">
+                  <span class="ui-button-icon squirrel-icon ui-icon squirrel-icon-folder-closed"></span>
+                  <span class="ui-button-icon-space"> </span>
+                 </button>
+                 <div class="tree_t_info">
+                  <button class="tree_t_i_alarm ui-button ui-widget ui-button-icon-only">
+                   <span class="ui-button-icon squirrel-icon ui-icon tree-icon-alarm"></span>
+                   <span class="ui-button-icon-space"> </span>
+                  </button>
+                  <span class="tree_t_i_key">Beluga</span>
+                  <span class="tree_t_i_leaf">
+                   <span class="tree_t_i_l_separator"> : </span>
+                   <span class="tree_t_i_l_value">£6.70 per gramme</span>
+                  </span>&nbsp;<span class="tree_t_i_change" style="display: none;">2007-01-01</span>
+                 </div>
+               </div>
+               <ul class="tree_subtree sortable" style="display: none;"></ul>
+              </li>
+             </ul>
+            </li>
+           </ul>
+          </li>
+         </ul>
+        </div>`.replace(/>\s\s+</g, "><"));
+      assert($actual.find("div")[0].isEqualNode($expect.find("div")[0]),
+             `\nExpect: ${$expect.html()}\n\nActual: ${$actual.html()}`);
     });
+  });
 
-    tr.addTest("should close decorated", function() {
-        let promise = Promise.resolve();
-        for (let act of actions) {
-            promise = promise.then($DOMtree.tree("action", act));
-        }
-        return promise.then(() => {
-            // open a leaf node
-            let $node = $DOMtree.tree("getNodeFromPath", ["FineDining", "Caviar", "Beluga"]);
-            $node.tree("open", {decorate:true});
-            $node.tree("close");
-            const open_tree = '\
-            <div id="sites-node" class="tree tree-never_opened tree-isRoot tree-isColl tree-hasAlarms">\
-              <ul class="sortable" style="display: none;">\
-                <li class="tree tree-never_opened tree-isColl tree-isModified tree-hasAlarms">\
-                  <ul class="sortable" style="display: none;">\
-                    <li class="tree tree-never_opened tree-isColl tree-isModified tree-hasAlarms">\
-                      <ul class="sortable" style="display: none;">\
-                        <li class="tree tree-isLeaf tree-isModified ui-draggable" style="position: relative;">\
-                          <div class="tree_title">\
-                            <div class="tree__info">\
-                              <button class="tree__alarm ui-button ui-widget ui-button-icon-only">\
-                                <span class="ui-button-icon squirrel-icon ui-icon tree-icon-alarm">\
-                                </span>\
-                                <span class="ui-button-icon-space">\
-                                </span>\
-                              </button>\
-                              <span class="tree__key">Beluga\
-                              </span>\
-                              <span class="tree-separator"> :\
-                              </span>\
-                              <span class="tree__value">£6.70 per gramme\
-                              </span>\
-                              <span class="tree__change">2007-01-01</span>\
-                            </div>\
-                            <div class="tree__draghandle ui-button ui-corner-all ui-widget ui-button-icon-only ui-draggable-handle" role="button" style="display: none;">\
-                              <span class="ui-button-icon ui-icon ui-icon-arrow-2-n-s">\
-                              </span>\
-                              <span class="ui-button-icon-space">\
-                              </span>\
-                            </div>\
-                          </div>\
-                        </li>\
-                      </ul>\
-                    </li>\
-                  </ul>\
-                </li>\
-              </ul>\
-            </div>';
-            expect_html(open_tree);
-        });
-    });
-
-    tr.run();
+  tr.run();
 });
-
-

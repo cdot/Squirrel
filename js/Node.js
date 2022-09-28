@@ -1,11 +1,11 @@
-/*@preserve Copyright (C) 2015-2021 Crawford Currie http://c-dot.co.uk license MIT*/
+/*@preserve Copyright (C) 2015-2022 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,node */
 
 define("js/Node", [
-	"js/Action", "js/Translator", "js/Serror"
-], (Action, Translator, Serror) => {
+	"js/Action", "js/Serror"
+], (Action, Serror) => {
 
-    const MSPERDAY = 24 * 60 * 60 * 1000;
+  const MSPERDAY = 24 * 60 * 60 * 1000;
 
 	/**
 	 * A node in a hoard tree.
@@ -40,10 +40,10 @@ define("js/Node", [
 			 * Time of the last modification (epoch ms)
 			 * @member {integer}
 			 */
-            this.time = data.time;
+      this.time = data.time;
 			
-            if (typeof data.alarm === 'string') {
-                // Compatibility
+      if (typeof data.alarm === 'string') {
+        // Compatibility
 				const mid = data.alarm.indexOf(';');
 				if (mid > 0) {
 					this.alarm = {
@@ -57,19 +57,19 @@ define("js/Node", [
 					};
 				}
 			}
-            else if (typeof data.alarm === 'number') {
-                // Compatibility
-                this.alarm = {
-                    due: this.time + (data.alarm * MSPERDAY),
-                    repeat: data.alarm * MSPERDAY
-                };
-            }
+      else if (typeof data.alarm === 'number') {
+        // Compatibility
+        this.alarm = {
+          due: this.time + (data.alarm * MSPERDAY),
+          repeat: data.alarm * MSPERDAY
+        };
+      }
 			else if (typeof data.alarm !== 'undefined') {
 				/**
 				 * Time of next alarm, `{due:number, repeat:number}`
 				 * @member {object}
 				 */
-                this.alarm = data.alarm;
+        this.alarm = data.alarm;
 			}
 
 			if (typeof data.constraints === 'string') {
@@ -79,28 +79,28 @@ define("js/Node", [
 					chars: data.constraints.substr(mid + 1)
 				};
 			}
-            else if (typeof data.constraints !== 'undefined') {
+      else if (typeof data.constraints !== 'undefined') {
 				/**
 				 * Constraints, `{size:number, chars:string}`
 				 * @member {string}
 				 */
-                this.constraints = data.constraints;
+        this.constraints = data.constraints;
 			}
 
 			/**
 			 * Collection of subnodes indexed by subnode name
 			 */
-            if (data.children) {
+      if (data.children) {
 				this.children = {};
-                for (let sub in data.children)
-                    this.children[sub] = new Node(data.children[sub]);
-            }
+        for (let sub in data.children)
+          this.children[sub] = new Node(data.children[sub]);
+      }
 
 			/**
 			 * Leaf (non-object) data
 			 * @member {string}
 			 */
-            if (typeof data.value !== 'undefined')
+      if (typeof data.value !== 'undefined')
 				this.value = data.value;
 
 			// Compatibility. The dual-use 'data' field has been
@@ -113,8 +113,8 @@ define("js/Node", [
 				Serror.assert(!this.children);
 				this.children = {};
 				console.log(`Warning: old format Node child data`);
-                for (let sub in data.data)
-                    this.children[sub] = new Node(data.data[sub]);
+        for (let sub in data.data)
+          this.children[sub] = new Node(data.data[sub]);
 			}
 		}
 
@@ -210,77 +210,77 @@ define("js/Node", [
 				delete this.value;
 		}
 
-        /**
-         * Get the node referenced by the given path relative
+    /**
+     * Get the node referenced by the given path relative
 		 * to this node.
-         * @param {string|string[]} path - path string, or path array
-         * @param {number} [offset=0] - offset from the leaf e.g. 1 will
-         * find the parent of the node identified by the path
+     * @param {string|string[]} path - path string, or path array
+     * @param {number} [offset=0] - offset from the leaf e.g. 1 will
+     * find the parent of the node identified by the path
 		 * @return {Node?} the node found, or undefined if not found
-         */
+     */
  		getNodeAt(path, offset) {
-            if (typeof path === 'string')
-                path = path.split(Action.PATH_SEPARATOR);
+      if (typeof path === 'string')
+        path = path.split(Action.PATH_SEPARATOR);
 
-            offset = offset || 0;
+      offset = offset || 0;
 
-            let node = this;
-            offset = offset || 0;
+      let node = this;
+      offset = offset || 0;
 
-            for (let i = 0; i < path.length - offset; i++) {
-                const name = path[i];
-                if (node && node.children && node.children[name])
-                    node = node.children[name];
+      for (let i = 0; i < path.length - offset; i++) {
+        const name = path[i];
+        if (node && node.children && node.children[name])
+          node = node.children[name];
 				else 
-                    return undefined;
-            }
-            return node;
+          return undefined;
+      }
+      return node;
 		}
 
-        /**
+    /**
 		 * Simple search for differences between two node trees.  No
-         * attempt is made to resolve complex changes, such as nodes
-         * being moved. Each difference detected is reported using:
-         * `difference(action, a, b)` where `action` is the action required
-         * to transform from `this` to the other tree, and
-         * `a` and `b` are the tree nodes being compared. Actions used are
-         * `A`, `D`, `E`, `I` and `X`
+     * attempt is made to resolve complex changes, such as nodes
+     * being moved. Each difference detected is reported using:
+     * `difference(action, a, b)` where `action` is the action required
+     * to transform from `this` to the other tree, and
+     * `a` and `b` are the tree nodes being compared. Actions used are
+     * `A`, `D`, `E`, `I` and `X`
 		 * @param {string[]} path the path to `this` (and `b`)
 		 * @param {Node} b the Node to compare
 		 * @param {Node.Differ} difference handler function
 		 */
 		diff(path, b, difference) {
-            if (b.alarm && !this.alarm
-				|| !b.alarm && this.alarm
-				|| this.alarm
-				&& (this.alarm.due !== b.alarm.due
-					|| this.alarm.repeat != b.alarm.repeat)) {
-                difference(new Action({
+      if (b.alarm && !this.alarm
+				  || !b.alarm && this.alarm
+				  || this.alarm
+				  && (this.alarm.due !== b.alarm.due
+					    || this.alarm.repeat != b.alarm.repeat)) {
+        difference(new Action({
 					type: 'A',
 					path: path,
 					alarm: b.alarm
 				}), this, b);
-            }
+      }
 
-            if (b.constraints && !this.constraints
-				|| !b.constraints && this.constraints
-				|| this.constraints
-				&& (b.constraints.size !== this.constraints.size
-				   || b.constraints.chars !== this.constraints.chars))
-                difference(new Action({
+      if (b.constraints && !this.constraints
+				  || !b.constraints && this.constraints
+				  || this.constraints
+				  && (b.constraints.size !== this.constraints.size
+				      || b.constraints.chars !== this.constraints.chars))
+        difference(new Action({
 					type: 'X',
 					path: path,
-                    constraints: b.constraints
+          constraints: b.constraints
 				}), this, b);
 
-            if (b.value !== this.value)
-                difference(new Action({
+      if (b.value !== this.value)
+        difference(new Action({
 					type: 'E',
 					path: path,
 					data: b.value
 				}), this, b);
 
-            const matchedChild = {};
+      const matchedChild = {};
 			let subnode;
 			if (this.children) {
 				for (subnode in this.children) {
@@ -300,7 +300,7 @@ define("js/Node", [
 				}
 			}
 
-            if (b.children) {
+      if (b.children) {
 				for (subnode in b.children) {
 					if (!matchedChild[subnode]) {
 						// TODO: look for the node elsewhere in a,
@@ -314,7 +314,7 @@ define("js/Node", [
 						}), this, b);
 					}
 				}
-            }
-        }
+      }
+    }
 	} return Node;
 });

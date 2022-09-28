@@ -1,0 +1,27 @@
+<div id="store_settings_dlg" class="dlg-dialog" data-i18n-title="Store settings">
+  <p data-id="image_message" class="template pick-one">
+    <span data-id="cui" class="template dlg-error" data-i18n-template="bad_image_tmpl"></span>
+    <span data-id="xbyy" class="template">
+      $1 x $2
+    </span>
+  </p>
+  <div data-id="get_image">
+    <div class="twisted" data-open="ui-icon-info">
+      <p class="twisted-body">
+        <span  data-i18n="local_image"></span>
+        <span  data-i18n="complex_image"></span>
+        <span  data-i18n="image_load_warn"></span>
+      </p>
+    </div>
+    <label for="change_image_url"  data-i18n="steg_image"></label>
+    <input type="url" data-id="image_url" class="dlg-hidden " placeholder="http://www.example.com/image.png" id="change_image_url"/>
+    <p><img data-id="steg_image" alt="Steganography image"/></p>
+  </div>
+  <div data-id="get_path">
+    <span class="tooltip-dialog" data-i18n-title="cloud_path" data-i18n="Cloud store path:"></span>
+    <input id="change_cloud_path" data-id="cloud_path" type="text" value="" autofocus/>
+  </div>
+  <p>
+    <button data-id="ok"  data-i18n="OK"></button>
+  </p>
+</div>

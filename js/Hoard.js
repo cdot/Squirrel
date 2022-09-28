@@ -2,11 +2,11 @@
 /* eslint-env browser,node */
 
 define("js/Hoard", [
-	"js/Node", "js/Action", "js/Translator", "js/Serror"
+	"js/Node", "js/Action", "js/Serror",
+  "i18n"
 ], (
-	Node, Action, Translator, Serror
+	Node, Action, Serror
 ) => {
-	const TX = Translator.TX;
 
 	/**
 	 * History of an action that was played into the hoard.
@@ -127,7 +127,7 @@ define("js/Hoard", [
         undo(options) {
 			options = options || {};
             if (this.history.length === 0)
-				return Promise.reject(new Error(TX.tx("Nothing to undo")));
+				return Promise.reject(new Error($.i18n("Nothing to undo")));
             const a = this.history.pop();
             if (this.debug) this.debug("Undo", a);
             
@@ -178,7 +178,7 @@ define("js/Hoard", [
 			// it's easier to debug them that way.
             const conflict = mess =>
 				  Promise.reject(
-					  new Error(TX.tx("$1 failed: $2",
+					  new Error($.i18n("$1 failed: $2",
 									  action.verbose(), mess)));
 
 			// Make nodes on the path (including the end), adding history
@@ -242,7 +242,7 @@ define("js/Hoard", [
                 
 				const node = this.tree.getNodeAt(action.path);
 				if (node)
-					return conflict(TX.tx("it already exists"));
+					return conflict($.i18n("it already exists"));
 
 				const json = JSON.parse(action.data);
 				promise = mkNode(action.path.slice(0, -1))
@@ -288,7 +288,7 @@ define("js/Hoard", [
 				// Compatibility, replaced by 'A' with undefined data
 				const node = this.tree.getNodeAt(action.path);
 				if (!node)
-					return conflict(TX.tx("it does not exist"));
+					return conflict($.i18n("it does not exist"));
 				// Cancel alarm
                 if (options.undoable)
                     this._record_event(action, 'A', action.path,
@@ -333,12 +333,12 @@ define("js/Hoard", [
                 // action.data is the path of the new parent
  				const node = this.tree.getNodeAt(action.path);
 				if (!node)
-					return conflict(TX.tx("it does not exist"));
+					return conflict($.i18n("it does not exist"));
 				promise = mkNode(action.data)
 				.then(new_parent => {
 					const name = action.path.slice(-1)[0];
 					if (new_parent.getChild(name))
-						return conflict(TX.tx("it already exists"));
+						return conflict($.i18n("it already exists"));
                 
 					const parent = this.tree.getNodeAt(
 						action.path.slice(0, -1));
@@ -366,12 +366,12 @@ define("js/Hoard", [
 				// Rename
  				const node = this.tree.getNodeAt(action.path);
 				if (!node)
-					return conflict("it does not exist");
+					return conflict($.i18n("it does not exist"));
 
 				const parent = this.tree.getNodeAt(
 					action.path.slice(0, -1));
 				if (parent.getChild(action.data))
-					return conflict(TX.tx("it already exists"));
+					return conflict($.i18n("it already exists"));
 				const name = action.path.slice(-1)[0];
 				if (options.undoable) {
 					const p = action.path.slice();

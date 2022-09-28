@@ -134,7 +134,7 @@ define("js/jq/simulated_password", ["jquery"], () => {
                 $input.after($showpass);
 
                 $showpass
-                .on($.getTapEvent(), function () {
+              .on($.isTouchCapable() ? "tap" : "click", function () {
                     showPass($input, $input.hasClass("pass_hidden"));
                 });
 
