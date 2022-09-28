@@ -8,38 +8,38 @@
  * data: data value to insert
  */
 define(["js/dialogs/add"], AddDialog => {
-    class InsertDialog extends AddDialog {
-        validateValue() {
-            const $ta = this.$control("value");
-            const text = $ta.val();
-            
-            try {
-                JSON.parse(text);
-                this.$control("ok").icon_button("enable");
-                $ta
-                .removeClass("dlg-disabled")
-                .attr("title", $.i18n("Edit valid JSON"));
-            } catch (e) {
-                this.$control("ok").icon_button("disable");
-                $ta
-                .addClass("dlg-disabled")
-                .attr("title", e);
-            }
-        }
-
-        initialise() {
-            const self = this;
-            super.initialise();
-            this.$control("value")
-            .on("input", function () {
-                self.validateValue();
-            })
-        }
-        
-        open() {
-            super.open();
-            this.validateValue();
-        }
+  class InsertDialog extends AddDialog {
+    validateValue() {
+      const $ta = this.$control("value");
+      const text = $ta.val();
+      
+      try {
+        JSON.parse(text);
+        this.$control("ok").icon_button("enable");
+        $ta
+        .removeClass("dlg-disabled")
+        .attr("title", $.i18n("Edit valid JSON"));
+      } catch (e) {
+        this.$control("ok").icon_button("disable");
+        $ta
+        .addClass("dlg-disabled")
+        .attr("title", e);
+      }
     }
-    return InsertDialog;
+
+    initialise() {
+      const self = this;
+      super.initialise();
+      this.$control("value")
+      .on("input", function () {
+        self.validateValue();
+      });
+    }
+    
+    open() {
+      super.open();
+      this.validateValue();
+    }
+  }
+  return InsertDialog;
 });

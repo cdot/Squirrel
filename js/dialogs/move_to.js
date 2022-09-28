@@ -13,13 +13,13 @@ define(["js/Dialog"], Dialog => {
 	 * See {@link Dialog} for constructor parameters.
 	 * @extends Dialog
 	 */
-    class MoveToDialog extends Dialog {
+  class MoveToDialog extends Dialog {
 
-        ok() {
-            return this.target;
-        }
+    ok() {
+      return this.target;
+    }
 
-        open() {
+    open() {
 			this.moving = this.options.path.slice();
 			this.originalParent = this.options.path.slice(0, -1);
 			this.target = this.options.path.slice();
@@ -33,15 +33,15 @@ define(["js/Dialog"], Dialog => {
 				this.target.pop();
 			}
 			this._updatePath();
-        }
+    }
 
 		_is(path, other) {
 			return (path.join(PATH_SEPARATOR) ===
-					other.join(PATH_SEPARATOR));
+					    other.join(PATH_SEPARATOR));
 		}
 
 		_updatePath() {			
-            if (this.target.length === 0) {
+      if (this.target.length === 0) {
 				// Can't go up
 				this.$control("parent")
 				.prop("disabled", true)
@@ -66,12 +66,12 @@ define(["js/Dialog"], Dialog => {
 			}
 			const content = this.options.getContent(this.target);
 			console.log(content);
-            const $sf = this.$control("subfolders");
+      const $sf = this.$control("subfolders");
 			$sf.empty();
-            const template = this.$control("row-template").html();
-            Object.keys(content).sort().map(name => {
-                const $row = $(template.replace(/\$1/g, name))
-					  .appendTo($sf);
+      const template = this.$control("row-template").html();
+      Object.keys(content).sort().map(name => {
+        const $row = $(template.replace(/\$1/g, name))
+					    .appendTo($sf);
 				if (content[name]) {
 					if (this._is(this.target.concat([name]), this.moving))
 						// Don't select self
@@ -90,8 +90,8 @@ define(["js/Dialog"], Dialog => {
 					$row.find('.ui-icon').remove();
 					$row.addClass("greyed");
 				}
-            });
+      });
 		}
-    }
-    return MoveToDialog;
+  }
+  return MoveToDialog;
 });

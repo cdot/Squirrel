@@ -8,39 +8,39 @@ define([
 	"js/dialogs/alert", "js/jq/template"
 ], AlertDialog => {
 
-    class OptimiseDialog extends AlertDialog {
+  class OptimiseDialog extends AlertDialog {
 
-        initialise() {
-            this.$control("existing").template();
-            this.$control("study").template();
-        }
-
-        ok() {
-            return this.options.optimise();
-        }
-        
-        open() {
-            super.open();
-
-            this.$control("study").hide();
-            this.$control("calculating")
-            .show()
-            .toggle("pulsate", 101);
-
-            const analysis = this.options.analyse();
-            
-            this.$control("existing").template("expand", analysis.cloud);
-
-            this.$control("calculating").hide();
-            this.$control("study")
-            .template(
-                "expand",
-                analysis.N, analysis.A, analysis.X,
-                analysis.N + analysis.A + analysis.X)
-            .show();
-            if (analysis.N + analysis.A + analysis.X >= analysis.cloud)
-                this.push($.i18n("dont_opt"));
-        }
+    initialise() {
+      this.$control("existing").template();
+      this.$control("study").template();
     }
-    return OptimiseDialog;
+
+    ok() {
+      return this.options.optimise();
+    }
+    
+    open() {
+      super.open();
+
+      this.$control("study").hide();
+      this.$control("calculating")
+      .show()
+      .toggle("pulsate", 101);
+
+      const analysis = this.options.analyse();
+      
+      this.$control("existing").template("expand", analysis.cloud);
+
+      this.$control("calculating").hide();
+      this.$control("study")
+      .template(
+        "expand",
+        analysis.N, analysis.A, analysis.X,
+        analysis.N + analysis.A + analysis.X)
+      .show();
+      if (analysis.N + analysis.A + analysis.X >= analysis.cloud)
+        this.push($.i18n("dont_opt"));
+    }
+  }
+  return OptimiseDialog;
 });

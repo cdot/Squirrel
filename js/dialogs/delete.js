@@ -11,16 +11,16 @@ define(["js/Dialog", "js/Action"], (Dialog, Action) => {
 	 * See {@link Dialog} for constructor parameters.
 	 * @extends Dialog
 	 */
-    class DeleteDialog extends Dialog {
+  class DeleteDialog extends Dialog {
 
-        open() {
-            this.$control("path").text(Action.pathS(this.options.path));
-            this.$control("coll").toggle(!this.options.is_leaf);
-        }
-
-        ok() {
-            return this.$control("path").text();
-        }
+    open() {
+      this.$control("path").text(Action.pathS(this.options.path));
+      this.$control("coll").toggle(!this.options.is_leaf);
     }
-    return DeleteDialog;
+
+    ok() {
+      return this.$control("path").text();
+    }
+  }
+  return DeleteDialog;
 });

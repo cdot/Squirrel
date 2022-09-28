@@ -11,11 +11,10 @@ define(["js/Dialog", "js/jq/template"], Dialog => {
 	 * See {@link Dialog} for constructor parameters.
 	 * @extends Dialog
 	 */
-    class AboutDialog extends Dialog {
+  class AboutDialog extends Dialog {
 
-        initialise() {
-        }
+    initialise() {
     }
-    return AboutDialog;
+  }
+  return AboutDialog;
 });
-
