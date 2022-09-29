@@ -108,10 +108,10 @@ define([
       this.$control("reset_local")
       .on(Dialog.tapEvent(), function () {
         Dialog.confirm("alert", {
-          title: $.i18n("Reset Local Store"),
+          title: $.i18n("reset_local"),
           alert: {
             severity: "warning",
-            message: $.i18n("confirm_local_reset")
+            message: $.i18n("conf-reset-loc")
           }
         })
         .then(() => {
@@ -144,7 +144,7 @@ define([
         self.options.set_language(fresh)
 				.catch(e => {
 					Dialog.confirm("alert", {
-            title: $.i18n("I18N load failure"),
+            title: $.i18n("i18n-fail"),
             alert: $.i18n("no_translations", fresh)
           });
 				});

@@ -59,7 +59,7 @@ define("js/Dialog", [
         autoOpen: false,
         closeOnEscape: false,
         open: (/*event, ui*/) => {
-          // jqueryui.dialog open event
+          // jquery ui dialog open event
 
           // Lazy initialisation
           if (!$dlg.hasClass("dlg-initialised"))
@@ -119,8 +119,8 @@ define("js/Dialog", [
       // stupid, but we do use requirejs.toUrl to locate the
       // resource.
       if ($dlg.length > 0) {
-        //if (options.debug)
-        //    options.debug("HTML for dialog", id, "is already loaded");
+        if (options.debug)
+            options.debug("HTML for dialog", id, "is already loaded");
         p = Promise.resolve($dlg);
       } else {
         let html_url = requirejs.toUrl(`html/dialogs/${id}.html`);
@@ -129,9 +129,9 @@ define("js/Dialog", [
         if (options.htmlRoot)
           html_url = `${options.htmlRoot}/${id}.html`;
 
-        //if (options.debug)
-        //    options.debug(
-        //        "Loading HTML for dialog", id, "from", html_url);
+        if (options.debug)
+            options.debug(
+                "Loading HTML for dialog", id, "from", html_url);
 
         if (!htmls[html_url]) {
           htmls[html_url] = $.get(html_url)
@@ -145,22 +145,32 @@ define("js/Dialog", [
             .i18n();
 
             $dlg
-            .find("input[data-i18n-placeholder]")
+            .find("[data-i18n-placeholder]")
             .each(function() {
               $(this).attr("placeholder", $.i18n(
                 $(this).data("i18n-placeholder")));
             });
 
             $dlg
-            .find("input[data-i18n-title]")
+            .find("[data-i18n-title]")
+            .add($dlg.filter("[data-i18n-title]")) // add root
             .each(function() {
               $(this).attr("title", $.i18n(
                 $(this).data("i18n-title")));
             });
 
+            // SMELL: can trip over data-i18n-title= attribute
+            $dlg
+            .find("[data-i18n-tooltip]")
+            .each(function() {
+              $(this).attr("title", $.i18n(
+                $(this).data("i18n-tooltip")));
+            });
+
             // force the id so we can find it again
-            $dlg.attr("id", id + "_dlg");
-            // force the CSS class - should be hidden
+            $dlg.attr("id", `${id}_dlg`);
+            $dlg.data("id", id);
+            // force the CSS class - should hide it
             $dlg.addClass("dlg-dialog");
 
             $("body").append($dlg);
@@ -172,11 +182,13 @@ define("js/Dialog", [
       }
 
       return p.then($dlg => {
+        const id = $dlg.data("id");
         if (!(id in classes)) {
-          console.log(`Require ${id}`);
+          //if (this.debug) this.debug(`Require ${id}`);
           return Utils.require(`js/dialogs/${id}`)
 					.then(dlgClass => {
-            console.log(`JS for ${id} was loaded`);
+            if (options.debug) options.debug(`JS for ${id} was loaded`);
+
             classes[id] = new dlgClass($dlg, options);
             return classes[id];
           })

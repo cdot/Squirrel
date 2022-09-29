@@ -65,7 +65,6 @@ define(["js/Dialog"], Dialog => {
 				.css('opacity', 1);
 			}
 			const content = this.options.getContent(this.target);
-			console.log(content);
       const $sf = this.$control("subfolders");
 			$sf.empty();
       const template = this.$control("row-template").html();

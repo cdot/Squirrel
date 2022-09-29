@@ -17,10 +17,11 @@ define("js/Squirrel", [
   // Dialogs for loading in the background. These are loaded in roughly
   // the order they are likely to be used, but the loads are supposed to
   // be asynchronous so the order shouldn't really matter.
-  const DIALOGS = [ "alert", "login", "alarm", "store_settings",
-                    "choose_changes", "insert", "pick", "add",
-                    "delete", "randomise", "extras", "about",
-                    "optimise" ];
+  const DIALOGS = [
+    "alert", "store_login", "network_login", "alarm", "store_settings",
+    "choose_changes", "insert", "pick", "add",
+    "delete", "randomise", "extras", "about",
+    "optimise" ];
 
   /**
    * This is the top level application singleton. It is primarily
@@ -219,8 +220,7 @@ define("js/Squirrel", [
     _network_login(domain) {
       if (this.debug) this.debug(domain, "network login");
 
-      return Dialog.confirm("login", {
-        title: $.i18n("Network login for $1", domain),
+      return Dialog.confirm("network_login", {
         // Copy default user from the stores if there
         user: this.hoarder.probableUser()
       });
@@ -289,12 +289,12 @@ define("js/Squirrel", [
         return store.init();
       })
       .catch(e => Dialog.confirm("alert", {
-        title: $.i18n("Warning"),
+        title: $.i18n("warn"),
         alert: {
           severity: "warning",
           message: [
             $.i18n("unopenable_cloud", e),
-            $.i18n("local_only"),
+            $.i18n("local-only"),
           ]
         }
       }));
@@ -323,13 +323,12 @@ define("js/Squirrel", [
       .then(() => {
         // Need to confirm encryption user/pass, which may have been
         // seeded from the store initialisation process
-        this._stage($.i18n("Authentication"), 2.1);
+        this._stage($.i18n("stage-auth"), 2.1);
         const auth_req = this.hoarder.auth_required();
         if (!auth_req)
           return Promise.resolve();
 
-        return Dialog.confirm("login", {
-          title: $.i18n("Client user"),
+        return Dialog.confirm("store_login", {
           user: auth_req.user
         }).then(info => {
           if (this.debug) this.debug("...login confirmed");
@@ -337,14 +336,14 @@ define("js/Squirrel", [
         });
       })
       .catch(e => {
-        this._stage($.i18n("Error"), 2.2);
+        this._stage($.i18n("error"), 2.2);
         return Dialog.confirm("alert", {
-          title: $.i18n("Error"),
+          title: $.i18n("error"),
           alert: {
             severity: "error",
             message: [
-              $.i18n("unopenable_client", e),
-              $.i18n("Unable to continue"),
+              $.i18n("bad-client", e),
+              $.i18n("stuck"),
             ]
           }
         });
@@ -469,8 +468,8 @@ define("js/Squirrel", [
             severity: "error",
             message: $.i18n("unreadable_cloud")
           });
-          mess.push($.i18n("check_pass"));
-          mess.push($.i18n("cont_to_overwrite"));
+          mess.push($.i18n("chk-pass"));
+          mess.push($.i18n("cont-to-over"));
         }
         return Dialog.confirm("alert", {
           title: $.i18n("cloud_read_fail"),
@@ -490,7 +489,7 @@ define("js/Squirrel", [
       .removeClass("picked-hit");
       if (s !== this.last_search) {
         $("#search_hits")
-        .text($.i18n("Searching..."));
+        .text($.i18n("searching"));
 
         let re;
         try {
@@ -525,7 +524,7 @@ define("js/Squirrel", [
         hits = $(".search-hit");
         if (hits.length === 0) {
           $("#search_hits")
-          .text($.i18n("Not found"));
+          .text($.i18n("not-found"));
           return;
         }
 
@@ -557,7 +556,7 @@ define("js/Squirrel", [
         this.$DOMtree.tree("destroy");
         this.$DOMtree.tree({});
         let promise = Promise.resolve();
-        for (let act of this.hoarder.tree_actions()) {
+        for (let act of this.hoarder.action_stream()) {
           await this.$DOMtree.tree("action", act);
         }
         $("#sites-node").tree("open");
@@ -585,9 +584,19 @@ define("js/Squirrel", [
         lingo = "en";
 
       $.i18n({ locale: lingo});
-      $.i18n(document);
+      $("[data-i18n]").i18n();
+      $("[data-i18n-placeholder]")
+      .each(function() {
+        $(this).attr("placeholder", $.i18n(
+          $(this).data("i18n-placeholder")));
+      });
+      $("[data-i18n-title]")
+      .each(function() {
+        $(this).attr("title", $.i18n(
+          $(this).data("i18n-title")));
+      });
 
-      this._stage($.i18n("Loading application"), 0);
+      this._stage($.i18n("load_app"), 0);
       $.styling.init({ debug: this.debug});
 
       // Special keys in sort ordering. Currently only works for
@@ -697,7 +706,7 @@ define("js/Squirrel", [
         .catch(e => {
           if (this.debug) this.debug("undo failed", e);
           Dialog.confirm("alert", {
-            title: $.i18n("Error"),
+            title: $.i18n("error"),
             alert: {
               severity: "error",
               message: e.message
@@ -734,7 +743,7 @@ define("js/Squirrel", [
           },
           analyse: () => this.hoarder.analyse(),
           optimise: () => {
-            const acts = this.hoarder.tree_actions();
+            const acts = this.hoarder.action_stream();
             return Dialog.open("alert", {
               title: $.i18n("Saving"),
               alert: ""
@@ -745,13 +754,11 @@ define("js/Squirrel", [
             return this._reset_local_store();
           },
           set_language: lingo => {
-            return TX.language(lingo, document)
-						.then(() => {
-							// Won't apply until we clear caches and restart
-							$.cookie("ui_lang", lingo, {
-								expires: 365,
-								sameSite: "strict"
-							});
+            $.i18n().locale = lingo;
+						// Won't apply until we clear caches and restart
+						$.cookie("ui_lang", lingo, {
+							expires: 365,
+							sameSite: "strict"
 						});
           }
         })
@@ -787,7 +794,7 @@ define("js/Squirrel", [
         return this._3_load_client();
       })
       .then(() => {
-        this._stage($.i18n("Reading from cloud"), 4);
+        this._stage($.i18n("read_cloud"), 4);
         return this._4_load_cloud();
       })
       .then(() => {
@@ -799,7 +806,7 @@ define("js/Squirrel", [
           if (us.length > 0) {
             us = $.i18n("unsaved_changes")
             + `\n${us.join("\n")}\n`
-            + $.i18n("Are you really sure?");
+            + $.i18n("sure");
             return us;
           }
 					return undefined;
@@ -842,7 +849,7 @@ define("js/Squirrel", [
 					})
 				})
 			.catch(e => Dialog.confirm("alert", {
-				title: $.i18n("Error"),
+				title: $.i18n("error"),
 				alert: {
 					severity: "error",
 					message: e.message

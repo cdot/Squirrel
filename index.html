@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="">
   <head>
-    <base href="..">
     <meta name="copyright" content="Copyright (C) 2015-2022 Crawford Currie http://c-dot.co.uk license MIT">
     <meta charset="UTF-8">
     <meta name="Description" content="Squirrel independent online password safe">
@@ -28,7 +27,7 @@
     <link href="css/Dialogs.css" rel="stylesheet" />
     <link href="css/Squirrel.css" rel="stylesheet" />
 
-    <script data-main="/js/main.js?flap" src="/node_modules/requirejs/require.js"></script>
+    <script data-main="js/main.js" src="//cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.js"></script>
   </head>
 
   <body>
@@ -42,13 +41,12 @@
 
     <div id="authenticated">
       <div class="topbar">
-        <button id="undo_button" data-i18n-title="Undo last change" data-icon="squirrel-icon-undo" data-i18n="Undo"></button>
-        <button id="save_button" data-icon="squirrel-icon-save" data-i18n="Save"></button>
-        <span id="search_label" data-i18n="Search"></span>
-        <input id="search_input" value="" data-i18n-title="Enter search string" />
-        <button id="search_button" data-i18n="Search" data-i18n-title="Search" data-icon="squirrel-icon-search"></button>
+        <button id="undo_button" data-i18n-tooltip="tt-undo" data-icon="squirrel-icon-undo" data-i18n="undo"></button>
+        <button id="save_button" data-icon="squirrel-icon-save" data-i18n="save"></button>
+        <input id="search_input" data-i18n-placeholder="Search" value="" data-i18n-tooltip="tt-search" />
+        <button id="search_button" data-i18n="search" data-i18n-tooltip="tt-search" data-icon="squirrel-icon-search"></button>
         <span id="search_hits"></span>
-        <button id="extras_button" data-i18n-title="Tools/Options" data-icon="squirrel-icon-gear" data-i18n="Tools/Options"></button>
+        <button id="extras_button" data-i18n-tooltip="tt-tools" data-icon="squirrel-icon-gear" data-i18n="tt-tools"></button>
         <a target="_blank">
           <button id="help_button" data-icon="ui-icon-info">Help</button>
         </a>

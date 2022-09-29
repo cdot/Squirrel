@@ -46,9 +46,9 @@ define([
     open() {
       const $user = this.$control("user");
       const $pass = this.$control("pass");
-
-      this.$dlg.dialog("option", "title", this.options.title);
-
+      debugger;
+      this.$dlg.parent().find(".ui-dialog-titlebar-close").hide();
+      
       if (typeof this.options.user !== 'undefined') {
         const u = this.options.user;
         $user.val(u);

@@ -316,7 +316,7 @@ define("js/GoogleDriveStore", [
         return this._putfile(parentId, name, data, id);
       })
       .catch(r => {
-        throw new Serror(400, path + this._gError(r, $.i18n("Write")));
+        throw new Serror(400, path + this._gError(r, $.i18n("gdrive-err")));
       });
     }
 
@@ -367,7 +367,7 @@ define("js/GoogleDriveStore", [
 				});
       })
 			.catch(r => {
-        throw new Serror(400, path + this._gError(r, $.i18n("Read")));
+        throw new Serror(400, path + this._gError(r, $.i18n("gd-rerr")));
       });
     }
   }

@@ -1,18 +1,14 @@
-/*@preserve Copyright (C) 2017 Crawford Currie http://c-dot.co.uk license MIT*/
+/*@preserve Copyright (C) 2017-2022 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser, node */
 
-if (typeof requirejs === 'undefined') {
-  requirejs = require('requirejs');
-	requirejs.config({
-		baseUrl: `${__dirname}/..`
-	});
-}
+const min = /[\?;]debug/.test(window.location.search.substring(1))
+      ? "" : ".min";
 
 requirejs.config({
-  baseUrl: ".",
   paths: {
-    jquery: "//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery",
-    "jquery-ui": "//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui"
+    jquery: `node_modules/jquery/dist/jquery${min}`,
+    "jquery-ui": `node_modules/jquery-ui-dist/jquery-ui${min}`,
+    cookie: "node_modules/jquery.cookie/jquery.cookie"
   }
 });
 

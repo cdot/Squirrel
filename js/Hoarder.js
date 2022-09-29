@@ -151,7 +151,7 @@ define("js/Hoarder", [
         if (this.debug) this.debug("Set cloud path", path);
         this.cloudPath = path;
         this.cloudChanged = !this.clientIsEmpty;
-        this.clientChanges.push($.i18n("Cloud path changed"));
+        this.clientChanges.push($.i18n("cloud_path_change"));
       }
       return this.cloudPath;
     }
@@ -174,7 +174,7 @@ define("js/Hoarder", [
         if (this.debug) this.debug("Set image url", path);
         this.imageURL = path;
         this.cloudChanged = !this.clientIsEmpty;
-        this.clientChanges.push($.i18n("Image URL changed"));
+        this.clientChanges.push($.i18n("img_changed"));
       }
       return this.imageURL || 'images/GCHQ.png'; // default;
     }
@@ -203,7 +203,7 @@ define("js/Hoarder", [
      const parsed = JSON.parse(json);
      this.hoard.clear_history();
      this.hoard.tree = parsed;
-     this.clientChanges.push($.i18n("Bulk content change"));
+     this.clientChanges.push($.i18n("bulk_change"));
      this.cloudChanged = true;
      }
      return JSON.stringify(this.hoard.tree, null, ' ');
@@ -463,8 +463,8 @@ define("js/Hoarder", [
               severity: "error",
               message: $.i18n("unreadable_local")
             },
-            $.i18n("check_pass"),
-            $.i18n("continue_to_local")
+            $.i18n("chk-pass"),
+            $.i18n("cont-to-local")
           ];
         }
       });
@@ -511,7 +511,7 @@ define("js/Hoarder", [
         if (progress) progress.push({
           severity: "error",
           message: $.i18n(
-            "local_save_fail_e", e)
+            "loc-save-f", e)
         });
         return Promise.reject(e);
       });

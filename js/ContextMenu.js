@@ -34,37 +34,37 @@ define("js/ContextMenu", [
         delegate: ".tree_title",
         menu: [
           {
-            title: $.i18n("Pick characters"),
+            title: $.i18n("pick-chars"),
             cmd: "pick_from",
             uiIcon: "squirrel-icon-pick squirrel-icon"
           },
           {
-            title: $.i18n("Rename"),
+            title: $.i18n("rename"),
             cmd: "rename",
             uiIcon: "squirrel-icon-edit squirrel-icon"
           },
           {
-            title: $.i18n("Edit value"),
+            title: $.i18n("ed-val"),
             cmd: "edit",
             uiIcon: "squirrel-icon-edit squirrel-icon"
           },
           {
-            title: $.i18n("Set/Change Reminder"),
+            title: $.i18n("remind"),
             cmd: "add_alarm",
             uiIcon: "tree-icon-alarm squirrel-icon"
           },
           {
-            title: $.i18n("Generate new random value"),
+            title: $.i18n("randomise"),
             cmd: "randomise",
             uiIcon: "squirrel-icon-key squirrel-icon"
           },
           {
-            title: $.i18n("Add new value"),
+            title: $.i18n("add-val"),
             cmd: "add_value",
             uiIcon: "squirrel-icon-add-value squirrel-icon"
           },
           {
-            title: $.i18n("Add new folder"),
+            title: $.i18n("add-fol"),
             cmd: "add_subtree",
             uiIcon: "squirrel-icon-add-folder squirrel-icon"
           },
@@ -79,12 +79,12 @@ define("js/ContextMenu", [
             uiIcon: "squirrel-icon-copy squirrel-icon"
           },
           {
-            title: $.i18n("Paste"),
+            title: $.i18n("paste"),
             cmd: "paste",
             uiIcon: "squirrel-icon-paste squirrel-icon"
           },
           {
-            title: $.i18n("Delete"),
+            title: $.i18n("delete"),
             cmd: "delete",
             uiIcon: "squirrel-icon-delete squirrel-icon"
           }
@@ -130,7 +130,7 @@ define("js/ContextMenu", [
 
       // Initialise the clipboard to get "paste" enabled, in case
       // we are copy-pasting external content
-      this.clipboardContents = `{"data":"${$.i18n("Add new value")}"}`;
+      this.clipboardContents = `{"data":"${$.i18n("add-val")}"}`;
       clipboard.on("success", e => {
         this.clipboardContents = e.text;
       });

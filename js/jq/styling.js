@@ -66,7 +66,7 @@ define("js/jq/styling", [
      * same look.
      */
     reset: () => {
-			console.debug("Resetting styling");
+			//console.debug("Resetting styling");
       const styles = [];
 			// Temporary element used to extract styling
       const $picker = $("<div></div>");

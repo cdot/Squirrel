@@ -79,8 +79,6 @@ const qs = parseURLParams(
     url: { type: "string" }
   });
 
-console.log("Starting", qs);
-
 const min = qs.debug ? "" : ".min";
 
 const rjs_config = {
@@ -94,23 +92,23 @@ const rjs_config = {
     clipboard: `node_modules/clipboard/dist/clipboard${min}`,
     i18n: "node_modules/@wikimedia/jquery.i18n/src/jquery.i18n",
     i18n_emitter:
-    "/node_modules/@wikimedia/jquery.i18n/src/jquery.i18n.emitter",
+    "node_modules/@wikimedia/jquery.i18n/src/jquery.i18n.emitter",
     i18n_fallbacks:
-    "/node_modules/@wikimedia/jquery.i18n/src/jquery.i18n.fallbacks",
+    "node_modules/@wikimedia/jquery.i18n/src/jquery.i18n.fallbacks",
     i18n_language:
-    "/node_modules/@wikimedia/jquery.i18n/src/jquery.i18n.language",
+    "node_modules/@wikimedia/jquery.i18n/src/jquery.i18n.language",
     i18n_messagestore:
-    "/node_modules/@wikimedia/jquery.i18n/src/jquery.i18n.messagestore",
+    "node_modules/@wikimedia/jquery.i18n/src/jquery.i18n.messagestore",
     i18n_parser:
-    "/node_modules/@wikimedia/jquery.i18n/src/jquery.i18n.parser",
+    "node_modules/@wikimedia/jquery.i18n/src/jquery.i18n.parser",
     cldrpluralruleparser:
-    "/node_modules/@wikimedia/jquery.i18n/libs/CLDRPluralRuleParser/src/CLDRPluralRuleParser",
-    "jquery-ui/ui/widgets/menu": "js/rjs_stub",
+    "node_modules/@wikimedia/jquery.i18n/libs/CLDRPluralRuleParser/src/CLDRPluralRuleParser",
+    "jquery-ui/ui/widgets/menu": "js/rjs_stub"
   },
 
   shim: {
     "jquery-touch-events": [ "jquery" ],
-    jqueryui:              [ "jquery" ],
+    "jquery-ui":           [ "jquery" ],
     contextmenu:           [ "jquery-ui" ],
     i18n:                  [ "jquery" ],
     i18n_emitter:          [ "i18n" ],
@@ -128,7 +126,6 @@ const rjs_config = {
 if (qs.debug)
   rjs_config.urlArgs = `nocache=${Date.now()}`; // suppress cache
 
-console.log(rjs_config);
 requirejs.config(rjs_config);
 
 /**
@@ -166,7 +163,8 @@ requirejs([
 	// Initialise UI components
   const params = {};
   const ulang = $.cookie("language") || "en";
-  console.debug("User language", ulang);
+  if (qs.debug)
+    console.debug("User language", ulang);
   // Set up to load the language file
   params[ulang] = `/i18n/${ulang}.json`;
   // Select the language and load

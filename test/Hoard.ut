@@ -372,7 +372,7 @@ requirejs(["js/Hoard", "js/Node", "js/Action", "test/TestRunner"], function(Hoar
 		.then(() => {
 			assert(false);
 		})
-		.catch(e => assert.equal(e.message, "it does not exist"));
+		.catch(e => assert.equal(e.message, "not_exist"));
   });
 
   tr.addTest('A & undo', async () => {
@@ -464,7 +464,7 @@ requirejs(["js/Hoard", "js/Node", "js/Action", "test/TestRunner"], function(Hoar
 			assert(false, "Should not succeed");
 		})
 		.catch(e => {
-			assert.equal(e.message, "it does not exist");
+			assert.equal(e.message, "not_exist");
 		});
   });
 
@@ -796,7 +796,7 @@ requirejs(["js/Hoard", "js/Node", "js/Action", "test/TestRunner"], function(Hoar
 			assert(false, "Should not get here");
 		})
 		.catch(e => {
-			assert.equal(e.message, "it does not exist");
+			assert.equal(e.message, "not_exist");
 		});
   });
 

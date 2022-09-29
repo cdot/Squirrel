@@ -107,12 +107,12 @@ define("js/Node", [
 			// replaced by ;children' and 'value', but may persist
 			// in some hoards.
 			else if (typeof data.data === 'string') {
-				console.log(`Warning: old format Node leaf data`);
+				console.warn(`Warning: old format Node leaf data`);
 				this.setValue(data.data);
 			} else if (typeof data.data === 'object') {
 				Serror.assert(!this.children);
 				this.children = {};
-				console.log(`Warning: old format Node child data`);
+				console.warn(`Warning: old format Node child data`);
         for (let sub in data.data)
           this.children[sub] = new Node(data.data[sub]);
 			}

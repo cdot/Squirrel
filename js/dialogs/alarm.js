@@ -25,7 +25,6 @@ define([
       const isEnabled = this.$control("enabled").prop("checked");
       const curd = this._getPickedDate() / MSPERDAY;
       const oldd = this.alarmTime / MSPERDAY;
-      //console.log(curd, oldd);
       this.$control("ok").toggle(
         isEnabled !== this.wasEnabled || Math.abs(curd - oldd) >= 1);
     }

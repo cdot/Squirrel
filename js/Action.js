@@ -163,7 +163,7 @@ define("js/Action", ["js/Serror"], (Serror) => {
 							       (this.data.repeat === 0)
                      ? ""
                      : " " +
-							       $.i18n("(repeat every $1)",
+							       $.i18n("repeat_every",
                             deltaTimeString(0, this.data.repeat)),
 							       p);
 				} else
@@ -188,14 +188,14 @@ define("js/Action", ["js/Serror"], (Serror) => {
         s = $.i18n("Create $1", p);
         break;
       case 'R':
-        s = $.i18n("Rename $1 to '$2'", p, this.data);
+        s = $.i18n("rename_x_y", p, this.data);
         break;
       case 'X':
         if (this.data)
           s = $.i18n("constrain_chars",
                      p, this.data.size, this.data.chars);
         else
-          s = $.i18n("clear_constraints", p);
+          s = $.i18n("clear-cons", p);
         break;
       }
       return s;

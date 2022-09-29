@@ -23,6 +23,22 @@ define("build/Dependencies", ["fs", "request", "js/Utils"], (fs, request, Utils)
 			this.configs = {};
 		}
 		
+    getRJSConfig(js) {
+		  let m = /\nconst\s*rjs_config\s*=\s*({.*?});/s.exec(js);
+		  let cfg;
+      var min = this.debug ? "" : ".min";
+      if (m) {
+			  eval(`cfg=${m[1]}`);
+			  return cfg;
+      }
+		  m = /\nrequirejs\.config\((.*?)\);/s.exec(js);
+		  if (m) {
+			  eval(`cfg=${m[1]}`);
+			  return cfg;
+		  }
+		  return undefined;
+    }
+
 		// Add a dependency to the depends_on
 		addDependency(dependant, dependee) {
 			let d = this.depends_on[dependant];
@@ -64,7 +80,7 @@ define("build/Dependencies", ["fs", "request", "js/Utils"], (fs, request, Utils)
 				path = `${config.baseUrl}/${path}`;
 			if (!/\.js$/.test(path))
 				path = path + ".js";
-        
+      
 			return path;
 		}
 
@@ -76,23 +92,23 @@ define("build/Dependencies", ["fs", "request", "js/Utils"], (fs, request, Utils)
 				if (!/^http/.test(path))
 					path = `https:${path}`;
 
-            return new Promise((resolve, reject) => {
-                request
-                .get(path)
-                .on('response', response => {
-                    if (response.statusCode !== 200) {
-                        reject(`${path}: ${response.statusCode}`);
-                        return;
-                    }
-                    let body = "";
-                    response.on('data', chunk => {
-                        body += chunk;
-                    });
-                    response.on('end', () => {
-                        resolve(body);
-                    });
-                });
+        return new Promise((resolve, reject) => {
+          request
+          .get(path)
+          .on('response', response => {
+            if (response.statusCode !== 200) {
+              reject(`${path}: ${response.statusCode}`);
+              return;
+            }
+            let body = "";
+            response.on('data', chunk => {
+              body += chunk;
             });
+            response.on('end', () => {
+              resolve(body);
+            });
+          });
+        });
 			} else
 				return Fs.readFile(path);
 		}
@@ -100,23 +116,20 @@ define("build/Dependencies", ["fs", "request", "js/Utils"], (fs, request, Utils)
 		// Load the requirejs.config from the given ID
 		getConfig(module) {
 			const path = this.getModulePath(module, {});
+
 			if (this.configs[path])
 				return Promise.resolve(this.configs[path]);
 			
 			return this.get(path)
 			.catch(e => {
-				console.log(`Failed to load config from ${path}`, e);
+				console.error(`Failed to load config from ${path}`, e);
 			})
 			.then(data => {
-				const m = /\nrequirejs\.config\((.*?)\);/s.exec(data);
-				if (m) {
-					let cfg;
-					eval(`cfg=${m[1]}`);
-					this.configs[path] = cfg;
-					return cfg;
-				} else
-					throw `No requirejs found in ${module} ${data}`;
-			});
+        const cfg = this.getRJSConfig(data.toString());
+        if (!cfg) throw `No requirejs found in ${module}`;
+			  this.configs[path] = cfg;
+        return cfg;
+      });
 		}
 
 		/**
@@ -137,20 +150,25 @@ define("build/Dependencies", ["fs", "request", "js/Utils"], (fs, request, Utils)
 		// /* dynamic-dependencies [...]
 		_extractFromCode(module, config, js) {
 			this.addDependency(module);
-        
+      
 			// Look for config
-			let m = /\nrequirejs\.config\((.*?)\);/.exec(js);
-			if (m) {
-				let cfg;
-				eval(`cfg=${m[1]}`);
-				config = Utils.extend(config, cfg);
-				delete config.order;
-			}
+      config = Utils.extend(config, this.getRJSConfig(js) || {});
+
+      const shim = config.shim;
+      if (shim) {
+        for (const dependant of Object.keys(shim)) {
+          const deps = (Array.isArray(shim[dependant]))
+                ? shim[dependant] :  shim[dependant].deps;
+          for (const dependee of deps)
+            this.addDependency(dependant, dependee);
+        }
+      }
 
 			const promises = [];
 			// Look for requirejs or define in a format we can analyse
 			// Also supports /* dynamic-dependencies [...] */
 			const re = /(?:(?:requirejs|define)\s*\(\s*(?:"[^"]*"\s*,\s*)?|\/\*\*?\s*dynamic-dependencies\s*)\[\s*(.*?)\s*\]/gs;
+      let m;
 			while ((m = re.exec(js)) !== null) {
 				const deps = m[1].split(/\s*,\s*/);
 				for (let dep of deps) {
@@ -162,7 +180,6 @@ define("build/Dependencies", ["fs", "request", "js/Utils"], (fs, request, Utils)
 							dep = dep.replace("../", module.replace(/[^/]*\/[^/]*$/, ""));
 						else if (/^\.\//.test(dep))
 							dep = dep.replace("./", module.replace(/\/[^/]*$/, "/"));
-						//this.debug(module, "depends on", dep);
 						this.addDependency(module, dep);
 						promises.push(this.extractFromModule(dep, config));
 					}
@@ -225,6 +242,7 @@ define("build/Dependencies", ["fs", "request", "js/Utils"], (fs, request, Utils)
 							console.log(`Warning: empty module ${module}`);
 							return "";
 						}
+            if (this.debug) this.debug(module, this.found_at[module]);
 						let codes = src.toString();
 						// Make sure all define's have an id
 						codes = codes.replace(
@@ -232,17 +250,16 @@ define("build/Dependencies", ["fs", "request", "js/Utils"], (fs, request, Utils)
 							`$1"${module}", $2`);
 						// Make sure there's a define specifying this module
 						const check = new RegExp(
-							"(^|\\W)define\\s*\\(\\s*[\"']" + module + "[\"']", "m");
+							"(?:^|\\W)(define\\s*\\(\\s*[\"']" + module + "[\"'])", "m");
 						if (!check.test(codes)) {
 							// If not, add one
 							//debug("Adding ID to", module);
-							codes = codes + "\ndefine('" + module
-							+ "',function(){});\n";
+							codes = `define("${module}",()=>{\n${codes}\n});`;
 						}
 						return codes;
 					}));
 			}
-        
+      
 			return Promise.all(proms)
 			.then(code => {
 				code.push(`requirejs(['${root}']);`);
