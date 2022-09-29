@@ -121,7 +121,7 @@ define("js/Dialog", [
       if ($dlg.length > 0) {
         if (options.debug)
           options.debug("HTML for dialog", id, "is already loaded");
-        $dlg.data("id") = id;
+        $dlg.data("id", id);
         p = Promise.resolve($dlg);
       } else {
         let html_url = requirejs.toUrl(`html/dialogs/${id}.html`);
