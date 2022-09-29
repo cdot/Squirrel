@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2017-2022 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser, node */
 
-const min = /[\?;]debug/.test(window.location.search.substring(1))
+const min = /[?;]debug/.test(window.location.search.substring(1))
       ? "" : ".min";
 
 requirejs.config({
