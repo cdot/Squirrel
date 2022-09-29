@@ -120,7 +120,8 @@ define("js/Dialog", [
       // resource.
       if ($dlg.length > 0) {
         if (options.debug)
-            options.debug("HTML for dialog", id, "is already loaded");
+          options.debug("HTML for dialog", id, "is already loaded");
+        $dlg.data("id") = id;
         p = Promise.resolve($dlg);
       } else {
         let html_url = requirejs.toUrl(`html/dialogs/${id}.html`);
@@ -139,6 +140,7 @@ define("js/Dialog", [
             if (options.debug)
               options.debug("HTML for",id,"was loaded");
             const $dlg = $(html);
+            $("body").append($dlg);
 
             $dlg
             .find("[data-i18n]")
@@ -172,8 +174,6 @@ define("js/Dialog", [
             $dlg.data("id", id);
             // force the CSS class - should hide it
             $dlg.addClass("dlg-dialog");
-
-            $("body").append($dlg);
 
             return $dlg;
           });

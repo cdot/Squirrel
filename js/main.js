@@ -166,7 +166,7 @@ requirejs([
   if (qs.debug)
     console.debug("User language", ulang);
   // Set up to load the language file
-  params[ulang] = `/i18n/${ulang}.json`;
+  params[ulang] = `i18n/${ulang}.json`;
   // Select the language and load
   return $.i18n({ locale: ulang }).load(params)
   .then(() => new Squirrel(qs).begin());
