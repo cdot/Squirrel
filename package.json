@@ -14,7 +14,7 @@
         "tx": "node bin/checkStrings.js",
         "update": "ncu -u ",
         "server": "node js/web_server.js --user=x --pass=x --debug --log",
-        "release": "node build/release.js"
+        "build": "node build/release.js"
     },
     "eslintConfig": {
         "extends": "eslint:recommended",

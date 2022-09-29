@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- The icon can be used freely in both personal and commercial projects with no attribution required, but always appreciated. 
+You may NOT sub-license, resell, rent, redistribute or otherwise transfer the icon without express written permission from iconmonstr.com -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   version="1.1"
+   x="0px"
+   y="0px"
+   width="512px"
+   height="512px"
+   viewBox="0 0 512 512"
+   enable-background="new 0 0 512 512"
+   xml:space="preserve"
+   id="svg7141"
+   inkscape:version="0.92.3 (2405546, 2018-03-11)"
+   sodipodi:docname="add-value.svg"><metadata
+   id="metadata7148"><rdf:RDF><cc:Work
+       rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type
+         rdf:resource="http://purl.org/dc/dcmitype/StillImage" /></cc:Work></rdf:RDF></metadata><defs
+   id="defs7146" /><sodipodi:namedview
+   pagecolor="#ffffff"
+   bordercolor="#666666"
+   borderopacity="1"
+   objecttolerance="10"
+   gridtolerance="10"
+   guidetolerance="10"
+   inkscape:pageopacity="0"
+   inkscape:pageshadow="2"
+   inkscape:window-width="1244"
+   inkscape:window-height="867"
+   id="namedview7144"
+   showgrid="false"
+   inkscape:zoom="0.4609375"
+   inkscape:cx="-541.28813"
+   inkscape:cy="256"
+   inkscape:window-x="59"
+   inkscape:window-y="24"
+   inkscape:window-maximized="0"
+   inkscape:current-layer="svg7141" /><path
+   id="add-file-2-icon"
+   d="m 479.1426,509.59572 -434.082338,0 0,-509.36093171 304.096768,0 130.79866,124.55852171 0,339.29991 -51.8713,0 0,-308.39209 -111.34692,0 0,-106.013824 -219.805912,0 0,410.455894 382.209752,0 0,49.45252 z"
+   inkscape:connector-curvature="0"
+   sodipodi:nodetypes="ccccccccccccccc"
+   style="fill:#00d700;fill-opacity:1;stroke:#00eb00;stroke-width:1.26618671;stroke-opacity:1" /><text
+   xml:space="preserve"
+   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:0%;font-family:Pothana2000;-inkscape-font-specification:Pothana2000;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none"
+   x="118.46123"
+   y="407.98318"
+   id="text7102"
+   transform="scale(1.0294104,0.97142986)"><tspan
+     sodipodi:role="line"
+     id="tspan7104"
+     x="118.46123"
+     y="407.98318"
+     style="font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;font-size:464.81506348px;line-height:1.25;font-family:FreeSans;-inkscape-font-specification:'FreeSans Semi-Bold'">+</tspan></text>
+
+</svg>

@@ -18,7 +18,10 @@ requirejs([
 
 	const Fs = fs.promises;
 
-  const debug = console.debug; // () => {};
+  const target_dir = process.argv[2];
+  if (!target_dir)
+    throw Error("target_dir required");
+  const debug = process.argv[3] === 'debug' ? console.debug : () => {};
   const dependencies = new Dependencies({debug: debug, show: true});
 
   /**
@@ -123,7 +126,7 @@ requirejs([
     return dependencies.generateFlatJS(module)
 		.then(code => {
       const debugging = typeof debug === "function";
-      if (debugging) console.debug(`Uglifying dist/${module}.js`);
+      if (debugging) debug(`Uglifying ${target_dir}/${module}.js`);
       const res = uglify.minify(code, {
         compress: debugging ? false : {},
         keep_fargs: debugging,
@@ -133,12 +136,12 @@ requirejs([
       });
       if (res.warnings)
         console.debug(res.warnings);
-			return Fs.writeFile(`dist/${module}.js`, debugging ? code : res.code);
+			return Fs.writeFile(`${target_dir}/${module}.js`, debugging ? code : res.code);
 		});
 	}
 
 	/**
-	 * Copy files matching the regex into dist/dir
+	 * Copy files matching the regex into ${target_dir}/dir
 	 * @param {string} dir diretcory to copy
 	 * @param {RegExp} regex matching files to copy
 	 */
@@ -150,7 +153,7 @@ requirejs([
         if (regex.test(f))
           proms.push(
             Fs.readFile(f)
-            .then(data => Fs.writeFile(`dist/${f}`, data)));
+            .then(data => Fs.writeFile(`${target_dir}/${f}`, data)));
       }
       return Promise.all(proms);
     });
@@ -192,7 +195,7 @@ requirejs([
       })
       .minify(allCss)
       .then(mini => {
-        return Fs.writeFile(`dist/${fn}`, mini.styles);
+        return Fs.writeFile(`${target_dir}/${fn}`, mini.styles);
       });
     });
   }
@@ -253,15 +256,15 @@ requirejs([
         collapseWhitespace: !this.debug,
         removeComments: !this.debug
       });
-      return Fs.writeFile(`dist/${module}.html`, mindex);
+      return Fs.writeFile(`${target_dir}/${module}.html`, mindex);
     });
   }
 
   Promise.all([
-    mkpath("dist/js"),
-    mkpath("dist/images"),
-    mkpath("dist/css"),
-    mkpath("dist/i18n"),
+    mkpath(`${target_dir}/js`),
+    mkpath(`${target_dir}/images`),
+    mkpath(`${target_dir}/css`),
+    mkpath(`${target_dir}/i18n`),
   ])
 
   .then(() => {
