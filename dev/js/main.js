@@ -42940,12 +42940,14 @@ define("js/GoogleDriveStore", [
 
     // Callback when GAPI has been loaded
     _initGAPIClient() {
-      gapi.client.init({
-				//immediate: true,
-				client_id: CLIENT_ID,
-				discoveryDocs: DISCOVERY_DOCS,
-				scope: SCOPE
-			});
+      gapi.load("client", () => {
+        gapi.client.init({
+				  //immediate: true,
+				  client_id: CLIENT_ID,
+				  discoveryDocs: DISCOVERY_DOCS,
+				  scope: SCOPE
+			  });
+      });
     }
 
     // Callback when GIS has been loaded
