@@ -46,7 +46,7 @@ define([
     open() {
       const $user = this.$control("user");
       const $pass = this.$control("pass");
-      debugger;
+
       this.$dlg.parent().find(".ui-dialog-titlebar-close").hide();
       
       if (typeof this.options.user !== 'undefined') {
