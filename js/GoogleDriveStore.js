@@ -1,55 +1,50 @@
-/*@preserve Copyright (C) 2015-2019 Crawford Currie http://c-dot.co.uk license MIT*/
+/*@preserve Copyright (C) 2015-2022 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser */
 /* global google */
-
 /* global gapi */
-let gapi_is_loaded = false;
-let gapi_loader;
 
-// Redirect target after gapi loading
-/* eslint-disable no-unused-vars */
-function gapi_on_load() {
-  if (this.debug) this.debug("gapi is loaded");
-  gapi_is_loaded = true;
-  if (gapi_loader)
-    gapi_loader();
-}
-/* eslint-enable no-unused-vars */
+define([
+  'js/Utils', 'js/HttpServerStore', 'js/Serror',
+  "jwt_decode", "i18n"
+], (Utils, HttpServerStore, Serror, jwt_decode) => {
 
-let gis_is_loaded = false;
-let gis_loader;
-
-// Redirect target after gisloading
-/* eslint-disable no-unused-vars */
-function gis_on_load() {
-  if (this.debug) this.debug("gis is loaded");
-  gis_is_loaded = true;
-  if (gis_loader)
-    gis_loader();
-}
-/* eslint-enable no-unused-vars */
-
-define("js/GoogleDriveStore", [
-	'js/Utils', 'js/HttpServerStore', 'js/Serror', "i18n"
-], (Utils, HttpServerStore, Serror) => {
-
-	// Client ID from Google APi dashboard. Note this is only valid
-	// for requests from specific URLs, so if you want to host your
-	// own Squirrel version - for example, to host a test version on
-	// localhost - you will have to
-	// change it. You can do so on https://console.developers.google.com
+  // https://console.cloud.google.com/welcome?project=ringed-inn-834
+  // Client ID from Google APi dashboard. Note this is only valid
+  // for requests from specific URLs, so if you want to host your
+  // own Squirrel version - for example, to host a test version on
+  // localhost - you will have to
+  // change it. You can do so on https://console.developers.google.com
   const CLIENT_ID = "985219699584-mt1do7j28ifm2vt821d498emarmdukbt.apps.googleusercontent.com";
 
   // While the appfolder would seem to make sense for Squirrel, it does make
   // it absolutely clear to an attacker where to look for Squirrel data files.
   // By granting full drive access, we open up the whole drive for possible
   // places to hoard.
-  const SCOPE = "https://www.googleapis.com/auth/drive";
+
+  // Authorization scopes required by the API; multiple scopes can be
+  // included, separated by spaces.
+  const SCOPES = "https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/userinfo.profile";
+  const DISCOVERY_DOCS = [
+    "https://www.googleapis.com/discovery/v1/apis/drive/v3/rest",
+    "https://www.googleapis.com/discovery/v1/apis/people/v1/rest"
+  ];
 
   const BOUNDARY = "-------314159265358979323846";
   const DELIMITER = `\r\n--${BOUNDARY}\r\n`;
   const RETIMILED = `\r\n--${BOUNDARY}--`;
-	const DISCOVERY_DOCS = ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"];
+
+  // Parse JWT token without verification
+  function parseJwt (token) {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      window.atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join(''));
+    return JSON.parse(jsonPayload);
+  }
+
+  const API_KEY = "AIzaSyCHmXIb9lOfZdNHWLcoMtL8C3LN4OarK2I";
 
   /**
    * A store using Google Drive
@@ -57,10 +52,10 @@ define("js/GoogleDriveStore", [
    */
   class GoogleDriveStore extends HttpServerStore {
 
-		/**
-		 * See {@link HttpServerStore} for other constructor options
-		 * Sets `options.needs_url` and `options.url`
-		 */
+    /**
+     * See {@link HttpServerStore} for other constructor options
+     * Sets `options.needs_url` and `options.url`
+     */
     constructor(p) {
       super(p);
       this.type = "GoogleDriveStore";
@@ -71,54 +66,51 @@ define("js/GoogleDriveStore", [
 
     /**
      * Return a promise to initialise the store
-		 * @Override
-		 */
-    async init() {
-      // Load the necessary Google libraries
-      return Promise.all([
-        new Promise(resolve => {
-          gapi_loader = () => resolve(this._initGAPIClient());
-          $.getScript(
-            "https://apis.google.com/js/api.js?onload=gapi_on_load");
-        }),
-        new Promise(resolve => {
-          gis_loader = () => resolve(this._authenticate());
-          $.getScript(
-            "https://accounts.google.com/gsi/client?onload=gis_on_load");
-        })]);
-    }
-
-    // Callback when GAPI has been loaded
-    _initGAPIClient() {
-      gapi.load("client", () => {
-        gapi.client.init({
-				  //immediate: true,
-				  client_id: CLIENT_ID,
-				  discoveryDocs: DISCOVERY_DOCS,
-				  scope: SCOPE
-			  });
-      });
-    }
-
-    // Callback when GIS has been loaded
-    _authenticate() {
-      const tokenClient = google.accounts.oauth2.initTokenClient({
-        client_id: CLIENT_ID,
-        scope: SCOPE,
-        callback: resp => {
-          if (resp.error !== undefined) throw (resp);
-          this.accessToken = resp.access_token;
-          this._getUser();
+     * @Override
+     */
+    init() {
+      // First load Google Identity Services and complete
+      // login there to get an access token
+      return $.getScript("https://accounts.google.com/gsi/client")
+      .then(() => {
+        console.debug("GIS loaded");
+        return $.getScript("https://apis.google.com/js/client.js");
+      })
+      .then(() => new Promise(resolve => gapi.load("client", resolve)))
+      .then(() => new Promise(resolve => {
+        console.log("gapi.client loaded");
+        const tokenClient = google.accounts.oauth2.initTokenClient({
+          client_id: CLIENT_ID,
+          discoveryDocs: DISCOVERY_DOCS,
+          scope: SCOPES,
+          callback: resolve
+        });
+        if (gapi.client.getToken() === null) {
+          tokenClient.requestAccessToken({prompt: 'consent'});
+        } else {
+          tokenClient.requestAccessToken({prompt: ''});
         }
-      });
-
-      if (gapi.client.getToken() === null) {
-        // Prompt the user to select a Google Account
-        tokenClient.requestAccessToken({prompt: 'consent'});
-      } else {
-        // Skip display of account chooser and consent dialog
-        tokenClient.requestAccessToken({prompt: ''});
-      }
+      }))
+      .then(() => console.debug("Access token granted"))
+      // GIS has automatically updated gapi.client with the
+      // access token.
+      .then(() => gapi.client.init({
+          apiKey: API_KEY
+      }))
+      // Load the Drive API
+      .then(() => gapi.client.load("drive", "v3"))
+      // Get user name from profile
+      .then(() => gapi.client.load("people", "v1"))
+      .then(() => gapi.client.people.people.get({
+        'resourceName': 'people/me',
+        'personFields': 'names'
+      }))
+      .then(response => {
+        const repo = JSON.parse(response.body);
+        const name = repo.names[0];
+				this.option("user", name.displayName);
+      })
+      .catch(e => console.error(e));
     }
 
     /**
@@ -141,34 +133,17 @@ define("js/GoogleDriveStore", [
       } else {
         mess += r.body;
       }
-      if (this.debug) this.debug(mess);
+      console.debug(mess);
       return ` ${mess}`;
     }
 
     /**
-     * We have an authenticated user, get their name and init
-     * drive.
+     * @Override
      */
-    _getUser(accessToken) {
-      $.get({
-        url: 'https://www.googleapis.com/oauth2/v3/userinfo',
-        headers: {
-          Authorization: `Bearer ${this.accessToken}`
-        }
-      })
-      .then(profile => {
-			  const name = profile.getName();
-			  if (this.debug) this.debug(`auth OK, user ${name}`);
-			  this.option("user", name);
-			  return gapi.client.load("drive", "v3");
-      });
-    }
-
-    /**
-		 * @Override
-		 */
     addAuth(headers) {
-      headers.Authorization = `Bearer ${this.accessToken}`;
+      // I don't know what this is
+      const apiTok = gapi.auth.getToken().access_token;
+      headers.Authorization = `Bearer ${apiTok}`;
     }
 
     /**
@@ -194,29 +169,31 @@ define("js/GoogleDriveStore", [
           metadata.parents = [{
             id: parentid
           }];
-        if (this.debug) this.debug(`Creating folder ${pathel} under ${parentid}`);
+        console.debug(`Creating folder ${pathel} under ${parentid}`);
         return gapi.client.drive.files
         .insert(metadata)
         .then(response =>
-					    this._follow_path(response.result.id, p, true));
+              this._follow_path(response.result.id, p, true));
       }
 
       const query = `title='${pathel}' and '${parentid}' in parents` +
             " and mimeType='application/vnd.google-apps.folder' and trashed=false";
 
+      console.debug(`Drive: ${query}`);
       return gapi.client.drive.files
       .list({
         q: query,
-				fields: "files/id"
+        fields: "files/id"
       })
       .then(response => {
+        console.debug(`Drive: response ${response.result}`);
         const files = response.result.files;
         if (files.length > 0) {
           const id = files[0].id;
-          if (this.debug) this.debug(`found ${query} at ${id}`);
+          console.debug(`found ${query} at ${id}`);
           return this._follow_path(id, p, create);
         }
-        if (this.debug) this.debug(`could not find ${query}`);
+        console.debug(`could not find ${query}`);
         if (create)
           return create_folder();
         this.status(404);
@@ -284,10 +261,10 @@ define("js/GoogleDriveStore", [
     }
 
     /**
-		 * @Override
-		 */
+     * @Override
+     */
     write(path, data) {
-      if (this.debug) this.debug("write", path);
+      console.debug("write", path);
 
       const p = path.split("/");
       const name = p.pop();
@@ -300,11 +277,11 @@ define("js/GoogleDriveStore", [
           return false;
         parentId = pid;
         // See if the file already exists, if it does then use it's id
-        if (this.debug) this.debug(`checking existance of ${name}`);
+        console.debug(`checking existance of ${name}`);
         return gapi.client.drive.files
         .list({
           q:  `name='${name}' and '${parentId}' in parents and trashed=false`,
-					fields: "files/id"
+          fields: "files/id"
         });
       })
       .then(response => {
@@ -312,9 +289,9 @@ define("js/GoogleDriveStore", [
         let id;
         if (files.length > 0) {
           id = files[0].id;
-          if (this.debug) this.debug(`updating ${name} ${id}`);
+          console.debug(`updating ${name} ${id}`);
         } else
-          if (this.debug) this.debug(`creating ${name} in ${parentId}`);
+          console.debug(`creating ${name} in ${parentId}`);
         return this._putfile(parentId, name, data, id);
       })
       .catch(r => {
@@ -323,11 +300,10 @@ define("js/GoogleDriveStore", [
     }
 
     /**
-		 * @Override
-		 */
+     * @Override
+     */
     read(path) {
-      if (this.debug) this.debug("read", path);
-
+      console.debug("read", path);
       const p = path.split("/");
       const name = p.pop();
       return this
@@ -335,40 +311,41 @@ define("js/GoogleDriveStore", [
       .then(parentId => {
         if (typeof parentId === 'undefined')
           return undefined;
-				if (this.debug) this.debug(
-					`listing files called ${name} in ${parentId}`);
+        const query = `name='${name}' and '${parentId}' in parents and trashed=false`;
+        console.debug(`Drive: ${query}`);
         return gapi.client.drive.files
         .list({
-          q: `name='${name}' and '${parentId}' in parents and trashed=false`,
-					// "*" shows all fields. We only need the id for matched files.
-					fields: "files/id"
+          q: query,
+          // "*" shows all fields. We only need the id for matched files.
+          fields: "files/id"
         });
       })
       .then(response => {
         const files = response.result.files;
         if (files === null || files.length === 0) {
-          if (this.debug) this.debug(`could not find ${name}`);
+          console.debug(`could not find ${name}`);
           throw new Serror(401, `${path} not found`);
         }
         const id = files[0].id;
-        if (this.debug) this.debug(`found '${name}' id ${id}`);
-				return gapi.client.drive.files.get(
-					{
-						fileId: id,
-						alt: "media"
-					})
-				.then(res => {
-					// alt=media requests content-type=text/plain. AFAICT the
-					// file comes in base64-encoded, and is simply converted
-					// to a 'string' by concatenating the bytes,
-					// one per code point, without any decoding (thankfully!)
-					const a = new Uint8Array(res.body.length);
-					for (let i = 0; i < a.length; i++)
-						a[i] = res.body.codePointAt(i);
-					return a;
-				});
+        console.debug(`found '${name}' id ${id}`);
+        return gapi.client.drive.files.get(
+          {
+            fileId: id,
+            alt: "media"
+          })
+        .then(res => {
+          // alt=media requests content-type=text/plain. AFAICT the
+          // file comes in base64-encoded, and is simply converted
+          // to a 'string' by concatenating the bytes,
+          // one per code point, without any decoding (thankfully!)
+          const a = new Uint8Array(res.body.length);
+          for (let i = 0; i < a.length; i++)
+            a[i] = res.body.codePointAt(i);
+          return a;
+        });
       })
-			.catch(r => {
+      .catch(r => {
+        console.error("Read failed", r);
         throw new Serror(400, path + this._gError(r, $.i18n("gd-rerr")));
       });
     }
