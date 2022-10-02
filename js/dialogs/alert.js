@@ -44,23 +44,7 @@ define(["js/Dialog"], Dialog => {
       }
       if (typeof lert === 'string')
         lert = { message: lert };
-      else if (lert.http) {
-        if (!$http) {
-          const http_url = requirejs.toUrl("html/dialogs/http.html");
-          const self = this;
-          const morlert = $.extend({ first: true }, lert);
-          $.get(http_url)
-          .then(html => {
-            $http = $(html);
-            $("body").append($http);
-            self.translate($http);
-            self.add(morlert, first);
-          });
-          return;
-        }
-        lert.message = $http.find(
-          `[title=http${lert.http}]`).html();
-      }
+
       if (!lert.severity)
         lert.severity = "notice";
       let mess = lert.message;

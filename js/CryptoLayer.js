@@ -37,9 +37,9 @@ define("js/CryptoLayer", [
       if (this.debug) this.debug("read", path);
       return super.read(path)
       .then(a8 => Crypto.decrypt(a8, this.option("pass"))
-				    .catch(e => {
-					    throw new Serror(400, "read failed");
-				    }));
+			      .catch(e => {
+              throw new Serror(400, "crypto read failed");
+			      }));
     }
 
     /**

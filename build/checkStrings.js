@@ -52,7 +52,7 @@ requirejs([
 
     if (!types[id])
       types[id] = [];
-    if (!(type in types[id]))
+    if (types[id].filter(t => t === type).length === 0)
         types[id].push(type);
   }
 
@@ -222,7 +222,7 @@ requirejs([
 
     // Check strings are in qqq and add to en if necessary
     for (const id of Object.keys(found_in_code).sort()) {
-      if (!strings.qqq[id]) {
+      if (!(/^[0-9]+$/.test(id) || strings.qqq[id])) {
         console.error(`"${id}" not found in qqq`);
         strings.qqq[id] = id; // placeholder
         qqqError = true;
@@ -247,7 +247,7 @@ requirejs([
       // Check that all keys in qqq are also in other language
       for (const id of Object.keys(strings.qqq)) {
         if (!strings[lang][id])
-          mess.push(`\t${id}:${types[id]} : qqq "${strings.qqq[id]}" en "${strings.en[id]}"`);
+          mess.push(`\t${id}:${types[id]} qqq="${strings.qqq[id]}", en="${strings.en[id]}"`);
       }
       if (mess.length > 0)
         console.error("----", lang, "is missing translations for:\n",
@@ -269,7 +269,7 @@ requirejs([
       }
 
       for (const id of Object.keys(strings[lang])) {
-        if (!strings.qqq[id]) {
+        if (!(/^[0-9]+$/.test(id) || strings.qqq[id])) {
           console.error(`${lang}: id "${id}" was not found in qqq`);
           for (const en_id in strings.en) {
             if (strings.en[en_id] === id) {

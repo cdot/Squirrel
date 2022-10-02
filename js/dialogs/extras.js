@@ -148,6 +148,13 @@ define([
         });
       });
 
+      if (self.debug) {
+        this.$control("debug_log")
+        .show()
+        .on(Dialog.tapEvent(), () => $("#debug_log").toggle());
+      } else
+        this.$control("debug_log").hide();
+
       this.$control("language")
       .on("change", function () {
         const fresh = self.$control("language").val();

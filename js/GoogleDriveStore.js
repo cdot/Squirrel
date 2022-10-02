@@ -5,8 +5,10 @@
 
 define([
   'js/Utils', 'js/HttpServerStore', 'js/Serror',
-  "jwt_decode", "i18n"
-], (Utils, HttpServerStore, Serror, jwt_decode) => {
+  "i18n"
+], (
+  Utils, HttpServerStore, Serror
+) => {
 
   // https://console.cloud.google.com/welcome?project=ringed-inn-834
   // Client ID from Google APi dashboard. Note this is only valid
@@ -28,12 +30,13 @@ define([
     "https://www.googleapis.com/discovery/v1/apis/drive/v3/rest",
     "https://www.googleapis.com/discovery/v1/apis/people/v1/rest"
   ];
+  const API_KEY = "AIzaSyCHmXIb9lOfZdNHWLcoMtL8C3LN4OarK2I";
 
   const BOUNDARY = "-------314159265358979323846";
   const DELIMITER = `\r\n--${BOUNDARY}\r\n`;
   const RETIMILED = `\r\n--${BOUNDARY}--`;
 
-  // Parse JWT token without verification
+  // Parse JWT token without verification. Not used, but kept for reference.
   function parseJwt (token) {
     const base64Url = token.split('.')[1];
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -43,8 +46,6 @@ define([
       }).join(''));
     return JSON.parse(jsonPayload);
   }
-
-  const API_KEY = "AIzaSyCHmXIb9lOfZdNHWLcoMtL8C3LN4OarK2I";
 
   /**
    * A store using Google Drive
@@ -73,12 +74,12 @@ define([
       // login there to get an access token
       return $.getScript("https://accounts.google.com/gsi/client")
       .then(() => {
-        console.debug("GIS loaded");
+        if (this.debug) this.debug("GIS loaded");
         return $.getScript("https://apis.google.com/js/client.js");
       })
       .then(() => new Promise(resolve => gapi.load("client", resolve)))
       .then(() => new Promise(resolve => {
-        console.log("gapi.client loaded");
+        if (this.debug) this.debug("gapi.client loaded");
         const tokenClient = google.accounts.oauth2.initTokenClient({
           client_id: CLIENT_ID,
           discoveryDocs: DISCOVERY_DOCS,
@@ -91,15 +92,12 @@ define([
           tokenClient.requestAccessToken({prompt: ''});
         }
       }))
-      .then(() => console.debug("Access token granted"))
       // GIS has automatically updated gapi.client with the
       // access token.
-      .then(() => gapi.client.init({
-          apiKey: API_KEY
-      }))
+      .then(() => gapi.client.init({ apiKey: API_KEY }))
       // Load the Drive API
       .then(() => gapi.client.load("drive", "v3"))
-      // Get user name from profile
+      // Get user name from profile. Clunky.
       .then(() => gapi.client.load("people", "v1"))
       .then(() => gapi.client.people.people.get({
         'resourceName': 'people/me',
@@ -133,7 +131,7 @@ define([
       } else {
         mess += r.body;
       }
-      console.debug(mess);
+      if (this.debug) this.debug(mess);
       return ` ${mess}`;
     }
 
@@ -169,7 +167,7 @@ define([
           metadata.parents = [{
             id: parentid
           }];
-        console.debug(`Creating folder ${pathel} under ${parentid}`);
+        if (this.debug) this.debug(`Creating folder ${pathel} under ${parentid}`);
         return gapi.client.drive.files
         .insert(metadata)
         .then(response =>
@@ -179,21 +177,21 @@ define([
       const query = `title='${pathel}' and '${parentid}' in parents` +
             " and mimeType='application/vnd.google-apps.folder' and trashed=false";
 
-      console.debug(`Drive: ${query}`);
+      if (this.debug) this.debug(`Drive: ${query}`);
       return gapi.client.drive.files
       .list({
         q: query,
         fields: "files/id"
       })
       .then(response => {
-        console.debug(`Drive: response ${response.result}`);
+        if (this.debug) this.debug(`Drive: response ${response.result}`);
         const files = response.result.files;
         if (files.length > 0) {
           const id = files[0].id;
-          console.debug(`found ${query} at ${id}`);
+          if (this.debug) this.debug(`found ${query} at ${id}`);
           return this._follow_path(id, p, create);
         }
-        console.debug(`could not find ${query}`);
+        if (this.debug) this.debug(`could not find ${query}`);
         if (create)
           return create_folder();
         this.status(404);
@@ -264,7 +262,7 @@ define([
      * @Override
      */
     write(path, data) {
-      console.debug("write", path);
+      if (this.debug) this.debug("write", path);
 
       const p = path.split("/");
       const name = p.pop();
@@ -277,7 +275,7 @@ define([
           return false;
         parentId = pid;
         // See if the file already exists, if it does then use it's id
-        console.debug(`checking existance of ${name}`);
+        if (this.debug) this.debug(`checking existance of ${name}`);
         return gapi.client.drive.files
         .list({
           q:  `name='${name}' and '${parentId}' in parents and trashed=false`,
@@ -289,9 +287,9 @@ define([
         let id;
         if (files.length > 0) {
           id = files[0].id;
-          console.debug(`updating ${name} ${id}`);
+          if (this.debug) this.debug(`updating ${name} ${id}`);
         } else
-          console.debug(`creating ${name} in ${parentId}`);
+          if (this.debug) this.debug(`creating ${name} in ${parentId}`);
         return this._putfile(parentId, name, data, id);
       })
       .catch(r => {
@@ -303,7 +301,7 @@ define([
      * @Override
      */
     read(path) {
-      console.debug("read", path);
+      if (this.debug) this.debug("read", path);
       const p = path.split("/");
       const name = p.pop();
       return this
@@ -312,7 +310,7 @@ define([
         if (typeof parentId === 'undefined')
           return undefined;
         const query = `name='${name}' and '${parentId}' in parents and trashed=false`;
-        console.debug(`Drive: ${query}`);
+        if (this.debug) this.debug(`Drive: ${query}`);
         return gapi.client.drive.files
         .list({
           q: query,
@@ -323,11 +321,11 @@ define([
       .then(response => {
         const files = response.result.files;
         if (files === null || files.length === 0) {
-          console.debug(`could not find ${name}`);
+          if (this.debug) this.debug(`could not find ${name}`);
           throw new Serror(401, `${path} not found`);
         }
         const id = files[0].id;
-        console.debug(`found '${name}' id ${id}`);
+        if (this.debug) this.debug(`found '${name}' id ${id}`);
         return gapi.client.drive.files.get(
           {
             fileId: id,

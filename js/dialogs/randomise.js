@@ -35,14 +35,14 @@ define([
         !this.sameConstraints(this.revert, this.defaultConstraints)
         && !this.sameConstraints(cons, this.revert));
 
-      this.$control("again").trigger(ConstraintsDialog.tapEvent());
+      this.$control("again").trigger(Dialog.tapEvent());
     }
 
     initialise() {
       const self = this;
       
       this.$control("again")
-      .on(ConstraintsDialog.tapEvent(), function () {
+      .on(Dialog.tapEvent(), function () {
         self.$control("idea")
         .text(this.generatePassword({
           size: self.$control("len").val(),

@@ -47,7 +47,11 @@ define("js/Squirrel", [
       this.options = options || {};
 
       if (this.options.debug) {
-        this.debug = console.debug;
+        this.debug = function (...args) {
+          console.debug(...args);
+          if (!args[0]) debugger;
+          $("#debug_log").append(`<p>${Array.from(args).join(" ")}</p>`);
+        };
         this.debug("Debug enabled");
       }
 
@@ -148,7 +152,8 @@ define("js/Squirrel", [
       const autosave = ($.cookie("ui_autosave") === "on");
       const us = this.hoarder.get_changes(10);
 
-      if (us.length === 0)
+      // cloudChanged will be set if the cloud store didn't exist
+      if (us.length === 0 && !this.hoarder.cloudChanged)
         $sb.hide(); // nothing to save
       else if (autosave) {
         $sb.hide();
@@ -156,7 +161,7 @@ define("js/Squirrel", [
       } else {
         $sb.attr(
           "title",
-          $.i18n("save_changes")
+          $.i18n("changes-to-save")
 					+ "\n" + us.join("\n"));
         $sb.show();
       }
@@ -457,13 +462,21 @@ define("js/Squirrel", [
           // Could not contact cloud; continue all the same
           if (this.debug) this.debug(
             this.hoarder.cloud_path(), "not found in the cloud");
-          if (e.status)
-            mess.push({ severity: "warning", http: e.status });
+          this.hoarder.cloudChanged = true; // to force create
+          mess.push({
+            severity: "warning",
+            message: $.i18n("404")
+          });
           if (e.message)
             mess.push(e.message);
           mess.push($.i18n("create_cloud"));
         } else {
-          // Some other error
+          // Some other error, map status code
+          if (typeof e.status === "number")
+            mess.push({
+              severity: "warning",
+              message: $.i18n(`${e.status}`)
+            });
           mess.push({
             severity: "error",
             message: $.i18n("unreadable_cloud")

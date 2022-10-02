@@ -35,6 +35,15 @@ https://stackoverflow.com/questions/826782/how-to-disable-text-selection-highlig
     float: right;
 }
 
+#debug_log {
+  display: none;
+  line-height: 1em;
+}
+
+#debug_log p {
+  margin: 0px;
+}
+
 #search_label,#search {
     vertical-align: middle;
 }
@@ -55,9 +64,7 @@ https://stackoverflow.com/questions/826782/how-to-disable-text-selection-highlig
     float: left;
 }
 
-#authenticated {
-    display: none;
-}
+#authenticated { display: none; }
 
 #stegimage {
     height: 8em;

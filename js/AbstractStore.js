@@ -29,11 +29,7 @@ define("js/AbstractStore", ["js/Utils", "js/Serror"], (Utils, Serror) => {
           if (Object.prototype.hasOwnProperty.call(options, k))
             this.options[k] = options[k];
       if (typeof this.options.debug === 'function') {
-        this.debug = () => {
-          const a = Array.from(arguments);
-          a.unshift(self.type);
-          this.options.debug.apply(null, a);
-        };
+        this.debug = this.options.debug;
       }
     }
 

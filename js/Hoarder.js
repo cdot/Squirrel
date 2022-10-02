@@ -570,8 +570,20 @@ define("js/Hoarder", [
 			options = options || {};
 
       const new_cloud = []; // list of actions
-      const prom = options.actions
-				    ? Promise.resolve(options.actions) : this.load_cloud();
+      let prom;
+
+      if (options.actions)
+				prom = Promise.resolve(options.actions);
+      else {
+        prom = this.load_cloud()
+        .catch(se => {
+          if (se instanceof Serror && se.status === 404)
+            // cloud "file not found"
+            return [];
+          throw se;
+        });
+      }
+
       return prom.then(cloud_actions => {
 
         if (this.debug) this.debug("Last sync was at", this.last_sync);
@@ -664,9 +676,7 @@ define("js/Hoarder", [
         return promise;
       })
       // new_cloud contains the right set of actions
-      .then(() => {
-				return new_cloud;
-			});
+      .then(() => new_cloud);
     }
 
 		/**

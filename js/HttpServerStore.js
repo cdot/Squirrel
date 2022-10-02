@@ -148,7 +148,7 @@ define("js/HttpServerStore", [
       .then(res => {
         if (200 <= res.status && res.status < 300)
           return res.body;
-        throw new Serror(res.status, path + " read failed");
+        throw new Serror(res.status, `${path} ${res.status} read failed`);
       });
     }
 
