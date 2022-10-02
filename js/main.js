@@ -162,7 +162,7 @@ requirejs([
 
 	// Initialise UI components
   const params = {};
-  const ulang = $.cookie("language") || "en";
+  const ulang = $.cookie("ui_lang") || "en";
   if (qs.debug)
     console.debug("User language", ulang);
   // Set up to load the language file

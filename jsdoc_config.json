@@ -1,0 +1,6 @@
+{
+	"opts": {
+		"readme": "jsdoc_README.md"
+	},
+    "plugins": ["plugins/markdown"]
+}

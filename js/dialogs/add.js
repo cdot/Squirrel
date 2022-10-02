@@ -46,8 +46,9 @@ define(["js/Dialog", "js/Action"], (Dialog, Action) => {
         self.validateUniqueKey();
       })
       .autocomplete({
-        // TOOD: translation
-        source: ["User", "Pass", "Email"]
+        source: [
+          $.i18n("User"), $.i18n("Pass"), $.i18n("Email"), $.i18n("Website")
+        ]
       });
     }
 

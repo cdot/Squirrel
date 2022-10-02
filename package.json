@@ -8,10 +8,10 @@
         "url": "https://github.com/cdot/Squirrel.git"
     },
     "scripts": {
-        "doc": "jsdoc --verbose -c doc/config.json -r -p -d doc js",
+        "doc": "jsdoc --verbose -c jsdoc_config.json -r -p -d doc js",
         "lint": "eslint js -f unix",
         "test": "for f in `find . -name '*.ut'`; do node $f; done",
-        "tx": "node bin/checkStrings.js",
+        "tx": "node build/checkStrings.js",
         "update": "ncu -u ",
         "server": "node js/web_server.js --user=x --pass=x --debug --log",
         "build": "node build/release.js"

@@ -1,9 +1,8 @@
 *.strings
-config.json
+./config.json
 npm-debug.log
 node_modules
 *~
-doc/*.html
 doc/*.html
 doc/fonts
 doc/scripts

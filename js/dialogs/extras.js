@@ -2,16 +2,23 @@
 /* eslint-env browser */
 
 define([
-	"js/Dialog", "js/Tree",
+	"js/Dialog", "js/dialogs/ConstraintsMixin", "js/Tree",
   "cookie", "js/jq/styling", "i18n"
-], (Dialog, Tree) => {
+], (
+  Dialog, ConstraintsMixin, Tree
+) => {
 
 	/**
 	 * Settings dialog.
-	 * See {@link Dialog} for constructor parameters
-	 * @extends Dialog
 	 */
-  class ExtrasDialog extends Dialog {
+  class ExtrasDialog extends ConstraintsMixin(Dialog) {
+
+    _constraints_changed() {
+      this.defaultConstraints = {
+        size: parseInt(this.$control("constraints_len").val()),
+        chars: this.$control("constraints_chs").val()
+      };
+    }
 
     _autosave(on) {
       if (typeof on !== 'undefined') {
@@ -91,13 +98,16 @@ define([
         });
       });
 
-      // TODO: add password constraints
-      // Cookie ui_randomise contains a JSON { size:, chars: }
-
       this.$control("theme")
       .on(Dialog.tapEvent(), function () {
         Dialog.confirm("theme", self.options);
       });
+
+      this.$control("constraints_len")
+      .on("change", () => this._constraints_changed());
+      
+      this.$control("constraints_chs")
+      .on("change", () => this._constraints_changed());
 
       this.$control("optimise")
       .on(Dialog.tapEvent(), function () {
@@ -163,6 +173,8 @@ define([
       this.$control("hidevalues").prop("checked", Tree.hidingValues());
       this.$control("lastchange").prop("checked", Tree.showingChanges());
 			this.$control("language").val($.i18n().locale);
+      this.$control("constraints_len").val(this.defaultConstraints.size);
+      this.$control("constraints_chs").val(this.defaultConstraints.chars);
     }
 
 		/**

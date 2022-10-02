@@ -52,15 +52,15 @@ CDN (content delivery network) that gets the code currently checked into
 the git repository, https://cdot.github.io/Squirrel, but you are welcome
 to make your own copy and host it on your own trusted server.
 
-Run it from 'github pages' by loading the following URL into your browser (using GoogleDriveStore as an example):
+Run the release build from 'github pages' by loading the following URL into your browser (using GoogleDriveStore as an example):
 
-https://cdot.github.io/Squirrel/release/Squirrel.html?store=GoogleDriveStore
+https://cdot.github.io/Squirrel/dist?store=GoogleDriveStore
 
 The following URL parameters are available:
 - `store=<store name>' required to set the file store to use (default is `LocalStorageStore', the example above uses `GoogleDriveStore`)
-- 'use=' to specify the encryption algorithm. The default is `use=aes`, and you can disable encryption entirely (for debugging) by passing `use` with no value. You can layer multiple algorithms by separating them with commas e.g. `use=aes,steganography`. Note that the same algorithms are used for both cloud and local stores.
-- 'debug' to enable verbose debug output to the console
-- 'url=<store url>' is required by some stores
+- `use=` to specify the encryption algorithm. The default is `use=aes`, and you can disable encryption entirely (for debugging) by passing `use` with no value. You can layer multiple algorithms by separating them with commas e.g. `use=aes,steganography`. Note that the same algorithms are used for both cloud and local stores.
+- `debug=1` to enable verbose debug output to the console
+- `url=<store url>` is required by some stores
 
 ## Choosing a File Store
 

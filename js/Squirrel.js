@@ -596,13 +596,13 @@ define("js/Squirrel", [
           $(this).data("i18n-title")));
       });
 
-      this._stage($.i18n("load_app"), 0);
+      this._stage($.i18n("stage-load-app"), 0);
       $.styling.init({ debug: this.debug});
 
-      // Special keys in sort ordering. Currently only works for
-      // English.
-      // TODO: translation
-      const sort_prio = [/*i18n*/"User", /*i18n*/"Pass", /*i18n*/"Email"];
+      // Special keys in sort ordering.
+      const sort_prio = [
+        $.i18n("User"), $.i18n("Pass"), $.i18n("Email"), $.i18n("Website")
+      ];
 
       Tree.debug = this.debug;
       
@@ -783,22 +783,22 @@ define("js/Squirrel", [
 
       // Promises work through the Javascript event loop, which should
       // get a look in between each step of the following chain.
-      this._stage($.i18n("init_cloud"), 1);
+      this._stage($.i18n("stage-init-cloud"), 1);
       this._1_init_cloud_store()
       .then(() => {
-        this._stage($.i18n("init_local"), 2);
+        this._stage($.i18n("stage-init-local"), 2);
         return this._2_init_client_store();
       })
       .then(() => {
-        this._stage($.i18n("reading_local"), 3);
+        this._stage($.i18n("stage-read-local"), 3);
         return this._3_load_client();
       })
       .then(() => {
-        this._stage($.i18n("read_cloud"), 4);
+        this._stage($.i18n("stage-read-cloud"), 4);
         return this._4_load_cloud();
       })
       .then(() => {
-        this._stage($.i18n("Preparing UI"), 5);
+        this._stage($.i18n("stage-ui"), 5);
         
         $(window)
         .on("beforeunload", () => {

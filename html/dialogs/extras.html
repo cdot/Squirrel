@@ -1,28 +1,28 @@
 <div id="extras_dlg" class="dlg-dialog" data-i18n-title="Settings">
   <div data-i18n="prefs_to_cookie"></div>
   <h1 data-i18n="User interface"></h1>
-  <div class="flex-row" data-i18n-title="autosave">
+  <div class="flex-row" data-i18n-tooltip="tt-autosave">
     <label for="autosave" data-i18n="Autosave"></label>
     <input type="checkbox" id="autosave" data-id="autosave" />
   </div>
-  <div class="flex-row tooltip-dialog" data-i18n-title="hide_vals">
+  <div class="flex-row tooltip-dialog" data-i18n-tooltip="tt-hide-vals">
 	<label for="hidevalues" data-i18n="hidevalues"></label>
     <input type="checkbox" id="hidevalues" data-id="hidevalues"/>
   </div>
-  <div class="flex-row tooltip-dialog" data-i18n-title="show_change_time">
+  <div class="flex-row tooltip-dialog" data-i18n-tooltip="tt-last-change">
     <label for="lastchange" data-i18n="last-change"></label>
     <input type="checkbox" id="lastchange" data-id="lastchange" />
   </div>
-  <div class="flex-row tooltip-dialog" data-i18n-title="lang_code">
+  <div class="flex-row tooltip-dialog" data-i18n-tooltip="tt-lang-code">
     <label for="language" data-i18n="language"></label>
     <input type="text" id="language" data-id="language" class="flex-grow" />
   </div>
-  <div class=" tooltip-dialog" data-i18n-title="scale_text">
+  <div class="flex-row tooltip-dialog" data-i18n-title="scale_text">
     <span data-i18n="Text size"></span>
-    <button data-id="bigger" style="font-size:larger" title="Larger">Aa</button>
-    <button data-id="smaller" style="font-size:smaller" title="Smaller">Aa</button>
+    <button data-id="bigger" style="font-size:larger" data-i18n-title="Larger">Aa</button>
+    <button data-id="smaller" style="font-size:smaller" data-i18n-title="Smaller">Aa</button>
   </div>
-  <div class="flex-row tooltip-dialog ui-front" data-i18n-title="select_theme">
+  <div class="flex-row tooltip-dialog ui-front" data-i18n-tooltip="tt-select-theme">
     <label for="theme" data-i18n="Theme"></label>
     <select id="theme" data-id="theme" class="flex-grow">
       <option value="base">Base</option>
@@ -52,17 +52,33 @@
       <option value="swanky-purse">Swanky Purse</option>
     </select>
   </div>
-  <h1 colspan="2" data-i18n="Database"></h1>
-  <div class="flex-row tooltip-dialog" data-i18n-title="store_settings">
+  <div data-i18n-tooltip="tt-default-cons"></p>
+  <h1 data-i18n="Default constraints"></h1>
+  <table>
+    <tr>
+      <td  data-i18n="Length"></td>
+      <td>
+        <input data-id="constraints_len" size="4" value="20" data-i18n-tooltip="tt-pass-len" />
+      </td>
+    </tr>
+    <tr>
+      <td  data-i18n="Characters"></td>
+      <td>
+        <input data-id="constraints_chs" size="30" value="A-Za-z0-9!%^&*_$+-=;:@#~,./?" data-i18n-tooltip="tt-pass-chars" />
+      </td>
+    </tr>
+  </table>
+  <h1 data-i18n="Database"></h1>
+  <div class="flex-row tooltip-dialog" data-i18n-tooltip="tt-store-settings">
     <button data-id="chss" class="flex-grow" data-i18n="edit_cloud_sets"></button>
   </div>
-  <div class="flex-row">
-    <button data-id="chpw" class="flex-grow" data-i18n-tooltip="tt-epass-change" data-i18n="change_epass"></button>
+  <div class="flex-row tooltip-dialog" data-i18n-tooltip="tt-epass-change">
+    <button data-id="chpw" class="flex-grow" data-i18n="change_epass"></button>
   </div>
-  <div class="flex-row tooltip-dialog" data-i18n-title="opt_advice">
+  <div class="flex-row tooltip-dialog" data-i18n-tooltip="tt-opt-advice">
     <button data-id="optimise" class="flex-grow" data-i18n="Optimise Store"></button>
   </div>
-  <div class="flex-row tooltip-dialog" data-i18n-title="lose-loc">
+  <div class="flex-row tooltip-dialog" data-i18n-tooltip="tt-reset-loc">
     <button data-id="reset_local" class="flex-grow" data-i18n="reset_local"></button>
   </div>
   <div class="flex-row">
