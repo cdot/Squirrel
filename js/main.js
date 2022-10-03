@@ -76,7 +76,8 @@ const qs = parseURLParams(
 		// 1 for debug messages
     debug: { type: "boolean" },
 		// Remote store URL
-    url: { type: "string" }
+    url: { type: "string" },
+    api_key: { type: "string" }
   });
 
 const min = qs.debug ? "" : ".min";

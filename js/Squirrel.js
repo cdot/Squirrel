@@ -265,11 +265,10 @@ define("js/Squirrel", [
      */
     _1_init_cloud_store() {
       return Utils.require(`js/${this.options.store}`)
-			.then(module => new module({
+			.then(module => new module($.extend(this.options, {
         debug: this.debug,
-        network_login: () =>
-        this._network_login($.i18n("cloud"))
-			}))
+        network_login: () => this._network_login($.i18n("cloud"))
+			})))
       .then(store => this._add_layers("cloud", store))
       .then(store => {
         // Tell the hoarder to use this store
@@ -313,9 +312,9 @@ define("js/Squirrel", [
      * @private
      */
     _2_init_client_store() {
-      return this._add_layers("client", new LocalStorageStore({
-        debug: this.debug
-      }))
+      return this._add_layers(
+        "client", new LocalStorageStore($.extend(
+          this.options, { debug: this.debug })))
       .then(store => {
         // Tell the hoarder to use this store
         this.hoarder.client_store(store);

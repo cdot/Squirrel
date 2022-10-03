@@ -30,7 +30,6 @@ define([
     "https://www.googleapis.com/discovery/v1/apis/drive/v3/rest",
     "https://www.googleapis.com/discovery/v1/apis/people/v1/rest"
   ];
-  const API_KEY = "AIzaSyCHmXIb9lOfZdNHWLcoMtL8C3LN4OarK2I";
 
   const BOUNDARY = "-------314159265358979323846";
   const DELIMITER = `\r\n--${BOUNDARY}\r\n`;
@@ -55,11 +54,11 @@ define([
 
     /**
      * See {@link HttpServerStore} for other constructor options
-     * Sets `options.needs_url` and `options.url`
      */
     constructor(p) {
       super(p);
       this.type = "GoogleDriveStore";
+      this.option("needs_api_key", true);
       // Override HttpServerStore
       this.option("needs_url", false);
       this.option("url", "");
@@ -70,9 +69,13 @@ define([
      * @Override
      */
     init() {
+      if (!this.option("api_key"))
+        throw new Error("GoogleDriveStore requires an ?api_key=");
+
       // First load Google Identity Services and complete
       // login there to get an access token
-      return $.getScript("https://accounts.google.com/gsi/client")
+      return super.init()
+      .then(() => $.getScript("https://accounts.google.com/gsi/client"))
       .then(() => {
         if (this.debug) this.debug("GIS loaded");
         return $.getScript("https://apis.google.com/js/client.js");
@@ -94,7 +97,14 @@ define([
       }))
       // GIS has automatically updated gapi.client with the
       // access token.
-      .then(() => gapi.client.init({ apiKey: API_KEY }))
+      .then(() => {
+        this.debug("API key", this.option("api_key"));
+        return gapi.client.init({
+          // API key can't be hard coded, and there is no server to store it on,
+          // so the only option is to get it from the URL
+          apiKey: this.option("api_key")
+        });
+      })
       // Load the Drive API
       .then(() => gapi.client.load("drive", "v3"))
       // Get user name from profile. Clunky.
