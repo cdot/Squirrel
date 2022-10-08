@@ -98,7 +98,7 @@ define([
       // GIS has automatically updated gapi.client with the
       // access token.
       .then(() => {
-        this.debug("API key", this.option("api_key"));
+        if (this.debug) this.debug("API key", this.option("api_key"));
         return gapi.client.init({
           // API key can't be hard coded, and there is no server to store it on,
           // so the only option is to get it from the URL
@@ -118,7 +118,13 @@ define([
         const name = repo.names[0];
 				this.option("user", name.displayName);
       })
-      .catch(e => console.error(e));
+      .catch(e => {
+        if (e && e.body) {
+          const info = JSON.parse(e.body);
+          alert(`${e.status} ${e.message}`);
+        }
+        console.error(e);
+      });
     }
 
     /**
