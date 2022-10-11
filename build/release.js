@@ -21,7 +21,8 @@ requirejs([
   const target_dir = process.argv[2];
   if (!target_dir)
     throw Error("target_dir required");
-  const debug = process.argv[3] === 'debug' ? console.debug : () => {};
+  const debugging = process.argv[3] === 'debug';
+  const debug = debugging ? console.debug : () => {};
   const dependencies = new Dependencies({debug: debug, show: true});
 
   /**
@@ -125,7 +126,6 @@ requirejs([
 	function generateMonolithicJS(module) {
     return dependencies.generateFlatJS(module)
 		.then(code => {
-      const debugging = typeof debug === "function";
       if (debugging) debug(`Uglifying ${target_dir}/${module}.js`);
       const res = uglify.minify(code, {
         compress: debugging ? false : {},

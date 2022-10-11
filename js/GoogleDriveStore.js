@@ -11,11 +11,12 @@ define([
 ) => {
 
   // https://console.cloud.google.com/welcome?project=ringed-inn-834
-  // Client ID from Google APi dashboard. Note this is only valid
+
+  // Client ID from Google API dashboard. Note this is only valid
   // for requests from specific URLs, so if you want to host your
   // own Squirrel version - for example, to host a test version on
-  // localhost - you will have to
-  // change it. You can do so on https://console.developers.google.com
+  // localhost - you will have to change it.
+  // You can do so on https://console.developers.google.com
   const CLIENT_ID = "985219699584-mt1do7j28ifm2vt821d498emarmdukbt.apps.googleusercontent.com";
 
   // While the appfolder would seem to make sense for Squirrel, it does make
@@ -35,17 +36,6 @@ define([
   const DELIMITER = `\r\n--${BOUNDARY}\r\n`;
   const RETIMILED = `\r\n--${BOUNDARY}--`;
 
-  // Parse JWT token without verification. Not used, but kept for reference.
-  function parseJwt (token) {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(
-      window.atob(base64).split('').map(function(c) {
-        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-      }).join(''));
-    return JSON.parse(jsonPayload);
-  }
-
   /**
    * A store using Google Drive
    * @extends HttpServerStore
@@ -58,7 +48,6 @@ define([
     constructor(p) {
       super(p);
       this.type = "GoogleDriveStore";
-      this.option("needs_api_key", true);
       // Override HttpServerStore
       this.option("needs_url", false);
       this.option("url", "");
@@ -69,52 +58,89 @@ define([
      * @Override
      */
     init() {
-      if (!this.option("api_key"))
-        throw new Error("GoogleDriveStore requires an ?api_key=");
-
-      // First load Google Identity Services and complete
-      // login there to get an access token
       return super.init()
-      .then(() => $.getScript("https://accounts.google.com/gsi/client"))
-      .then(() => {
-        if (this.debug) this.debug("GIS loaded");
-        return $.getScript("https://apis.google.com/js/client.js");
-      })
-      .then(() => new Promise(resolve => gapi.load("client", resolve)))
+      // Load the Google Identity client library
+      // see https://developers.google.com/identity/gsi/web/guides/client-library
+      .then(() => Promise.all([
+        $.getScript("https://accounts.google.com/gsi/client")
+        .then(() => {
+          if (this.debug) this.debug("GSI loaded");
+          // https://developers.google.com/drive/api/quickstart/js
+          // https://developers.google.com/identity/oauth2/web/reference/js-reference
+          this.tokenClient = google.accounts.oauth2.initTokenClient({
+            client_id: CLIENT_ID,
+            scope: SCOPES,
+            callback: () => {} // define later
+          });
+        }),
+
+        // Load GAPI
+        $.getScript("https://apis.google.com/js/api.js")
+        // Load the GAPI client
+        .then(() => new Promise((resolve, reject) => gapi.load("client", {
+          callback: resolve,
+          onerror: reject,
+          timeout: 5000, // 5 seconds.
+          ontimeout: reject
+        })))
+        .then(() => {
+          if (this.debug) this.debug("GAPI client loaded");
+          // GIS has automatically updated gapi.client with the
+          // access token. Initialise the GAPI client library.
+          // https://github.com/google/google-api-javascript-client/blob/master/docs/reference.md#----gapiclientinitargs--
+          return gapi.client.init({
+            discoveryDocs: DISCOVERY_DOCS
+          });
+        })
+      ]))
+
+      // GIS and GAPI should be ready to play.
+      // Talk to the user to get auth for the scopes we want
+      // https://developers.google.com/drive/api/quickstart/js
       .then(() => new Promise(resolve => {
-        if (this.debug) this.debug("gapi.client loaded");
-        const tokenClient = google.accounts.oauth2.initTokenClient({
-          client_id: CLIENT_ID,
-          discoveryDocs: DISCOVERY_DOCS,
-          scope: SCOPES,
-          callback: resolve
-        });
+        this.tokenClient.callback = resolve;
         if (gapi.client.getToken() === null) {
-          tokenClient.requestAccessToken({prompt: 'consent'});
+          if (this.debug) this.debug("Requesting new access token");
+          // Prompt the user to select a Google Account and ask for
+          // consent to share their data when establishing a new session.
+          // https://developers.google.com/identity/oauth2/web/reference/js-reference
+          this.tokenClient.requestAccessToken({ prompt: 'select_account' });
         } else {
-          tokenClient.requestAccessToken({prompt: ''});
+          if (this.debug) this.debug("Reusing access token");
+          // Skip display of account chooser for an existing session.
+          // (This will never be called in Squirrel.)
+          this.tokenClient.requestAccessToken({ prompt: '' });
         }
       }))
-      // GIS has automatically updated gapi.client with the
-      // access token.
-      .then(() => {
-        if (this.debug) this.debug("API key", this.option("api_key"));
-        return gapi.client.init({
-          // API key can't be hard coded, and there is no server to store it on,
-          // so the only option is to get it from the URL
-          apiKey: this.option("api_key")
-        });
+
+      .then(tokenResponse => {
+        if (this.debug) {
+          const token = gapi.client.getToken();
+          this.debug("Access token", token.access_token);
+        }
       })
-      // Load the Drive API
-      .then(() => gapi.client.load("drive", "v3"))
-      // Get user name from profile. Clunky.
-      .then(() => gapi.client.load("people", "v1"))
+
+      // WARNING: when used with an API key that has an earlier expired
+      // key associated with it, this fails.
       .then(() => gapi.client.people.people.get({
-        'resourceName': 'people/me',
-        'personFields': 'names'
+        // Get user name from profile. Clunky.
+        resourceName: 'people/me',
+        personFields: 'names'
       }))
+
+      /* This DOES always work, though....
+      .then(() => gapi.client.request({
+        path: "https://content-people.googleapis.com/v1/people/me",
+        params: {
+          personFields: "names"
+        }
+      }))
+      /**/
+
       .then(response => {
         const repo = JSON.parse(response.body);
+        if (this.debug) this.debug(
+          "people.people", repo.names.map(n => n.displayName));
         const name = repo.names[0];
 				this.option("user", name.displayName);
       })
