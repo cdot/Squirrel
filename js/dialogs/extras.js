@@ -10,6 +10,7 @@ define([
 
 	/**
 	 * Settings dialog.
+   * @mixes ConstraintsMixin
 	 */
   class ExtrasDialog extends ConstraintsMixin(Dialog) {
 

@@ -5,14 +5,14 @@
  * Password generation for the given leaf node
  */
 define([
-  "js/Dialog", "js/dialogs/ConstraintsMixin",
-  "cookie"
+  "js/Dialog", "js/dialogs/ConstraintsMixin"
 ], (
   Dialog, ConstraintsMixin
 ) => {
 
   /**
 	 * Randomise string dialog.
+   * @mixes ConstraintsMixin
 	 */
   class RandomiseDialog extends ConstraintsMixin(Dialog) {
 
@@ -44,7 +44,7 @@ define([
       this.$control("again")
       .on(Dialog.tapEvent(), function () {
         self.$control("idea")
-        .text(this.generatePassword({
+        .text(self.generatePassword({
           size: self.$control("len").val(),
           chars: self.$control("chs").val()
         }));
