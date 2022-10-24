@@ -190,7 +190,7 @@ define("js/Hoard", [
 				const node = this.tree.getNodeAt(path);
 				if (!node && (options.autocreate || forceMake)) {
 					Serror.assert(path.length > 0);
-					return mkNode(path.slice(0, -1))
+					return mkNode(path.slice(0, -1), forceMake)
 					.then(parent => {
 						let act = new Action({
 							type: 'N',
@@ -217,7 +217,7 @@ define("js/Hoard", [
 				} else if (node)
 					return Promise.resolve(node);
 				else
-					return Promise.reject(new Error("not_exist"));
+					return conflict($.i18n("not_exist", path.join("/")));
 			};
 
 			let promise;
@@ -225,7 +225,7 @@ define("js/Hoard", [
       switch (action.type) {
 
       case 'N': { // New
-				// return becuase mkNode handles calling the uiPlayer
+				// return because mkNode handles calling the uiPlayer
 				return mkNode(action.path, true)
 				.then(node => {
 					if (typeof action.data === 'string') {
@@ -242,10 +242,10 @@ define("js/Hoard", [
         
 				const node = this.tree.getNodeAt(action.path);
 				if (node)
-					return conflict($.i18n("change_remind"));
+					return conflict($.i18n("already_exists"));
 
 				const json = JSON.parse(action.data);
-				promise = mkNode(action.path.slice(0, -1))
+				promise = mkNode(action.path.slice(0, -1), false)
 				.then(parent => {
 					parent.time = action.time; // collection is being modified
 					const name = action.path[action.path.length - 1];
@@ -257,11 +257,11 @@ define("js/Hoard", [
       }
         
       case 'A': { // Alarm
-				promise = (action.data ? mkNode(action.path)
+				promise = (action.data ? mkNode(action.path, false)
 						       : Promise.resolve(this.tree.getNodeAt(action.path)))
 				.then(node => {
 					if (!node && action.data)
-						return conflict("not_exist");
+						return conflict($.i18n("not_exist", action.path.join("/")));
 					if (options.undoable) {
 						if (typeof node.alarm === 'undefined')
 							// Undo by cancelling the new alarm
@@ -289,7 +289,7 @@ define("js/Hoard", [
 				// Compatibility, replaced by 'A' with undefined data
 				const node = this.tree.getNodeAt(action.path);
 				if (!node)
-					return conflict($.i18n("not_exist"));
+					return conflict($.i18n("not_exist", action.path.join("/")));
 				// Cancel alarm
         if (options.undoable)
           this._record_event(action, 'A', action.path,
@@ -302,7 +302,7 @@ define("js/Hoard", [
       case 'D': { // Delete
 				const node = this.tree.getNodeAt(action.path);
 				if (!node)
-					return conflict("not_exist");
+					return conflict($.i18n("not_exist", action.path.join("/")));
 
 				const parent = this.tree.getNodeAt(
 					action.path.slice(0, -1));
@@ -318,7 +318,7 @@ define("js/Hoard", [
 			}
 
       case 'E': { // Edit
-				promise = mkNode(action.path)
+				promise = mkNode(action.path, false)
 				.then(node => {
 					if (options.undoable)
 						this._record_event(action, 'E', action.path,
@@ -334,12 +334,12 @@ define("js/Hoard", [
         // action.data is the path of the new parent
  				const node = this.tree.getNodeAt(action.path);
 				if (!node)
-					return conflict($.i18n("not_exist"));
-				promise = mkNode(action.data)
+					return conflict($.i18n("not_exist", action.path.join("/")));
+				promise = mkNode(action.data, false)
 				.then(new_parent => {
 					const name = action.path.slice(-1)[0];
 					if (new_parent.getChild(name))
-						return conflict($.i18n("change_remind"));
+						return conflict($.i18n("already_exists"));
           
 					const parent = this.tree.getNodeAt(
 						action.path.slice(0, -1));
@@ -367,12 +367,12 @@ define("js/Hoard", [
 				// Rename
  				const node = this.tree.getNodeAt(action.path);
 				if (!node)
-					return conflict($.i18n("not_exist"));
+					return conflict($.i18n("not_exist", action.path.join("/")));
 
 				const parent = this.tree.getNodeAt(
 					action.path.slice(0, -1));
 				if (parent.getChild(action.data))
-					return conflict($.i18n("change_remind"));
+					return conflict($.i18n("already_exists"));
 				const name = action.path.slice(-1)[0];
 				if (options.undoable) {
 					const p = action.path.slice();
@@ -390,7 +390,7 @@ define("js/Hoard", [
       case 'X': {
 				// Constrain.
 				promise = (action.data ?
-						       mkNode(action.path)
+						       mkNode(action.path, false)
 						       : Promise.resolve(this.tree.getNodeAt(action.path)))
 				.then(node => {
 
