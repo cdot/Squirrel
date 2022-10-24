@@ -46,7 +46,7 @@ define("js/Serror", () => {
     
     toString() {
       return this.status
-      + (this.path ? ` ${this.path.join('/')}` : "")
+      + (Array.isArray(this.path) ? ` ${this.path.join('/')}` : (this.path || ""))
       + (this.message ? ` ${this.message}` : "");
     }
   }

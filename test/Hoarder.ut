@@ -366,8 +366,8 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/Cr
 		})
     .then(() => {
       assert.equal(progress.length, 2);
-      assert.equal(progress[0].message, "cloud_saved");
-      assert.equal(progress[1].message, "local_saved");
+      assert.equal(progress[0].message, "Saved in cloud");
+      assert.equal(progress[1].message, "Saved in local store");
       return cliest.reads("client");
 		})
 		.then(clied => {

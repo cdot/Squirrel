@@ -4,6 +4,19 @@
 const paths = {
   //    jquery: "node_modules/jquery/dist/jquery",
   i18n: "node_modules/@wikimedia/jquery.i18n/src/jquery.i18n",
+  i18n_emitter:
+  "node_modules/@wikimedia/jquery.i18n/src/jquery.i18n.emitter",
+  i18n_fallbacks:
+  "node_modules/@wikimedia/jquery.i18n/src/jquery.i18n.fallbacks",
+  i18n_language:
+  "node_modules/@wikimedia/jquery.i18n/src/jquery.i18n.language",
+  i18n_messagestore:
+  "node_modules/@wikimedia/jquery.i18n/src/jquery.i18n.messagestore",
+  i18n_parser:
+  "node_modules/@wikimedia/jquery.i18n/src/jquery.i18n.parser",
+  cldrpluralruleparser:
+  "node_modules/@wikimedia/jquery.i18n/libs/CLDRPluralRuleParser/src/CLDRPluralRuleParser",
+
   "jquery-touch-events": "node_modules/@benmajor/jquery-touch-events/src/jquery.mobile-events",
   "jquery-ui": "node_modules/jquery-ui-dist/jquery-ui"
 };
@@ -22,7 +35,7 @@ if (typeof document === "undefined") {
   global.jQuery = jQuery;
   global.$ = jQuery;
 
-  paths.i18n = "test/I18N";
+  //paths.i18n = "test/I18N";
 }
 
 requirejs.config({
@@ -38,7 +51,7 @@ requirejs.config({
     i18n_messagestore:     ["i18n"],
     i18n_parser:           ["i18n"],
     cldrpluralruleparser: {
-      deps: [ "i18n_parser" ]
+      deps: [ "i18n_parser", "i18n_messagestore", "i18n_emitter", "i18n_language" ]
       //exports: "pluralRuleParser"
     }
 	}

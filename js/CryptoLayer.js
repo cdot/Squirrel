@@ -34,7 +34,7 @@ define("js/CryptoLayer", [
 		 * @override
 		 */
     read(path) {
-      if (this.debug) this.debug("read", path);
+      //if (this.debug) this.debug("crypto read", path);
       return super.read(path)
       .then(a8 => Crypto.decrypt(a8, this.option("pass"))
 			      .catch(e => {
@@ -46,7 +46,7 @@ define("js/CryptoLayer", [
 		 * @override
 		 */
     write(path, a8) {
-      if (this.debug) this.debug("write", path);
+      //if (this.debug) this.debug("crypto write", path);
       return Crypto.encrypt(a8, this.option("pass"))
 			.catch(e => {
 				throw new Serror(400, "write failed");
@@ -58,7 +58,7 @@ define("js/CryptoLayer", [
 		 * @override
 		 */
     reads(path) {
-      if (this.debug) this.debug("read", path);
+      //if (this.debug) this.debug("crypto reads", path);
       return super.read(path)
       .then(uint8 => Crypto.decrypt(uint8, this.option("pass"))
 				    .then(data => new TextDecoder().decode(data))
@@ -71,7 +71,7 @@ define("js/CryptoLayer", [
 		 * @override
 		 */
     writes(path, s) {
-      if (this.debug) this.debug("write", path);
+      //if (this.debug) this.debug("crypto writes", path);
 			const uint8 = new TextEncoder().encode(s);
       return Crypto.encrypt(uint8, this.option("pass"))
 			.catch(e => {

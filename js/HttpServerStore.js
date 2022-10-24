@@ -39,12 +39,12 @@ define("js/HttpServerStore", [
       // Override auth if credentials are set
       if (this.option('net_user')) { // populated by login
         if (this.debug)
-          this.debug("addAuth: Using BasicAuth", this.option('net_user'));
+          this.debug("http addAuth: Using BasicAuth", this.option('net_user'));
         // Not happy about caching this
         headers.Authorization = 'Basic '
         + btoa(this.option('net_user') + ':' + this.option('net_pass'));
       } else if (this.debug)
-        this.debug("addAuth: No auth header");
+        this.debug("http addAuth: No auth header");
     }
 
     /**
@@ -102,17 +102,17 @@ define("js/HttpServerStore", [
         }
 
         xhr.onload = () => {
-          if (this.debug) this.debug("response",xhr.status);
+          if (this.debug) this.debug("http response", xhr.status);
           if (xhr.status === 401) {
             const handler = this.option("network_login");
             if (typeof handler === 'function') {
-							if (this.debug) this.debug("handling 401");
+              if (this.debug) this.debug("http handling 401");
               handler.call(this)
               .then(login => {
                 resolve(this.request(method, url, headers, body));
               });
               return;
-            } else if (this.debug) this.debug("No 401 handler");
+            } else if (this.debug) this.debug("http no 401 handler");
           }
 
           resolve({
@@ -120,6 +120,10 @@ define("js/HttpServerStore", [
             status: xhr.status,
             xhr: xhr
           });
+        };
+
+        xhr.onerror = e => {
+          reject(new Serror(400, `http error: ${e}`));
         };
 
         xhr.ontimeout = function() {
@@ -143,7 +147,7 @@ define("js/HttpServerStore", [
 		 * @Override
 		 */
     read(path) {
-      if (this.debug) this.debug("read", path);
+      if (this.debug) this.debug("http read", path);
       return this.request("GET", path)
       .then(res => {
         if (200 <= res.status && res.status < 300)
@@ -164,7 +168,7 @@ define("js/HttpServerStore", [
 		 * @Override
 		 */
     write(path, data) {
-      if (this.debug) this.debug("write", path);
+      if (this.debug) this.debug("http write", path);
       const pathbits = path.split('/');
       const folder = pathbits.slice(0, pathbits.length - 1);
       return this.mkpath(folder.join('/'))

@@ -29,7 +29,9 @@ define("js/FileStore", [
 		 */
     read(path) {
       if (this.debug) this.debug("read", path);
-      return Fs.readFile(`${this.option("path")}/${path}`)
+      if (this.option("path"))
+        path = `${this.option("path")}/${path}`;
+      return Fs.readFile(path)
       .catch(e => {
         if (/ENOENT/.test(e.message))
           throw new Serror(404, `${path} ${e.message}`);
@@ -49,8 +51,10 @@ define("js/FileStore", [
 		 */
     write(path, data) {
       if (this.debug) this.debug("write", path);
+      if (this.option("path"))
+        path = `${this.option("path")}/${path}`;
       // data is an Uint8Array so is already bytes
-      return Fs.writeFile(`${this.option("path")}/${path}`, data);
+      return Fs.writeFile(path, data);
     }
 
 		/**

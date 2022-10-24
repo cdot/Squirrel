@@ -1,12 +1,9 @@
 /*@preserve Copyright (C) 2016-2018 Crawford Currie http://c-dot.co.uk license MIT*/
 /*eslint-env node, mocha */
 
-if (typeof module !== 'undefined') {
-  requirejs = require('requirejs');
-  requirejs.config({
-    baseUrl: `${__dirname}/..`
-  });
-}
+requirejs = require('requirejs');
+
+require("./TestSupport");
 
 // Was using chai-http, but couldn't work out how to test the body
 // of a response :-( So use "Request" instead, as described in

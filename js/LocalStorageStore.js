@@ -90,7 +90,7 @@ define("js/LocalStorageStore", [
       const str = localStorage.getItem(this._makeKey(path));
       if (str === null)
         return Promise.reject(new Serror(
-          404, path + " does not exist"));
+          404, path, " does not exist in LocalStorageStore"));
       return Promise.resolve(str);
     }
 

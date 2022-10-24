@@ -15,7 +15,7 @@ const OPTIONS = [
   ['h', "help", "show this help"]
 ];
 
-requirejs(["node-getopt','js/FileStore", "js/CryptoLayer", "js/Utils"], function(Getopt, FileStore, CryptoLayer, Utils) {
+requirejs(["node-getopt", "js/FileStore", "js/CryptoLayer", "js/Utils"], function(Getopt, FileStore, CryptoLayer, Utils) {
 
   const parse = new Getopt(OPTIONS)
         .bindHelp()
@@ -26,7 +26,7 @@ requirejs(["node-getopt','js/FileStore", "js/CryptoLayer", "js/Utils"], function
     parse.showHelp();
     throw "No filename";
   }
-  const fname = parse.argv[0];
+  let fname = parse.argv[0];
 
   const opt = parse.options;
   const debug = typeof opt.debug === 'undefined' ? () => {} : console.debug;
@@ -46,13 +46,13 @@ requirejs(["node-getopt','js/FileStore", "js/CryptoLayer", "js/Utils"], function
 
   let instore, outstore, outf, encrypt = false;
   if (/\.json$/.test(fname)) {
-    debug("Encrypt");
+    debug(`Encrypt ${fname}`);
     encrypt = true;
     instore = plainstore;
     outf = fname.replace(/\.json$/, "");
     outstore = cipherstore;
   } else {
-    debug("Decrypt");
+    debug(`Decrypt ${fname}`);
     instore = cipherstore;
     outf = fname + ".json";
     outstore = plainstore;

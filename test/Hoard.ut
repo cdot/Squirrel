@@ -372,7 +372,7 @@ requirejs(["js/Hoard", "js/Node", "js/Action", "test/TestRunner"], function(Hoar
 		.then(() => {
 			assert(false);
 		})
-		.catch(e => assert.equal(e.message, "not_exist"));
+		.catch(e => assert.equal(e.message, "Change value of One↘Two↘Three to 'Smooch' failed: One↘Two↘Three does not exist"));
   });
 
   tr.addTest('A & undo', async () => {
@@ -464,7 +464,7 @@ requirejs(["js/Hoard", "js/Node", "js/Action", "test/TestRunner"], function(Hoar
 			assert(false, "Should not succeed");
 		})
 		.catch(e => {
-			assert.equal(e.message, "not_exist");
+			assert.equal(e.message, "Add reminder on 01/01/2005, 00:00:00 (repeat every 1 days) to One↘Two↘Three failed: One↘Two↘Three does not exist");
 		});
   });
 
@@ -666,7 +666,7 @@ requirejs(["js/Hoard", "js/Node", "js/Action", "test/TestRunner"], function(Hoar
 			assert(false);
 		})
 		.catch(e => {
-			assert.equal(e.message, "Delete One failed: it does not exist");
+			assert.equal(e.message, "Delete One failed: One does not exist");
 		});
 	});
 
@@ -756,7 +756,7 @@ requirejs(["js/Hoard", "js/Node", "js/Action", "test/TestRunner"], function(Hoar
     .catch(c => {
 			assert.equal(
 				c.message,
-				"Delete FineDining↘La Gavroche failed: it does not exist");
+				"Delete FineDining↘La Gavroche failed: FineDining↘La Gavroche does not exist");
 		});
   });
 
@@ -796,7 +796,7 @@ requirejs(["js/Hoard", "js/Node", "js/Action", "test/TestRunner"], function(Hoar
 			assert(false, "Should not get here");
 		})
 		.catch(e => {
-			assert.equal(e.message, "not_exist");
+			assert.equal(e.message, "Change value of FineDining↘Doner to 'Sausages' failed: FineDining↘Doner does not exist");
 		});
   });
 

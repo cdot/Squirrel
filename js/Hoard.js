@@ -178,8 +178,7 @@ define("js/Hoard", [
 			// it's easier to debug them that way.
       const conflict = mess =>
 				    Promise.reject(
-					    new Error($.i18n("$1 failed: $2",
-									             action.verbose(), mess)));
+					    new Error($.i18n("act_failed", action.verbose(), mess)));
 
 			// Make nodes on the path (including the end), adding history
 			// as necessary.
@@ -217,7 +216,7 @@ define("js/Hoard", [
 				} else if (node)
 					return Promise.resolve(node);
 				else
-					return conflict($.i18n("not_exist", path.join("/")));
+					return conflict($.i18n("not_exist", path.join(Action.PATH_SEPARATOR)));
 			};
 
 			let promise;
@@ -261,7 +260,7 @@ define("js/Hoard", [
 						       : Promise.resolve(this.tree.getNodeAt(action.path)))
 				.then(node => {
 					if (!node && action.data)
-						return conflict($.i18n("not_exist", action.path.join("/")));
+						return conflict($.i18n("not_exist", action.path.join(Action.PATH_SEPARATOR)));
 					if (options.undoable) {
 						if (typeof node.alarm === 'undefined')
 							// Undo by cancelling the new alarm
@@ -289,7 +288,7 @@ define("js/Hoard", [
 				// Compatibility, replaced by 'A' with undefined data
 				const node = this.tree.getNodeAt(action.path);
 				if (!node)
-					return conflict($.i18n("not_exist", action.path.join("/")));
+					return conflict($.i18n("not_exist", action.path.join(Action.PATH_SEPARATOR)));
 				// Cancel alarm
         if (options.undoable)
           this._record_event(action, 'A', action.path,
@@ -302,7 +301,7 @@ define("js/Hoard", [
       case 'D': { // Delete
 				const node = this.tree.getNodeAt(action.path);
 				if (!node)
-					return conflict($.i18n("not_exist", action.path.join("/")));
+					return conflict($.i18n("not_exist", action.path.join(Action.PATH_SEPARATOR)));
 
 				const parent = this.tree.getNodeAt(
 					action.path.slice(0, -1));
@@ -334,7 +333,7 @@ define("js/Hoard", [
         // action.data is the path of the new parent
  				const node = this.tree.getNodeAt(action.path);
 				if (!node)
-					return conflict($.i18n("not_exist", action.path.join("/")));
+					return conflict($.i18n("not_exist", action.path.join(Action.PATH_SEPARATOR)));
 				promise = mkNode(action.data, false)
 				.then(new_parent => {
 					const name = action.path.slice(-1)[0];
@@ -367,7 +366,7 @@ define("js/Hoard", [
 				// Rename
  				const node = this.tree.getNodeAt(action.path);
 				if (!node)
-					return conflict($.i18n("not_exist", action.path.join("/")));
+					return conflict($.i18n("not_exist", action.path.join(Action.PATH_SEPARATOR)));
 
 				const parent = this.tree.getNodeAt(
 					action.path.slice(0, -1));

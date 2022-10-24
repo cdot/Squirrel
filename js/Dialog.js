@@ -119,8 +119,8 @@ define("js/Dialog", [
       // stupid, but we do use requirejs.toUrl to locate the
       // resource.
       if ($dlg.length > 0) {
-        if (options.debug)
-          options.debug("HTML for dialog", id, "is already loaded");
+        //if (options.debug)
+        //  options.debug("HTML for dialog", id, "is already loaded");
         $dlg.data("id", id);
         p = Promise.resolve($dlg);
       } else {
@@ -130,15 +130,15 @@ define("js/Dialog", [
         if (options.htmlRoot)
           html_url = `${options.htmlRoot}/${id}.html`;
 
-        if (options.debug)
-            options.debug(
-                "Loading HTML for dialog", id, "from", html_url);
+        //if (options.debug)
+        //    options.debug(
+        //        "Loading HTML for dialog", id, "from", html_url);
 
         if (!htmls[html_url]) {
           htmls[html_url] = $.get(html_url)
           .then(html => {
-            if (options.debug)
-              options.debug("HTML for",id,"was loaded");
+            //if (options.debug)
+            //  options.debug("HTML for",id,"was loaded");
             const $dlg = $(html);
             $("body").append($dlg);
 
@@ -187,7 +187,7 @@ define("js/Dialog", [
           //if (this.debug) this.debug(`Require ${id}`);
           return Utils.require(`js/dialogs/${id}`)
 					.then(dlgClass => {
-            if (options.debug) options.debug(`JS for ${id} was loaded`);
+            //if (options.debug) options.debug(`JS for ${id} was loaded`);
 
             classes[id] = new dlgClass($dlg, options);
             return classes[id];

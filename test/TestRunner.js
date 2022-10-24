@@ -12,7 +12,7 @@ if (typeof requirejs === 'undefined') {
  * '*' wildcard.
  * --keep will prevent tmp files from being deleted
  */
-define(["mocha", "chai"], (maybeMocha, chai) => {
+define([ "mocha", "chai", "cldrpluralruleparser" ], (maybeMocha, chai) => {
 
 	if (typeof Mocha === 'undefined')
 		Mocha = maybeMocha; // node.js
@@ -163,10 +163,17 @@ define(["mocha", "chai"], (maybeMocha, chai) => {
 		}
 
 		run() {
-			return new Promise(resolve => {
+      const lang = requirejs.toUrl(".") + "/i18n/en.json";
+      return this.Fs().then(fs => fs.readFile(lang))
+      .then(json => {
+        return $.i18n().load({
+          en: JSON.parse(json)
+        });
+      }).then(() => new Promise(resolve => {
+        $.i18n().locale = "en";
 				this.timeout(10000);
 				super.run(resolve);
-			});
+			}));
 		}
 	}
 
