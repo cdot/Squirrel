@@ -206,7 +206,7 @@ define("js/Hoarder", [
      this.clientChanges.push($.i18n("bulk_change"));
      this.cloudChanged = true;
      }
-     return JSON.stringify(this.hoard.tree, null, ' ');
+     return JSON.stringify(this.hoard.tree, null, " ");
      }*/
     
     /**

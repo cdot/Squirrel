@@ -95,7 +95,7 @@ define("js/jq/styling", [
           const m = /(.*)\.inherit_(.*)$/.exec(rule.selectorText);
           if (m) {
             const selector = m[1];
-            const superclass = m[2].split('_').join(' ');
+            const superclass = m[2].split("_").join(" ");
 
             $picker.addClass(superclass);
             let s = "";

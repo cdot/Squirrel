@@ -19,7 +19,7 @@ define([ "cookie" ], () => {
     let n = 0;
     while (n < cs.length) {
       const sor = cs.charAt(n++);
-      if (n + 2 < cs.length && cs.charAt(n) === '-') {
+      if (n + 2 < cs.length && cs.charAt(n) === "-") {
         n++;
         const eor = cs.charAt(n++);
         let sorc = sor.charCodeAt(0);

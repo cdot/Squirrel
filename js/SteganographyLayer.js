@@ -91,7 +91,7 @@ define("js/SteganographyLayer", [
 				cxt.putImageData(id, 0, 0 );
 				const dataURL = canvas.toDataURL('image/png', 1);
 				// Convert the base64 part of the data URL back to binary
-				const data = dataURL.substr(dataURL.indexOf(',') + 1);
+				const data = dataURL.substr(dataURL.indexOf(",") + 1);
 				const array = new Uint8Array(data.length);
 				for (let i = 0; i < data.length; i++)
 					array[i] = data.charCodeAt(i);

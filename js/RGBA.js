@@ -210,7 +210,7 @@ define("js/RGBA", () => {
         if (typeof named !== 'undefined')
           r = named;
 
-        if (r.charAt(0) === '#') {
+        if (r.charAt(0) === "#") {
           this.r = parseInt(r.substr(1, 2), 16) / 255.0;
           this.g = parseInt(r.substr(3, 2), 16) / 255.0;
           this.b = parseInt(r.substr(5, 2), 16) / 255.0;
@@ -235,7 +235,7 @@ define("js/RGBA", () => {
 
         if (/^rgba?\(.*\)$/.test(r)) {
           a = r.replace(/(rgba?\(|\))/g, "")
-          .split(',');
+          .split(",");
           this.r = Math.floor(parseComponent(a[0], 255)) / 255;
           this.g = Math.floor(parseComponent(a[1], 255)) / 255;
           this.b = Math.floor(parseComponent(a[2], 255)) / 255;
@@ -290,7 +290,7 @@ define("js/RGBA", () => {
 
       if (typeof this.a !== 'undefined') {
         tuple.push(this.a);
-        return `rgba(${tuple.join(',')})`;
+        return `rgba(${tuple.join(",")})`;
       } else {
         let s = "#";
         for (let i = 0; i < 3; i++) {

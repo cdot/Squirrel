@@ -192,16 +192,16 @@ define("js/Hoard", [
 					return mkNode(path.slice(0, -1), forceMake)
 					.then(parent => {
 						let act = new Action({
-							type: 'N',
+							type: "N",
 							time: action.time,
 							path: path
 						});
-						if (action.type === 'N'
+						if (action.type === "N"
 							  && path.length === action.path.length)
 							act = action;
 						if (options.undoable)
 							// It was just created, and we want an undo
-							this._record_event(act, 'D', path, parent.time);
+							this._record_event(act, "D", path, parent.time);
 						const nn = new Node({ time: action.time });
 						//if (this.debug) this.debug(`making ${path} at `,new Date(nn.time));
 						parent.addChild(path[path.length - 1], nn);
@@ -223,7 +223,7 @@ define("js/Hoard", [
 
       switch (action.type) {
 
-      case 'N': { // New
+      case "N": { // New
 				// return because mkNode handles calling the uiPlayer
 				return mkNode(action.path, true)
 				.then(node => {
@@ -235,9 +235,9 @@ define("js/Hoard", [
 				});
 			}
 
-			case 'I': { // Insert
+			case "I": { // Insert
         if (options.undoable)
-          this._record_event(action, 'D', action.path, action.time);
+          this._record_event(action, "D", action.path, action.time);
         
 				const node = this.tree.getNodeAt(action.path);
 				if (node)
@@ -255,21 +255,16 @@ define("js/Hoard", [
 				break;
       }
         
-      case 'A': { // Alarm
+      case "A": { // Alarm
 				promise = (action.data ? mkNode(action.path, false)
 						       : Promise.resolve(this.tree.getNodeAt(action.path)))
 				.then(node => {
 					if (!node && action.data)
 						return conflict($.i18n("not_exist", action.path.join(Action.PATH_SEPARATOR)));
 					if (options.undoable) {
-						if (typeof node.alarm === 'undefined')
-							// Undo by cancelling the new alarm
-							this._record_event(action, 'C', action.path,
-											           node.time);
-						else
 							this._record_event(
-								action, 'A', action.path,
-								node.time, { alarm: node.alarm });
+								action, "A", action.path,
+								node.time, node.alarm ? { alarm: node.alarm } : undefined);
 					}
 					
 					if (node) {
@@ -284,21 +279,21 @@ define("js/Hoard", [
         break;
 			}
 
-      case 'C': {
-				// Compatibility, replaced by 'A' with undefined data
+      case "C": {
+				// Retained for compatibility, replaced by "A" with undefined data
 				const node = this.tree.getNodeAt(action.path);
 				if (!node)
 					return conflict($.i18n("not_exist", action.path.join(Action.PATH_SEPARATOR)));
 				// Cancel alarm
         if (options.undoable)
-          this._record_event(action, 'A', action.path,
+          this._record_event(action, "A", action.path,
                              node.time, { alarm: node.alarm });
         delete node.alarm;
         node.time = action.time;
         break;
 			}
 
-      case 'D': { // Delete
+      case "D": { // Delete
 				const node = this.tree.getNodeAt(action.path);
 				if (!node)
 					return conflict($.i18n("not_exist", action.path.join(Action.PATH_SEPARATOR)));
@@ -307,7 +302,7 @@ define("js/Hoard", [
 					action.path.slice(0, -1));
 				if (options.undoable) {
 					this._record_event(action,
-									           'I', action.path, parent.time,
+									           "I", action.path, parent.time,
 									           { data: JSON.stringify(node) });
 				}
 				parent.removeChild(action.path.slice(-1)[0]);
@@ -316,11 +311,11 @@ define("js/Hoard", [
 				break;
 			}
 
-      case 'E': { // Edit
+      case "E": { // Edit
 				promise = mkNode(action.path, false)
 				.then(node => {
 					if (options.undoable)
-						this._record_event(action, 'E', action.path,
+						this._record_event(action, "E", action.path,
 										           node.time, { data: node.value });
 					node.setValue(action.data);
 					node.time = action.time;
@@ -328,7 +323,7 @@ define("js/Hoard", [
         break;
 			}
 
-      case 'M': {
+      case "M": {
 				// Move to another parent
         // action.data is the path of the new parent
  				const node = this.tree.getNodeAt(action.path);
@@ -347,7 +342,7 @@ define("js/Hoard", [
 						from_parent.pop();
 						this._record_event(
 							action,
-							'M', action.data.slice().concat([name]),
+							"M", action.data.slice().concat([name]),
 							parent.time,
 							{ data: from_parent });
 					}
@@ -362,7 +357,7 @@ define("js/Hoard", [
         break;
 			}
 
-      case 'R': {
+      case "R": {
 				// Rename
  				const node = this.tree.getNodeAt(action.path);
 				if (!node)
@@ -377,7 +372,7 @@ define("js/Hoard", [
 					const p = action.path.slice();
 					p[p.length - 1] = action.data;
 					this._record_event(
-						action, 'R', p, parent.time, { data: name });
+						action, "R", p, parent.time, { data: name });
 				}
 				parent.addChild(action.data, node);
 				parent.removeChild(name);
@@ -386,7 +381,7 @@ define("js/Hoard", [
         break;
 			}
 
-      case 'X': {
+      case "X": {
 				// Constrain.
 				promise = (action.data ?
 						       mkNode(action.path, false)
@@ -397,11 +392,11 @@ define("js/Hoard", [
 						if (options.undoable) {
 							if (node.constraints)
 								this._record_event(
-									action, 'X', action.path, node.time,
+									action, "X", action.path, node.time,
 									{ data: node.constraints });
 							else
 								this._record_event(
-									action, 'X', action.path, node.time);
+									action, "X", action.path, node.time);
 						}
 						if (action.data)
 							node.constraints = action.data;
@@ -446,7 +441,7 @@ define("js/Hoard", [
 
     /**
      * Reconstruct the minimal action stream required to recreate
-     * the data.  Actions will be 'N', 'A' and 'X'.
+     * the data.  Actions will be "N", "A" and "X".
 		 * @param {boolean} [includeRoot=false] normally the root node
 		 * of the hoard is not included in the actions list. Set this
 		 * to make it included.
@@ -464,7 +459,7 @@ define("js/Hoard", [
 
         if (includeRoot || path.length > 0) {
           const action = new Action({
-            type: 'N',
+            type: "N",
             path: path,
             time: time
           });
@@ -478,7 +473,7 @@ define("js/Hoard", [
         if (node.alarm) {
           // Use the node construction time on alarms too
           actions.push(new Action({
-            type: 'A',
+            type: "A",
             path: path.slice(),
             time: time,
             data: node.alarm
@@ -487,7 +482,7 @@ define("js/Hoard", [
         
         if (node.constraints) {
           actions.push(new Action({
-            type: 'X',
+            type: "X",
             path: path.slice(),
             time: time,
             data: node.constraints

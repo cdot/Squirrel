@@ -44,7 +44,7 @@ define("js/Node", [
 			
       if (typeof data.alarm === 'string') {
         // Compatibility
-				const mid = data.alarm.indexOf(';');
+				const mid = data.alarm.indexOf(";");
 				if (mid > 0) {
 					this.alarm = {
 						due: Number.parseInt(data.alarm.substr(0, mid)),
@@ -73,7 +73,7 @@ define("js/Node", [
 			}
 
 			if (typeof data.constraints === 'string') {
-				const mid = data.constraints.indexOf(';');
+				const mid = data.constraints.indexOf(";");
 				this.constraints = {
 					size: Number.parseInt(data.constraints.substr(0, mid)),
 					chars: data.constraints.substr(mid + 1)
@@ -256,7 +256,7 @@ define("js/Node", [
 				  && (this.alarm.due !== b.alarm.due
 					    || this.alarm.repeat != b.alarm.repeat)) {
         difference(new Action({
-					type: 'A',
+					type: "A",
 					path: path,
 					alarm: b.alarm
 				}), this, b);
@@ -268,14 +268,14 @@ define("js/Node", [
 				  && (b.constraints.size !== this.constraints.size
 				      || b.constraints.chars !== this.constraints.chars))
         difference(new Action({
-					type: 'X',
+					type: "X",
 					path: path,
           constraints: b.constraints
 				}), this, b);
 
       if (b.value !== this.value)
         difference(new Action({
-					type: 'E',
+					type: "E",
 					path: path,
 					data: b.value
 				}), this, b);
@@ -293,7 +293,7 @@ define("js/Node", [
 						// TODO: look for the node elsewhere in b,
 						// it might have been moved or renamed
 						difference(new Action({
-							type: 'D',
+							type: "D",
 							path: subpath
 						}), this, b);
 					}
@@ -306,7 +306,7 @@ define("js/Node", [
 						// TODO: look for the node elsewhere in a,
 						// it might have been moved or renamed
 						difference(new Action({
-							type: 'I',
+							type: "I",
 							path: path,
 							data: JSON.stringify({
 								name: subnode,

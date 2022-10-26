@@ -13,13 +13,13 @@ define("js/Tree", [
   const PATHSEP = String.fromCharCode(1);
 
   // Character used to hide values
-  const HIDE = '※';
+  const HIDE = "※";
 
   function formatDate(time) {
     const d = new Date(time);
     return `${d.getFullYear()}-`
     + `00${d.getMonth() + 1}`.slice(-2)
-		+ '-'
+		+ "-"
     + `00${d.getDate()}`.slice(-2);
   }
 
@@ -253,7 +253,7 @@ define("js/Tree", [
      * an object.
      * @param {jQuery} $span child node to edit
      * @param {string} text text to present in the editor
-     * @param {string} action 'R'ename or 'E'dit
+     * @param {string} action "R"ename or "E"dit
 		 * @param {function=} after post-edit function
      * @return a Promise that resolves to the changed value
 		 * @private
@@ -298,7 +298,7 @@ define("js/Tree", [
 			$leaf.hide();
       return this._edit(
         $node.find(".tree_t_i_key")
-        .first(), $node.data("key"), 'R',
+        .first(), $node.data("key"), "R",
 				() => $leaf.show());
     },
 
@@ -311,7 +311,7 @@ define("js/Tree", [
       const $node = this.element;
       return this._edit(
         $node.find(".tree_t_i_l_value")
-        .first(), $node.data("value"), 'E');
+        .first(), $node.data("value"), "E");
     },
 
     /**
@@ -516,8 +516,10 @@ define("js/Tree", [
                 alarm: $node.data("alarm")
               })
               .then(act => {
-                if (act.type === 'C') {
+                // "C" retained for compatibility
+                if (act.type === "C" || !act.data) {
                   $node.data("alarm", null);
+				          $node.addClass("tree-noAlarm");
                 } else {
                   $node.data("alarm", {
                     due: act.data.due,
@@ -525,7 +527,7 @@ define("js/Tree", [
                   });
                 }
               })
-              .catch((/*e*/) => {});
+              .catch(e => console.error(e));
               return false;
             });
 
@@ -851,11 +853,11 @@ define("js/Tree", [
     action: function(action, open) {
       if (Tree.debug) Tree.debug("Tree.action", action);
       
-      // 'N' and 'I' require construction of a new node.
-      if (action.type === 'N')
+      // "N" and "I" require construction of a new node.
+      if (action.type === "N")
         return this._action_N(action, open);
       
-      if (action.type === 'I')
+      if (action.type === "I")
 				return this._action_I(action, open);
 
       // All else requires a pre-existing node

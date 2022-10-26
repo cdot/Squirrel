@@ -12,7 +12,7 @@ define("js/jq/simulated_password", ["jquery"], () => {
 	 * ```
 	 * @namespace $.simulated_password
 	 */
-    const SPOT = '•';
+    const SPOT = "•";
     let debug; // global for all instances
     let selectionStart = 0, selectionEnd = 0, keyDown = -1;
     

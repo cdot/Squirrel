@@ -96,8 +96,8 @@ define("js/AES", () => {
 
 	Aes.mixColumns = function (s, Nb) {
 		for (var c = 0; c < 4; c++) {
-			var a = new Array(4); // 'a' is a copy of the current column from 's'
-			var b = new Array(4); // 'b' is a•{02} in GF(2^8)
+			var a = new Array(4); // "a" is a copy of the current column from "s"
+			var b = new Array(4); // "b" is a•{02} in GF(2^8)
 			for (var i = 0; i < 4; i++) {
 				a[i] = s[i][c];
 				b[i] = s[i][c] & 0x80 ? s[i][c] << 1 ^ 0x011b : s[i][c] << 1;

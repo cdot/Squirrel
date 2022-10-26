@@ -72,7 +72,7 @@ define([
       const isEnabled = this.$control("enabled").prop("checked");
 			if (isEnabled || this.wasEnabled) {
 				const act = new Action({
-          type: 'A',
+          type: "A",
 					path: this.options.path
 				});
 				if (isEnabled) {
@@ -98,13 +98,13 @@ define([
       this.$control("settings").find(":input").prop("disabled", !this.wasEnabled);
       const now = new Date().getTime();
 
-      if (this.wasEnabled)
+      if (this.wasEnabled && this.options.alarm)
         this.alarmTime = new Date(this.options.alarm.due);
 			else
         this.alarmTime = now;
 
       if (this.alarmTime < now) {
-        if (this.options.alarm.repeat > 0)
+        if (this.options.alarm && this.options.alarm.repeat > 0)
           this.alarmTime = now + this.options.alarm.repeat;
         else
           this.alarmTime = now + 180 * MSPERDAY;

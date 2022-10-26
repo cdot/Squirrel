@@ -6,7 +6,7 @@
  */
 define(["js/Dialog"], Dialog => {
 
-	const PATH_SEPARATOR = '↘';
+	const PATH_SEPARATOR = "↘";
 
 	/**
 	 * Move node dialog.

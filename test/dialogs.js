@@ -104,7 +104,7 @@ define([
       return Dialog.confirm("add", {
         path: [ "New", "Node", "Not", "x" ],
         validate: key => {
-          return key !== 'x';
+          return key !== "x";
         },
         is_value: false
       }).then(result => {
@@ -115,7 +115,7 @@ define([
       return Dialog.confirm("add", {
         path: [ "Leaf", "Value", "Not", "x" ],
         validate: key => {
-          return key !== 'x';
+          return key !== "x";
         },
         is_value: true
       }).then(result => {

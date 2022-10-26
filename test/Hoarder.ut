@@ -32,12 +32,12 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/Cr
 
   const full_tree_actions = [
     {
-			type: 'N',
+			type: "N",
 			time: 100,
 			path: ["One"]
     },
     {
-			type: 'A',
+			type: "A",
 			time: 200,
       data: {
         due: Date.UTC(2513,9,9),
@@ -46,18 +46,18 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/Cr
 			path: ["One"]
     },
     {
-			type: 'N',
+			type: "N",
 			time: 300,
 			path: [ "One", "Two" ]
     },
     {
-			type: 'N',
+			type: "N",
 			time: 400,
 			path: [ "One", "Two", "Three" ],
       data: "£6.70 per gram"
     },
     {
-      type: 'A',
+      type: "A",
 			path: [ "One", "Two", "Three" ],
 			time: 500,
       data: {
@@ -66,7 +66,7 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/Cr
       }
     },
     {
-      type: 'A',
+      type: "A",
 			path: [ "One", "Two" ],
 			time: 600,
       data: {
@@ -75,7 +75,7 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/Cr
       }
     },
     {
-			type: 'X',
+			type: "X",
 			time: 500,
 			path: [ "One", "Two", "Three" ],
       data: {
@@ -181,7 +181,7 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/Cr
     // Add an action to the cloud that won't be in the client
     let acts = full_tree_actions.slice();
     let cloud_act = new Action({
-			type:'N',
+			type:"N",
 			path:["One", "From Cloud"],
       time: 1000,
 			data:"cloud action"
@@ -191,7 +191,7 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/Cr
 		// Make an action that will be in the client, but not the cloud,
 		// slightly before the cloud one
     let client_act = new Action({
-      type:'N',
+      type:"N",
 			path:["One", "From Client"],
 			time: 950,
 			data:"client action"
@@ -277,12 +277,12 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/Cr
     // Add an action to the cloud
     let acts = full_tree_actions.slice();
     let cloud_act = new Action({
-      type:'R', path:["One", "Two"], data:"Whoops", time:960});
+      type:"R", path:["One", "Two"], data:"Whoops", time:960});
     let h;
     acts.push(cloud_act);
 
     let eact = new Action({
-      type:'R', path:["One", "Two"], time:950, data:"In Client"});
+      type:"R", path:["One", "Two"], time:950, data:"In Client"});
     return make_cloud(acts, cloust)
     .then(() => {
       // Populate the client with the base tree
@@ -328,7 +328,7 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/Cr
 
     // Add an action to the cloud
     let acts = full_tree_actions.slice();
-    let cloud_act = new Action({type:'N', path:["One", "From Cloud"], time:960, data:'4'});
+    let cloud_act = new Action({type:"N", path:["One", "From Cloud"], time:960, data:"4"});
     acts.push(cloud_act);
     let h;
     let progress = [];
@@ -352,8 +352,8 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/Cr
     .then(() => {
       // Add a local action in the client
       return h.hoard.play_action(
-				new Action({type:'N', path:["One", "Five"],
-							      time:950, data:'5'}));
+				new Action({type:"N", path:["One", "Five"],
+							      time:950, data:"5"}));
 		})
     .then(() => {
 			return h.update_from_cloud(progress);
@@ -394,7 +394,7 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/Cr
 
     // Add an action to the cloud
     let acts = full_tree_actions.slice();
-    let cloud_act = new Action({type:'N', path:["One", "From Cloud"], time:960, data:'4'});
+    let cloud_act = new Action({type:"N", path:["One", "From Cloud"], time:960, data:"4"});
     acts.push(cloud_act);
     let h;
     let progress = [];
@@ -417,7 +417,7 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/Cr
     })
     .then(() => {
       // Add a local action in the client
-      let act = new Action({type:'N', path:["One", "Five"], time:950, data:'5'});
+      let act = new Action({type:"N", path:["One", "Five"], time:950, data:"5"});
       return h.hoard.play_action(act)
 			.then(() => {
 				let progress = [];
@@ -440,7 +440,7 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/Cr
 
     // Add an action to the cloud
     let acts = full_tree_actions.slice();
-    let cloud_act = new Action({type:'N', path:["One", "From Cloud"], time:960, data:'4'});
+    let cloud_act = new Action({type:"N", path:["One", "From Cloud"], time:960, data:"4"});
     acts.push(cloud_act);
 
     cloust.writes("blah", "rubbish")
@@ -459,7 +459,7 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/Cr
       return h.load_client()
       .then(() => {
         // Add a local action in the client
-        let act = new Action({type:'N', path:["One", "Five"], time:950, data:'5'});
+        let act = new Action({type:"N", path:["One", "Five"], time:950, data:"5"});
         let progress = [];
         return h.hoard.play_action(act)
         .then(() => h.update_from_cloud(progress))
@@ -482,7 +482,7 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/Cr
 
     // Add an action to the cloud
     let acts = full_tree_actions.slice();
-    let cloud_act = new Action({type:'N', path:["One", "From Cloud"], time:960, data:'4'});
+    let cloud_act = new Action({type:"N", path:["One", "From Cloud"], time:960, data:"4"});
     acts.push(cloud_act);
 
     return make_cloud(acts, cloust)
@@ -502,7 +502,7 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/Cr
       .then(() => {
         return h.check_alarms(function(path/*, rang_at*/) {
           for (let a of full_tree_actions) {
-            if (a.type === 'A' && TestRunner.samePath(a.path, path)) {
+            if (a.type === "A" && TestRunner.samePath(a.path, path)) {
               assert(!a.rung);
               //console.log(a,"at",rang_at);
               a.rung = true;
@@ -523,19 +523,19 @@ requirejs(["js/Hoarder", "js/Action", "js/Hoard", "js/LocalStorageStore", "js/Cr
     // Add an action to the cloud
     let acts = full_tree_actions.slice();
     let cloud_act = new Action({
-			type:'N',
+			type:"N",
 			path:["One", "From Cloud"],
       time:960,
-			data:'4'
+			data:"4"
 		});
     let h;
     acts.push(cloud_act);
 
     let eact = new Action({
-      type:'N',
+      type:"N",
 			path:["One", "Five"],
 			time:950,
-			data:'5'
+			data:"5"
 		});
     return make_cloud(acts, cloust)
     .then(() => {

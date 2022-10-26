@@ -80,7 +80,7 @@ define("js/LocalStorageStore", [
         key.push(this.option("user"));
       key.push(ROOT_PATH);
       key.push(path);
-      return key.join('.');
+      return key.join(".");
     }
 
 		/**

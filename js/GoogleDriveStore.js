@@ -166,7 +166,7 @@ define([
       else if (r.status === 401) {
         mess +=
         $.i18n("access_expired") +
-        ' ' +
+        " " +
         $.i18n("please_refresh");
       } else if (r.result && r.result.error) {
         mess += r.result.error.message;

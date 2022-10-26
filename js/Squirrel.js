@@ -48,8 +48,7 @@ define("js/Squirrel", [
 
       if (this.options.debug) {
         this.debug = function (...args) {
-          console.debug(...args);
-          if (!args[0]) debugger;
+          if (args.length == 0 || !args[0]) debugger;
           $("#debug_log").append(`<p>${Array.from(args).join(" ")}</p>`);
         };
         this.debug("Debug enabled");

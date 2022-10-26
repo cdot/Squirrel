@@ -14,7 +14,7 @@ requirejs(["js/Utils", "js/Cryptographer", "js/Server", "fs", "axios", "test/Tes
   let tr = new TestRunner("Server");
   let assert = tr.assert;
   const workingLocation = "working";
-  const workingDir = __dirname + '/' + workingLocation;
+  const workingDir = __dirname + "/" + workingLocation;
 
   // The server will start in the directory where the test lives
   let server_config = {
@@ -31,10 +31,10 @@ requirejs(["js/Utils", "js/Cryptographer", "js/Server", "fs", "axios", "test/Tes
   };
 
   const serverUrl = "http://localhost:" + server_config.port;
-  const workingUrl = serverUrl + '/' + workingLocation;
+  const workingUrl = serverUrl + "/" + workingLocation;
 
   tr.addTest("no-auth-get", () => {
-    return request.get(serverUrl + '/')
+    return request.get(serverUrl + "/")
     .then(r => {
       console.log(r);
       assert(false, "Unexpected");
@@ -58,7 +58,7 @@ requirejs(["js/Utils", "js/Cryptographer", "js/Server", "fs", "axios", "test/Tes
   });
 
   tr.addTest("bad-root-get", () => {
-    return request.get(serverUrl + '/', {
+    return request.get(serverUrl + "/", {
       auth: {
         username: server_config.auth.user,
         password: server_config.auth.pass
@@ -74,7 +74,7 @@ requirejs(["js/Utils", "js/Cryptographer", "js/Server", "fs", "axios", "test/Tes
   });
 
   tr.addTest("doesnt_support_post", () => {
-    return request.post(serverUrl + '/', {
+    return request.post(serverUrl + "/", {
       auth: {
         username: server_config.auth.user,
         password: server_config.auth.pass

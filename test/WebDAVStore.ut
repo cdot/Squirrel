@@ -27,7 +27,7 @@ requirejs(deps, function(StoreTester, webdav) {
 		const user = userManager.addUser(webdav_user, webdav_pass, false);
 		console.log("User", user);
 		const privilegeManager = new WebDAV.SimplePathPrivilegeManager();
-		privilegeManager.setRights(user, '/', [ 'all' ]);
+		privilegeManager.setRights(user, "/", [ 'all' ]);
 		server = new WebDAV.WebDAVServer({
 			httpAuthentication: new WebDAV.HTTPBasicAuthentication(
 				userManager, 'Default realm'),
@@ -37,14 +37,14 @@ requirejs(deps, function(StoreTester, webdav) {
 
 		/*server.afterRequest((arg, next) => {
 			console.log('>>', arg.request.method, arg.requested.uri,
-			'>', arg.response.statusCode,
+			">", arg.response.statusCode,
 			arg.response.statusMessage);
 			console.log(arg.responseBody);
 			next();
 		  });*/
     
 		config = new Promise(resolve => server.setFileSystem(
-			'/',
+			"/",
 			new WebDAV.PhysicalFileSystem(__dirname),
 			success =>
 			server.start(() => {

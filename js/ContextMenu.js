@@ -267,7 +267,7 @@ define("js/ContextMenu", [
         .then(kv => {
           this.clipboardContents = kv.value;
           return this.app.appPlayAction(new Action({
-            type: 'I',
+            type: "I",
             path: $node.tree("getPath").concat(kv.key),
             data: kv.value
           }), true);
@@ -291,7 +291,7 @@ define("js/ContextMenu", [
           is_value: true
         })
         .then(res => this.app.appPlayAction(new Action({
-          type: 'N',
+          type: "N",
           path: $node.tree("getPath").concat(res.key),
           data: res.value
         }), true));
@@ -304,7 +304,7 @@ define("js/ContextMenu", [
           is_value: false
         })
         .then(res => this.app.appPlayAction(new Action({
-          type: 'N',
+          type: "N",
           path: $node.tree("getPath").concat(res.key)
         }), true));
         break;
@@ -315,7 +315,7 @@ define("js/ContextMenu", [
 					getContent: path => this.app.nodeContents(path)
 				})
 				.then(path => this.app.appPlayAction(new Action({
-          type: 'M',
+          type: "M",
           path: $node.tree("getPath"),
           data: path
         }), true));
@@ -328,14 +328,14 @@ define("js/ContextMenu", [
         })
         .then(result => {
           let prom = this.app.appPlayAction(new Action({
-            type: 'E',
+            type: "E",
             path: $node.tree("getPath"),
             data: result.text
           }));
           if (typeof result.constraints !== 'undefined')
             prom = prom.then(() => {
               return this.app.appPlayAction(new Action({
-                type: 'X',
+                type: "X",
                 path: $node.tree("getPath"),
                 data: result.constraints
               }));
@@ -362,7 +362,7 @@ define("js/ContextMenu", [
           is_leaf: $node.hasClass("tree-isLeaf")
         })
         .then(() => this.app.appPlayAction(new Action({
-          type: 'D',
+          type: "D",
           path: $node.tree("getPath")
         })));
         break;

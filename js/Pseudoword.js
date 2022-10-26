@@ -40,7 +40,7 @@ define(() => {
 
   // Matrix of character transition probabilities, derived from analysis of
   // /usr/share/dict/british-english. Each row corresponds to a character
-  // 'a'..'z', and each column is a character 'a'..'z' that might follow it.
+  // "a".."z", and each column is a character "a".."z" that might follow it.
   // Values represent the probability of that transition.
   Pseudoword.MATRIX = [
     [0.0410761963442185,4.22571369891148,6.16399671390429,4.22828096118299,
@@ -196,7 +196,7 @@ define(() => {
      0.380952380952381,0.476190476190476,0,3.42857142857143,16.0952380952381] //z
   ];
 
-  Pseudoword.ORDA = 'a'.charCodeAt(0);
+  Pseudoword.ORDA = "a".charCodeAt(0);
 
   return Pseudoword;
 });

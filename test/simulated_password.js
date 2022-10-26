@@ -53,7 +53,7 @@ requirejs(["test/TestRunner", "jquery", "js/jq/simulated_password"], function(Te
   });
 
   tr.addTest('options in data', function() {
-    $("#working").html('<input class="password" id="tt" value="initial" data-options=\'{"hidden":false,"checkbox":false}\'>');
+    $("#working").html('<input class="password" id="tt" value="initial" data-options=\'{"hidden":false,"checkbox":false}\">");
     $(".password").simulated_password();
     const html = $("#working").html();
     assert.equal(html, '<input class="password" id="tt" value="initial" data-options="{&quot;hidden&quot;:false,&quot;checkbox&quot;:false}">');
@@ -94,7 +94,7 @@ requirejs(["test/TestRunner", "jquery", "js/jq/simulated_password"], function(Te
       assert.equal($p.val(), "ass");
       assert.equal($p.raw_val(), "•••");
     });
-    $p.trigger(new jQuery.Event("input", { key: 'h' }));
+    $p.trigger(new jQuery.Event("input", { key: "h" }));
   });
 
   tr.addTest('set val', function() {

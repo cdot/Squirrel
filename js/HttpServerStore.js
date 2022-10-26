@@ -42,7 +42,7 @@ define("js/HttpServerStore", [
           this.debug("http addAuth: Using BasicAuth", this.option('net_user'));
         // Not happy about caching this
         headers.Authorization = 'Basic '
-        + btoa(this.option('net_user') + ':' + this.option('net_pass'));
+        + btoa(this.option('net_user') + ":" + this.option('net_pass'));
       } else if (this.debug)
         this.debug("http addAuth: No auth header");
     }
@@ -97,7 +97,7 @@ define("js/HttpServerStore", [
             xhr.send(body);
           }
         } catch (e) {
-          reject(this.error(500, turl.split('/'),
+          reject(this.error(500, turl.split("/"),
                             `xhr.send error: ${e}`));
         }
 
@@ -169,9 +169,9 @@ define("js/HttpServerStore", [
 		 */
     write(path, data) {
       if (this.debug) this.debug("http write", path);
-      const pathbits = path.split('/');
+      const pathbits = path.split("/");
       const folder = pathbits.slice(0, pathbits.length - 1);
-      return this.mkpath(folder.join('/'))
+      return this.mkpath(folder.join("/"))
       .then(() => this.request('PUT', path, {}, data))
       .then(res => {
         if (res.status < 200 || res.status >= 300)

@@ -8,8 +8,8 @@ if (typeof requirejs === 'undefined') {
 const DESCRIPTION = "USAGE\n  node build_tree.js [options] <file>\nRead a .json file of actions as output by endcrypt.js and try to build a hoard from it.";
 
 const OPTIONS = [
-  ['d', "debug", " to enable debug"],
-  ['h', "help", "show this help"]
+  ["d", "debug", " to enable debug"],
+  ["h", "help", "show this help"]
 ];
 
 requirejs(["node-getopt","fs", "js/Hoard"], function(Getopt, fs, Hoard) {

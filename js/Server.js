@@ -78,8 +78,8 @@ define("js/Server", ["url", "extend", "fs"], (Url, extend, fs) => {
             if (this.log)
               this.log("Authentication failed ", request.url);
             response.statusCode = 401;
-            response.setHeader('WWW-Authenticate', 'Basic realm="' +
-                               this.auth.realm + '"');
+            response.setHeader(
+              'WWW-Authenticate', `Basic realm="${this.auth.realm}"`);
             response.end('Access denied');
             return false;
           }

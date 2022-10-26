@@ -242,7 +242,7 @@ define("build/Locales", [
                 while (!finished) {
                     const data = readline.question(prompt);
                     // User input exit.
-                    if (data === 't') {
+                    if (data === "t") {
                         let tx = auto_translate(en, lang);
                         if (typeof tx !== 'undefined')
                             translated[en] = tx;

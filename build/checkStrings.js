@@ -83,7 +83,7 @@ requirejs([
       while ((m = re.exec(fileContents[file]))) {
         if (!m[id_idx])
           throw Error(m + " in " + file);
-        const type = type_idx ? m[type_idx] : '*';
+        const type = type_idx ? m[type_idx] : "*";
         const id = m[id_idx].replace(/^\[.*\]/, "");
         addID(id, file, type);
       }
@@ -118,7 +118,7 @@ requirejs([
       output: process.stdout
     });
     console.log(`${id}:${types[id]} = "${strings[lang][id]}" in ${lang}`);
-    const q = `Change ID "${id}"${probably ? (' to "'+probably+'"') : ""} in ${lang}? `;
+    const q = `Change ID "${id}"${probably ? (' to "'+probably+""") : ""} in ${lang}? `;
     return rl.question(q)
     .then(answer => {
       rl.close();
@@ -127,7 +127,7 @@ requirejs([
         return -2;
       case undefined: case "": case "n": case "N":
         return 0;
-      case 'y': case 'Y':
+      case "y": case "Y":
         if (probably) {
           answer = probably;
           break;

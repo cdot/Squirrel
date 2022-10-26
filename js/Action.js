@@ -32,7 +32,7 @@ define("js/Action", ["js/Serror"], (Serror) => {
              + ":" + `00${deltaDate.getUTCMinutes()}`.slice(-2)
              + ":" + `00${deltaDate.getUTCSeconds()}`.slice(-2));
 		
-    return s.join(' ');
+    return s.join(" ");
   }
 
 	/**
@@ -49,19 +49,21 @@ define("js/Action", ["js/Serror"], (Serror) => {
     constructor(proto) {
 			/**
 			 * Action type - a single character identifying code
-			 * * 'N' with no data - create collection
-			 * * 'N' with data:string - create leaf
-			 * * 'D' delete node, no data. Will delete the entire node tree.
-			 * * 'I' insert node, data:Node, insert an entire node tree
+			 * * "N" with no data - create collection
+			 * * "N" with data:string - create leaf
+			 * * "D" delete node, no data. Will delete the entire node tree.
+			 * * "I" insert node, data:Node, insert an entire node tree
 			 * at a named node.
-			 * * 'E' edit node, data:string, modify the leaf data in a node
-			 * * 'R' rename node, data:string contains new name
-			 * * 'A' add alarm, data:{due:number, repeat:number}
-			 * Old format had data:number, number of days from last node
-			 * change, will be automatically updated when played.
-			 * * 'C' cancel alarm on node, no data
-			 * * 'X' with data, add value constraints
-			 * * 'X' with no data, remove value constraints
+			 * * "E" edit node, data:string, modify the leaf data in a node
+			 * * "R" rename node, data:string contains new name
+			 * * "A" add alarm, data:{due:number, repeat:number}
+			 *   Old format had data:number, number of days from last node
+			 *   change, will be automatically updated when played. Undefined data
+       *   will cancel the alarm.
+			 * * "C" cancel alarm on node, no data (retained for compatibility,
+       *   replaced by "A" with no data
+			 * * "X" with data, add value constraints
+			 * * "X" with no data, remove value constraints
        * @member {string}
 			 */
 			this.type = proto.type;
@@ -91,9 +93,9 @@ define("js/Action", ["js/Serror"], (Serror) => {
 			 */
       if (typeof proto.data !== 'undefined') {
 				// Compatibility with old formats
-				if (this.type === 'A') {
+				if (this.type === "A") {
 					if (typeof proto.data === 'string') {
-						const mid = proto.data.indexOf(';');
+						const mid = proto.data.indexOf(";");
 						if (mid > 0) {
 							this.data = {
 								due: Number.parseInt(proto.data.substr(0, mid)),
@@ -125,9 +127,9 @@ define("js/Action", ["js/Serror"], (Serror) => {
 						this.data = proto.data;
 					}
 				}
-				else if (this.type === 'X'
+				else if (this.type === "X"
 						     && typeof proto.data === 'string') {
-					const mid = proto.data.indexOf(';');
+					const mid = proto.data.indexOf(";");
 					this.data = {
 						size: Number.parseInt(proto.data.substr(0, mid)),
 						chars: proto.data.substr(mid + 1)
@@ -156,7 +158,7 @@ define("js/Action", ["js/Serror"], (Serror) => {
       const p = Action.pathS(this.path);
       let s;
       switch (this.type) {
-      case 'A':
+      case "A":
 				if (this.data) {
 					s = $.i18n("add_reminder",
 							       new Date(this.data.due).toLocaleString(),
@@ -169,28 +171,28 @@ define("js/Action", ["js/Serror"], (Serror) => {
 				} else
 					s = $.i18n("cancel_reminder", p);
         break;
-      case 'C':
+      case "C": // retained for compatibility
         s = $.i18n("cancel_reminder", p);
         break;
-      case 'D':
+      case "D":
         s = $.i18n("Delete $1", p);
         break;
-      case 'E':
+      case "E":
         s = $.i18n("change_val", p, this.data);
         break;
-      case 'I':
+      case "I":
         s = $.i18n("Insert $1 = $2", p, this.data);
         break;
-      case 'M':
+      case "M":
         s = $.i18n("Move $1 to $2", p, Action.pathS(this.data));
         break;
-      case 'N':
+      case "N":
         s = $.i18n("Create $1", p);
         break;
-      case 'R':
+      case "R":
         s = $.i18n("rename_x_y", p, this.data);
         break;
-      case 'X':
+      case "X":
         if (this.data)
           s = $.i18n("constrain_chars",
                      p, this.data.size, this.data.chars);
@@ -242,7 +244,7 @@ define("js/Action", ["js/Serror"], (Serror) => {
         if (aact && bact) {
           if (aact.time === bact.time &&
               aact.type === bact.type &&
-              aact.path.join('/') === bact.path.join('/') &&
+              aact.path.join("/") === bact.path.join("/") &&
               aact.data === bact.data) {
             // Duplicate, ignore one of them
             aact = a.shift();
@@ -265,7 +267,7 @@ define("js/Action", ["js/Serror"], (Serror) => {
     }
   }
 
-  Action.PATH_SEPARATOR = '↘';
+  Action.PATH_SEPARATOR = "↘";
 
   return Action;
 });

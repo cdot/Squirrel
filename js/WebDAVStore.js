@@ -6,7 +6,7 @@ define("js/WebDAVStore", [
 ], (Utils, HttpServerStore) => {
 
   const XML_NAMESPACES = {
-    'DAV:' : 'd'
+    'DAV:' : "d"
   };
 
   /**
@@ -44,10 +44,10 @@ define("js/WebDAVStore", [
      static _escapeXml(s) {
      return s.replace(/[<>&"']/g, function (ch) {
      switch (ch) {
-     case '<': return '&lt;';
-     case '>': return '&gt;';
-     case '&': return '&amp;';
-     case '"': return '&quot;';
+     case "<": return '&lt;';
+     case ">": return '&gt;';
+     case "&": return '&amp;';
+     case """: return '&quot;';
      case "'": return '&apos;';
      }
      });
@@ -79,7 +79,7 @@ define("js/WebDAVStore", [
      propFind(url, properties, depth, headers) {
 
      if(typeof depth === 'undefined') {
-     depth = '0';
+     depth = "0";
      }
 
      // depth header must be a string, in case a number was passed in
@@ -93,7 +93,7 @@ define("js/WebDAVStore", [
      let body ='<?xml version="1.0"?><d:propfind ';
      let namespace;
      for (namespace in XML_NAMESPACES) {
-     body += ' xmlns:' + XML_NAMESPACES[namespace] + '="' + namespace + '"';
+     body += ' xmlns:' + XML_NAMESPACES[namespace] + '="' + namespace + """;
      }
      body += '><d:prop>';
 
@@ -104,7 +104,7 @@ define("js/WebDAVStore", [
 
      const property = this._parseClarkNotation(properties[ii]);
      if (property && XML_NAMESPACES[property.namespace]) {
-     body += '<' + XML_NAMESPACES[property.namespace] + ':' + property.name + ' />';
+     body += "<" + XML_NAMESPACES[property.namespace] + ":" + property.name + ' />';
      } else {
      body += '<x:' + property.name + ' xmlns:x="' + property.namespace + '" />';
      }
@@ -116,7 +116,7 @@ define("js/WebDAVStore", [
      .then(result => {
      return {
      status: result.status,
-     body: depth === '0' ? result.body[0] : result.body,
+     body: depth === "0" ? result.body[0] : result.body,
      xhr: result.xhr
      };
      });
@@ -140,9 +140,9 @@ define("js/WebDAVStore", [
      let propName;
      let propValue = properties[ii];
      if (XML_NAMESPACES[property.namespace]) {
-     propName = XML_NAMESPACES[property.namespace] + ':' + property.name;
+     propName = XML_NAMESPACES[property.namespace] + ":" + property.name;
      } else {
-     propName = 'x:' + property.name + ' xmlns:x="' + property.namespace + '"';
+     propName = 'x:' + property.name + ' xmlns:x="' + property.namespace + """;
      }
 
      // FIXME: hard-coded for now until we allow properties to
@@ -150,7 +150,7 @@ define("js/WebDAVStore", [
      if (propName !== 'd:resourcetype') {
      propValue = _escapeXml(propValue);
      }
-     body += '<' + propName + '>' + propValue + '</' + propName + '>';
+     body += "<" + propName + ">" + propValue + '</' + propName + ">";
      }
      body += '</d:prop></d:set>';
      return body;
@@ -174,9 +174,9 @@ define("js/WebDAVStore", [
      '<?xml version="1.0"?><d:propertyupdate ';
      let namespace;
      for (namespace in XML_NAMESPACES) {
-     body += ' xmlns:' + XML_NAMESPACES[namespace] + '="' + namespace + '"';
+     body += ' xmlns:' + XML_NAMESPACES[namespace] + '="' + namespace + """;
      }
-     body += '>' + this._renderPropSet(properties) + '</d:propertyupdate>';
+     body += ">" + this._renderPropSet(properties) + '</d:propertyupdate>';
 
      return this.request('PROPPATCH', url, headers, body)
      .then(result => {
@@ -208,9 +208,9 @@ define("js/WebDAVStore", [
      '<?xml version="1.0"?><d:mkcol';
      let namespace;
      for (namespace in XML_NAMESPACES) {
-     body += ' xmlns:' + XML_NAMESPACES[namespace] + '="' + namespace + '"';
+     body += ' xmlns:' + XML_NAMESPACES[namespace] + '="' + namespace + """;
      }
-     body += '>' + this._renderPropSet(properties) + '</d:mkcol>';
+     body += ">" + this._renderPropSet(properties) + '</d:mkcol>';
      }
 
      return this.request('MKCOL', url, headers, body).then(result => {
@@ -298,7 +298,7 @@ define("js/WebDAVStore", [
           let propNode = propIterator.iterateNext();
           while (propNode) {
             const content = this._parsePropNode(propNode);
-            propStat.properties['{' + propNode.namespaceURI + '}' + propNode.localName] = content;
+            propStat.properties["{" + propNode.namespaceURI + "}" + propNode.localName] = content;
             propNode = propIterator.iterateNext();
 
           }
@@ -323,7 +323,7 @@ define("js/WebDAVStore", [
       if (path.length === 0)
         return Promise.resolve(); // at the root, always exists
 
-      return this.request('PROPFIND', path.join('/'), { Depth: 1 })
+      return this.request('PROPFIND', path.join("/"), { Depth: 1 })
       .then(res => {
         if (200 <= res.status && res.status < 300)
           return Promise.resolve();
@@ -333,7 +333,7 @@ define("js/WebDAVStore", [
           p.pop();
           return this.mkpath(p).then(
             // Simple MKCOL request, no properties
-						() => this.request('MKCOL', path.join('/')));
+						() => this.request('MKCOL', path.join("/")));
         }
 
         return this._handle_error(path, res)
