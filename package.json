@@ -1,31 +1,91 @@
 {
-    "name": "Squirrel",
-    "version": "0.0.1",
+    "name": "@cdot/squirrel",
+    "version": "0.1.0",
     "license": "MIT",
-    "homepage": "https://github.com/cdot/Squirrel",
+    "type": "module",
+    "author": {
+        "name": "Crawford Currie",
+        "url": "https://github.com/cdot"
+    },
     "repository": {
         "type": "git",
         "url": "https://github.com/cdot/Squirrel.git"
     },
+    "publishConfig": {
+        "registry": "https://registry.npmjs.org/",
+        "access": "public"
+    },
+    "files": {},
+    "dependencies": {
+        "@rwap/jquery-ui-touch-punch": "latest",
+        "@wikimedia/jquery.i18n": "^1.0.7",
+        "clipboard": "^2.0.11",
+        "jquery": "^3.6.3",
+        "jquery-ui-dist": "^1.13.2",
+        "jquery.cookie": "^1.4.1",
+        "posix-getopt": "^1.2.1",
+        "ui-contextmenu": "^1.18.1"
+    },
+    "optionalDependencies": {
+        "bcrypt": "^5.1.0",
+        "body-parser": "^1.20.1",
+        "btoa": "^1.2.1",
+        "canvas": "^2.11.0",
+        "cors": "^2.8.5",
+        "express": "^4.18.2",
+        "express-basic-auth": "^1.2.1",
+        "express-session": "^1.17.3",
+        "passport": "^0.6.0",
+        "passport-local": "^1.0.0",
+        "pngjs": "^6.0.0",
+        "session-file-store": "^1.5.0",
+        "url": "^0.11.0"
+    },
+    "devDependencies": {
+        "c8": "^7.12.0",
+        "chai": "^4.3.7",
+        "chai-http": "*",
+        "clean-css": "^5.3.2",
+        "eslint": "^8.33.0",
+        "express-basic-auth": "^1.2.1",
+        "html-minifier": "^4.0.0",
+        "jsdoc": "^4.0.0",
+        "jsdom": "^21.1.0",
+        "mocha": "^10.2.0",
+        "node-localstorage": "^2.2.1",
+        "npm-check": "^6.0.1",
+        "npm-check-updates": "^16.6.3",
+        "readline-sync": "^1.4.10",
+        "request": "^2.65.0",
+        "sync-request": "^6.1.0",
+        "tmp-promise": "^3.0.3",
+        "uglify-js": "^3.17.4",
+        "webdav-server": "^2.6.2",
+        "xhr2": "^0.2.1"
+    },
     "scripts": {
+        "build": "webpack -c build/webpack_config.js",
         "doc": "jsdoc --verbose -c jsdoc_config.json -r -p -d doc js",
-        "lint": "eslint js -f unix",
-        "test": "for f in `find . -name '*.ut'`; do node $f; done",
+        "lint": "eslint src -f unix",
+        "test": "mocha --timeout=5000 test/*_unit.js",
+        "coverage": "NODE_ENV=test c8 --reporter=html --reporter text npm run test",
         "tx": "node build/checkStrings.js",
-        "update": "ncu -u ",
-        "server": "node js/web_server.js --user=x --pass=x --debug --log",
-        "build": "node build/release.js"
+        "server": "node src/web_server.js --user=x --pass=x --debug --log"
     },
     "eslintConfig": {
         "extends": "eslint:recommended",
         "parserOptions": {
-            "ecmaVersion": "latest"
+            "sourceType": "module",
+            "ecmaVersion": 2022
         },
         "env": {
             "shared-node-browser": true,
             "jquery": true,
             "es2021": true
         },
+        "plugins": [
+            "import"
+        ],
         "globals": {
             "define": false,
             "ArrayBuffer": false,
@@ -74,42 +134,5 @@
             "quotes": 0,
             "strict": 0
         }
-    },
-    "devDependencies": {
-        "axios": "^1.1.3",
-        "btoa": "^1.2.1",
-        "c8": "^7.12.0",
-        "canvas": "^2.10.1",
-        "chai": "^4.3.6",
-        "chai-http": "*",
-        "clean-css": "^5.3.1",
-        "cookies": "^0.8.0",
-        "eslint": "^8.25.0",
-        "express": "^4.18.2",
-        "express-basic-auth": "^1.2.1",
-        "html-minifier": "^4.0.0",
-        "jsdoc": "^3.6.11",
-        "jsdom": "^20.0.1",
-        "mocha": "^10.1.0",
-        "node-getopt": "^0.3.2",
-        "npm-check": "^6.0.1",
-        "npm-check-updates": "^16.3.13",
-        "readline-sync": "^1.4.10",
-        "request": "^2.65.0",
-        "sync-request": "^6.1.0",
-        "uglify-js": "^3.17.3",
-        "url-parse": "^1.5.10",
-        "webdav-server": "^2.6.2",
-        "xhr2": "^0.2.1"
-    },
-    "dependencies": {
-        "@benmajor/jquery-touch-events": "^2.0.3",
-        "@wikimedia/jquery.i18n": "^1.0.7",
-        "clipboard": "^2.0.11",
-        "jquery": "^3.6.1",
-        "jquery-ui-dist": "^1.13.2",
-        "jquery.cookie": "^1.4.1",
-        "requirejs": "^2.3.6",
-        "ui-contextmenu": "^1.18.1"
     }
 }

@@ -19,7 +19,7 @@
     <link rel="shortcut icon" sizes="196x196" href="images/squirrel.svg" />
     <title>Squirrel</title>
     <link rel="icon" href="images/favicon.ico" type="image/x-icon" />
-	<!-- The id is used by js/sq/styling to switch the jquery-ui theme -->
+	<!-- The id is used by src/sq/styling to switch the jquery-ui theme -->
     <link id="jQueryTheme" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" rel="stylesheet">
 
     <link href="css/Icons.css" rel="stylesheet" />
@@ -27,7 +27,19 @@
     <link href="css/Dialogs.css" rel="stylesheet" />
     <link href="css/Squirrel.css" rel="stylesheet" />
 
-    <script data-main="js/main.js" src="//cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.js"></script>
+    <script type="importmap">
+      {
+        "imports": {
+          "jquery/": "./node_modules/jquery/",
+          "jquery-ui-dist/": "./node_modules/jquery-ui-dist/",
+          "clipboard/": "./node_modules/clipboard/",
+          "ui-contextmenu/": "./node_modules/ui-contextmenu/",
+          "@rwap/jquery-ui-touch-punch/": "./node_modules/@rwap/jquery-ui-touch-punch/",
+          "@wikimedia/jquery.i18n/": "./node_modules/@wikimedia/jquery.i18n/"
+        }
+      }
+    </script>
+    <script type="module" src="src/main.js"></script>
   </head>
 
   <body>
