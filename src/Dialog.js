@@ -187,7 +187,7 @@ class Dialog extends Progress {
       if (!(id in classes)) {
         //if (this.debug) this.debug(`Require ${id}`);
         console.log(import.meta.url);
-        return import(`./dialogs/${id}.js?fuck=8`)
+        return import(`./dialogs/${id}.js`)
 				.then(mod => {
           const dlgClass = mod[id];
           //if (options.debug) options.debug(`JS for ${id} was loaded`);
