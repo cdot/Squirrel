@@ -3,23 +3,27 @@
     <meta charset="utf-8">
     <title>Dialog Tests</title>
     <link id="jQueryTheme" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" rel="stylesheet">
-    <link href="../css/Icons.css" rel="stylesheet">
-    <link href="../css/Dialogs.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/mocha/5.2.0/mocha.css" rel="stylesheet" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.js"></script>
+    <link href="../../css/Icons.css" rel="stylesheet">
+    <link href="../../css/Dialogs.css" rel="stylesheet">
+    <script type="importmap">
+      {
+        "imports": {
+          "@rwap/jquery-ui-touch-punch/": "../../node_modules/@rwap/jquery-ui-touch-punch/",
+          "banana-i18n/": "../../node_modules/banana-i18n/",
+          "jquery.cookie/": "../../node_modules/jquery.cookie/",
+          "jquery/": "../../node_modules/jquery/",
+          "jquery-ui-dist/": "../../node_modules/jquery-ui-dist/",
+          "pngjs/": "../../node_modules/pngjs/",
+          "ui-contextmenu/": "../../node_modules/ui-contextmenu/"
+        }
+      }
+    </script>
   </head>
   <body>
     <div id="mocha"></div>
     <div id="node"></div>
     <h1>Click the button to open the dialog</h1>
     <div id="buttons"></div>
-    <script>
-      requirejs.config({
-          urlArgs: "nocache=" + Date.now()
-      });
-      requirejs(["dialogs"], function(when_ready) {
-        $(when_ready);
-      });
-    </script>
+    <script type="module" src="./dialogs.js"></script>
   </body>
 </html>

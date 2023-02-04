@@ -4,7 +4,7 @@
 /**
  * Change chooser dialog
  */
-import { Dialog } from "./Dialog.js";
+import { Dialog } from "../Dialog.js";
 
 /**
  * Review changes dialog.
@@ -13,7 +13,7 @@ import { Dialog } from "./Dialog.js";
  */
 class ChangesDialog extends Dialog {
 
-  ok() {
+  onOK() {
     const picked_acts = [];
     for (let n in this.options.changes) {
       const $in = this.$control("act" + n);
@@ -24,7 +24,7 @@ class ChangesDialog extends Dialog {
     return picked_acts;
   }
 
-  open() {
+  onOpened() {
     const $table = this.$control("changes");
     $table.empty();
     this.$control("changes").empty();

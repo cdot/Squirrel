@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2015-2023 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser */
 
-import { Dialog} from "./Dialog.js";
+import { Dialog } from "../Dialog.js";
 
 let $http = null;
 
@@ -15,7 +15,7 @@ class AlertDialog extends Dialog {
   /**
 	 * @Override
 	 */
-  open() {
+  onOpened() {
     this.$control("messages").empty();
 
     if (this.options.title)
@@ -77,4 +77,3 @@ class AlertDialog extends Dialog {
 }
 
 export { AlertDialog }
-

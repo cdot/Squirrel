@@ -517,7 +517,7 @@ const Tree = {
             icon: "tree-icon-alarm"
           })
           .on(Dialog.tapEvent(), function () {
-            Dialog.confirm("alarm", {
+            Dialog.confirm("AlarmDialog", {
               path: $node.tree("getPath"),
               alarm: $node.data("alarm")
             })

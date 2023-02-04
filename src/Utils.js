@@ -4,7 +4,7 @@
 /* global TextDecoder */
 /* global TextEncoder */
 
-import { PNG } from "pngjs/browser.js";
+import "pngjs/browser.js";
 
 /**
  * Utilities and plugins used by Squirrel
@@ -220,17 +220,6 @@ class Utils {
 		}
     return arguments[0];
   }
-
-	/**
-	 * Promise to requirejs a module
-	 * @param {string} mod module to require
-	 * @return {Promise} Promise that resolves to the loaded module
-	 */
-	static require(mod) {
-		return new Promise(resolve => {
-			requirejs([mod], fn => resolve(fn));
-		});
-	}
 
   /**
    * Parse a URL parameter string according to the given spec

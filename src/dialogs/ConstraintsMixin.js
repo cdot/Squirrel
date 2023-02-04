@@ -1,7 +1,8 @@
 /*@preserve Copyright (C) 2015-2022 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser */
 
-import "cookie";
+import "jquery/dist/jquery.js";
+import "jquery.cookie/jquery.cookie.js";
 
 const DEFAULT_CONSTRAINTS = {
   size: 30,

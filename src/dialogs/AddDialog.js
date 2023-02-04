@@ -1,8 +1,8 @@
 /*@preserve Copyright (C) 2015-2023 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser */
 
-import { Dialog } from "./Dialog.js";
-import { Action } from "./Action.js";
+import { Dialog } from "../Dialog.js";
+import { Action } from "../Action.js";
 
 /**
  * Add folder/value dialog.
@@ -32,7 +32,7 @@ class AddDialog extends Dialog {
       .removeClass("dlg-disabled")
       .attr("title", $.i18n("Enter new name"));
     } else {
-      this.$control("ok").icon_button("disable");
+      this.$control("ok", true).icon_button("disable");
       $input
       .addClass("dlg-disabled")
       .attr("title", $.i18n("name_used"));
@@ -53,7 +53,7 @@ class AddDialog extends Dialog {
     });
   }
 
-  open() {
+  onOpened() {
     this.$control("path").text(Action.pathS(this.options.path, true));
     const isV = this.options.is_value;
     this.$control("value_help", true).toggle(isV);
@@ -66,7 +66,7 @@ class AddDialog extends Dialog {
     this.validateUniqueKey();
   }
 
-  ok() {
+  onOK() {
     return {
       key: this.$control("key").val(),
       value: this.$control("value", true).val()

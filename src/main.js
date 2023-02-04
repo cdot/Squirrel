@@ -1,16 +1,18 @@
 /*@preserve Copyright (C) 2019-2022 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser */
 
-import { Squirrel } from "./Squirrel.js";
-import { Utils } from "./Utils.js";
-
 import "jquery/dist/jquery.js";
+import "jquery-ui-dist/jquery-ui.js";
+import "jquery.cookie/jquery.cookie.js";
 import "@wikimedia/jquery.i18n/src/jquery.i18n.js";
 import "@wikimedia/jquery.i18n/src/jquery.i18n.language.js";
 import "@wikimedia/jquery.i18n/src/jquery.i18n.messagestore.js";
 import "@wikimedia/jquery.i18n/src/jquery.i18n.parser.js";
 import "@wikimedia/jquery.i18n/src/jquery.i18n.fallbacks.js";
 import "@wikimedia/jquery.i18n/src/jquery.i18n.emitter.js";
+
+import { Squirrel } from "./Squirrel.js";
+import { Utils } from "./Utils.js";
 
 // Parse URL parameters
 const qs = Utils.parseURLParams(
@@ -26,66 +28,6 @@ const qs = Utils.parseURLParams(
     url: { type: "string" },
     api_key: { type: "string" }
   });
-/*
-const min = qs.debug ? "" : ".min";
-
-const rjs_config = {
-  baseUrl: ".",
-  paths: {
-    jquery: `node_modules/jquery/jquery${min}`,
-    "jquery-ui": `node_modules/jquery-ui-dist/jquery-ui${min}`,
-    contextmenu: `node_modules/ui-contextmenu/jquery.ui-contextmenu${min}`,
-    cookie: "node_modules/jquery.cookie/jquery.cookie",
-    "jquery-touch-events": `node_modules/@benmajor/jquery-touch-events/src/jquery.mobile-events${min}`,
-    clipboard: `node_modules/clipboard/dist/clipboard${min}`,
-    i18n: "node_modules/@wikimedia/jquery.i18n/src/jquery.i18n",
-    i18n_emitter:
-    "node_modules/@wikimedia/jquery.i18n/src/jquery.i18n.emitter",
-    i18n_fallbacks:
-    "node_modules/@wikimedia/jquery.i18n/src/jquery.i18n.fallbacks",
-    i18n_language:
-    "node_modules/@wikimedia/jquery.i18n/src/jquery.i18n.language",
-    i18n_messagestore:
-    "node_modules/@wikimedia/jquery.i18n/src/jquery.i18n.messagestore",
-    i18n_parser:
-    "node_modules/@wikimedia/jquery.i18n/src/jquery.i18n.parser",
-    cldrpluralruleparser:
-    "node_modules/@wikimedia/jquery.i18n/libs/CLDRPluralRuleParser/src/CLDRPluralRuleParser",
-    "jquery-ui/ui/widgets/menu": "js/rjs_stub"
-  },
-
-  shim: {
-    "jquery-touch-events": [ "jquery" ],
-    "jquery-ui":           [ "jquery" ],
-    contextmenu:           [ "jquery-ui" ],
-    i18n:                  [ "jquery" ],
-    i18n_emitter:          [ "i18n" ],
-    i18n_fallbacks:        [ "i18n"],
-    i18n_language:         ["i18n"],
-    i18n_messagestore:     ["i18n"],
-    i18n_parser:           ["i18n"],
-    cldrpluralruleparser: {
-      deps: [ "i18n_parser" ]
-      //exports: "pluralRuleParser"
-    }
-  }   
-};
-
-if (qs.debug)
-  rjs_config.urlArgs = `nocache=${Date.now()}`; // suppress cache
-
-requirejs.config(rjs_config);
-
-requirejs([
-	"js/Squirrel",
-  "jquery", "i18n",
-  "i18n_emitter",
-  "i18n_fallbacks",
-  "i18n_language",
-  "i18n_messagestore",
-  "i18n_parser"
-], Squirrel => {
-  */
 
 if (qs.debug) {
 	if ($.support.touch)

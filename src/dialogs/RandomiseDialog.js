@@ -4,8 +4,8 @@
 /**
  * Password generation for the given leaf node
  */
-import  { Dialog } from "./Dialog.js";
-import { ConstraintsMixin } from "./dialogs/ConstraintsMixin.js";
+import  { Dialog } from "../Dialog.js";
+import { ConstraintsMixin } from "./ConstraintsMixin.js";
 
 /**
  * Randomise string dialog.
@@ -73,7 +73,7 @@ class RandomiseDialog extends ConstraintsMixin(Dialog) {
     });
   }
 
-  ok() {
+  onOK() {
     const res = { text: this.$control("idea").text() };
     if (this.$control("remember").prop("checked")) {
       res.constraints = {
@@ -84,7 +84,7 @@ class RandomiseDialog extends ConstraintsMixin(Dialog) {
     return res;
   }
   
-  open() {
+  onOpened() {
     this.revert = $.extend(
       {}, this.defaultConstraints, this.options.constraints);
     

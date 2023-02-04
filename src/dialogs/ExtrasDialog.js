@@ -1,12 +1,14 @@
 /*@preserve Copyright (C) 2019-2022 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser */
 
-import { Dialog } from "./Dialog.js";
-import { dialogs } from "./dialogs.js/ConstraintsMixin.js";
-import { Tree } from "./Tree.js";
+import "jquery/dist/jquery.js";
+import "jquery.cookie/jquery.cookie.js";
 
-import "cookie";
-import "./jq/styling.js";
+import { Dialog } from "../Dialog.js";
+import { Tree } from "../Tree.js";
+import { ConstraintsMixin } from "./ConstraintsMixin.js";
+
+import "../jq/styling.js";
 
 /**
  * Settings dialog.
@@ -79,7 +81,7 @@ class ExtrasDialog extends ConstraintsMixin(Dialog) {
 
     this.$control("chss")
     .on(Dialog.tapEvent(), function () {
-      Dialog.confirm("store_settings", self.options)
+      Dialog.confirm("StoreSettingsDialog", self.options)
       .then(paths => {
         self.options.cloud_path(paths.cloud_path);
         self.options.image_url(paths.image_url);
@@ -92,7 +94,7 @@ class ExtrasDialog extends ConstraintsMixin(Dialog) {
 
     this.$control("chpw")
     .on(Dialog.tapEvent(), function () {
-      Dialog.confirm("change_password", self.options)
+      Dialog.confirm("ChangePasswordDialog", self.options)
       .then(pass => self.options.encryption_pass(pass))
       .catch(f => {
         if (self.debug) self.debug("Change password aborted", f);
@@ -101,7 +103,7 @@ class ExtrasDialog extends ConstraintsMixin(Dialog) {
 
     this.$control("theme")
     .on(Dialog.tapEvent(), function () {
-      Dialog.confirm("theme", self.options);
+      Dialog.confirm("ThemeDialog", self.options);
     });
 
     this.$control("constraints_len")
@@ -112,13 +114,13 @@ class ExtrasDialog extends ConstraintsMixin(Dialog) {
 
     this.$control("optimise")
     .on(Dialog.tapEvent(), function () {
-      Dialog.confirm("optimise", self.options)
+      Dialog.confirm("OptimiseDialog", self.options)
       .catch(() => {});
     });
 
     this.$control("reset_local")
     .on(Dialog.tapEvent(), function () {
-      Dialog.confirm("alert", {
+      Dialog.confirm("AlertDialog", {
         title: $.i18n("reset_local"),
         alert: {
           severity: "warning",
@@ -144,7 +146,7 @@ class ExtrasDialog extends ConstraintsMixin(Dialog) {
 
     this.$control("about")
     .on(Dialog.tapEvent(), function () {
-      Dialog.confirm("about", self.options)
+      Dialog.confirm("AboutDialog", self.options)
       .catch(() => {
       });
     });
@@ -161,7 +163,7 @@ class ExtrasDialog extends ConstraintsMixin(Dialog) {
       const fresh = self.$control("language").val();
       self.options.set_language(fresh)
 			.catch(e => {
-				Dialog.confirm("alert", {
+				Dialog.confirm("AlertDialog", {
           title: $.i18n("i18n-fail"),
           alert: $.i18n("no_translations", fresh)
         });
@@ -172,7 +174,7 @@ class ExtrasDialog extends ConstraintsMixin(Dialog) {
 	/**
 	 * @override
 	 */
-  open() {
+  onOpened() {
     this.$control("theme")
     .val($.styling.theme())
     .selectmenu("refresh");
@@ -180,7 +182,7 @@ class ExtrasDialog extends ConstraintsMixin(Dialog) {
     this.$control("autosave").prop("checked", this._autosave());
     this.$control("hidevalues").prop("checked", Tree.hidingValues());
     this.$control("lastchange").prop("checked", Tree.showingChanges());
-		this.$control("language").val($.i18n().locale);
+		this.$control("language").val($.i18n.locale());
     this.$control("constraints_len").val(this.defaultConstraints.size);
     this.$control("constraints_chs").val(this.defaultConstraints.chars);
   }

@@ -1,6 +1,9 @@
 /*@preserve Copyright (C) 2015-2023 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,jquery */
 
+import "jquery/dist/jquery.js";
+import "jquery.cookie/jquery.cookie.js";
+
 import { Serror } from "./Serror.js";
 import { Utils } from "./Utils.js";
 import { Dialog } from "./Dialog.js";
@@ -22,10 +25,11 @@ import "./jq/twisted.js";
 // the order they are likely to be used, but the loads are supposed to
 // be asynchronous so the order shouldn't really matter.
 const DIALOGS = [
-  "alert", "store_login", "network_login", "alarm", "store_settings",
-  "choose_changes", "insert", "pick", "add",
-  "delete", "randomise", "extras", "about",
-  "optimise" ];
+  "AboutDialog", "AddDialog", "AlarmDialog", "AlertDialog",
+  "ChangesDialog", "DeleteDialog", "ExtrasDialog", "InsertDialog",
+  "NetworkLoginDialog", "OptimiseDialog",  "PickDialog", 
+  "RandomiseDialog", "StoreLoginDialog", "StoreSettingsDialog"
+];
 
 /**
  * This is the top level application singleton. It is primarily
@@ -111,7 +115,7 @@ class Squirrel {
       })
     .then(() => {
       if (lerts.length > 0) {
-        Dialog.confirm("alert", {
+        Dialog.confirm("AlertDialog", {
           title: $.i18n("Reminders"),
           alert: lerts
         });
@@ -125,7 +129,7 @@ class Squirrel {
   _save_stores(progress) {
     this.hoarder.save_stores({
       progress: progress,
-      selector: actions => Dialog.confirm("choose_changes", {
+      selector: actions => Dialog.confirm("ChangesDialog", {
         changes: actions
       }),
       uiPlayer: act => this.$DOMtree.tree("action", act)
@@ -228,7 +232,7 @@ class Squirrel {
   _network_login(domain) {
     if (this.debug) this.debug(domain, "network login");
 
-    return Dialog.confirm("network_login", {
+    return Dialog.confirm("NetworkLoginDialog", {
       // Copy default user from the stores if there
       user: this.hoarder.probableUser()
     });
@@ -267,8 +271,8 @@ class Squirrel {
    * @private
    */
   _1_init_cloud_store() {
-    return Utils.require(`js/${this.options.store}`)
-		.then(module => new module($.extend(this.options, {
+    return import(`./${this.options.store}.js`)
+		.then(module => new (module[this.options.store])($.extend(this.options, {
       debug: this.debug,
       network_login: () => this._network_login($.i18n("cloud"))
 		})))
@@ -281,7 +285,7 @@ class Squirrel {
         if (this.options.url) {
           store.option("url", this.options.url);
         } else {
-          return Dialog.confirm("alert", {
+          return Dialog.confirm("AlertDialog", {
             alert: {
               severity: "error",
               message: $.i18n(
@@ -295,7 +299,7 @@ class Squirrel {
       }
       return store.init();
     })
-    .catch(e => Dialog.confirm("alert", {
+    .catch(e => Dialog.confirm("AlertDialog", {
       title: $.i18n("warn"),
       alert: {
         severity: "warning",
@@ -335,7 +339,7 @@ class Squirrel {
       if (!auth_req)
         return Promise.resolve();
 
-      return Dialog.confirm("store_login", {
+      return Dialog.confirm("StoreLoginDialog", {
         user: auth_req.user
       }).then(info => {
         if (this.debug) this.debug("...login confirmed");
@@ -344,7 +348,7 @@ class Squirrel {
     })
     .catch(e => {
       this._stage($.i18n("error"), 2.2);
-      return Dialog.confirm("alert", {
+      return Dialog.confirm("AlertDialog", {
         title: $.i18n("error"),
         alert: {
           severity: "error",
@@ -367,7 +371,7 @@ class Squirrel {
   _3_load_client() {
     
     return this.hoarder.load_client()
-    .catch(lerts => Dialog.confirm("alert", {
+    .catch(lerts => Dialog.confirm("AlertDialog", {
       title: $.i18n("local_read_fail"),
       alert: lerts
 		}))
@@ -410,7 +414,7 @@ class Squirrel {
     else {
       // Use the store_settings dlg to initialise the cloud store
       // path and optional steganography image
-      p = Dialog.confirm("store_settings", {
+      p = Dialog.confirm("StoreSettingsDialog", {
         cloud_path: path => 
         this.hoarder.cloud_path(path),
         needs_image: this.hoarder.needs_image(),
@@ -435,7 +439,7 @@ class Squirrel {
       // Merge updates from cloud hoard to client
       return this.hoarder.update_from_cloud({
         progress: conflicts,
-        selector: actions => Dialog.confirm("choose_changes", {
+        selector: actions => Dialog.confirm("ChangesDialog", {
           changes: actions
         }),
         uiPlayer: act => this.$DOMtree.tree("action", act),
@@ -446,7 +450,7 @@ class Squirrel {
         if (conflicts.length === 0)
 					return Promise.resolve();
 
-        return Dialog.confirm("alert", {
+        return Dialog.confirm("AlertDialog", {
           title: $.i18n("Conflicts"),
           alert: conflicts
         });
@@ -486,7 +490,7 @@ class Squirrel {
         mess.push($.i18n("chk-pass"));
         mess.push($.i18n("cont-to-over"));
       }
-      return Dialog.confirm("alert", {
+      return Dialog.confirm("AlertDialog", {
         title: $.i18n("cloud_read_fail"),
         alert: mess
       });
@@ -510,7 +514,7 @@ class Squirrel {
       try {
         re = new RegExp(s, "i");
       } catch (e) {
-        Dialog.confirm("alert", {
+        Dialog.confirm("AlertDialog", {
           alert: {
             severity: "error",
             message: $.i18n("bad_search") + ` '${s}': ${e}`
@@ -697,7 +701,7 @@ class Squirrel {
     .icon_button()
     .hide()
     .on(Dialog.tapEvent(), ( /*evt*/ ) => {
-      Dialog.open("alert", {
+      Dialog.open("AlertDialog", {
         title: $.i18n("Saving"),
         alert: ""
       }).then(progress => this._save_stores(progress));
@@ -720,7 +724,7 @@ class Squirrel {
 				})
       .catch(e => {
         if (this.debug) this.debug("undo failed", e);
-        Dialog.confirm("alert", {
+        Dialog.confirm("AlertDialog", {
           title: $.i18n("error"),
           alert: {
             severity: "error",
@@ -734,7 +738,7 @@ class Squirrel {
     $("#extras_button")
     .icon_button()
     .on(Dialog.tapEvent(), () => {
-      Dialog.confirm("extras", {
+      Dialog.confirm("ExtrasDialog", {
         needs_image: this.hoarder.needs_image(),
         image_url: path => {
           path = this.hoarder.image_url(path);
@@ -759,7 +763,7 @@ class Squirrel {
         analyse: () => this.hoarder.analyse(),
         optimise: () => {
           const acts = this.hoarder.action_stream();
-          return Dialog.open("alert", {
+          return Dialog.open("AlertDialog", {
             title: $.i18n("Saving"),
             alert: ""
           }).then(progress => 
@@ -863,7 +867,7 @@ class Squirrel {
 					$(document).trigger("update_save");
 				})
 			})
-		.catch(e => Dialog.confirm("alert", {
+		.catch(e => Dialog.confirm("AlertDialog", {
 			title: $.i18n("error"),
 			alert: {
 				severity: "error",

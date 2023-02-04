@@ -4,7 +4,7 @@
 /**
  * Move To dialog
  */
-import { Dialog } from "./Dialog.js";
+import { Dialog } from "../Dialog.js";
 
 const PATH_SEPARATOR = "↘";
 
@@ -15,11 +15,11 @@ const PATH_SEPARATOR = "↘";
  */
 class MoveToDialog extends Dialog {
 
-  ok() {
+  onOK() {
     return this.target;
   }
 
-  open() {
+  onOpened() {
 		this.moving = this.options.path.slice();
 		this.originalParent = this.options.path.slice(0, -1);
 		this.target = this.options.path.slice();

@@ -3,8 +3,8 @@
 
 import "jquery/dist/jquery.js";
 import "jquery-ui-dist/jquery-ui.js";
-import /* global ClipboardJS */ "clipboard/dist/clipboard.js";
 import "ui-contextmenu/jquery.ui-contextmenu.js";
+import { Clipboard } from "./clipboard/clipboard.js";
 
 import { Dialog } from "./Dialog.js";
 import { Action } from "./Action.js";
@@ -110,7 +110,7 @@ class ContextMenu {
     // we can't paste the system clipboard as it was before the
     // app started.
     const clipboard =
-          new ClipboardJS(".ui-contextmenu li[data-command='copy']", {
+          new Clipboard(".ui-contextmenu li[data-command='copy']", {
             text: () => {
               const p = this.$menuTarget.tree("getPath");
               if (this.debug) this.debug("copy ", p);
@@ -262,7 +262,7 @@ class ContextMenu {
 
     case "paste":
       
-      return Dialog.confirm("insert", {
+      return Dialog.confirm("InsertDialog", {
         path: $node.tree("getPath"),
         validate: validate_unique_key,
         value: this.clipboardContents,
@@ -289,7 +289,7 @@ class ContextMenu {
       break;
 
     case "add_value":
-      promise = Dialog.confirm("add", {
+      promise = Dialog.confirm("AddDialog", {
         path: $node.tree("getPath"),
         validate: validate_unique_key,
         is_value: true
@@ -302,7 +302,7 @@ class ContextMenu {
       break;
 
     case "add_subtree":
-      promise = Dialog.confirm("add", {
+      promise = Dialog.confirm("AddDialog", {
         path: $node.tree("getPath"),
         validate: validate_unique_key,
         is_value: false
@@ -314,7 +314,7 @@ class ContextMenu {
       break;
 
 		case "move_to":
-			promise = Dialog.confirm("move_to", {
+			promise = Dialog.confirm("MoveToDialog", {
         path: $node.tree("getPath"),
 				getContent: path => this.app.nodeContents(path)
 			})
@@ -326,7 +326,7 @@ class ContextMenu {
 			break;
 
     case "randomise":
-      promise = Dialog.confirm("randomise", {
+      promise = Dialog.confirm("RandomiseDialog", {
         key: $node.data("key"),
         constraints: $node.data("constraints")
       })
@@ -349,7 +349,7 @@ class ContextMenu {
       break;
 
     case "add_alarm":
-      promise = Dialog.confirm("alarm", {
+      promise = Dialog.confirm("AlarmDialog", {
         path: $node.tree("getPath"),
         alarm: $node.data("alarm"),
         last_change: $node.data("last-time-changed")
@@ -361,7 +361,7 @@ class ContextMenu {
       break;
 
     case "delete":
-      promise = Dialog.confirm("delete", {
+      promise = Dialog.confirm("DeleteDialog", {
         path: $node.tree("getPath"),
         is_leaf: $node.hasClass("tree-isLeaf")
       })
@@ -373,7 +373,7 @@ class ContextMenu {
 
     case "pick_from":
       promise = Dialog.confirm(
-        "pick", { pick_from: $node.data("value") || "" });
+         "PickDialog", { pick_from: $node.data("value") || "" });
       break;
 
     default:

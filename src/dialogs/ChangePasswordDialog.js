@@ -4,7 +4,7 @@
 /**
  * Encryption password change dialog. Password entry fields must match.
  */
-import { Dialog } from "./Dialog.js";
+import { Dialog } from "../Dialog.js";
 
 /**
  * Password change dialog.
@@ -40,11 +40,11 @@ class ChangePasswordDialog extends Dialog {
     .on("change", chk);
   }
 
-  ok() {
+  onOK() {
     return this.$control("pass").val();
   }
 
-  open() {
+  onOpened() {
     this.$control("pass").val(this.options.encryption_pass());
     this._checkSamePass();
   }

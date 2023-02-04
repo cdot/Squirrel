@@ -1,8 +1,8 @@
 /*@preserve Copyright (C) 2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser */
 
-import { Dialog } from "./Dialog.js";
-import "./jq/simulated_password.js";
+import { Dialog } from "../Dialog.js";
+import "../jq/simulated_password.js";
 
 /**
  * Login dialog.
@@ -42,7 +42,7 @@ class LoginDialog extends Dialog {
     });
   }
 
-  open() {
+  onOpened() {
     const $user = this.$control("user");
     const $pass = this.$control("pass");
 
@@ -61,7 +61,7 @@ class LoginDialog extends Dialog {
       $pass.val(this.options.pass);
   }
 
-  ok() {
+  onOK() {
     return {
       user: this.$control("user").val(),
       pass: this.$control("pass").val()

@@ -4,8 +4,8 @@
 /**
  * About dialog
  */
-import { Dialog } from "./Dialog.js";
-import "./jq/template.js";
+import { Dialog } from "../Dialog.js";
+import "../jq/template.js";
 
 /**
  * About Squirrel dialog.

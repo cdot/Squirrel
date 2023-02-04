@@ -7,7 +7,7 @@
  * $node (required)
  * data: data value to insert
  */
-import { AddDialog } from "./add.js";
+import { AddDialog } from "./AddDialog.js";
 
 class InsertDialog extends AddDialog {
   validateValue() {
@@ -21,7 +21,7 @@ class InsertDialog extends AddDialog {
       .removeClass("dlg-disabled")
       .attr("title", $.i18n("Edit valid JSON"));
     } catch (e) {
-      this.$control("ok").icon_button("disable");
+      this.$control("o!k").icon_button("disable");
       $ta
       .addClass("dlg-disabled")
       .attr("title", e);
@@ -37,8 +37,8 @@ class InsertDialog extends AddDialog {
     });
   }
   
-  open() {
-    super.open();
+  onOpened() {
+    super.onOpened();
     this.validateValue();
   }
 }

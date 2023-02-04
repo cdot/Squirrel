@@ -4,10 +4,12 @@
  * Reminder setting dialog
  * Options:
  */
-import { Dialog } from "./Dialog.js";
-import { Action } from "./Action.js";
-import "./jq/template.js";
 import "jquery-ui-dist/jquery-ui.js";
+
+import { Dialog } from "../Dialog.js";
+import { Action } from "../Action.js";
+
+import "../jq/template.js";
 
 const MSPERDAY = 24 * 60 * 60 * 1000;
 
@@ -69,7 +71,7 @@ class AlarmDialog extends Dialog {
     });
   }
 
-  ok() {
+  onOK() {
     const isEnabled = this.$control("enabled").prop("checked");
 		if (isEnabled || this.wasEnabled) {
 			const act = new Action({
@@ -91,7 +93,7 @@ class AlarmDialog extends Dialog {
   /**
 	 * @Override
 	 */
-  open() {
+  onOpened() {
     this.$control("path").text(Action.pathS(this.options.path));
     this.wasEnabled = (typeof this.options.alarm !== 'undefined');
 

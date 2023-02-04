@@ -1,8 +1,9 @@
 /*@preserve Copyright (C) 2015-2023 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser */
 
-import { Dialog } from "./Dialog.js";
-import "./jq/template.js";
+import { Dialog } from "../Dialog.js";
+
+import "../jq/template.js";
 
 /**
  * Store settings dialog.
@@ -109,7 +110,7 @@ class StoreSettingsDialog extends Dialog {
     .on("change", () => this.$control("ok").focus());
   }
 
-  open() {
+  onOpened() {
     this.$control("image_message").hide();
     if (this.options.needs_image) {
       this.$control("get_image").show();
@@ -123,7 +124,7 @@ class StoreSettingsDialog extends Dialog {
     this._check_paths();
   }
 
-  ok() {
+  onOK() {
     return {
       cloud_path: this.$control("cloud_path").val(),
       image_url: this.$control("image_url").val()

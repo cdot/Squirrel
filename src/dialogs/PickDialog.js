@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2015-2023 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser */
 
-import { Dialog } from "./Dialog.js";
+import { Dialog } from "../Dialog.js";
 
 /**
  * Pick characters dialog.
@@ -18,7 +18,7 @@ class PickDialog extends Dialog {
 		});
   }
 
-  open() {
+  onOpened() {
     const $dlg = this.$dlg;
 
     const val = this.options.pick_from;

@@ -4,8 +4,9 @@
 /**
  * Store optimisiation control dialog
  */
-import { AlertDialog } from "./dialogs/alert.js";
-import "./jq/template.js";
+import { AlertDialog } from "./AlertDialog.js";
+
+import "../jq/template.js";
 
 class OptimiseDialog extends AlertDialog {
 
@@ -14,12 +15,12 @@ class OptimiseDialog extends AlertDialog {
     this.$control("study").template();
   }
 
-  ok() {
+  onOK() {
     return this.options.optimise();
   }
   
-  open() {
-    super.open();
+  onOpened() {
+    super.onOpened();
 
     this.$control("study").hide();
     this.$control("calculating")
