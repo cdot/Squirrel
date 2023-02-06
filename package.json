@@ -15,7 +15,6 @@
         "registry": "https://registry.npmjs.org/",
         "access": "public"
     },
-    "files": {},
     "dependencies": {
         "@rwap/jquery-ui-touch-punch": "latest",
         "banana-i18n": "^2.3.3",
@@ -61,6 +60,8 @@
         "tmp-promise": "^3.0.3",
         "uglify-js": "^3.17.4",
         "webdav-server": "^2.6.2",
+        "webpack": "^5.75.0",
+        "webpack-cli": "^5.0.1",
         "xhr2": "^0.2.1"
     },
     "scripts": {
@@ -83,9 +84,6 @@
             "jquery": true,
             "es2021": true
         },
-        "plugins": [
-            "import"
-        ],
         "globals": {
             "define": false,
             "ArrayBuffer": false,

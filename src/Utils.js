@@ -1,9 +1,6 @@
 /*@preserve Copyright (C) 2015-2023 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,node */
 
-/* global TextDecoder */
-/* global TextEncoder */
-
 import "pngjs/browser.js";
 
 /**

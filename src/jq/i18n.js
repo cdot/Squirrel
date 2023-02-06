@@ -3,7 +3,7 @@
 import "jquery/dist/jquery.js";
 import "jquery-ui/dist/jquery-ui.js";
 import "jquery.cookie/jquery.cookie.js";
-import "banana-i18n/dist/banana-i18n.js";
+import { default as Banana } from "banana-i18n/dist/banana-i18n.js";
 
 /**
  * Support for $.i18n internationalisation using banana-i18n.
@@ -18,8 +18,9 @@ $.i18n = (...args) => {
   return ret;
 };
 
-$.i18n.init = () => {
+$.i18n.init = (root) => {
 
+  if (!root) root = ".";
   let language;
 
   // Get the language from cookies
@@ -33,10 +34,9 @@ $.i18n.init = () => {
   else
     language = window.navigator.userLanguage || window.navigator.language;
 
-  const i18n_url = import.meta.url.replace(/i18n.js$/, "../../i18n");
   // Load the fallback, English
   console.debug("i18n loading en");
-  return $.get(`${i18n_url}/en.json`)
+  return $.get(`${root}/i18n/en.json`)
   .then(en => banana = new Banana("en", { messages: en }))
   .catch(e => {
     console.error(`i18n en load failed`);
@@ -50,7 +50,7 @@ $.i18n.init = () => {
 
     // Load the language selected in the browser
     console.debug("i18n loading", language);
-    return $.get(`${i18n_url}/${language}.json`)
+    return $.get(`${root}/i18n/${language}.json`)
     .catch(e => {
       console.error(`i18n ${language} load failed`);
       if (/-/.test(language)) {
@@ -60,7 +60,7 @@ $.i18n.init = () => {
           return undefined;
         }
         console.debug("i18n loading", language);
-        return $.get(`${i18n_url}/${language}.json`);
+        return $.get(`${root}/i18n/${language}.json`);
       }
       throw e;
     })

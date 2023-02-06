@@ -262,7 +262,7 @@ class Squirrel {
     }
     return p;
   }
-  
+
   /**
    * Initialisation of the cloud store *may* provide user
    * information - for example, initialisation of a
@@ -273,7 +273,8 @@ class Squirrel {
    * @private
    */
   _1_init_cloud_store() {
-    return import(`./${this.options.store}.js`)
+    return import(
+      `./${this.options.store}.js`)
 		.then(module => new (module[this.options.store])($.extend(this.options, {
       debug: this.debug,
       network_login: () => this._network_login($.i18n("cloud"))
@@ -684,7 +685,7 @@ class Squirrel {
     $("#help_button")
     .icon_button()
     .on(Dialog.tapEvent(), function() {
-      const url = requirejs.toUrl("help.html");
+      const url = "./help.html";
       $(this).closest("a").attr("href", url);
 			// Allow event to bubble
       return true;

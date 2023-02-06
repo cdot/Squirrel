@@ -5,6 +5,9 @@ import { assert } from "chai";
 import { Utils } from "../src/Utils.js";
 import { Cryptographer } from "../src/Cryptographer.js";
 
+if (typeof crypto === 'undefined' && typeof global !== "undefined")
+	import("crypto").then(mod => global.crypto = mod.webcrypto); // node.js
+
 describe("Cryptographer", () => {
 
   it('should encrypt / decrypt 256 bytes', function() {

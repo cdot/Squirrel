@@ -18,7 +18,6 @@ class StoreSettingsDialog extends Dialog {
   const self = this;
 
   // Check that we can use the image.
-  requirejs(["js/Steganographer"], function(Steganographer) {
   const steg = new Steganographer({debug: self.debug});
   steg.insert("tada", img);
   self.$control("ok").icon_button("enable");
@@ -29,7 +28,6 @@ class StoreSettingsDialog extends Dialog {
   .show()
   .template("pick", "xbyy")
   .template("expand", w, h);
-  });
   }
 
   changeImage() {

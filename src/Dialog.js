@@ -127,8 +127,13 @@ class Dialog extends Progress {
       $dlg.data("id", id);
       p = Promise.resolve($dlg);
     } else {
-      const html_path = import.meta.url.toString().replace(
-        /\/src\/Dialog.js$/, "/html/dialogs");
+      let html_path;
+      if (typeof global === "undefined")
+        html_path = "./html/dialogs";
+      else {
+        html_path = import.meta.url.toString().replace(
+          /\/src\/Dialog.js$/, "/html/dialogs");
+      }
       let html_url = `${html_path}/${id}.html`;
 
       // testing only
