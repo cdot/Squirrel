@@ -1,6 +1,9 @@
 /*@preserve Copyright (C) 2017-2023 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,jquery */
 
+import "jquery/dist/jquery.js";
+import "jquery-ui/dist/jquery-ui.js";
+
 /**
  * jQuery widget that extends the jquery UI `button` widget to
  * simplify using buttons with images for icons. The `icon` option

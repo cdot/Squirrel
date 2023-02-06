@@ -8,7 +8,7 @@ import { jsdom } from "./jsdom.js";
 describe("icon_button", () => {
 
   before(() => jsdom(true)
-         .then(() => import("jquery-ui-dist/jquery-ui.js"))
+         .then(() => import("jquery-ui/dist/jquery-ui.js"))
          .then(() => import("../src/jq/icon_button.js")));
 
   beforeEach(function() {

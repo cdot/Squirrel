@@ -4,7 +4,7 @@
 requirejs.config({
   paths: {
     jquery: `node_modules/jquery/jquery.js`,
-    "jquery-ui": `node_modules/jquery-ui-dist/jquery-ui.js`,
+    "jquery-ui": `node_modules/jquery-ui/dist/jquery-ui.js`,
     cookie: "node_modules/jquery.cookie/jquery.cookie"
   }
 });

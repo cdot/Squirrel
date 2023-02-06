@@ -13,7 +13,7 @@ describe("Tree", () => {
   let $DOMtree, $actual, $expect, Tree;
   before(
     () => jsdom()
-    .then(() => import("jquery-ui-dist/jquery-ui.js"))
+    .then(() => import("jquery-ui/dist/jquery-ui.js"))
     .then(() => import("../src/Tree.js"))
     .then(mod => {
       Tree = mod.Tree;
@@ -256,3 +256,5 @@ describe("Tree", () => {
     });
   });
 });
+
+export {}

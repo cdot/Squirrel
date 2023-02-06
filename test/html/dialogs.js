@@ -1,6 +1,5 @@
 /*@preserve Copyright (C) 2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser */
-/* global __filename */
 
 import "jquery/dist/jquery.js";
 import "banana-i18n/dist/banana-i18n.js";
@@ -12,6 +11,7 @@ import { Tree } from "../../src/Tree.js";
 
 import "../../src/jq/simulated_password.js";
 import "../../src/jq/icon_button.js";
+import "../../src/jq/i18n.js";
 
 const debug = console.debug;
 
@@ -352,27 +352,6 @@ const tests = {
 test_app.cloud.store.option("needs_image", true);
 
 $(() => {
-  const banana = new Banana("en");
-
-  $.get("../../i18n/en.json")
-  .then(en => {
-    banana.load(en);
-  });
-
-  $.i18n = (...args) => {
-    const ret = banana.i18n.apply(banana, args);
-    return ret;
-  };
-
-  $.i18n.locale = () => banana.locale;
-
-  $.widget("custom.i18n", {
-    _create: function() {
-      const $el = $(this.element);
-      if ($el.data("i18n"))
-        $el.html(banana.i18n($el.data("i18n")));
-    }
-  });
 
   $("#node").data("key", "spoon");
   $("#node").data("value",TESTR);

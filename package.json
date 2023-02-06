@@ -18,7 +18,6 @@
     "files": {},
     "dependencies": {
         "@rwap/jquery-ui-touch-punch": "latest",
-        "@wikimedia/jquery.i18n": "^1.0.7",
         "banana-i18n": "^2.3.3",
         "clipboard": "^2.0.11",
         "jquery": "^3.6.3",

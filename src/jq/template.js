@@ -2,7 +2,8 @@
 /* eslint-env browser,jquery */
 
 import "jquery/dist/jquery.js";
-import "jquery-ui-dist/jquery-ui.js";
+import "jquery-ui/dist/jquery-ui.js";
+import "./i18n.js";
 
 /**
  * JQuery-ui widget that supports two simple styles of template expansion,

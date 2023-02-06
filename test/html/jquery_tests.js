@@ -2,65 +2,68 @@
 /*eslint-env browser*/
 /*global __filename*/
 
-if (typeof requirejs === 'undefined')
-  throw new Error(__filename + " is not runnable stand-alone");
+import { assert } from "chai";
+import "jquery/dist/jquery.js";
+import "../../src/jq/i18n.js";
+import "../../src/jq/icon_button.js";
+import "../../src/jq/simulated_password.js";
+import "../../src/jq/template.js";
 
-/**
- * Support for jquery_tests HTML page
- */
-requirejs.config({
-  baseUrl: "..",
-  urlArgs: "nocache=" + Date.now(),
-  paths: {
-    mocha: "//cdnjs.cloudflare.com/ajax/libs/mocha/6.0.2/mocha",
-    chai: "//cdnjs.cloudflare.com/ajax/libs/chai/4.2.0/chai",
-    jquery: "//code.jquery.com/jquery-3.3.1",
-    "jquery-ui": "//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui"
-  }
-});
-
-import { Translator } from "../src/Translator.js";
-import "../src/jq/icon_button";
-import "./simulated_password.js";
-
-  const TX = Translator.configure({ url: "locale", debug: console.debug});
-
-  /*function assert(v, m) {
-    if (!v) {
-    if (typeof m !== 'undefined')
-    throw "Assert failed: " + m;
-    else
-    throw "Assret failed";
-    }
-    }*/
-
-  function simulated_password() {
-    $("#hidden_pw")
-    .simulated_password()
-    .on("change", function() {
-      const info = $(this).val() + " (on change)";
-      console.debug(info);
+function simulated_password() {
+  $("#hidden_pw")
+  .simulated_password()
+  .on("change", function() {
+    const info = $(this).val() + " (on change)";
+    console.debug(info);
+    $("#pw_val").text(info);
+  })
+  .on("input", function() {
+    const info = $(this).val() + "(on input)";
+    console.debug(info);
       $("#pw_val").text(info);
-    })
-    .on("input", function() {
-      const info = $(this).val() + "(on input)";
-      console.debug(info);
-      $("#pw_val").text(info);
-    });
-    $("#password_reset").on("click", function() {
-      $("#hidden_pw").val("reset");
-      $("#pw_val").text($("#hidden_pw").val());
-    });
-  }
-
-  function icon_button() {
-    $(".icon_button").icon_button();
-  }
-
-  return () =>
-  // on ready
-  TX.language("fr").then(() => {
-    simulated_password();
-    icon_button();
   });
+  $("#password_reset").on("click", function() {
+    $("#hidden_pw").val("reset");
+    $("#pw_val").text($("#hidden_pw").val());
+  });
+}
+
+function icon_button() {
+  $(".icon_button").icon_button();
+}
+
+function template() {
+  $(".actual").template();
+
+  $("#template1 .actual").template("expand", "B");
+
+  $("#template2 .expected").text("1");
+  $("#template2 .actual").template(
+    "expand", $("#template2 .expected").text());
+  $("#template2").on("click", () => {
+    if ($("#template2 .expected").text() > 1) {
+      $("#template2 .actual").template("expand", 1);
+      $("#template2 .expected").text("1");
+    } else {
+      $("#template2 .actual").template("expand", 2);
+      $("#template2 .expected").text("2");
+    }
+  });
+
+  $("#template3 .actual").template("pick", 1);
+  $("#template3").on("click", () => {
+    if ($("#template3 .expected").text() > 1) {
+      $("#template3 .actual").template("pick", 1);
+      $("#template3 .expected").text(1);
+    } else {
+      $("#template3 .actual").template("pick", 2);
+      $("#template3 .expected").text(2);
+    }
+  });
+}
+
+$(() => {
+  simulated_password();
+  icon_button();
+  template();
 });

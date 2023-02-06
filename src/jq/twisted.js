@@ -2,7 +2,7 @@
 /* eslint-env browser,jquery */
 
 import "jquery/dist/jquery.js";
-import "jquery-ui-dist/jquery-ui.js";
+import "jquery-ui/dist/jquery-ui.js";
 import "./icon_button.js";
 
 /**

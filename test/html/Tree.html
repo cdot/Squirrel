@@ -3,27 +3,32 @@
   <head>
     <meta charset="utf-8">
     <title>Tree Tests</title>
-    <link href="../css/Icons.css" rel="stylesheet" />
-    <link href="../css/Tree.css" rel="stylesheet" />
-    <link href="//cdnjs.cloudflare.com/ajax/libs/mocha/6.0.2/mocha.css" rel="stylesheet" />
-    <script src="//cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.js"></script>
+    <link href="../../css/Icons.css" rel="stylesheet" />
+    <link href="../../css/Tree.css" rel="stylesheet" />
+    <link rel="stylesheet" href="../../node_modules/mocha/mocha.css">
+    <script type="importmap">
+      {
+        "imports": {
+          "@rwap/jquery-ui-touch-punch/": "../../node_modules/@rwap/jquery-ui-touch-punch/",
+          "banana-i18n/": "../../node_modules/banana-i18n/",
+          "chai": "../chai-importer.js",
+          "jquery.cookie/": "../../node_modules/jquery.cookie/",
+          "jquery/": "../../node_modules/jquery/",
+          "jquery-ui/": "../../node_modules/jquery-ui/",
+          "pngjs/": "../../node_modules/pngjs/",
+          "ui-contextmenu/": "../../node_modules/ui-contextmenu/"
+        }
+      }
+    </script>
+    <script src="../../node_modules/mocha/mocha.js"></script>
   </head>
   <body>
     <div id="mocha"></div>
     <div id="actual"></div>
     <div id="expect"></div>
     <script>
-      requirejs.config({
-        urlArgs: "nocache=" + Date.now(),
-        paths: {
-          mocha: "//cdnjs.cloudflare.com/ajax/libs/mocha/6.0.2/mocha",
-          chai: "//cdnjs.cloudflare.com/ajax/libs/chai/4.2.0/chai",
-          jquery: "//code.jquery.com/jquery-3.3.1.min",
-          "jquery-ui": "//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui"
-        }
-      });
-      requirejs(["Tree"], function() {
-      });
+      mocha.setup('bdd');
+      import("../Tree_unit.js").then(() => mocha.run());
     </script>
   </body>
 </html>

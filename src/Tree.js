@@ -10,7 +10,7 @@ import { Dialog } from "./Dialog.js";
 import { Node } from "./Node.js";
 
 import "jquery/dist/jquery.js";
-import "jquery-ui-dist/jquery-ui.js";
+import "jquery-ui/dist/jquery-ui.js";
 import "./jq/edit_in_place.js";
 import "./jq/scroll_into_view.js";
 import "./jq/icon_button.js";

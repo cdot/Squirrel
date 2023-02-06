@@ -2,6 +2,7 @@
 /* eslint-env browser,jquery */
 
 import "jquery/dist/jquery.js";
+import "jquery-ui/dist/jquery-ui.js";
 import "jquery.cookie/jquery.cookie.js";
 
 import { Serror } from "./Serror.js";
@@ -248,8 +249,9 @@ class Squirrel {
             + "Layer";
 
       p = p.then(
-				store => Utils.require(`js/${layer}`)
+				store => import(`./${layer}.js`)
 				.then(module => {
+          module = module[layer];
           if (this.debug)
             this.debug(`...adding ${layer} to ${to}`);
           return new module({
@@ -594,15 +596,6 @@ class Squirrel {
    * Main entry point for the application, invoked from main.js
    */
   begin() {
-    let lingo = $.cookie("ui_lang");
-    if (!lingo && window && window.navigator)
-      lingo = (window.navigator.userLanguage
-               || window.navigator.language);
-
-    if (!lingo)
-      lingo = "en";
-
-    $.i18n({ locale: lingo});
     $("[data-i18n]").i18n();
     $("[data-i18n-placeholder]")
     .each(function() {
