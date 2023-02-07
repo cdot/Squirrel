@@ -1,0 +1,33 @@
+<html>
+  <!-- Test Tree.js -->
+  <head>
+    <meta charset="utf-8">
+    <title>Tree Tests</title>
+    <link href="../../css/Icons.css" rel="stylesheet" />
+    <link href="../../css/Tree.css" rel="stylesheet" />
+    <link rel="stylesheet" href="../../node_modules/mocha/mocha.css">
+    <script type="importmap">
+      {
+        "imports": {
+          "@rwap/jquery-ui-touch-punch/": "../../node_modules/@rwap/jquery-ui-touch-punch/",
+          "banana-i18n/": "../../node_modules/banana-i18n/",
+          "chai": "../chai-importer.js",
+          "jquery/": "../../node_modules/jquery/",
+          "jquery-ui/": "../../node_modules/jquery-ui/",
+          "pngjs/": "../../node_modules/pngjs/",
+          "ui-contextmenu/": "../../node_modules/ui-contextmenu/"
+        }
+      }
+    </script>
+    <script src="../../node_modules/mocha/mocha.js"></script>
+  </head>
+  <body>
+    <div id="mocha"></div>
+    <div id="actual"></div>
+    <div id="expect"></div>
+    <script>
+      mocha.setup('bdd');
+      import("../Tree_unit.js").then(() => mocha.run());
+    </script>
+  </body>
+</html>

@@ -2,8 +2,9 @@
 /* eslint-env browser */
 import "jquery/dist/jquery.js";
 import "jquery-ui/dist/jquery-ui.js";
-import "jquery.cookie/jquery.cookie.js";
-import { default as Banana } from "banana-i18n/dist/banana-i18n.js";
+import "./cookie.js";
+// See resolution of Banana, below
+import "banana-i18n/dist/banana-i18n.js";
 
 /**
  * Support for $.i18n internationalisation using banana-i18n.
@@ -18,9 +19,8 @@ $.i18n = (...args) => {
   return ret;
 };
 
-$.i18n.init = (root) => {
+$.i18n.init = (root = ".", debug = false) => {
 
-  if (!root) root = ".";
   let language;
 
   // Get the language from cookies
@@ -35,32 +35,53 @@ $.i18n.init = (root) => {
     language = window.navigator.userLanguage || window.navigator.language;
 
   // Load the fallback, English
-  console.debug("i18n loading en");
-  return $.get(`${root}/i18n/en.json`)
-  .then(en => banana = new Banana("en", { messages: en }))
+  if (debug) debug("i18n loading fallback from", `${root}/i18n/en.json`);
+
+  // Running in the browser, outside of webpack, the ESM import statement
+  // above defines a global "Banana". Running in node and in webpack,
+  // only loading the module explicitly gives us access.
+  let bunch;
+  if (typeof Banana !== "undefined") {
+    bunch = Promise.resolve(Banana);
+  } else {
+    bunch = import("banana-i18n/dist/banana-i18n.js")
+    .then(mod => {
+      return mod.default;
+    });
+  }
+
+  return Promise.all([
+    bunch,
+    $.getJSON(`${root}/i18n/en.json`)
+  ])
+  .then(modz => {
+    const Banana = modz[0], en = modz[1];
+    banana = new Banana("en", { messages: en });
+  })
   .catch(e => {
-    console.error(`i18n en load failed`);
+    console.error(`i18n fallback load failed`);
     throw e;
   })
   .then(() => {
     if (language === "en") {
-      console.debug("i18n using default en");
+      if (debug) debug("i18n using default en");
       return banana;
     }
 
     // Load the language selected in the browser
-    console.debug("i18n loading", language);
-    return $.get(`${root}/i18n/${language}.json`)
+    if (debug) debug("i18n loading", language);
+
+    return $.getJSON(`${root}/i18n/${language}.json`)
     .catch(e => {
       console.error(`i18n ${language} load failed`);
       if (/-/.test(language)) {
         language = language.replace(/-.*$/, "");
         if (language === "en") {
-          console.debug("i18n using en (fallback)");
+          if (debug) debug("i18n using en (fallback)");
           return undefined;
         }
-        console.debug("i18n loading", language);
-        return $.get(`${root}/i18n/${language}.json`);
+        if (debug) debug("i18n loading", language);
+        return $.getJSON(`${root}/i18n/${language}.json`);
       }
       throw e;
     })
@@ -68,7 +89,7 @@ $.i18n.init = (root) => {
       if (messages) {
         banana.load(messages, language);
         banana.setLocale(language);
-        console.debug("Using language", language);
+        if (debug) debug("Using language", language);
       }
       return banana;
     });
@@ -85,4 +106,3 @@ $.widget("custom.i18n", {
       $el.html(banana.i18n($el.data("i18n")));
   }
 });
-

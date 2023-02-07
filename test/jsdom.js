@@ -1,27 +1,37 @@
-/* global DOM */
-
+/**
+ * Set up $, $.cookie, and $.ui for unit tests. Should run under
+ * node or browser.
+ * @param {string?} url the url we are pretending to have been loaded
+ * from (node only)
+ * @param {string?} html file path to load html from (node only)
+ */
 function jsdom(url, html) {
-  if (typeof global === "undefined")
+
+  if (typeof $ !== "undefined")
+    return Promise.resolve();
+
+  if (typeof global === "undefined") {
+    // BROWSER
     // PITA, but doesn't matter how many times I use a static import,
     // $.ui is never defined!
-    return Promise.all([
-      import("jquery/dist/jquery.js"),
-      import("jquery-ui/dist/jquery-ui.js")
-    ]);
+    // N.B. requires importmap
+    return import("jquery/dist/jquery.js")
+    .then(() => import("jquery-ui/dist/jquery-ui.js"))
+    .then(() => import("jquery.cookie/jquery.cookie.js"));
+  }
 
+  // NODE.JS
   const opts = {
     url: url,
     resources: "usable"
   };
+
   let JSDOM, jquery;
-  Promise.all([
-    import("jquery/dist/jquery.js"),
-    import("jquery-ui/dist/jquery-ui.js"),
-    import("jsdom")
-  ])
-  .then(modz => {
-    jquery = modz[0].default;
-    JSDOM = modz[1].JSDOM;
+  return import("jsdom")
+  .then(mod => JSDOM = mod.JSDOM)
+  .then(() => import("jquery/dist/jquery.js"))
+  .then(mod => jquery = mod.default)
+  .then(() => {
     if (html)
       return JSDOM.fromFile(html, opts);
     else
@@ -29,11 +39,13 @@ function jsdom(url, html) {
   })
   .then(dom => {
     global.DOM = dom;
-    global.window = DOM.window;
-    global.document = DOM.window.document;
+    global.window = dom.window;
+    global.document = dom.window.document;
     global.navigator = { userAgent: "node.js" };
     global.$ = global.jQuery = jquery(window);
-  });
+  })
+  .then(() => import("../src/jq/cookie.js"))
+  .then(() => import("jquery-ui/dist/jquery-ui.js"));
 }
 
 export { jsdom }

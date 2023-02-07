@@ -2,7 +2,7 @@
 /* eslint-env browser,jquery */
 
 import "jquery/dist/jquery.js";
-import "jquery.cookie/jquery.cookie.js";
+import "./cookie.js";
 
 /**
  * JQuery plugin to manage custom styling for a UI theme.

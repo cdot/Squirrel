@@ -1,7 +1,7 @@
 import Getopt from "node-getopt";
-import { FileStore } from "../src/FileStore.js";
-import { CryptoLayer } from "../src/CryptoLayer.js";
-import { Utils } from "../src/Utils.js";
+import { FileStore } from "../src/stores/FileStore.js";
+import { CryptoLayer } from "../src/stores/CryptoLayer.js";
+import { Utils } from "../src/common/Utils.js";
 
 const DESCRIPTION = "USAGE\n  node endecrypt.js [options] <file>\nEncode/decode a file encrypted using CryptoLayer. If the input file has a .json extension, will encrypt it to a file of the same name without the extension. If there is no .json extension, will decrypt to a file of the same name with a .json extension.";
 

@@ -40,7 +40,9 @@ function processHTML(html) {
                      "../dist/css/themes",
                      content);
 
-    content = content.replace(/src="src\/([a-z]*?)\.js"/, 'src="./$1.js"');
+    content = content.replace(
+      /src="src\/(?:[a-z/]*\/)([a-z]+\.js")/,
+      'src="./$1');
 
     return fs.writeFile(`${__dirname}/../dist/${html}.html`, content);
   });
@@ -58,8 +60,8 @@ processHTML("help", "help");
 
 export default {
   entry: {
-    main: `${__dirname}/../src/main.js`,
-    help: `${__dirname}/../src/help.js`
+    main: `${__dirname}/../src/browser/main.js`,
+    help: `${__dirname}/../src/browser/help.js`
   },
   //mode: "production",
   mode: "development",
@@ -75,6 +77,12 @@ export default {
     new webpack.ProvidePlugin({
       $: 'jquery',
       jQuery: 'jquery'
+    }),
+    new webpack.IgnorePlugin({
+      checkResource(resource) {
+        // FileStore.js is server-side only
+        return /FileStore\.js$/.test(resource);
+      }
     })
   ]
 }

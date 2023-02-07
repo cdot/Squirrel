@@ -6,8 +6,8 @@
  * Shared code used in testing stores.
  */
 import { assert } from "chai";
-import { Utils } from "../src/Utils.js";
-import { Serror } from "../src/Serror.js";
+import { Utils } from "../src/common/Utils.js";
+import { Serror } from "../src/common/Serror.js";
 import Test from "mocha/lib/test.js";
 
 const TESTR = "1234567普通话/普通話العَرَبِيَّة";
@@ -35,15 +35,16 @@ class StoreTester {
     let p = Promise.resolve();
 
     // Starting from the end of the class list, construct store objects
-    for (let i = this.storeClasses.length - 1; i >= 0; i--) {
-      const storeClass = this.storeClasses[i];
+    for (let i = this.storeClasses.length - 1; i >= 0;) {
+      const storeClass = this.storeClasses[i--];
+      const storeDir = this.storeClasses[i--];
       let sc;
       try {
         sc = eval(storeClass);
         p = Promise.resolve(sc);
       } catch (e) {
         if (this.debug) this.debug("import", storeClass);
-        p = p.then(() => import("../src/" + storeClass + ".js")
+        p = p.then(() => import(`${storeDir}/${storeClass}.js`)
                    .then(mod => mod[storeClass]));
       }
       p = p.then(module => {

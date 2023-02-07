@@ -1,20 +1,36 @@
 import { jsdom } from "./jsdom.js";
-import Path from "path";
-import { fileURLToPath } from "url";
-const __dirname = Path.dirname(fileURLToPath(import.meta.url));
 
-/** Fixture for internationalisation */
+/**
+ * Load i18n for tests.
+ * Should work in node.js and browser.
+ */
 function i18n() {
   return jsdom()
-  .then(() => Promise.all([
-    import("../../src/jq/i18n.js"),
-  ]))
   .then(() => {
-    const lang = "en";
-    let url = 'file://' + Path.normalize(`${__dirname}/../i18n/${lang}.json`), nurl;
-    const params = {};
-    params[lang] = url;
-    return $.i18n({ locale: lang }).load(params);
+    if (!window.navigator)
+      window.navigator = {};
+    window.navigator.userLanguage = "en";
+    return import("../src/jq/i18n.js");
+  })
+  .then(() => {
+
+    if (typeof global === "undefined") {
+      // BROWSER
+      return $.i18n.init("../..");
+
+    } else {
+      // NODE.JS
+      return Promise.all([
+        import("path"),
+        import("url")
+      ])
+      .then(modz => {
+        const Path = modz[0];
+        const fileURLToPath = modz[1].fileURLToPath;
+        const __dirname = Path.dirname(import.meta.url);
+        return $.i18n.init(`${__dirname}/..`);
+      });
+    }
   });
 }
 
