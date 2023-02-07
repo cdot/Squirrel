@@ -60,7 +60,6 @@ debug("Output ", outstore.type, outstore.option("path"), outf);
 instore.reads(fname)
 .then(json => {
   if (!encrypt) {
-		console.log(json);
     json = JSON.stringify(JSON.parse(json), null, " ");
   }
   if (opt.stdio) {

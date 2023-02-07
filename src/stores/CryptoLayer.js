@@ -59,13 +59,13 @@ class CryptoLayer extends LayeredStore {
 	 * @override
 	 */
   reads(path) {
-    //if (this.debug) this.debug("crypto reads", path);
+    if (this.debug) this.debug("crypto reads", path);
     return super.read(path)
-    .then(uint8 => Cryptographer.decrypt(uint8, this.option("pass"))
-				  .then(data => new TextDecoder().decode(data))
-				  .catch(e => {
-					  throw new Serror(new Serror(400, "reads failed"));
-				  }));
+    .then(uint8 => Cryptographer.decrypt(uint8, this.option("pass")))
+		.then(data => new TextDecoder().decode(data))
+		.catch(e => {
+			throw new Serror(new Serror(400, "reads failed"));
+    });
   }
 
   /**

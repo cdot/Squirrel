@@ -63,8 +63,7 @@ export default {
     main: `${__dirname}/../src/browser/main.js`,
     help: `${__dirname}/../src/browser/help.js`
   },
-  //mode: "production",
-  mode: "development",
+  mode: "production",
   output: {
     path: `${__dirname}/../dist`,
     filename: "[name].js",

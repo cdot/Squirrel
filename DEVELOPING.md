@@ -7,23 +7,25 @@ To create a development environment, first clone the repository from (github)[ht
 # File structure
 
 The installation has subdirectories as follows:
+* `browser_tests` has browser tests (unsurprisingly)
+* `build` has webpack stuff
 * `css` contains style sheets
 * `html` has the html for the user interfaces, `html/dialogs.html` th html for all dialogs
 * `i18n` contains the master English `en.json`, `qqq.json` documentation, and any other contributed translations of the interface.
 * `images` contains images used by the game
-* `js` has all the source code
+* `src` has all the source code
 * `test` has all the unit tests and fixtures
 
 # Building
 
-The application will run in the browser simply by opening `index.html`. For release versions, use `npm run build <target-dir>` to build in a target directory e.g. `npm run build dist`.
+The application will run in the browser simply by opening `index.html`. For release versions, use `npm run build` to build in a target directory e.g. `npm run build`.
 
 Code documentation is built using `npm run doc`. The documentation will be generated in the `doc` subdirectory.
 
 # Translations
 
 Squirrel incorporates support for translation of all user messages to
-languages other than English, using the (Wikimedia translation framework)[https://www.npmjs.com/package/@wikimedia/jquery.i18n].
+languages other than English.
 
 Translations are simply mappings from the English string to the equivalent
 in the other language, using the symbols $1, $2 etc to indicate parameters

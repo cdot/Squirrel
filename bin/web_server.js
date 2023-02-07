@@ -26,10 +26,10 @@ const OPTIONS = [
 ];
 
 import getopt from "posix-getopt";
-import { Server } from "../src/Server.js";
+import { Server } from "../src/server/Server.js";
 
 const go_parser = new getopt.BasicParser(
-  "h(help)r:(docroot)w:(writable)p:(port)l:(log)C:(cert)K:(key)U:(user)P:(pass)R:(realm)d(debug)",
+  "h(help)r:(docroot)w:(writable)p:(port)l(log)C:(cert)K:(key)U:(user)P:(pass)R:(realm)d(debug)",
   process.argv);
 
 const params = {
@@ -48,11 +48,11 @@ while ((option = go_parser.getopt())) {
     params.ssl.cert = option.optarg; break;
   case "K": if (!params.ssl) params.ssl = {};
     params.ssl.key = option.optarg; break;
-  case "U":  if (params.auth) params.auth = {};
+  case "U":  if (!params.auth) params.auth = {};
     params.auth.user = option.optarg; break
-  case "P":  if (params.auth) params.auth = {};
+  case "P":  if (!params.auth) params.auth = {};
     params.auth.pass = option.optarg; break
-  case "R":  if (params.auth) params.auth = {};
+  case "R":  if (!params.auth) params.auth = {};
     params.auth.realm = option.optarg; break
   }
 }

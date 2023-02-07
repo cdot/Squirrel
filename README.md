@@ -264,24 +264,14 @@ Further reading can be found in a series of blog posts from the UK's NCSC unit:
 https://www.ncsc.gov.uk/guidance/password-guidance-simplifying-your-approach
 https://www.ncsc.gov.uk/blog-post/what-does-ncsc-think-password-managers
 
-
 Note that Squirrel uses state-of-the-art Javascript and HTML5, and
 requires the latest browsers to run. If you are stuck with IE8, don't
 even think about it :-(
 
 ## Developers
-See [DEVELOPING}(DEVELOPING.md)
+See [DEVELOPING](DEVELOPING.md)
 
 ## About Squirrel
 
-Squirrel was written by Crawford Currie http://c-dot.co.uk, and uses the
-following 3rd party libraries:
+Squirrel was written by Crawford Currie http://c-dot.co.uk.
 
-- JQuery & JQuery UI, from the JQuery Foundation, https://jquery.org
-- AES implementation in JavaScript, Copyright Chris Veness 2005-2014, http://www.movable-type.co.uk/scripts/aes.html
-- jQuery UI contextmenu, by Martin Wendt, https://github.com/mar10/jquery-ui-contextmenu
-- jQuery touch events, by Ben Major, https://github.com/benmajor/jQuery-Touch-Events
-- Clipboard.js, by Zeno Rocha, https://clipboardjs.com/
-- js-cookie, Copyright 2014 Klaus Hartl, https://github.com/js-cookie/js-cookie
-- Dropbox API, Copyright 2012 Dropbox, Inc., http://www.dropbox.com
-- Google Drive API

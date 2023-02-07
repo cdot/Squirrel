@@ -1,6 +1,7 @@
 import Getopt from "node-getopt";
 import fs from "fs";
-import Hoard from "hoard";
+import { Hoard } from "../src/common/Hoard.js";
+import { Action } from "../src/common/Action.js";
 
 const DESCRIPTION = "USAGE\n  node build_tree.js [options] <file>\nRead a .json file of actions as output by endcrypt.js and try to build a hoard from it.";
 
@@ -23,13 +24,18 @@ const fname = parse.argv[0];
 const opt = parse.options;
 const debug = typeof opt.debug === 'undefined' ? () => {} : console.debug;
 
+global.$ = {};
+$.i18n = (...args) => console.log(args.join(" "));
+
 fs.promises.readFile(fname)
-.then(json => {
+.then(async json => {
 	const hoard = new Hoard({debug: debug});
 	const actions = JSON.parse(json);
-	const conflicts = hoard.play_actions(actions);
-	console.log(conflicts);
-})
-.catch(e => console.log("Failed", e));
+  const conflicts = [];
+	for (let act of actions) {
+		await hoard.play_action(new Action(act))
+		.catch(e => console.log(e));
+	}
+});
 
 
