@@ -8,7 +8,7 @@ import { promises as fs } from "fs";
 function copyFile(from, to) {
   const a_from = path.normalize(path.join(__dirname, from));
   const a_to = path.normalize(path.join(__dirname, to));
-  fs.cp(a_from, a_to, {
+  return fs.cp(a_from, a_to, {
     recursive: true,
     force: true,
     // filter: f => { console.debug("copy", f); return true; },
@@ -17,7 +17,7 @@ function copyFile(from, to) {
   .catch(e => {
     // cp works, but throws all sorts of wierd errors for no
     // apparent reason before completing.
-    //console.error("wierd", from, e);
+    console.error("wierd", from, e);
   });
 }
 
@@ -29,7 +29,7 @@ function relink(from, to, content) {
 }
 
 function processHTML(html) {
-  fs.readFile(`${__dirname}/../${html}.html`)
+  return fs.readFile(`${__dirname}/../${html}.html`)
   .then(content => {
     content = content.toString();
 
@@ -48,15 +48,13 @@ function processHTML(html) {
   });
 }
 
-copyFile("../css", "../dist/css");
-copyFile("../node_modules/jquery-ui/dist/themes",
-         "../dist/css/themes");
-copyFile("../html", "../dist/html");
-copyFile("../images", "../dist/images");
-copyFile("../i18n", "../dist/i18n");
-
-processHTML("index", "main");
-processHTML("help", "help");
+copyFile("../css", "../dist/css")
+.then(() => copyFile("../node_modules/jquery-ui/dist/themes", "../dist/css/themes"))
+.then(() => copyFile("../html", "../dist/html"))
+.then(() => copyFile("../images", "../dist/images"))
+.then(() => copyFile("../i18n", "../dist/i18n"))
+.then(() => processHTML("index", "main"))
+.then(() => processHTML("help", "help"));
 
 export default {
   entry: {
