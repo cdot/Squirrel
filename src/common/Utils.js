@@ -1,8 +1,6 @@
 /*@preserve Copyright (C) 2015-2023 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,node */
 
-import "pngjs/browser.js";
-
 /**
  * Utilities and plugins used by Squirrel
  */

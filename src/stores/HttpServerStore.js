@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2018-2023 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env shared-node-browser */
 
-import "jquery/dist/jquery.js";
+import "jquery";
 
 import { Serror } from "../common/Serror.js";
 import { Utils } from "../common/Utils.js";

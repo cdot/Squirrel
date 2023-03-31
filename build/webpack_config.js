@@ -68,7 +68,13 @@ export default {
     globalObject: "window"
   },
   resolve: {
-    extensions: [ '.js' ]
+    extensions: [ '.js' ],
+      alias: {
+        "pngjs": path.resolve(
+          __dirname, "../node_modules/pngjs/browser.js"),
+        "ui-contextmenu": path.resolve(
+          __dirname, "../node_modules/ui-contextmenu/jquery.ui-contextmenu.js")
+      }
   },
   plugins: [
     new webpack.ProvidePlugin({

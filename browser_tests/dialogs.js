@@ -1,8 +1,8 @@
 /*@preserve Copyright (C) 2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser */
 
-import "jquery/dist/jquery.js";
-import "banana-i18n/dist/banana-i18n.js";
+import "jquery";
+import "banana-i18n";
 import { Dialog } from "../../src/browser/Dialog.js";
 import { LocalStorageStore } from "../../src/stores/LocalStorageStore.js";
 import { Action } from "../../src/common/Action.js";

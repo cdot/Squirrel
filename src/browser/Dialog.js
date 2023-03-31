@@ -1,9 +1,9 @@
 /*@preserve Copyright (C) 2019-2023 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,jquery */
 
-import "jquery/dist/jquery.js";
-import "jquery-ui/dist/jquery-ui.js";
-import "@rwap/jquery-ui-touch-punch/jquery.ui.touch-punch.js";
+import "jquery";
+import "jquery-ui";
+import "@rwap/jquery-ui-touch-punch";
 
 import "../jq/cookie.js";
 import "../jq/icon_button.js";

@@ -3,7 +3,7 @@
 /*global __filename*/
 
 import { assert } from "chai";
-import "jquery/dist/jquery.js";
+import "jquery";
 import "../../src/jq/i18n.js";
 import "../../src/jq/icon_button.js";
 import "../../src/jq/simulated_password.js";

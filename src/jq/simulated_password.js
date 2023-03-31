@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2018-2023 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,jquery */
 
-import "jquery/dist/jquery.js";
+import "jquery";
 
 /**
  * Simulated password jQuery plugin, fixes `input type="password".

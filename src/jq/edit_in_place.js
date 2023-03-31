@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2015-2023 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,jquery */
 
-import "jquery/dist/jquery.js";
+import "jquery";
 
 /**
  * Simple in-place editing jQuery widget. Creates an edit box in place

@@ -1,8 +1,8 @@
 /*@preserve Copyright (C) 2019-2022 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser */
 
-import "jquery/dist/jquery.js";
-import "jquery-ui/dist/jquery-ui.js";
+import "jquery";
+import "jquery-ui";
 
 import "../jq/i18n.js";
 

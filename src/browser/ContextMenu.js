@@ -1,9 +1,9 @@
 /*@preserve Copyright (C) 2015-2023 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,jquery */
 
-import "jquery/dist/jquery.js";
-import "jquery-ui/dist/jquery-ui.js";
-import "ui-contextmenu/jquery.ui-contextmenu.js";
+import "jquery";
+import "jquery-ui";
+import "ui-contextmenu";
 
 import { Action } from "../common/Action.js";
 import { Serror } from "../common/Serror.js";

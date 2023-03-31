@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2017 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser,jquery */
 
-import "jquery/dist/jquery.js";
+import "jquery";
 import "./cookie.js";
 
 /**

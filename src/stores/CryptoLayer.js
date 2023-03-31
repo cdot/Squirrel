@@ -64,7 +64,7 @@ class CryptoLayer extends LayeredStore {
     .then(uint8 => Cryptographer.decrypt(uint8, this.option("pass")))
 		.then(data => new TextDecoder().decode(data))
 		.catch(e => {
-			throw new Serror(new Serror(400, "reads failed"));
+			throw new Serror(400, "reads failed", e);
     });
   }
 
@@ -76,7 +76,7 @@ class CryptoLayer extends LayeredStore {
 		const uint8 = new TextEncoder().encode(s);
     return Cryptographer.encrypt(uint8, this.option("pass"))
 		.catch(e => {
-			throw new Serror(new Serror(400, "writes failed"));
+			throw new Serror(new Serror(400, "writes failed", e));
 		})
     .then(encrypted => super.write(path, encrypted));
   }

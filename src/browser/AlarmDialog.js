@@ -4,7 +4,7 @@
  * Reminder setting dialog
  * Options:
  */
-import "jquery-ui/dist/jquery-ui.js";
+import "jquery-ui";
 
 import { Dialog } from "./Dialog.js";
 import { Action } from "../common/Action.js";

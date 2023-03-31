@@ -1,10 +1,10 @@
 /*@preserve Copyright (C) 2019 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser */
-import "jquery/dist/jquery.js";
-import "jquery-ui/dist/jquery-ui.js";
+import "jquery";
+import "jquery-ui";
 import "./cookie.js";
 // See resolution of Banana, below
-import "banana-i18n/dist/banana-i18n.js";
+import "banana-i18n";
 
 /**
  * Support for $.i18n internationalisation using banana-i18n.
@@ -44,7 +44,7 @@ $.i18n.init = (root = ".", debug = false) => {
   if (typeof Banana !== "undefined") {
     bunch = Promise.resolve(Banana);
   } else {
-    bunch = import("banana-i18n/dist/banana-i18n.js")
+    bunch = import("banana-i18n")
     .then(mod => {
       return mod.default;
     });

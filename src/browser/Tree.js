@@ -3,8 +3,8 @@
 
 /* global Tree: true */
 
-import "jquery/dist/jquery.js";
-import "jquery-ui/dist/jquery-ui.js";
+import "jquery";
+import "jquery-ui";
 
 import "../jq/edit_in_place.js";
 import "../jq/scroll_into_view.js";

@@ -334,7 +334,7 @@ class GoogleDriveStore extends HttpServerStore {
       return this._putfile(parentId, name, data, id);
     })
     .catch(r => {
-      throw new Serror(400, path + this._gError(r, $.i18n("gdrive-err")));
+      throw new Serror(400, path, this._gError(r, $.i18n("gdrive-err")));
     });
   }
 
@@ -357,13 +357,17 @@ class GoogleDriveStore extends HttpServerStore {
         q: query,
         // "*" shows all fields. We only need the id for matched files.
         fields: "files/id"
+      })
+      .catch(r => {
+        console.error("Query failed", r);
+        throw new Serror(400, path, this._gError(r, $.i18n("gd-rerr")));
       });
     })
     .then(response => {
       const files = response.result.files;
       if (files === null || files.length === 0) {
         if (this.debug) this.debug(`could not find ${name}`);
-        throw new Serror(401, `${path} not found`);
+        throw new Serror(404, `${path} not found`);
       }
       const id = files[0].id;
       if (this.debug) this.debug(`found "${name}" id ${id}`);
@@ -381,11 +385,11 @@ class GoogleDriveStore extends HttpServerStore {
         for (let i = 0; i < a.length; i++)
           a[i] = res.body.codePointAt(i);
         return a;
+      })
+      .catch(r => {
+        console.error("Read failed", r);
+        throw new Serror(400, path, this._gError(r, $.i18n("gd-rerr")));
       });
-    })
-    .catch(r => {
-      console.error("Read failed", r);
-      throw new Serror(400, path + this._gError(r, $.i18n("gd-rerr")));
     });
   }
 }

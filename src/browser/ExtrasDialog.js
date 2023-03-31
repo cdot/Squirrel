@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2019-2022 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env browser */
 
-import "jquery/dist/jquery.js";
+import "jquery";
 
 import "../jq/cookie.js";
 import "../jq/styling.js";

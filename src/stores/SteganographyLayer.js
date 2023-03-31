@@ -1,7 +1,7 @@
 /*@preserve Copyright (C) 2015-2022 Crawford Currie http://c-dot.co.uk license MIT*/
 /* eslint-env node, browser */
 
-import { PNG } from "pngjs/browser.js";
+import { PNG } from "pngjs";
 
 import { Serror } from "../common/Serror.js";
 import { Utils } from "../common/Utils.js";
