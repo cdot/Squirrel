@@ -232,7 +232,7 @@ class StoreTester {
       })
       .catch(function(se) {
         assert(se instanceof Serror, "" + se);
-        assert(se.status === 404, "" + se);
+        assert.equal(se.status, 404, se);
       });
     }));
 

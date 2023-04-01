@@ -22,7 +22,7 @@ import { AbstractStore } from "../stores/AbstractStore.js";
 		 */
     read(path) {
       if (!(path in this.data))
-        return Promise.reject(new Serror(400, path, "is not in store"));
+        return Promise.reject(new Serror(400, `${path} is not in store`));
       return Promise.resolve(this.data[path]);
     }
 

@@ -78,20 +78,19 @@ class Hoarder {
 		 * @member {}
 		 */
     this.clientChanges = [];
+
     /**
-		 * Flag that indicates if the cloud was changed. This applies
-		 * only to the meta-data and not to the action stream; the
-		 * stream can change without the cloudChanged flag being set
-		 * (it's rebuilt from the client tree).
+		 * Flag that indicates if the cloud needs to be saved.
 		 * @member {boolean}
 		 * @private
 		 */
-    this.cloudChanged = false;
+    this.cloudNeedsSave = false;
+
     /**
 		 * Flag that indicates if the hoard was just created. When
 		 * we open on a new store, the client will be emptied and
 		 * this flag set. It will be cleared when the client has been
-		 * populated from the cloud.
+		 * populated from the cloud, or when something is added.
 		 * @member {boolean}
 		 * @private
 		 */
@@ -150,7 +149,7 @@ class Hoarder {
     if (typeof path !== 'undefined' && path !== this.cloudPath) {
       if (this.debug) this.debug("Set cloud path", path);
       this.cloudPath = path;
-      this.cloudChanged = !this.clientIsEmpty;
+      this.cloudNeedsSave = !this.clientIsEmpty;
       this.clientChanges.push($.i18n("cloud_path_change"));
     }
     return this.cloudPath;
@@ -173,7 +172,7 @@ class Hoarder {
     if (typeof path !== 'undefined' && path !== this.imageURL) {
       if (this.debug) this.debug("Set image url", path);
       this.imageURL = path;
-      this.cloudChanged = !this.clientIsEmpty;
+      this.cloudNeedsSave = !this.clientIsEmpty;
       this.clientChanges.push($.i18n("img_changed"));
     }
     return this.imageURL || 'images/GCHQ.png'; // default;
@@ -189,7 +188,7 @@ class Hoarder {
       this.clientStore.option("pass", pass);
       this.clientChanges.push($.i18n("chepass_log"));
       this.cloudStore.option("pass", pass);
-      this.cloudChanged = true;
+      this.cloudNeedsSave = true;
     }
     return this.clientStore.option("pass");
   }
@@ -204,7 +203,7 @@ class Hoarder {
    this.hoard.clear_history();
    this.hoard.tree = parsed;
    this.clientChanges.push($.i18n("bulk_change"));
-   this.cloudChanged = true;
+   this.cloudNeedsSave = true;
    }
    return JSON.stringify(this.hoard.tree, null, " ");
    }*/
@@ -231,7 +230,7 @@ class Hoarder {
       if (changes > 0) {
         this.clientChanges.push(
           $.i18n("alarm_changes", changes));
-        this.cloudChanged = true;
+        this.cloudNeedsSave = true;
         this.clientIsEmpty = false;
       }
     });
@@ -714,7 +713,7 @@ class Hoarder {
         severity: "notice",
         message: $.i18n("cloud_saved")
       });
-      this.cloudChanged = false;
+      this.cloudNeedsSave = false;
       return Promise.resolve(true);
     })
     .catch(e => {
@@ -723,6 +722,7 @@ class Hoarder {
         severity: "error",
         message: $.i18n("cloud_save_fail", e)
       });
+      this.cloudNeedsSave = true;
       return Promise.resolve(false);
     });
   }
@@ -733,12 +733,13 @@ class Hoarder {
 	 * @param {Progress} options.progress reporter
 	 * @param {Hoarder.Selector} options.selector
 	 * @param {Hoard.UIPlayer=} options.uiPlayer
-	 * @return {Promise} Promise to save both stores
+	 * @return {Promise} Promise to save both stores, resolving to { cloud:, client: }
+   * where the fields indicate if the relevant store is now up to date.
 	 */
   save_stores(options) {
 		options = options || {};
     let saveClient = this.clientChanges.length > 0;
-    let saveCloud = this.cloudChanged;
+    let saveCloud = this.cloudNeedsSave;
 
     // See if there's anything new in the history since
     // we last synched/saved
@@ -754,16 +755,19 @@ class Hoarder {
         severity: "notice",
         message: $.i18n("no_changes")
       });
-      return Promise.resolve(false);
+      return Promise.resolve(0);
     }
     
     let promise; // order is important!
     let cloud_saved = false;
     let client_saved = false;
+
     if (saveCloud) {
       promise = this.update_from_cloud(options)
       .then(new_cloud => this.save_cloud(new_cloud, options.progress))
-      .then(() => cloud_saved = true)
+      .then(() => {
+        cloud_saved = true;
+      })
 			.catch(e => {
         if (this.debug) this.debug("cloud update failed", e);
         if (options.progress)
@@ -810,14 +814,14 @@ class Hoarder {
     }
 
     return promise
-    .then(() => {               
-      if ((!saveCloud || cloud_saved)
-          && (!saveClient || client_saved)) {
+    .then(() => {
+      const status = {
+        cloud: !saveCloud || cloud_saved,
+        client: !saveClient || client_saved
+      };
+      if (status.cloud && status.client)
         this.hoard.clear_history();
-        return true;
-      }
-      else
-        return false;
+      return status;
     });
   }
 }

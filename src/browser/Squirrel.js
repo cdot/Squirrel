@@ -135,13 +135,14 @@ class Squirrel {
       }),
       uiPlayer: act => this.$DOMtree.tree("action", act)
 		})
-    .then(saved => {
-      if (saved) {
+    .then(upToDate => {
+      if (upToDate.client && upToDate.cloud) {
         // otherwise if cloud or client save failed, we have to
         // try again
         $(".tree-isModified")
         .removeClass("tree-isModified");
       }
+      this.upToDate = upToDate;
       $(document).trigger("update_save");
     });
   }
@@ -156,12 +157,13 @@ class Squirrel {
     .show().attr("title", this.hoarder.next_undo());
     else
       $("#undo_button").hide();
+
     const $sb = $("#save_button");
     const autosave = ($.cookie("ui_autosave") === "on");
     const us = this.hoarder.get_changes(10);
 
-    // cloudChanged will be set if the cloud store didn't exist
-    if (us.length === 0 && !this.hoarder.cloudChanged)
+    // cloudNeedsSave will be set if the cloud store didn't exist
+    if (us.length === 0 && !this.hoarder.cloudNeedsSave)
       $sb.hide(); // nothing to save
     else if (autosave) {
       $sb.hide();
@@ -468,10 +470,10 @@ class Squirrel {
                         this.hoarder.cloud_path())
       });
       if (e instanceof Serror && e.status === 404) {
-        // Could not contact cloud; continue all the same
+        // Could not find data in the cloud; continue all the same
         if (this.debug) this.debug(
           this.hoarder.cloud_path(), "not found in the cloud");
-        this.hoarder.cloudChanged = true; // to force create
+        this.hoarder.cloudNeedsSave = true; // to force create
         mess.push({
           severity: "warning",
           message: $.i18n("404")

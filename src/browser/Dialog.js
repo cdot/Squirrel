@@ -3,7 +3,7 @@
 
 import "jquery";
 import "jquery-ui";
-import "@rwap/jquery-ui-touch-punch";
+//import "@rwap/jquery-ui-touch-punch";
 
 import "../jq/cookie.js";
 import "../jq/icon_button.js";
@@ -385,7 +385,7 @@ class Dialog extends Progress {
     const $el = $(`[data-id='${key}']`, this.$dlg);
     if (this.debug && $el.length === 0 && !mayBeMissing) {
       this.debug("Unknown control", key);
-      throw new Serror(500,`Unknown control ${key}`);
+      throw new Serror(500, `Unknown control ${key}`);
     }
     return $el;
   }

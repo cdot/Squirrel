@@ -21,22 +21,22 @@ describe("Hoarder", () => {
 
   it("constructor", function() {
     let h = new Hoarder();
-    assert.equal(h.cloudChanged, false);
+    assert.equal(h.cloudNeedsSave, false);
     h.cloud_store(new LocalStorageStore({ debug: console.debug,
                                           user: "Cumulo",
                                           pass: "Nimbus" }));
-    assert.equal(h.cloudChanged, false);
+    assert.equal(h.cloudNeedsSave, false);
     h.client_store(new LocalStorageStore({ debug: console.debug,
                                            user: "Stratus",
                                            pass: "Alto"}));
-    assert.equal(h.cloudChanged, false);
+    assert.equal(h.cloudNeedsSave, false);
     h.cloud_path("CLOUD");
-    assert.equal(h.cloudChanged, false);
+    assert.equal(h.cloudNeedsSave, false);
     assert.equal(h.clientChanges.length, 1);
 
     assert.equal(h.user(), "Stratus");
     assert.equal(h.encryption_pass(), "Alto");
-    assert.equal(h.cloudChanged, false);
+    assert.equal(h.cloudNeedsSave, false);
   });
 
   const full_tree_actions = [
