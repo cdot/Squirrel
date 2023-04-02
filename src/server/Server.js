@@ -64,11 +64,10 @@ class Server {
     if (!p.debug) p.debug = () => {};
 
     extend(this, p);
-
     this.ready = false;
     if (!this.docroot) {
       this.docroot = Path.normalize(
-        `${import.meta.url}/../..`.replace(/^file:/, ""));
+        `${import.meta.url}/../../..`.replace(/^file:/, ""));
     }
     this.debug("Doc root", this.docroot);
 
@@ -244,7 +243,7 @@ class Server {
       // Get file path
       let spath = req.pathname;
       if (spath.indexOf("/") !== 0 || spath.length === 0) {
-        this.debug("ROOT or relative path GET");
+        if (this.debug) this.debug("ROOT or relative path GET");
         response.statusCode = 400;
         response.end();
         return;

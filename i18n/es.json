@@ -104,8 +104,6 @@
   "empty_pass": "La contraseña no puede estar vacía",
   "enable-rem": "Habilitar recordatorio",
   "failed": "fallido",
-  "gd-rerr": "Leer",
-  "gdrive-err": "Escribir",
   "goto_parent": "Volver a la carpeta principal",
   "hidevalues": "Ocultar valores",
   "i18n-fail": "Error de carga de I18N",

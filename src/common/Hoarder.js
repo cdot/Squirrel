@@ -646,7 +646,6 @@ class Hoarder {
           if (this.debug) this.debug("...played", act);
         })
 				.catch(e => {
-					debugger;
           if (this.debug) this.debug("FAILED", act, e);
           if (options.progress) options.progress.push({
             severity: "warning",

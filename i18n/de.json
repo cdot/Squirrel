@@ -103,8 +103,6 @@
   "enable-rem": "Erinnerung Aktivieren",
   "error": "Fehler",
   "failed": "fehlgeschlagen",
-  "gd-rerr": "Lesen",
-  "gdrive-err": "Schreiben",
   "goto_parent": "Zurück zum übergeordneten Ordner",
   "hidevalues": "Werte ausblenden",
   "i18n-fail": "I18N Ladefehler",

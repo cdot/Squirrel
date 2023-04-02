@@ -138,8 +138,6 @@
   "enable-rem": "Enable reminder",
   "error": "Error",
   "failed": "failed",
-  "gd-rerr": "Read",
-  "gdrive-err": "Write",
   "goto_parent": "Back to parent folder",
   "hidevalues": "Hide Values",
   "i18n-fail": "I18N load failure",

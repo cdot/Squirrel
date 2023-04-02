@@ -47,13 +47,6 @@ class LayeredStore extends AbstractStore {
 	/**
 	 * @override
 	 */
-  status() {
-    return this.understore.status();
-  }
-
-	/**
-	 * @override
-	 */
   read(path) {
     return this.understore.read(path);
   }

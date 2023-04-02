@@ -104,8 +104,6 @@
   "enable-rem": "Activer rappel",
   "error": "Erreur",
   "failed": "échoué",
-  "gd-rerr": "Lu",
-  "gdrive-err": "Écrire",
   "goto_parent": "Revenir au dossier parent",
   "hidevalues": "Masquer les valeurs",
   "i18n-fail": "Échec de charge I18N",

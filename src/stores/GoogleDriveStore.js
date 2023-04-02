@@ -36,6 +36,30 @@ const DELIMITER = `\r\n--${BOUNDARY}\r\n`;
 const RETIMILED = `\r\n--${BOUNDARY}--`;
 
 /**
+ * Analyse an error returned by a Google API call.
+ * @private
+ * @param {Reponse} r the response
+ * @param {string} op the operation
+ * @return {Serror} the error to throw
+ */
+function _gError(r, op) {
+  let mess = `${op} ${$.i18n("failed")}: `;
+  if (typeof r.details !== "undefined")
+    mess += r.details;
+  else if (typeof r.error !== "undefined")
+    mess += r.error;
+  else if (r.status === 401) {
+    mess += `${$.i18n("access_expired")} ${$.i18n("please_refresh")}`;
+  } else if (r.result && r.result.error) {
+    mess += r.result.error.message;
+  } else {
+    mess += r.body;
+  }
+  if (this.debug) this.debug(`GAPI error ${r.status} ${mess}`);
+  return new Serror(r.status, mess);
+}
+
+/**
  * A store using Google Drive
  * @extends HttpServerStore
  */
@@ -136,44 +160,16 @@ class GoogleDriveStore extends HttpServerStore {
        }))
        /**/
 
-    .then(response => {
-      const repo = JSON.parse(response.body);
+    .then(r => {
+      if (r.status >= 400)
+        throw _gError(r, "gapi.client.people.people.get");
+
+      const repo = JSON.parse(r.body);
       if (this.debug) this.debug(
         "people.people", repo.names.map(n => n.displayName));
       const name = repo.names[0];
 			this.option("user", name.displayName);
-    })
-    .catch(e => {
-      if (e && e.body) {
-        const info = JSON.parse(e.body);
-        alert(`${e.status} ${e.message}`);
-      }
-      console.error(e);
     });
-  }
-
-  /**
-   * Analyse an error returned by a Google promise
-   * @private
-   */
-  _gError(r, context) {
-    let mess = `${context} ` + $.i18n("failed") + ": ";
-    if (typeof r.details !== "undefined")
-      mess += r.details;
-    else if (typeof r.error !== "undefined")
-      mess += r.error;
-    else if (r.status === 401) {
-      mess +=
-      $.i18n("access_expired") +
-      " " +
-      $.i18n("please_refresh");
-    } else if (r.result && r.result.error) {
-      mess += r.result.error.message;
-    } else {
-      mess += r.body;
-    }
-    if (this.debug) this.debug(mess);
-    return ` ${mess}`;
   }
 
   /**
@@ -189,6 +185,11 @@ class GoogleDriveStore extends HttpServerStore {
    * Promise to get the id of the folder at the end of the given
    * path, optionally creating the folders if they don't exist.
    * Any errors thrown will be from Google
+   * @param {string} parentid id of parent folder, or "root"
+   * @param {string[]} path array of path elements
+   * @param {boolean} create if true, create the folder if it's missing
+   * @return {Promise} promise that resolves to the id of the folder, or
+   * undefined if the folder wasn't found and create is false
    * @private
    */
   _follow_path(parentid, path, create) {
@@ -196,11 +197,11 @@ class GoogleDriveStore extends HttpServerStore {
       return Promise.resolve(parentid);
 
     const p = path.slice();
-    const pathel = p.shift();
+    const name = p.shift();
 
     function create_folder() {
       const metadata = {
-        title: pathel,
+        title: name,
         mimeType: "application/vnd.google-apps.folder"
       };
       if (parentid !== "root")
@@ -208,15 +209,21 @@ class GoogleDriveStore extends HttpServerStore {
         metadata.parents = [{
           id: parentid
         }];
-      if (this.debug) this.debug(`Creating folder ${pathel} under ${parentid}`);
+      if (this.debug) this.debug(
+        `Creating folder ${name} under ${parentid} (${path.join("/")})`);
       return gapi.client.drive.files
       .insert(metadata)
-      .then(response =>
-            this._follow_path(response.result.id, p, true));
+      .then(r => {
+        if (r.status >= 400)
+          throw _gError(r, `create folder "${path.join("/")}`);
+
+        return this._follow_path(r.result.id, p, true);
+      });
     }
 
-    const query = `title="${pathel}" and "${parentid}" in parents` +
-          " and mimeType='application/vnd.google-apps.folder' and trashed=false";
+    const query = `title="${name}" and "${parentid}" in parents`
+          + " and mimeType='application/vnd.google-apps.folder'"
+          + " and trashed=false";
 
     if (this.debug) this.debug(`Drive: ${query}`);
     return gapi.client.drive.files
@@ -224,19 +231,18 @@ class GoogleDriveStore extends HttpServerStore {
       q: query,
       fields: "files/id"
     })
-    .then(response => {
-      if (this.debug) this.debug(`Drive: response ${response.result}`);
-      const files = response.result.files;
+    .then(r => {
+      if (r.status >= 400)
+        throw _gError(r, `find "${path}"`);
+
+      const files = r.result.files;
       if (files.length > 0) {
         const id = files[0].id;
         if (this.debug) this.debug(`found ${query} at ${id}`);
         return this._follow_path(id, p, create);
       }
       if (this.debug) this.debug(`could not find ${query}`);
-      if (create)
-        return create_folder();
-      this.status(404);
-      return undefined;
+      return create ? create_folder() : undefined;
     });
   }
 
@@ -292,10 +298,10 @@ class GoogleDriveStore extends HttpServerStore {
       },
       body: multipartRequestBody
     })
-    .then((/*response*/) => true)
-    .catch(e => {
-      this.status(e.code);
-      return false;
+    .then(r => {
+      if (r.status >= 400)
+        throw _gError(r, `write "${name}"`);
+      return true;
     });
   }
 
@@ -323,18 +329,19 @@ class GoogleDriveStore extends HttpServerStore {
         fields: "files/id"
       });
     })
-    .then(response => {
-      const files = response.result.files;
+    .then(r => {
+      if (r.status >= 400)
+        throw _gError(r, `write "${path}"`);
+
+      const files = r.result.files;
       let id;
       if (files.length > 0) {
         id = files[0].id;
         if (this.debug) this.debug(`updating ${name} ${id}`);
-      } else
+      } else {
         if (this.debug) this.debug(`creating ${name} in ${parentId}`);
+      }
       return this._putfile(parentId, name, data, id);
-    })
-    .catch(r => {
-      throw new Serror(400, `${path} ${this._gError(r, $.i18n("gdrive-err"))}`);
     });
   }
 
@@ -357,39 +364,39 @@ class GoogleDriveStore extends HttpServerStore {
         q: query,
         // "*" shows all fields. We only need the id for matched files.
         fields: "files/id"
-      })
-      .catch(r => {
-        console.error("Query failed", r);
-        throw new Serror(400, `${path} ${this._gError(r, $.i18n("gd-rerr"))}`);
       });
     })
-    .then(response => {
-      const files = response.result.files;
-      if (files === null || files.length === 0) {
+    .then(r => {
+      if (r.status >= 400)
+        throw _gError(r, `read ${path}`);
+
+      const files = r.result.files;
+      if (!files || files.length === 0) {
         if (this.debug) this.debug(`could not find ${name}`);
-        throw new Serror(404, path, "not found");
+        throw new Serror(404, `${path} not found`);
       }
       const id = files[0].id;
       if (this.debug) this.debug(`found "${name}" id ${id}`);
-      return gapi.client.drive.files.get(
+      return gapi.client.drive.files
+      .get(
         {
           fileId: id,
           alt: "media"
-        })
-      .then(res => {
-        // alt=media requests content-type=text/plain. AFAICT the
-        // file comes in base64-encoded, and is simply converted
-        // to a 'string' by concatenating the bytes,
-        // one per code point, without any decoding (thankfully!)
-        const a = new Uint8Array(res.body.length);
-        for (let i = 0; i < a.length; i++)
-          a[i] = res.body.codePointAt(i);
-        return a;
-      })
-      .catch(r => {
-        console.error("Read failed", r);
-        throw new Serror(400, `${path} ${this._gError(r, $.i18n("gd-rerr"))}`);
-      });
+        });
+    })
+    .then(r => {
+      if (r.status >= 400)
+        throw _gError(r, `read ${path}`);
+
+      // alt=media requests content-type=text/plain. The
+      // file comes in base64-encoded, and is simply converted
+      // to a 'string' by concatenating the bytes,
+      // one per code point, without any decoding.
+      const a = new Uint8Array(r.body.length);
+      for (let i = 0; i < a.length; i++)
+        a[i] = r.body.codePointAt(i);
+
+      return a;
     });
   }
 }
