@@ -30,7 +30,7 @@
         "btoa": "^1.2.1",
         "canvas": "^2.11.0",
         "cors": "^2.8.5",
-        "express": "^4.19.2",
+        "express": "^4.21.0",
         "express-basic-auth": "^1.2.1",
         "express-session": "^1.17.3",
         "node-getopt": "^0.3.2",
