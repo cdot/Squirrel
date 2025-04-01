@@ -1,5 +1,7 @@
 # Welcome to Squirrel
 
+Squirrel is no longer maintained* - it served it's purpose very well for a number of years, but I've shifted over to another Open Source implementation that has features that Squirrel lacks, and I can't be bothered maintaining it any more.
+
 In these days of data loss and identify theft it is critically
 important to take care of your personal information. Most people have
 realised by now that for security they need to have a different
